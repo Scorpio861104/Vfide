@@ -1,0 +1,53 @@
+name: Daily Security Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Semgrep security scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/smart-contract
+            p/solidity
+            p/security-audit
+      
+      - name: Check for known vulnerabilities
+        run: |
+          echo "Checking for common vulnerabilities..."
+          
+          # Check for selfdestruct
+          if grep -r "selfdestruct" contracts/; then
+            echo "⚠️ Found selfdestruct"
+          fi
+          
+          # Check for tx.origin
+          if grep -r "tx.origin" contracts/; then
+            echo "⚠️ Found tx.origin usage"
+          fi
+          
+          # Check for block.timestamp
+          if grep -r "block.timestamp" contracts/; then
+            echo "⚠️ Found timestamp dependence"
+          fi
+      
+      - name: Create security report issue
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔴 Security Scan Failed',
+              body: 'Daily security scan found issues. Check workflow logs.',
+              labels: ['security', 'critical']
+            });
