@@ -1,0 +1,1235 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+/*
+╔══════════════════════════════════════════════════════════════════════╗
+║                     VFIDE TOKEN - CORE CONTRACT                      ║
+║                    Surgically Refined Edition v2.0                   ║
+╚══════════════════════════════════════════════════════════════════════╝
+*/
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {ERC20Pausable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+// Optimized interface definitions
+interface IProofScore {
+    function getScore(address user) external view returns (uint256);
+    function updateScore(address user, uint256 change, bool increase) external;
+}
+
+interface ISanctumFund {
+    function depositFee(uint256 amount) external;
+}
+
+interface IProofLedger {
+    function logActivity(address user, bytes32 activityType, uint256 amount) external;
+}
+
+/**
+ * @title VFIDEToken
+ * @notice Core VFIDE token with advanced burn mechanics and trust integration
+ * @dev Surgically optimized for gas efficiency and security
+ */
+contract VFIDEToken is ERC20, ERC20Burnable, ERC20Pausable, ERC20Permit, Ownable2Step, ReentrancyGuard {
+    
+    // Custom errors for gas optimization
+    error ExceedsMaxSupply();
+    error InvalidAddress();
+    error InsufficientBalance();
+    error UnauthorizedMinter();
+    error FeeTooHigh();
+    error VestingNotMature();
+    error InvalidAmount();
+    error ContractPaused();
+    error TransferRestricted();
+    
+    // Immutable constants for gas optimization
+    uint256 private constant MAX_SUPPLY = 200_000_000 * 1e18;
+    uint256 private constant PRESALE_ALLOCATION = 75_000_000 * 1e18;
+    uint256 private constant DEV_ALLOCATION = 40_000_000 * 1e18;
+    uint256 private constant COMMUNITY_ALLOCATION = 85_000_000 * 1e18;
+    uint256 private constant VESTING_CLIFF = 90 days;
+    uint256 private constant VESTING_DURATION = 3 * 365 days;
+    uint256 private constant MAX_TOTAL_FEE_BPS = 500; // 5% max
+    uint256 private constant PROOF_SCORE_CACHE_DURATION = 1 hours;
+    
+    // Packed struct for gas efficiency
+    struct FeeConfig {
+        uint16 burnFeeBps;
+        uint16 sanctumFeeBps;
+        uint16 liquidityFeeBps;
+        bool feesEnabled;
+        address sanctumAddress;
+        address liquidityAddress;
+    }
+    
+    struct VestingSchedule {
+        uint256 totalAmount;
+        uint256 claimedAmount;
+        uint256 startTime;
+        uint256 cliffTime;
+        uint256 endTime;
+        bool revocable;
+        bool revoked;
+    }
+    
+    struct ProofScoreCache {
+        uint256 score;
+        uint256 lastUpdate;
+    }
+    
+    // State variables (optimized layout)
+    FeeConfig public feeConfig;
+    mapping(address => VestingSchedule) public vestingSchedules;
+    mapping(address => ProofScoreCache) private proofScoreCache;
+    mapping(address => bool) public authorizedMinters;
+    mapping(address => bool) public feeExempt;
+    mapping(address => mapping(address => uint256)) private _allowancesWithExpiry;
+    
+    // External contract interfaces
+    IProofScore public proofScore;
+    ISanctumFund public sanctumFund;
+    IProofLedger public proofLedger;
+    
+    // Events
+    event FeesUpdated(uint16 burnFee, uint16 sanctumFee, uint16 liquidityFee);
+    event VestingCreated(address indexed beneficiary, uint256 amount, uint256 cliff, uint256 duration);
+    event VestingClaimed(address indexed beneficiary, uint256 amount);
+    event VestingRevoked(address indexed beneficiary, uint256 unvestedAmount);
+    event ProofScoreUpdated(address indexed user, uint256 newScore);
+    event MinterAuthorized(address indexed minter, bool authorized);
+    
+    modifier validAddress(address addr) {
+        if (addr == address(0)) revert InvalidAddress();
+        _;
+    }
+    
+    modifier onlyAuthorizedMinter() {
+        if (!authorizedMinters[msg.sender] && msg.sender != owner()) revert UnauthorizedMinter();
+        _;
+    }
+    
+    constructor(address _owner) 
+        ERC20("VFIDE", "VFIDE") 
+        ERC20Permit("VFIDE")
+        Ownable2Step()
+    {
+        _transferOwnership(_owner);
+        
+        // Initialize fee configuration
+        feeConfig = FeeConfig({
+            burnFeeBps: 100,      // 1%
+            sanctumFeeBps: 100,    // 1%
+            liquidityFeeBps: 50,   // 0.5%
+            feesEnabled: true,
+            sanctumAddress: address(0),
+            liquidityAddress: address(0)
+        });
+    }
+    
+    /**
+     * @notice Mint tokens with supply cap check
+     * @param to Recipient address
+     * @param amount Amount to mint
+     */
+    function mint(address to, uint256 amount) external onlyAuthorizedMinter validAddress(to) {
+        if (totalSupply() + amount > MAX_SUPPLY) revert ExceedsMaxSupply();
+        _mint(to, amount);
+        _updateProofScore(to, amount, true);
+    }
+    
+    /**
+     * @notice Create vesting schedule for tokens
+     * @param beneficiary Address receiving vested tokens
+     * @param amount Total amount to vest
+     * @param cliff Cliff period in seconds
+     * @param duration Total vesting duration
+     * @param revocable Whether vesting can be revoked
+     */
+    function createVesting(
+        address beneficiary,
+        uint256 amount,
+        uint256 cliff,
+        uint256 duration,
+        bool revocable
+    ) external onlyOwner validAddress(beneficiary) {
+        if (amount == 0) revert InvalidAmount();
+        if (vestingSchedules[beneficiary].totalAmount > 0) revert("Vesting exists");
+        
+        uint256 cliffTime = block.timestamp + cliff;
+        uint256 endTime = block.timestamp + duration;
+        
+        vestingSchedules[beneficiary] = VestingSchedule({
+            totalAmount: amount,
+            claimedAmount: 0,
+            startTime: block.timestamp,
+            cliffTime: cliffTime,
+            endTime: endTime,
+            revocable: revocable,
+            revoked: false
+        });
+        
+        _mint(address(this), amount);
+        emit VestingCreated(beneficiary, amount, cliff, duration);
+    }
+    
+    /**
+     * @notice Claim vested tokens
+     */
+    function claimVesting() external nonReentrant {
+        VestingSchedule storage schedule = vestingSchedules[msg.sender];
+        if (schedule.totalAmount == 0) revert("No vesting");
+        if (schedule.revoked) revert("Vesting revoked");
+        if (block.timestamp < schedule.cliffTime) revert VestingNotMature();
+        
+        uint256 vestedAmount = _calculateVestedAmount(msg.sender);
+        uint256 claimable = vestedAmount - schedule.claimedAmount;
+        
+        if (claimable == 0) revert("Nothing to claim");
+        
+        schedule.claimedAmount += claimable;
+        _transfer(address(this), msg.sender, claimable);
+        
+        emit VestingClaimed(msg.sender, claimable);
+        _updateProofScore(msg.sender, claimable, true);
+    }
+    
+    /**
+     * @notice Calculate vested amount for a beneficiary
+     */
+    function _calculateVestedAmount(address beneficiary) private view returns (uint256) {
+        VestingSchedule memory schedule = vestingSchedules[beneficiary];
+        
+        if (block.timestamp < schedule.cliffTime) return 0;
+        if (block.timestamp >= schedule.endTime) return schedule.totalAmount;
+        
+        uint256 timeElapsed = block.timestamp - schedule.startTime;
+        uint256 totalDuration = schedule.endTime - schedule.startTime;
+        
+        return (schedule.totalAmount * timeElapsed) / totalDuration;
+    }
+    
+    /**
+     * @notice Override transfer to apply fees and restrictions
+     */
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Pausable) {
+        if (from == address(0) || to == address(0)) revert InvalidAddress();
+        
+        // Apply fees if enabled and not exempt
+        uint256 amountAfterFees = amount;
+        if (feeConfig.feesEnabled && !feeExempt[from] && !feeExempt[to]) {
+            amountAfterFees = _applyFees(from, amount);
+        }
+        
+        super._transfer(from, to, amountAfterFees);
+        
+        // Update proof scores
+        _updateProofScore(from, amount, false);
+        _updateProofScore(to, amountAfterFees, true);
+        
+        // Log activity
+        if (address(proofLedger) != address(0)) {
+            proofLedger.logActivity(from, keccak256("transfer"), amount);
+        }
+    }
+    
+    /**
+     * @notice Apply transfer fees
+     */
+    function _applyFees(address from, uint256 amount) private returns (uint256) {
+        uint256 burnFee = (amount * feeConfig.burnFeeBps) / 10000;
+        uint256 sanctumFee = (amount * feeConfig.sanctumFeeBps) / 10000;
+        uint256 liquidityFee = (amount * feeConfig.liquidityFeeBps) / 10000;
+        
+        if (burnFee > 0) {
+            _burn(from, burnFee);
+        }
+        
+        if (sanctumFee > 0 && feeConfig.sanctumAddress != address(0)) {
+            super._transfer(from, feeConfig.sanctumAddress, sanctumFee);
+        }
+        
+        if (liquidityFee > 0 && feeConfig.liquidityAddress != address(0)) {
+            super._transfer(from, feeConfig.liquidityAddress, liquidityFee);
+        }
+        
+        return amount - burnFee - sanctumFee - liquidityFee;
+    }
+    
+    /**
+     * @notice Update user proof score with caching
+     */
+    function _updateProofScore(address user, uint256 amount, bool increase) private {
+        if (address(proofScore) == address(0)) return;
+        
+        ProofScoreCache storage cache = proofScoreCache[user];
+        
+        // Check if cache is still valid
+        if (block.timestamp - cache.lastUpdate > PROOF_SCORE_CACHE_DURATION) {
+            cache.score = proofScore.getScore(user);
+            cache.lastUpdate = block.timestamp;
+        }
+        
+        // Update score
+        proofScore.updateScore(user, amount, increase);
+        
+        // Update cache
+        if (increase) {
+            cache.score += amount / 1e18; // Simplified score calculation
+        } else {
+            cache.score = cache.score > amount / 1e18 ? cache.score - amount / 1e18 : 0;
+        }
+        
+        emit ProofScoreUpdated(user, cache.score);
+    }
+    
+    /**
+     * @notice Update fee configuration
+     */
+    function updateFees(
+        uint16 _burnFeeBps,
+        uint16 _sanctumFeeBps,
+        uint16 _liquidityFeeBps
+    ) external onlyOwner {
+        uint256 totalFees = _burnFeeBps + _sanctumFeeBps + _liquidityFeeBps;
+        if (totalFees > MAX_TOTAL_FEE_BPS) revert FeeTooHigh();
+        
+        feeConfig.burnFeeBps = _burnFeeBps;
+        feeConfig.sanctumFeeBps = _sanctumFeeBps;
+        feeConfig.liquidityFeeBps = _liquidityFeeBps;
+        
+        emit FeesUpdated(_burnFeeBps, _sanctumFeeBps, _liquidityFeeBps);
+    }
+    
+    /**
+     * @notice Set external contract addresses
+     */
+    function setContracts(
+        address _proofScore,
+        address _sanctumFund,
+        address _proofLedger
+    ) external onlyOwner {
+        proofScore = IProofScore(_proofScore);
+        sanctumFund = ISanctumFund(_sanctumFund);
+        proofLedger = IProofLedger(_proofLedger);
+        feeConfig.sanctumAddress = _sanctumFund;
+    }
+    
+    /**
+     * @notice Authorize or revoke minter
+     */
+    function setMinter(address minter, bool authorized) external onlyOwner validAddress(minter) {
+        authorizedMinters[minter] = authorized;
+        emit MinterAuthorized(minter, authorized);
+    }
+    
+    /**
+     * @notice Set fee exemption status
+     */
+    function setFeeExempt(address account, bool exempt) external onlyOwner validAddress(account) {
+        feeExempt[account] = exempt;
+    }
+    
+    /**
+     * @notice Emergency pause
+     */
+    function pause() external onlyOwner {
+        _pause();
+    }
+    
+    /**
+     * @notice Unpause
+     */
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+    
+    /**
+     * @notice Get user's proof score (with caching)
+     */
+    function getUserProofScore(address user) external view returns (uint256) {
+        ProofScoreCache memory cache = proofScoreCache[user];
+        
+        if (block.timestamp - cache.lastUpdate <= PROOF_SCORE_CACHE_DURATION) {
+            return cache.score;
+        }
+        
+        if (address(proofScore) != address(0)) {
+            return proofScore.getScore(user);
+        }
+        
+        return 0;
+    }
+}
+
+/*
+╔══════════════════════════════════════════════════════════════════════╗
+║                     VFIDE PRESALE CONTRACT                           ║
+║                    Surgically Refined Edition v2.0                   ║
+╚══════════════════════════════════════════════════════════════════════╝
+*/
+
+/**
+ * @title VFIDEPresale
+ * @notice Three-tier presale with advanced anti-sybil and referral mechanics
+ * @dev Surgically optimized with comprehensive security measures
+ */
+contract VFIDEPresale is Ownable2Step, Pausable, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+    
+    // Custom errors
+    error InvalidTier();
+    error TierNotActive();
+    error ExceedsTierCap();
+    error ExceedsWalletCap();
+    error InsufficientPayment();
+    error InvalidReferrer();
+    error SelfReferral();
+    error CircularReferral();
+    error ReferralDepthExceeded();
+    error ReferrerTooNew();
+    error CooldownActive();
+    error InvalidStablecoin();
+    error OracleError();
+    error AlreadyFinalized();
+    error NotFinalized();
+    error NothingToClaim();
+    error StillLocked();
+    error InvalidAmount();
+    
+    enum Tier { FOUNDING, OATH, PUBLIC }
+    
+    struct TierInfo {
+        uint256 allocation;
+        uint256 sold;
+        uint256 priceUSD;      // In cents (300 = $3.00)
+        uint256 minPurchase;
+        uint256 maxPerWallet;
+        uint256 lockDays;
+        bool active;
+        uint256 startTime;
+        uint256 endTime;
+    }
+    
+    struct Purchase {
+        uint256 amount;
+        uint256 lockedUntil;
+        uint256 claimed;
+        Tier tier;
+        uint256 purchaseTime;
+        address referrer;
+        bool referralPaid;
+    }
+    
+    struct ReferralData {
+        address referrer;
+        uint256 totalReferred;
+        uint256 earnings;
+        uint256 depth;
+        uint256 firstReferralTime;
+        mapping(address => bool) hasReferred;
+    }
+    
+    // Constants
+    uint256 private constant TOTAL_PRESALE = 75_000_000 * 1e18;
+    uint256 private constant MAX_REFERRAL_DEPTH = 3;
+    uint256 private constant MIN_REFERRER_AGE = 1 days;
+    uint256 private constant PURCHASE_COOLDOWN = 1 hours;
+    uint256 private constant REFERRER_BPS = 200;  // 2%
+    uint256 private constant REFEREE_BPS = 100;   // 1%
+    
+    // State variables
+    IERC20 public immutable vfideToken;
+    mapping(Tier => TierInfo) public tiers;
+    mapping(address => mapping(Tier => Purchase)) public purchases;
+    mapping(address => ReferralData) public referralData;
+    mapping(address => uint256) public lastPurchaseTime;
+    mapping(address => bool) public approvedStablecoins;
+    
+    address public treasury;
+    bool public finalized;
+    uint256 public totalRaised;
+    
+    // Anti-sybil tracking
+    mapping(bytes32 => bool) public usedProofs;
+    mapping(address => uint256) public purchaseNonce;
+    
+    // Events
+    event TierPurchase(address indexed buyer, Tier tier, uint256 amount, uint256 paid);
+    event ReferralBonus(address indexed recipient, uint256 amount, bool isReferrer);
+    event ClaimExecuted(address indexed user, uint256 amount);
+    event TierActivated(Tier tier, uint256 startTime, uint256 endTime);
+    event PresaleFinalized(uint256 totalRaised, uint256 totalSold);
+    
+    constructor(address _vfideToken, address _treasury) {
+        vfideToken = IERC20(_vfideToken);
+        treasury = _treasury;
+        
+        // Initialize tiers
+        tiers[Tier.FOUNDING] = TierInfo({
+            allocation: 30_000_000 * 1e18,
+            sold: 0,
+            priceUSD: 300,  // $0.03
+            minPurchase: 1000 * 1e18,
+            maxPerWallet: 1_000_000 * 1e18,
+            lockDays: 180,
+            active: false,
+            startTime: 0,
+            endTime: 0
+        });
+        
+        tiers[Tier.OATH] = TierInfo({
+            allocation: 25_000_000 * 1e18,
+            sold: 0,
+            priceUSD: 500,  // $0.05
+            minPurchase: 500 * 1e18,
+            maxPerWallet: 500_000 * 1e18,
+            lockDays: 90,
+            active: false,
+            startTime: 0,
+            endTime: 0
+        });
+        
+        tiers[Tier.PUBLIC] = TierInfo({
+            allocation: 20_000_000 * 1e18,
+            sold: 0,
+            priceUSD: 700,  // $0.07
+            minPurchase: 100 * 1e18,
+            maxPerWallet: 250_000 * 1e18,
+            lockDays: 0,
+            active: false,
+            startTime: 0,
+            endTime: 0
+        });
+    }
+    
+    /**
+     * @notice Purchase tokens in specified tier
+     * @param tier The tier to purchase from
+     * @param vfideAmount Amount of VFIDE tokens to purchase
+     * @param stablecoin Stablecoin address for payment
+     * @param referrer Referrer address (optional)
+     * @param proof Anti-sybil proof (optional)
+     */
+    function buy(
+        Tier tier,
+        uint256 vfideAmount,
+        address stablecoin,
+        address referrer,
+        bytes32 proof
+    ) external nonReentrant whenNotPaused {
+        // Validations
+        _validatePurchase(tier, vfideAmount, stablecoin, referrer, proof);
+        
+        TierInfo storage tierInfo = tiers[tier];
+        Purchase storage purchase = purchases[msg.sender][tier];
+        
+        // Calculate payment amount
+        uint256 paymentAmount = (vfideAmount * tierInfo.priceUSD) / 10000;
+        
+        // Process payment
+        IERC20(stablecoin).safeTransferFrom(msg.sender, treasury, paymentAmount);
+        
+        // Update purchase data
+        purchase.amount += vfideAmount;
+        purchase.tier = tier;
+        purchase.purchaseTime = block.timestamp;
+        purchase.referrer = referrer;
+        
+        if (tierInfo.lockDays > 0) {
+            purchase.lockedUntil = block.timestamp + (tierInfo.lockDays * 1 days);
+        }
+        
+        // Update tier data
+        tierInfo.sold += vfideAmount;
+        totalRaised += paymentAmount;
+        
+        // Process referral
+        if (referrer != address(0)) {
+            _processReferral(msg.sender, referrer, vfideAmount);
+        }
+        
+        // Update anti-sybil tracking
+        lastPurchaseTime[msg.sender] = block.timestamp;
+        purchaseNonce[msg.sender]++;
+        if (proof != bytes32(0)) {
+            usedProofs[proof] = true;
+        }
+        
+        emit TierPurchase(msg.sender, tier, vfideAmount, paymentAmount);
+    }
+    
+    /**
+     * @notice Validate purchase parameters
+     */
+    function _validatePurchase(
+        Tier tier,
+        uint256 vfideAmount,
+        address stablecoin,
+        address referrer,
+        bytes32 proof
+    ) private view {
+        TierInfo memory tierInfo = tiers[tier];
+        Purchase memory purchase = purchases[msg.sender][tier];
+        
+        // Basic validations
+        if (!tierInfo.active) revert TierNotActive();
+        if (block.timestamp < tierInfo.startTime || block.timestamp > tierInfo.endTime) revert TierNotActive();
+        if (!approvedStablecoins[stablecoin]) revert InvalidStablecoin();
+        if (vfideAmount < tierInfo.minPurchase) revert InvalidAmount();
+        
+        // Cap validations
+        if (tierInfo.sold + vfideAmount > tierInfo.allocation) revert ExceedsTierCap();
+        if (purchase.amount + vfideAmount > tierInfo.maxPerWallet) revert ExceedsWalletCap();
+        
+        // Anti-sybil validations
+        if (lastPurchaseTime[msg.sender] + PURCHASE_COOLDOWN > block.timestamp) revert CooldownActive();
+        if (proof != bytes32(0) && usedProofs[proof]) revert("Proof already used");
+        
+        // Referral validations
+        if (referrer != address(0)) {
+            if (referrer == msg.sender) revert SelfReferral();
+            if (referralData[referrer].referrer == msg.sender) revert CircularReferral();
+            if (referralData[msg.sender].depth >= MAX_REFERRAL_DEPTH) revert ReferralDepthExceeded();
+            if (purchases[referrer][Tier.FOUNDING].amount == 0 &&
+                purchases[referrer][Tier.OATH].amount == 0 &&
+                purchases[referrer][Tier.PUBLIC].amount == 0) revert InvalidReferrer();
+        }
+    }
+    
+    /**
+     * @notice Process referral bonuses
+     */
+    function _processReferral(address buyer, address referrer, uint256 amount) private {
+        ReferralData storage buyerData = referralData[buyer];
+        ReferralData storage referrerData = referralData[referrer];
+        
+        // Set referrer if not already set
+        if (buyerData.referrer == address(0)) {
+            buyerData.referrer = referrer;
+            buyerData.depth = referrerData.depth + 1;
+            buyerData.firstReferralTime = block.timestamp;
+        }
+        
+        // Calculate bonuses
+        uint256 referrerBonus = (amount * REFERRER_BPS) / 10000;
+        uint256 refereeBonus = (amount * REFEREE_BPS) / 10000;
+        
+        // Credit bonuses
+        referrerData.earnings += referrerBonus;
+        referrerData.totalReferred += amount;
+        referrerData.hasReferred[buyer] = true;
+        
+        // Mint bonus tokens
+        vfideToken.safeTransfer(referrer, referrerBonus);
+        vfideToken.safeTransfer(buyer, refereeBonus);
+        
+        emit ReferralBonus(referrer, referrerBonus, true);
+        emit ReferralBonus(buyer, refereeBonus, false);
+    }
+    
+    /**
+     * @notice Claim purchased tokens after lock period
+     */
+    function claim(Tier tier) external nonReentrant {
+        Purchase storage purchase = purchases[msg.sender][tier];
+        
+        if (purchase.amount == 0) revert NothingToClaim();
+        if (block.timestamp < purchase.lockedUntil) revert StillLocked();
+        if (!finalized) revert NotFinalized();
+        
+        uint256 claimable = purchase.amount - purchase.claimed;
+        if (claimable == 0) revert NothingToClaim();
+        
+        purchase.claimed += claimable;
+        vfideToken.safeTransfer(msg.sender, claimable);
+        
+        emit ClaimExecuted(msg.sender, claimable);
+    }
+    
+    /**
+     * @notice Activate a tier for sale
+     */
+    function activateTier(Tier tier, uint256 duration) external onlyOwner {
+        TierInfo storage tierInfo = tiers[tier];
+        tierInfo.active = true;
+        tierInfo.startTime = block.timestamp;
+        tierInfo.endTime = block.timestamp + duration;
+        
+        emit TierActivated(tier, tierInfo.startTime, tierInfo.endTime);
+    }
+    
+    /**
+     * @notice Finalize presale
+     */
+    function finalizePresale() external onlyOwner {
+        if (finalized) revert AlreadyFinalized();
+        finalized = true;
+        
+        uint256 totalSold = tiers[Tier.FOUNDING].sold + 
+                           tiers[Tier.OATH].sold + 
+                           tiers[Tier.PUBLIC].sold;
+        
+        emit PresaleFinalized(totalRaised, totalSold);
+    }
+    
+    /**
+     * @notice Add approved stablecoin
+     */
+    function addStablecoin(address stablecoin) external onlyOwner validAddress(stablecoin) {
+        approvedStablecoins[stablecoin] = true;
+    }
+    
+    /**
+     * @notice Emergency pause
+     */
+    function pause() external onlyOwner {
+        _pause();
+    }
+    
+    /**
+     * @notice Unpause
+     */
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+}
+
+/*
+╔══════════════════════════════════════════════════════════════════════╗
+║                     VFIDE STAKING CONTRACT                           ║
+║                    Surgically Refined Edition v2.0                   ║
+╚══════════════════════════════════════════════════════════════════════╝
+*/
+
+/**
+ * @title VFIDEStaking
+ * @notice Advanced staking with dynamic rewards and trust integration
+ * @dev Surgically optimized with precision accounting
+ */
+contract VFIDEStaking is Ownable2Step, Pausable, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+    
+    // Custom errors
+    error InsufficientStake();
+    error NoRewards();
+    error StakeLocked();
+    error InvalidAmount();
+    error RewardDurationTooShort();
+    error RewardsNotFunded();
+    error PenaltyTooHigh();
+    error InvalidAddress();
+    
+    // Constants
+    uint256 private constant PRECISION = 1e18;
+    uint256 private constant MIN_STAKE = 100 * 1e18;
+    uint256 private constant MAX_PENALTY_BPS = 5000;
+    uint256 private constant MIN_REWARD_DURATION = 1 hours;
+    uint256 private constant COMPOUND_FREQUENCY = 1 days;
+    
+    // Structs
+    struct StakeInfo {
+        uint256 amount;
+        uint256 rewardDebt;
+        uint256 pendingRewards;
+        uint256 stakedAt;
+        uint256 lastCompound;
+        uint256 lockEndTime;
+        uint256 boostMultiplier;
+    }
+    
+    struct RewardPool {
+        uint256 totalRewards;
+        uint256 rewardRate;
+        uint256 lastUpdateTime;
+        uint256 rewardPerTokenStored;
+        uint256 periodFinish;
+        uint256 duration;
+    }
+    
+    // State variables
+    IERC20 public immutable vfideToken;
+    IProofScore public proofScore;
+    ISanctumFund public sanctumFund;
+    
+    RewardPool public rewardPool;
+    mapping(address => StakeInfo) public stakes;
+    
+    uint256 public totalStaked;
+    uint256 public penaltyBps = 1000; // 10% default
+    uint256 public compoundBonus = 100; // 1% bonus for compounding
+    
+    // Events
+    event Staked(address indexed user, uint256 amount, uint256 lockDuration);
+    event Unstaked(address indexed user, uint256 amount, uint256 penalty);
+    event RewardsClaimed(address indexed user, uint256 amount);
+    event RewardsCompounded(address indexed user, uint256 amount);
+    event RewardsFunded(uint256 amount, uint256 duration);
+    event PenaltyUpdated(uint256 newPenalty);
+    
+    modifier updateReward(address account) {
+        rewardPool.rewardPerTokenStored = rewardPerToken();
+        rewardPool.lastUpdateTime = lastTimeRewardApplicable();
+        
+        if (account != address(0)) {
+            stakes[account].pendingRewards = earned(account);
+            stakes[account].rewardDebt = rewardPool.rewardPerTokenStored;
+        }
+        _;
+    }
+    
+    constructor(address _vfideToken) {
+        vfideToken = IERC20(_vfideToken);
+    }
+    
+    /**
+     * @notice Stake tokens with optional lock period
+     * @param amount Amount to stake
+     * @param lockDuration Lock duration in seconds (0 for no lock)
+     */
+    function stake(uint256 amount, uint256 lockDuration) 
+        external 
+        nonReentrant 
+        whenNotPaused 
+        updateReward(msg.sender) 
+    {
+        if (amount < MIN_STAKE) revert InvalidAmount();
+        
+        StakeInfo storage userStake = stakes[msg.sender];
+        
+        // Transfer tokens
+        vfideToken.safeTransferFrom(msg.sender, address(this), amount);
+        
+        // Update stake info
+        userStake.amount += amount;
+        userStake.stakedAt = block.timestamp;
+        userStake.lastCompound = block.timestamp;
+        
+        // Apply lock if specified
+        if (lockDuration > 0) {
+            uint256 newLockEnd = block.timestamp + lockDuration;
+            if (newLockEnd > userStake.lockEndTime) {
+                userStake.lockEndTime = newLockEnd;
+                // Apply boost multiplier based on lock duration
+                userStake.boostMultiplier = _calculateBoostMultiplier(lockDuration);
+            }
+        }
+        
+        totalStaked += amount;
+        
+        // Update proof score
+        if (address(proofScore) != address(0)) {
+            proofScore.updateScore(msg.sender, amount / 1e18, true);
+        }
+        
+        emit Staked(msg.sender, amount, lockDuration);
+    }
+    
+    /**
+     * @notice Unstake tokens
+     * @param amount Amount to unstake
+     */
+    function unstake(uint256 amount) 
+        external 
+        nonReentrant 
+        updateReward(msg.sender) 
+    {
+        StakeInfo storage userStake = stakes[msg.sender];
+        
+        if (amount > userStake.amount) revert InsufficientStake();
+        if (block.timestamp < userStake.lockEndTime) revert StakeLocked();
+        
+        uint256 penalty = 0;
+        
+        // Apply early unstake penalty if applicable
+        if (block.timestamp < userStake.stakedAt + 30 days) {
+            penalty = (amount * penaltyBps) / 10000;
+            if (penalty > 0 && address(sanctumFund) != address(0)) {
+                vfideToken.safeTransfer(address(sanctumFund), penalty);
+            }
+        }
+        
+        uint256 amountAfterPenalty = amount - penalty;
+        
+        // Update stake info
+        userStake.amount -= amount;
+        totalStaked -= amount;
+        
+        // Transfer tokens
+        vfideToken.safeTransfer(msg.sender, amountAfterPenalty);
+        
+        // Update proof score
+        if (address(proofScore) != address(0)) {
+            proofScore.updateScore(msg.sender, amount / 1e18, false);
+        }
+        
+        emit Unstaked(msg.sender, amount, penalty);
+    }
+    
+    /**
+     * @notice Claim accumulated rewards
+     */
+    function claimRewards() 
+        external 
+        nonReentrant 
+        updateReward(msg.sender) 
+    {
+        uint256 reward = stakes[msg.sender].pendingRewards;
+        if (reward == 0) revert NoRewards();
+        
+        stakes[msg.sender].pendingRewards = 0;
+        vfideToken.safeTransfer(msg.sender, reward);
+        
+        emit RewardsClaimed(msg.sender, reward);
+    }
+    
+    /**
+     * @notice Compound rewards into stake
+     */
+    function compound() 
+        external 
+        nonReentrant 
+        updateReward(msg.sender) 
+    {
+        StakeInfo storage userStake = stakes[msg.sender];
+        uint256 reward = userStake.pendingRewards;
+        
+        if (reward == 0) revert NoRewards();
+        
+        // Apply compound bonus
+        uint256 bonus = (reward * compoundBonus) / 10000;
+        uint256 totalCompound = reward + bonus;
+        
+        // Update stake
+        userStake.amount += totalCompound;
+        userStake.pendingRewards = 0;
+        userStake.lastCompound = block.timestamp;
+        totalStaked += totalCompound;
+        
+        emit RewardsCompounded(msg.sender, totalCompound);
+    }
+    
+    /**
+     * @notice Calculate boost multiplier based on lock duration
+     */
+    function _calculateBoostMultiplier(uint256 lockDuration) private pure returns (uint256) {
+        if (lockDuration >= 365 days) return 200; // 2x boost
+        if (lockDuration >= 180 days) return 150; // 1.5x boost
+        if (lockDuration >= 90 days) return 125;  // 1.25x boost
+        if (lockDuration >= 30 days) return 110;  // 1.1x boost
+        return 100; // No boost
+    }
+    
+    /**
+     * @notice Get last time rewards are applicable
+     */
+    function lastTimeRewardApplicable() public view returns (uint256) {
+        return block.timestamp < rewardPool.periodFinish ? block.timestamp : rewardPool.periodFinish;
+    }
+    
+    /**
+     * @notice Calculate reward per token
+     */
+    function rewardPerToken() public view returns (uint256) {
+        if (totalStaked == 0) {
+            return rewardPool.rewardPerTokenStored;
+        }
+        
+        return rewardPool.rewardPerTokenStored + (
+            (lastTimeRewardApplicable() - rewardPool.lastUpdateTime) * 
+            rewardPool.rewardRate * 
+            PRECISION / 
+            totalStaked
+        );
+    }
+    
+    /**
+     * @notice Calculate earned rewards for an account
+     */
+    function earned(address account) public view returns (uint256) {
+        StakeInfo memory userStake = stakes[account];
+        
+        uint256 baseReward = (
+            userStake.amount * 
+            (rewardPerToken() - userStake.rewardDebt)
+        ) / PRECISION + userStake.pendingRewards;
+        
+        // Apply boost multiplier
+        return (baseReward * userStake.boostMultiplier) / 100;
+    }
+    
+    /**
+     * @notice Fund rewards pool
+     * @param rewardAmount Total reward amount
+     * @param rewardDuration Duration in seconds
+     */
+    function fundRewards(uint256 rewardAmount, uint256 rewardDuration) 
+        external 
+        onlyOwner 
+        updateReward(address(0)) 
+    {
+        if (rewardDuration < MIN_REWARD_DURATION) revert RewardDurationTooShort();
+        
+        vfideToken.safeTransferFrom(msg.sender, address(this), rewardAmount);
+        
+        if (block.timestamp >= rewardPool.periodFinish) {
+            rewardPool.rewardRate = rewardAmount / rewardDuration;
+        } else {
+            uint256 remaining = rewardPool.periodFinish - block.timestamp;
+            uint256 leftover = remaining * rewardPool.rewardRate;
+            rewardPool.rewardRate = (rewardAmount + leftover) / rewardDuration;
+        }
+        
+        rewardPool.totalRewards += rewardAmount;
+        rewardPool.duration = rewardDuration;
+        rewardPool.lastUpdateTime = block.timestamp;
+        rewardPool.periodFinish = block.timestamp + rewardDuration;
+        
+        emit RewardsFunded(rewardAmount, rewardDuration);
+    }
+    
+    /**
+     * @notice Update penalty percentage
+     */
+    function setPenalty(uint256 _penaltyBps) external onlyOwner {
+        if (_penaltyBps > MAX_PENALTY_BPS) revert PenaltyTooHigh();
+        penaltyBps = _penaltyBps;
+        emit PenaltyUpdated(_penaltyBps);
+    }
+    
+    /**
+     * @notice Set external contracts
+     */
+    function setContracts(address _proofScore, address _sanctumFund) external onlyOwner {
+        proofScore = IProofScore(_proofScore);
+        sanctumFund = ISanctumFund(_sanctumFund);
+    }
+}
+
+/*
+╔══════════════════════════════════════════════════════════════════════╗
+║                    VFIDE SANCTUM FUND CONTRACT                       ║
+║                    Surgically Refined Edition v2.0                   ║
+╚══════════════════════════════════════════════════════════════════════╝
+*/
+
+/**
+ * @title SanctumFund
+ * @notice Treasury and fee collection with advanced distribution mechanics
+ * @dev Surgically optimized for transparency and efficiency
+ */
+contract SanctumFund is Ownable2Step, Pausable, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+    
+    // Custom errors
+    error InsufficientBalance();
+    error InvalidAddress();
+    error InvalidAmount();
+    error UnauthorizedCaller();
+    error AllocationExceeded();
+    
+    // Constants
+    uint256 private constant MAX_ALLOCATION_BPS = 10000;
+    uint256 private constant EMERGENCY_WITHDRAWAL_DELAY = 3 days;
+    
+    // Structs
+    struct Allocation {
+        address recipient;
+        uint256 bps;
+        string description;
+        bool active;
+        uint256 totalReceived;
+    }
+    
+    struct EmergencyWithdrawal {
+        address recipient;
+        uint256 amount;
+        uint256 requestTime;
+        bool executed;
+        string reason;
+    }
+    
+    // State variables
+    IERC20 public immutable vfideToken;
+    
+    Allocation[] public allocations;
+    mapping(address => bool) public isProtocolModule;
+    mapping(address => uint256) public moduleDeposits;
+    
+    uint256 public totalFees;
+    uint256 public totalPenalties;
+    uint256 public totalDonations;
+    uint256 public totalDistributed;
+    
+    uint256 public emergencyWithdrawalNonce;
+    mapping(uint256 => EmergencyWithdrawal) public emergencyWithdrawals;
+    
+    // Events
+    event FeeDeposited(address indexed from, uint256 amount);
+    event PenaltyDeposited(address indexed from, uint256 amount, string reason);
+    event Donation(address indexed from, uint256 amount);
+    event Distribution(address indexed to, uint256 amount, string reason);
+    event AllocationUpdated(uint256 indexed index, address recipient, uint256 bps);
+    event EmergencyWithdrawalRequested(uint256 indexed nonce, address recipient, uint256 amount);
+    event EmergencyWithdrawalExecuted(uint256 indexed nonce);
+    
+    modifier onlyProtocolModule() {
+        if (!isProtocolModule[msg.sender]) revert UnauthorizedCaller();
+        _;
+    }
+    
+    constructor(address _vfideToken) {
+        vfideToken = IERC20(_vfideToken);
+    }
+    
+    /**
+     * @notice Deposit fees from protocol module
+     */
+    function depositFee(uint256 amount) external onlyProtocolModule {
+        totalFees += amount;
+        moduleDeposits[msg.sender] += amount;
+        emit FeeDeposited(msg.sender, amount);
+    }
+    
+    /**
+     * @notice Deposit penalty from protocol module
+     */
+    function depositPenalty(uint256 amount, string calldata reason) external onlyProtocolModule {
+        totalPenalties += amount;
+        moduleDeposits[msg.sender] += amount;
+        emit PenaltyDeposited(msg.sender, amount, reason);
+    }
+    
+    /**
+     * @notice Accept donations
+     */
+    function donate(uint256 amount) external nonReentrant {
+        vfideToken.safeTransferFrom(msg.sender, address(this), amount);
+        totalDonations += amount;
+        emit Donation(msg.sender, amount);
+    }
+    
+    /**
+     * @notice Distribute funds according to allocations
+     */
+    function distribute() external nonReentrant {
+        uint256 balance = vfideToken.balanceOf(address(this));
+        if (balance == 0) revert InsufficientBalance();
+        
+        uint256 distributed = 0;
+        
+        for (uint256 i = 0; i < allocations.length; i++) {
+            Allocation storage alloc = allocations[i];
+            
+            if (!alloc.active) continue;
+            
+            uint256 amount = (balance * alloc.bps) / MAX_ALLOCATION_BPS;
+            if (amount > 0) {
+                vfideToken.safeTransfer(alloc.recipient, amount);
+                alloc.totalReceived += amount;
+                distributed += amount;
+                
+                emit Distribution(alloc.recipient, amount, alloc.description);
+            }
+        }
+        
+        totalDistributed += distributed;
+    }
+    
+    /**
+     * @notice Add or update allocation
+     */
+    function setAllocation(
+        uint256 index,
+        address recipient,
+        uint256 bps,
+        string calldata description,
+        bool active
+    ) external onlyOwner validAddress(recipient) {
+        if (bps > MAX_ALLOCATION_BPS) revert AllocationExceeded();
+        
+        if (index >= allocations.length) {
+            allocations.push(Allocation({
+                recipient: recipient,
+                bps: bps,
+                description: description,
+                active: active,
+                totalReceived: 0
+            }));
+        } else {
+            Allocation storage alloc = allocations[index];
+            alloc.recipient = recipient;
+            alloc.bps = bps;
+            alloc.description = description;
+            alloc.active = active;
+        }
+        
+        emit AllocationUpdated(index, recipient, bps);
+    }
+    
+    /**
+     * @notice Request emergency withdrawal (time-locked)
+     */
+    function requestEmergencyWithdrawal(
+        address recipient,
+        uint256 amount,
+        string calldata reason
+    ) external onlyOwner validAddress(recipient) {
+        uint256 nonce = emergencyWithdrawalNonce++;
+        
+        emergencyWithdrawals[nonce] = EmergencyWithdrawal({
+            recipient: recipient,
+            amount: amount,
+            requestTime: block.timestamp,
+            executed: false,
+            reason: reason
+        });
+        
+        emit EmergencyWithdrawalRequested(nonce, recipient, amount);
+    }
+    
+    /**
+     * @notice Execute emergency withdrawal after timelock
+     */
+    function executeEmergencyWithdrawal(uint256 nonce) external onlyOwner {
+        EmergencyWithdrawal storage withdrawal = emergencyWithdrawals[nonce];
+        
+        if (withdrawal.executed) revert("Already executed");
+        if (block.timestamp < withdrawal.requestTime + EMERGENCY_WITHDRAWAL_DELAY) {
+            revert("Timelock not met");
+        }
+        
+        withdrawal.executed = true;
+        vfideToken.safeTransfer(withdrawal.recipient, withdrawal.amount);
+        
+        emit EmergencyWithdrawalExecuted(nonce);
+    }
+    
+    /**
+     * @notice Set protocol module authorization
+     */
+    function setProtocolModule(address module, bool authorized) external onlyOwner validAddress(module) {
+        isProtocolModule[module] = authorized;
+    }
+    
+    /**
+     * @notice Get total allocations BPS
+     */
+    function getTotalAllocationBps() external view returns (uint256) {
+        uint256 total = 0;
+        for (uint256 i = 0; i < allocations.length; i++) {
+            if (allocations[i].active) {
+                total += allocations[i].bps;
+            }
+        }
+        return total;
+    }
+}
