@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/UserVault.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> UserVault.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/28</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/56</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/9</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/35</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+&nbsp;
+/**
+ * @title UserVault
+ * @notice Per-user custody. Wallet = identity; Vault = funds. Only vault↔vault moves.
+ * - Owner can approve system contracts (staking/router/market) to pull from the vault.
+ * - Sends only to other registered vaults via factory registry.
+ * - Logs to ProofLedger (best-effort).
+ */
+interface IProofLedgerUV {
+    enum EventType {
+        Unknown,
+        VaultDeposit,
+        VaultWithdraw,
+        NextOfKinTransfer,
+        ChainOfReturn,
+        ProofPenalty,
+        ProofBonus
+    }
+    function logEvent(address user, EventType etype, bytes32 ctx) external;
+}
+&nbsp;
+interface IVaultFactoryUV {
+    function vaultOf(address user) external view returns (address);
+    function isVault(address v) external view returns (bool);
+}
+&nbsp;
+contract UserVault is Ownable2Step, ReentrancyGuard {
+    /* ---------------- Storage ---------------- */
+    IERC20 public vfide;
+    IProofLedgerUV public proof;
+    address public guardianLock;    // optional
+    address public factory;         // immutable after init
+&nbsp;
+    bool private _inited;
+    bool private _tokenLocked;
+&nbsp;
+    /* ---------------- Events ----------------- */
+    event Initialized(address owner, address proof, address guardianLock);
+    event TokenSet(address token);
+    event Pulled(address indexed fromOwner, uint256 amount);
+    event SentToVault(address indexed toVault, uint256 amount);
+    event Approved(address indexed spender, uint256 amount);
+&nbsp;
+    /* ---------------- Errors ----------------- */
+    error AlreadyInitialized();
+    error ZeroAddress();
+    error NotRegisteredVault(address to);
+&nbsp;
+    /* ---------------- Modifiers -------------- */
+<span class="fstat-no" title="function not covered" >    modifier tokenSet() {</span>
+<span class="cstat-no" title="statement not covered" >        require(address(vfide) != address(0), "VFIDE token not set")</span>;
+        _;
+    }
+&nbsp;
+    /* --------------- Initialization ---------- */
+<span class="fstat-no" title="function not covered" >    function initialize(address owner_, address proofLedger_, address guardianLock_) external {</span>
+<span class="cstat-no" title="statement not covered" >        if (_inited) revert AlreadyInitialized();</span>
+<span class="cstat-no" title="statement not covered" >        if (owner_ == address(0) || proofLedger_ == address(0)) revert ZeroAddress();</span>
+<span class="cstat-no" title="statement not covered" >        _transferOwnership(owner_)</span>;
+        proof = IProofLedgerUV(proofLedger_);
+        guardianLock = guardianLock_;
+        factory = msg.sender; // factory is msg.sender at clone time
+        _inited = true;
+<span class="cstat-no" title="statement not covered" >        emit Initialized(owner_, proofLedger_, guardianLock_);</span>
+    }
+&nbsp;
+    /* --------------- Configuration ----------- */
+    /// @notice Set the VFIDE token address once; permanently locks to prevent accidental changes.
+<span class="fstat-no" title="function not covered" >    function setToken(address vfide_) external onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        if (_tokenLocked) <span class="cstat-no" title="statement not covered" >revert("token locked")</span>;</span>
+<span class="cstat-no" title="statement not covered" >        if (vfide_ == address(0)) revert ZeroAddress();</span>
+        vfide = IERC20(vfide_);
+        _tokenLocked = true;
+<span class="cstat-no" title="statement not covered" >        emit TokenSet(vfide_);</span>
+    }
+&nbsp;
+    /* --------------- User flows -------------- */
+&nbsp;
+    /// @notice Pull VFIDE from owner EOA into the vault (requires EOA approval to this vault).
+<span class="fstat-no" title="function not covered" >    function pullFromOwner(uint256 amount) external nonReentrant onlyOwner tokenSet {</span>
+<span class="cstat-no" title="statement not covered" >        require(vfide.transferFrom(owner(), address(this), amount), "pull fail")</span>;
+<span class="cstat-no" title="statement not covered" >        _log(IProofLedgerUV.EventType.VaultDeposit, keccak256(abi.encode(amount)))</span>;
+<span class="cstat-no" title="statement not covered" >        emit Pulled(owner(), amount);</span>
+    }
+&nbsp;
+    /// @notice Send VFIDE to another registered vault (never to an EOA).
+<span class="fstat-no" title="function not covered" >    function sendToVault(address toUser, uint256 amount) external nonReentrant onlyOwner tokenSet {</span>
+<span class="cstat-no" title="statement not covered" >        address toVault = IVaultFactoryUV(factory).vaultOf(toUser);</span>
+<span class="cstat-no" title="statement not covered" >        if (toVault == address(0) || !IVaultFactoryUV(factory).isVault(toVault)) {</span>
+            revert NotRegisteredVault(toVault);
+        }
+<span class="cstat-no" title="statement not covered" >        require(vfide.transfer(toVault, amount), "xfer fail")</span>;
+<span class="cstat-no" title="statement not covered" >        _log(IProofLedgerUV.EventType.VaultWithdraw, keccak256(abi.encode(amount, toVault)))</span>;
+<span class="cstat-no" title="statement not covered" >        emit SentToVault(toVault, amount);</span>
+    }
+&nbsp;
+    /// @notice Approve a system contract (staking/router/market) to pull VFIDE from this vault.
+    /// Uses safe-approve pattern to avoid allowance race issues.
+<span class="fstat-no" title="function not covered" >    function approveSpender(address spender, uint256 amount) external onlyOwner tokenSet {</span>
+<span class="cstat-no" title="statement not covered" >        uint256 curr = vfide.allowance(address(this), spender);</span>
+<span class="cstat-no" title="statement not covered" >        if (curr != 0 &amp;&amp; amount != 0) {</span>
+<span class="cstat-no" title="statement not covered" >            require(vfide.approve(spender, 0), "approve reset fail")</span>;
+        }
+<span class="cstat-no" title="statement not covered" >        require(vfide.approve(spender, amount), "approve fail")</span>;
+<span class="cstat-no" title="statement not covered" >        emit Approved(spender, amount);</span>
+    }
+&nbsp;
+    /* --------------- Rescue (owner-only ops) -------------- */
+&nbsp;
+    /// @notice Rescue arbitrary ERC20 tokens mistakenly sent here (including non-VFIDE).
+    /// For VFIDE, the token's own vault-only policy still applies (EOA rescues will fail).
+<span class="fstat-no" title="function not covered" >    function rescueERC20(address token_, address to, uint256 amount) external onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        if (to == address(0)) revert ZeroAddress();</span>
+<span class="cstat-no" title="statement not covered" >        require(IERC20(token_).transfer(to, amount), "rescue fail")</span>;
+    }
+&nbsp;
+    /// @notice Accept ETH (if ever sent).
+    receive() external payable {}
+&nbsp;
+    /// @notice Rescue ETH sent here by mistake.
+<span class="fstat-no" title="function not covered" >    function rescueETH(address payable to, uint256 amount) external onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        if (to == address(0)) revert ZeroAddress();</span>
+<span class="cstat-no" title="statement not covered" >        (bool ok, ) = to.call{value: amount}("");</span>
+<span class="cstat-no" title="statement not covered" >        require(ok, "eth rescue fail")</span>;
+    }
+&nbsp;
+    /* --------------- Internals --------------- */
+<span class="fstat-no" title="function not covered" >    function _log(IProofLedgerUV.EventType et, bytes32 ctx) internal {</span>
+        // best-effort logging; swallow failures
+<span class="cstat-no" title="statement not covered" >        try proof.logEvent(owner(), et, ctx) {} catch {}</span>
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

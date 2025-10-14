@@ -1,0 +1,1403 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/MerchantRegistry.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> MerchantRegistry.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.68% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>2/119</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0.68% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>1/146</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">3.03% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/33</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.4% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>2/143</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+&nbsp;
+/* ─────────────── Minimal interfaces aligned with VFIDE ─────────────── */
+interface IVaultFactoryView {
+    function isVault(address v) external view returns (bool);
+    function ownerOfVault(address vault) external view returns (address);
+    function ensureVault(address user) external returns (address); // create if missing
+    function vaultOf(address user) external view returns (address);
+}
+&nbsp;
+interface ISeerView {
+    function score(address user) external view returns (uint16); // 0..1000
+    function isBlocked(address user) external view returns (bool);
+}
+&nbsp;
+interface IProofLedger {
+    function logEvent(address user, uint8 etype, bytes32 ctx) external;
+}
+&nbsp;
+/**
+ * @title MerchantRegistry
+ * @notice Governance-managed registry + enforcement for VFIDE merchants.
+ *         - Merchants apply; governance approves.
+ *         - Enforcement ON by default: Seer risk gates + auto suspension/revocation.
+ *         - Exposes `canAcceptPayment(merchant, buyer)` for portals/routers to check pre-payment.
+ *         - Vault-first payout model: stores merchant payout vault (synced via Factory).
+ */
+contract MerchantRegistry is Ownable2Step, ReentrancyGuard {
+    using EnumerableSet for EnumerableSet.AddressSet;
+&nbsp;
+    /* ───────────────────────────── State ───────────────────────────── */
+&nbsp;
+    // Wiring
+    IVaultFactoryView public factory;
+    ISeerView        public seer;
+    IProofLedger     public proof;   // optional (0 = disabled)
+    address          public dao;     // DAO executor (post-handover)
+&nbsp;
+    // Core types
+    enum Status { None, Pending, Active, Suspended, Revoked }
+&nbsp;
+    struct Merchant {
+        address controller;      // merchant controller EOA (vault owner)
+        address payoutVault;     // cached/synced vault for payouts
+        Status  status;          // lifecycle status
+        uint64  appliedAt;       // when they applied
+        uint64  approvedAt;      // when activated
+        uint64  lastCheckpoint;  // last enforcement check
+        string  name;            // display name (short)
+        bytes32 metaHash;        // off-chain metadata hash (e.g., IPFS/JSON)
+    }
+&nbsp;
+    // Storage
+    mapping(address =&gt; Merchant) private _m; // controller =&gt; Merchant
+    EnumerableSet.AddressSet private _active;   // active merchant controllers
+    EnumerableSet.AddressSet private _all;      // all merchants ever created
+&nbsp;
+    // Enforcement defaults (ON)
+    bool   public enforcementEnabled   = true;
+    bool   public blockIfBlocked       = true;    // block if Seer says blocked
+    bool   public enforceBuyerMin      = true;    // require buyer score &gt;= minBuyerScore
+    bool   public enforceMerchantMin   = true;    // require merchant score &gt;= minMerchantScore
+    uint16 public minBuyerScore        = 300;
+    uint16 public minMerchantScore     = 650;     // higher bar to become/operate as merchant
+    uint16 public maintainMerchantScore= 600;     // falling below → suspend; sustained low → revoke
+&nbsp;
+    // Exemptions: system users (by controller EOA) that skip buyer/merchant checks
+    mapping(address =&gt; bool) public systemExemptUser;   // e.g., routers, custodians
+&nbsp;
+    // Allow/Deny lists for merchants (by controller EOA)
+    mapping(address =&gt; bool) public allowMerchant; // forces allow regardless of score (still blocks if Revoked)
+    mapping(address =&gt; bool) public denyMerchant;  // hard block even if Active
+&nbsp;
+    // Deny list for buyers (by controller EOA)
+    mapping(address =&gt; bool) public denyBuyer;
+&nbsp;
+    /* ───────────────────────────── Events ─────────────────────────── */
+&nbsp;
+    event DAOUpdated(address indexed dao);
+    event FactorySet(address indexed factory);
+    event SeerSet(address indexed seer);
+    event ProofSinkSet(address indexed proof);
+&nbsp;
+    event EnforcementToggled(bool enabled);
+    event EnforcementParamsUpdated(
+        bool blockIfBlocked,
+        bool enforceBuyerMin,
+        bool enforceMerchantMin,
+        uint16 minBuyerScore,
+        uint16 minMerchantScore,
+        uint16 maintainMerchantScore
+    );
+&nbsp;
+    event SystemExemptSet(address indexed user, bool exempt);
+    event AllowMerchantSet(address indexed merchant, bool allowed);
+    event DenyMerchantSet(address indexed merchant, bool denied);
+    event DenyBuyerSet(address indexed buyer, bool denied);
+&nbsp;
+    event MerchantApplied(address indexed controller, string name, bytes32 metaHash);
+    event MerchantApproved(address indexed controller, address payoutVault);
+    event MerchantSuspended(address indexed controller, uint16 score);
+    event MerchantReactivated(address indexed controller, uint16 score);
+    event MerchantRevoked(address indexed controller, uint16 score);
+    event MerchantUpdated(address indexed controller, string name, bytes32 metaHash);
+    event MerchantVaultSynced(address indexed controller, address payoutVault);
+&nbsp;
+    /* ───────────────────────────── Errors ─────────────────────────── */
+&nbsp;
+    error ZeroAddress();
+    error NotGov();
+    error AlreadyExists();
+    error NotFound();
+    error BadStatus();
+    error FactoryUnset();
+    error SeerUnset();
+&nbsp;
+    /* ───────────────────────────── Modifiers ─────────────────────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    modifier onlyGov() {</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != owner() &amp;&amp; msg.sender != dao) revert NotGov();</span>
+        _;
+    }
+&nbsp;
+    /* ───────────────────────────── Constructor ───────────────────── */
+&nbsp;
+    constructor(address initialOwner) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (initialOwner == address(0)) revert ZeroAddress();
+        _transferOwnership(initialOwner);
+    }
+&nbsp;
+    /* ───────────────────────── Governance wiring ─────────────────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setDAO(address dao_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (dao_ == address(0)) revert ZeroAddress();</span>
+        dao = dao_;
+<span class="cstat-no" title="statement not covered" >        emit DAOUpdated(dao_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setFactory(address factory_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (factory_ == address(0)) revert ZeroAddress();</span>
+        factory = IVaultFactoryView(factory_);
+<span class="cstat-no" title="statement not covered" >        emit FactorySet(factory_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setSeer(address seer_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (seer_ == address(0)) revert ZeroAddress();</span>
+        seer = ISeerView(seer_);
+<span class="cstat-no" title="statement not covered" >        emit SeerSet(seer_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setProofSink(address proof_) external onlyGov {</span>
+        proof = IProofLedger(proof_); // 0 allowed (disable)
+<span class="cstat-no" title="statement not covered" >        emit ProofSinkSet(proof_);</span>
+    }
+&nbsp;
+    /* ───────────────────── Enforcement controls (ON) ─────────────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function toggleEnforcement(bool enabled) external onlyGov {</span>
+        enforcementEnabled = enabled;
+<span class="cstat-no" title="statement not covered" >        emit EnforcementToggled(enabled);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setEnforcementParams(</span>
+        bool blockIfBlocked_,
+        bool enforceBuyerMin_,
+        bool enforceMerchantMin_,
+        uint16 minBuyerScore_,
+        uint16 minMerchantScore_,
+        uint16 maintainMerchantScore_
+    ) external onlyGov {
+<span class="cstat-no" title="statement not covered" >        require(minBuyerScore_ &lt;= 1000 &amp;&amp; minMerchantScore_ &lt;= 1000 &amp;&amp; maintainMerchantScore_ &lt;= 1000, "score&gt;max")</span>;
+        blockIfBlocked        = blockIfBlocked_;
+        enforceBuyerMin       = enforceBuyerMin_;
+        enforceMerchantMin    = enforceMerchantMin_;
+        minBuyerScore         = minBuyerScore_;
+        minMerchantScore      = minMerchantScore_;
+        maintainMerchantScore = maintainMerchantScore_;
+<span class="cstat-no" title="statement not covered" >        emit EnforcementParamsUpdated(</span>
+            blockIfBlocked, enforceBuyerMin, enforceMerchantMin,
+            minBuyerScore, minMerchantScore, maintainMerchantScore
+        );
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setSystemExemptUser(address user, bool exempt) external onlyGov {</span>
+        systemExemptUser[user] = exempt;
+<span class="cstat-no" title="statement not covered" >        emit SystemExemptSet(user, exempt);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setAllowMerchant(address controller, bool allowed) external onlyGov {</span>
+        allowMerchant[controller] = allowed;
+<span class="cstat-no" title="statement not covered" >        emit AllowMerchantSet(controller, allowed);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setDenyMerchant(address controller, bool denied) external onlyGov {</span>
+        denyMerchant[controller] = denied;
+<span class="cstat-no" title="statement not covered" >        emit DenyMerchantSet(controller, denied);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setDenyBuyer(address buyer, bool denied) external onlyGov {</span>
+        denyBuyer[buyer] = denied;
+<span class="cstat-no" title="statement not covered" >        emit DenyBuyerSet(buyer, denied);</span>
+    }
+&nbsp;
+    /* ───────────────────────── Registry lifecycle ────────────────── */
+&nbsp;
+    /// @notice Merchant applies. Creates or updates a Pending record.
+<span class="fstat-no" title="function not covered" >    function merchantApply(string calldata name, bytes32 metaHash) external nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        address controller = msg.sender;</span>
+<span class="cstat-no" title="statement not covered" >        Merchant storage mm = _m[controller];</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (mm.status == Status.None) {</span>
+            // New applicant
+            mm.controller    = controller;
+            mm.status        = Status.Pending;
+            mm.appliedAt     = uint64(block.timestamp);
+            mm.name          = name;
+            mm.metaHash      = metaHash;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            _all.add(controller)</span>;
+<span class="cstat-no" title="statement not covered" >            emit MerchantApplied(controller, name, metaHash);</span>
+<span class="cstat-no" title="statement not covered" >            _log(controller, 10 /*etype: MerchantApplied*/, keccak256(abi.encode(controller, name, metaHash)))</span>;
+        } else {
+            // Update application metadata if not yet Active/Revoked
+<span class="cstat-no" title="statement not covered" >            require(mm.status == Status.Pending || mm.status == Status.Suspended, "bad status")</span>;
+            mm.name     = name;
+            mm.metaHash = metaHash;
+<span class="cstat-no" title="statement not covered" >            emit MerchantUpdated(controller, name, metaHash);</span>
+        }
+    }
+&nbsp;
+    /// @notice Governance approves a merchant. Syncs payout vault.
+<span class="fstat-no" title="function not covered" >    function approve(address controller) external onlyGov nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(factory) == address(0)) revert FactoryUnset();</span>
+<span class="cstat-no" title="statement not covered" >        if (address(seer) == address(0)) revert SeerUnset();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        Merchant storage mm = _mustExist(controller);</span>
+<span class="cstat-no" title="statement not covered" >        if (mm.status != Status.Pending &amp;&amp; mm.status != Status.Suspended) revert BadStatus();</span>
+&nbsp;
+        // Enforce merchant score threshold and not blocked
+<span class="cstat-no" title="statement not covered" >        uint16 s = seer.score(controller);</span>
+<span class="cstat-no" title="statement not covered" >        if (enforcementEnabled) {</span>
+<span class="cstat-no" title="statement not covered" >            if (blockIfBlocked) <span class="cstat-no" title="statement not covered" >require(!seer.isBlocked(controller), "blocked")</span>;</span>
+<span class="cstat-no" title="statement not covered" >            if (enforceMerchantMin) <span class="cstat-no" title="statement not covered" >require(s &gt;= minMerchantScore, "score&lt;merchantMin")</span>;</span>
+        }
+&nbsp;
+        // Ensure/sync payout vault
+<span class="cstat-no" title="statement not covered" >        address pv = _syncVault(controller);</span>
+        mm.status       = Status.Active;
+        mm.approvedAt   = uint64(block.timestamp);
+        mm.lastCheckpoint = uint64(block.timestamp);
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        _active.add(controller)</span>;
+<span class="cstat-no" title="statement not covered" >        emit MerchantApproved(controller, pv);</span>
+<span class="cstat-no" title="statement not covered" >        _log(controller, 11 /*etype: MerchantApproved*/, keccak256(abi.encode(controller, s, pv)))</span>;
+    }
+&nbsp;
+    /// @notice Governance can suspend an active merchant (reversible).
+<span class="fstat-no" title="function not covered" >    function suspend(address controller, string calldata reason) external onlyGov nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        Merchant storage mm = _mustExist(controller);</span>
+<span class="cstat-no" title="statement not covered" >        require(mm.status == Status.Active, "not active")</span>;
+        mm.status = Status.Suspended;
+<span class="cstat-no" title="statement not covered" >        _active.remove(controller)</span>;
+<span class="cstat-no" title="statement not covered" >        emit MerchantSuspended(controller, _safeScore(controller));</span>
+<span class="cstat-no" title="statement not covered" >        _log(controller, 12 /*etype: MerchantSuspended*/, keccak256(abi.encode(controller, reason)))</span>;
+    }
+&nbsp;
+    /// @notice Governance can revoke (final) – merchant must re-apply to return.
+<span class="fstat-no" title="function not covered" >    function revoke(address controller, string calldata reason) external onlyGov nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        Merchant storage mm = _mustExist(controller);</span>
+<span class="cstat-no" title="statement not covered" >        require(mm.status == Status.Active || mm.status == Status.Suspended || mm.status == Status.Pending, "bad status")</span>;
+        mm.status = Status.Revoked;
+<span class="cstat-no" title="statement not covered" >        _active.remove(controller)</span>;
+<span class="cstat-no" title="statement not covered" >        emit MerchantRevoked(controller, _safeScore(controller));</span>
+<span class="cstat-no" title="statement not covered" >        _log(controller, 13 /*etype: MerchantRevoked*/, keccak256(abi.encode(controller, reason)))</span>;
+    }
+&nbsp;
+    /// @notice Merchant may rotate metadata; governance can re-validate anytime.
+<span class="fstat-no" title="function not covered" >    function updateInfo(string calldata name, bytes32 metaHash) external nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        Merchant storage mm = _mustExist(msg.sender);</span>
+<span class="cstat-no" title="statement not covered" >        require(mm.status == Status.Active || mm.status == Status.Suspended, "bad status")</span>;
+        mm.name     = name;
+        mm.metaHash = metaHash;
+<span class="cstat-no" title="statement not covered" >        emit MerchantUpdated(msg.sender, name, metaHash);</span>
+    }
+&nbsp;
+    /// @notice Sync/ensure payout vault (idempotent).
+<span class="fstat-no" title="function not covered" >    function syncPayoutVault(address controller) external nonReentrant onlyGov returns (address) {</span>
+<span class="cstat-no" title="statement not covered" >        address pv = _syncVault(controller);</span>
+<span class="cstat-no" title="statement not covered" >        emit MerchantVaultSynced(controller, pv);</span>
+<span class="cstat-no" title="statement not covered" >        return pv;</span>
+    }
+&nbsp;
+    /* ───────────────────────── Enforcement ops ───────────────────── */
+&nbsp;
+    /// @notice Check and update a single merchant’s state based on Seer score.
+<span class="fstat-no" title="function not covered" >    function checkpoint(address controller) public {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(seer) == address(0)) revert SeerUnset();</span>
+<span class="cstat-no" title="statement not covered" >        Merchant storage mm = _mustExist(controller);</span>
+<span class="cstat-no" title="statement not covered" >        uint16 s = seer.score(controller);</span>
+        mm.lastCheckpoint = uint64(block.timestamp);
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (!enforcementEnabled) <span class="cstat-no" title="statement not covered" >return;</span></span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (mm.status == Status.Active) {</span>
+<span class="cstat-no" title="statement not covered" >            if (blockIfBlocked &amp;&amp; seer.isBlocked(controller)) {</span>
+                mm.status = Status.Suspended;
+<span class="cstat-no" title="statement not covered" >                _active.remove(controller)</span>;
+<span class="cstat-no" title="statement not covered" >                emit MerchantSuspended(controller, s);</span>
+<span class="cstat-no" title="statement not covered" >                _log(controller, 14 /*etype: MerchantAutoSuspended*/, keccak256(abi.encode(controller, s, "blocked")))</span>;
+<span class="cstat-no" title="statement not covered" >                return;</span>
+            }
+<span class="cstat-no" title="statement not covered" >            if (s &lt; maintainMerchantScore) {</span>
+                mm.status = Status.Suspended;
+<span class="cstat-no" title="statement not covered" >                _active.remove(controller)</span>;
+<span class="cstat-no" title="statement not covered" >                emit MerchantSuspended(controller, s);</span>
+<span class="cstat-no" title="statement not covered" >                _log(controller, 14 /*etype: MerchantAutoSuspended*/, keccak256(abi.encode(controller, s, "maint")))</span>;
+            }
+        } else <span class="cstat-no" title="statement not covered" >if (mm.status == Status.Suspended) {</span>
+            // If merchant recovers above minMerchantScore, governance may reactivate via approve()
+<span class="cstat-no" title="statement not covered" >            if (blockIfBlocked &amp;&amp; seer.isBlocked(controller)) {</span>
+                // optional: escalate to revoke if desired (commented):
+                // mm.status = Status.Revoked;
+                // _log(controller, 15 /*etype: MerchantAutoRevoked*/, keccak256(abi.encode(controller, s, "blocked-escalate")));
+            }
+        }
+    }
+&nbsp;
+    /// @notice Batch checkpoint for a list of merchants.
+<span class="fstat-no" title="function not covered" >    function checkpointMany(address[] calldata controllers) external {</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; controllers.length; i++) <span class="cstat-no" title="statement not covered" >checkpoint(controllers[i])</span>;</span>
+    }
+&nbsp;
+    /* ───────────────────── Payment-time enforcement ───────────────── */
+&nbsp;
+    /**
+     * @notice View guard for portals/routers to check whether a payment is allowed.
+     * @param merchantController merchant controller EOA
+     * @param buyerController    buyer controller EOA
+     * @return ok true if allowed, reason a short string reason if not
+     */
+<span class="fstat-no" title="function not covered" >    function canAcceptPayment(address merchantController, address buyerController)</span>
+        external
+        view
+        returns (bool ok, string memory reason)
+    {
+<span class="cstat-no" title="statement not covered" >        Merchant storage mm = _m[merchantController];</span>
+<span class="cstat-no" title="statement not covered" >        if (mm.status == Status.None)         <span class="cstat-no" title="statement not covered" >return (false, "merchant:none");</span></span>
+<span class="cstat-no" title="statement not covered" >        if (mm.status == Status.Pending)      <span class="cstat-no" title="statement not covered" >return (false, "merchant:pending");</span></span>
+<span class="cstat-no" title="statement not covered" >        if (mm.status == Status.Revoked)      <span class="cstat-no" title="statement not covered" >return (false, "merchant:revoked");</span></span>
+<span class="cstat-no" title="statement not covered" >        if (denyMerchant[merchantController]) <span class="cstat-no" title="statement not covered" >return (false, "merchant:denied");</span></span>
+<span class="cstat-no" title="statement not covered" >        if (denyBuyer[buyerController])       <span class="cstat-no" title="statement not covered" >return (false, "buyer:denied");</span></span>
+&nbsp;
+        // Suspended merchants are blocked unless explicitly allow-listed
+<span class="cstat-no" title="statement not covered" >        if (mm.status == Status.Suspended &amp;&amp; !allowMerchant[merchantController]) {</span>
+<span class="cstat-no" title="statement not covered" >            return (false, "merchant:suspended");</span>
+        }
+&nbsp;
+        // Exemptions skip score checks
+<span class="cstat-no" title="statement not covered" >        if (systemExemptUser[merchantController] || systemExemptUser[buyerController]) {</span>
+<span class="cstat-no" title="statement not covered" >            return (true, "");</span>
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (!enforcementEnabled) <span class="cstat-no" title="statement not covered" >return (true, "");</span></span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (address(seer) == address(0)) <span class="cstat-no" title="statement not covered" >return (false, "seer:unset");</span></span>
+&nbsp;
+        // Block "blocked" parties if enabled
+<span class="cstat-no" title="statement not covered" >        if (blockIfBlocked) {</span>
+<span class="cstat-no" title="statement not covered" >            if (seer.isBlocked(merchantController)) <span class="cstat-no" title="statement not covered" >return (false, "merchant:blocked");</span></span>
+<span class="cstat-no" title="statement not covered" >            if (seer.isBlocked(buyerController))    <span class="cstat-no" title="statement not covered" >return (false, "buyer:blocked");</span></span>
+        }
+&nbsp;
+        // Score minimums
+<span class="cstat-no" title="statement not covered" >        if (enforceMerchantMin) {</span>
+<span class="cstat-no" title="statement not covered" >            uint16 sm = seer.score(merchantController);</span>
+<span class="cstat-no" title="statement not covered" >            if (sm &lt; minMerchantScore) <span class="cstat-no" title="statement not covered" >return (false, "merchant:score");</span></span>
+        }
+<span class="cstat-no" title="statement not covered" >        if (enforceBuyerMin) {</span>
+<span class="cstat-no" title="statement not covered" >            uint16 sb = seer.score(buyerController);</span>
+<span class="cstat-no" title="statement not covered" >            if (sb &lt; minBuyerScore) <span class="cstat-no" title="statement not covered" >return (false, "buyer:score");</span></span>
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return (true, "");</span>
+    }
+&nbsp;
+    /* ─────────────────────────── Views / Lists ───────────────────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function merchantOf(address controller) external view returns (Merchant memory) { <span class="cstat-no" title="statement not covered" >return _m[controller];</span> }</span>
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function isMerchant(address controller) external view returns (bool) {</span>
+<span class="cstat-no" title="statement not covered" >        return _m[controller].status == Status.Active;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function merchantCount() external view returns (uint256) { <span class="cstat-no" title="statement not covered" >return _all.length();</span> }</span>
+<span class="fstat-no" title="function not covered" >    function activeCount() external view returns (uint256) { <span class="cstat-no" title="statement not covered" >return _active.length();</span> }</span>
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function merchantAt(uint256 index) external view returns (address controller, Merchant memory m) {</span>
+        controller = _all.at(index);
+        m = _m[controller];
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function activeAt(uint256 index) external view returns (address controller, Merchant memory m) {</span>
+        controller = _active.at(index);
+        m = _m[controller];
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function getAllMerchants() external view returns (address[] memory list) {</span>
+        list = _all.values();
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function getActiveMerchants() external view returns (address[] memory list) {</span>
+        list = _active.values();
+    }
+&nbsp;
+    /* ─────────────────────────── Internals ──────────────────────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _mustExist(address controller) internal view returns (Merchant storage mm) {</span>
+        mm = _m[controller];
+<span class="cstat-no" title="statement not covered" >        if (mm.status == Status.None) revert NotFound();</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _syncVault(address controller) internal returns (address pv) {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(factory) == address(0)) revert FactoryUnset();</span>
+<span class="cstat-no" title="statement not covered" >        Merchant storage mm = _mustExist(controller);</span>
+        pv = factory.vaultOf(controller);
+<span class="cstat-no" title="statement not covered" >        if (pv == address(0)) {</span>
+            pv = factory.ensureVault(controller);
+        }
+<span class="cstat-no" title="statement not covered" >        require(factory.isVault(pv), "not vault")</span>;
+        mm.payoutVault = pv;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _safeScore(address user) internal view returns (uint16) {</span>
+<span class="cstat-no" title="statement not covered" >        return address(seer) == address(0) ? 0 : seer.score(user);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _log(address user, uint8 etype, bytes32 ctx) internal {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(proof) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            try proof.logEvent(user, etype, ctx) {} catch {}</span>
+        }
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

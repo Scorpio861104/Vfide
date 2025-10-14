@@ -1,0 +1,139 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IMerchantRegistry",
+  "sourceName": "contracts/MerchantPortal.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "activeCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "merchantController",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "buyerController",
+          "type": "address"
+        }
+      ],
+      "name": "canAcceptPayment",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "ok",
+          "type": "bool"
+        },
+        {
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getActiveMerchants",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "controller",
+          "type": "address"
+        }
+      ],
+      "name": "isMerchant",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "controller",
+          "type": "address"
+        }
+      ],
+      "name": "merchantOf",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "controller_",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "payoutVault_",
+          "type": "address"
+        },
+        {
+          "internalType": "enum IMerchantRegistry.Status",
+          "name": "status_",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint64",
+          "name": "appliedAt_",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "approvedAt_",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "lastCheckpoint_",
+          "type": "uint64"
+        },
+        {
+          "internalType": "string",
+          "name": "name_",
+          "type": "string"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "metaHash_",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

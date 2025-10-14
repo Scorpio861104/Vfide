@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/ReviewRegistry.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> ReviewRegistry.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">5% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>2/40</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.92% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>1/52</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">6.67% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/15</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/36</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+&nbsp;
+/* Minimal interfaces */
+interface ISeerView { function score(address user) external view returns (uint16); }
+interface IProofLedger { function logEvent(address user, uint8 etype, bytes32 ctx) external; }
+interface IEscrow {
+    enum State { None, Initiated, Shipped, Delivered, Disputed, Released, Refunded }
+    function orders(uint256 id) external view returns (
+        address buyer, address merchant, uint256 amount,
+        IEscrow.State state, uint64 tInitiated, uint64 tShipped, uint64 tDelivered, uint64 tDisputed, string memory meta
+    );
+}
+&nbsp;
+/**
+ * @title ReviewRegistry
+ * @notice Purchase-verified, score-weighted merchant reviews.
+ */
+contract ReviewRegistry is Ownable2Step, ReentrancyGuard {
+    ISeerView public seer;
+    IProofLedger public proof;
+    IEscrow public escrow;
+    address public dao;
+&nbsp;
+    uint64 public editGraceSecs = 2 days;
+    bool   public allowEdits = true;
+&nbsp;
+    struct Review {
+        address buyer;
+        address merchant;
+        uint8   stars;        // 1..5
+        int16   weightBp;     // weight in basis points (e.g., 1000 = 1.0x)
+        string  text;         // short text (off-chain pointers recommended)
+        uint64  createdAt;
+        uint64  editedAt;
+        bool    hidden;       // DAO moderation
+    }
+    // orderId -&gt; review
+    mapping(uint256 =&gt; Review) public reviewOfOrder;
+&nbsp;
+    // aggregate per merchant
+    struct Aggregate {
+        uint256 sumWeighted; // sum(stars * weightBp)
+        uint256 sumWeight;   // sum(weightBp)
+    }
+    mapping(address =&gt; Aggregate) public aggOf;
+&nbsp;
+    event DAOUpdated(address dao);
+    event SeerSet(address seer);
+    event ProofSinkSet(address proof);
+    event EscrowSet(address escrow);
+    event SettingsUpdated(uint64 editGraceSecs, bool allowEdits);
+&nbsp;
+    event Reviewed(uint256 indexed orderId, address indexed buyer, address indexed merchant, uint8 stars, int16 weightBp);
+    event ReviewEdited(uint256 indexed orderId, uint8 newStars);
+    event ReviewHidden(uint256 indexed orderId, bool hidden);
+&nbsp;
+    error ZeroAddress();
+    error NotGov();
+    error NotBuyer();
+    error BadStars();
+    error NotCompleted();
+    error AlreadyReviewed();
+    error EditWindowClosed();
+&nbsp;
+<span class="fstat-no" title="function not covered" >    modifier onlyGov() { <span class="cstat-no" title="statement not covered" >if (msg.sender != owner() &amp;&amp; msg.sender != dao) revert NotGov();</span> _; }</span>
+&nbsp;
+    constructor(address initialOwner) { <span class="missing-if-branch" title="if path not taken" >I</span>if (initialOwner==address(0)) revert ZeroAddress(); _transferOwnership(initialOwner); }
+&nbsp;
+    /* wiring */
+<span class="fstat-no" title="function not covered" >    function setDAO(address d) external onlyGov { <span class="cstat-no" title="statement not covered" >if (d==address(0)) revert ZeroAddress();</span> dao=d; <span class="cstat-no" title="statement not covered" >emit DAOUpdated(d);</span> }</span>
+<span class="fstat-no" title="function not covered" >    function setSeer(address s) external onlyGov { <span class="cstat-no" title="statement not covered" >if (s==address(0)) revert ZeroAddress();</span> seer=ISeerView(s); <span class="cstat-no" title="statement not covered" >emit SeerSet(s);</span> }</span>
+<span class="fstat-no" title="function not covered" >    function setProofSink(address p) external onlyGov { proof = IProofLedger(p); <span class="cstat-no" title="statement not covered" >emit ProofSinkSet(p);</span> }</span>
+<span class="fstat-no" title="function not covered" >    function setEscrow(address e) external onlyGov { <span class="cstat-no" title="statement not covered" >if (e==address(0)) revert ZeroAddress();</span> escrow=IEscrow(e); <span class="cstat-no" title="statement not covered" >emit EscrowSet(e);</span> }</span>
+<span class="fstat-no" title="function not covered" >    function setSettings(uint64 grace, bool edits) external onlyGov { editGraceSecs=grace; allowEdits=edits; <span class="cstat-no" title="statement not covered" >emit SettingsUpdated(grace, edits);</span> }</span>
+&nbsp;
+    /* core */
+<span class="fstat-no" title="function not covered" >    function leaveReview(uint256 orderId, uint8 stars, string calldata text) external nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        if (stars&lt;1 || stars&gt;5) revert BadStars();</span>
+<span class="cstat-no" title="statement not covered" >        (address buyer, address merchant,, IEscrow.State st,,,,,)= escrow.orders(orderId);</span>
+<span class="cstat-no" title="statement not covered" >        if (buyer != msg.sender) revert NotBuyer();</span>
+        // only completed orders (Released or Refunded) can be reviewed
+<span class="cstat-no" title="statement not covered" >        if (!(st == IEscrow.State.Released || st == IEscrow.State.Refunded)) revert NotCompleted();</span>
+<span class="cstat-no" title="statement not covered" >        if (reviewOfOrder[orderId].buyer != address(0)) revert AlreadyReviewed();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        int16 w = _weightFor(buyer);</span> // e.g., 500..1500 bp
+        reviewOfOrder[orderId] = Review({
+            buyer: buyer, merchant: merchant, stars: stars, weightBp: w,
+            text: text, createdAt: uint64(block.timestamp), editedAt: 0, hidden: false
+        });
+<span class="cstat-no" title="statement not covered" >        _addAggregate(merchant, stars, w)</span>;
+<span class="cstat-no" title="statement not covered" >        emit Reviewed(orderId, buyer, merchant, stars, w);</span>
+<span class="cstat-no" title="statement not covered" >        _log(buyer, 40 /*ReviewCreated*/, keccak256(abi.encode(orderId, stars)))</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function editReview(uint256 orderId, uint8 newStars, string calldata newText) external nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        if (!allowEdits) revert EditWindowClosed();</span>
+<span class="cstat-no" title="statement not covered" >        if (newStars&lt;1 || newStars&gt;5) revert BadStars();</span>
+<span class="cstat-no" title="statement not covered" >        Review storage r = reviewOfOrder[orderId];</span>
+<span class="cstat-no" title="statement not covered" >        if (r.buyer != msg.sender) revert NotBuyer();</span>
+<span class="cstat-no" title="statement not covered" >        require(block.timestamp &lt;= r.createdAt + editGraceSecs, "grace over")</span>;
+        // adjust aggregate
+<span class="cstat-no" title="statement not covered" >        _subAggregate(r.merchant, r.stars, r.weightBp)</span>;
+        r.stars = newStars;
+        r.text  = newText;
+        r.editedAt = uint64(block.timestamp);
+<span class="cstat-no" title="statement not covered" >        _addAggregate(r.merchant, r.stars, r.weightBp)</span>;
+<span class="cstat-no" title="statement not covered" >        emit ReviewEdited(orderId, newStars);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function hideReview(uint256 orderId, bool hidden) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        Review storage r = reviewOfOrder[orderId];</span>
+        r.hidden = hidden;
+<span class="cstat-no" title="statement not covered" >        emit ReviewHidden(orderId, hidden);</span>
+    }
+&nbsp;
+    /* views */
+<span class="fstat-no" title="function not covered" >    function weightedRating(address merchant) external view returns (uint256 numerator, uint256 denominator, uint256 scaledStars1e2) {</span>
+<span class="cstat-no" title="statement not covered" >        Aggregate memory a = aggOf[merchant];</span>
+        numerator = a.sumWeighted; denominator = a.sumWeight;
+        scaledStars1e2 = (denominator==0) ? 0 : (numerator * 100) / denominator; // “stars * 100”
+    }
+&nbsp;
+    /* internals */
+<span class="fstat-no" title="function not covered" >    function _weightFor(address buyer) internal view returns (int16) {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(seer) == address(0)) <span class="cstat-no" title="statement not covered" >return 1000;</span></span> // 1.0x if unset
+<span class="cstat-no" title="statement not covered" >        uint16 s = seer.score(buyer);</span> // 0..1000
+        // map 0..1000 → 500..1500 (0.5x..1.5x)
+<span class="cstat-no" title="statement not covered" >    int256 w = 500 + (int256(uint256(s)) * 1000) / 1000;</span>
+<span class="cstat-no" title="statement not covered" >        return int16(uint16(uint256(w)));</span> // safe range
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _addAggregate(address m, uint8 stars, int16 wBp) internal {</span>
+<span class="cstat-no" title="statement not covered" >        Aggregate storage a = aggOf[m];</span>
+        a.sumWeighted += uint256(stars) * uint256(uint16(wBp));
+        a.sumWeight   += uint256(uint16(wBp));
+    }
+<span class="fstat-no" title="function not covered" >    function _subAggregate(address m, uint8 stars, int16 wBp) internal {</span>
+<span class="cstat-no" title="statement not covered" >        Aggregate storage a = aggOf[m];</span>
+        a.sumWeighted -= uint256(stars) * uint256(uint16(wBp));
+        a.sumWeight   -= uint256(uint16(wBp));
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _log(address user, uint8 et, bytes32 ctx) internal { <span class="cstat-no" title="statement not covered" >if (address(proof)!=address(0)) { <span class="cstat-no" title="statement not covered" >try proof.logEvent(user, et, ctx) {} catch {}</span> }</span> }</span>
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/VaultFactory.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> VaultFactory.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/23</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/24</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/9</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/34</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+&nbsp;
+/**
+ * @title VaultFactory
+ * @notice Authoritative registry + creator for per-user vaults (EIP-1167 clones).
+ * - One vault per user.
+ * - Anyone can call ensureVault(user) to auto-create if missing.
+ * - Tracks on-chain registry `isVault[vault] = true` for token-level enforcement.
+ */
+interface IUserVault {
+    function initialize(address owner_, address proofLedger_, address guardianLock_) external;
+}
+&nbsp;
+contract VaultFactory is Ownable2Step {
+    /* ---------------- Settings ---------------- */
+    address public vaultImplementation;  // UserVault logic address
+    address public proofLedger;          // ProofLedger reference (events/scores)
+    address public guardianLock;         // optional (0 to disable)
+&nbsp;
+    /* ---------------- Registry ---------------- */
+    mapping(address =&gt; address) public vaultOf; // user =&gt; vault
+    mapping(address =&gt; bool)    public isVault; // vault =&gt; true
+    address[] public allVaults;
+&nbsp;
+    /* ---------------- Events ------------------ */
+    event ImplementationSet(address impl);
+    event ProofLedgerSet(address proof);
+    event GuardianLockSet(address guardian);
+    event VaultCreated(address indexed user, address indexed vault);
+&nbsp;
+    /* ---------------- Errors ------------------ */
+    error ZeroAddress();
+    error ImplementationUnset();
+&nbsp;
+<span class="fstat-no" title="function not covered" >    constructor(address vaultImpl_, address proofLedger_, address guardianLock_) {</span>
+<span class="cstat-no" title="statement not covered" >        if (vaultImpl_ == address(0) || proofLedger_ == address(0)) revert ZeroAddress();</span>
+        // SAFETY: ensure the implementation is actually a contract
+<span class="cstat-no" title="statement not covered" >        uint256 size;</span>
+        assembly { size := extcodesize(vaultImpl_) }
+<span class="cstat-no" title="statement not covered" >        require(size &gt; 0, "impl !contract")</span>;
+&nbsp;
+        vaultImplementation = vaultImpl_;
+        proofLedger = proofLedger_;
+        guardianLock = guardianLock_;
+<span class="cstat-no" title="statement not covered" >        emit ImplementationSet(vaultImpl_);</span>
+<span class="cstat-no" title="statement not covered" >        emit ProofLedgerSet(proofLedger_);</span>
+<span class="cstat-no" title="statement not covered" >        emit GuardianLockSet(guardianLock_);</span>
+    }
+&nbsp;
+    /* --------------- Admin -------------------- */
+<span class="fstat-no" title="function not covered" >    function setImplementation(address impl) external onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        if (impl == address(0)) revert ZeroAddress();</span>
+        // SAFETY: ensure the implementation is actually a contract
+<span class="cstat-no" title="statement not covered" >        uint256 size;</span>
+        assembly { size := extcodesize(impl) }
+<span class="cstat-no" title="statement not covered" >        require(size &gt; 0, "impl !contract")</span>;
+&nbsp;
+        vaultImplementation = impl;
+<span class="cstat-no" title="statement not covered" >        emit ImplementationSet(impl);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setProofLedger(address proof) external onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        if (proof == address(0)) revert ZeroAddress();</span>
+        proofLedger = proof;
+<span class="cstat-no" title="statement not covered" >        emit ProofLedgerSet(proof);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setGuardianLock(address guardian) external onlyOwner {</span>
+        guardianLock = guardian; // 0 allowed
+<span class="cstat-no" title="statement not covered" >        emit GuardianLockSet(guardian);</span>
+    }
+&nbsp;
+    /* --------------- Create / Ensure ---------- */
+<span class="fstat-no" title="function not covered" >    function createMyVault() external returns (address) {</span>
+<span class="cstat-no" title="statement not covered" >        return _ensureVault(msg.sender);</span>
+    }
+&nbsp;
+    /// @notice Ensure `user` has a vault; creates if missing. Callable by anyone.
+<span class="fstat-no" title="function not covered" >    function ensureVault(address user) external returns (address) {</span>
+<span class="cstat-no" title="statement not covered" >        return _ensureVault(user);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _ensureVault(address user) internal returns (address v) {</span>
+<span class="cstat-no" title="statement not covered" >        if (vaultImplementation == address(0)) revert ImplementationUnset();</span>
+        v = vaultOf[user];
+<span class="cstat-no" title="statement not covered" >        if (v != address(0)) <span class="cstat-no" title="statement not covered" >return v;</span></span>
+&nbsp;
+        v = _clone(vaultImplementation);
+<span class="cstat-no" title="statement not covered" >        IUserVault(v).initialize(user, proofLedger, guardianLock)</span>;
+        vaultOf[user] = v;
+        isVault[v] = true;
+<span class="cstat-no" title="statement not covered" >        allVaults.push(v)</span>;
+<span class="cstat-no" title="statement not covered" >        emit VaultCreated(user, v);</span>
+    }
+&nbsp;
+    /* --------------- Views -------------------- */
+<span class="fstat-no" title="function not covered" >    function totalVaults() external view returns (uint256) { <span class="cstat-no" title="statement not covered" >return allVaults.length;</span> }</span>
+&nbsp;
+    /* --------------- EIP-1167 ----------------- */
+<span class="fstat-no" title="function not covered" >    function _clone(address impl) internal returns (address instance) {</span>
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, 0x3d602d80600a3d3981f3)
+            mstore(add(ptr, 0x14), shl(0x60, impl))
+            mstore(add(ptr, 0x28), 0x5af43d82803e903d91602b57fd5bf3)
+            instance := create(0, ptr, 0x37)
+        }
+<span class="cstat-no" title="statement not covered" >        require(instance != address(0), "clone failed")</span>;
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

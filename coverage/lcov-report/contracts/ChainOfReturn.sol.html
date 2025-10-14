@@ -1,0 +1,1346 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/ChainOfReturn.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> ChainOfReturn.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.72% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>2/116</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0.75% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>1/134</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">4.76% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/21</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.43% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>2/140</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+&nbsp;
+/* ---------------- Interfaces ---------------- */
+&nbsp;
+interface IEmergencyBreaker {
+    function isSystemPaused() external view returns (bool);
+    function isModulePaused(uint8 module) external view returns (bool);
+}
+interface IProofLedger {
+    function logEvent(address who, uint8 etype, bytes32 ctx) external;
+}
+interface ISeerView {
+    function score(address user) external view returns (uint16);
+    function isBlocked(address user) external view returns (bool);
+}
+interface ISeerTuning {
+    function setFlag(address user, uint8 code, bool on) external;
+}
+interface IPanicGuard {
+    function setQuarantine(address user, uint64 untilTs) external;
+}
+interface IVaultFactoryView {
+    function vaultOf(address user) external view returns (address);
+    function isVault(address v) external view returns (bool);
+}
+&nbsp;
+/* Most VFIDE vaults will expose one of these; we support both paths. */
+interface IUserVaultRecoverTo { function recoverTo(address newWallet) external; }
+interface IUserVaultOwnable   {
+    function owner() external view returns (address);
+    function transferOwnership(address newOwner) external;
+}
+&nbsp;
+/* ───────────────────────────── ChainOfReturn (Vault Recovery) ─────────────────────────────
+   Adds **per-vault overrides** with **DAO bounds** while keeping the original flow:
+   - Guardians (M-of-N), Seer gates, cooldown, approval expiry, breaker/guard/proof logging.
+   - Recovery rotates the wallet that controls a vault (no fund clawback).
+-------------------------------------------------------------------------------------------------------- */
+contract ChainOfReturn is Ownable2Step, ReentrancyGuard {
+    /* ---------------- Wiring ---------------- */
+    IEmergencyBreaker public breaker;      // optional
+    IProofLedger      public proof;        // optional
+    ISeerView         public seer;         // required
+    ISeerTuning       public seerTune;     // optional
+    IPanicGuard       public guard;        // optional
+    IVaultFactoryView public factory;      // optional sanity checks
+&nbsp;
+    /* ---------------- Global policy (defaults) ---------------- */
+    uint8   public constant MAX_GUARDIANS = 5;
+    uint16  public minGuardianScore = 600;       // default ProofScore floor for guardians
+    uint64  public approvalExpiry   = 14 days;   // approvals must execute before this
+    uint64  public cooldownSecs     = 48 hours;  // wait after reaching threshold
+    uint8   public breakerModuleId  = 9;         // Guardians module
+&nbsp;
+    bool    public enableQuarantine = true;
+    uint64  public quarantineSecs   = 24 hours;
+&nbsp;
+    /* ---------------- DAO bounds for per-vault overrides ----------------
+       Vault-specific values must lie within these inclusive bounds.
+       Owner (DAO) can tune these; set min==max to “lock” a parameter globally. */
+    struct Bounds {
+        // guardian score: 0..1000
+        uint16 minGuardianScoreMin;  // e.g. 600
+        uint16 minGuardianScoreMax;  // e.g. 900
+        // seconds
+        uint64 approvalExpiryMin;    // e.g. 3 days
+        uint64 approvalExpiryMax;    // e.g. 60 days
+        uint64 cooldownSecsMin;      // e.g. 12 hours
+        uint64 cooldownSecsMax;      // e.g. 7 days
+    }
+    Bounds public bounds = Bounds({
+        minGuardianScoreMin: 600,
+        minGuardianScoreMax: 900,
+        approvalExpiryMin:   3 days,
+        approvalExpiryMax:   60 days,
+        cooldownSecsMin:     12 hours,
+        cooldownSecsMax:     7 days
+    });
+&nbsp;
+    /* ---------------- Per-vault overrides ---------------- */
+    struct VaultPolicy {
+        bool   hasOverride;        // if false → use globals
+        uint16 minGuardianScore;   // 0..1000
+        uint64 approvalExpiry;     // seconds
+        uint64 cooldownSecs;       // seconds
+    }
+    // vault =&gt; policy
+    mapping(address =&gt; VaultPolicy) public vaultPolicy;
+&nbsp;
+    /* ---------------- Guardians &amp; Recovery ---------------- */
+    struct GuardianSet {
+        address[] guardians;
+        uint8     threshold;     // M out of N
+        bool      set;
+    }
+    mapping(address =&gt; GuardianSet) public config;
+&nbsp;
+    enum ReqState { None, Active, Executable, Executed, Canceled }
+&nbsp;
+    struct RecoveryRequest {
+        address vault;
+        address newWallet;
+        address proposer;
+        uint64  createdAt;
+        uint64  thresholdAt;   // when M-of-N reached (starts cooldown)
+        ReqState state;
+        uint8   approvals;
+        mapping(address =&gt; bool) approved;
+    }
+    mapping(bytes32 =&gt; RecoveryRequest) private _reqs;
+    mapping(address =&gt; bytes32) public latestRequestOf;
+&nbsp;
+    /* ---------------- Events ---------------- */
+    event WiringSet(address breaker, address proof, address seer, address seerTune, address guard, address factory);
+    event PolicySet(uint16 minGuardianScore, uint64 approvalExpiry, uint64 cooldownSecs, bool enableQuarantine, uint64 quarantineSecs, uint8 breakerModuleId);
+    event BoundsSet(uint16 gMin, uint16 gMax, uint64 expMin, uint64 expMax, uint64 cdMin, uint64 cdMax);
+&nbsp;
+    event VaultPolicySet(address indexed vault, uint16 minGuardianScore, uint64 approvalExpiry, uint64 cooldownSecs, bool cleared);
+    event GuardiansConfigured(address indexed vault, address[] guardians, uint8 threshold);
+    event RecoveryProposed(bytes32 indexed id, address indexed vault, address indexed newWallet, address proposer);
+    event RecoveryApproved(bytes32 indexed id, address indexed guardian, uint8 approvals, uint8 threshold);
+    event ThresholdReached(bytes32 indexed id, uint64 at, uint64 executableAt);
+    event RecoveryExecuted(bytes32 indexed id, address indexed vault, address indexed newWallet);
+    event RecoveryCanceled(bytes32 indexed id, address indexed by, string reason);
+&nbsp;
+    /* ---------------- Errors ---------------- */
+    error Paused();
+    error NotVault();
+    error NotOwner();
+    error BadParams();
+    error AlreadyExists();
+    error NotConfigured();
+    error NotActive();
+    error NotGuardian();
+    error DuplicateApproval();
+    error NotExecutable();
+    error Expired();
+    error ZeroAddress();
+&nbsp;
+    /* ---------------- Modifiers ---------------- */
+<span class="fstat-no" title="function not covered" >    modifier breakerGuard() {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(breaker) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            if (breaker.isSystemPaused() || breaker.isModulePaused(breakerModuleId)) revert Paused();</span>
+        }
+        _;
+    }
+&nbsp;
+    constructor(address initialOwner) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (initialOwner == address(0)) revert ZeroAddress();
+        _transferOwnership(initialOwner);
+    }
+&nbsp;
+    /* ---------------- Wiring ---------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setWiring(</span>
+        address breaker_,
+        address proof_,
+        address seer_,
+        address seerTune_,
+        address guard_,
+        address factory_
+    ) external onlyOwner {
+        breaker = IEmergencyBreaker(breaker_);
+        proof   = IProofLedger(proof_);
+        seer    = ISeerView(seer_);
+        seerTune= ISeerTuning(seerTune_);
+        guard   = IPanicGuard(guard_);
+        factory = IVaultFactoryView(factory_);
+<span class="cstat-no" title="statement not covered" >        emit WiringSet(breaker_, proof_, seer_, seerTune_, guard_, factory_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setPolicy(</span>
+        uint16 minGuardianScore_,
+        uint64 approvalExpiry_,
+        uint64 cooldownSecs_,
+        bool   enableQuarantine_,
+        uint64 quarantineSecs_,
+        uint8  breakerModuleId_
+    ) external onlyOwner {
+<span class="cstat-no" title="statement not covered" >        require(minGuardianScore_ &lt;= 1000, "score&gt;1000")</span>;
+<span class="cstat-no" title="statement not covered" >        require(approvalExpiry_ &gt;= 1 days &amp;&amp; cooldownSecs_ &gt;= 1 hours, "short")</span>;
+        minGuardianScore = minGuardianScore_;
+        approvalExpiry   = approvalExpiry_;
+        cooldownSecs     = cooldownSecs_;
+        enableQuarantine = enableQuarantine_;
+        quarantineSecs   = quarantineSecs_;
+        breakerModuleId  = breakerModuleId_;
+<span class="cstat-no" title="statement not covered" >        emit PolicySet(minGuardianScore, approvalExpiry, cooldownSecs, enableQuarantine, quarantineSecs, breakerModuleId_);</span>
+<span class="cstat-no" title="statement not covered" >        _log(180 /*GlobalPolicy*/, keccak256(abi.encode(minGuardianScore, approvalExpiry, cooldownSecs)))</span>;
+    }
+&nbsp;
+    /// @notice DAO sets bounds for per-vault overrides.
+<span class="fstat-no" title="function not covered" >    function setBounds(</span>
+        uint16 gMin, uint16 gMax,
+        uint64 expMin, uint64 expMax,
+        uint64 cdMin, uint64 cdMax
+    ) external onlyOwner {
+<span class="cstat-no" title="statement not covered" >        require(gMin &lt;= gMax &amp;&amp; gMax &lt;= 1000, "g-bounds")</span>;
+<span class="cstat-no" title="statement not covered" >        require(expMin &gt;= 1 days &amp;&amp; expMin &lt;= expMax, "exp-bounds")</span>;
+<span class="cstat-no" title="statement not covered" >        require(cdMin  &gt;= 1 hours &amp;&amp; cdMin &lt;= cdMax, "cd-bounds")</span>;
+        bounds = Bounds(gMin, gMax, expMin, expMax, cdMin, cdMax);
+<span class="cstat-no" title="statement not covered" >        emit BoundsSet(gMin, gMax, expMin, expMax, cdMin, cdMax);</span>
+<span class="cstat-no" title="statement not covered" >        _log(181 /*BoundsSet*/, keccak256(abi.encode(gMin,gMax,expMin,expMax,cdMin,cdMax)))</span>;
+    }
+&nbsp;
+    /* ---------------- Per-vault overrides ---------------- */
+&nbsp;
+    /// @notice Vault owner can set (or clear) custom recovery parameters within DAO bounds.
+<span class="fstat-no" title="function not covered" >    function setVaultPolicy(</span>
+        address vault,
+        bool    clear,
+        uint16  minGuardianScore_,
+        uint64  approvalExpiry_,
+        uint64  cooldownSecs_
+    ) external breakerGuard nonReentrant {
+<span class="cstat-no" title="statement not covered" >        _requireVault(vault)</span>;
+<span class="cstat-no" title="statement not covered" >        address owner_ = _vaultOwner(vault);</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != owner_) revert NotOwner();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (clear) {</span>
+            delete vaultPolicy[vault];
+<span class="cstat-no" title="statement not covered" >            emit VaultPolicySet(vault, 0, 0, 0, true);</span>
+<span class="cstat-no" title="statement not covered" >            _log(182 /*VaultPolicyCleared*/, keccak256(abi.encode(vault)))</span>;
+<span class="cstat-no" title="statement not covered" >            return;</span>
+        }
+&nbsp;
+        // enforce bounds
+<span class="cstat-no" title="statement not covered" >        require(minGuardianScore_ &gt;= bounds.minGuardianScoreMin &amp;&amp; minGuardianScore_ &lt;= bounds.minGuardianScoreMax, "g out of bounds")</span>;
+<span class="cstat-no" title="statement not covered" >        require(approvalExpiry_   &gt;= bounds.approvalExpiryMin   &amp;&amp; approvalExpiry_   &lt;= bounds.approvalExpiryMax,   "exp out of bounds")</span>;
+<span class="cstat-no" title="statement not covered" >        require(cooldownSecs_     &gt;= bounds.cooldownSecsMin     &amp;&amp; cooldownSecs_     &lt;= bounds.cooldownSecsMax,     "cd out of bounds")</span>;
+&nbsp;
+        vaultPolicy[vault] = VaultPolicy({
+            hasOverride: true,
+            minGuardianScore: minGuardianScore_,
+            approvalExpiry: approvalExpiry_,
+            cooldownSecs: cooldownSecs_
+        });
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit VaultPolicySet(vault, minGuardianScore_, approvalExpiry_, cooldownSecs_, false);</span>
+<span class="cstat-no" title="statement not covered" >        _log(183 /*VaultPolicySet*/, keccak256(abi.encode(vault, minGuardianScore_, approvalExpiry_, cooldownSecs_)))</span>;
+    }
+&nbsp;
+    /// Effective policy = vault override if set, else global defaults.
+<span class="fstat-no" title="function not covered" >    function effectivePolicy(address vault) public view returns (uint16 gScore, uint64 expSecs, uint64 cdSecs) {</span>
+<span class="cstat-no" title="statement not covered" >        VaultPolicy memory vp = vaultPolicy[vault];</span>
+<span class="cstat-no" title="statement not covered" >        if (vp.hasOverride) <span class="cstat-no" title="statement not covered" >return (vp.minGuardianScore, vp.approvalExpiry, vp.cooldownSecs);</span></span>
+<span class="cstat-no" title="statement not covered" >        return (minGuardianScore, approvalExpiry, cooldownSecs);</span>
+    }
+&nbsp;
+    /* ---------------- Guardian config (by current vault owner) ---------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setGuardians(address vault, address[] calldata guardians, uint8 threshold) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        _requireVault(vault)</span>;
+<span class="cstat-no" title="statement not covered" >        address owner_ = _vaultOwner(vault);</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != owner_) revert NotOwner();</span>
+<span class="cstat-no" title="statement not covered" >        if (guardians.length == 0 || guardians.length &gt; MAX_GUARDIANS) revert BadParams();</span>
+<span class="cstat-no" title="statement not covered" >        if (threshold == 0 || threshold &gt; guardians.length) revert BadParams();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        (uint16 gScoreReq,,) = effectivePolicy(vault);</span>
+&nbsp;
+        // uniqueness + Seer checks
+<span class="cstat-no" title="statement not covered" >        for (uint256 i=0; i&lt;guardians.length; i++) {</span>
+<span class="cstat-no" title="statement not covered" >            address gi = guardians[i];</span>
+<span class="cstat-no" title="statement not covered" >            if (gi == address(0)) revert ZeroAddress();</span>
+<span class="cstat-no" title="statement not covered" >            for (uint256 j=i+1; j&lt;guardians.length; j++) <span class="cstat-no" title="statement not covered" >require(gi != guardians[j], "dup guardian")</span>;</span>
+<span class="cstat-no" title="statement not covered" >            require(!seer.isBlocked(gi), "g blocked")</span>;
+<span class="cstat-no" title="statement not covered" >            require(seer.score(gi) &gt;= gScoreReq, "g score")</span>;
+        }
+&nbsp;
+        config[vault] = GuardianSet({ guardians: guardians, threshold: threshold, set: true });
+<span class="cstat-no" title="statement not covered" >        emit GuardiansConfigured(vault, guardians, threshold);</span>
+<span class="cstat-no" title="statement not covered" >        _log(170 /*GuardiansSet*/, keccak256(abi.encode(vault, guardians, threshold)))</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function getGuardians(address vault) external view returns (address[] memory gs, uint8 threshold, bool isSet) {</span>
+<span class="cstat-no" title="statement not covered" >        GuardianSet storage g = config[vault];</span>
+<span class="cstat-no" title="statement not covered" >        return (g.guardians, g.threshold, g.set);</span>
+    }
+&nbsp;
+    /* ---------------- Recovery lifecycle ---------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function requestId(address vault, address newWallet, bytes32 salt) public pure returns (bytes32) {</span>
+<span class="cstat-no" title="statement not covered" >        return keccak256(abi.encode(vault, newWallet, salt));</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function propose(address vault, address newWallet, bytes32 salt) external breakerGuard nonReentrant returns (bytes32 id) {</span>
+<span class="cstat-no" title="statement not covered" >        if (newWallet == address(0)) revert ZeroAddress();</span>
+<span class="cstat-no" title="statement not covered" >        _requireVault(vault)</span>;
+<span class="cstat-no" title="statement not covered" >        GuardianSet storage g = config[vault];</span>
+<span class="cstat-no" title="statement not covered" >        if (!g.set) revert NotConfigured();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bool proposerOk = (msg.sender == _vaultOwner(vault)) || _isGuardian(g, msg.sender);</span>
+<span class="cstat-no" title="statement not covered" >        require(proposerOk, "not proposer")</span>;
+&nbsp;
+        id = requestId(vault, newWallet, salt);
+<span class="cstat-no" title="statement not covered" >        if (_reqs[id].createdAt != 0) revert AlreadyExists();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        RecoveryRequest storage r = _reqs[id];</span>
+        r.vault      = vault;
+        r.newWallet  = newWallet;
+        r.proposer   = msg.sender;
+        r.createdAt  = uint64(block.timestamp);
+        r.state      = ReqState.Active;
+        latestRequestOf[vault] = id;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit RecoveryProposed(id, vault, newWallet, msg.sender);</span>
+<span class="cstat-no" title="statement not covered" >        _log(171 /*RecoveryProposed*/, keccak256(abi.encode(id, vault, newWallet, msg.sender)))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (address(seerTune) != address(0) &amp;&amp; msg.sender != _vaultOwner(vault)) {</span>
+<span class="cstat-no" title="statement not covered" >            try seerTune.setFlag(msg.sender, 5 /*recovery-propose*/, true) {} catch {}</span>
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function approve(bytes32 id) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        RecoveryRequest storage r = _reqsMust(id);</span>
+<span class="cstat-no" title="statement not covered" >        if (r.state != ReqState.Active) revert NotActive();</span>
+<span class="cstat-no" title="statement not covered" >        GuardianSet storage g = config[r.vault];</span>
+<span class="cstat-no" title="statement not covered" >        if (!_isGuardian(g, msg.sender)) revert NotGuardian();</span>
+<span class="cstat-no" title="statement not covered" >        if (r.approved[msg.sender]) revert DuplicateApproval();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        (uint16 gScoreReq,,) = effectivePolicy(r.vault);</span>
+<span class="cstat-no" title="statement not covered" >        require(!seer.isBlocked(msg.sender), "g blocked")</span>;
+<span class="cstat-no" title="statement not covered" >        require(seer.score(msg.sender) &gt;= gScoreReq, "g score")</span>;
+&nbsp;
+        r.approved[msg.sender] = true;
+        r.approvals += 1;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit RecoveryApproved(id, msg.sender, r.approvals, g.threshold);</span>
+<span class="cstat-no" title="statement not covered" >        _log(172 /*RecoveryApproved*/, keccak256(abi.encode(id, msg.sender, r.approvals, g.threshold)))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (r.approvals &gt;= g.threshold &amp;&amp; r.thresholdAt == 0) {</span>
+<span class="cstat-no" title="statement not covered" >            (, , uint64 cd) = effectivePolicy(r.vault);</span>
+            r.thresholdAt = uint64(block.timestamp);
+<span class="cstat-no" title="statement not covered" >            emit ThresholdReached(id, r.thresholdAt, r.thresholdAt + cd);</span>
+<span class="cstat-no" title="statement not covered" >            _log(173 /*ThresholdReached*/, keccak256(abi.encode(id, r.thresholdAt, cd)))</span>;
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function execute(bytes32 id) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        RecoveryRequest storage r = _reqsMust(id);</span>
+<span class="cstat-no" title="statement not covered" >        if (r.state != ReqState.Active &amp;&amp; r.state != ReqState.Executable) revert NotActive();</span>
+<span class="cstat-no" title="statement not covered" >        GuardianSet storage g = config[r.vault];</span>
+<span class="cstat-no" title="statement not covered" >        require(g.set, "no guardians")</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        ( , uint64 exp, uint64 cd) = effectivePolicy(r.vault);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        require(r.approvals &gt;= g.threshold, "need approvals")</span>;
+<span class="cstat-no" title="statement not covered" >        require(r.thresholdAt != 0, "no threshold")</span>;
+<span class="cstat-no" title="statement not covered" >        uint64 execAt = r.thresholdAt + cd;</span>
+<span class="cstat-no" title="statement not covered" >        if (block.timestamp &lt; execAt) revert NotExecutable();</span>
+<span class="cstat-no" title="statement not covered" >        if (block.timestamp &gt; r.createdAt + exp) revert Expired();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        _rotateVault(r.vault, r.newWallet)</span>;
+&nbsp;
+        r.state = ReqState.Executed;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit RecoveryExecuted(id, r.vault, r.newWallet);</span>
+<span class="cstat-no" title="statement not covered" >        _log(174 /*RecoveryExecuted*/, keccak256(abi.encode(id, r.vault, r.newWallet)))</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function cancel(bytes32 id, string calldata reason) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        RecoveryRequest storage r = _reqsMust(id);</span>
+<span class="cstat-no" title="statement not covered" >        if (r.state != ReqState.Active) revert NotActive();</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != _vaultOwner(r.vault)) revert NotOwner();</span>
+&nbsp;
+        r.state = ReqState.Canceled;
+<span class="cstat-no" title="statement not covered" >        emit RecoveryCanceled(id, msg.sender, reason);</span>
+<span class="cstat-no" title="statement not covered" >        _log(175 /*RecoveryCanceled*/, keccak256(abi.encode(id, msg.sender, keccak256(bytes(reason)))))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (enableQuarantine &amp;&amp; address(guard) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            try guard.setQuarantine(r.proposer, uint64(block.timestamp) + quarantineSecs) {} catch {}</span>
+        }
+    }
+&nbsp;
+    /* ---------------- Internals ---------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _reqsMust(bytes32 id) internal view returns (RecoveryRequest storage) {</span>
+<span class="cstat-no" title="statement not covered" >        RecoveryRequest storage r = _reqs[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (r.createdAt == 0) revert BadParams();</span>
+<span class="cstat-no" title="statement not covered" >        return r;</span>
+    }
+<span class="fstat-no" title="function not covered" >    function _isGuardian(GuardianSet storage g, address who) internal view returns (bool) {</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i=0; i&lt;g.guardians.length; i++) <span class="cstat-no" title="statement not covered" >if (g.guardians[i] == who) <span class="cstat-no" title="statement not covered" >return true;</span></span></span>
+<span class="cstat-no" title="statement not covered" >        return false;</span>
+    }
+<span class="fstat-no" title="function not covered" >    function _requireVault(address vault) internal view {</span>
+<span class="cstat-no" title="statement not covered" >        if (vault == address(0)) revert ZeroAddress();</span>
+<span class="cstat-no" title="statement not covered" >        if (address(factory) != address(0)) <span class="cstat-no" title="statement not covered" >require(factory.isVault(vault), "not vault")</span>;</span>
+    }
+<span class="fstat-no" title="function not covered" >    function _vaultOwner(address vault) internal view returns (address owner_) {</span>
+<span class="cstat-no" title="statement not covered" >        try IUserVaultOwnable(vault).owner() returns (address o) { owner_ = o; } catch { owner_ = address(0); }</span>
+    }
+<span class="fstat-no" title="function not covered" >    function _rotateVault(address vault, address newWallet) internal {</span>
+<span class="cstat-no" title="statement not covered" >        bool ok;</span>
+        // Prefer explicit recoverTo(newWallet)
+<span class="cstat-no" title="statement not covered" >        try IUserVaultRecoverTo(vault).recoverTo(newWallet) { ok = true; }</span>
+        catch {
+<span class="cstat-no" title="statement not covered" >            try IUserVaultOwnable(vault).transferOwnership(newWallet) { ok = true; }</span>
+            catch { ok = false; }
+        }
+<span class="cstat-no" title="statement not covered" >        require(ok, "vault rotation failed")</span>;
+    }
+&nbsp;
+    /* ---------------- Views ---------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function previewRequest(bytes32 id)</span>
+        external
+        view
+        returns (address vault, address newWallet, address proposer, uint64 createdAt, uint64 thresholdAt, uint64 executableAt, ReqState state, uint8 approvals, uint8 threshold)
+    {
+<span class="cstat-no" title="statement not covered" >        RecoveryRequest storage r = _reqsMust(id);</span>
+<span class="cstat-no" title="statement not covered" >        GuardianSet storage g = config[r.vault];</span>
+<span class="cstat-no" title="statement not covered" >        (, , uint64 cd) = effectivePolicy(r.vault);</span>
+<span class="cstat-no" title="statement not covered" >        uint64 execAt = (r.thresholdAt == 0) ? 0 : r.thresholdAt + cd;</span>
+<span class="cstat-no" title="statement not covered" >        return (r.vault, r.newWallet, r.proposer, r.createdAt, r.thresholdAt, execAt, r.state, r.approvals, g.threshold);</span>
+    }
+&nbsp;
+    /* ---------------- Logging helper ---------------- */
+<span class="fstat-no" title="function not covered" >    function _log(uint8 etype, bytes32 ctx) internal {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(proof) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            try proof.logEvent(address(this), etype, ctx) {} catch {}</span>
+        }
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

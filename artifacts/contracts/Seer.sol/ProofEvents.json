@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ProofEvents",
+  "sourceName": "contracts/Seer.sol",
+  "abi": [],
+  "bytecode": "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea26469706673582212201f43ead78f0395aa73235331d8f21c7f6807c63a215d2330fd516bb556d58e5f64736f6c634300081e0033",
+  "deployedBytecode": "0x600080fdfea26469706673582212201f43ead78f0395aa73235331d8f21c7f6807c63a215d2330fd516bb556d58e5f64736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

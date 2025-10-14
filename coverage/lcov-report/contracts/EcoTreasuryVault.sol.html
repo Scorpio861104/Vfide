@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/EcoTreasuryVault.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> EcoTreasuryVault.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">2.33% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>2/86</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.28% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>1/78</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">5.56% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/18</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">3.53% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>3/85</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+&nbsp;
+/* -------------------- Minimal interfaces -------------------- */
+&nbsp;
+interface IVFIDE {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function balanceOf(address a) external view returns (uint256);
+}
+&nbsp;
+interface IProofLedger {
+    function logEvent(address user, uint8 etype, bytes32 ctx) external;
+}
+&nbsp;
+interface ISeerView {
+    function score(address user) external view returns (uint16);      // 0..1000
+    function systemHealthy() external view returns (bool);            // optional; may revert if unsupported
+}
+&nbsp;
+interface IEmergencyBreaker {
+    function isSystemPaused() external view returns (bool);
+    function isModulePaused(uint8 module) external view returns (bool);
+    // We’ll use module id 0=Core, 7=Router/Funding by convention
+}
+&nbsp;
+/* ----------------------------------------------------------------
+ * EcoTreasuryVault (Smart Automated Ecosystem Treasury)
+ * ----------------------------------------------------------------
+ * - Holds VFIDE allocated to ecosystem purposes.
+ * - Periodically “sweeps” balance and distributes per configured allocations.
+ * - Applies Seer-driven trust throttle (reduces sweep size when system isn’t healthy).
+ * - Obeys EmergencyBreaker global/module pauses.
+ * - Emits detailed events and logs to ProofLedger (best effort).
+ *
+ * Notes:
+ * - This contract never pulls from user vaults. It only transfers *out* its own VFIDE.
+ * - Remainder (10_000 - sum(bps)) stays as on-vault reserve.
+ */
+contract EcoTreasuryVault is Ownable2Step, ReentrancyGuard {
+    /* -------------------- Wiring -------------------- */
+    IVFIDE public vfide;
+    IProofLedger public proof;          // optional
+    ISeerView public seer;              // optional
+    IEmergencyBreaker public breaker;   // optional
+&nbsp;
+    address public dao;                 // post-handover governance
+&nbsp;
+    /* -------------------- Sinks &amp; allocations -------------------- */
+    struct Sinks {
+        address sanctum;        // verified charity fund
+        address stakingPool;    // rewards pool
+        address daoOps;         // multisig/governor ops wallet
+        address liquidityFund;  // market/liquidity mgmt
+    }
+    Sinks public sinks;
+&nbsp;
+    struct AllocBps {
+        uint16 sanctum;         // e.g., 2500 = 25.00%
+        uint16 stakingPool;
+        uint16 daoOps;
+        uint16 liquidityFund;
+    }
+    AllocBps public alloc;
+&nbsp;
+    /* -------------------- Sweep policy -------------------- */
+    uint64  public minSweepInterval = 6 hours;
+    uint64  public lastSweepAt;
+    uint256 public perCycleCap = 20_000_000 ether; // cap per sweep (tune to token decimals)
+&nbsp;
+    // Trust throttle: linear scaling factor based on system health/score
+    // If systemHealthy()==true → factor = 10000 (100%)
+    // Else map seer.score(address(this or dao)) to [minThrottleBps .. 10000]
+    uint16 public minThrottleBps = 3000; // 30% min flow under stress
+    uint16 public minScoreForFullFlow = 800; // ≥ this score → 100% flow if system not healthy()
+&nbsp;
+    /* -------------------- Events -------------------- */
+    event DAOUpdated(address dao);
+    event VFIDESet(address token);
+    event ProofSinkSet(address proof);
+    event SeerSet(address seer);
+    event BreakerSet(address breaker);
+&nbsp;
+    event SinksUpdated(address sanctum, address staking, address daoOps, address liquidity);
+    event AllocationsUpdated(uint16 sanctum, uint16 staking, uint16 daoOps, uint16 liquidity);
+&nbsp;
+    event PolicyUpdated(uint64 minInterval, uint256 perCycleCap, uint16 minThrottleBps, uint16 minScoreForFullFlow);
+&nbsp;
+    event Swept(
+        uint256 gross,
+        uint256 throttleBps,
+        uint256 toSanctum,
+        uint256 toStaking,
+        uint256 toDaoOps,
+        uint256 toLiquidity,
+        uint256 retained
+    );
+&nbsp;
+    /* -------------------- Errors -------------------- */
+    error ZeroAddress();
+    error NotGov();
+    error Paused();
+    error Interval();
+    error CapTooLow();
+    error BadAlloc();
+&nbsp;
+    /* -------------------- Modifiers -------------------- */
+<span class="fstat-no" title="function not covered" >    modifier onlyGov() {</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != owner() &amp;&amp; msg.sender != dao) revert NotGov();</span>
+        _;
+    }
+&nbsp;
+    constructor(address initialOwner, address vfide_) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (initialOwner == address(0) || vfide_ == address(0)) revert ZeroAddress();
+        _transferOwnership(initialOwner);
+        vfide = IVFIDE(vfide_);
+    }
+&nbsp;
+    /* -------------------- Governance wiring -------------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setDAO(address dao_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (dao_ == address(0)) revert ZeroAddress();</span>
+        dao = dao_; <span class="cstat-no" title="statement not covered" >emit DAOUpdated(dao_);</span>
+    }
+<span class="fstat-no" title="function not covered" >    function setVFIDE(address vfide_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (vfide_ == address(0)) revert ZeroAddress();</span>
+        vfide = IVFIDE(vfide_); <span class="cstat-no" title="statement not covered" >emit VFIDESet(vfide_);</span>
+    }
+<span class="fstat-no" title="function not covered" >    function setProofSink(address p_) external onlyGov {</span>
+        proof = IProofLedger(p_); <span class="cstat-no" title="statement not covered" >emit ProofSinkSet(p_);</span>
+    }
+<span class="fstat-no" title="function not covered" >    function setSeer(address s_) external onlyGov {</span>
+        seer = ISeerView(s_); <span class="cstat-no" title="statement not covered" >emit SeerSet(s_);</span>
+    }
+<span class="fstat-no" title="function not covered" >    function setBreaker(address b_) external onlyGov {</span>
+        breaker = IEmergencyBreaker(b_); <span class="cstat-no" title="statement not covered" >emit BreakerSet(b_);</span>
+    }
+&nbsp;
+    /* -------------------- Sinks / Allocations -------------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setSinks(address sanctum, address staking, address daoOps_, address liquidity) external onlyGov {</span>
+        sinks = Sinks({
+            sanctum: sanctum,
+            stakingPool: staking,
+            daoOps: daoOps_,
+            liquidityFund: liquidity
+        });
+<span class="cstat-no" title="statement not covered" >        emit SinksUpdated(sanctum, staking, daoOps_, liquidity);</span>
+    }
+&nbsp;
+    /// @notice Set allocation bps for each sink (sum must be ≤ 10000).
+<span class="fstat-no" title="function not covered" >    function setAllocations(uint16 sanctum, uint16 staking, uint16 daoOps_, uint16 liquidity) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        uint256 sum = uint256(sanctum) + staking + daoOps_ + liquidity;</span>
+<span class="cstat-no" title="statement not covered" >        if (sum &gt; 10_000) revert BadAlloc();</span>
+        alloc = AllocBps({sanctum: sanctum, stakingPool: staking, daoOps: daoOps_, liquidityFund: liquidity});
+<span class="cstat-no" title="statement not covered" >        emit AllocationsUpdated(sanctum, staking, daoOps_, liquidity);</span>
+    }
+&nbsp;
+    /* -------------------- Policy -------------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setPolicy(</span>
+        uint64 minInterval,
+        uint256 cap,
+        uint16 minThrottle,
+        uint16 minScoreFull
+    ) external onlyGov {
+<span class="cstat-no" title="statement not covered" >        if (minInterval &lt; 5 minutes) revert Interval();</span>
+<span class="cstat-no" title="statement not covered" >        if (cap == 0) revert CapTooLow();</span>
+<span class="cstat-no" title="statement not covered" >        require(minThrottle &lt;= 10_000, "throttle&gt;100%")</span>;
+<span class="cstat-no" title="statement not covered" >        require(minScoreFull &lt;= 1000, "score&gt;1000")</span>;
+        minSweepInterval = minInterval;
+        perCycleCap = cap;
+        minThrottleBps = minThrottle;
+        minScoreForFullFlow = minScoreFull;
+<span class="cstat-no" title="statement not covered" >        emit PolicyUpdated(minInterval, cap, minThrottle, minScoreFull);</span>
+    }
+&nbsp;
+    /* -------------------- Sweep logic -------------------- */
+&nbsp;
+    /// @notice Distribute current balance according to allocations (subject to throttle, cap, and breaker).
+<span class="fstat-no" title="function not covered" >    function sweep() external nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        _revertIfPaused()</span>;
+&nbsp;
+        // interval gate
+<span class="cstat-no" title="statement not covered" >        uint64 nowTs = uint64(block.timestamp);</span>
+<span class="cstat-no" title="statement not covered" >        require(lastSweepAt + minSweepInterval &lt;= nowTs, "interval")</span>;
+        lastSweepAt = nowTs;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 gross = vfide.balanceOf(address(this));</span>
+<span class="cstat-no" title="statement not covered" >        if (gross == 0) {</span>
+<span class="cstat-no" title="statement not covered" >            emit Swept(0, 0, 0, 0, 0, 0, 0);</span>
+<span class="cstat-no" title="statement not covered" >            _log(0, 0, 0, 0, 0, 0, 0, 0)</span>;
+<span class="cstat-no" title="statement not covered" >            return;</span>
+        }
+&nbsp;
+        // apply per-cycle cap
+<span class="cstat-no" title="statement not covered" >        if (gross &gt; perCycleCap) gross = perCycleCap;</span>
+&nbsp;
+        // compute throttle
+<span class="cstat-no" title="statement not covered" >        uint16 throttleBps = _throttleBps();</span>
+&nbsp;
+        // amount to distribute this cycle after throttle
+<span class="cstat-no" title="statement not covered" >        uint256 distributable = (gross * throttleBps) / 10_000;</span>
+&nbsp;
+        // split per allocations (may be &lt; 10000, leaving remainder as reserve)
+<span class="cstat-no" title="statement not covered" >        uint256 toSanctum  = (distributable * alloc.sanctum)     / 10_000;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 toStaking  = (distributable * alloc.stakingPool) / 10_000;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 toDaoOps   = (distributable * alloc.daoOps)      / 10_000;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 toLiq      = (distributable * alloc.liquidityFund)/ 10_000;</span>
+&nbsp;
+        // perform transfers (best-effort per sink only if address set)
+<span class="cstat-no" title="statement not covered" >        uint256 sentSanctum = _sendIf(sinks.sanctum, toSanctum);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 sentStaking = _sendIf(sinks.stakingPool, toStaking);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 sentDaoOps  = _sendIf(sinks.daoOps, toDaoOps);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 sentLiq     = _sendIf(sinks.liquidityFund, toLiq);</span>
+&nbsp;
+        // anything not sent (unset sinks) remains as reserve; plus the unallocated portion
+<span class="cstat-no" title="statement not covered" >        uint256 totalSent = sentSanctum + sentStaking + sentDaoOps + sentLiq;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 retained  = vfide.balanceOf(address(this));</span> // actual remaining
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit Swept(</span>
+            gross,
+            throttleBps,
+            sentSanctum,
+            sentStaking,
+            sentDaoOps,
+            sentLiq,
+            retained
+        );
+<span class="cstat-no" title="statement not covered" >        _log(gross, throttleBps, sentSanctum, sentStaking, sentDaoOps, sentLiq, retained, block.number)</span>;
+    }
+&nbsp;
+    /* -------------------- Views -------------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function previewSweep()</span>
+        external
+        view
+        returns (
+            uint256 balance,
+            uint16 throttleBps,
+            uint256 capApplied,
+            uint256 willDistribute,
+            uint256 toSanctum,
+            uint256 toStaking,
+            uint256 toDaoOps,
+            uint256 toLiquidity,
+            uint256 retainedIfAllSinksSet
+        )
+    {
+<span class="cstat-no" title="statement not covered" >        _requireNotPausedView()</span>;
+<span class="cstat-no" title="statement not covered" >        uint256 bal = vfide.balanceOf(address(this));</span>
+<span class="cstat-no" title="statement not covered" >        uint256 capBal = bal &gt; perCycleCap ? perCycleCap : bal;</span>
+<span class="cstat-no" title="statement not covered" >        uint16 t = _throttleBpsView();</span>
+<span class="cstat-no" title="statement not covered" >        uint256 dist = (capBal * t) / 10_000;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 s1 = (dist * alloc.sanctum)      / 10_000;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 s2 = (dist * alloc.stakingPool)  / 10_000;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 s3 = (dist * alloc.daoOps)       / 10_000;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 s4 = (dist * alloc.liquidityFund)/ 10_000;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 allocated = s1 + s2 + s3 + s4;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 retained = capBal - allocated;</span> // this assumes all sinks are set &amp; transfers succeed
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return (bal, t, capBal, dist, s1, s2, s3, s4, retained);</span>
+    }
+&nbsp;
+    /* -------------------- Internal helpers -------------------- */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _revertIfPaused() internal view {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(breaker) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            if (breaker.isSystemPaused()) revert Paused();</span>
+            // 7 == Router/Funding module ID per our shared enum map
+<span class="cstat-no" title="statement not covered" >            if (breaker.isModulePaused(7)) revert Paused();</span>
+        }
+    }
+<span class="fstat-no" title="function not covered" >    function _requireNotPausedView() internal view {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(breaker) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            require(!breaker.isSystemPaused(), "sys paused")</span>;
+<span class="cstat-no" title="statement not covered" >            require(!breaker.isModulePaused(7), "router paused")</span>;
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _throttleBps() internal view returns (uint16) {</span>
+        // If no Seer: full flow
+<span class="cstat-no" title="statement not covered" >        if (address(seer) == address(0)) <span class="cstat-no" title="statement not covered" >return 10_000;</span></span>
+&nbsp;
+        // Try systemHealthy() first (may revert if not implemented)
+<span class="cstat-no" title="statement not covered" >        bool healthy = false;</span>
+<span class="cstat-no" title="statement not covered" >        try seer.systemHealthy() returns (bool ok) { healthy = ok; } catch { healthy = false; }</span>
+<span class="cstat-no" title="statement not covered" >        if (healthy) <span class="cstat-no" title="statement not covered" >return 10_000;</span></span>
+&nbsp;
+        // If not healthy, scale by DAO score (if dao set), else by this contract’s score
+<span class="cstat-no" title="statement not covered" >        uint16 s = 0;</span>
+<span class="cstat-no" title="statement not covered" >        if (dao != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            try seer.score(dao) returns (uint16 d) { s = d; } catch {}</span>
+        } else {
+<span class="cstat-no" title="statement not covered" >            try seer.score(address(this)) returns (uint16 d2) { s = d2; } catch {}</span>
+        }
+<span class="cstat-no" title="statement not covered" >        if (s &gt;= minScoreForFullFlow) <span class="cstat-no" title="statement not covered" >return 10_000;</span></span>
+&nbsp;
+        // linear map: [0..minScoreForFullFlow) → [minThrottleBps .. 10000)
+        // bps = minThrottle + (s / minScoreForFullFlow) * (10000 - minThrottle)
+<span class="cstat-no" title="statement not covered" >        if (minScoreForFullFlow == 0) <span class="cstat-no" title="statement not covered" >return minThrottleBps;</span></span>
+<span class="cstat-no" title="statement not covered" >        uint256 span = 10_000 - uint256(minThrottleBps);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 scaled = uint256(minThrottleBps) + (uint256(s) * span) / uint256(minScoreForFullFlow);</span>
+<span class="cstat-no" title="statement not covered" >        if (scaled &gt; 10_000) scaled = 10_000;</span>
+<span class="cstat-no" title="statement not covered" >        return uint16(scaled);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _throttleBpsView() internal view returns (uint16) {</span>
+<span class="cstat-no" title="statement not covered" >        return _throttleBps();</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _sendIf(address to, uint256 amt) internal returns (uint256 sent) {</span>
+<span class="cstat-no" title="statement not covered" >        if (to == address(0) || amt == 0) <span class="cstat-no" title="statement not covered" >return 0;</span></span>
+<span class="cstat-no" title="statement not covered" >        bool ok = vfide.transfer(to, amt);</span>
+<span class="cstat-no" title="statement not covered" >        return ok ? amt : 0;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _log(</span>
+        uint256 gross,
+        uint16 throttleBps,
+        uint256 sSanctum,
+        uint256 sStaking,
+        uint256 sDao,
+        uint256 sLiq,
+        uint256 retained,
+        uint256 blk
+    ) internal {
+<span class="cstat-no" title="statement not covered" >        if (address(proof) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            bytes32 ctx = keccak256(abi.encode(gross, throttleBps, sSanctum, sStaking, sDao, sLiq, retained, blk));</span>
+            // 120 = EcoTreasury sweep
+<span class="cstat-no" title="statement not covered" >            try proof.logEvent(address(this), 120, ctx) {} catch {}</span>
+        }
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

@@ -1,0 +1,1598 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/CommerceEscrow.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> CommerceEscrow.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.59% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>2/126</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0.62% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>1/162</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">4% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/25</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.19% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>2/168</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+&nbsp;
+/* ─────────────────── Minimal VFIDE interfaces ─────────────────── */
+&nbsp;
+interface IEmergencyBreaker {
+    function isSystemPaused() external view returns (bool);
+    function isModulePaused(uint8 module) external view returns (bool);
+}
+&nbsp;
+interface IProofLedger {
+    function logEvent(address who, uint8 etype, bytes32 ctx) external;
+}
+&nbsp;
+interface ISeerView {
+    function score(address user) external view returns (uint16); // 0..1000
+    function isBlocked(address user) external view returns (bool);
+}
+&nbsp;
+interface ISeerTuning {
+    function adjustScore(address user, int16 delta) external;
+    function setFlag(address user, uint8 code, bool on) external;
+}
+&nbsp;
+interface IPanicGuard {
+    function setQuarantine(address user, uint64 untilTs) external;
+}
+&nbsp;
+interface IVaultFactoryView {
+    function vaultOf(address user) external view returns (address);
+    function isVault(address v) external view returns (bool);
+}
+&nbsp;
+/* VFIDE token; we require transferFrom for escrow pulls from buyer's vault */
+interface IVFIDE {
+    function balanceOf(address a) external view returns (uint256);
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint256);
+}
+&nbsp;
+/* MerchantRegistry must confirm merchant validity and optional min score */
+interface IMerchantRegistry {
+    function isMerchant(address account) external view returns (bool);
+    function minMerchantScore() external view returns (uint16);
+}
+&nbsp;
+/* ─────────────────────── CommerceEscrow (VFIDE Trust Escrow) ───────────────────────
+   - Vault-native: buyer funds flow from buyer's UserVault → this escrow; seller receives to seller's UserVault.
+   - Seer trust gates: blocklisted actors forbidden; min ProofScore enforced for merchants via registry.
+   - Risk channel: SeerTuning nudges score; PanicGuard can quarantine high-risk parties.
+   - Breaker-aware: all mutations blocked while system/module paused.
+   - ProofLedger logging: best-effort for every lifecycle change.
+&nbsp;
+   Flow:
+     1) open(...) by buyer (or front-end) defines buyer, seller, amount, timeouts.
+     2) fund(escrowId) pulls VFIDE from buyerVault via transferFrom (buyer must approve this contract in their vault).
+     3) release(...) sends funds to sellerVault (or refund(...) back to buyerVault).
+     4) disputes: buyer/seller can openDispute before release deadline; resolveDispute by DAO/arbitrator splits funds.
+     5) auto-release on timeout if enabled and no dispute.
+&nbsp;
+   Notes:
+     - We keep a simple state machine and cap risk on-chain. Deep fraud analytics should be handled by DarkTrust/Seer.
+     - Module id assumption for Breaker: Merchants = 4 (per earlier enum), Router/Funding = 7.
+------------------------------------------------------------------------------------- */
+contract CommerceEscrow is Ownable2Step, ReentrancyGuard {
+    /* ───────── Wiring ───────── */
+    IEmergencyBreaker public breaker;   // optional
+    IProofLedger public proof;          // optional
+    ISeerView public seer;              // required for trust checks
+    ISeerTuning public seerTune;        // optional score adjustments/flags
+    IPanicGuard public guard;           // optional quarantine
+    IVaultFactoryView public factory;   // required to resolve vaults
+    IMerchantRegistry public merchants; // required to validate merchant sellers
+    IVFIDE public vfide;                // VFIDE token
+&nbsp;
+    /* ───────── Governance knobs ───────── */
+    uint16 public minBuyerScore = 400;          // buyers must meet this ProofScore
+    uint16 public minSellerScoreOverride = 0;   // if &gt;0, overrides MerchantRegistry.minMerchantScore()
+    uint64 public maxEscrowDuration = 60 days;  // safety cap
+    uint64 public minEscrowDuration = 1 days;
+    uint64 public disputeWindowBuffer = 3 days; // added before auto-release to allow disputes
+&nbsp;
+    // Seer penalties / rewards on outcomes (optional; 0 = disabled)
+    int16 public rewardOnSuccess = 2;  // +2 both parties
+    int16 public penaltyOnRefund  = -2; // -2 to seller on refund
+    int16 public penaltyOnBadActor = -6; // applied to party ruled at fault
+&nbsp;
+    // PanicGuard quarantine on high-risk incidents (optional)
+    uint64 public quarantineSecs = 24 hours;
+&nbsp;
+    // Breaker module used for per-module pause checks (Merchants=4 by our shared enum)
+    uint8 public breakerModuleId = 4;
+&nbsp;
+    /* ───────── Escrow data ───────── */
+    enum Status { None, Open, Funded, Disputed, Released, Refunded, Canceled }
+&nbsp;
+    struct Escrow {
+        address buyer;
+        address seller;
+        uint256 amount;        // total expected amount
+        uint64  createdAt;
+        uint64  autoReleaseAt; // optional (0 = off)
+        Status  status;
+        bool    autoRelease;   // if true, can auto-release after deadline
+        string  memo;          // reference (order id, item hash, etc.)
+    }
+&nbsp;
+    // id =&gt; escrow
+    mapping(bytes32 =&gt; Escrow) public escrows;
+&nbsp;
+    // Track deposits by id (supports top-ups before funded)
+    mapping(bytes32 =&gt; uint256) public fundedAmount;
+&nbsp;
+    // Disputes
+    struct Dispute {
+        bool open;
+        address openedBy; // buyer or seller
+        uint64 openedAt;
+        string reason;    // lightweight reason text hash
+    }
+    mapping(bytes32 =&gt; Dispute) public disputes;
+&nbsp;
+    /* ───────── Events ───────── */
+    event WiringSet(address breaker, address proof, address seer, address seerTune, address guard, address factory, address merchants, address vfide);
+    event PolicySet(uint16 minBuyerScore, uint16 minSellerScoreOverride, uint64 maxEscrowDur, uint64 minEscrowDur, uint64 disputeBuf, int16 rewardSuccess, int16 penaltyRefund, int16 penaltyBadActor, uint64 quarantineSecs);
+    event BreakerModuleSet(uint8 moduleId);
+&nbsp;
+    event Opened(bytes32 indexed id, address indexed buyer, address indexed seller, uint256 amount, uint64 autoReleaseAt, bool autoRelease, string memo);
+    event Funded(bytes32 indexed id, address fromVault, uint256 amount, uint256 totalFunded);
+    event DisputeOpened(bytes32 indexed id, address by, string reason);
+    event DisputeClosed(bytes32 indexed id);
+&nbsp;
+    event Released(bytes32 indexed id, address toVault, uint256 amount);
+    event Refunded(bytes32 indexed id, address toVault, uint256 amount);
+    event Resolved(bytes32 indexed id, uint256 toSeller, uint256 toBuyer, address adjudicator);
+&nbsp;
+    event Canceled(bytes32 indexed id);
+&nbsp;
+    /* ───────── Errors ───────── */
+    error Paused();
+    error TrustGate();
+    error TimeRange();
+    error Exists();
+    error Missing();
+    error BadState();
+    error NotParty();
+    error NotSeller();
+    error NotBuyer();
+    error Amount();
+    error NoAllowance();
+    error NoDispute();
+    error AlreadyDisputed();
+&nbsp;
+    /* ───────── Modifiers ───────── */
+<span class="fstat-no" title="function not covered" >    modifier breakerGuard() {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(breaker) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            if (breaker.isSystemPaused() || breaker.isModulePaused(breakerModuleId)) revert Paused();</span>
+        }
+        _;
+    }
+&nbsp;
+    constructor(address initialOwner) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(initialOwner != address(0), "owner=0");
+        _transferOwnership(initialOwner);
+    }
+&nbsp;
+    /* ───────── Wiring ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setWiring(</span>
+        address breaker_,
+        address proof_,
+        address seer_,
+        address seerTune_,
+        address guard_,
+        address factory_,
+        address merchants_,
+        address vfide_
+    ) external onlyOwner {
+        breaker   = IEmergencyBreaker(breaker_);
+        proof     = IProofLedger(proof_);
+        seer      = ISeerView(seer_);
+        seerTune  = ISeerTuning(seerTune_);
+        guard     = IPanicGuard(guard_);
+        factory   = IVaultFactoryView(factory_);
+        merchants = IMerchantRegistry(merchants_);
+        vfide     = IVFIDE(vfide_);
+<span class="cstat-no" title="statement not covered" >        emit WiringSet(breaker_, proof_, seer_, seerTune_, guard_, factory_, merchants_, vfide_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setPolicy(</span>
+        uint16 minBuyerScore_,
+        uint16 minSellerScoreOverride_,
+        uint64 maxEscrowDur_,
+        uint64 minEscrowDur_,
+        uint64 disputeBuf_,
+        int16 rewardSuccess_,
+        int16 penaltyRefund_,
+        int16 penaltyBadActor_,
+        uint64 quarantineSecs_
+    ) external onlyOwner {
+<span class="cstat-no" title="statement not covered" >        require(maxEscrowDur_ &gt;= minEscrowDur_ &amp;&amp; minEscrowDur_ &gt;= 1 hours, "dur")</span>;
+<span class="cstat-no" title="statement not covered" >        require(minBuyerScore_ &lt;= 1000 &amp;&amp; minSellerScoreOverride_ &lt;= 1000, "score&gt;1000")</span>;
+        minBuyerScore = minBuyerScore_;
+        minSellerScoreOverride = minSellerScoreOverride_;
+        maxEscrowDuration = maxEscrowDur_;
+        minEscrowDuration = minEscrowDur_;
+        disputeWindowBuffer = disputeBuf_;
+        rewardOnSuccess = rewardSuccess_;
+        penaltyOnRefund = penaltyRefund_;
+        penaltyOnBadActor = penaltyBadActor_;
+        quarantineSecs = quarantineSecs_;
+<span class="cstat-no" title="statement not covered" >        emit PolicySet(minBuyerScore, minSellerScoreOverride, maxEscrowDuration, minEscrowDuration, disputeWindowBuffer, rewardOnSuccess, penaltyOnRefund, penaltyOnBadActor, quarantineSecs);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setBreakerModule(uint8 moduleId) external onlyOwner {</span>
+        breakerModuleId = moduleId;
+<span class="cstat-no" title="statement not covered" >        emit BreakerModuleSet(moduleId);</span>
+    }
+&nbsp;
+    /* ───────── Core helpers ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _vaultOf(address user) internal view returns (address v) {</span>
+        v = factory.vaultOf(user);
+<span class="cstat-no" title="statement not covered" >        require(v != address(0), "no vault")</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _sellerMinScore() internal view returns (uint16) {</span>
+<span class="cstat-no" title="statement not covered" >        if (minSellerScoreOverride &gt; 0) <span class="cstat-no" title="statement not covered" >return minSellerScoreOverride;</span></span>
+<span class="cstat-no" title="statement not covered" >        try merchants.minMerchantScore() returns (uint16 m) { <span class="cstat-no" title="statement not covered" >return m;</span> } catch { <span class="cstat-no" title="statement not covered" >return 0;</span> }</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _checkParties(address buyer, address seller) internal view {</span>
+<span class="cstat-no" title="statement not covered" >        if (seer.isBlocked(buyer) || seer.isBlocked(seller)) revert TrustGate();</span>
+<span class="cstat-no" title="statement not covered" >        if (seer.score(buyer) &lt; minBuyerScore) revert TrustGate();</span>
+<span class="cstat-no" title="statement not covered" >        if (!merchants.isMerchant(seller)) revert TrustGate();</span>
+<span class="cstat-no" title="statement not covered" >        uint16 need = _sellerMinScore();</span>
+<span class="cstat-no" title="statement not covered" >        if (need &gt; 0 &amp;&amp; seer.score(seller) &lt; need) revert TrustGate();</span>
+    }
+&nbsp;
+    /* ───────── Escrow lifecycle ───────── */
+&nbsp;
+    /// @notice Compute deterministic escrow id from buyer/seller/amount/memo/salt.
+<span class="fstat-no" title="function not covered" >    function escrowId(</span>
+        address buyer,
+        address seller,
+        uint256 amount,
+        string calldata memo,
+        bytes32 salt
+    ) public pure returns (bytes32) {
+<span class="cstat-no" title="statement not covered" >        return keccak256(abi.encode(buyer, seller, amount, keccak256(bytes(memo)), salt));</span>
+    }
+&nbsp;
+    /// @notice Create an escrow record; funds are not moved until `fund(...)`.
+    /// @param autoReleaseAt  unix ts when auto-release is allowed (0 to disable)
+    /// @param autoReleaseFlag    if true, anyone can call `autoRelease(...)` after autoReleaseAt + dispute buffer
+<span class="fstat-no" title="function not covered" >    function open(</span>
+        address buyer,
+        address seller,
+        uint256 amount,
+        uint64 autoReleaseAt,
+    bool autoReleaseFlag,
+        string calldata memo,
+        bytes32 salt
+    ) external breakerGuard nonReentrant returns (bytes32 id) {
+<span class="cstat-no" title="statement not covered" >        require(buyer != address(0) &amp;&amp; seller != address(0), "addr=0")</span>;
+<span class="cstat-no" title="statement not covered" >        require(amount &gt; 0, "amt=0")</span>;
+<span class="cstat-no" title="statement not covered" >        _checkParties(buyer, seller)</span>;
+&nbsp;
+        // time bounds
+<span class="cstat-no" title="statement not covered" >        if (autoReleaseFlag) {</span>
+<span class="cstat-no" title="statement not covered" >            require(autoReleaseAt &gt; block.timestamp, "auto ts")</span>;
+<span class="cstat-no" title="statement not covered" >            uint64 dur = autoReleaseAt - uint64(block.timestamp);</span>
+<span class="cstat-no" title="statement not covered" >            if (dur &lt; minEscrowDuration || dur &gt; maxEscrowDuration) revert TimeRange();</span>
+        }
+&nbsp;
+        id = escrowId(buyer, seller, amount, memo, salt);
+<span class="cstat-no" title="statement not covered" >        if (escrows[id].status != Status.None) revert Exists();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        Escrow storage e = escrows[id];</span>
+        e.buyer       = buyer;
+        e.seller      = seller;
+        e.amount      = amount;
+        e.createdAt   = uint64(block.timestamp);
+    e.autoReleaseAt = autoReleaseFlag ? autoReleaseAt : 0;
+    e.autoRelease = autoReleaseFlag;
+        e.status      = Status.Open;
+        e.memo        = memo;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    emit Opened(id, buyer, seller, amount, e.autoReleaseAt, autoReleaseFlag, memo);</span>
+<span class="cstat-no" title="statement not covered" >    _log(60 /*Opened*/, keccak256(abi.encode(id, buyer, seller, amount, autoReleaseAt, autoReleaseFlag)))</span>;
+    }
+&nbsp;
+    /// @notice Pull funds from buyer's vault into escrow; buyer's vault must `approve` this contract for `amount`.
+<span class="fstat-no" title="function not covered" >    function fund(bytes32 id) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        Escrow storage e = escrows[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (e.status != Status.Open) revert BadState();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        address buyerVault = _vaultOf(e.buyer);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 needed = e.amount - fundedAmount[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (needed == 0) revert Amount();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 allowance = vfide.allowance(buyerVault, address(this));</span>
+<span class="cstat-no" title="statement not covered" >        if (allowance &lt; needed) revert NoAllowance();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bool ok = vfide.transferFrom(buyerVault, address(this), needed);</span>
+<span class="cstat-no" title="statement not covered" >        require(ok, "pull fail")</span>;
+&nbsp;
+        fundedAmount[id] += needed;
+        e.status = Status.Funded;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit Funded(id, buyerVault, needed, fundedAmount[id]);</span>
+<span class="cstat-no" title="statement not covered" >        _log(61 /*Funded*/, keccak256(abi.encode(id, buyerVault, needed, fundedAmount[id])))</span>;
+    }
+&nbsp;
+    /// @notice Buyer opens a dispute before release/refund.
+<span class="fstat-no" title="function not covered" >    function openDispute(bytes32 id, string calldata reason) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        Escrow storage e = escrows[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (e.status != Status.Funded) revert BadState();</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != e.buyer &amp;&amp; msg.sender != e.seller) revert NotParty();</span>
+<span class="cstat-no" title="statement not covered" >        Dispute storage d = disputes[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (d.open) revert AlreadyDisputed();</span>
+&nbsp;
+        d.open = true;
+        d.openedBy = msg.sender;
+        d.openedAt = uint64(block.timestamp);
+        d.reason = reason;
+&nbsp;
+        e.status = Status.Disputed;
+&nbsp;
+        // Risk actions (optional)
+<span class="cstat-no" title="statement not covered" >        _penalize(msg.sender, -1)</span>; // tiny nudge for opening; neutral in aggregate
+<span class="cstat-no" title="statement not covered" >        _flag(msg.sender, 1 /*dispute*/, true)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit DisputeOpened(id, msg.sender, reason);</span>
+<span class="cstat-no" title="statement not covered" >        _log(62 /*DisputeOpened*/, keccak256(abi.encode(id, msg.sender, keccak256(bytes(reason)))))</span>;
+    }
+&nbsp;
+    /// @notice Close dispute without resolution (settled off-chain). Moves back to Funded.
+<span class="fstat-no" title="function not covered" >    function closeDispute(bytes32 id) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        Escrow storage e = escrows[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (e.status != Status.Disputed) revert BadState();</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != e.buyer &amp;&amp; msg.sender != e.seller) revert NotParty();</span>
+&nbsp;
+        disputes[id].open = false;
+        e.status = Status.Funded;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        _flag(msg.sender, 1 /*dispute*/, false)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit DisputeClosed(id);</span>
+<span class="cstat-no" title="statement not covered" >        _log(63 /*DisputeClosed*/, keccak256(abi.encode(id, msg.sender)))</span>;
+    }
+&nbsp;
+    /// @notice Release to seller's vault (buyer or seller can call, but only when no dispute).
+<span class="fstat-no" title="function not covered" >    function release(bytes32 id) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        _releaseFunds(id, msg.sender)</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _releaseFunds(bytes32 id, address caller) internal {</span>
+<span class="cstat-no" title="statement not covered" >        Escrow storage e = escrows[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (e.status != Status.Funded) revert BadState();</span>
+<span class="cstat-no" title="statement not covered" >        if (caller != e.buyer &amp;&amp; caller != e.seller) revert NotParty();</span>
+&nbsp;
+        // Re-check seller trust (no recent block) before final release
+<span class="cstat-no" title="statement not covered" >        if (seer.isBlocked(e.seller)) revert TrustGate();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        address sellerVault = _vaultOf(e.seller);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 amt = fundedAmount[id];</span>
+&nbsp;
+        fundedAmount[id] = 0;
+        e.status = Status.Released;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bool ok = vfide.transfer(sellerVault, amt);</span>
+<span class="cstat-no" title="statement not covered" >        require(ok, "xfer fail")</span>;
+&nbsp;
+        // Rewards (optional)
+<span class="cstat-no" title="statement not covered" >        _reward(e.buyer, rewardOnSuccess)</span>;
+<span class="cstat-no" title="statement not covered" >        _reward(e.seller, rewardOnSuccess)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit Released(id, sellerVault, amt);</span>
+<span class="cstat-no" title="statement not covered" >        _log(64 /*Released*/, keccak256(abi.encode(id, sellerVault, amt)))</span>;
+    }
+&nbsp;
+    /// @notice Refund back to buyer's vault (buyer or seller can call, but only when no dispute).
+<span class="fstat-no" title="function not covered" >    function refund(bytes32 id) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        Escrow storage e = escrows[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (e.status != Status.Funded) revert BadState();</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != e.buyer &amp;&amp; msg.sender != e.seller) revert NotParty();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        address buyerVault = _vaultOf(e.buyer);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 amt = fundedAmount[id];</span>
+&nbsp;
+        fundedAmount[id] = 0;
+        e.status = Status.Refunded;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bool ok = vfide.transfer(buyerVault, amt);</span>
+<span class="cstat-no" title="statement not covered" >        require(ok, "xfer fail")</span>;
+&nbsp;
+        // Penalize seller slightly for failed transaction
+<span class="cstat-no" title="statement not covered" >        _penalize(e.seller, penaltyOnRefund)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit Refunded(id, buyerVault, amt);</span>
+<span class="cstat-no" title="statement not covered" >        _log(65 /*Refunded*/, keccak256(abi.encode(id, buyerVault, amt)))</span>;
+    }
+&nbsp;
+    /// @notice Auto-release anyone after deadline (if enabled, no dispute).
+<span class="fstat-no" title="function not covered" >    function autoRelease(bytes32 id) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        Escrow storage e = escrows[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (!e.autoRelease) revert BadState();</span>
+<span class="cstat-no" title="statement not covered" >        if (e.status != Status.Funded) revert BadState();</span>
+<span class="cstat-no" title="statement not covered" >        require(e.autoReleaseAt &gt; 0 &amp;&amp; block.timestamp &gt;= e.autoReleaseAt + disputeWindowBuffer, "not due")</span>;
+<span class="cstat-no" title="statement not covered" >        require(!disputes[id].open, "disputed")</span>;
+<span class="cstat-no" title="statement not covered" >        _releaseFunds(id, msg.sender)</span>;
+    }
+&nbsp;
+    /// @notice DAO/arbitrator resolves dispute with split amounts.
+<span class="fstat-no" title="function not covered" >    function resolveDispute(bytes32 id, uint256 toSeller, uint256 toBuyer, bool sellerAtFault) external breakerGuard nonReentrant onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        Escrow storage e = escrows[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (e.status != Status.Disputed) revert BadState();</span>
+<span class="cstat-no" title="statement not covered" >        Dispute storage d = disputes[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (!d.open) revert NoDispute();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 total = fundedAmount[id];</span>
+<span class="cstat-no" title="statement not covered" >        require(toSeller + toBuyer == total, "sum != total")</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        address sellerVault = _vaultOf(e.seller);</span>
+<span class="cstat-no" title="statement not covered" >        address buyerVault  = _vaultOf(e.buyer);</span>
+&nbsp;
+        fundedAmount[id] = 0;
+        d.open = false;
+        e.status = (toSeller &gt; 0) ? Status.Released : Status.Refunded;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (toSeller &gt; 0) <span class="cstat-no" title="statement not covered" >require(vfide.transfer(sellerVault, toSeller), "xfer seller")</span>;</span>
+<span class="cstat-no" title="statement not covered" >        if (toBuyer  &gt; 0) <span class="cstat-no" title="statement not covered" >require(vfide.transfer(buyerVault,  toBuyer),  "xfer buyer")</span>;</span>
+&nbsp;
+        // Penalties
+<span class="cstat-no" title="statement not covered" >        if (sellerAtFault) {</span>
+<span class="cstat-no" title="statement not covered" >            _penalize(e.seller, penaltyOnBadActor)</span>;
+<span class="cstat-no" title="statement not covered" >            _quarantine(e.seller)</span>;
+        } else {
+<span class="cstat-no" title="statement not covered" >            _penalize(e.buyer, penaltyOnBadActor)</span>;
+<span class="cstat-no" title="statement not covered" >            _quarantine(e.buyer)</span>;
+        }
+        // Small reward to the non-fault party
+<span class="cstat-no" title="statement not covered" >        _reward(sellerAtFault ? e.buyer : e.seller, rewardOnSuccess)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit Resolved(id, toSeller, toBuyer, msg.sender);</span>
+<span class="cstat-no" title="statement not covered" >        _log(66 /*Resolved*/, keccak256(abi.encode(id, toSeller, toBuyer, sellerAtFault, msg.sender)))</span>;
+    }
+&nbsp;
+    /// @notice Cancel an open (unfunded) escrow
+<span class="fstat-no" title="function not covered" >    function cancel(bytes32 id) external breakerGuard nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        Escrow storage e = escrows[id];</span>
+<span class="cstat-no" title="statement not covered" >        if (e.status != Status.Open) revert BadState();</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != e.buyer &amp;&amp; msg.sender != e.seller) revert NotParty();</span>
+        e.status = Status.Canceled;
+<span class="cstat-no" title="statement not covered" >        emit Canceled(id);</span>
+<span class="cstat-no" title="statement not covered" >        _log(67 /*Canceled*/, keccak256(abi.encode(id, msg.sender)))</span>;
+    }
+&nbsp;
+    /* ───────── Seer / Guard hooks ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _reward(address user, int16 delta) internal {</span>
+<span class="cstat-no" title="statement not covered" >        if (delta == 0) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >        if (address(seerTune) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            try seerTune.adjustScore(user, delta) {} catch {}</span>
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _penalize(address user, int16 delta) internal {</span>
+<span class="cstat-no" title="statement not covered" >        if (delta == 0) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >        if (address(seerTune) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            try seerTune.adjustScore(user, delta) {} catch {}</span>
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _flag(address user, uint8 code, bool on) internal {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(seerTune) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            try seerTune.setFlag(user, code, on) {} catch {}</span>
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _quarantine(address user) internal {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(guard) != address(0) &amp;&amp; quarantineSecs &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            try guard.setQuarantine(user, uint64(block.timestamp) + quarantineSecs) {} catch {}</span>
+        }
+    }
+&nbsp;
+    /* ───────── Views &amp; helpers ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function preview(bytes32 id) external view returns (Escrow memory e, Dispute memory d, uint256 balanceHere) {</span>
+        e = escrows[id];
+        d = disputes[id];
+        balanceHere = vfide.balanceOf(address(this));
+    }
+&nbsp;
+    /* ───────── Logging ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _log(uint8 etype, bytes32 ctx) internal {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(proof) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            try proof.logEvent(address(this), etype, ctx) {} catch {}</span>
+        }
+    }
+&nbsp;
+    /* ───────── Safety ───────── */
+&nbsp;
+    // No rescue of funds: escrow flows only through lifecycle functions.
+    // If any dust remains (shouldn’t), owner can never move it — intentional for safety.
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

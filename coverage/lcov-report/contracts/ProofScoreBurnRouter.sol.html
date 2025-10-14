@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/ProofScoreBurnRouter.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> ProofScoreBurnRouter.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">3.7% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>2/54</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.35% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>1/74</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">7.69% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/13</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">4.35% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>3/69</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+&nbsp;
+/* ──────────────────────── Minimal interfaces (aligned with VFIDE) ──────────────────────── */
+&nbsp;
+interface IERC20Burnable {
+    function transfer(address to, uint256 value) external returns (bool);
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+    function burn(uint256 value) external;
+    function balanceOf(address) external view returns (uint256);
+    function allowance(address owner, address spender) external view returns (uint256);
+}
+&nbsp;
+interface IVaultFactoryView {
+    function isVault(address v) external view returns (bool);
+    function vaultOf(address user) external view returns (address);
+}
+&nbsp;
+interface ISeerView {
+    function score(address user) external view returns (uint16);   // 0..1000
+    function isBlocked(address user) external view returns (bool);
+}
+&nbsp;
+interface IProofLedger {
+    enum EventType { BurnRouted }
+    function logEvent(address user, EventType etype, bytes32 ctx) external;
+}
+&nbsp;
+/* ───────────────────────────────────────────────────────────────────────────────────────── */
+&nbsp;
+contract ProofScoreBurnRouter is Ownable2Step, ReentrancyGuard {
+    /* ================================ Immutable / Core ================================ */
+    IERC20Burnable public immutable vfide;
+&nbsp;
+    IVaultFactoryView public factory;   // resolves vaultOf(user)
+    ISeerView        public seer;      // ProofScore + blocked
+    address          public sanctum;   // SanctumFund (receives the non-burn portion)
+    IProofLedger     public proof;     // optional sink for logging
+    address          public dao;       // DAO executor (post-handover)
+&nbsp;
+    /* ================================ Risk gate (default ON) ========================== */
+    bool   public riskGateEnabled = true;
+    bool   public blockIfBlocked  = true;
+&nbsp;
+    // Score→BPS mapping (linear). Best score =&gt; burnMinBps; worst score =&gt; burnMaxBps.
+    uint16 public constant MAX_SCORE = 1000;
+    uint16 public burnMinBps     = 2000;   // 20% burn at top score (default)
+    uint16 public burnMaxBps     = 9000;   // 90% burn at bottom score (default)
+    uint16 public blockedBurnBps = 10000;  // 100% burn if blocked (default)
+&nbsp;
+    // Optional hard minimums (sender/receiver score) – off by default (0 disables)
+    uint16 public minSenderScoreTx   = 0;
+    uint16 public minReceiverScoreTx = 0;
+&nbsp;
+    // Allowlist for special **vault** addresses (routers, custodians) to bypass risk checks
+    mapping(address =&gt; bool) public riskExemptVault;
+&nbsp;
+    /* ================================ Events ========================================== */
+    event DAOUpdated(address indexed dao);
+    event FactorySet(address indexed factory);
+    event SeerSet(address indexed seer);
+    event SanctumSet(address indexed sanctum);
+    event ProofSinkSet(address indexed proof);
+&nbsp;
+    event RiskGateToggled(bool enabled);
+    event RiskParamsUpdated(
+        bool blockIfBlocked,
+        uint16 burnMinBps,
+        uint16 burnMaxBps,
+        uint16 blockedBurnBps,
+        uint16 minSenderScoreTx,
+        uint16 minReceiverScoreTx
+    );
+    event RiskExemptVaultSet(address indexed vault, bool exempt);
+&nbsp;
+    event Routed(
+        address indexed user,
+        address indexed userVault,
+        uint16 score,
+        uint16 burnBps,
+        uint256 amountIn,
+        uint256 burned,
+        uint256 toSanctum
+    );
+&nbsp;
+    /* ================================ Errors ========================================== */
+    error ZeroAddress();
+    error FactoryUnset();
+    error SeerUnset();
+    error SanctumUnset();
+    error NotGov();
+    error NoVault();
+    error RiskRejected(string why);
+&nbsp;
+    /* ================================ Modifiers ======================================= */
+<span class="fstat-no" title="function not covered" >    modifier onlyGov() {</span>
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != owner() &amp;&amp; msg.sender != dao) revert NotGov();</span>
+        _;
+    }
+&nbsp;
+    /* ================================ Constructor ==================================== */
+    constructor(address vfide_, address initialOwner) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (vfide_ == address(0) || initialOwner == address(0)) revert ZeroAddress();
+        vfide = IERC20Burnable(vfide_);
+        _transferOwnership(initialOwner);
+    }
+&nbsp;
+    /* ================================ Governance wiring ============================== */
+<span class="fstat-no" title="function not covered" >    function setDAO(address dao_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (dao_ == address(0)) revert ZeroAddress();</span>
+        dao = dao_;
+<span class="cstat-no" title="statement not covered" >        emit DAOUpdated(dao_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setFactory(address factory_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (factory_ == address(0)) revert ZeroAddress();</span>
+        factory = IVaultFactoryView(factory_);
+<span class="cstat-no" title="statement not covered" >        emit FactorySet(factory_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setSeer(address seer_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (seer_ == address(0)) revert ZeroAddress();</span>
+        seer = ISeerView(seer_);
+<span class="cstat-no" title="statement not covered" >        emit SeerSet(seer_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setSanctum(address sanctum_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (sanctum_ == address(0)) revert ZeroAddress();</span>
+        sanctum = sanctum_;
+<span class="cstat-no" title="statement not covered" >        emit SanctumSet(sanctum_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setProofSink(address proof_) external onlyGov {</span>
+        proof = IProofLedger(proof_); // 0 allowed (disable)
+<span class="cstat-no" title="statement not covered" >        emit ProofSinkSet(proof_);</span>
+    }
+&nbsp;
+    /* ================================ Risk controls ================================== */
+<span class="fstat-no" title="function not covered" >    function toggleRiskGate(bool enabled) external onlyGov {</span>
+        riskGateEnabled = enabled;
+<span class="cstat-no" title="statement not covered" >        emit RiskGateToggled(enabled);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setRiskParams(</span>
+        bool blockIfBlocked_,
+        uint16 burnMinBps_,
+        uint16 burnMaxBps_,
+        uint16 blockedBurnBps_,
+        uint16 minSenderScoreTx_,
+        uint16 minReceiverScoreTx_
+    ) external onlyGov {
+<span class="cstat-no" title="statement not covered" >        require(burnMinBps_ &lt;= 10000 &amp;&amp; burnMaxBps_ &lt;= 10000 &amp;&amp; blockedBurnBps_ &lt;= 10000, "bps&gt;100%")</span>;
+<span class="cstat-no" title="statement not covered" >        require(burnMinBps_ &lt;= burnMaxBps_, "min&gt;max")</span>;
+<span class="cstat-no" title="statement not covered" >        require(minSenderScoreTx_ &lt;= MAX_SCORE &amp;&amp; minReceiverScoreTx_ &lt;= MAX_SCORE, "score&gt;max")</span>;
+&nbsp;
+        blockIfBlocked     = blockIfBlocked_;
+        burnMinBps         = burnMinBps_;
+        burnMaxBps         = burnMaxBps_;
+        blockedBurnBps     = blockedBurnBps_;
+        minSenderScoreTx   = minSenderScoreTx_;
+        minReceiverScoreTx = minReceiverScoreTx_;
+<span class="cstat-no" title="statement not covered" >        emit RiskParamsUpdated(blockIfBlocked, burnMinBps, burnMaxBps, blockedBurnBps, minSenderScoreTx, minReceiverScoreTx);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setRiskExemptVault(address vault, bool exempt) external onlyGov {</span>
+        riskExemptVault[vault] = exempt;
+<span class="cstat-no" title="statement not covered" >        emit RiskExemptVaultSet(vault, exempt);</span>
+    }
+&nbsp;
+    /* ================================ Public flow ==================================== */
+    /**
+     * @notice Route/burn tokens based on your current ProofScore.
+     * @dev Caller must be the **controller EOA** that owns a vault, and that vault must approve this router.
+     *      Pulls from the caller's vault; burns a score-weighted portion; sends the rest to Sanctum.
+     *
+     *      Token-level note: mark this router **systemExempt** on VFIDEToken unless you make it a vault.
+     */
+<span class="fstat-no" title="function not covered" >    function route(uint256 amount) external nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(factory) == address(0)) revert FactoryUnset();</span>
+<span class="cstat-no" title="statement not covered" >        if (address(seer) == address(0)) revert SeerUnset();</span>
+<span class="cstat-no" title="statement not covered" >        if (sanctum == address(0)) revert SanctumUnset();</span>
+<span class="cstat-no" title="statement not covered" >        require(amount &gt; 0, "amount=0")</span>;
+&nbsp;
+        // Resolve caller's vault
+<span class="cstat-no" title="statement not covered" >        address user = msg.sender;</span>
+<span class="cstat-no" title="statement not covered" >        address v = factory.vaultOf(user);</span>
+<span class="cstat-no" title="statement not covered" >        if (v == address(0) || !factory.isVault(v)) revert NoVault();</span>
+&nbsp;
+        // Risk gate (sender focus)
+<span class="cstat-no" title="statement not covered" >        if (riskGateEnabled &amp;&amp; !riskExemptVault[v]) {</span>
+<span class="cstat-no" title="statement not covered" >            if (blockIfBlocked &amp;&amp; seer.isBlocked(user)) revert RiskRejected("sender blocked");</span>
+<span class="cstat-no" title="statement not covered" >            if (minSenderScoreTx &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >                uint16 s0 = seer.score(user);</span>
+<span class="cstat-no" title="statement not covered" >                if (s0 &lt; minSenderScoreTx) revert RiskRejected("sender score");</span>
+            }
+        }
+&nbsp;
+        // Pull from vault (requires prior vault -&gt; router allowance)
+<span class="cstat-no" title="statement not covered" >        require(vfide.transferFrom(v, address(this), amount), "pull fail")</span>;
+&nbsp;
+        // Compute split based on current score
+<span class="cstat-no" title="statement not covered" >        (uint16 s, uint16 burnBps) = _burnBpsFor(user);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 toSanctum = (amount * (10000 - burnBps)) / 10000;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 toBurn    = amount - toSanctum;</span> // exact remainder
+&nbsp;
+        // Interactions
+<span class="cstat-no" title="statement not covered" >        if (toSanctum &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            require(vfide.transfer(sanctum, toSanctum), "xfer sanctum")</span>;
+        }
+<span class="cstat-no" title="statement not covered" >        if (toBurn &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            vfide.burn(toBurn)</span>;
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        emit Routed(user, v, s, burnBps, amount, toBurn, toSanctum);</span>
+&nbsp;
+        // Best-effort ledger log
+<span class="cstat-no" title="statement not covered" >        if (address(proof) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            bytes32 ctx = keccak256(abi.encode(user, s, burnBps, amount, toBurn, toSanctum));</span>
+<span class="cstat-no" title="statement not covered" >            try proof.logEvent(user, IProofLedger.EventType.BurnRouted, ctx) {} catch {}</span>
+        }
+    }
+&nbsp;
+    /* ================================ Views ========================================== */
+<span class="fstat-no" title="function not covered" >    function preview(address user, uint256 amount)</span>
+        external
+        view
+        returns (uint16 score, uint16 burnBps, uint256 burnAmt, uint256 sanctumAmt)
+    {
+<span class="cstat-no" title="statement not covered" >        if (user == address(0) || amount == 0) <span class="cstat-no" title="statement not covered" >return (0, 0, 0, 0);</span></span>
+<span class="cstat-no" title="statement not covered" >        (uint16 s, uint16 bps) = _burnBpsFor(user);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 sanctumOut = (amount * (10000 - bps)) / 10000;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 burnOut    = amount - sanctumOut;</span>
+<span class="cstat-no" title="statement not covered" >        return (s, bps, burnOut, sanctumOut);</span>
+    }
+&nbsp;
+    /* ================================ Internals ====================================== */
+<span class="fstat-no" title="function not covered" >    function _burnBpsFor(address user) internal view returns (uint16 score, uint16 burnBps) {</span>
+        score = seer.score(user); // 0..1000
+<span class="cstat-no" title="statement not covered" >        if (riskGateEnabled &amp;&amp; blockIfBlocked &amp;&amp; seer.isBlocked(user)) {</span>
+<span class="cstat-no" title="statement not covered" >            return (score, blockedBurnBps);</span> // e.g., 100% burn by default
+        }
+        // Linear interpolation from [0..1000] → [burnMaxBps..burnMinBps]
+        // s=0   =&gt; burnMaxBps
+        // s=1000=&gt; burnMinBps
+<span class="cstat-no" title="statement not covered" >        uint256 span = uint256(burnMaxBps) - uint256(burnMinBps);</span> // &gt;=0
+<span class="cstat-no" title="statement not covered" >        uint256 reduce = (span * score) / MAX_SCORE;</span>               // 0..span
+<span class="cstat-no" title="statement not covered" >        uint256 bps = uint256(burnMaxBps) - reduce;</span>
+<span class="cstat-no" title="statement not covered" >        return (score, uint16(bps));</span>
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

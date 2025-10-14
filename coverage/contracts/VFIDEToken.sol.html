@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/VFIDEToken.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> VFIDEToken.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">51.11% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>23/45</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">37.04% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>20/54</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">72.73% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>8/11</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">64.71% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>44/68</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line medium'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+&nbsp;
+/**
+ * @title VFIDE Token (Vault-Only Custody)
+ * @notice Fixed-supply ERC20 enforcing vault-only transfers via the factory registry.
+ *         Includes burn routing to ecoTreasury/sanctum with a timelocked, delta-capped split update.
+ *
+ * Key agreements implemented:
+ * - Total supply: 200,000,000 VFIDE (minted at deploy to a genesis receiver).
+ * - Vault-only custody (EOAs cannot directly hold/receive VFIDE when enabled).
+ * - System exemptions for necessary contracts (presale, staking, routers, etc).
+ * - Burn routing: user-triggered split across burn/eco/sanctum.
+ * - Split governance: propose -&gt; 48h timelock -&gt; activate, with a 10% per-change max delta.
+ */
+interface IVaultFactoryToken {
+    function isVault(address v) external view returns (bool);
+}
+&nbsp;
+contract VFIDEToken is ERC20Burnable, ERC20Permit, Ownable2Step {
+    /*//////////////////////////////////////////////////////////////
+                                SUPPLY
+    //////////////////////////////////////////////////////////////*/
+    uint256 public constant MAX_SUPPLY = 200_000_000 * 1e18;
+&nbsp;
+    /*//////////////////////////////////////////////////////////////
+                        VAULT-ONLY CUSTODY (ENFORCEMENT)
+    //////////////////////////////////////////////////////////////*/
+    // Enforce that tokens live in vaults (not EOAs)
+    bool public vaultOnly = true;
+&nbsp;
+    // Authoritative vault registry
+    IVaultFactoryToken public vaultFactory;
+&nbsp;
+    // System contracts allowed to bypass vault-only rule if needed
+    mapping(address =&gt; bool) public systemExempt; // e.g., presale, staking, ecoTreasury, routers
+&nbsp;
+    event VaultPolicySet(bool enabled);
+    event VaultFactorySet(address factory);
+    event SystemExemptSet(address indexed who, bool enabled);
+&nbsp;
+    /*//////////////////////////////////////////////////////////////
+                           BURN ROUTING / SINKS
+    //////////////////////////////////////////////////////////////*/
+    // Sinks
+    address public ecoTreasury;
+    address public sanctum;
+&nbsp;
+    event SinksSet(address ecoTreasury, address sanctum);
+&nbsp;
+    // Basis points denominator
+    uint16 public constant BPS_DENOM = 10_000;
+&nbsp;
+    // Current split (must sum to 10_000)
+    uint16 public burnBps;     // portion burned
+    uint16 public ecoBps;      // portion to ecoTreasury
+    uint16 public sanctumBps;  // portion to sanctum
+&nbsp;
+    event SplitActivated(uint16 burnBps, uint16 ecoBps, uint16 sanctumBps);
+&nbsp;
+    // Governance guardrails for split changes
+    uint16 public constant MAX_SPLIT_CHANGE_BPS = 1_000; // 10% max change per field
+    uint64 public constant SPLIT_CHANGE_DELAY   = 48 hours;
+&nbsp;
+    // Pending split proposal
+    uint16 public pendingBurnBps;
+    uint16 public pendingEcoBps;
+    uint16 public pendingSanctumBps;
+    uint64 public splitChangeEta; // timestamp after which activateSplitChange() is allowed
+&nbsp;
+    event SplitProposed(
+        uint16 burnBps,
+        uint16 ecoBps,
+        uint16 sanctumBps,
+        uint64 eta
+    );
+&nbsp;
+    /*//////////////////////////////////////////////////////////////
+                               CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
+    /**
+     * @param genesisReceiver Address receiving the full initial supply (treasury or a vault).
+     * @param vaultFactory_   Vault factory exposing isVault() for custody enforcement.
+     * @param ecoTreasury_    Initial ecoTreasury sink (can be a vault or system-exempt contract).
+     * @param sanctum_        Initial sanctum sink (can be a vault or system-exempt contract).
+     * @param initBurnBps     Initial burn bps.
+     * @param initEcoBps      Initial eco bps.
+     * @param initSanctumBps  Initial sanctum bps. (All three must sum to 10_000.)
+     */
+    constructor(
+        address genesisReceiver,
+        address vaultFactory_,
+        address ecoTreasury_,
+        address sanctum_,
+        uint16 initBurnBps,
+        uint16 initEcoBps,
+        uint16 initSanctumBps
+    )
+        ERC20("VFIDE", "VFIDE")
+        ERC20Permit("VFIDE")
+    {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(genesisReceiver != address(0), "VFIDE: genesis=0");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(vaultFactory_   != address(0), "VFIDE: factory=0");
+        _validateSplit(initBurnBps, initEcoBps, initSanctumBps);
+&nbsp;
+        // Mint full supply
+        _mint(genesisReceiver, MAX_SUPPLY);
+&nbsp;
+        // Wire factory &amp; sinks
+        vaultFactory = IVaultFactoryToken(vaultFactory_);
+        emit VaultFactorySet(vaultFactory_);
+&nbsp;
+        ecoTreasury = ecoTreasury_;
+        sanctum     = sanctum_;
+        emit SinksSet(ecoTreasury_, sanctum_);
+&nbsp;
+        // Set initial active split
+        burnBps    = initBurnBps;
+        ecoBps     = initEcoBps;
+        sanctumBps = initSanctumBps;
+        emit SplitActivated(burnBps, ecoBps, sanctumBps);
+    }
+&nbsp;
+    /*//////////////////////////////////////////////////////////////
+                                ADMIN
+    //////////////////////////////////////////////////////////////*/
+    /// @notice Toggle the vault-only transfer policy.
+<span class="fstat-no" title="function not covered" >    function setVaultOnly(bool enabled) external onlyOwner {</span>
+        vaultOnly = enabled;
+<span class="cstat-no" title="statement not covered" >        emit VaultPolicySet(enabled);</span>
+    }
+&nbsp;
+    /// @notice Point to the authoritative vault factory (must expose isVault()).
+    function setVaultFactory(address f) external onlyOwner {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(f != address(0), "VFIDE: factory=0");
+        vaultFactory = IVaultFactoryToken(f);
+        emit VaultFactorySet(f);
+    }
+&nbsp;
+    /// @notice Exempt (or unexempt) a system address from the vault-only rule (use sparingly).
+    function setSystemExempt(address who, bool enabled) external onlyOwner {
+        systemExempt[who] = enabled;
+        emit SystemExemptSet(who, enabled);
+    }
+&nbsp;
+    /// @notice Set sinks. If these are not vaults, you may whitelist them via setSystemExempt.
+    function setSinks(address ecoTreasury_, address sanctum_) external onlyOwner {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(ecoTreasury_ != address(0), "VFIDE: eco=0");
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(sanctum_     != address(0), "VFIDE: sanctum=0");
+        ecoTreasury = ecoTreasury_;
+        sanctum     = sanctum_;
+        emit SinksSet(ecoTreasury_, sanctum_);
+    }
+&nbsp;
+    /*//////////////////////////////////////////////////////////////
+                     SPLIT GOVERNANCE (TIMELOCKED)
+    //////////////////////////////////////////////////////////////*/
+    /**
+     * @notice Propose a new split; enforce delta caps per field; activate after 48h.
+     *         Caller must be owner (governed). New split must sum to 10_000.
+     */
+    function proposeSplitChange(
+        uint16 newBurnBps,
+        uint16 newEcoBps,
+        uint16 newSanctumBps
+    ) external onlyOwner {
+        _validateSplit(newBurnBps, newEcoBps, newSanctumBps);
+        // Enforce max delta per field (10%)
+        _enforceMaxDelta(burnBps,    newBurnBps);
+        _enforceMaxDelta(ecoBps,     newEcoBps);
+        _enforceMaxDelta(sanctumBps, newSanctumBps);
+&nbsp;
+        pendingBurnBps    = newBurnBps;
+        pendingEcoBps     = newEcoBps;
+        pendingSanctumBps = newSanctumBps;
+        splitChangeEta    = uint64(block.timestamp + SPLIT_CHANGE_DELAY);
+&nbsp;
+        emit SplitProposed(newBurnBps, newEcoBps, newSanctumBps, splitChangeEta);
+    }
+&nbsp;
+    /// @notice After the delay has passed, activate the proposed split.
+    function activateSplitChange() external onlyOwner {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(splitChangeEta != 0 &amp;&amp; block.timestamp &gt;= splitChangeEta, "VFIDE: split not ready");
+&nbsp;
+        burnBps    = pendingBurnBps;
+        ecoBps     = pendingEcoBps;
+        sanctumBps = pendingSanctumBps;
+&nbsp;
+        // clear pending
+        pendingBurnBps    = 0;
+        pendingEcoBps     = 0;
+        pendingSanctumBps = 0;
+        splitChangeEta    = 0;
+&nbsp;
+        emit SplitActivated(burnBps, ecoBps, sanctumBps);
+    }
+&nbsp;
+    /*//////////////////////////////////////////////////////////////
+                         USER ACTION: BURN ROUTING
+    //////////////////////////////////////////////////////////////*/
+    /**
+     * @notice Route a user-initiated burn across sinks according to the active split.
+     * @dev The caller must already hold (custody via vault policy still applies to transfers).
+     *      Any rounding dust is added to the burn portion.
+     */
+<span class="fstat-no" title="function not covered" >    function burnWithRouting(uint256 amount) external {</span>
+<span class="cstat-no" title="statement not covered" >        require(amount &gt; 0, "VFIDE: amount=0")</span>;
+&nbsp;
+        // Calculate portions
+<span class="cstat-no" title="statement not covered" >        uint256 toBurn    = (amount * uint256(burnBps))    / BPS_DENOM;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 toEco     = (amount * uint256(ecoBps))     / BPS_DENOM;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 toSanctum = (amount * uint256(sanctumBps)) / BPS_DENOM;</span>
+&nbsp;
+        // Rounding remainder → burn
+<span class="cstat-no" title="statement not covered" >        uint256 routed = toBurn + toEco + toSanctum;</span>
+<span class="cstat-no" title="statement not covered" >        if (routed &lt; amount) {</span>
+            toBurn += (amount - routed);
+        }
+&nbsp;
+        // Execute in-effects order: transfers (interactions) last
+        // Burn from sender
+<span class="cstat-no" title="statement not covered" >        if (toBurn &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            _burn(msg.sender, toBurn)</span>;
+        }
+&nbsp;
+        // Transfer to sinks (only if non-zero). If sinks are not vaults, they must be systemExempt.
+<span class="cstat-no" title="statement not covered" >        if (toEco &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            require(ecoTreasury != address(0), "VFIDE: eco unset")</span>;
+<span class="cstat-no" title="statement not covered" >            _transfer(msg.sender, ecoTreasury, toEco)</span>;
+        }
+<span class="cstat-no" title="statement not covered" >        if (toSanctum &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            require(sanctum != address(0), "VFIDE: sanctum unset")</span>;
+<span class="cstat-no" title="statement not covered" >            _transfer(msg.sender, sanctum, toSanctum)</span>;
+        }
+    }
+&nbsp;
+    /*//////////////////////////////////////////////////////////////
+                        TRANSFER GUARD (VAULT-ONLY)
+    //////////////////////////////////////////////////////////////*/
+    /**
+     * @dev Enforce vault-only movements when enabled; allow mints/burns.
+     * OZ v5-style transfer hook. If your stack uses OZ v4, switch to _beforeTokenTransfer.
+     */
+<span class="fstat-no" title="function not covered" >    function _update(address from, address to, uint256 value) internal {</span>
+<span class="cstat-no" title="statement not covered" >        if (vaultOnly) {</span>
+            // Ignore mint (from == 0) and burn (to == 0)
+<span class="cstat-no" title="statement not covered" >            if (from != address(0) &amp;&amp; to != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >                require(address(vaultFactory) != address(0), "VFIDE: factory unset")</span>;
+<span class="cstat-no" title="statement not covered" >                bool fromOk = vaultFactory.isVault(from) || systemExempt[from];</span>
+<span class="cstat-no" title="statement not covered" >                bool toOk   = vaultFactory.isVault(to)   || systemExempt[to];</span>
+<span class="cstat-no" title="statement not covered" >                require(fromOk &amp;&amp; toOk, "VFIDE: vault-only")</span>;
+            }
+        }
+    // ...existing code...
+    }
+&nbsp;
+    /*//////////////////////////////////////////////////////////////
+                               HELPERS
+    //////////////////////////////////////////////////////////////*/
+    function _validateSplit(uint16 b, uint16 e, uint16 s) internal pure {
+        require(uint256(b) + uint256(e) + uint256(s) == BPS_DENOM, "VFIDE: split != 100%");
+    }
+&nbsp;
+    function _enforceMaxDelta(uint16 oldBps, uint16 newBps) internal pure {
+        // abs(new - old) &lt;= MAX_SPLIT_CHANGE_BPS
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (newBps &gt;= oldBps) {
+            <span class="missing-if-branch" title="else path not taken" >E</span>require(newBps - oldBps &lt;= MAX_SPLIT_CHANGE_BPS, "VFIDE: split delta too high");
+        } else {
+<span class="cstat-no" title="statement not covered" >            require(oldBps - newBps &lt;= MAX_SPLIT_CHANGE_BPS, "VFIDE: split delta too high")</span>;
+        }
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

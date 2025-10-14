@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/HandoverGate.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> HandoverGate.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">5.36% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>3/56</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">1.35% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>1/74</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">4.17% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/24</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">5.41% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>4/74</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+&nbsp;
+/* ─────────────────── Minimal VFIDE interfaces ─────────────────── */
+&nbsp;
+interface ISeerView {
+    function score(address user) external view returns (uint16); // 0..1000
+    function isBlocked(address user) external view returns (bool);
+}
+&nbsp;
+interface IProofLedger {
+    function logEvent(address user, uint8 etype, bytes32 ctx) external;
+}
+&nbsp;
+/** Generic “has a DAO” pattern used across VFIDE modules */
+interface IHasDAO {
+    function setDAO(address dao) external;
+}
+&nbsp;
+/** Optional: our developer multisig that can switch to DAO mode */
+interface IMultiSigDeveloperControl {
+    function activateDAOMode(address daoExecutor) external;
+}
+&nbsp;
+/* ───────────────────────── HandoverGate ─────────────────────────
+   Final-stage controller for timed transition from developer control
+   to DAO governance, with readiness + safety checks.
+&nbsp;
+   Flow (typical):
+   1) Deploy with initialOwner (dev governance).
+   2) setDAOExecutor(dao), setSeer(), setProofSink(), setGovernables([...]),
+      setMultisig(multisig) (optional), setHandoverStart(startTs) or use now.
+   3) Optionally register a small set of DAO readiness signers (e.g., Gnosis owners)
+      and setReadySignerThreshold(3). Each signer calls signalDAOReady().
+   4) After `start + minDelay` (default 6 months) and readiness checks pass,
+      anyone may call finalizeHandover().
+   5) Gate pushes DAO to all governed modules; flips multisig to DAO mode; emits Finalized.
+------------------------------------------------------------------- */
+contract HandoverGate is Ownable2Step, ReentrancyGuard {
+    /* ───────── Wiring ───────── */
+&nbsp;
+    address public daoExecutor;        // the DAO executor to hand to (Gnosis Safe / Governor)
+    ISeerView public seer;             // ProofScore / blocklist source
+    IProofLedger public proof;         // optional audit sink
+&nbsp;
+    // Optional developer multisig; we flip it into DAO mode at finalize()
+    IMultiSigDeveloperControl public multisig;
+&nbsp;
+    // Modules that expose setDAO(address)
+    address[] public governables;
+&nbsp;
+    /* ───────── Timing ───────── */
+&nbsp;
+    uint64  public handoverStart;      // when the countdown begins
+    uint64  public minDelay = 180 days; // default 6 months
+    bool    public postponedOnce;      // single emergency extension used?
+&nbsp;
+    /* ───────── Readiness ───────── */
+&nbsp;
+    // DAO must have at least this ProofScore
+    uint16  public minDAOScore = 600;  // sane default; adjustable
+&nbsp;
+    // Optional DAO “ready” signal system
+    mapping(address =&gt; bool) public isReadySigner;
+    mapping(address =&gt; bool) public signerHasSignaled;
+    uint16  public readySignerThreshold;  // e.g., 3 of N
+    uint16  public readySignals;          // current count
+&nbsp;
+    /* ───────── State ───────── */
+&nbsp;
+    bool public finalized;              // once set, irreversible
+    address public dao;                  // mirrors daoExecutor after finalize (for onlyGov)
+&nbsp;
+    /* ───────── Events ───────── */
+&nbsp;
+    event DAOExecutorSet(address indexed dao);
+    event SeerSet(address indexed seer);
+    event ProofSinkSet(address indexed proof);
+    event MultisigSet(address indexed multisig);
+    event GovernablesSet(address[] modules);
+&nbsp;
+    event HandoverStartSet(uint64 startTs);
+    event MinDelaySet(uint64 seconds_);
+    event EmergencyPostpone(uint64 addedSeconds);
+&nbsp;
+    event MinDAOScoreSet(uint16 score);
+    event ReadySignerAdded(address indexed signer);
+    event ReadySignerRemoved(address indexed signer);
+    event ReadySignaled(address indexed signer);
+    event ReadySignerThresholdSet(uint16 threshold);
+&nbsp;
+    event Finalized(address indexed dao, uint64 timestamp);
+&nbsp;
+    /* ───────── Errors ───────── */
+&nbsp;
+    error ZeroAddress();
+    error NotGov();
+    error AlreadyFinalized();
+    error NotEligible();
+    error AlreadySignaled();
+    error ThresholdTooHigh();
+    error PostponeOnlyOnce();
+&nbsp;
+    /* ───────── Modifiers ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    modifier onlyGov() {</span>
+        // Pre-handover: owner; Post-handover: dao
+<span class="cstat-no" title="statement not covered" >        if (msg.sender != owner() &amp;&amp; msg.sender != dao) revert NotGov();</span>
+        _;
+    }
+&nbsp;
+    /* ───────── Constructor ───────── */
+&nbsp;
+    constructor(address initialOwner) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (initialOwner == address(0)) revert ZeroAddress();
+        _transferOwnership(initialOwner);
+        handoverStart = uint64(block.timestamp);
+        emit HandoverStartSet(handoverStart);
+    }
+&nbsp;
+    /* ───────── Wiring setters ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setDAOExecutor(address dao_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (dao_ == address(0)) revert ZeroAddress();</span>
+        daoExecutor = dao_;
+<span class="cstat-no" title="statement not covered" >        emit DAOExecutorSet(dao_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setSeer(address seer_) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (seer_ == address(0)) revert ZeroAddress();</span>
+        seer = ISeerView(seer_);
+<span class="cstat-no" title="statement not covered" >        emit SeerSet(seer_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setProofSink(address proof_) external onlyGov {</span>
+        proof = IProofLedger(proof_); // 0 allowed (disable)
+<span class="cstat-no" title="statement not covered" >        emit ProofSinkSet(proof_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setMultisig(address ms_) external onlyGov {</span>
+        multisig = IMultiSigDeveloperControl(ms_); // 0 allowed (skip)
+<span class="cstat-no" title="statement not covered" >        emit MultisigSet(ms_);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setGovernables(address[] calldata modules) external onlyGov {</span>
+        governables = modules;
+<span class="cstat-no" title="statement not covered" >        emit GovernablesSet(modules);</span>
+    }
+&nbsp;
+    /* ───────── Timing controls ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setHandoverStart(uint64 startTs) external onlyGov {</span>
+        handoverStart = startTs;
+<span class="cstat-no" title="statement not covered" >        emit HandoverStartSet(startTs);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setMinDelay(uint64 seconds_) external onlyGov {</span>
+        minDelay = seconds_;
+<span class="cstat-no" title="statement not covered" >        emit MinDelaySet(seconds_);</span>
+    }
+&nbsp;
+    /// @notice Single-use emergency postpone; must be invoked BEFORE eligibility.
+<span class="fstat-no" title="function not covered" >    function emergencyPostpone(uint64 addSeconds) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (postponedOnce) revert PostponeOnlyOnce();</span>
+<span class="cstat-no" title="statement not covered" >        if (_now() &lt; eligibleAt()) {</span>
+            postponedOnce = true;
+            minDelay += addSeconds;
+<span class="cstat-no" title="statement not covered" >            emit EmergencyPostpone(addSeconds);</span>
+<span class="cstat-no" title="statement not covered" >            _log(msg.sender, 70 /*EmergencyPostpone*/, keccak256(abi.encode(addSeconds)))</span>;
+        } else {
+            // If already eligible, do nothing (no silent extensions)
+            revert NotEligible();
+        }
+    }
+&nbsp;
+    /* ───────── Readiness controls ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setMinDAOScore(uint16 score) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        require(score &lt;= 1000, "score&gt;max")</span>;
+        minDAOScore = score;
+<span class="cstat-no" title="statement not covered" >        emit MinDAOScoreSet(score);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function addReadySigner(address a) external onlyGov {</span>
+<span class="cstat-no" title="statement not covered" >        if (a == address(0)) revert ZeroAddress();</span>
+        isReadySigner[a] = true;
+<span class="cstat-no" title="statement not covered" >        emit ReadySignerAdded(a);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function removeReadySigner(address a) external onlyGov {</span>
+        isReadySigner[a] = false;
+        // keep any prior signal; it no longer counts toward future thresholds
+<span class="cstat-no" title="statement not covered" >        if (signerHasSignaled[a]) {</span>
+            signerHasSignaled[a] = false;
+<span class="cstat-no" title="statement not covered" >            if (readySignals &gt; 0) readySignals -= 1;</span>
+        }
+<span class="cstat-no" title="statement not covered" >        emit ReadySignerRemoved(a);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function setReadySignerThreshold(uint16 t) external onlyGov {</span>
+        // Can’t require &lt;= number of signers on-chain cheaply; just ensure sensible range
+<span class="cstat-no" title="statement not covered" >        if (t &gt; 1000) revert ThresholdTooHigh();</span>
+        readySignerThreshold = t;
+<span class="cstat-no" title="statement not covered" >        emit ReadySignerThresholdSet(t);</span>
+    }
+&nbsp;
+    /// @notice Called by whitelisted readiness signers (e.g., DAO Safe owners) to signal DAO is ready.
+<span class="fstat-no" title="function not covered" >    function signalDAOReady() external {</span>
+<span class="cstat-no" title="statement not covered" >        address a = msg.sender;</span>
+<span class="cstat-no" title="statement not covered" >        require(isReadySigner[a], "not signer")</span>;
+<span class="cstat-no" title="statement not covered" >        if (signerHasSignaled[a]) revert AlreadySignaled();</span>
+        signerHasSignaled[a] = true;
+        readySignals += 1;
+<span class="cstat-no" title="statement not covered" >        emit ReadySignaled(a);</span>
+    }
+&nbsp;
+    /* ───────── Eligibility + finalize ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function eligibleAt() public view returns (uint64) {</span>
+<span class="cstat-no" title="statement not covered" >        return handoverStart + minDelay;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function isTimeReady() public view returns (bool) {</span>
+<span class="cstat-no" title="statement not covered" >        return _now() &gt;= eligibleAt();</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function isDAOScoreReady() public view returns (bool) {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(seer) == address(0) || daoExecutor == address(0)) <span class="cstat-no" title="statement not covered" >return false;</span></span>
+<span class="cstat-no" title="statement not covered" >        if (seer.isBlocked(daoExecutor)) <span class="cstat-no" title="statement not covered" >return false;</span></span>
+<span class="cstat-no" title="statement not covered" >        return seer.score(daoExecutor) &gt;= minDAOScore;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function isQuorumReady() public view returns (bool) {</span>
+        // If threshold is zero, treat as disabled
+<span class="cstat-no" title="statement not covered" >        if (readySignerThreshold == 0) <span class="cstat-no" title="statement not covered" >return true;</span></span>
+<span class="cstat-no" title="statement not covered" >        return readySignals &gt;= readySignerThreshold;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function previewEligibility()</span>
+        external
+        view
+        returns (bool timeReady, bool scoreReady, bool quorumReady, uint64 eligibleTimestamp)
+    {
+<span class="cstat-no" title="statement not covered" >        return (isTimeReady(), isDAOScoreReady(), isQuorumReady(), eligibleAt());</span>
+    }
+&nbsp;
+    /// @notice Final, one-way handover to DAO. Anyone can call once conditions are met.
+<span class="fstat-no" title="function not covered" >    function finalizeHandover() external nonReentrant {</span>
+<span class="cstat-no" title="statement not covered" >        if (finalized) revert AlreadyFinalized();</span>
+<span class="cstat-no" title="statement not covered" >        if (!isTimeReady() || !isDAOScoreReady() || !isQuorumReady()) revert NotEligible();</span>
+&nbsp;
+        // Push DAO into all governed modules
+<span class="cstat-no" title="statement not covered" >        address dao_ = daoExecutor;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; governables.length; i++) {</span>
+<span class="cstat-no" title="statement not covered" >            address mod = governables[i];</span>
+<span class="cstat-no" title="statement not covered" >            if (mod != address(0)) {</span>
+                // best-effort; if a single module reverts, we revert (safer than partial)
+<span class="cstat-no" title="statement not covered" >                IHasDAO(mod).setDAO(dao_)</span>;
+            }
+        }
+&nbsp;
+        // Flip developer multisig into DAO mode (optional)
+<span class="cstat-no" title="statement not covered" >        if (address(multisig) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            multisig.activateDAOMode(dao_)</span>;
+        }
+&nbsp;
+        finalized = true;
+        dao = dao_; // from now on, onlyGov recognizes DAO
+<span class="cstat-no" title="statement not covered" >        emit Finalized(dao_, _now());</span>
+<span class="cstat-no" title="statement not covered" >        _log(dao_, 71 /*HandoverFinalized*/, keccak256(abi.encode(dao_, eligibleAt(), readySignals)))</span>;
+    }
+&nbsp;
+    /* ───────── Views: list governables ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function governablesCount() external view returns (uint256) {</span>
+<span class="cstat-no" title="statement not covered" >        return governables.length;</span>
+    }
+&nbsp;
+    /* ───────── Internals ───────── */
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _now() internal view returns (uint64) {</span>
+<span class="cstat-no" title="statement not covered" >        return uint64(block.timestamp);</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _log(address user, uint8 etype, bytes32 ctx) internal {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(proof) != address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >            try proof.logEvent(user, etype, ctx) {} catch {}</span>
+        }
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 14 2025 00:31:15 GMT+0000 (Coordinated Universal Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
