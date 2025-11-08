@@ -93,13 +93,18 @@ describe("VFIDECommerce - Remaining Uncovered Branches", function () {
       await registry.waitForDeployment();
     });
 
-    it("should trigger onlyDAO revert when non-DAO calls protected function", async function () {
-      // The onlyDAO modifier at line 87 needs to test: msg.sender != dao && !TEST_onlyDAO_off
-      // Currently, there's no function in MerchantRegistry that uses onlyDAO modifier
-      // But the modifier itself exists and needs testing
-      // We can verify the modifier logic by checking that TEST_onlyDAO_off is false by default
+    it("should verify TEST_onlyDAO_off default state", async function () {
+      // Note: Branch 1 (line 87) - The onlyDAO modifier in MerchantRegistry is UNREACHABLE
+      // because no functions in MerchantRegistry use this modifier.
+      // This is dead code that cannot be covered through normal testing.
+      // We can only verify that the flag exists and has the expected default value.
       const testOffValue = await registry.TEST_onlyDAO_off();
       expect(testOffValue).to.equal(false);
+      
+      // Verify we can toggle the flag (even though it's not used)
+      await registry.TEST_setOnlyDAOOff(true);
+      const newValue = await registry.TEST_onlyDAO_off();
+      expect(newValue).to.equal(true);
     });
   });
 
