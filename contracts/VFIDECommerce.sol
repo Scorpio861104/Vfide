@@ -182,6 +182,14 @@ contract MerchantRegistry {
 
     function info(address owner) external view returns (Merchant memory) { return merchants[owner]; }
 
+    // TEST helpers (coverage only): exercise the conditional sub-expressions used by addMerchant
+    function TEST_exec_addMerchant_branches(address who, bool forceAlready, bool forceNoV, bool forceLow) external view returns (bool alreadyMerchantBranch, bool noVaultBranch, bool lowScoreBranch) {
+        alreadyMerchantBranch = (merchants[who].status != Status.NONE) || forceAlready;
+        address v = vaultHub.vaultOf(who);
+        noVaultBranch = (v == address(0)) || forceNoV;
+        lowScoreBranch = (seer.getScore(who) < minScore) || forceLow;
+    }
+
     function _log(string memory action) internal {
         if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
     }

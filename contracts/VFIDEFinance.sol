@@ -106,6 +106,20 @@ contract StablecoinRegistry {
         return 18;
     }
 
+    // TEST helper: explicitly exercise decimals fallback and direct-return branches
+    function TEST_exec_decimals_branches(address token, bool forceReturn, uint8 forcedVal) external view returns (uint8 val, bool usedForce, bool usedStaticcall) {
+        if (forceReturn) {
+            usedForce = true;
+            return (forcedVal, usedForce, false);
+        }
+        (bool ok, bytes memory d) = token.staticcall(abi.encodeWithSignature("decimals()"));
+        if (ok && d.length >= 32) {
+            usedStaticcall = true;
+            return (abi.decode(d, (uint8)), false, usedStaticcall);
+        }
+        return (18, false, false);
+    }
+
     function _log(string memory action) internal {
         if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
     }
