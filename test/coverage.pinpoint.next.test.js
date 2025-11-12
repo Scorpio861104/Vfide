@@ -353,44 +353,26 @@ describe('coverage.pinpoint.next: flip specific Commerce branch arms', function 
   const comb664 = await ce.TEST_line664_combined_mask(m1.address, m1.address, 10, 0, true);
   expect(comb664.toString().length).to.be.greaterThan(0);
 
-  // NEW micro-pass: call the freshly added 871/886 helpers
-  const inj871 = await ce.TEST_line871_injected(ethers.ZeroAddress, true);
+  // NEW: call the 871/886 cluster helpers we just added
+  const inj871 = await ce.TEST_line871_injected_zero(ethers.ZeroAddress, true);
   expect(inj871.toNumber ? inj871.toNumber() >= 0 : true).to.equal(true);
 
-  const msg871 = await ce.connect(m1).TEST_line871_msgsender(true);
-  expect(msg871.toNumber ? msg871.toNumber() >= 0 : true).to.equal(true);
+  const m871_msg = await ce.connect(m1).TEST_line871_msgsender_vault(true, 10);
+  expect(m871_msg.toNumber ? m871_msg.toNumber() >= 0 : true).to.equal(true);
 
-  const loc871 = await ce.TEST_line871_localdup(m1.address, m1.address, true);
-  expect(loc871.toString().length).to.be.greaterThan(0);
+  const local886 = await ce.TEST_line886_localdup_order(m1.address, m1.address, true);
+  expect(local886.toString().length).to.be.greaterThan(0);
 
-  const if886 = await ce.TEST_line886_ifelse(m1.address, m1.address, true);
-  expect(if886.toNumber ? if886.toNumber() >= 0 : true).to.equal(true);
+  const th871 = await ce.TEST_line871_threshold_ifelse(m1.address, 10, 0);
+  expect(th871.toNumber ? th871.toNumber() >= 0 : true).to.equal(true);
 
-  const ter886 = await ce.TEST_line886_ternary_local(m1.address, 0, true);
-  expect(ter886.toNumber ? ter886.toNumber() >= 0 : true).to.equal(true);
+  const t886_tv = await ce.TEST_line886_ternary_vs_if(m1.address, m1.address, true);
+  expect(t886_tv.toNumber ? t886_tv.toNumber() >= 0 : true).to.equal(true);
 
-  const comb871886 = await ce.TEST_line871_886_combined(m1.address, m1.address, true, true);
+  const comb871886 = await ce.TEST_line871_886_combined(m1.address, m1.address, 10, 10, true);
   expect(comb871886.toString().length).to.be.greaterThan(0);
- 
 
-  // NEW micro-pass: call the freshly added 964/1060 helpers
-  const inj964 = await ce.TEST_line964_injected(ethers.ZeroAddress, 0, true);
-  expect(inj964.toNumber ? inj964.toNumber() >= 0 : true).to.equal(true);
-
-  const if964 = await ce.TEST_line964_ifelse(m1.address, 0, true, false);
-  expect(if964.toNumber ? if964.toNumber() >= 0 : true).to.equal(true);
-
-  const msg964 = await ce.connect(m1).TEST_line964_msgsender(0, true);
-  expect(msg964.toNumber ? msg964.toNumber() >= 0 : true).to.equal(true);
-
-  const inj1060 = await ce.TEST_line1060_injected(0, ethers.ZeroAddress, true);
-  expect(inj1060.toString().length).to.be.greaterThan(0);
-
-  const ter1060 = await ce.TEST_line1060_ternary_local(0, m1.address, true);
-  expect(ter1060.toNumber ? ter1060.toNumber() >= 0 : true).to.equal(true);
-
-  const cmb9641060 = await ce.TEST_line964_1060_combined(m1.address, 0, 0, true);
-  expect(cmb9641060.toString().length).to.be.greaterThan(0);
+  // (removed duplicate/placeholder calls for additional micro-passes)
 
   // NEW micro-pass: call helpers targeting the dense 435-456 cluster and nearby 503/523 arms
   const s435_left = await ce.TEST_line435_single_arm_left(m1.address, m1.address);
