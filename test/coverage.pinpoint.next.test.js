@@ -369,8 +369,12 @@ describe('coverage.pinpoint.next: flip specific Commerce branch arms', function 
   const t886_tv = await ce.TEST_line886_ternary_vs_if(m1.address, m1.address, true);
   expect(t886_tv.toNumber ? t886_tv.toNumber() >= 0 : true).to.equal(true);
 
-  const comb871886 = await ce.TEST_line871_886_combined(m1.address, m1.address, 10, 10, true);
+  const comb871886 = await ce['TEST_line871_886_combined(address,address,uint8,uint8,bool)'](m1.address, m1.address, 10, 10, true);
   expect(comb871886.toString().length).to.be.greaterThan(0);
+
+  // Also call the boolean-typed overload explicitly to exercise that branch
+  const comb871886_bool = await ce['TEST_line871_886_combined(address,address,bool,bool)'](m1.address, m1.address, true, false);
+  expect(comb871886_bool.toString().length).to.be.greaterThan(0);
 
   // (removed duplicate/placeholder calls for additional micro-passes)
 
