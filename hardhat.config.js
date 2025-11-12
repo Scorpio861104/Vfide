@@ -4,12 +4,19 @@ try {
   require('solidity-coverage');
 } catch (e) {}
 
+// Use local solcjs to avoid download
+const solc = require('solc');
+
 module.exports = {
   solidity: {
-    version: "0.8.30",
-    settings: {
-      optimizer: { enabled: true, runs: 200 }
-    }
+    compilers: [
+      {
+        version: "0.8.30",
+        settings: {
+          optimizer: { enabled: true, runs: 200 }
+        }
+      }
+    ]
   },
   paths: {
     // For running unit tests we compile the focused subset under `contracts-min` to avoid
