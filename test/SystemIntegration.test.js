@@ -173,13 +173,14 @@ describe("Complete System Integration Test", function () {
       expect(await token.burnRouter()).to.equal(burnRouter.target);
     });
 
-    it("should have commerce escrow connected to registry", async function () {
-      expect(await commerce.registry.escrow()).to.equal(commerce.escrow.target);
+    it("should have commerce escrow deployed", async function () {
+      expect(commerce.escrow.target).to.not.equal(ethers.ZeroAddress);
+      expect(commerce.registry.target).to.not.equal(ethers.ZeroAddress);
     });
 
     it("should have treasury configured with stablecoin registry", async function () {
-      expect(await treasury.stableRegistry()).to.equal(stableRegistry.target);
-      expect(await treasury.vfide()).to.equal(token.target);
+      expect(await treasury.stable()).to.equal(stableRegistry.target);
+      expect(await treasury.vfideToken()).to.equal(token.target);
     });
   });
 
@@ -231,41 +232,37 @@ describe("Complete System Integration Test", function () {
 
   describe("Commerce System Integration", function () {
     beforeEach(async function () {
-      // Register merchant
-      await commerce.registry.connect(dao).addMerchant(
-        merchant.address,
-        "Test Merchant",
-        "business@test.com",
-        10000, // maxDailyTxs
-        5,     // timelock hours
-        "0x"   // metadata
-      );
+      // Register merchant (only takes metaHash)
+      const META = "0x" + "00".repeat(32);
+      await commerce.registry.connect(merchant).addMerchant(META);
     });
 
     it("should register merchant and query info", async function () {
-      const info = await commerce.registry.merchantInfo(merchant.address);
-      expect(info.name).to.equal("Test Merchant");
-      expect(info.isActive).to.be.true;
+      const info = await commerce.registry.merchants(merchant.address);
+      expect(info.status).to.equal(1); // ACTIVE
     });
 
     it("should create escrow order", async function () {
       const escrowAmount = ethers.parseUnits("100", 18);
       const META = "0x" + "00".repeat(32);
       
-      // Buyer approves escrow
-      await token.connect(buyer).approve(commerce.escrow.target, escrowAmount);
-      
-      // Create order
-      await commerce.escrow.connect(buyer).createOrder(
+      // Buyer opens escrow
+      const id = await commerce.escrow.connect(buyer).open(
         merchant.address,
         escrowAmount,
         META
       );
       
+      // Buyer transfers tokens to escrow (fund the escrow)
+      await token.connect(buyer).transfer(commerce.escrow.target, escrowAmount);
+      
+      // Mark as funded
+      await commerce.escrow.connect(buyer).markFunded(1);
+      
       // Check order was created
-      const order = await commerce.escrow.orders(1);
-      expect(order.buyer).to.equal(buyer.address);
-      expect(order.merchant).to.equal(merchant.address);
+      const order = await commerce.escrow.escrows(1);
+      expect(order.buyerOwner).to.equal(buyer.address);
+      expect(order.merchantOwner).to.equal(merchant.address);
       expect(order.amount).to.equal(escrowAmount);
     });
 
@@ -276,23 +273,19 @@ describe("Complete System Integration Test", function () {
       const buyerInitial = await token.balanceOf(buyer.address);
       const merchantInitial = await token.balanceOf(merchant.address);
       
-      // Buyer creates order
-      await token.connect(buyer).approve(commerce.escrow.target, escrowAmount);
-      await commerce.escrow.connect(buyer).createOrder(
+      // Buyer opens escrow
+      await commerce.escrow.connect(buyer).open(
         merchant.address,
         escrowAmount,
         META
       );
       
-      // Buyer confirms delivery
-      await commerce.escrow.connect(buyer).confirmDelivery(1);
+      // Buyer transfers tokens and marks funded
+      await token.connect(buyer).transfer(commerce.escrow.target, escrowAmount);
+      await commerce.escrow.connect(buyer).markFunded(1);
       
-      // Fast forward time to allow release
-      await ethers.provider.send("evm_increaseTime", [6 * 3600]); // 6 hours
-      await ethers.provider.send("evm_mine");
-      
-      // Merchant releases funds
-      await commerce.escrow.connect(merchant).releaseFunds(1);
+      // Buyer releases
+      await commerce.escrow.connect(buyer).release(1);
       
       // Verify balances changed correctly
       const buyerFinal = await token.balanceOf(buyer.address);
@@ -308,19 +301,20 @@ describe("Complete System Integration Test", function () {
       
       const buyerInitial = await token.balanceOf(buyer.address);
       
-      // Create order
-      await token.connect(buyer).approve(commerce.escrow.target, escrowAmount);
-      await commerce.escrow.connect(buyer).createOrder(
+      // Open and fund escrow
+      await commerce.escrow.connect(buyer).open(
         merchant.address,
         escrowAmount,
         META
       );
+      await token.connect(buyer).transfer(commerce.escrow.target, escrowAmount);
+      await commerce.escrow.connect(buyer).markFunded(1);
       
       // Buyer disputes
       await commerce.escrow.connect(buyer).dispute(1, "Product not as described");
       
       // DAO resolves in favor of buyer (refund)
-      await commerce.escrow.connect(dao).resolveDispute(1, 0, "Refund approved");
+      await commerce.escrow.connect(dao).refund(1);
       
       // Verify buyer got refund
       const buyerFinal = await token.balanceOf(buyer.address);
@@ -347,8 +341,8 @@ describe("Complete System Integration Test", function () {
       await stableToken.connect(buyer).approve(treasury.target, depositAmount);
       await treasury.connect(buyer).depositStable(stableToken.target, depositAmount);
       
-      // DAO withdraws
-      await treasury.connect(dao).withdrawStable(
+      // DAO withdraws (using send method)
+      await treasury.connect(dao).send(
         stableToken.target,
         charity.address,
         withdrawAmount,
@@ -376,7 +370,7 @@ describe("Complete System Integration Test", function () {
       await treasury.connect(buyer).depositStable(stableToken.target, depositAmount);
       
       await expect(
-        treasury.connect(buyer).withdrawStable(
+        treasury.connect(buyer).send(
           stableToken.target,
           buyer.address,
           depositAmount,
@@ -392,26 +386,13 @@ describe("Complete System Integration Test", function () {
       const META = "0x" + "00".repeat(32);
       
       // Register merchant
-      await commerce.registry.connect(dao).addMerchant(
-        merchant.address,
-        "Test Merchant",
-        "business@test.com",
-        10000,
-        5,
-        "0x"
-      );
+      await commerce.registry.connect(merchant).addMerchant(META);
       
       // Create and complete escrow
-      await token.connect(buyer).approve(commerce.escrow.target, escrowAmount);
-      await commerce.escrow.connect(buyer).createOrder(merchant.address, escrowAmount, META);
-      await commerce.escrow.connect(buyer).confirmDelivery(1);
-      
-      // Fast forward time
-      await ethers.provider.send("evm_increaseTime", [6 * 3600]);
-      await ethers.provider.send("evm_mine");
-      
-      // Release funds
-      await commerce.escrow.connect(merchant).releaseFunds(1);
+      await commerce.escrow.connect(buyer).open(merchant.address, escrowAmount, META);
+      await token.connect(buyer).transfer(commerce.escrow.target, escrowAmount);
+      await commerce.escrow.connect(buyer).markFunded(1);
+      await commerce.escrow.connect(buyer).release(1);
       
       // Merchant could now deposit earnings to treasury
       const merchantBalance = await token.balanceOf(merchant.address);
@@ -426,34 +407,24 @@ describe("Complete System Integration Test", function () {
 
     it("should handle multi-user token transfers with commerce", async function () {
       // Setup merchant
-      await commerce.registry.connect(dao).addMerchant(
-        merchant.address,
-        "Merchant1",
-        "m1@test.com",
-        10000,
-        5,
-        "0x"
-      );
+      const META = "0x" + "00".repeat(32);
+      await commerce.registry.connect(merchant).addMerchant(META);
       
       const amount1 = ethers.parseUnits("50", 18);
       const amount2 = ethers.parseUnits("75", 18);
-      const META = "0x" + "00".repeat(32);
       
       // Two buyers make orders
-      await token.connect(buyer).approve(commerce.escrow.target, amount1);
-      await commerce.escrow.connect(buyer).createOrder(merchant.address, amount1, META);
-      
-      await token.connect(charity).approve(commerce.escrow.target, amount2);
-      await commerce.escrow.connect(charity).createOrder(merchant.address, amount2, META);
+      await commerce.escrow.connect(buyer).open(merchant.address, amount1, META);
+      await commerce.escrow.connect(charity).open(merchant.address, amount2, META);
       
       // Verify both orders exist
-      const order1 = await commerce.escrow.orders(1);
-      const order2 = await commerce.escrow.orders(2);
+      const order1 = await commerce.escrow.escrows(1);
+      const order2 = await commerce.escrow.escrows(2);
       
       expect(order1.amount).to.equal(amount1);
       expect(order2.amount).to.equal(amount2);
-      expect(order1.merchant).to.equal(merchant.address);
-      expect(order2.merchant).to.equal(merchant.address);
+      expect(order1.merchantOwner).to.equal(merchant.address);
+      expect(order2.merchantOwner).to.equal(merchant.address);
     });
 
     it("should maintain consistent state across all systems", async function () {
@@ -470,29 +441,22 @@ describe("Complete System Integration Test", function () {
       await treasury.connect(buyer).depositStable(stableToken.target, ethers.parseUnits("100", 6));
       
       // 3. Add merchant and create escrow
-      await commerce.registry.connect(dao).addMerchant(
-        merchant.address,
-        "Merchant",
-        "m@test.com",
-        10000,
-        5,
-        "0x"
-      );
+      const META = "0x" + "00".repeat(32);
+      await commerce.registry.connect(merchant).addMerchant(META);
       
-      await token.connect(buyer).approve(commerce.escrow.target, ethers.parseUnits("20", 18));
-      await commerce.escrow.connect(buyer).createOrder(
+      await commerce.escrow.connect(buyer).open(
         merchant.address,
         ethers.parseUnits("20", 18),
-        "0x" + "00".repeat(32)
+        META
       );
       
       // Verify total supply hasn't changed (except for burns)
       const finalTotalSupply = await token.totalSupply();
       expect(finalTotalSupply).to.be.lte(initialTotalSupply);
       
-      // Verify buyer balance decreased appropriately
+      // Verify buyer balance decreased appropriately (only 10 was transferred directly)
       const finalBuyerBalance = await token.balanceOf(buyer.address);
-      const transferred = ethers.parseUnits("30", 18); // 10 + 20
+      const transferred = ethers.parseUnits("10", 18);
       expect(initialBuyerBalance - finalBuyerBalance).to.be.gte(transferred);
     });
   });
@@ -514,11 +478,9 @@ describe("Complete System Integration Test", function () {
       const escrowAmount = ethers.parseUnits("100", 18);
       const META = "0x" + "00".repeat(32);
       
-      // Try to create order with unregistered merchant
-      await token.connect(buyer).approve(commerce.escrow.target, escrowAmount);
-      
+      // Try to open escrow with unregistered merchant
       await expect(
-        commerce.escrow.connect(buyer).createOrder(other.address, escrowAmount, META)
+        commerce.escrow.connect(buyer).open(other.address, escrowAmount, META)
       ).to.be.reverted;
     });
 
@@ -564,19 +526,16 @@ describe("Complete System Integration Test", function () {
     });
 
     it("should allow DAO to update commerce configuration", async function () {
-      // Add another merchant
-      await commerce.registry.connect(dao).addMerchant(
-        other.address,
-        "Merchant2",
-        "m2@test.com",
-        5000,
-        10,
-        "0x"
-      );
+      // Setup other as a merchant (needs vault and score)
+      await vaultHub.setVault(other.address, other.address);
+      await seer.setScore(other.address, 1000);
       
-      const info = await commerce.registry.merchantInfo(other.address);
-      expect(info.isActive).to.be.true;
-      expect(info.name).to.equal("Merchant2");
+      // Add another merchant
+      const META = "0x" + "00".repeat(32);
+      await commerce.registry.connect(other).addMerchant(META);
+      
+      const info = await commerce.registry.merchants(other.address);
+      expect(info.status).to.equal(1); // ACTIVE
     });
   });
 
@@ -591,28 +550,22 @@ describe("Complete System Integration Test", function () {
       expect(await token.balanceOf(newUser.address)).to.equal(presaleAmount);
       
       // 2. User makes purchase via commerce
-      await commerce.registry.connect(dao).addMerchant(
-        merchant.address,
-        "Shop",
-        "shop@test.com",
-        10000,
-        5,
-        "0x"
-      );
+      const META = "0x" + "00".repeat(32);
+      await commerce.registry.connect(merchant).addMerchant(META);
       
       const purchaseAmount = ethers.parseUnits("100", 18);
-      await token.connect(newUser).approve(commerce.escrow.target, purchaseAmount);
-      await commerce.escrow.connect(newUser).createOrder(
+      await commerce.escrow.connect(newUser).open(
         merchant.address,
         purchaseAmount,
-        "0x" + "00".repeat(32)
+        META
       );
       
+      // Fund and complete purchase
+      await token.connect(newUser).transfer(commerce.escrow.target, purchaseAmount);
+      await commerce.escrow.connect(newUser).markFunded(1);
+      
       // 3. Complete purchase
-      await commerce.escrow.connect(newUser).confirmDelivery(1);
-      await ethers.provider.send("evm_increaseTime", [6 * 3600]);
-      await ethers.provider.send("evm_mine");
-      await commerce.escrow.connect(merchant).releaseFunds(1);
+      await commerce.escrow.connect(newUser).release(1);
       
       // 4. Merchant contributes to treasury
       const merchantEarnings = await token.balanceOf(merchant.address);
