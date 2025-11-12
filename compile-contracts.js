@@ -89,7 +89,7 @@ Object.keys(output.contracts).forEach(file => {
       "deployedLinkReferences": contract.evm.deployedBytecode.linkReferences || {}
     };
     
-    const artifactDir = path.join(outputPath, 'contracts-min', file.replace('.sol', '.sol'));
+    const artifactDir = path.join(outputPath, 'contracts-min', file);
     fs.mkdirSync(artifactDir, { recursive: true });
     fs.writeFileSync(
       path.join(artifactDir, contractName + '.json'),
