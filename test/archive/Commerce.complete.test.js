@@ -1,7 +1,9 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("Commerce Complete Coverage", function() {
+const describeIfNotFast = process.env.FAST_TESTS ? describe.skip : describe;
+
+describeIfNotFast("Commerce Complete Coverage", function() {
   let registry, escrow, hub, seer, sec, ledger, token;
   let dao, admin, merchant, buyer, seller;
 

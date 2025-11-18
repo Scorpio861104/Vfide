@@ -1,7 +1,9 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("VFIDECommerce - Exhaustive TEST Coverage (Part 2/3)", function() {
+const describeIfNotFast = process.env.FAST_TESTS ? describe.skip : describe;
+
+describeIfNotFast("VFIDECommerce - Exhaustive TEST Coverage (Part 2/3)", function() {
   let registry, escrow, dao, token, hub, seer, security, ledger;
   let merchant, buyer, seller, user1;
 

@@ -47,6 +47,24 @@ GitHub Actions workflow: `.github/workflows/zksync-toolchain.yml` runs:
  - `npm run coverage` (solidity-coverage) + uploads
  - Soft coverage threshold check (`coverage:check`)
 
+### Fast vs Full Tests
+For quick iteration, the default `npm test` runs in FAST mode and skips heavy archive suites. Use:
+
+```bash
+# Fast (skips exhaustive archive tests)
+npm test
+
+# Full (runs everything, slower)
+npm run test:full
+
+# Coverage with fast suite
+npm run coverage:fast
+
+# Coverage full
+npm run coverage
+```
+You can also toggle via env var: `FAST_TESTS=1 npx hardhat test`.
+
 ### Deprecated Plugin Removed
 Removed `@matterlabs/hardhat-zksync-chai-matchers` since Hardhat toolbox covers chai matchers.
 
@@ -105,6 +123,20 @@ npm run format
 Generate Solidity API docs into `docs/`:
 ```bash
 npm run docgen
+```
+
+### Advanced Tooling
+- Echidna invariants:
+```bash
+npm run echidna
+```
+- Mythril static scan (Docker image):
+```bash
+npm run mythril:token
+```
+- Medusa property testing (if installed):
+```bash
+npm run medusa
 ```
 
 ### Deploy Example (ProofLedger)
@@ -185,6 +217,20 @@ npm run diff:all
 Outputs are written to `diff-out/<network>.json`. By default, `diff:compare` compares `hardhat` vs `zkSyncSepoliaTestnet`; override with env:
 ```bash
 DIFF_EVM_NET=hardhat DIFF_ZK_NET=zkLocal npm run diff:compare
+```
+
+#### Scenario Diff (with transfers)
+Runs a simple scenario where a test vault withdraws a small token amount to the deployer and compares deltas across networks.
+```bash
+# EVM
+npm run diff:scenario:evm
+# zkSync
+export PRIVATE_KEY=0x...
+npm run diff:scenario:zk
+# Compare
+npm run diff:scenario:compare
+# Or all-in-one
+npm run diff:scenario:all
 ```
 
 ### Full-Trip Test Runner
