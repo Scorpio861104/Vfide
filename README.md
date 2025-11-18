@@ -44,6 +44,8 @@ GitHub Actions workflow: `.github/workflows/zksync-toolchain.yml` runs:
  - Short Foundry fuzz
  - Brief `forge coverage` (soft-fail)
  - `forge snapshot` (soft-fail)
+ - `npm run coverage` (solidity-coverage) + uploads
+ - Soft coverage threshold check (`coverage:check`)
 
 ### Deprecated Plugin Removed
 Removed `@matterlabs/hardhat-zksync-chai-matchers` since Hardhat toolbox covers chai matchers.
@@ -97,6 +99,12 @@ npm ci
 Format contracts:
 ```bash
 npm run format
+```
+
+### Docs (solidity-docgen)
+Generate Solidity API docs into `docs/`:
+```bash
+npm run docgen
 ```
 
 ### Deploy Example (ProofLedger)
@@ -178,3 +186,19 @@ Outputs are written to `diff-out/<network>.json`. By default, `diff:compare` com
 ```bash
 DIFF_EVM_NET=hardhat DIFF_ZK_NET=zkLocal npm run diff:compare
 ```
+
+### Full-Trip Test Runner
+Run the complete test pipeline (EVM compile/tests, coverage, optional zkLocal tests, Foundry fuzz, diff capture/compare, gas, size, lint/format):
+```bash
+bash scripts/full-trip.sh
+```
+Notes:
+- To include zkLocal tests, start the node first:
+	```bash
+	docker run --pull=always -it -p 8011:8011 -p 8545:8545 matterlabs/era-test-node:latest
+	```
+- To include zk diff capture/compare, export a funded key:
+	```bash
+	export PRIVATE_KEY=0x...
+	```
+ - The CI workflow `full-trip.yml` runs the same pipeline and uploads coverage, diff, gas, surya, and docs artifacts.

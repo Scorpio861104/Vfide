@@ -92,6 +92,8 @@ module.exports = {
     coinmarketcap: process.env.CMC_API_KEY || undefined,
     gasPrice: parseFloat(process.env.ZKSYNC_GAS_PRICE_GWEI || '0.25'), // tune for zkSync (approximate) or override via env
     showTimeSpent: true,
+    outputFile: process.env.GAS_REPORT_OUTPUT || undefined,
+    noColors: !!process.env.GAS_REPORT_OUTPUT,
     excludeContracts: ['mocks', 'contracts-min/mocks']
   }
 };

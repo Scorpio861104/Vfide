@@ -40,6 +40,23 @@ jobs:
       - name: Foundry zkSync build (optional)
         run: |
           FOUNDRY_PROFILE=zksync forge build || echo "zkSync profile build skipped"
+      - name: Solidity coverage
+        run: |
+          npm run coverage || echo "coverage failed"
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: solidity-coverage
+          path: |
+            coverage
+            coverage.json
+          if-no-files-found: ignore
+      - name: Coverage threshold check (soft)
+        env:
+          COVERAGE_MIN_LINES: '70'
+          COVERAGE_MIN_BRANCHES: '60'
+        run: |
+          npm run coverage:check || echo "coverage below threshold"
       - name: Differential capture (EVM)
         run: |
           npm run diff:evm || echo "diff:evm failed"

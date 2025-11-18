@@ -24,13 +24,17 @@
     "diff:all": "npm run diff:evm && npm run diff:zk && npm run diff:compare",
     "forge:coverage": "forge coverage --report lcov",
     "forge:snapshot": "forge snapshot",
+    "coverage:check": "node scripts/coverage-check.js",
+    "docgen": "solidity-docgen -i contracts-min -o docs",
+    "slither": "slither . --config slither.config.json",
     "coverage": "COVERAGE=1 hardhat coverage",
     "gas": "GAS_REPORT=1 hardhat test --no-compile",
     "size": "hardhat compile && hardhat size-contracts",
     "surya:graph": "surya graph contracts-min/*.sol | dot -Tpng > surya-graph.png",
     "lint:sol": "solhint 'contracts-min/**/*.sol'",
     "format": "prettier --write 'contracts-min/**/*.sol'",
-    "aggregate": "bash scripts/aggregate.sh"
+    "aggregate": "bash scripts/aggregate.sh",
+    "trip": "bash scripts/full-trip.sh"
   },
   "devDependencies": {
     "@matterlabs/hardhat-zksync-deploy": "^1.8.0",
