@@ -1,0 +1,198 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+import "forge-std/Test.sol";
+import "../../contracts-prod/VFIDECommerce.sol";
+
+interface IERC20Minimal {
+    function mint(address to, uint256 amount) external;
+    function balanceOf(address account) external view returns (uint256);
+    function approve(address spender, uint256 amount) external returns (bool);
+}
+
+/// @title Foundry Fuzz Tests for CommerceEscrow
+/// @notice Verify escrow state machine with millions of scenarios
+contract VFIDECommerceFuzzTest is Test {
+    CommerceEscrow commerce;
+    IERC20Minimal token;
+    
+    address dao = address(0x1);
+    address vaultHub = address(0x2);
+    address merchant = address(0x10);
+    address buyer = address(0x20);
+    
+    function setUp() public {
+        // Deploy mock token
+        vm.prank(dao);
+        token = IERC20Minimal(address(new MockToken()));
+        commerce = new CommerceEscrow(address(token), dao, vaultHub);
+        
+        vm.prank(dao);
+        commerce.addMerchant(merchant, "Test Merchant");
+        
+        vm.prank(dao);
+        token.mint(buyer, 10000000e18);
+        
+        vm.prank(buyer);
+        token.approve(address(commerce), type(uint256).max);
+    }
+}
+
+// Mock token for testing
+contract MockToken {
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+    uint256 public totalSupply;
+    
+    function mint(address to, uint256 amount) external {
+        balanceOf[to] += amount;
+        totalSupply += amount;
+    }
+    
+    function approve(address spender, uint256 amount) external returns (bool) {
+        allowance[msg.sender][spender] = amount;
+        return true;
+    }
+    
+    function transfer(address to, uint256 amount) external returns (bool) {
+        require(balanceOf[msg.sender] >= amount, "Insufficient balance");
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        return true;
+    }
+    
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(balanceOf[from] >= amount, "Insufficient balance");
+        require(allowance[from][msg.sender] >= amount, "Insufficient allowance");
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+        allowance[from][msg.sender] -= amount;
+        return true;
+    }
+    
+    // FUZZ 1: Open escrow with various amounts
+    function testFuzz_openEscrow(uint256 amount, uint32 timeout) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= token.balanceOf(buyer));
+        vm.assume(timeout >= 1 days && timeout <= 365 days);
+        
+        vm.prank(buyer);
+        uint256 escrowId = commerce.open(merchant, amount, bytes32(0), timeout);
+        
+        (CommerceEscrow.Status status, address escrowBuyer, address escrowMerchant, uint256 escrowAmount,,,) 
+            = commerce.info(escrowId);
+        
+        assertEq(uint(status), uint(CommerceEscrow.Status.OPEN));
+        assertEq(escrowBuyer, buyer);
+        assertEq(escrowMerchant, merchant);
+        assertEq(escrowAmount, amount);
+    }
+    
+    // FUZZ 2: Fund and release escrow
+    function testFuzz_fundAndRelease(uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= 1000000e18);
+        
+        vm.prank(buyer);
+        uint256 escrowId = commerce.open(merchant, amount, bytes32(0), 30 days);
+        
+        vm.prank(buyer);
+        commerce.markFunded(escrowId);
+        
+        vm.prank(merchant);
+        commerce.release(escrowId);
+        
+        uint256 merchantBalance = token.balanceOf(merchant);
+        assertGt(merchantBalance, 0);
+    }
+    
+    // FUZZ 3: Refund escrow
+    function testFuzz_refundEscrow(uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= 1000000e18);
+        
+        uint256 buyerBalanceBefore = token.balanceOf(buyer);
+        
+        vm.prank(buyer);
+        uint256 escrowId = commerce.open(merchant, amount, bytes32(0), 30 days);
+        
+        vm.prank(buyer);
+        commerce.markFunded(escrowId);
+        
+        vm.prank(merchant);
+        commerce.refund(escrowId);
+        
+        assertGt(token.balanceOf(buyer), buyerBalanceBefore - amount);
+    }
+    
+    // FUZZ 4: Dispute and resolve
+    function testFuzz_disputeAndResolve(uint256 amount, uint256 buyerShare) public {
+        vm.assume(amount > 1000);
+        vm.assume(amount <= 1000000e18);
+        vm.assume(buyerShare <= amount);
+        
+        vm.prank(buyer);
+        uint256 escrowId = commerce.open(merchant, amount, bytes32(0), 30 days);
+        
+        vm.prank(buyer);
+        commerce.markFunded(escrowId);
+        
+        vm.prank(buyer);
+        commerce.dispute(escrowId);
+        
+        vm.prank(dao);
+        commerce.resolve(escrowId, buyerShare);
+        
+        (CommerceEscrow.Status status,,,,,) = commerce.info(escrowId);
+        assertEq(uint(status), uint(CommerceEscrow.Status.RESOLVED));
+    }
+    
+    // FUZZ 5: Cannot release before funding
+    function testFuzz_cannotReleaseUnfunded(uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= 1000000e18);
+        
+        vm.prank(buyer);
+        uint256 escrowId = commerce.open(merchant, amount, bytes32(0), 30 days);
+        
+        vm.prank(merchant);
+        vm.expectRevert();
+        commerce.release(escrowId);
+    }
+    
+    // FUZZ 6: Timeout after deadline
+    function testFuzz_timeoutAfterDeadline(uint256 amount, uint32 timeout) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= 100000e18);
+        vm.assume(timeout >= 1 days && timeout <= 30 days);
+        
+        vm.prank(buyer);
+        uint256 escrowId = commerce.open(merchant, amount, bytes32(0), timeout);
+        
+        vm.prank(buyer);
+        commerce.markFunded(escrowId);
+        
+        vm.warp(block.timestamp + timeout + 1);
+        
+        vm.prank(buyer);
+        commerce.refund(escrowId);
+        
+        (CommerceEscrow.Status status,,,,,) = commerce.info(escrowId);
+        assertEq(uint(status), uint(CommerceEscrow.Status.REFUNDED));
+    }
+    
+    // FUZZ 7: Multiple escrows work independently
+    function testFuzz_multipleEscrows(uint256 amount1, uint256 amount2) public {
+        vm.assume(amount1 > 0 && amount2 > 0);
+        vm.assume(amount1 + amount2 <= 1000000e18);
+        
+        vm.prank(buyer);
+        uint256 escrowId1 = commerce.open(merchant, amount1, bytes32(0), 30 days);
+        
+        vm.prank(buyer);
+        uint256 escrowId2 = commerce.open(merchant, amount2, bytes32(0), 30 days);
+        
+        assertEq(escrowId2, escrowId1 + 1);
+        assertEq(commerce.escrowCount(), escrowId2 + 1);
+    }
+}

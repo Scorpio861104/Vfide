@@ -45,6 +45,21 @@ interface IProofLedger {
     function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
 }
 
+/// Rate limiting structure
+struct RateLimit {
+    uint256 purchaseCount;
+    uint256 lastPurchaseTime;
+    uint256 windowStart;
+}
+
+/// Multi-level referral structure
+struct ReferralData {
+    address referrer;
+    uint256 level1Bonus; // Direct referral bonus
+    uint256 level2Bonus; // Second-level referral bonus
+    uint256 totalReferrals;
+}
+
 /// ─────────────────────────── Lightweight Ownable
 abstract contract Ownable {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
@@ -120,6 +135,16 @@ contract VFIDEPresale is Ownable {
     // Presale start time (for DevReserveVestingVault to read)
     uint256 public presaleStartTime;
 
+    // Rate limiting (prevent abuse during high-demand periods)
+    mapping(address => RateLimit) public rateLimits;
+    uint256 public maxPurchasesPerWindow = 5; // Max purchases per time window
+    uint256 public rateLimitWindow = 1 hours; // Time window for rate limiting
+    bool public rateLimitingEnabled = false;
+
+    // Multi-level referral tracking
+    mapping(address => ReferralData) public referralData;
+    mapping(address => address[]) public referralsByAddress; // Track all referrals
+
     constructor(address _vfide, address _vaultHub, address _registry, address _ledger, address _securityHub) {
         if (_vfide==address(0) || _vaultHub==address(0) || _registry==address(0)) revert PR_Zero();
         vfide = IVFIDEToken(_vfide);
@@ -176,6 +201,12 @@ contract VFIDEPresale is Ownable {
         _log("ref_bps_set");
     }
 
+    function setTreasury(address newTreasury) external onlyOwner {
+        require(newTreasury != address(0), "treasury=0");
+        registry.setTreasury(newTreasury);
+        _log("treasury_updated");
+    }
+
     /// One-time launch setter for vesting sync
     function launchPresale(uint256 startTime) external onlyOwner {
         if (presaleStartTime != 0) revert PR_StartSet();
@@ -192,6 +223,46 @@ contract VFIDEPresale is Ownable {
         _log("presale_launched");
     }
 
+    /// Rate limiting controls
+    function setRateLimiting(bool enabled, uint256 maxPurchases, uint256 window) external onlyOwner {
+        rateLimitingEnabled = enabled;
+        maxPurchasesPerWindow = maxPurchases;
+        rateLimitWindow = window;
+        _log("rate_limiting_updated");
+    }
+
+    function _checkRateLimit(address buyer) internal {
+        if (!rateLimitingEnabled) return;
+        
+        RateLimit storage limit = rateLimits[buyer];
+        
+        // Reset window if expired
+        if (block.timestamp >= limit.windowStart + rateLimitWindow) {
+            limit.windowStart = block.timestamp;
+            limit.purchaseCount = 0;
+        }
+        
+        // Check limit
+        require(limit.purchaseCount < maxPurchasesPerWindow, "rate limit exceeded");
+        limit.purchaseCount++;
+        limit.lastPurchaseTime = block.timestamp;
+    }
+
+    /// Multi-level referral tracking
+    function getReferralStats(address user) external view returns (
+        address referrer,
+        uint256 level1Bonus,
+        uint256 level2Bonus,
+        uint256 totalReferrals
+    ) {
+        ReferralData memory data = referralData[user];
+        return (data.referrer, data.level1Bonus, data.level2Bonus, data.totalReferrals);
+    }
+
+    function getReferralCount(address user) external view returns (uint256) {
+        return referralsByAddress[user].length;
+    }
+
     // ─────────────────────────── Purchase
 
     /**
@@ -206,11 +277,22 @@ contract VFIDEPresale is Ownable {
         if (tier > 2 || !tierEnabled[tier]) revert PR_BadTier();
         if (!registry.isAllowed(stable)) revert PR_NotAllowedStable();
 
+        // Check rate limiting
+        _checkRateLimit(msg.sender);
+
         // ensure vault (auto-create) and resolve it
         address vault = vaultHub.ensureVault(msg.sender);
 
         // security lock check
         if (address(securityHub)!=address(0) && securityHub.isLocked(vault)) revert PR_VaultLocked();
+
+        // Track referral relationships
+        if (referrer != address(0) && referrer != msg.sender) {
+            if (referralData[msg.sender].referrer == address(0)) {
+                referralData[msg.sender].referrer = referrer;
+                referralsByAddress[referrer].push(msg.sender);
+            }
+        }
 
         // compute bonuses
         uint256 buyerBonus = (vfideOut * buyerBonusBps) / 10_000;
@@ -249,12 +331,26 @@ contract VFIDEPresale is Ownable {
             // If ref vault is locked, skip ref bonus mint to avoid reverts (fair + safe)
             if (address(securityHub)==address(0) || !securityHub.isLocked(refVault)) {
                 vfide.mintPresale(refVault, refBonus);
+                
+                // Track referral bonuses
+                referralData[referrer].level1Bonus += refBonus;
+                referralData[referrer].totalReferrals++;
+                
+                // Check for second-level referrer
+                address secondLevelRef = referralData[referrer].referrer;
+                if (secondLevelRef != address(0)) {
+                    uint256 level2Bonus = (refBonus * 50) / 100; // 50% of level 1 bonus
+                    referralData[secondLevelRef].level2Bonus += level2Bonus;
+                }
             } else {
                 // rollback the per-address booked ref bonus since it didn't mint
-                purchasedByVault[vault] -= refBonus; // only buyer’s cap was incremented; ref’s wasn't
+                purchasedByVault[vault] -= refBonus; // only buyer's cap was incremented; ref's wasn't
                 totalMint = vfideOut + buyerBonus;   // for event/logging
             }
         }
+        
+        // Track buyer's bonus
+        referralData[msg.sender].level1Bonus += buyerBonus;
 
         emit Purchase(msg.sender, vault, stable, tier, vfideOut, buyerBonus, refBonus, payAmt, referrer);
         _logEv(msg.sender, "presale_buy", totalMint, _tierNote(tier));

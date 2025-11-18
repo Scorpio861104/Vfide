@@ -2,73 +2,228 @@
 pragma solidity 0.8.30;
 
 /**
- * ProofScoreBurnRouter
- * Adjusts transaction fees, burns, and charity splits
- * dynamically based on user ProofScore.
+ * ProofScoreBurnRouter — VFIDE Ecosystem Burns & Sanctum Router
+ * ----------------------------------------------------------
+ * Per VFIDE Ecosystem Overview Sections 8.2 & 8.3:
+ * - Burns to reduce supply and signal long-term commitment
+ * - Sanctum fund receives percentage for charity/impact (e.g., 25% Sanctum, 75% burn)
+ * - Dynamic fees based on ProofScore
+ * - Implements computeFees interface for VFIDEToken integration
+ * - All actions logged for transparency
  */
 
-interface ISeer_BURN { function getScore(address user) external view returns (uint16); }
-interface IEcoTreasuryVault_BURN { function noteVFIDE(uint256 amount, address from) external; }
-interface ISanctumFund_BURN { function disburse(address token, address charity, uint256 amount, string calldata reason) external; }
+interface ISeer_BURN { 
+    function getScore(address user) external view returns (uint16);
+    function highTrustThreshold() external view returns (uint16);
+    function lowTrustThreshold() external view returns (uint16);
+}
 
 error BURN_Zero();
+error BURN_NotDAO();
 
-contract ProofScoreBurnRouter {
-    event ModulesSet(address seer, address treasury, address sanctum);
-    event RouteExecuted(address indexed user, uint256 burnAmount, uint256 sanctumAmount);
-    event Adjusted(address indexed user, uint16 score, uint16 burnRate, uint16 sanctumRate);
+abstract contract Ownable {
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    address public owner;
+    constructor() { owner = msg.sender; emit OwnershipTransferred(address(0), msg.sender); }
+    modifier onlyOwner() { require(msg.sender == owner, "not owner"); _; }
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "zero");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+    }
+}
+
+contract ProofScoreBurnRouter is Ownable {
+    event ModulesSet(address seer, address sanctumSink, address burnSink);
+    event PolicySet(uint16 baseBurnBps, uint16 baseSanctumBps, uint16 highTrustReduction, uint16 lowTrustPenalty);
+    event FeesComputed(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint16 score);
 
     ISeer_BURN public seer;
-    IEcoTreasuryVault_BURN public treasury;
-    ISanctumFund_BURN public sanctum;
+    address public sanctumSink;  // SanctumVault address
+    address public burnSink;     // Optional burn sink (if zero, hard burn to address(0))
 
-    address public vfideToken;
-    uint16 public baseBurnRate = 50;     // 0.5%
-    uint16 public maxBurnRate  = 250;    // 2.5%
-    uint16 public sanctumRate  = 25;     // 0.25%
+    // Policy: basis points (100 = 1%)
+    // Per overview: suggested split ~25% Sanctum, 75% burn (total ~2-3% of transfers)
+    uint16 public baseBurnBps    = 200;  // 2.0% base burn
+    uint16 public baseSanctumBps = 50;   // 0.5% base Sanctum
+    
+    // ProofScore adjustments
+    uint16 public highTrustReduction = 50;  // -0.5% for high trust (reduce burn)
+    uint16 public lowTrustPenalty    = 150; // +1.5% for low trust (increase burn)
+    
+    uint16 public maxTotalBps = 500; // 5% max total fees
 
-    constructor(address _seer, address _treasury, address _sanctum, address _vfide) {
-        if (_seer == address(0) || _treasury == address(0) || _vfide == address(0)) revert BURN_Zero();
+    constructor(address _seer, address _sanctumSink, address _burnSink) {
+        require(_seer != address(0), "zero seer");
         seer = ISeer_BURN(_seer);
-        treasury = IEcoTreasuryVault_BURN(_treasury);
-        sanctum = ISanctumFund_BURN(_sanctum);
-        vfideToken = _vfide;
-        emit ModulesSet(_seer, _treasury, _sanctum);
+        sanctumSink = _sanctumSink;
+        burnSink = _burnSink;
+        emit ModulesSet(_seer, _sanctumSink, _burnSink);
     }
 
-    function setModules(address _seer, address _treasury, address _sanctum, address _vfide) external {
+    // ─────────────────────────── Admin
+
+    function setModules(address _seer, address _sanctumSink, address _burnSink) external onlyOwner {
+        if (_seer == address(0)) revert BURN_Zero();
         seer = ISeer_BURN(_seer);
-        treasury = IEcoTreasuryVault_BURN(_treasury);
-        sanctum = ISanctumFund_BURN(_sanctum);
-        vfideToken = _vfide;
-        emit ModulesSet(_seer, _treasury, _sanctum);
+        sanctumSink = _sanctumSink;
+        burnSink = _burnSink;
+        emit ModulesSet(_seer, _sanctumSink, _burnSink);
     }
 
-    function route(address user, uint256 amount) external returns (uint256) {
-        uint16 score = seer.getScore(user);
-        uint16 burnRate = _calcBurnRate(score);
-        uint256 burnAmount = (amount * burnRate) / 10000;
-        uint256 sanctumAmount = (amount * sanctumRate) / 10000;
-        uint256 total = burnAmount + sanctumAmount;
-
-        if (burnAmount > 0) { treasury.noteVFIDE(burnAmount, user); }
-        if (sanctumAmount > 0) { sanctum.disburse(vfideToken, address(treasury), sanctumAmount, "ProofScore charity share"); }
-
-        emit RouteExecuted(user, burnAmount, sanctumAmount);
-        emit Adjusted(user, score, burnRate, sanctumRate);
-        return total;
+    function setPolicy(
+        uint16 _baseBurnBps,
+        uint16 _baseSanctumBps,
+        uint16 _highTrustReduction,
+        uint16 _lowTrustPenalty,
+        uint16 _maxTotalBps
+    ) external onlyOwner {
+        require(_maxTotalBps <= 1000, "max too high"); // Max 10%
+        require(_baseBurnBps + _baseSanctumBps <= _maxTotalBps, "base exceeds max");
+        
+        baseBurnBps = _baseBurnBps;
+        baseSanctumBps = _baseSanctumBps;
+        highTrustReduction = _highTrustReduction;
+        lowTrustPenalty = _lowTrustPenalty;
+        maxTotalBps = _maxTotalBps;
+        
+        emit PolicySet(_baseBurnBps, _baseSanctumBps, _highTrustReduction, _lowTrustPenalty);
     }
 
-    function adjustScore(address user, uint16 delta, bool increase) external {
-        uint16 score = seer.getScore(user);
-        emit Adjusted(user, score, _calcBurnRate(score), sanctumRate);
+    /**
+     * Dynamic Fee Adjustment
+     * Adjust fees based on market conditions
+     */
+    function adjustFees(uint16 marketVolatility) external onlyOwner {
+        require(marketVolatility <= 1000, "Volatility too high"); // Max 10%
+
+        // Adjust base fees dynamically
+        baseBurnBps = 200 + (marketVolatility / 10); // Example: Increase by up to 1%
+        baseSanctumBps = 50 + (marketVolatility / 20); // Example: Increase by up to 0.5%
+
+        // Ensure total fees do not exceed maxTotalBps
+        require(baseBurnBps + baseSanctumBps <= maxTotalBps, "Adjusted fees exceed max");
+
+        emit PolicySet(baseBurnBps, baseSanctumBps, highTrustReduction, lowTrustPenalty);
     }
 
-    function _calcBurnRate(uint16 score) internal view returns (uint16) {
-        if (score >= 900) return baseBurnRate / 2;
-        if (score <= 300) return maxBurnRate;
-        uint16 range = maxBurnRate - baseBurnRate;
-        uint16 diff = 900 - score;
-        return baseBurnRate + (range * diff / 600);
+    /**
+     * Refined Dynamic Fee Adjustment
+     * Adjust fees based on market conditions with capped increases
+     */
+    function adjustFeesWithCap(uint16 marketVolatility) external onlyOwner {
+        require(marketVolatility <= 1000, "Volatility too high"); // Max 10%
+
+        // Calculate adjustments with gradual scaling
+        uint16 volatilityAdjustment = marketVolatility / 10; // Scale: 0.1% per 10% volatility
+
+        // Apply adjustments with caps
+        uint16 adjustedBurnBps = 200 + volatilityAdjustment; // Base 2.0% + adjustment
+        uint16 adjustedSanctumBps = 50 + (volatilityAdjustment / 2); // Base 0.5% + adjustment
+
+        // Ensure total fees do not exceed maxTotalBps
+        require(adjustedBurnBps + adjustedSanctumBps <= maxTotalBps, "Adjusted fees exceed max");
+
+        // Update fees
+        baseBurnBps = adjustedBurnBps;
+        baseSanctumBps = adjustedSanctumBps;
+
+        emit PolicySet(baseBurnBps, baseSanctumBps, highTrustReduction, lowTrustPenalty);
+    }
+
+    /**
+     * Liquidity Pool Incentives
+     * Redirect a portion of fees to liquidity pools
+     */
+    function allocateToLiquidityPool(address liquidityPool, uint256 amount) external onlyOwner {
+        require(liquidityPool != address(0), "Invalid pool address");
+        require(amount > 0, "Amount must be greater than zero");
+
+        // Transfer funds to the liquidity pool
+        (bool success, ) = liquidityPool.call{value: amount}("");
+        require(success, "Liquidity pool transfer failed");
+    }
+
+    /**
+     * Emergency Fund Allocation
+     * Reserve a portion of the burn fee for liquidity or emergencies
+     */
+    function allocateEmergencyFund(address emergencyFund, uint256 amount) external onlyOwner {
+        require(emergencyFund != address(0), "Invalid fund address");
+        require(amount > 0, "Amount must be greater than zero");
+
+        // Transfer funds to the emergency fund
+        (bool success, ) = emergencyFund.call{value: amount}("");
+        require(success, "Emergency fund transfer failed");
+    }
+
+    // ─────────────────────────── Core Interface (for VFIDEToken)
+
+    /**
+     * Compute dynamic burn and Sanctum fees based on ProofScore
+     * Called by VFIDEToken during transfers
+     * 
+     * @param from Sender address
+     * @param to Recipient address  
+     * @param amount Transfer amount
+     * @return burnAmount Amount to burn
+     * @return sanctumAmount Amount to Sanctum fund
+     * @return sanctumSink_ Sanctum vault address
+     * @return burnSink_ Burn sink address (zero = hard burn)
+     */
+    function computeFees(
+        address from,
+        address to,
+        uint256 amount
+    ) external view returns (
+        uint256 burnAmount,
+        uint256 sanctumAmount,
+        address sanctumSink_,
+        address burnSink_
+    ) {
+        if (amount == 0) return (0, 0, sanctumSink, burnSink);
+
+        // Delegate fee computation to Seer
+        (burnAmount, sanctumAmount) = seer.computeBurnAndSanctumFees(from, amount);
+
+        sanctumSink_ = sanctumSink;
+        burnSink_ = burnSink;
+    }
+
+    // ─────────────────────────── View Helpers
+
+    /**
+     * Preview fees for a given user and amount
+     */
+    function previewFees(address user, uint256 amount) external view returns (
+        uint256 burnAmount,
+        uint256 sanctumAmount,
+        uint256 netAmount,
+        uint16 score
+    ) {
+        score = seer.getScore(user);
+
+        // Delegate fee preview to Seer
+        (burnAmount, sanctumAmount) = seer.previewBurnAndSanctumFees(user, amount);
+        netAmount = amount - burnAmount - sanctumAmount;
+    }
+
+    /**
+     * Get effective burn rate for a user
+     */
+    function getEffectiveBurnRate(address user) external view returns (uint16 burnBps, uint16 sanctumBps) {
+        // Delegate effective burn rate calculation to Seer
+        (burnBps, sanctumBps) = seer.getEffectiveBurnAndSanctumRates(user);
+    }
+
+    /**
+     * Calculate split ratio (for transparency)
+     */
+    function getSplitRatio() external view returns (uint256 burnPercent, uint256 sanctumPercent) {
+        uint256 total = baseBurnBps + baseSanctumBps;
+        if (total == 0) return (0, 0);
+        
+        burnPercent = (baseBurnBps * 100) / total;
+        sanctumPercent = (baseSanctumBps * 100) / total;
     }
 }

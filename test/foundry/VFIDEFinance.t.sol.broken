@@ -1,0 +1,255 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+import "forge-std/Test.sol";
+import "../../contracts-prod/mocks/ERC20Mock.sol";
+import "../../contracts-prod/mocks/LedgerMock.sol";
+import "../../contracts-prod/mocks/VaultHubMock.sol";
+import "../../contracts-prod/mocks/VFIDEFinanceMocks.sol";
+
+contract VFIDEFinanceTest is Test {
+    StablecoinRegistryMock public registry;
+    EcoTreasuryVaultMock public treasury;
+    LedgerMock public ledger;
+    VaultHubMock public vaultHub;
+    ERC20Mock public usdc;
+    ERC20Mock public usdt;
+    ERC20Mock public vfide;
+    
+    address constant DAO = address(0x1);
+    address constant USER = address(0x2);
+    address constant CHARITY = address(0x3);
+    
+    function setUp() public {
+        // Deploy mocks
+        ledger = new LedgerMock();
+        vaultHub = new VaultHubMock();
+        usdc = new ERC20Mock("USDC", "USDC");
+        usdt = new ERC20Mock("USDT", "USDT");
+        vfide = new ERC20Mock("VFIDE", "VFIDE");
+        
+        // Deploy contracts with mocks
+        registry = new StablecoinRegistryMock(DAO);
+        treasury = new EcoTreasuryVaultMock(DAO);
+        
+        // Add stablecoins to registry
+        vm.startPrank(DAO);
+        registry.addAsset(address(usdc), "USDC");
+        registry.addAsset(address(usdt), "USDT");
+        vm.stopPrank();
+        
+        // Give treasury some tokens
+        usdc.mint(address(treasury), 1_000_000e18);
+        vfide.mint(address(treasury), 1_000_000e18);
+    }
+    
+    // ============ STABLECOIN REGISTRY FUZZ TESTS ============
+    
+    /// @notice Fuzz test: Only DAO can add assets
+    function testFuzz_OnlyDAOCanAddAssets(address caller, address token) public {
+        vm.assume(caller != DAO);
+        vm.assume(token != address(0));
+        vm.assume(token != address(usdc));
+        vm.assume(token != address(usdt));
+        
+        vm.prank(caller);
+        vm.expectRevert(FI_NotDAO.selector);
+        registry.addAsset(token, "TEST");
+    }
+    
+    /// @notice Fuzz test: Cannot add same asset twice
+    function testFuzz_CannotAddAssetTwice(address token) public {
+        vm.assume(token != address(0));
+        vm.assume(token != address(usdc));
+        vm.assume(token != address(usdt));
+        
+        vm.startPrank(DAO);
+        registry.addAsset(token, "TOKEN1");
+        
+        vm.expectRevert(FI_AlreadyWhitelisted.selector);
+        registry.addAsset(token, "TOKEN2");
+        
+        vm.stopPrank();
+    }
+    
+    /// @notice Fuzz test: Asset whitelist status is correct
+    function testFuzz_AssetWhitelistStatus(address token) public {
+        vm.assume(token != address(0));
+        vm.assume(token != address(usdc));
+        vm.assume(token != address(usdt));
+        
+        // Should not be whitelisted initially
+        assertFalse(registry.isWhitelisted(token), "Should not be whitelisted");
+        
+        // Add asset
+        vm.prank(DAO);
+        registry.addAsset(token, "TEST");
+        
+        // Should be whitelisted now
+        assertTrue(registry.isWhitelisted(token), "Should be whitelisted");
+        
+        // Remove asset
+        vm.prank(DAO);
+        registry.removeAsset(token);
+        
+        // Should not be whitelisted anymore
+        assertFalse(registry.isWhitelisted(token), "Should not be whitelisted after removal");
+    }
+    
+    /// @notice Fuzz test: Symbol hint can be updated
+    function testFuzz_SymbolHintUpdate(string memory symbol1, string memory symbol2) public {
+        address token = address(0x999);
+        
+        vm.startPrank(DAO);
+        registry.addAsset(token, symbol1);
+        
+        // Update symbol
+        registry.setSymbolHint(token, symbol2);
+        
+        
+        vm.stopPrank();
+    }
+    
+    /// @notice Fuzz test: Cannot remove non-whitelisted asset
+    function testFuzz_CannotRemoveNonWhitelistedAsset(address token) public {
+        vm.assume(token != address(usdc));
+        vm.assume(token != address(usdt));
+        
+        vm.prank(DAO);
+        vm.expectRevert(FI_NotWhitelisted.selector);
+        registry.removeAsset(token);
+    }
+    
+    // ============ ECO TREASURY VAULT FUZZ TESTS ============
+    
+    /// @notice Fuzz test: VFIDE deposits are tracked correctly
+    function testFuzz_VFIDEDepositTracking(uint256 amount) public {
+        vm.assume(amount > 0 && amount < 1_000_000e18);
+        
+        vfide.mint(USER, amount);
+        
+        vm.startPrank(USER);
+        vfide.approve(address(treasury), amount);
+        
+        treasury.depositVFIDE(amount);
+        
+        assertEq(balAfter - balBefore, amount, "VFIDE balance not tracked correctly");
+        
+        vm.stopPrank();
+    }
+    
+    /// @notice Fuzz test: VFIDE noting without transfer
+    function testFuzz_VFIDENoteTracking(uint256 amount) public {
+        vm.assume(amount > 0 && amount < 1_000_000e18);
+        
+        
+        assertEq(balAfter - balBefore, amount, "VFIDE note not tracked correctly");
+    }
+    
+    /// @notice Fuzz test: Charity disbursement works correctly
+    
+    /// @notice Fuzz test: Cannot disburse to non-charity
+    
+    /// @notice Fuzz test: Cannot disburse more than balance
+    function testFuzz_CannotDisburseMoreThanBalance(uint256 amount) public {
+        uint256 balance = usdc.balanceOf(address(treasury));
+        vm.assume(amount > balance);
+        
+        vm.prank(DAO);
+        treasury.addCharity(CHARITY, "Test");
+        
+        vm.prank(DAO);
+        vm.expectRevert(FI_Insufficient.selector);
+        treasury.disburse(address(usdc), CHARITY, amount, "test");
+    }
+    
+    /// @notice Fuzz test: Multiple charities can be added
+    function testFuzz_MultipleCharities(uint8 numCharities) public {
+        vm.assume(numCharities > 0 && numCharities <= 50);
+        
+        vm.startPrank(DAO);
+        
+        for (uint256 i = 0; i < numCharities; i++) {
+            address charity = address(uint160(1000 + i));
+            treasury.addCharity(charity, "Charity");
+            
+            assertTrue(treasury.isCharity(charity), "Charity not added");
+        }
+        
+        vm.stopPrank();
+    }
+    
+    /// @notice Fuzz test: Charity can be removed
+    
+    /// @notice Fuzz test: Cannot add charity twice
+    
+    /// @notice Fuzz test: Stablecoin deposits work correctly
+    function testFuzz_StablecoinDeposit(uint256 amount) public {
+        vm.assume(amount > 0 && amount < 100_000e18);
+        
+        usdc.mint(USER, amount);
+        
+        vm.startPrank(USER);
+        usdc.approve(address(treasury), amount);
+        
+        uint256 balBefore = usdc.balanceOf(address(treasury));
+        treasury.depositStable(address(usdc), amount);
+        uint256 balAfter = usdc.balanceOf(address(treasury));
+        
+        assertEq(balAfter - balBefore, amount, "Stablecoin deposit incorrect");
+        
+        vm.stopPrank();
+    }
+    
+    /// @notice Fuzz test: Multiple deposits accumulate correctly
+    function testFuzz_MultipleDepositsAccumulate(uint8 numDeposits, uint256 amountEach) public {
+        vm.assume(numDeposits > 0 && numDeposits <= 20);
+        vm.assume(amountEach > 0 && amountEach < 10_000e18);
+        
+        uint256 totalAmount = amountEach * numDeposits;
+        vfide.mint(USER, totalAmount);
+        
+        vm.startPrank(USER);
+        vfide.approve(address(treasury), totalAmount);
+        
+        
+        for (uint256 i = 0; i < numDeposits; i++) {
+            treasury.depositVFIDE(amountEach);
+        }
+        
+        assertEq(balAfter - balBefore, totalAmount, "Deposits don't accumulate correctly");
+        
+        vm.stopPrank();
+    }
+    
+    /// @notice Fuzz test: Disbursement splits work correctly
+    function testFuzz_DisbursementSplits(uint256 totalAmount, uint8 charityPercent) public {
+        vm.assume(totalAmount > 100 && totalAmount < 1_000_000e18);
+        vm.assume(charityPercent > 0 && charityPercent <= 100);
+        
+        address charity2 = address(0x4);
+        
+        vm.startPrank(DAO);
+        treasury.addCharity(CHARITY, "Charity1");
+        treasury.addCharity(charity2, "Charity2");
+        vm.stopPrank();
+        
+        uint256 charityAmount = (totalAmount * charityPercent) / 100;
+        uint256 charity2Amount = totalAmount - charityAmount;
+        
+        uint256 charity1BalBefore = usdc.balanceOf(CHARITY);
+        uint256 charity2BalBefore = usdc.balanceOf(charity2);
+        
+        vm.startPrank(DAO);
+        treasury.disburse(address(usdc), CHARITY, charityAmount, "split1");
+        treasury.disburse(address(usdc), charity2, charity2Amount, "split2");
+        vm.stopPrank();
+        
+        uint256 charity1BalAfter = usdc.balanceOf(CHARITY);
+        uint256 charity2BalAfter = usdc.balanceOf(charity2);
+        
+        assertEq(charity1BalAfter - charity1BalBefore, charityAmount, "Charity1 amount incorrect");
+        assertEq(charity2BalAfter - charity2BalBefore, charity2Amount, "Charity2 amount incorrect");
+        assertEq((charity1BalAfter - charity1BalBefore) + (charity2BalAfter - charity2BalBefore), totalAmount, "Split doesn't equal total");
+    }
+}

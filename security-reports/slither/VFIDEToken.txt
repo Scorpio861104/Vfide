@@ -1,0 +1,32 @@
+'solc --version' running
+'solc contracts-min/VFIDEToken.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+
+VFIDEToken.setPresale(address)._presale (contracts-min/VFIDEToken.sol#251) lacks a zero-check on :
+		- presale = _presale (contracts-min/VFIDEToken.sol#252)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+VFIDEToken.constructor(address,address,address,address) (contracts-min/VFIDEToken.sol#121-151) uses assembly
+	- INLINE ASM (contracts-min/VFIDEToken.sol#131)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+VFIDEToken._transfer(address,address,uint256) (contracts-min/VFIDEToken.sol#280-343) has a high cyclomatic complexity (15).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Low level call in VFIDEToken._locked(address) (contracts-min/VFIDEToken.sol#388-392):
+	- (ok,d) = address(securityHub).staticcall(abi.encodeWithSelector(ISecurityHub.isLocked.selector,vault)) (contracts-min/VFIDEToken.sol#390)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function VFIDEToken.TEST_setForceSecurityStaticcallFail(bool) (contracts-min/VFIDEToken.sol#158) is not in mixedCase
+Function VFIDEToken.TEST_setForceVaultHubZero(bool) (contracts-min/VFIDEToken.sol#159) is not in mixedCase
+Function VFIDEToken.TEST_setForcePolicyLockedRequireRouter(bool) (contracts-min/VFIDEToken.sol#160) is not in mixedCase
+Parameter VFIDEToken.setLedger(address)._ledger (contracts-min/VFIDEToken.sol#211) is not in mixedCase
+Parameter VFIDEToken.setPresale(address)._presale (contracts-min/VFIDEToken.sol#251) is not in mixedCase
+Function VFIDEToken.TEST_check_locked(address) (contracts-min/VFIDEToken.sol#395) is not in mixedCase
+Function VFIDEToken.TEST_check_isVault(address) (contracts-min/VFIDEToken.sol#396) is not in mixedCase
+Function VFIDEToken.TEST_force_router_requirement() (contracts-min/VFIDEToken.sol#398-400) is not in mixedCase
+Variable VFIDEToken.TEST_force_security_staticcall_fail (contracts-min/VFIDEToken.sol#154) is not in mixedCase
+Variable VFIDEToken.TEST_force_vaultHub_zero (contracts-min/VFIDEToken.sol#155) is not in mixedCase
+Variable VFIDEToken.TEST_force_policyLocked_require_router (contracts-min/VFIDEToken.sol#156) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+contracts-min/VFIDEToken.sol analyzed (6 contracts with 100 detectors), 15 result(s) found
+INFO:Slither:security-reports/slither/VFIDEToken.json exists already, the overwrite is prevented

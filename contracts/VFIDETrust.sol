@@ -16,6 +16,7 @@ pragma solidity 0.8.30;
 /// ────────────────────────── Interfaces
 interface IVaultHub_Trust { function vaultOf(address owner) external view returns (address); }
 interface ITokenLike_Trust { function balanceOf(address) external view returns (uint256); }
+interface ISecurityHub_Trust { function isLocked(address vault) external view returns (bool); }
 
 /// ────────────────────────── Errors
 error TRUST_NotDAO();
@@ -113,7 +114,44 @@ contract Seer {
     /// Returns current ProofScore; uninitialized = 500 (neutral).
     function getScore(address subject) public view returns (uint16) {
         uint16 s = _score[subject];
-        return s == 0 ? NEUTRAL : s;
+        if (s == 0) {
+            // Calculate automated score for uninitialized users
+            return calculateAutomatedScore(subject);
+        }
+        return s;
+    }
+
+    /// Automated ProofScore calculation based on behavioral metrics
+    function calculateAutomatedScore(address subject) public view returns (uint16) {
+        if (subject == address(0)) return NEUTRAL;
+        
+        uint256 score = NEUTRAL;
+        
+        // Vault existence bonus (+50)
+        if (address(vaultHub) != address(0)) {
+            address vault = vaultHub.vaultOf(subject);
+            if (vault != address(0)) {
+                score += 50;
+            }
+        }
+        
+        // Check for security penalties
+        if (address(vaultHub) != address(0) && address(hub) != address(0)) {
+            address vault = vaultHub.vaultOf(subject);
+            if (vault != address(0)) {
+                try ISecurityHub_Trust(hub).isLocked(vault) returns (bool locked) {
+                    if (locked) {
+                        // Active lock penalty: -100 (with floor at 0)
+                        score = score > 100 ? score - 100 : 0;
+                    }
+                } catch {}
+            }
+        }
+        
+        // Clamp to valid range
+        if (score > MAX_SCORE) score = MAX_SCORE;
+        
+        return uint16(score);
     }
 
     /// DAO can directly set scores for migrations or rectifications.

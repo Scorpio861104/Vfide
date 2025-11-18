@@ -1,0 +1,23 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+Compiling 75 Solidity files
+TypeError: Indexed expression has to be a type, mapping or array (is contract MerchantRegistry)
+    --> contracts-min/VFIDECommerce.sol:1109:46:
+     |
+1109 |         MerchantRegistry.Merchant memory m = merchants[who];
+     |                                              ^^^^^^^^^
+
+
+No chunk id map found
+Error HH600: Compilation failed
+
+HardhatError: HH600: Compilation failed
+    at SimpleTaskDefinition.action (/workspaces/Vfide/node_modules/hardhat/src/builtin-tasks/compile.ts:504:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Environment._runTaskDefinition (/workspaces/Vfide/node_modules/hardhat/src/internal/core/runtime-environment.ts:351:14)
+    at OverriddenTaskDefinition._action (/workspaces/Vfide/node_modules/@typechain/hardhat/src/index.ts:28:30)
+    at Environment._runTaskDefinition (/workspaces/Vfide/node_modules/hardhat/src/internal/core/runtime-environment.ts:351:14)
+    at Environment.run (/workspaces/Vfide/node_modules/hardhat/src/internal/core/runtime-environment.ts:184:14)
+    at SimpleTaskDefinition.action (/workspaces/Vfide/node_modules/hardhat/src/builtin-tasks/compile.ts:1433:63)
+    at Environment._runTaskDefinition (/workspaces/Vfide/node_modules/hardhat/src/internal/core/runtime-environment.ts:351:14)
+    at Environment.run (/workspaces/Vfide/node_modules/hardhat/src/internal/core/runtime-environment.ts:184:14)
+    at SimpleTaskDefinition.action (/workspaces/Vfide/node_modules/hardhat/src/builtin-tasks/compile.ts:1513:7)

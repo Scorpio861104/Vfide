@@ -1,0 +1,66 @@
+# Foundry configuration for VFIDE project
+
+[profile.default]
+# Use full contract sources (not minimized) for Foundry to maximize fuzz & invariant exploration
+src = 'contracts'
+out = 'out'
+libs = ["node_modules", "lib"]
+test = 'test/foundry'
+cache_path = 'cache/foundry'
+
+# Compiler settings
+solc = "0.8.30"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+via_ir = true # Default profile uses IR (faster optimizer, closer to production)
+
+[profile.coverage]
+src = 'contracts'
+solc = "0.8.30"
+optimizer = true
+optimizer_runs = 1
+via_ir = false # Disable IR for coverage instrumentation stability
+
+[profile.fuzz]
+src = 'contracts'
+solc = "0.8.30"
+optimizer = true
+optimizer_runs = 50
+via_ir = false # Disable IR to reduce complexity for deep fuzz sequences
+# zkSync specific build profile (requires foundry-zksync extension)
+[profile.zksync]
+src = 'contracts-min'
+solc = "0.8.30"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+vm_type = "zksync"
+fallback_oz = false
+
+
+# Fuzz testing configuration
+fuzz_runs = 1000000
+fuzz_max_test_rejects = 1000000
+
+# Invariant testing configuration  
+invariant_runs = 256
+invariant_depth = 15
+invariant_fail_on_revert = true
+
+# Gas reporting
+gas_reports = ["*"]
+gas_reports_ignore = []
+
+# RPC endpoints
+[rpc_endpoints]
+mainnet = "${MAINNET_RPC_URL}"
+sepolia = "${SEPOLIA_RPC_URL}"
+zksync = "${ZKSYNC_RPC_URL}"
+zksync_sepolia = "${ZKSYNC_SEPOLIA_RPC_URL}"
+
+# Formatter
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = true

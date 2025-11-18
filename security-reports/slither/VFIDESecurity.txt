@@ -1,0 +1,29 @@
+'solc --version' running
+'solc contracts-min/VFIDESecurity.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+
+PanicGuard.isQuarantined(address) (contracts-min/VFIDESecurity.sol#280-283) uses timestamp for comparisons
+	Dangerous comparisons:
+	- untilTs != 0 && untilTs > block.timestamp (contracts-min/VFIDESecurity.sol#282)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Contract IProofLedger_SEC (contracts-min/VFIDESecurity.sol#36-39) is not in CapWords
+Parameter GuardianRegistry.setDAO(address)._dao (contracts-min/VFIDESecurity.sol#76) is not in mixedCase
+Parameter GuardianLock.setModules(address,address)._registry (contracts-min/VFIDESecurity.sol#152) is not in mixedCase
+Parameter GuardianLock.setModules(address,address)._ledger (contracts-min/VFIDESecurity.sol#152) is not in mixedCase
+Parameter PanicGuard.setLedger(address)._ledger (contracts-min/VFIDESecurity.sol#240) is not in mixedCase
+Parameter PanicGuard.setPolicy(uint64,uint64)._minDuration (contracts-min/VFIDESecurity.sol#246) is not in mixedCase
+Parameter PanicGuard.setPolicy(uint64,uint64)._maxDuration (contracts-min/VFIDESecurity.sol#246) is not in mixedCase
+Parameter EmergencyBreaker.setDAO(address)._dao (contracts-min/VFIDESecurity.sol#315) is not in mixedCase
+Parameter EmergencyBreaker.setLedger(address)._ledger (contracts-min/VFIDESecurity.sol#321) is not in mixedCase
+Parameter SecurityHub.setDAO(address)._dao (contracts-min/VFIDESecurity.sol#367) is not in mixedCase
+Parameter SecurityHub.setModules(address,address,address,address)._guardianLock (contracts-min/VFIDESecurity.sol#373) is not in mixedCase
+Parameter SecurityHub.setModules(address,address,address,address)._panicGuard (contracts-min/VFIDESecurity.sol#373) is not in mixedCase
+Parameter SecurityHub.setModules(address,address,address,address)._breaker (contracts-min/VFIDESecurity.sol#373) is not in mixedCase
+Parameter SecurityHub.setModules(address,address,address,address)._ledger (contracts-min/VFIDESecurity.sol#373) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+GuardianLock.dao (contracts-min/VFIDESecurity.sol#132) should be immutable 
+PanicGuard.dao (contracts-min/VFIDESecurity.sol#219) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+contracts-min/VFIDESecurity.sol analyzed (6 contracts with 100 detectors), 17 result(s) found
+INFO:Slither:security-reports/slither/VFIDESecurity.json exists already, the overwrite is prevented

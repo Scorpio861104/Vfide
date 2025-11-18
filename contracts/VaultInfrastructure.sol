@@ -68,6 +68,11 @@ contract UserVault is ReentrancyGuard {
     mapping(address => bool) public isGuardian;
 
     address public nextOfKin;
+    
+    /// Withdrawal friction layer
+    uint256 public lastWithdrawalTime;
+    uint256 public withdrawalCooldown = 24 hours; // Default 24h cooldown
+    uint256 public largeTransferThreshold = 10000 * 1e18; // Default 10k VFIDE
 
     struct Recovery {
         address proposedOwner;
@@ -144,6 +149,17 @@ contract UserVault is ReentrancyGuard {
         emit NextOfKinSet(kin);
     }
 
+    function setWithdrawalCooldown(uint256 cooldown) external onlyOwner notLocked {
+        require(cooldown <= 7 days, "UV:cooldown-too-long");
+        withdrawalCooldown = cooldown;
+        _logEv(msg.sender, "cooldown_set", cooldown, "");
+    }
+
+    function setLargeTransferThreshold(uint256 threshold) external onlyOwner notLocked {
+        largeTransferThreshold = threshold;
+        _logEv(msg.sender, "threshold_set", threshold, "");
+    }
+
     // ——— Recovery flow (owner lost)
     function requestRecovery(address proposedOwner) external notLocked {
         // Either nextOfKin, an existing guardian, or the current owner may open a request
@@ -184,8 +200,25 @@ contract UserVault is ReentrancyGuard {
     // ——— Token operations (VFIDE only)
     function transferVFIDE(address toVault, uint256 amount) external onlyOwner notLocked nonReentrant returns (bool) {
         if (toVault == address(0)) revert UV_Zero();
+        
+        // Withdrawal cooldown check
+        if (withdrawalCooldown > 0 && lastWithdrawalTime > 0) {
+            require(block.timestamp >= lastWithdrawalTime + withdrawalCooldown, "UV:cooldown-active");
+        }
+        
+        // Amount-based threshold: large transfers face additional scrutiny
+        // (All transfers already checked by notLocked modifier above)
+        // This could be used for future enhanced checks on large amounts
+        if (amount > largeTransferThreshold && largeTransferThreshold > 0) {
+            // Large transfer - log for extra scrutiny
+            _logEv(toVault, "large_transfer_attempt", amount, "");
+        }
+        
         bool ok = IERC20_VI(vfideToken).transfer(toVault, amount);
         require(ok, "UV:transfer-failed");
+        
+        lastWithdrawalTime = block.timestamp;
+        
         _logEv(toVault, "vault_transfer", amount, "");
         emit VaultTransfer(toVault, amount);
         return true;
@@ -227,6 +260,7 @@ contract VaultInfrastructure is Ownable {
     event ForcedRecovery(address indexed vault, address indexed newOwner);
     event VFIDESet(address vfide);
     event DAOSet(address dao);
+    event RecoveryScheduled(address indexed vault, address indexed newOwner, uint256 delay);
 
     /// Errors
     error VI_Zero();
@@ -244,7 +278,7 @@ contract VaultInfrastructure is Ownable {
     function setModules(address _vfideToken, address _securityHub, address _ledger, address _dao) external onlyOwner {
         vfideToken = _vfideToken;
         securityHub = ISecurityHub_VI(_securityHub);
-        ledger = IProofLedger_VI(_ledger);
+        ledger = IProofLedger_VI(_Ledger);
         dao = _dao;
         emit ModulesSet(_vfideToken, _securityHub, _ledger, _dao);
         _log("hub_modules_set");
@@ -301,6 +335,13 @@ contract VaultInfrastructure is Ownable {
     }
 
     // ——— DAO forced recovery (emergency exceptional path)
+    mapping(address => Recovery) public recoveryQueue;
+
+    struct Recovery {
+        address newOwner;
+        uint256 executeAfter;
+    }
+
     function forceRecover(address vault, address newOwner) external {
         if (msg.sender != dao) revert VI_NotDAO();
         if (vault == address(0) || newOwner == address(0)) revert VI_Zero();
@@ -315,6 +356,66 @@ contract VaultInfrastructure is Ownable {
         UserVault(vault).__forceSetOwner(newOwner);
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover", 0, "");
+    }
+
+    // Add granular recovery controls
+    function forceRecoverWithDelay(address vault, address newOwner, uint256 delay) external {
+        if (msg.sender != dao) revert VI_NotDAO();
+        if (vault == address(0) || newOwner == address(0)) revert VI_Zero();
+        address current = ownerOfVault[vault];
+        require(current != address(0), "unknown vault");
+
+        // Schedule recovery with delay
+        recoveryQueue[vault] = Recovery({
+            newOwner: newOwner,
+            executeAfter: block.timestamp + delay
+        });
+
+        emit RecoveryScheduled(vault, newOwner, delay);
+        _logEv(vault, "recovery_scheduled", delay, "");
+    }
+
+    function executeRecovery(address vault) external {
+        Recovery memory recovery = recoveryQueue[vault];
+        require(recovery.executeAfter != 0 && block.timestamp >= recovery.executeAfter, "recovery not ready");
+
+        // Update registry and notify vault
+        address current = ownerOfVault[vault];
+        vaultOf[current] = address(0);
+        ownerOfVault[vault] = recovery.newOwner;
+        vaultOf[recovery.newOwner] = vault;
+
+        UserVault(vault).__forceSetOwner(recovery.newOwner);
+        emit ForcedRecovery(vault, recovery.newOwner);
+        _logEv(vault, "force_recover", 0, "");
+
+        delete recoveryQueue[vault];
+    }
+
+    // ─────────────────────────── Trading Cooldowns
+    mapping(address => uint256) public lastTradeTimestamp; // Tracks the last trade time for each vault
+    mapping(address => uint8) public offenseCount; // Tracks repeat offenses for cooldown adjustments
+
+    function enforceCooldown(address vault) internal view {
+        uint256 cooldownPeriod = 12 hours; // Default cooldown
+        uint16 proofScore = getProofScore(vault); // Assume getProofScore is implemented
+
+        // Adjust cooldown based on ProofScore and repeat offenses
+        if (proofScore < 300) {
+            cooldownPeriod = 48 hours; // Longer cooldown for low ProofScore
+        } else if (offenseCount[vault] > 2) {
+            cooldownPeriod = 48 hours; // Longer cooldown for repeat offenses
+        }
+
+        require(
+            block.timestamp >= lastTradeTimestamp[vault] + cooldownPeriod,
+            "Cooldown period active"
+        );
+    }
+
+    function recordTrade(address vault) internal {
+        lastTradeTimestamp[vault] = block.timestamp;
+        offenseCount[vault] += 1; // Increment offense count for repeat violations
     }
 
     // ——— Internals

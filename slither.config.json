@@ -1,0 +1,14 @@
+{
+  "detectors_to_exclude": [
+    "solc-version",
+    "immutable-states"
+  ],
+  "filter_paths": "node_modules|lib|test|scripts|deploy|artifacts|cache",
+  "solc_remaps": [
+    "@openzeppelin=node_modules/@openzeppelin"
+  ],
+  "solc_args": [
+    "--via-ir",
+    "--optimize"
+  ]
+}

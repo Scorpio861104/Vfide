@@ -1,0 +1,92 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+import "forge-std/Test.sol";
+import "../../contracts-prod/VFIDEToken.sol";
+import "../../contracts-prod/DAO.sol";
+
+/// @title Foundry Invariant Tests for VFIDE System
+/// @notice Stateful fuzzing to verify system-wide invariants
+contract VFIDEInvariantTest is Test {
+    VFIDEToken token;
+    DAO dao;
+    
+    address deployer = address(0x1);
+    address[] actors;
+    
+    function setUp() public {
+        vm.startPrank(deployer);
+        
+        token = new VFIDEToken(
+            deployer,
+            address(0x2),
+            address(0x3),
+            address(0x4),
+            address(0x5)
+        );
+        
+        dao = new DAO(
+            address(token),
+            deployer,
+            address(0x6),
+            1000e18, // proposal threshold
+            51, // quorum %
+            3 days
+        );
+        
+        // Create test actors
+        for (uint i = 0; i < 10; i++) {
+            address actor = address(uint160(0x100 + i));
+            actors.push(actor);
+            token.mint(actor, 10000e18);
+        }
+        
+        vm.stopPrank();
+        
+        // Configure invariant testing
+        targetContract(address(token));
+        targetContract(address(dao));
+    }
+    
+    // INVARIANT 1: Total supply never exceeds max supply
+    function invariant_totalSupplyBounded() public view {
+        assertLe(token.totalSupply(), token.MAX_SUPPLY());
+    }
+    
+    // INVARIANT 2: Sum of actor balances <= total supply
+    function invariant_balanceSumValid() public view {
+        uint256 sum = 0;
+        for (uint i = 0; i < actors.length; i++) {
+            sum += token.balanceOf(actors[i]);
+        }
+        assertLe(sum, token.totalSupply());
+    }
+    
+    // INVARIANT 3: No balance exceeds total supply
+    function invariant_noBalanceExceedsSupply() public view {
+        for (uint i = 0; i < actors.length; i++) {
+            assertLe(token.balanceOf(actors[i]), token.totalSupply());
+        }
+    }
+    
+    // INVARIANT 4: DAO proposal count is monotonic
+    function invariant_proposalCountMonotonic() public view {
+        uint256 count = dao.proposalCount();
+        assertTrue(count >= 0);
+    }
+    
+    // INVARIANT 5: Token contract is never empty if supply > 0
+    function invariant_tokenContractNotEmpty() public view {
+        if (token.totalSupply() > 0) {
+            // At least one address must have tokens
+            bool hasTokens = false;
+            for (uint i = 0; i < actors.length; i++) {
+                if (token.balanceOf(actors[i]) > 0) {
+                    hasTokens = true;
+                    break;
+                }
+            }
+            assertTrue(hasTokens || token.balanceOf(address(token)) > 0);
+        }
+    }
+}

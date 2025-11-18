@@ -62,6 +62,9 @@ abstract contract Ownable {
 
 /// ─────────────────────────── ERC20 (no OZ deps; 0.8.x checked math)
 contract VFIDEToken is Ownable {
+    /// Scribble specs (optional instrumentation)
+    /// if_succeeds {:msg "supply cap never exceeded"} totalSupply <= MAX_SUPPLY;
+    /// if_succeeds {:msg "presale minted bounded"} presaleMinted <= PRESALE_SUPPLY_CAP;
     /// Constants
     string public constant name = "VFIDE";
     string public constant symbol = "VFIDE";
@@ -357,6 +360,7 @@ contract VFIDEToken is Ownable {
     function _mint(address to, uint256 amount) internal {
         if (to == address(0)) revert VF_ZERO();
         if (totalSupply + amount > MAX_SUPPLY) revert VF_CAP();
+        /// if_succeeds {:msg "mint keeps cap"} totalSupply + amount <= MAX_SUPPLY;
         totalSupply += amount;
         _balances[to] += amount;
         emit Transfer(address(0), to, amount);

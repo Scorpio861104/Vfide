@@ -1,0 +1,494 @@
+/src/contracts-prod/VFIDEToken.sol
+   1 |     | // SPDX-License-Identifier: MIT
+   2 |     | pragma solidity 0.8.30;
+   3 |     | 
+   4 |     | /**
+   5 |     |  * VFIDEToken (zkSync Era ready) — FINAL
+   6 |     |  * ----------------------------------------------------------
+   7 |     |  * - Total supply cap: 200,000,000 VFIDE (18 decimals)
+   8 |     |  * - Dev reserve: 40,000,000 pre-minted to DevReserveVestingVault (constructor)
+   9 |     |  * - Presale mint cap: 75,000,000 (only `presale` can mint within cap)
+  10 |     |  * - Vault-only transfer rule (via VaultHub): wallets cannot hold VFIDE
+  11 |     |  * - System exemptions for infra contracts (presale, DAO, routers, treasury)
+  12 |     |  * - ProofScore-aware fees/burns via external BurnRouter (computeFees view)
+  13 |     |  * - SecurityHub lock check (PanicGuard/GuardianLock integration)
+  14 |     |  * - ProofLedger hooks (best-effort) for transparency
+  15 |     |  * - NEW: policy lock to make enforcement non-optional post-launch
+  16 |     |  * - NEW: presale mint must target a valid vault when vaultOnly is true
+  17 |     |  */
+  18 |     | 
+  19 |     | /// ─────────────────────────── Minimal Interfaces
+  20 |     | interface IVaultHub {
+  21 |     |     function vaultOf(address owner) external view returns (address);
+  22 |     | }
+  23 |     | 
+  24 |     | interface ISecurityHub {
+  25 |     |     function isLocked(address vault) external view returns (bool);
+  26 |     | }
+  27 |     | 
+  28 |     | interface IProofLedgerToken {
+  29 |     |     function logSystemEvent(address who, string calldata action, address by) external;
+  30 |     |     function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
+  31 |     | }
+  32 |     | 
+  33 |     | /**
+  34 |     |  * Router interface: computes fee amounts/sinks based on ProofScore.
+  35 |     |  * Token uses returned amounts to burn and route charity/treasury portions.
+  36 |     |  */
+  37 |     | interface IProofScoreBurnRouterToken {
+  38 |     |     function computeFees(
+  39 |     |         address from,
+  40 |     |         address to,
+  41 |     |         uint256 amount
+  42 |     |     ) external view returns (
+  43 |     |         uint256 burnAmount,
+  44 |     |         uint256 sanctumAmount,
+  45 |     |         address sanctumSink,  // usually Treasury or SanctumFund
+  46 |     |         address burnSink      // optional burn sink; if zero, token burns to address(0)
+  47 |     |     );
+  48 |     | }
+  49 |     | 
+  50 |     | /// ─────────────────────────── Lightweight Ownable
+  51 |     | abstract contract Ownable {
+  52 |     |     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+  53 |     |     address public owner;
+  54 | *   |     constructor() { owner = msg.sender; emit OwnershipTransferred(address(0), msg.sender); }
+  55 | *   |     modifier onlyOwner() { require(msg.sender == owner, "OWN: not owner"); _; }
+  56 |     |     function transferOwnership(address newOwner) external onlyOwner {
+  57 |     |         require(newOwner != address(0), "OWN: zero");
+  58 |     |         emit OwnershipTransferred(owner, newOwner);
+  59 |     |         owner = newOwner;
+  60 |     |     }
+  61 |     | }
+  62 |     | 
+  63 |     | /// ─────────────────────────── ERC20 (no OZ deps; 0.8.x checked math)
+  64 | *r  | contract VFIDEToken is Ownable {
+  65 |     |     /// Constants
+  66 |     |     string public constant name = "VFIDE";
+  67 |     |     string public constant symbol = "VFIDE";
+  68 | *   |     uint8  public constant decimals = 18;
+  69 |     | 
+  70 | *   |     uint256 public constant MAX_SUPPLY = 200_000_000e18;
+  71 | *   |     uint256 public constant DEV_RESERVE_SUPPLY = 40_000_000e18;
+  72 | *   |     uint256 public constant PRESALE_SUPPLY_CAP = 75_000_000e18;
+  73 |     | 
+  74 |     |     /// Storage
+  75 | *   |     uint256 public totalSupply;
+  76 |     | 
+  77 |     |     mapping(address => uint256) private _balances;
+  78 |     |     mapping(address => mapping(address => uint256)) private _allowances;
+  79 |     | 
+  80 |     |     // Modules
+  81 |     |     IVaultHub public vaultHub;                    // required for vault-only rule
+  82 | *   |     ISecurityHub public securityHub;              // optional lock checks
+  83 | *   |     IProofLedgerToken public ledger;              // optional event ledger
+  84 | *   |     IProofScoreBurnRouterToken public burnRouter; // score-based fee calc
+  85 |     | 
+  86 |     |     // Policy
+  87 | *   |     bool public vaultOnly = true;                 // enforce vault-only transfers
+  88 | *   |     bool public policyLocked = false;             // once locked, cannot disable enforcement
+  89 | *   |     mapping(address => bool) public systemExempt; // bypass vault check & fees
+  90 |     | 
+  91 |     |     // Presale control
+  92 | *   |     address public presale;
+  93 | *   |     uint256 public presaleMinted; // must never exceed PRESALE_SUPPLY_CAP
+  94 |     | 
+  95 |     |     // Sinks (fallbacks if router is unset or returns zero sinks)
+  96 | *   |     address public treasurySink;  // sanctuary/treasury receiver for charity share
+  97 |     | 
+  98 |     |     /// Events
+  99 |     |     event VaultHubSet(address indexed hub);
+ 100 |     |     event SecurityHubSet(address indexed hub);
+ 101 |     |     event LedgerSet(address indexed ledger);
+ 102 |     |     event BurnRouterSet(address indexed router);
+ 103 |     |     event TreasurySinkSet(address indexed sink);
+ 104 |     |     event SystemExemptSet(address indexed who, bool isExempt);
+ 105 |     |     event VaultOnlySet(bool enabled);
+ 106 |     |     event PolicyLocked();
+ 107 |     |     event PresaleSet(address indexed presale);
+ 108 |     |     event PresaleMint(address indexed to, uint256 amount);
+ 109 |     |     event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, address sanctumSink);
+ 110 |     |     event Transfer(address indexed from, address indexed to, uint256 value);
+ 111 |     |     event Approval(address indexed owner, address indexed spender, uint256 value);
+ 112 |     | 
+ 113 |     |     /// Errors
+ 114 |     |     error VF_ZERO();
+ 115 |     |     error VF_CAP();
+ 116 |     |     error VF_NOT_PRESALE();
+ 117 |     |     error VF_LOCKED();
+ 118 |     |     error VF_POLICY_LOCKED();
+ 119 |     | 
+ 120 |     |     /// Constructor: pre-mint dev reserve to the vesting vault
+ 121 |     |     constructor(
+ 122 |     |         address devReserveVestingVault, // MUST be deployed before token
+ 123 |     |         address _vaultHub,              // MAY be zero at deploy; can be set later
+ 124 |     |         address _ledger,                // optional
+ 125 |     |         address _treasurySink           // recommended: EcoTreasuryVault
+ 126 |     |     ) {
+ 127 | *   |         if (devReserveVestingVault == address(0)) revert VF_ZERO();
+ 128 |     | 
+ 129 |     |         // Require dev vault is a contract to prevent misconfig at genesis.
+ 130 |     |         uint256 size;
+ 131 | *   |         assembly { size := extcodesize(devReserveVestingVault) }
+ 132 | *   |         require(size > 0, "devVault !contract");
+ 133 |     | 
+ 134 |     |         // Optional modules (can be set later)
+ 135 | *   |         if (_vaultHub != address(0)) {
+ 136 |     |             vaultHub = IVaultHub(_vaultHub);
+ 137 |     |             emit VaultHubSet(_vaultHub);
+ 138 |     |         }
+ 139 | *   |         if (_ledger != address(0)) {
+ 140 | *   |             ledger = IProofLedgerToken(_ledger);
+ 141 | *   |             emit LedgerSet(_ledger);
+ 142 |     |         }
+ 143 | *   |         if (_treasurySink != address(0)) {
+ 144 |     |             treasurySink = _treasurySink;
+ 145 |     |             emit TreasurySinkSet(_treasurySink);
+ 146 |     |         }
+ 147 |     | 
+ 148 |     |         // Pre-mint dev reserve
+ 149 |     |         _mint(devReserveVestingVault, DEV_RESERVE_SUPPLY);
+ 150 |     |         _logEv(devReserveVestingVault, "premint_dev_reserve", DEV_RESERVE_SUPPLY, "40M to vesting vault");
+ 151 |     |     }
+ 152 |     | 
+ 153 |     |     // ------------------ TEST-ONLY toggles
+ 154 |     | 
+ 155 | *   |     function allowance(address owner_, address spender) external view returns (uint256) { return _allowances[owner_][spender]; }
+ 156 |     | 
+ 157 |     |     function approve(address spender, uint256 amount) external returns (bool) {
+ 158 | *   |         _approve(msg.sender, spender, amount);
+ 159 |     |         return true;
+ 160 |     |     }
+ 161 |     | 
+ 162 |     |     function increaseAllowance(address spender, uint256 added) external returns (bool) {
+ 163 | *   |         _approve(msg.sender, spender, _allowances[msg.sender][spender] + added);
+ 164 |     |         return true;
+ 165 |     |     }
+ 166 |     | 
+ 167 |     |     function decreaseAllowance(address spender, uint256 subtracted) external returns (bool) {
+ 168 | *   |         uint256 cur = _allowances[msg.sender][spender];
+ 169 | *   |         require(cur >= subtracted, "allow underflow");
+ 170 | *   |         _approve(msg.sender, spender, cur - subtracted);
+ 171 |     |         return true;
+ 172 |     |     }
+ 173 |     | 
+ 174 |     |     function transfer(address to, uint256 amount) external returns (bool) {
+ 175 | *   |         _transfer(msg.sender, to, amount);
+ 176 |     |         return true;
+ 177 |     |     }
+ 178 |     | 
+ 179 |     |     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+ 180 | *   |         uint256 cur = _allowances[from][msg.sender];
+ 181 | *   |         require(cur >= amount, "allow");
+ 182 |     |         _approve(from, msg.sender, cur - amount);
+ 183 |     |         _transfer(from, to, amount);
+ 184 |     |         return true;
+ 185 |     |     }
+ 186 |     | 
+ 187 |     |     // ─────────────────────────── Admin / Modules
+ 188 |     | 
+ 189 |     |     function setVaultHub(address hub) external onlyOwner {
+ 190 |     |         vaultHub = IVaultHub(hub);
+ 191 |     |         emit VaultHubSet(hub);
+ 192 |     |         _log("vault_hub_set");
+ 193 |     |     }
+ 194 |     | 
+ 195 |     |     function setSecurityHub(address hub) external onlyOwner {
+ 196 |     |         securityHub = ISecurityHub(hub);
+ 197 |     |         emit SecurityHubSet(hub);
+ 198 |     |         _log("security_hub_set");
+ 199 |     |     }
+ 200 |     | 
+ 201 |     |     function setLedger(address _ledger) external onlyOwner {
+ 202 |     |         ledger = IProofLedgerToken(_ledger);
+ 203 |     |         emit LedgerSet(_ledger);
+ 204 |     |         _log("ledger_set");
+ 205 |     |     }
+ 206 |     | 
+ 207 |     |     function setBurnRouter(address router) external onlyOwner {
+ 208 |     |         if (policyLocked && router == address(0)) revert VF_POLICY_LOCKED();
+ 209 |     |         burnRouter = IProofScoreBurnRouterToken(router);
+ 210 |     |         emit BurnRouterSet(router);
+ 211 |     |         _log("burn_router_set");
+ 212 |     |     }
+ 213 |     | 
+ 214 |     |     function setTreasurySink(address sink) external onlyOwner {
+ 215 |     |         if (policyLocked && sink == address(0)) revert VF_POLICY_LOCKED();
+ 216 |     |         treasurySink = sink;
+ 217 |     |         emit TreasurySinkSet(sink);
+ 218 |     |         _log("treasury_sink_set");
+ 219 |     |     }
+ 220 |     | 
+ 221 |     |     function setSystemExempt(address who, bool isExempt) external onlyOwner {
+ 222 |     |         systemExempt[who] = isExempt;
+ 223 | *   |         emit SystemExemptSet(who, isExempt);
+ 224 |     |         _logEv(who, isExempt ? "exempt_on" : "exempt_off", 0, "");
+ 225 |     |     }
+ 226 |     | 
+ 227 |     |     function setVaultOnly(bool enabled) external onlyOwner {
+ 228 |     |         if (policyLocked && !enabled) revert VF_POLICY_LOCKED();
+ 229 |     |         vaultOnly = enabled;
+ 230 |     |         emit VaultOnlySet(enabled);
+ 231 |     |         _log(enabled ? "vault_only_on" : "vault_only_off");
+ 232 |     |     }
+ 233 |     | 
+ 234 |     |     /// One-way switch that makes policy non-optional post-launch.
+ 235 |     |     function lockPolicy() external onlyOwner {
+ 236 |     |         policyLocked = true;
+ 237 |     |         emit PolicyLocked();
+ 238 |     |         _log("policy_locked");
+ 239 |     |     }
+ 240 |     | 
+ 241 |     |     function setPresale(address _presale) external onlyOwner {
+ 242 |     |         presale = _presale;
+ 243 |     |         if (_presale != address(0)) {
+ 244 |     |             systemExempt[_presale] = true; // presale ops bypass vault rule/fees; mint target still must be a vault
+ 245 |     |             emit SystemExemptSet(_presale, true);
+ 246 |     |         }
+ 247 |     |         emit PresaleSet(_presale);
+ 248 |     |         _log("presale_set");
+ 249 |     |     }
+ 250 |     | 
+ 251 |     |     // ─────────────────────────── Presale mint (within 75M cap)
+ 252 |     |     function mintPresale(address to, uint256 amount) external {
+ 253 | *r  |         if (msg.sender != presale) revert VF_NOT_PRESALE();
+ 254 | *   |         if (amount == 0) revert VF_ZERO();
+ 255 |     |         if (presaleMinted + amount > PRESALE_SUPPLY_CAP) revert VF_CAP();
+ 256 |     | 
+ 257 |     |         // NEW: when vaultOnly is active, enforce presale target is a registered vault
+ 258 |     |         if (vaultOnly) {
+ 259 |     |             require(_isVault(to), "presale target !vault");
+ 260 |     |         }
+ 261 |     | 
+ 262 |     |         presaleMinted += amount;
+ 263 |     |         _mint(to, amount);
+ 264 |     |         emit PresaleMint(to, amount);
+ 265 |     |         _logEv(to, "presale_mint", amount, "");
+ 266 |     |     }
+ 267 |     | 
+ 268 |     |     // ─────────────────────────── Internal core
+ 269 |     | 
+ 270 | *   |     function _transfer(address from, address to, uint256 amount) internal {
+ 271 | *r  |         if (from == address(0) || to == address(0)) revert VF_ZERO();
+ 272 | *   |         if (amount == 0) { emit Transfer(from, to, 0); return; }
+ 273 |     | 
+ 274 |     |         // SecurityHub lock check (if set)
+ 275 | *   |         if (address(securityHub) != address(0)) {
+ 276 |     |             address fromVault = _vaultOfAddr(from);
+ 277 |     |             address toVault   = _vaultOfAddr(to);
+ 278 |     |             if ((fromVault != address(0) && _locked(fromVault)) ||
+ 279 |     |                 (toVault   != address(0) && _locked(toVault))) {
+ 280 |     |                 revert VF_LOCKED();
+ 281 |     |             }
+ 282 |     |         }
+ 283 |     | 
+ 284 |     |         // Vault-only rule (unless system-exempt endpoint)
+ 285 | *   |         if (vaultOnly) {
+ 286 | *   |             if (!systemExempt[from]) {
+ 287 | *   |                 require(_isVault(from), "from !vault");
+ 288 |     |             }
+ 289 |     |             if (!systemExempt[to]) {
+ 290 |     |                 require(_isVault(to), "to !vault");
+ 291 |     |             }
+ 292 |     |         }
+ 293 |     | 
+ 294 |     |         // Balance update: pull from sender
+ 295 |     |         uint256 bal = _balances[from];
+ 296 |     |         require(bal >= amount, "balance");
+ 297 |     |         unchecked { _balances[from] = bal - amount; }
+ 298 |     | 
+ 299 |     |         uint256 remaining = amount;
+ 300 |     | 
+ 301 |     |         // Dynamic fees via burn router (if present and not exempt)
+ 302 |     |         if (address(burnRouter) != address(0) && !(systemExempt[from] || systemExempt[to])) {
+ 303 |     |             (uint256 burnAmt, uint256 sanctumAmt, address sanctumSink, address burnSink) =
+ 304 |     |                 burnRouter.computeFees(from, to, amount);
+ 305 |     | 
+ 306 |     |             if (burnAmt > 0) {
+ 307 |     |                 address sink = (burnSink == address(0)) ? address(0) : burnSink;
+ 308 |     |                 _applyBurn(from, sink, burnAmt);
+ 309 |     |                 remaining -= burnAmt;
+ 310 |     |             }
+ 311 |     |             if (sanctumAmt > 0) {
+ 312 |     |                 address sink2 = (sanctumSink == address(0)) ? treasurySink : sanctumSink;
+ 313 |     |                 require(sink2 != address(0), "sanctum sink=0");
+ 314 |     |                 _balances[sink2] += sanctumAmt;
+ 315 |     |                 emit Transfer(from, sink2, sanctumAmt);
+ 316 |     |                 remaining -= sanctumAmt;
+ 317 |     |             }
+ 318 |     |             if (burnAmt > 0 || sanctumAmt > 0) {
+ 319 |     |                 emit FeeApplied(from, to, burnAmt, sanctumAmt, (sanctumSink == address(0) ? treasurySink : sanctumSink));
+ 320 |     |             }
+ 321 |     |         } else {
+ 322 |     |             // If policy is locked we require a router be present so fees cannot be bypassed
+ 323 |     |             if (policyLocked) {
+ 324 |     |                 require(address(burnRouter) != address(0), "router required");
+ 325 |     |             }
+ 326 |     |         }
+ 327 |     | 
+ 328 |     |         // Deliver net to receiver
+ 329 |     |         _balances[to] += remaining;
+ 330 |     |         emit Transfer(from, to, remaining);
+ 331 |     | 
+ 332 |     |         _logEv(from, "transfer", amount, "");
+ 333 |     |     }
+ 334 |     | 
+ 335 |     |     function _applyBurn(address from, address sink, uint256 burnAmt) internal {
+ 336 |     |         if (sink == address(0)) {
+ 337 |     |             // Hard burn
+ 338 |     |             totalSupply -= burnAmt;
+ 339 |     |             emit Transfer(from, address(0), burnAmt);
+ 340 |     |         } else {
+ 341 |     |             // Soft burn sink (e.g., dead vault, dedicated burner)
+ 342 |     |             _balances[sink] += burnAmt;
+ 343 |     |             emit Transfer(from, sink, burnAmt);
+ 344 |     |         }
+ 345 |     |     }
+ 346 |     | 
+ 347 |     |     function _mint(address to, uint256 amount) internal {
+ 348 | *   |         if (to == address(0)) revert VF_ZERO();
+ 349 | *   |         if (totalSupply + amount > MAX_SUPPLY) revert VF_CAP();
+ 350 | *   |         totalSupply += amount;
+ 351 | *   |         _balances[to] += amount;
+ 352 | *   |         emit Transfer(address(0), to, amount);
+ 353 |     |     }
+ 354 |     | 
+ 355 | *   |     function _approve(address owner_, address spender, uint256 amount) internal {
+ 356 | *   |         require(owner_ != address(0) && spender != address(0), "approve 0");
+ 357 | *   |         _allowances[owner_][spender] = amount;
+ 358 | *   |         emit Approval(owner_, spender, amount);
+ 359 |     |     }
+ 360 |     | 
+ 361 |     |     // ─────────────────────────── Helpers
+ 362 |     | 
+ 363 | *   |     function _isVault(address a) internal view returns (bool) {
+ 364 | *   |         if (address(vaultHub) == address(0)) return false;
+ 365 |     |         address v = vaultHub.vaultOf(a);
+ 366 |     |         if (v == a && v != address(0)) return true;
+ 367 |     |         if (v == address(0)) {
+ 368 |     |             return vaultHub.vaultOf(a) == a;
+ 369 |     |         }
+ 370 |     |         return false;
+ 371 |     |     }
+ 372 |     | 
+ 373 |     |     function _vaultOfAddr(address a) internal view returns (address) {
+ 374 |     |         if (address(vaultHub) == address(0)) return address(0);
+ 375 |     |         return vaultHub.vaultOf(a);
+ 376 |     |     }
+ 377 |     | 
+ 378 |     |     function _locked(address vault) internal view returns (bool) {
+ 379 |     |         (bool ok, bytes memory d) = address(securityHub).staticcall(abi.encodeWithSelector(ISecurityHub.isLocked.selector, vault));
+ 380 |     |         return !(ok && d.length >= 32) || abi.decode(d, (bool));
+ 381 |     |     }
+ 382 |     | 
+ 383 |     |     function _log(string memory action) internal {
+ 384 |     |         if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+ 385 |     |     }
+ 386 |     |     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
+ 387 | *   |         if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+ 388 |     |     }
+ 389 |     | }
+ 390 |     | 
+
+/src/echidna/EchidnaVFIDETokenSimple.sol
+   1 |     | // SPDX-License-Identifier: MIT
+   2 |     | pragma solidity 0.8.30;
+   3 |     | 
+   4 |     | import "../contracts-prod/VFIDEToken.sol";
+   5 |     | 
+   6 |     | // Mock dev vault with actual code for extcodesize check
+   7 | *r  | contract MockDevVault {
+   8 | *   |     uint256 public dummy = 1; // Add state to ensure contract has bytecode
+   9 |     |     function claim() external {}
+  10 |     |     function claimable() external view returns (uint256) { return 0; }
+  11 |     | }
+  12 |     | 
+  13 |     | // Mock ledger that implements IProofLedgerToken interface
+  14 | *r  | contract MockLedger {
+  15 |     |     function logEvent(address, string calldata, uint256, string calldata) external {}
+  16 |     | }
+  17 |     | 
+  18 |     | /// @title Simplified Echidna Property Tests for VFIDEToken
+  19 |     | /// @notice Property-based fuzzing that compiles successfully
+  20 | *   | contract EchidnaVFIDETokenSimple {
+  21 |     |     VFIDEToken public token;
+  22 |     |     MockDevVault public devVault;
+  23 | *   |     MockLedger public ledger;
+  24 |     |     
+  25 |     |     constructor() {
+  26 | *   |         devVault = new MockDevVault();
+  27 | *   |         ledger = new MockLedger();
+  28 |     |         
+  29 | *   |         token = new VFIDEToken(
+  30 |     |             address(devVault),
+  31 |     |             address(0), // vaultHub (not needed for properties)
+  32 |     |             address(ledger), // ledger with logEvent
+  33 |     |             address(0)  // treasurySink (not needed)
+  34 |     |         );
+  35 |     |     }
+  36 |     |     
+  37 |     |     // PROPERTY 1: Total supply never exceeds MAX_SUPPLY
+  38 |     |     function echidna_total_supply_bounded() public view returns (bool) {
+  39 | *   |         return token.totalSupply() <= token.MAX_SUPPLY();
+  40 |     |     }
+  41 |     |     
+  42 |     |     // PROPERTY 2: Dev reserve is 40M initially
+  43 |     |     function echidna_dev_reserve_initial() public view returns (bool) {
+  44 | *   |         return token.totalSupply() == token.DEV_RESERVE_SUPPLY();
+  45 |     |     }
+  46 |     |     
+  47 |     |     // PROPERTY 3: Presale minted never exceeds cap
+  48 |     |     function echidna_presale_cap_not_exceeded() public view returns (bool) {
+  49 | *   |         return token.presaleMinted() <= token.PRESALE_SUPPLY_CAP();
+  50 |     |     }
+  51 |     |     
+  52 |     |     // PROPERTY 4: Constants are immutable
+  53 |     |     function echidna_constants_immutable() public view returns (bool) {
+  54 | *   |         return token.MAX_SUPPLY() == 200_000_000e18 &&
+  55 |     |                token.DEV_RESERVE_SUPPLY() == 40_000_000e18 &&
+  56 |     |                token.PRESALE_SUPPLY_CAP() == 75_000_000e18;
+  57 |     |     }
+  58 |     |     
+  59 |     |     // PROPERTY 5: Name and symbol are constant
+  60 |     |     function echidna_name_and_symbol() public view returns (bool) {
+  61 |     |         return keccak256(bytes(token.name())) == keccak256(bytes("VFIDE")) &&
+  62 |     |                keccak256(bytes(token.symbol())) == keccak256(bytes("VFIDE")) &&
+  63 |     |                token.decimals() == 18;
+  64 |     |     }
+  65 |     |     
+  66 |     |     // PROPERTY 6: Owner always exists
+  67 |     |     function echidna_owner_exists() public view returns (bool) {
+  68 | *   |         return token.owner() != address(0);
+  69 |     |     }
+  70 |     |     
+  71 |     |     // PROPERTY 7: Vault-only is boolean
+  72 |     |     function echidna_vault_only_boolean() public view returns (bool) {
+  73 | *   |         bool vaultOnly = token.vaultOnly();
+  74 |     |         return vaultOnly == true || vaultOnly == false;
+  75 |     |     }
+  76 |     |     
+  77 |     |     // PROPERTY 8: Policy locked is boolean
+  78 |     |     function echidna_policy_locked_boolean() public view returns (bool) {
+  79 | *   |         bool locked = token.policyLocked();
+  80 |     |         return locked == true || locked == false;
+  81 |     |     }
+  82 |     |     
+  83 |     |     // PROPERTY 9: Total supply is non-negative
+  84 |     |     function echidna_supply_non_negative() public view returns (bool) {
+  85 | *   |         return token.totalSupply() >= 0;
+  86 |     |     }
+  87 |     |     
+  88 |     |     // PROPERTY 10: Presale minted is non-negative
+  89 |     |     function echidna_presale_non_negative() public view returns (bool) {
+  90 | *   |         return token.presaleMinted() >= 0;
+  91 |     |     }
+  92 |     |     
+  93 |     |     // PROPERTY 11: Total supply consistency
+  94 |     |     function echidna_supply_consistent() public view returns (bool) {
+  95 | *   |         uint256 supply1 = token.totalSupply();
+  96 |     |         uint256 supply2 = token.totalSupply();
+  97 |     |         return supply1 == supply2;
+  98 |     |     }
+  99 |     | }
+ 100 |     | 
+

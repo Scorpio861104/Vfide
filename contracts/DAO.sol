@@ -25,6 +25,9 @@ contract DAO {
     event Finalized(uint256 id, bool passed);
     event Queued(uint256 id, bytes32 timelockId);
     event Executed(uint256 id);
+    event DisputeFlagged(address indexed user, address indexed caller, string reason);
+    event VoteDelegated(address indexed delegator, address indexed delegate);
+    event ProposalWithdrawn(uint256 id, address indexed proposer);
 
     address public admin;
     IDAOTimelock_GOV public timelock;
@@ -54,6 +57,11 @@ contract DAO {
     uint256 public proposalCount;
     mapping(uint256 => Proposal) public proposals;
 
+    /**
+     * Allow vote delegation
+     */
+    mapping(address => address) public voteDelegates;
+
     modifier onlyAdmin() { if (msg.sender!=admin) revert DAO_NotAdmin(); _; }
 
     constructor(address _admin, address _timelock, address _seer, address _hub, address _hooks) {
@@ -72,8 +80,8 @@ contract DAO {
     function setParams(uint64 _period, uint16 _q) external onlyAdmin { if(_period<1 hours)_period=1 hours; if(_q>100)_q=100; votingPeriod=_period; quorum=_q; emit ParamsSet(_period,_q); }
 
     function _eligible(address a) internal view returns (bool) {
-        if (vaultHub.vaultOf(a)==address(0)) return false;
-        return seer.getScore(a) >= seer.minForGovernance();
+        // Delegate eligibility check to Seer
+        return seer.getScore(a) >= seer.minForGovernance() && vaultHub.vaultOf(a) != address(0);
     }
 
     function propose(ProposalType ptype, address target, uint256 value, bytes calldata data, string calldata description) external returns (uint256 id) {
@@ -85,15 +93,25 @@ contract DAO {
         emit ProposalCreated(id,msg.sender,ptype,target,value,data,description);
     }
 
+    function delegateVote(address delegate) external {
+        require(delegate != address(0), "Invalid delegate");
+        voteDelegates[msg.sender] = delegate;
+        emit VoteDelegated(msg.sender, delegate);
+    }
+
     function vote(uint256 id, bool support) external {
-        Proposal storage p=proposals[id];
-        if(p.end==0) revert DAO_UnknownProposal();
-        if(block.timestamp>=p.end) revert DAO_VoteEnded();
-        if(!_eligible(msg.sender)) revert DAO_NotEligible();
-        if(p.hasVoted[msg.sender]) revert DAO_AlreadyVoted();
-        p.hasVoted[msg.sender]=true; if(support) p.forVotes+=1; else p.againstVotes+=1;
-        emit Voted(id,msg.sender,support);
-        if (address(hooks)!=address(0)) { try hooks.onVoteCast(id,msg.sender,support) {} catch {} }
+        address voter = voteDelegates[msg.sender] != address(0) ? voteDelegates[msg.sender] : msg.sender;
+        Proposal storage p = proposals[id];
+        if (p.end == 0) revert DAO_UnknownProposal();
+        if (block.timestamp >= p.end) revert DAO_VoteEnded();
+        if (!_eligible(voter)) revert DAO_NotEligible();
+        if (p.hasVoted[voter]) revert DAO_AlreadyVoted();
+        p.hasVoted[voter] = true;
+        if (support) p.forVotes += 1; else p.againstVotes += 1;
+        emit Voted(id, voter, support);
+        if (address(hooks) != address(0)) {
+            try hooks.onVoteCast(id, voter, support) {} catch {}
+        }
     }
 
     function finalize(uint256 id) external {
@@ -117,5 +135,20 @@ contract DAO {
         Proposal storage p=proposals[id];
         require(p.queued&&!p.executed,"bad");
         p.executed=true; emit Executed(id);
+    }
+
+    function withdrawProposal(uint256 id) external {
+        Proposal storage p = proposals[id];
+        require(p.proposer == msg.sender, "Not proposer");
+        require(block.timestamp < p.start, "Voting started");
+        delete proposals[id];
+        emit ProposalWithdrawn(id, msg.sender);
+    }
+
+    function disputeFlag(address user, string calldata reason) external {
+        require(msg.sender != address(0), "Invalid caller");
+        // Log the dispute for DAO review
+        emit DisputeFlagged(user, msg.sender, reason);
+        // DAO can review and override Seer decisions
     }
 }

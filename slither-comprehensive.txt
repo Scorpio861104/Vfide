@@ -1,0 +1,771 @@
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/ProofScoreBurnRouter.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+Compilation warnings/errors on contracts-prod/ProofScoreBurnRouter.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/ProofScoreBurnRouter.sol:62:40:
+   |
+62 |     function adjustScore(address user, uint16 delta, bool increase) external {
+   |                                        ^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/ProofScoreBurnRouter.sol:62:54:
+   |
+62 |     function adjustScore(address user, uint16 delta, bool increase) external {
+   |                                                      ^^^^^^^^^^^^^
+
+
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/Seer.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/VFIDESecurity.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/DAOTimelock.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/SystemHandover.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/GovernanceHooks.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+Compilation warnings/errors on contracts-prod/GovernanceHooks.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/GovernanceHooks.sol:16:31:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                               ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/GovernanceHooks.sol:16:43:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                           ^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/GovernanceHooks.sol:16:59:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                                           ^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/GovernanceHooks.sol:20:25:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                         ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/GovernanceHooks.sol:20:37:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                     ^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/GovernanceHooks.sol:20:52:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                                    ^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/GovernanceHooks.sol:24:26:
+   |
+24 |     function onFinalized(uint256 id, bool passed) external {
+   |                          ^^^^^^^^^^
+
+
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/VFIDEToken.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/VFIDETrust.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/VFIDEPresale.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/DevReserveVestingVault.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/VFIDECommerce.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+Compilation warnings/errors on contracts-prod/VFIDECommerce.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts-prod/VFIDECommerce.sol:290:34:
+    |
+290 |     function dispute(uint256 id, string calldata reason) external {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^
+
+
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/EmergencyControl.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/DAO.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/CouncilElection.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/VaultInfrastructure.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/ProofLedger.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts-prod/VFIDEFinance.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts-prod' running
+
+ProofScoreBurnRouter.setModules(address,address,address,address)._vfide (contracts-prod/ProofScoreBurnRouter.sol#39) lacks a zero-check on :
+		- vfideToken = _vfide (contracts-prod/ProofScoreBurnRouter.sol#43)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in ProofScoreBurnRouter.route(address,uint256) (contracts-prod/ProofScoreBurnRouter.sol#47-60):
+	External calls:
+	- treasury.noteVFIDE(burnAmount,user) (contracts-prod/ProofScoreBurnRouter.sol#54)
+	- sanctum.disburse(vfideToken,address(treasury),sanctumAmount,ProofScore charity share) (contracts-prod/ProofScoreBurnRouter.sol#55)
+	Event emitted after the call(s):
+	- Adjusted(user,score,burnRate,sanctumRate) (contracts-prod/ProofScoreBurnRouter.sol#58)
+	- RouteExecuted(user,burnAmount,sanctumAmount) (contracts-prod/ProofScoreBurnRouter.sol#57)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Contract ISeer_BURN (contracts-prod/ProofScoreBurnRouter.sol#10) is not in CapWords
+Contract IEcoTreasuryVault_BURN (contracts-prod/ProofScoreBurnRouter.sol#11) is not in CapWords
+Contract ISanctumFund_BURN (contracts-prod/ProofScoreBurnRouter.sol#12) is not in CapWords
+Parameter ProofScoreBurnRouter.setModules(address,address,address,address)._seer (contracts-prod/ProofScoreBurnRouter.sol#39) is not in mixedCase
+Parameter ProofScoreBurnRouter.setModules(address,address,address,address)._treasury (contracts-prod/ProofScoreBurnRouter.sol#39) is not in mixedCase
+Parameter ProofScoreBurnRouter.setModules(address,address,address,address)._sanctum (contracts-prod/ProofScoreBurnRouter.sol#39) is not in mixedCase
+Parameter ProofScoreBurnRouter.setModules(address,address,address,address)._vfide (contracts-prod/ProofScoreBurnRouter.sol#39) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+ProofScoreBurnRouter.baseBurnRate (contracts-prod/ProofScoreBurnRouter.sol#26) should be constant 
+ProofScoreBurnRouter.maxBurnRate (contracts-prod/ProofScoreBurnRouter.sol#27) should be constant 
+ProofScoreBurnRouter.sanctumRate (contracts-prod/ProofScoreBurnRouter.sol#28) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Seer.setModules(address,address,address,address)._dao (contracts-prod/Seer.sol#66) lacks a zero-check on :
+		- dao = _dao (contracts-prod/Seer.sol#67)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Contract IProofLedger_SEER (contracts-prod/Seer.sol#12-15) is not in CapWords
+Contract IPanicGuard_SEER (contracts-prod/Seer.sol#17-19) is not in CapWords
+Contract IProofScoreBurnRouter_SEER (contracts-prod/Seer.sol#21-23) is not in CapWords
+Parameter Seer.setModules(address,address,address,address)._dao (contracts-prod/Seer.sol#66) is not in mixedCase
+Parameter Seer.setModules(address,address,address,address)._ledger (contracts-prod/Seer.sol#66) is not in mixedCase
+Parameter Seer.setModules(address,address,address,address)._panic (contracts-prod/Seer.sol#66) is not in mixedCase
+Parameter Seer.setModules(address,address,address,address)._burn (contracts-prod/Seer.sol#66) is not in mixedCase
+Parameter Seer.setPolicy(uint16,uint16,uint16)._base (contracts-prod/Seer.sol#75) is not in mixedCase
+Parameter Seer.setPolicy(uint16,uint16,uint16)._min (contracts-prod/Seer.sol#75) is not in mixedCase
+Parameter Seer.setPolicy(uint16,uint16,uint16)._max (contracts-prod/Seer.sol#75) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+PanicGuard.isQuarantined(address) (contracts-prod/VFIDESecurity.sol#280-283) uses timestamp for comparisons
+	Dangerous comparisons:
+	- untilTs != 0 && untilTs > block.timestamp (contracts-prod/VFIDESecurity.sol#282)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Contract IProofLedger_SEC (contracts-prod/VFIDESecurity.sol#36-39) is not in CapWords
+Parameter GuardianRegistry.setDAO(address)._dao (contracts-prod/VFIDESecurity.sol#76) is not in mixedCase
+Parameter GuardianLock.setModules(address,address)._registry (contracts-prod/VFIDESecurity.sol#152) is not in mixedCase
+Parameter GuardianLock.setModules(address,address)._ledger (contracts-prod/VFIDESecurity.sol#152) is not in mixedCase
+Parameter PanicGuard.setLedger(address)._ledger (contracts-prod/VFIDESecurity.sol#240) is not in mixedCase
+Parameter PanicGuard.setPolicy(uint64,uint64)._minDuration (contracts-prod/VFIDESecurity.sol#246) is not in mixedCase
+Parameter PanicGuard.setPolicy(uint64,uint64)._maxDuration (contracts-prod/VFIDESecurity.sol#246) is not in mixedCase
+Parameter EmergencyBreaker.setDAO(address)._dao (contracts-prod/VFIDESecurity.sol#315) is not in mixedCase
+Parameter EmergencyBreaker.setLedger(address)._ledger (contracts-prod/VFIDESecurity.sol#321) is not in mixedCase
+Parameter SecurityHub.setDAO(address)._dao (contracts-prod/VFIDESecurity.sol#367) is not in mixedCase
+Parameter SecurityHub.setModules(address,address,address,address)._guardianLock (contracts-prod/VFIDESecurity.sol#373) is not in mixedCase
+Parameter SecurityHub.setModules(address,address,address,address)._panicGuard (contracts-prod/VFIDESecurity.sol#373) is not in mixedCase
+Parameter SecurityHub.setModules(address,address,address,address)._breaker (contracts-prod/VFIDESecurity.sol#373) is not in mixedCase
+Parameter SecurityHub.setModules(address,address,address,address)._ledger (contracts-prod/VFIDESecurity.sol#373) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+GuardianLock.dao (contracts-prod/VFIDESecurity.sol#132) should be immutable 
+PanicGuard.dao (contracts-prod/VFIDESecurity.sol#219) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+
+Reentrancy in DAOTimelock.execute(bytes32) (contracts-prod/DAOTimelock.sol#48-64):
+	External calls:
+	- (ok,r) = op.target.call{value: op.value}(op.data) (contracts-prod/DAOTimelock.sol#60)
+	Event emitted after the call(s):
+	- Executed(id) (contracts-prod/DAOTimelock.sol#62)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DAOTimelock.execute(bytes32) (contracts-prod/DAOTimelock.sol#48-64) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= op.eta + 21600,risk delay) (contracts-prod/DAOTimelock.sol#54)
+	- require(bool,string)(block.timestamp >= op.eta,too early) (contracts-prod/DAOTimelock.sol#56)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Low level call in DAOTimelock.execute(bytes32) (contracts-prod/DAOTimelock.sol#48-64):
+	- (ok,r) = op.target.call{value: op.value}(op.data) (contracts-prod/DAOTimelock.sol#60)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract IProofLedger_GOV (contracts-prod/DAOTimelock.sol#4) is not in CapWords
+Contract IPanicGuard_GOV (contracts-prod/DAOTimelock.sol#5) is not in CapWords
+Parameter DAOTimelock.setAdmin(address)._admin (contracts-prod/DAOTimelock.sol#33) is not in mixedCase
+Parameter DAOTimelock.setDelay(uint64)._delay (contracts-prod/DAOTimelock.sol#34) is not in mixedCase
+Parameter DAOTimelock.setLedger(address)._ledger (contracts-prod/DAOTimelock.sol#35) is not in mixedCase
+Parameter DAOTimelock.setPanicGuard(address)._pg (contracts-prod/DAOTimelock.sol#36) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in SystemHandover.executeHandover(address) (contracts-prod/SystemHandover.sol#72-79):
+	External calls:
+	- dao.setAdmin(newAdmin) (contracts-prod/SystemHandover.sol#75)
+	- timelock.setAdmin(address(dao)) (contracts-prod/SystemHandover.sol#76)
+	Event emitted after the call(s):
+	- Executed(address(dao),address(timelock),newAdmin,extensionsUsed) (contracts-prod/SystemHandover.sol#77)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+SystemHandover.executeHandover(address) (contracts-prod/SystemHandover.sol#72-79) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < handoverAt (contracts-prod/SystemHandover.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Contract ISeer_SH (contracts-prod/SystemHandover.sol#4) is not in CapWords
+Contract IVFIDEPresaleLike_SH (contracts-prod/SystemHandover.sol#5) is not in CapWords
+Contract IDAO_SH (contracts-prod/SystemHandover.sol#6) is not in CapWords
+Contract IDAOTimelock_SH (contracts-prod/SystemHandover.sol#7) is not in CapWords
+Contract IProofLedger_SH (contracts-prod/SystemHandover.sol#8) is not in CapWords
+Parameter SystemHandover.setParams(uint64,uint16,uint8,uint64)._monthsDelay (contracts-prod/SystemHandover.sol#53) is not in mixedCase
+Parameter SystemHandover.setParams(uint64,uint16,uint8,uint64)._minAvg (contracts-prod/SystemHandover.sol#53) is not in mixedCase
+Parameter SystemHandover.setParams(uint64,uint16,uint8,uint64)._maxExt (contracts-prod/SystemHandover.sol#53) is not in mixedCase
+Parameter SystemHandover.setParams(uint64,uint16,uint8,uint64)._extSpan (contracts-prod/SystemHandover.sol#53) is not in mixedCase
+Parameter SystemHandover.setLedger(address)._ledger (contracts-prod/SystemHandover.sol#81) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+SystemHandover.dao (contracts-prod/SystemHandover.sol#21) should be immutable 
+SystemHandover.devMultisig (contracts-prod/SystemHandover.sol#20) should be immutable 
+SystemHandover.seer (contracts-prod/SystemHandover.sol#23) should be immutable 
+SystemHandover.timelock (contracts-prod/SystemHandover.sol#22) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+
+Contract IProofLedger_GH (contracts-prod/GovernanceHooks.sol#4) is not in CapWords
+Contract ISeer_GH (contracts-prod/GovernanceHooks.sol#5) is not in CapWords
+Parameter GovernanceHooks.setModules(address,address)._ledger (contracts-prod/GovernanceHooks.sol#14) is not in mixedCase
+Parameter GovernanceHooks.setModules(address,address)._seer (contracts-prod/GovernanceHooks.sol#14) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+VFIDEToken.setPresale(address)._presale (contracts-prod/VFIDEToken.sol#241) lacks a zero-check on :
+		- presale = _presale (contracts-prod/VFIDEToken.sol#242)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+VFIDEToken.constructor(address,address,address,address) (contracts-prod/VFIDEToken.sol#121-151) uses assembly
+	- INLINE ASM (contracts-prod/VFIDEToken.sol#131)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+VFIDEToken._transfer(address,address,uint256) (contracts-prod/VFIDEToken.sol#270-333) has a high cyclomatic complexity (15).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Low level call in VFIDEToken._locked(address) (contracts-prod/VFIDEToken.sol#378-381):
+	- (ok,d) = address(securityHub).staticcall(abi.encodeWithSelector(ISecurityHub.isLocked.selector,vault)) (contracts-prod/VFIDEToken.sol#379)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter VFIDEToken.setLedger(address)._ledger (contracts-prod/VFIDEToken.sol#201) is not in mixedCase
+Parameter VFIDEToken.setPresale(address)._presale (contracts-prod/VFIDEToken.sol#241) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+ProofScoreBurnRouterPlus.constructor(address,address,address)._treasury (contracts-prod/VFIDETrust.sol#179) lacks a zero-check on :
+		- treasury = _treasury (contracts-prod/VFIDETrust.sol#183)
+ProofScoreBurnRouterPlus.setModules(address,address)._treasury (contracts-prod/VFIDETrust.sol#186) lacks a zero-check on :
+		- treasury = _treasury (contracts-prod/VFIDETrust.sol#189)
+ProofScoreBurnRouterPlus.setPolicy(uint16,uint16,uint16,uint16,uint16,address)._treasury (contracts-prod/VFIDETrust.sol#199) lacks a zero-check on :
+		- treasury = _treasury (contracts-prod/VFIDETrust.sol#207)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Contract IVaultHub_Trust (contracts-prod/VFIDETrust.sol#17) is not in CapWords
+Contract ITokenLike_Trust (contracts-prod/VFIDETrust.sol#18) is not in CapWords
+Parameter ProofLedger.setDAO(address)._dao (contracts-prod/VFIDETrust.sol#43) is not in mixedCase
+Parameter Seer.setModules(address,address)._ledger (contracts-prod/VFIDETrust.sol#96) is not in mixedCase
+Parameter Seer.setModules(address,address)._hub (contracts-prod/VFIDETrust.sol#96) is not in mixedCase
+Parameter ProofScoreBurnRouterPlus.setModules(address,address)._seer (contracts-prod/VFIDETrust.sol#186) is not in mixedCase
+Parameter ProofScoreBurnRouterPlus.setModules(address,address)._treasury (contracts-prod/VFIDETrust.sol#186) is not in mixedCase
+Parameter ProofScoreBurnRouterPlus.setPolicy(uint16,uint16,uint16,uint16,uint16,address)._baseBurnBps (contracts-prod/VFIDETrust.sol#194) is not in mixedCase
+Parameter ProofScoreBurnRouterPlus.setPolicy(uint16,uint16,uint16,uint16,uint16,address)._baseRewardBps (contracts-prod/VFIDETrust.sol#195) is not in mixedCase
+Parameter ProofScoreBurnRouterPlus.setPolicy(uint16,uint16,uint16,uint16,uint16,address)._highBoostBps (contracts-prod/VFIDETrust.sol#196) is not in mixedCase
+Parameter ProofScoreBurnRouterPlus.setPolicy(uint16,uint16,uint16,uint16,uint16,address)._lowPenaltyBps (contracts-prod/VFIDETrust.sol#197) is not in mixedCase
+Parameter ProofScoreBurnRouterPlus.setPolicy(uint16,uint16,uint16,uint16,uint16,address)._maxTotalBps (contracts-prod/VFIDETrust.sol#198) is not in mixedCase
+Parameter ProofScoreBurnRouterPlus.setPolicy(uint16,uint16,uint16,uint16,uint16,address)._treasury (contracts-prod/VFIDETrust.sol#199) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+ProofScoreBurnRouterPlus.dao (contracts-prod/VFIDETrust.sol#166) should be immutable 
+Seer.dao (contracts-prod/VFIDETrust.sol#70) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+
+Reentrancy in VFIDEPresale.buy(address,uint8,uint256,address) (contracts-prod/VFIDEPresale.sol#203-261):
+	External calls:
+	- vault = vaultHub.ensureVault(msg.sender) (contracts-prod/VFIDEPresale.sol#210)
+	- require(bool,string)(IERC20Like(stable).transferFrom(msg.sender,treas,payAmt),transferFrom failed) (contracts-prod/VFIDEPresale.sol#240)
+	- vfide.mintPresale(vault,vfideOut + buyerBonus) (contracts-prod/VFIDEPresale.sol#243)
+	- refVault = vaultHub.ensureVault(referrer) (contracts-prod/VFIDEPresale.sol#248)
+	State variables written after the call(s):
+	- purchasedByVault[vault] -= refBonus (contracts-prod/VFIDEPresale.sol#254)
+	VFIDEPresale.purchasedByVault (contracts-prod/VFIDEPresale.sol#118) can be used in cross function reentrancies:
+	- VFIDEPresale.buy(address,uint8,uint256,address) (contracts-prod/VFIDEPresale.sol#203-261)
+	- VFIDEPresale.purchasedByVault (contracts-prod/VFIDEPresale.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in VFIDEPresale.buy(address,uint8,uint256,address) (contracts-prod/VFIDEPresale.sol#203-261):
+	External calls:
+	- vault = vaultHub.ensureVault(msg.sender) (contracts-prod/VFIDEPresale.sol#210)
+	State variables written after the call(s):
+	- purchasedByVault[vault] = prior + totalMint (contracts-prod/VFIDEPresale.sol#230)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in VFIDEPresale.buy(address,uint8,uint256,address) (contracts-prod/VFIDEPresale.sol#203-261):
+	External calls:
+	- vault = vaultHub.ensureVault(msg.sender) (contracts-prod/VFIDEPresale.sol#210)
+	- require(bool,string)(IERC20Like(stable).transferFrom(msg.sender,treas,payAmt),transferFrom failed) (contracts-prod/VFIDEPresale.sol#240)
+	- vfide.mintPresale(vault,vfideOut + buyerBonus) (contracts-prod/VFIDEPresale.sol#243)
+	- refVault = vaultHub.ensureVault(referrer) (contracts-prod/VFIDEPresale.sol#248)
+	- vfide.mintPresale(refVault,refBonus) (contracts-prod/VFIDEPresale.sol#251)
+	Event emitted after the call(s):
+	- Purchase(msg.sender,vault,stable,tier,vfideOut,buyerBonus,refBonus,payAmt,referrer) (contracts-prod/VFIDEPresale.sol#259)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+VFIDEPresale.launchPresale(uint256) (contracts-prod/VFIDEPresale.sol#180-186) uses timestamp for comparisons
+	Dangerous comparisons:
+	- presaleStartTime != 0 (contracts-prod/VFIDEPresale.sol#181)
+VFIDEPresale.launchNow() (contracts-prod/VFIDEPresale.sol#188-193) uses timestamp for comparisons
+	Dangerous comparisons:
+	- presaleStartTime != 0 (contracts-prod/VFIDEPresale.sol#189)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Function IVFIDEToken.PRESALE_SUPPLY_CAP() (contracts-prod/VFIDEPresale.sol#20) is not in mixedCase
+Parameter VFIDEPresale.setModules(address,address,address,address,address)._vfide (contracts-prod/VFIDEPresale.sol#135) is not in mixedCase
+Parameter VFIDEPresale.setModules(address,address,address,address,address)._vaultHub (contracts-prod/VFIDEPresale.sol#135) is not in mixedCase
+Parameter VFIDEPresale.setModules(address,address,address,address,address)._registry (contracts-prod/VFIDEPresale.sol#135) is not in mixedCase
+Parameter VFIDEPresale.setModules(address,address,address,address,address)._ledger (contracts-prod/VFIDEPresale.sol#135) is not in mixedCase
+Parameter VFIDEPresale.setModules(address,address,address,address,address)._security (contracts-prod/VFIDEPresale.sol#135) is not in mixedCase
+Parameter VFIDEPresale.setActive(bool)._active (contracts-prod/VFIDEPresale.sol#146) is not in mixedCase
+Parameter VFIDEPresale.setReferralBps(uint16,uint16)._buyerBps (contracts-prod/VFIDEPresale.sol#171) is not in mixedCase
+Parameter VFIDEPresale.setReferralBps(uint16,uint16)._refBps (contracts-prod/VFIDEPresale.sol#171) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+DevReserveVestingVault.claim() (contracts-prod/DevReserveVestingVault.sol#146-170) uses a dangerous strict equality:
+	- amount == 0 (contracts-prod/DevReserveVestingVault.sol#159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+DevReserveVestingVault.constructor(address,address,address,address,address,address,uint256)._securityHub (contracts-prod/DevReserveVestingVault.sol#91) lacks a zero-check on :
+		- SECURITY_HUB = _securityHub (contracts-prod/DevReserveVestingVault.sol#100)
+DevReserveVestingVault.constructor(address,address,address,address,address,address,uint256)._ledger (contracts-prod/DevReserveVestingVault.sol#92) lacks a zero-check on :
+		- LEDGER = _ledger (contracts-prod/DevReserveVestingVault.sol#101)
+DevReserveVestingVault.constructor(address,address,address,address,address,address,uint256)._presale (contracts-prod/DevReserveVestingVault.sol#93) lacks a zero-check on :
+		- PRESALE = _presale (contracts-prod/DevReserveVestingVault.sol#102)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in DevReserveVestingVault.claim() (contracts-prod/DevReserveVestingVault.sol#146-170):
+	External calls:
+	- _syncStart() (contracts-prod/DevReserveVestingVault.sol#150)
+		- IProofLedger_DV(LEDGER).logSystemEvent(address(this),action,msg.sender) (contracts-prod/DevReserveVestingVault.sol#242)
+	- vault = beneficiaryVault() (contracts-prod/DevReserveVestingVault.sol#152)
+		- IVaultHub_DV(VAULT_HUB).ensureVault(BENEFICIARY) (contracts-prod/DevReserveVestingVault.sol#128)
+	State variables written after the call(s):
+	- totalClaimed += amount (contracts-prod/DevReserveVestingVault.sol#162)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+DevReserveVestingVault.vested() (contracts-prod/DevReserveVestingVault.sol#113-119) uses timestamp for comparisons
+	Dangerous comparisons:
+	- s == 0 || block.timestamp < c (contracts-prod/DevReserveVestingVault.sol#115)
+	- block.timestamp >= e (contracts-prod/DevReserveVestingVault.sol#116)
+DevReserveVestingVault.claimable() (contracts-prod/DevReserveVestingVault.sol#121-125) uses timestamp for comparisons
+	Dangerous comparisons:
+	- v <= totalClaimed (contracts-prod/DevReserveVestingVault.sol#123)
+DevReserveVestingVault.claim() (contracts-prod/DevReserveVestingVault.sol#146-170) uses timestamp for comparisons
+	Dangerous comparisons:
+	- amount == 0 (contracts-prod/DevReserveVestingVault.sol#159)
+	- require(bool,string)(ok,transfer failed) (contracts-prod/DevReserveVestingVault.sol#166)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Low level call in DevReserveVestingVault._fetchStartFromPresale() (contracts-prod/DevReserveVestingVault.sol#202-230):
+	- (ok1,d1) = PRESALE.staticcall(abi.encodeWithSelector(IPresaleStart_presaleStartTime.presaleStartTime.selector)) (contracts-prod/DevReserveVestingVault.sol#205-207)
+	- (ok2,d2) = PRESALE.staticcall(abi.encodeWithSelector(IPresaleStart_launchTimestamp.launchTimestamp.selector)) (contracts-prod/DevReserveVestingVault.sol#213-215)
+	- (ok3,d3) = PRESALE.staticcall(abi.encodeWithSelector(IPresaleStart_startTime.startTime.selector)) (contracts-prod/DevReserveVestingVault.sol#221-223)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract IERC20_DV (contracts-prod/DevReserveVestingVault.sol#16-19) is not in CapWords
+Contract IVaultHub_DV (contracts-prod/DevReserveVestingVault.sol#21-24) is not in CapWords
+Contract ISecurityHub_DV (contracts-prod/DevReserveVestingVault.sol#26-28) is not in CapWords
+Contract IProofLedger_DV (contracts-prod/DevReserveVestingVault.sol#30-33) is not in CapWords
+Contract IPresaleStart_presaleStartTime (contracts-prod/DevReserveVestingVault.sol#36) is not in CapWords
+Contract IPresaleStart_launchTimestamp (contracts-prod/DevReserveVestingVault.sol#37) is not in CapWords
+Contract IPresaleStart_startTime (contracts-prod/DevReserveVestingVault.sol#38) is not in CapWords
+Variable DevReserveVestingVault.VFIDE (contracts-prod/DevReserveVestingVault.sol#52) is not in mixedCase
+Variable DevReserveVestingVault.BENEFICIARY (contracts-prod/DevReserveVestingVault.sol#53) is not in mixedCase
+Variable DevReserveVestingVault.VAULT_HUB (contracts-prod/DevReserveVestingVault.sol#54) is not in mixedCase
+Variable DevReserveVestingVault.SECURITY_HUB (contracts-prod/DevReserveVestingVault.sol#55) is not in mixedCase
+Variable DevReserveVestingVault.LEDGER (contracts-prod/DevReserveVestingVault.sol#56) is not in mixedCase
+Variable DevReserveVestingVault.PRESALE (contracts-prod/DevReserveVestingVault.sol#57) is not in mixedCase
+Variable DevReserveVestingVault.ALLOCATION (contracts-prod/DevReserveVestingVault.sol#58) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Contract IVaultHub_COM (contracts-prod/VFIDECommerce.sol#6-8) is not in CapWords
+Contract ISeer_COM (contracts-prod/VFIDECommerce.sol#9-12) is not in CapWords
+Contract IProofLedger_COM (contracts-prod/VFIDECommerce.sol#13-16) is not in CapWords
+Contract ISecurityHub_COM (contracts-prod/VFIDECommerce.sol#17-19) is not in CapWords
+Contract IERC20_COM (contracts-prod/VFIDECommerce.sol#20-23) is not in CapWords
+Function MerchantRegistry._noteRefund(address) (contracts-prod/VFIDECommerce.sol#99-108) is not in mixedCase
+Function MerchantRegistry._noteDispute(address) (contracts-prod/VFIDECommerce.sol#110-119) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+MerchantRegistry.autoSuspendDisputes (contracts-prod/VFIDECommerce.sol#70) should be constant 
+MerchantRegistry.autoSuspendRefunds (contracts-prod/VFIDECommerce.sol#69) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+CommerceEscrow.dao (contracts-prod/VFIDECommerce.sol#217) should be immutable 
+CommerceEscrow.merchants (contracts-prod/VFIDECommerce.sol#220) should be immutable 
+CommerceEscrow.security (contracts-prod/VFIDECommerce.sol#221) should be immutable 
+CommerceEscrow.token (contracts-prod/VFIDECommerce.sol#218) should be immutable 
+CommerceEscrow.vaultHub (contracts-prod/VFIDECommerce.sol#219) should be immutable 
+MerchantRegistry.dao (contracts-prod/VFIDECommerce.sol#51) should be immutable 
+MerchantRegistry.ledger (contracts-prod/VFIDECommerce.sol#56) should be immutable 
+MerchantRegistry.minScore (contracts-prod/VFIDECommerce.sol#68) should be immutable 
+MerchantRegistry.security (contracts-prod/VFIDECommerce.sol#55) should be immutable 
+MerchantRegistry.seer (contracts-prod/VFIDECommerce.sol#54) should be immutable 
+MerchantRegistry.token (contracts-prod/VFIDECommerce.sol#52) should be immutable 
+MerchantRegistry.vaultHub (contracts-prod/VFIDECommerce.sol#53) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+
+EmergencyControl._enforceCooldown() (contracts-prod/EmergencyControl.sol#231-234) uses a dangerous strict equality:
+	- lastToggleTs == 0 (contracts-prod/EmergencyControl.sol#232)
+EmergencyControl.timeSinceLastToggle() (contracts-prod/EmergencyControl.sol#214-217) uses a dangerous strict equality:
+	- lastToggleTs == 0 (contracts-prod/EmergencyControl.sol#215)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in EmergencyControl.daoToggle(bool,string) (contracts-prod/EmergencyControl.sol#149-155):
+	External calls:
+	- breaker.toggle(halt,reason) (contracts-prod/EmergencyControl.sol#151)
+	State variables written after the call(s):
+	- lastToggleTs = uint64(block.timestamp) (contracts-prod/EmergencyControl.sol#152)
+	EmergencyControl.lastToggleTs (contracts-prod/EmergencyControl.sol#53) can be used in cross function reentrancies:
+	- EmergencyControl._enforceCooldown() (contracts-prod/EmergencyControl.sol#231-234)
+	- EmergencyControl.committeeVote(bool,string) (contracts-prod/EmergencyControl.sol#158-210)
+	- EmergencyControl.daoToggle(bool,string) (contracts-prod/EmergencyControl.sol#149-155)
+	- EmergencyControl.lastToggleTs (contracts-prod/EmergencyControl.sol#53)
+	- EmergencyControl.timeSinceLastToggle() (contracts-prod/EmergencyControl.sol#214-217)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in EmergencyControl.removeMember(address) (contracts-prod/EmergencyControl.sol#131-139):
+	External calls:
+	- _log(ec_member_remove) (contracts-prod/EmergencyControl.sol#135)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts-prod/EmergencyControl.sol#237)
+	State variables written after the call(s):
+	- threshold = memberCount (contracts-prod/EmergencyControl.sol#137)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts-prod/EmergencyControl.sol#158-210):
+	External calls:
+	- _logEv(msg.sender,ec_vote_halt,voteCount,reason) (contracts-prod/EmergencyControl.sol#177)
+		- ledger.logEvent(who,action,amount,note) (contracts-prod/EmergencyControl.sol#240)
+	- breaker.toggle(true,reason) (contracts-prod/EmergencyControl.sol#178)
+	Event emitted after the call(s):
+	- CommitteeTriggered(true,reason) (contracts-prod/EmergencyControl.sol#179)
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts-prod/EmergencyControl.sol#158-210):
+	External calls:
+	- _logEv(msg.sender,ec_vote_unhalt,voteCount_scope_0,reason) (contracts-prod/EmergencyControl.sol#201)
+		- ledger.logEvent(who,action,amount,note) (contracts-prod/EmergencyControl.sol#240)
+	- breaker.toggle(false,reason) (contracts-prod/EmergencyControl.sol#202)
+	Event emitted after the call(s):
+	- CommitteeTriggered(false,reason) (contracts-prod/EmergencyControl.sol#203)
+Reentrancy in EmergencyControl.daoToggle(bool,string) (contracts-prod/EmergencyControl.sol#149-155):
+	External calls:
+	- breaker.toggle(halt,reason) (contracts-prod/EmergencyControl.sol#151)
+	Event emitted after the call(s):
+	- DAOToggled(halt,reason) (contracts-prod/EmergencyControl.sol#153)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+EmergencyControl.timeSinceLastToggle() (contracts-prod/EmergencyControl.sol#214-217) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastToggleTs == 0 (contracts-prod/EmergencyControl.sol#215)
+EmergencyControl._enforceCooldown() (contracts-prod/EmergencyControl.sol#231-234) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastToggleTs == 0 (contracts-prod/EmergencyControl.sol#232)
+	- uint64(block.timestamp) < lastToggleTs + minCooldown (contracts-prod/EmergencyControl.sol#233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+EmergencyControl.resetCommittee(uint8,address[]) (contracts-prod/EmergencyControl.sol#94-120) has costly operations inside a loop:
+	- memberCount += 1 (contracts-prod/EmergencyControl.sol#115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+EmergencyControl._resetVotes() (contracts-prod/EmergencyControl.sol#222-229) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Contract IEmergencyBreaker_EC (contracts-prod/EmergencyControl.sol#19-22) is not in CapWords
+Contract IProofLedger_EC (contracts-prod/EmergencyControl.sol#24-27) is not in CapWords
+Parameter EmergencyControl.setModules(address,address,address)._dao (contracts-prod/EmergencyControl.sol#81) is not in mixedCase
+Parameter EmergencyControl.setModules(address,address,address)._breaker (contracts-prod/EmergencyControl.sol#81) is not in mixedCase
+Parameter EmergencyControl.setModules(address,address,address)._ledger (contracts-prod/EmergencyControl.sol#81) is not in mixedCase
+Parameter EmergencyControl.resetCommittee(uint8,address[])._threshold (contracts-prod/EmergencyControl.sol#94) is not in mixedCase
+Parameter EmergencyControl.setThreshold(uint8)._threshold (contracts-prod/EmergencyControl.sol#141) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in DAO.finalize(uint256) (contracts-prod/DAO.sol#99-121):
+	External calls:
+	- hooks.onFinalized(id,passed) (contracts-prod/DAO.sol#115)
+	- tlId = timelock.queueTx(p.target,p.value,p.data) (contracts-prod/DAO.sol#117)
+	Event emitted after the call(s):
+	- Queued(id,tlId) (contracts-prod/DAO.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DAO.vote(uint256,bool) (contracts-prod/DAO.sol#88-97) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= p.end (contracts-prod/DAO.sol#91)
+DAO.finalize(uint256) (contracts-prod/DAO.sol#99-121) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= p.end,early) (contracts-prod/DAO.sol#102)
+	- require(bool,string)(! p.executed && ! p.queued,done) (contracts-prod/DAO.sol#103)
+DAO.markExecuted(uint256) (contracts-prod/DAO.sol#123-127) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(p.queued && ! p.executed,bad) (contracts-prod/DAO.sol#125)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Contract ISeer_GOV2 (contracts-prod/DAO.sol#4) is not in CapWords
+Contract IVaultHub_GOV2 (contracts-prod/DAO.sol#5) is not in CapWords
+Contract IDAOTimelock_GOV (contracts-prod/DAO.sol#6) is not in CapWords
+Contract IProofLedger_GOV3 (contracts-prod/DAO.sol#7) is not in CapWords
+Parameter DAO.setModules(address,address,address,address)._timelock (contracts-prod/DAO.sol#65) is not in mixedCase
+Parameter DAO.setModules(address,address,address,address)._seer (contracts-prod/DAO.sol#65) is not in mixedCase
+Parameter DAO.setModules(address,address,address,address)._hub (contracts-prod/DAO.sol#65) is not in mixedCase
+Parameter DAO.setModules(address,address,address,address)._hooks (contracts-prod/DAO.sol#65) is not in mixedCase
+Parameter DAO.setAdmin(address)._admin (contracts-prod/DAO.sol#71) is not in mixedCase
+Parameter DAO.setParams(uint64,uint16)._period (contracts-prod/DAO.sol#72) is not in mixedCase
+Parameter DAO.setParams(uint64,uint16)._q (contracts-prod/DAO.sol#72) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+DAO.ledger (contracts-prod/DAO.sol#34) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+CouncilElection._eligible(address) (contracts-prod/CouncilElection.sol#88-92) has external calls inside a loop: vaultHub.vaultOf(a) == address(0) (contracts-prod/CouncilElection.sol#90)
+	Calls stack containing the loop:
+		CouncilElection.setCouncil(address[])
+CouncilElection._eligible(address) (contracts-prod/CouncilElection.sol#88-92) has external calls inside a loop: seer.getScore(a) >= minCouncilScore (contracts-prod/CouncilElection.sol#91)
+	Calls stack containing the loop:
+		CouncilElection.setCouncil(address[])
+CouncilElection._eligible(address) (contracts-prod/CouncilElection.sol#88-92) has external calls inside a loop: vaultHub.vaultOf(a) == address(0) (contracts-prod/CouncilElection.sol#90)
+	Calls stack containing the loop:
+		CouncilElection.refreshCouncil(address[])
+CouncilElection._eligible(address) (contracts-prod/CouncilElection.sol#88-92) has external calls inside a loop: seer.getScore(a) >= minCouncilScore (contracts-prod/CouncilElection.sol#91)
+	Calls stack containing the loop:
+		CouncilElection.refreshCouncil(address[])
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Contract ISeer_GOV (contracts-prod/CouncilElection.sol#4) is not in CapWords
+Contract IVaultHub_GOV (contracts-prod/CouncilElection.sol#5) is not in CapWords
+Contract IProofLedger_GOV2 (contracts-prod/CouncilElection.sol#6) is not in CapWords
+Parameter CouncilElection.setModules(address,address,address,address)._dao (contracts-prod/CouncilElection.sol#44) is not in mixedCase
+Parameter CouncilElection.setModules(address,address,address,address)._seer (contracts-prod/CouncilElection.sol#44) is not in mixedCase
+Parameter CouncilElection.setModules(address,address,address,address)._hub (contracts-prod/CouncilElection.sol#44) is not in mixedCase
+Parameter CouncilElection.setModules(address,address,address,address)._ledger (contracts-prod/CouncilElection.sol#44) is not in mixedCase
+Parameter CouncilElection.setParams(uint8,uint16,uint64,uint64)._size (contracts-prod/CouncilElection.sol#50) is not in mixedCase
+Parameter CouncilElection.setParams(uint8,uint16,uint64,uint64)._minScore (contracts-prod/CouncilElection.sol#50) is not in mixedCase
+Parameter CouncilElection.setParams(uint8,uint16,uint64,uint64)._term (contracts-prod/CouncilElection.sol#50) is not in mixedCase
+Parameter CouncilElection.setParams(uint8,uint16,uint64,uint64)._refresh (contracts-prod/CouncilElection.sol#50) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+UserVault.__forceSetOwner(address).newOwner (contracts-prod/VaultInfrastructure.sol#125) lacks a zero-check on :
+		- owner = newOwner (contracts-prod/VaultInfrastructure.sol#127)
+VaultInfrastructure.constructor(address,address,address,address)._vfideToken (contracts-prod/VaultInfrastructure.sol#235) lacks a zero-check on :
+		- vfideToken = _vfideToken (contracts-prod/VaultInfrastructure.sol#236)
+VaultInfrastructure.constructor(address,address,address,address)._dao (contracts-prod/VaultInfrastructure.sol#235) lacks a zero-check on :
+		- dao = _dao (contracts-prod/VaultInfrastructure.sol#239)
+VaultInfrastructure.setModules(address,address,address,address)._vfideToken (contracts-prod/VaultInfrastructure.sol#244) lacks a zero-check on :
+		- vfideToken = _vfideToken (contracts-prod/VaultInfrastructure.sol#245)
+VaultInfrastructure.setModules(address,address,address,address)._dao (contracts-prod/VaultInfrastructure.sol#244) lacks a zero-check on :
+		- dao = _dao (contracts-prod/VaultInfrastructure.sol#248)
+VaultInfrastructure.setVFIDE(address)._vfide (contracts-prod/VaultInfrastructure.sol#253) lacks a zero-check on :
+		- vfideToken = _vfide (contracts-prod/VaultInfrastructure.sol#254)
+VaultInfrastructure.setDAO(address)._dao (contracts-prod/VaultInfrastructure.sol#259) lacks a zero-check on :
+		- dao = _dao (contracts-prod/VaultInfrastructure.sol#260)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in UserVault.__forceSetOwner(address) (contracts-prod/VaultInfrastructure.sol#125-130):
+	External calls:
+	- _logSys(vault_force_owner) (contracts-prod/VaultInfrastructure.sol#128)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts-prod/VaultInfrastructure.sol#205)
+	Event emitted after the call(s):
+	- OwnerSet(newOwner) (contracts-prod/VaultInfrastructure.sol#129)
+Reentrancy in UserVault.approveVFIDE(address,uint256) (contracts-prod/VaultInfrastructure.sol#194-201):
+	External calls:
+	- ok = IERC20_VI(vfideToken).approve(spender,amount) (contracts-prod/VaultInfrastructure.sol#196)
+	- _logEv(spender,vault_approve,amount,) (contracts-prod/VaultInfrastructure.sol#198)
+		- ledger.logEvent(who,action,amount,note) (contracts-prod/VaultInfrastructure.sol#208)
+	Event emitted after the call(s):
+	- VaultApprove(spender,amount) (contracts-prod/VaultInfrastructure.sol#199)
+Reentrancy in UserVault.finalizeRecovery() (contracts-prod/VaultInfrastructure.sol#170-182):
+	External calls:
+	- _logSys(recovery_finalized) (contracts-prod/VaultInfrastructure.sol#180)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts-prod/VaultInfrastructure.sol#205)
+	Event emitted after the call(s):
+	- RecoveryFinalized(owner) (contracts-prod/VaultInfrastructure.sol#181)
+Reentrancy in VaultInfrastructure.forceRecover(address,address) (contracts-prod/VaultInfrastructure.sol#304-318):
+	External calls:
+	- UserVault(vault).__forceSetOwner(newOwner) (contracts-prod/VaultInfrastructure.sol#315)
+	Event emitted after the call(s):
+	- ForcedRecovery(vault,newOwner) (contracts-prod/VaultInfrastructure.sol#316)
+Reentrancy in UserVault.guardianApproveRecovery() (contracts-prod/VaultInfrastructure.sol#160-168):
+	External calls:
+	- _logEv(msg.sender,recovery_approval,_recovery.approvals,) (contracts-prod/VaultInfrastructure.sol#166)
+		- ledger.logEvent(who,action,amount,note) (contracts-prod/VaultInfrastructure.sol#208)
+	Event emitted after the call(s):
+	- RecoveryApproved(msg.sender,_recovery.proposedOwner,_recovery.approvals) (contracts-prod/VaultInfrastructure.sol#167)
+Reentrancy in UserVault.requestRecovery(address) (contracts-prod/VaultInfrastructure.sol#148-158):
+	External calls:
+	- _logEv(proposedOwner,recovery_requested,0,) (contracts-prod/VaultInfrastructure.sol#156)
+		- ledger.logEvent(who,action,amount,note) (contracts-prod/VaultInfrastructure.sol#208)
+	Event emitted after the call(s):
+	- RecoveryRequested(proposedOwner) (contracts-prod/VaultInfrastructure.sol#157)
+Reentrancy in UserVault.setGuardian(address,bool) (contracts-prod/VaultInfrastructure.sol#133-138):
+	External calls:
+	- _logEv(g,guardian_add,0,) (contracts-prod/VaultInfrastructure.sol#136)
+		- ledger.logEvent(who,action,amount,note) (contracts-prod/VaultInfrastructure.sol#208)
+	- _logEv(g,guardian_remove,0,) (contracts-prod/VaultInfrastructure.sol#136)
+		- ledger.logEvent(who,action,amount,note) (contracts-prod/VaultInfrastructure.sol#208)
+	Event emitted after the call(s):
+	- GuardianSet(g,active) (contracts-prod/VaultInfrastructure.sol#137)
+Reentrancy in UserVault.setNextOfKin(address) (contracts-prod/VaultInfrastructure.sol#140-145):
+	External calls:
+	- _logEv(kin,next_of_kin_set,0,) (contracts-prod/VaultInfrastructure.sol#143)
+		- ledger.logEvent(who,action,amount,note) (contracts-prod/VaultInfrastructure.sol#208)
+	Event emitted after the call(s):
+	- NextOfKinSet(kin) (contracts-prod/VaultInfrastructure.sol#144)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+VaultInfrastructure.ensureVault(address) (contracts-prod/VaultInfrastructure.sol#280-296) uses assembly
+	- INLINE ASM (contracts-prod/VaultInfrastructure.sol#288)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Contract IProofLedger_VI (contracts-prod/VaultInfrastructure.sol#18-21) is not in CapWords
+Contract ISecurityHub_VI (contracts-prod/VaultInfrastructure.sol#23-25) is not in CapWords
+Contract IERC20_VI (contracts-prod/VaultInfrastructure.sol#27-32) is not in CapWords
+Function UserVault.__forceSetOwner(address) (contracts-prod/VaultInfrastructure.sol#125-130) is not in mixedCase
+Parameter VaultInfrastructure.setModules(address,address,address,address)._vfideToken (contracts-prod/VaultInfrastructure.sol#244) is not in mixedCase
+Parameter VaultInfrastructure.setModules(address,address,address,address)._securityHub (contracts-prod/VaultInfrastructure.sol#244) is not in mixedCase
+Parameter VaultInfrastructure.setModules(address,address,address,address)._ledger (contracts-prod/VaultInfrastructure.sol#244) is not in mixedCase
+Parameter VaultInfrastructure.setModules(address,address,address,address)._dao (contracts-prod/VaultInfrastructure.sol#244) is not in mixedCase
+Parameter VaultInfrastructure.setVFIDE(address)._vfide (contracts-prod/VaultInfrastructure.sol#253) is not in mixedCase
+Parameter VaultInfrastructure.setDAO(address)._dao (contracts-prod/VaultInfrastructure.sol#259) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+VaultInfrastructure._creationCode(address) (contracts-prod/VaultInfrastructure.sol#325-330) uses literals with too many digits:
+	- abi.encodePacked(type()(UserVault).creationCode,abi.encode(address(this),vfideToken,owner_,address(securityHub),address(ledger))) (contracts-prod/VaultInfrastructure.sol#326-329)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Parameter ProofLedger.setDAO(address)._dao (contracts-prod/ProofLedger.sol#30) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+EcoTreasuryVault.setModules(address,address,address,address)._vfide (contracts-prod/VFIDEFinance.sol#140) lacks a zero-check on :
+		- vfideToken = _vfide (contracts-prod/VFIDEFinance.sol#142)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in EcoTreasuryVault.depositStable(address,uint256) (contracts-prod/VFIDEFinance.sol#152-158):
+	External calls:
+	- ! IERC20_FI(token).transferFrom(msg.sender,address(this),amount) (contracts-prod/VFIDEFinance.sol#155)
+	Event emitted after the call(s):
+	- ReceivedStable(token,amount,msg.sender) (contracts-prod/VFIDEFinance.sol#156)
+Reentrancy in EcoTreasuryVault.send(address,address,uint256,string) (contracts-prod/VFIDEFinance.sol#160-170):
+	External calls:
+	- ! IERC20_FI(token).transfer(to,amount) (contracts-prod/VFIDEFinance.sol#166)
+	Event emitted after the call(s):
+	- Sent(token,to,amount,reason) (contracts-prod/VFIDEFinance.sol#168)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Low level call in StablecoinRegistry._decimalsOrTry(address) (contracts-prod/VFIDEFinance.sol#85-89):
+	- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts-prod/VFIDEFinance.sol#86)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract IERC20_FI (contracts-prod/VFIDEFinance.sol#9-14) is not in CapWords
+Contract IProofLedger_FI (contracts-prod/VFIDEFinance.sol#16-19) is not in CapWords
+Contract IVaultHub_FI (contracts-prod/VFIDEFinance.sol#21-23) is not in CapWords
+Parameter StablecoinRegistry.setDAO(address)._dao (contracts-prod/VFIDEFinance.sol#55) is not in mixedCase
+Parameter StablecoinRegistry.setLedger(address)._ledger (contracts-prod/VFIDEFinance.sol#56) is not in mixedCase
+Parameter EcoTreasuryVault.setModules(address,address,address,address)._dao (contracts-prod/VFIDEFinance.sol#140) is not in mixedCase
+Parameter EcoTreasuryVault.setModules(address,address,address,address)._ledger (contracts-prod/VFIDEFinance.sol#140) is not in mixedCase
+Parameter EcoTreasuryVault.setModules(address,address,address,address)._stableRegistry (contracts-prod/VFIDEFinance.sol#140) is not in mixedCase
+Parameter EcoTreasuryVault.setModules(address,address,address,address)._vfide (contracts-prod/VFIDEFinance.sol#140) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+contracts-prod/ analyzed (87 contracts with 100 detectors), 241 result(s) found

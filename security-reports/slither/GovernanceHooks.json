@@ -1,0 +1,260 @@
+{
+  "success": true,
+  "error": null,
+  "results": {
+    "detectors": [
+      {
+        "elements": [
+          {
+            "type": "contract",
+            "name": "IProofLedger_GH",
+            "source_mapping": {
+              "start": 57,
+              "length": 112,
+              "filename_relative": "contracts-min/GovernanceHooks.sol",
+              "filename_absolute": "/workspaces/Vfide/contracts-min/GovernanceHooks.sol",
+              "filename_short": "contracts-min/GovernanceHooks.sol",
+              "is_dependency": false,
+              "lines": [
+                4
+              ],
+              "starting_column": 1,
+              "ending_column": 113
+            },
+            "additional_fields": {
+              "target": "contract",
+              "convention": "CapWords"
+            }
+          }
+        ],
+        "description": "Contract IProofLedger_GH (contracts-min/GovernanceHooks.sol#4) is not in CapWords\n",
+        "markdown": "Contract [IProofLedger_GH](contracts-min/GovernanceHooks.sol#L4) is not in CapWords\n",
+        "first_markdown_element": "contracts-min/GovernanceHooks.sol#L4",
+        "id": "3e2beea015d883f90c5f4b457a529747b9b4ea5a8b1d19107a7554ee552b8e92",
+        "check": "naming-convention",
+        "impact": "Informational",
+        "confidence": "High"
+      },
+      {
+        "elements": [
+          {
+            "type": "variable",
+            "name": "_ledger",
+            "source_mapping": {
+              "start": 694,
+              "length": 15,
+              "filename_relative": "contracts-min/GovernanceHooks.sol",
+              "filename_absolute": "/workspaces/Vfide/contracts-min/GovernanceHooks.sol",
+              "filename_short": "contracts-min/GovernanceHooks.sol",
+              "is_dependency": false,
+              "lines": [
+                14
+              ],
+              "starting_column": 25,
+              "ending_column": 40
+            },
+            "type_specific_fields": {
+              "parent": {
+                "type": "function",
+                "name": "setModules",
+                "source_mapping": {
+                  "start": 674,
+                  "length": 151,
+                  "filename_relative": "contracts-min/GovernanceHooks.sol",
+                  "filename_absolute": "/workspaces/Vfide/contracts-min/GovernanceHooks.sol",
+                  "filename_short": "contracts-min/GovernanceHooks.sol",
+                  "is_dependency": false,
+                  "lines": [
+                    14
+                  ],
+                  "starting_column": 5,
+                  "ending_column": 156
+                },
+                "type_specific_fields": {
+                  "parent": {
+                    "type": "contract",
+                    "name": "GovernanceHooks",
+                    "source_mapping": {
+                      "start": 356,
+                      "length": 1150,
+                      "filename_relative": "contracts-min/GovernanceHooks.sol",
+                      "filename_absolute": "/workspaces/Vfide/contracts-min/GovernanceHooks.sol",
+                      "filename_short": "contracts-min/GovernanceHooks.sol",
+                      "is_dependency": false,
+                      "lines": [
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                        20,
+                        21,
+                        22,
+                        23,
+                        24,
+                        25,
+                        26,
+                        27,
+                        28,
+                        29,
+                        30
+                      ],
+                      "starting_column": 1,
+                      "ending_column": 0
+                    }
+                  },
+                  "signature": "setModules(address,address)"
+                }
+              }
+            },
+            "additional_fields": {
+              "target": "parameter",
+              "convention": "mixedCase"
+            }
+          }
+        ],
+        "description": "Parameter GovernanceHooks.setModules(address,address)._ledger (contracts-min/GovernanceHooks.sol#14) is not in mixedCase\n",
+        "markdown": "Parameter [GovernanceHooks.setModules(address,address)._ledger](contracts-min/GovernanceHooks.sol#L14) is not in mixedCase\n",
+        "first_markdown_element": "contracts-min/GovernanceHooks.sol#L14",
+        "id": "43907b52d28d7045a8b4f1a78608dd4af6b74f5e30b7da2083f15d2c4adf3b5c",
+        "check": "naming-convention",
+        "impact": "Informational",
+        "confidence": "High"
+      },
+      {
+        "elements": [
+          {
+            "type": "variable",
+            "name": "_seer",
+            "source_mapping": {
+              "start": 711,
+              "length": 13,
+              "filename_relative": "contracts-min/GovernanceHooks.sol",
+              "filename_absolute": "/workspaces/Vfide/contracts-min/GovernanceHooks.sol",
+              "filename_short": "contracts-min/GovernanceHooks.sol",
+              "is_dependency": false,
+              "lines": [
+                14
+              ],
+              "starting_column": 42,
+              "ending_column": 55
+            },
+            "type_specific_fields": {
+              "parent": {
+                "type": "function",
+                "name": "setModules",
+                "source_mapping": {
+                  "start": 674,
+                  "length": 151,
+                  "filename_relative": "contracts-min/GovernanceHooks.sol",
+                  "filename_absolute": "/workspaces/Vfide/contracts-min/GovernanceHooks.sol",
+                  "filename_short": "contracts-min/GovernanceHooks.sol",
+                  "is_dependency": false,
+                  "lines": [
+                    14
+                  ],
+                  "starting_column": 5,
+                  "ending_column": 156
+                },
+                "type_specific_fields": {
+                  "parent": {
+                    "type": "contract",
+                    "name": "GovernanceHooks",
+                    "source_mapping": {
+                      "start": 356,
+                      "length": 1150,
+                      "filename_relative": "contracts-min/GovernanceHooks.sol",
+                      "filename_absolute": "/workspaces/Vfide/contracts-min/GovernanceHooks.sol",
+                      "filename_short": "contracts-min/GovernanceHooks.sol",
+                      "is_dependency": false,
+                      "lines": [
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                        20,
+                        21,
+                        22,
+                        23,
+                        24,
+                        25,
+                        26,
+                        27,
+                        28,
+                        29,
+                        30
+                      ],
+                      "starting_column": 1,
+                      "ending_column": 0
+                    }
+                  },
+                  "signature": "setModules(address,address)"
+                }
+              }
+            },
+            "additional_fields": {
+              "target": "parameter",
+              "convention": "mixedCase"
+            }
+          }
+        ],
+        "description": "Parameter GovernanceHooks.setModules(address,address)._seer (contracts-min/GovernanceHooks.sol#14) is not in mixedCase\n",
+        "markdown": "Parameter [GovernanceHooks.setModules(address,address)._seer](contracts-min/GovernanceHooks.sol#L14) is not in mixedCase\n",
+        "first_markdown_element": "contracts-min/GovernanceHooks.sol#L14",
+        "id": "489e9f4ab81b05701e353a53f09e0abb736816e6f75604536bbb68a82d1b6da7",
+        "check": "naming-convention",
+        "impact": "Informational",
+        "confidence": "High"
+      },
+      {
+        "elements": [
+          {
+            "type": "contract",
+            "name": "ISeer_GH",
+            "source_mapping": {
+              "start": 170,
+              "length": 184,
+              "filename_relative": "contracts-min/GovernanceHooks.sol",
+              "filename_absolute": "/workspaces/Vfide/contracts-min/GovernanceHooks.sol",
+              "filename_short": "contracts-min/GovernanceHooks.sol",
+              "is_dependency": false,
+              "lines": [
+                5
+              ],
+              "starting_column": 1,
+              "ending_column": 185
+            },
+            "additional_fields": {
+              "target": "contract",
+              "convention": "CapWords"
+            }
+          }
+        ],
+        "description": "Contract ISeer_GH (contracts-min/GovernanceHooks.sol#5) is not in CapWords\n",
+        "markdown": "Contract [ISeer_GH](contracts-min/GovernanceHooks.sol#L5) is not in CapWords\n",
+        "first_markdown_element": "contracts-min/GovernanceHooks.sol#L5",
+        "id": "f1f91310e5a35716ff4c61532549e47cdab79c56c6e73b026ef18c2d7f27660a",
+        "check": "naming-convention",
+        "impact": "Informational",
+        "confidence": "High"
+      }
+    ]
+  }
+}

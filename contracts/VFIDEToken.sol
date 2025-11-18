@@ -87,6 +87,10 @@ contract VFIDEToken is Ownable {
     bool public vaultOnly = true;                 // enforce vault-only transfers
     bool public policyLocked = false;             // once locked, cannot disable enforcement
     mapping(address => bool) public systemExempt; // bypass vault check & fees
+    
+    // Emergency controls (DAO-only, for router failures)
+    address public emergencyDAO;                  // can temporarily disable router requirement
+    bool public emergencyRouterBypass = false;    // temporary bypass if router fails
 
     // Presale control
     address public presale;
@@ -107,6 +111,8 @@ contract VFIDEToken is Ownable {
     event PresaleSet(address indexed presale);
     event PresaleMint(address indexed to, uint256 amount);
     event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, address sanctumSink);
+    event EmergencyDAOSet(address indexed dao);
+    event EmergencyRouterBypassSet(bool enabled, string reason);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
@@ -116,14 +122,25 @@ contract VFIDEToken is Ownable {
     error VF_NOT_PRESALE();
     error VF_LOCKED();
     error VF_POLICY_LOCKED();
+    error VF_NOT_EMERGENCY_DAO();
 
     /// Constructor: pre-mint dev reserve to the vesting vault
+    uint256 public immutable ownershipTransferDeadline;
+    address public immutable daoMultiSig; // Multi-sig wallet for DAO
+    bool public ownershipTransferred;
+
     constructor(
         address devReserveVestingVault, // MUST be deployed before token
         address _vaultHub,              // MAY be zero at deploy; can be set later
         address _ledger,                // optional
         address _treasurySink           // recommended: EcoTreasuryVault
+        address _daoMultiSig
     ) {
+        require(_daoMultiSig != address(0), "DAO multi-sig not set");
+        daoMultiSig = _daoMultiSig;
+        ownershipTransferDeadline = block.timestamp + 365 days; // 1 year
+        ownershipTransferred = false;
+
         if (devReserveVestingVault == address(0)) revert VF_ZERO();
 
         // Require dev vault is a contract to prevent misconfig at genesis.
@@ -148,6 +165,15 @@ contract VFIDEToken is Ownable {
         // Pre-mint dev reserve
         _mint(devReserveVestingVault, DEV_RESERVE_SUPPLY);
         _logEv(devReserveVestingVault, "premint_dev_reserve", DEV_RESERVE_SUPPLY, "40M to vesting vault");
+    }
+
+    function finalizeOwnershipTransfer() external {
+        require(block.timestamp >= ownershipTransferDeadline, "Ownership transfer not yet allowed");
+        require(!ownershipTransferred, "Ownership already transferred");
+
+        // Transfer ownership to the DAO multi-sig wallet
+        transferOwnership(daoMultiSig);
+        ownershipTransferred = true;
     }
 
     // ─────────────────────────── ERC20 standard
@@ -191,6 +217,12 @@ contract VFIDEToken is Ownable {
         vaultHub = IVaultHub(hub);
         emit VaultHubSet(hub);
         _log("vault_hub_set");
+    }
+
+    /// Alias for setVaultHub (terminology consistency with overview)
+    function setVaultFactory(address factory) external onlyOwner {
+        setVaultHub(factory);
+        // Event already emitted by setVaultHub, no need to duplicate
     }
 
     function setSecurityHub(address hub) external onlyOwner {
@@ -247,6 +279,22 @@ contract VFIDEToken is Ownable {
         }
         emit PresaleSet(_presale);
         _log("presale_set");
+    }
+
+    /// Set emergency DAO address (one-time or DAO-controlled)
+    function setEmergencyDAO(address _dao) external onlyOwner {
+        if (_dao == address(0)) revert VF_ZERO();
+        emergencyDAO = _dao;
+        emit EmergencyDAOSet(_dao);
+        _log("emergency_dao_set");
+    }
+
+    /// Emergency bypass for router requirement (DAO-only, temporary, logged)
+    function setEmergencyRouterBypass(bool enabled, string calldata reason) external {
+        if (msg.sender != emergencyDAO) revert VF_NOT_EMERGENCY_DAO();
+        emergencyRouterBypass = enabled;
+        emit EmergencyRouterBypassSet(enabled, reason);
+        _logEv(msg.sender, enabled ? "emergency_bypass_on" : "emergency_bypass_off", 0, reason);
     }
 
     // ─────────────────────────── Presale mint (within 75M cap)
@@ -321,7 +369,8 @@ contract VFIDEToken is Ownable {
             }
         } else {
             // If policy is locked we require a router be present so fees cannot be bypassed
-            if (policyLocked) {
+            // Emergency DAO can temporarily bypass this requirement if router fails
+            if (policyLocked && !emergencyRouterBypass) {
                 require(address(burnRouter) != address(0), "router required");
             }
         }
@@ -364,11 +413,8 @@ contract VFIDEToken is Ownable {
     function _isVault(address a) internal view returns (bool) {
         if (address(vaultHub) == address(0)) return false;
         address v = vaultHub.vaultOf(a);
-        if (v == a && v != address(0)) return true;
-        if (v == address(0)) {
-            return vaultHub.vaultOf(a) == a;
-        }
-        return false;
+        // A valid vault returns itself when queried
+        return v == a && v != address(0);
     }
 
     function _vaultOfAddr(address a) internal view returns (address) {
@@ -377,8 +423,14 @@ contract VFIDEToken is Ownable {
     }
 
     function _locked(address vault) internal view returns (bool) {
-        (bool ok, bytes memory d) = address(securityHub).staticcall(abi.encodeWithSelector(ISecurityHub.isLocked.selector, vault));
-        return !(ok && d.length >= 32) || abi.decode(d, (bool));
+        (bool success, bytes memory data) = address(securityHub).staticcall(
+            abi.encodeWithSelector(ISecurityHub.isLocked.selector, vault)
+        );
+        
+        // If call failed or returned invalid data, assume locked (safe default)
+        if (!success || data.length < 32) return true;
+        
+        return abi.decode(data, (bool));
     }
 
     function _log(string memory action) internal {

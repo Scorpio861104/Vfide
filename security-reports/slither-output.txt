@@ -1,0 +1,134 @@
+'solc --version' running
+'solc contracts-min/ProofScoreBurnRouter.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+Compilation warnings/errors on contracts-min/ProofScoreBurnRouter.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-min/ProofScoreBurnRouter.sol:62:40:
+   |
+62 |     function adjustScore(address user, uint16 delta, bool increase) external {
+   |                                        ^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-min/ProofScoreBurnRouter.sol:62:54:
+   |
+62 |     function adjustScore(address user, uint16 delta, bool increase) external {
+   |                                                      ^^^^^^^^^^^^^
+
+
+'solc --version' running
+'solc contracts-min/Seer.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+'solc --version' running
+'solc contracts-min/VFIDESecurity.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+'solc --version' running
+'solc contracts-min/DAOTimelock.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+'solc --version' running
+'solc contracts-min/SystemHandover.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+'solc --version' running
+'solc contracts-min/GovernanceHooks.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+Compilation warnings/errors on contracts-min/GovernanceHooks.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-min/GovernanceHooks.sol:16:31:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                               ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-min/GovernanceHooks.sol:16:43:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                           ^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-min/GovernanceHooks.sol:16:59:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                                           ^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-min/GovernanceHooks.sol:20:25:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                         ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-min/GovernanceHooks.sol:20:37:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                     ^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-min/GovernanceHooks.sol:20:52:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                                    ^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-min/GovernanceHooks.sol:24:26:
+   |
+24 |     function onFinalized(uint256 id, bool passed) external {
+   |                          ^^^^^^^^^^
+
+
+'solc --version' running
+'solc contracts-min/VFIDEToken.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+'solc --version' running
+'solc contracts-min/VFIDETrust.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+'solc --version' running
+'solc contracts-min/VFIDEPresale.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/workspaces/Vfide/contracts-min' running
+Compilation warnings/errors on contracts-min/VFIDEPresale.sol:
+Error: Stack too deep. Try compiling with `--via-ir` (cli) or the equivalent `viaIR: true` (standard JSON) while enabling the optimizer. Otherwise, try removing local variables.
+   --> contracts-min/VFIDEPresale.sol:259:42:
+    |
+259 |         emit Purchase(msg.sender, vault, stable, tier, vfideOut, buyerBonus, refBonus, payAmt, referrer);
+    |                                          ^^^^^^
+
+
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.12/site-packages/crytic_compile/platform/solc.py", line 581, in _run_solc
+    ret: Dict = json.loads(stdout)
+                ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/python/3.12.1/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/python/3.12.1/lib/python3.12/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/python/3.12.1/lib/python3.12/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/codespace/.local/bin/slither", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/codespace/.local/lib/python3.12/site-packages/slither/__main__.py", line 776, in main
+    main_impl(all_detector_classes=detectors, all_printer_classes=printers)
+  File "/home/codespace/.local/lib/python3.12/site-packages/slither/__main__.py", line 882, in main_impl
+    ) = process_all(filename, args, detector_classes, printer_classes)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.local/lib/python3.12/site-packages/slither/__main__.py", line 96, in process_all
+    compilations = compile_all(target, **vars(args))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.local/lib/python3.12/site-packages/crytic_compile/crytic_compile.py", line 737, in compile_all
+    compilations.append(CryticCompile(filename, **kwargs))
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.local/lib/python3.12/site-packages/crytic_compile/crytic_compile.py", line 211, in __init__
+    self._compile(**kwargs)
+  File "/home/codespace/.local/lib/python3.12/site-packages/crytic_compile/crytic_compile.py", line 633, in _compile
+    self._platform.compile(self, **kwargs)
+  File "/home/codespace/.local/lib/python3.12/site-packages/crytic_compile/platform/solc.py", line 150, in compile
+    targets_json = _get_targets_json(compilation_unit, self._target, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.local/lib/python3.12/site-packages/crytic_compile/platform/solc.py", line 279, in _get_targets_json
+    return _run_solc(
+           ^^^^^^^^^^
+  File "/home/codespace/.local/lib/python3.12/site-packages/crytic_compile/platform/solc.py", line 585, in _run_solc
+    raise InvalidCompilation(f"Invalid solc compilation {stderr}")
+crytic_compile.platform.exceptions.InvalidCompilation: Invalid solc compilation Error: Stack too deep. Try compiling with `--via-ir` (cli) or the equivalent `viaIR: true` (standard JSON) while enabling the optimizer. Otherwise, try removing local variables.
+   --> contracts-min/VFIDEPresale.sol:259:42:
+    |
+259 |         emit Purchase(msg.sender, vault, stable, tier, vfideOut, buyerBonus, refBonus, payAmt, referrer);
+    |                                          ^^^^^^
+
+

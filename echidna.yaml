@@ -1,0 +1,38 @@
+# Echidna Configuration for VFIDE Project
+# Property-based fuzzing configuration
+
+# Compiler version normalization
+solc: "0.8.30"
+
+# Test execution
+testLimit: 100000
+testMode: assertion
+shrinkLimit: 5000
+timeout: 3600
+
+# Coverage
+coverage: true
+corpusDir: echidna/corpus
+
+# Harness contract deployment targets (supplied via command line typically):
+# Example run:
+# echidna-test contracts/harness/EchidnaVFIDEToken.sol --contract EchidnaVFIDETokenHarness --config echidna.yaml --test-mode property --deployer 0x30000 --sender 0x10000
+
+# Custom property naming already uses echidna_ prefix.
+
+# Optimization
+deployer: "0x30000"
+sender: ["0x10000", "0x20000", "0x30000"]
+multi-abi: true
+
+# Network
+# rpcUrl: http://localhost:8545
+# rpcBlock: 0
+
+# Filters
+filterBlacklist: true
+filterFunctions: ["echidna_*"]
+
+# Output
+format: text
+quiet: false

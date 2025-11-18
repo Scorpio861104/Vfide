@@ -31,11 +31,25 @@ contract Seer {
     event ScoreSet(address indexed user, uint16 oldScore, uint16 newScore);
     event Flagged(address indexed user, string reason, uint8 severity);
     event PolicySet(uint16 baseScore, uint16 minScore, uint16 maxScore);
+    event SubScoreAdjusted(address indexed user, string category, uint16 oldScore, uint16 newScore);
+    event PolicyChangeRecommended(uint16 newBase, uint16 newMin, uint16 newMax, string reason);
+
+    /**
+     * Notify users of significant score changes
+     */
+    event ScoreChangeNotified(address indexed user, uint16 oldScore, uint16 newScore);
+
+    /**
+     * Auto-update metrics upon dispute resolution or transaction completion
+     */
+    event MetricsAutoUpdated(address indexed user, uint16 financialScore, uint16 governanceScore, uint16 securityScore);
 
     struct Profile {
-        uint16 score;
-        bool flagged;
+        uint16 financialScore;
+        uint16 governanceScore;
+        uint16 securityScore;
         uint64 lastUpdate;
+        bool flagged;
     }
 
     address public dao;
@@ -49,8 +63,19 @@ contract Seer {
 
     mapping(address => Profile) public profiles;
 
+    /**
+     * Introduce cooldown for frequent score adjustments
+     */
+    mapping(address => uint64) public lastScoreAdjustment;
+    uint64 public cooldownPeriod = 1 days;
+
     modifier onlyDAO() {
         if (msg.sender != dao) revert SEER_NotDAO();
+        _;
+    }
+
+    modifier cooldownCheck(address user) {
+        require(block.timestamp >= lastScoreAdjustment[user] + cooldownPeriod, "Cooldown active");
         _;
     }
 
@@ -80,9 +105,17 @@ contract Seer {
         _log("seer_policy_set");
     }
 
+    function recommendPolicyChange(uint16 newBase, uint16 newMin, uint16 newMax, string calldata reason) external onlyDAO {
+        emit PolicyChangeRecommended(newBase, newMin, newMax, reason);
+        // DAO can review and approve/reject the recommendation
+    }
+
     function getScore(address user) public view returns (uint16) {
-        uint16 s = profiles[user].score;
-        return s == 0 ? baseScore : s;
+        Profile memory p = profiles[user];
+        uint16 overallScore = (p.financialScore * 40 / 100) + 
+                              (p.governanceScore * 30 / 100) + 
+                              (p.securityScore * 30 / 100);
+        return overallScore == 0 ? baseScore : overallScore;
     }
 
     function minForGovernance() external view returns (uint16) {
@@ -107,16 +140,97 @@ contract Seer {
         if (increase) {
             newScore = old + delta > maxScore ? maxScore : old + delta;
         } else {
-            newScore = old > delta ? old - delta : minScore;
+            newScore = old < delta ? minScore : old - delta;
         }
-        profiles[user].score = newScore;
+        profiles[user].financialScore = newScore;
         profiles[user].lastUpdate = uint64(block.timestamp);
         emit ScoreSet(user, old, newScore);
-        _logEv(user, increase ? "seer_inc" : "seer_dec", delta, reason);
+        emit ScoreChangeNotified(user, old, newScore);
+        _logEv(user, "seer_adjust_score", newScore, reason);
+    }
 
-        if (address(burnRouter) != address(0)) {
-            try burnRouter.adjustScore(user, delta, increase) {} catch {}
+    function adjustScoreWithCooldown(address user, uint16 delta, bool increase, string calldata reason) external onlyDAO cooldownCheck(user) {
+        adjustScore(user, delta, increase, reason);
+        lastScoreAdjustment[user] = uint64(block.timestamp);
+    }
+
+    function getScoreBreakdown(address user) public view returns (uint16 financial, uint16 governance, uint16 security) {
+        Profile memory p = profiles[user];
+        return (p.financialScore, p.governanceScore, p.securityScore);
+    }
+
+    function adjustFinancialScore(address user, uint16 delta, bool increase) external onlyDAO {
+        if (user == address(0)) revert SEER_Zero();
+        uint16 oldScore = profiles[user].financialScore;
+        profiles[user].financialScore = increase 
+            ? (profiles[user].financialScore + delta > 1000 ? 1000 : profiles[user].financialScore + delta)
+            : (profiles[user].financialScore > delta ? profiles[user].financialScore - delta : 0);
+        emit SubScoreAdjusted(user, "financial", oldScore, profiles[user].financialScore);
+    }
+
+    function adjustGovernanceScore(address user, uint16 delta, bool increase) external onlyDAO {
+        if (user == address(0)) revert SEER_Zero();
+        uint16 oldScore = profiles[user].governanceScore;
+        profiles[user].governanceScore = increase 
+            ? (profiles[user].governanceScore + delta > 1000 ? 1000 : profiles[user].governanceScore + delta)
+            : (profiles[user].governanceScore > delta ? profiles[user].governanceScore - delta : 0);
+        emit SubScoreAdjusted(user, "governance", oldScore, profiles[user].governanceScore);
+    }
+
+    function adjustSecurityScore(address user, uint16 delta, bool increase) external onlyDAO {
+        if (user == address(0)) revert SEER_Zero();
+        uint16 oldScore = profiles[user].securityScore;
+        profiles[user].securityScore = increase 
+            ? (profiles[user].securityScore + delta > 1000 ? 1000 : profiles[user].securityScore + delta)
+            : (profiles[user].securityScore > delta ? profiles[user].securityScore - delta : 0);
+        emit SubScoreAdjusted(user, "security", oldScore, profiles[user].securityScore);
+    }
+
+    function autoUpdateMetrics(
+        address user,
+        uint16 financialDelta,
+        uint16 governanceDelta,
+        uint16 securityDelta,
+        bool increase
+    ) external onlyDAO {
+        require(user != address(0), "Invalid user address");
+
+        Profile storage profile = profiles[user];
+
+        // Update financial score
+        if (increase) {
+            profile.financialScore = profile.financialScore + financialDelta > maxScore
+                ? maxScore
+                : profile.financialScore + financialDelta;
+        } else {
+            profile.financialScore = profile.financialScore < financialDelta
+                ? minScore
+                : profile.financialScore - financialDelta;
         }
+
+        // Update governance score
+        if (increase) {
+            profile.governanceScore = profile.governanceScore + governanceDelta > maxScore
+                ? maxScore
+                : profile.governanceScore + governanceDelta;
+        } else {
+            profile.governanceScore = profile.governanceScore < governanceDelta
+                ? minScore
+                : profile.governanceScore - governanceDelta;
+        }
+
+        // Update security score
+        if (increase) {
+            profile.securityScore = profile.securityScore + securityDelta > maxScore
+                ? maxScore
+                : profile.securityScore + securityDelta;
+        } else {
+            profile.securityScore = profile.securityScore < securityDelta
+                ? minScore
+                : profile.securityScore - securityDelta;
+        }
+
+        emit MetricsAutoUpdated(user, profile.financialScore, profile.governanceScore, profile.securityScore);
     }
 
     function _log(string memory action) internal {
@@ -124,6 +238,8 @@ contract Seer {
     }
 
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (address(ledger) != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
+        }
     }
 }

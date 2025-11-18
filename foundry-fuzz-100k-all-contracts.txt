@@ -1,0 +1,25 @@
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+Compiler run failed:
+Error (7576): Undeclared identifier.
+  --> test/foundry/Seer.t.sol:74:18:
+   |
+74 |         vm.prank(admin);
+   |                  ^^^^^
+
+Error (7576): Undeclared identifier.
+  --> test/foundry/Seer.t.sol:87:18:
+   |
+87 |         vm.prank(admin);
+   |                  ^^^^^
+
+Error (7576): Undeclared identifier.
+   --> test/foundry/Seer.t.sol:100:18:
+    |
+100 |         vm.prank(admin);
+    |                  ^^^^^
+
+Error: Compilation failed

@@ -1,0 +1,181 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+import "forge-std/Test.sol";
+import "../../contracts-prod/VFIDEPresale.sol";
+
+interface IERC20Minimal {
+    function mint(address to, uint256 amount) external;
+    function balanceOf(address account) external view returns (uint256);
+}
+
+/// @title Foundry Fuzz Tests for VFIDEPresale
+/// @notice Verify presale purchase logic with millions of scenarios
+contract VFIDEPresaleFuzzTest is Test {
+    VFIDEPresale presale;
+    IERC20Minimal token;
+    
+    address dao = address(0x1);
+    address buyer1 = address(0x10);
+    address buyer2 = address(0x20);
+    
+    uint256 constant ALLOCATION = 100_000_000e18;
+    uint256 constant PRICE = 1e18; // 1 USDC per token
+    uint256 startTime;
+    uint256 endTime;
+    
+    function setUp() public {
+        // Deploy mock token
+        vm.prank(dao);
+        token = IERC20Minimal(address(new MockToken()));
+        
+        startTime = block.timestamp + 1 days;
+        endTime = startTime + 30 days;
+        
+        presale = new VFIDEPresale(
+            address(token),
+            dao,
+            ALLOCATION,
+            PRICE,
+            startTime,
+            endTime
+        );
+        
+        vm.prank(dao);
+        token.mint(address(presale), ALLOCATION);
+        
+        vm.deal(buyer1, 1000 ether);
+        vm.deal(buyer2, 1000 ether);
+    }
+}
+
+// Mock token for testing
+contract MockToken {
+    mapping(address => uint256) public balanceOf;
+    uint256 public totalSupply;
+    
+    function mint(address to, uint256 amount) external {
+        balanceOf[to] += amount;
+        totalSupply += amount;
+    }
+    
+    function transfer(address to, uint256 amount) external returns (bool) {
+        require(balanceOf[msg.sender] >= amount, "Insufficient balance");
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        return true;
+    }
+    
+    // FUZZ 1: Purchase amount should match tokens received
+    function testFuzz_purchaseMatchesTokens(uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= ALLOCATION / 2);
+        
+        vm.warp(startTime + 1);
+        
+        vm.prank(buyer1);
+        presale.buy{value: amount * PRICE / 1e18}(amount);
+        
+        assertEq(presale.purchased(buyer1), amount);
+        assertEq(presale.totalSold(), amount);
+    }
+    
+    // FUZZ 2: Cannot purchase more than allocation
+    function testFuzz_cannotExceedAllocation(uint256 amount) public {
+        vm.assume(amount > ALLOCATION);
+        
+        vm.warp(startTime + 1);
+        
+        vm.prank(buyer1);
+        vm.expectRevert();
+        presale.buy{value: amount * PRICE / 1e18}(amount);
+    }
+    
+    // FUZZ 3: Multiple purchases accumulate correctly
+    function testFuzz_multiplePurchasesAccumulate(uint256 amount1, uint256 amount2) public {
+        vm.assume(amount1 > 0 && amount2 > 0);
+        vm.assume(amount1 + amount2 <= ALLOCATION);
+        
+        vm.warp(startTime + 1);
+        
+        vm.prank(buyer1);
+        presale.buy{value: amount1 * PRICE / 1e18}(amount1);
+        
+        vm.prank(buyer2);
+        presale.buy{value: amount2 * PRICE / 1e18}(amount2);
+        
+        assertEq(presale.totalSold(), amount1 + amount2);
+    }
+    
+    // FUZZ 4: Cannot purchase before start time
+    function testFuzz_cannotPurchaseBeforeStart(uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= ALLOCATION);
+        
+        // Time is before startTime
+        vm.warp(startTime - 1);
+        
+        vm.prank(buyer1);
+        vm.expectRevert();
+        presale.buy{value: amount * PRICE / 1e18}(amount);
+    }
+    
+    // FUZZ 5: Cannot purchase after end time
+    function testFuzz_cannotPurchaseAfterEnd(uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= ALLOCATION);
+        
+        vm.warp(endTime + 1);
+        
+        vm.prank(buyer1);
+        vm.expectRevert();
+        presale.buy{value: amount * PRICE / 1e18}(amount);
+    }
+    
+    // FUZZ 6: Remaining tokens calculation is correct
+    function testFuzz_remainingTokensCorrect(uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= ALLOCATION / 2);
+        
+        vm.warp(startTime + 1);
+        
+        vm.prank(buyer1);
+        presale.buy{value: amount * PRICE / 1e18}(amount);
+        
+        uint256 remaining = token.balanceOf(address(presale));
+        assertEq(remaining, ALLOCATION - amount);
+    }
+    
+    // FUZZ 7: Claim tokens after presale ends
+    function testFuzz_claimAfterPresaleEnds(uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= ALLOCATION);
+        
+        vm.warp(startTime + 1);
+        
+        vm.prank(buyer1);
+        presale.buy{value: amount * PRICE / 1e18}(amount);
+        
+        vm.warp(endTime + 1);
+        
+        vm.prank(buyer1);
+        presale.claim();
+        
+        assertEq(token.balanceOf(buyer1), amount);
+    }
+    
+    // FUZZ 8: Price calculation is accurate
+    function testFuzz_priceCalculationAccurate(uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(amount <= ALLOCATION);
+        
+        uint256 requiredPayment = amount * PRICE / 1e18;
+        
+        vm.warp(startTime + 1);
+        
+        vm.prank(buyer1);
+        presale.buy{value: requiredPayment}(amount);
+        
+        assertEq(presale.purchased(buyer1), amount);
+    }
+}

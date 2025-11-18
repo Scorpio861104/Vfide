@@ -10,10 +10,12 @@ error CE_Zero();
 error CE_NotEligible();
 error CE_ArrayMismatch();
 error CE_BadSize();
+error CE_TermLimitReached();
 
 contract CouncilElection {
     event ModulesSet(address dao, address seer, address hub, address ledger);
     event ParamsSet(uint8 councilSize, uint16 minScore, uint64 termSeconds, uint64 refreshInterval);
+    event TermLimitsSet(uint8 maxConsecutiveTerms, uint64 cooldownPeriod);
     event CandidateRegistered(address indexed who);
     event CandidateUnregistered(address indexed who);
     event CouncilSet(address[] members, uint64 termEnd);
@@ -25,10 +27,17 @@ contract CouncilElection {
 
     mapping(address => bool) public isCandidate;
     mapping(address => bool) public isCouncil;
+    
+    // Term limit tracking to prevent entrenchment
+    mapping(address => uint8) public consecutiveTermsServed;
+    mapping(address => uint64) public lastTermEndDate;
+    uint8 public maxConsecutiveTerms = 1; // Max 1 year continuous service before mandatory break
+    uint64 public cooldownPeriod = 365 days; // Must wait 1 year before re-eligibility
+    uint16 public minCouncilScoreStrict = 700; // High trust threshold for council (700 = high trust)
 
     uint8  public councilSize = 12;
     uint16 public minCouncilScore;       // default from Seer
-    uint64 public termSeconds = 180 days; // ~6 months
+    uint64 public termSeconds = 365 days; // 1 year term
     uint64 public refreshInterval = 14 days;
     uint64 public termEnd;
 
@@ -53,6 +62,17 @@ contract CouncilElection {
         emit ParamsSet(_size,_minScore,_term,_refresh); _log("ce_params_set");
     }
 
+    function setTermLimits(uint8 _maxConsecutive, uint64 _cooldown, uint16 _minScoreStrict) external onlyDAO {
+        require(_maxConsecutive > 0 && _maxConsecutive <= 10, "CE: invalid max terms");
+        require(_cooldown >= 90 days, "CE: cooldown too short");
+        require(_minScoreStrict >= 500, "CE: score too low");
+        maxConsecutiveTerms = _maxConsecutive;
+        cooldownPeriod = _cooldown;
+        minCouncilScoreStrict = _minScoreStrict;
+        emit TermLimitsSet(_maxConsecutive, _cooldown);
+        _log("ce_term_limits_set");
+    }
+
     function register() external {
         if (!_eligible(msg.sender)) revert CE_NotEligible();
         isCandidate[msg.sender]=true; emit CandidateRegistered(msg.sender); _log("ce_register");
@@ -62,16 +82,38 @@ contract CouncilElection {
 
     function setCouncil(address[] calldata members) external onlyDAO {
         if (members.length==0 || members.length>councilSize) revert CE_ArrayMismatch();
-        // reset previous council flags (bounded; council small)
-        // For simplicity: clear flags for provided members only; non-provided remain from last term until overwritten.
-        // Enforce eligibility per member:
-        for (uint256 i=0;i<members.length;i++){ if(!_eligible(members[i])) revert CE_NotEligible(); }
+        
+        uint64 newTermEnd = uint64(block.timestamp) + termSeconds;
+        
+        // Enforce eligibility and term limits per member
+        for (uint256 i=0; i<members.length; i++) {
+            address member = members[i];
+            if (!_eligible(member)) revert CE_NotEligible();
+            
+            // Check term limits to prevent entrenchment
+            if (!_canServe(member)) revert CE_TermLimitReached();
+            
+            // Track consecutive terms
+            if (isCouncil[member]) {
+                // Already serving, increment consecutive count
+                consecutiveTermsServed[member]++;
+            } else {
+                // New or returning member
+                if (lastTermEndDate[member] > 0 && block.timestamp >= lastTermEndDate[member] + cooldownPeriod) {
+                    // Cooldown completed, reset counter
+                    consecutiveTermsServed[member] = 1;
+                } else if (consecutiveTermsServed[member] == 0) {
+                    // First time ever
+                    consecutiveTermsServed[member] = 1;
+                }
+                // If they're within cooldown, consecutiveTermsServed stays at previous value
+            }
+            
+            lastTermEndDate[member] = newTermEnd;
+            isCouncil[member] = true;
+        }
 
-        // clear previous (soft-reset by overwriting mapping values we know)
-        // then set new
-        for (uint256 j=0;j<members.length;j++){ isCouncil[members[j]]=true; }
-
-        termEnd = uint64(block.timestamp)+termSeconds;
+        termEnd = newTermEnd;
         emit CouncilSet(members, termEnd);
         _log("ce_council_set");
     }
@@ -85,10 +127,62 @@ contract CouncilElection {
         _log("ce_refresh");
     }
 
+    /// Remove council member for breaking VFIDE laws or falling below ProofScore 700
+    /// Can be called immediately without waiting for refresh
+    function removeCouncilMember(address member, string calldata reason) external onlyDAO {
+        require(isCouncil[member], "CE: not council member");
+
+        // Delegate high trust threshold check to Seer
+        uint16 score = seer.getScore(member);
+        require(score < minCouncilScoreStrict, "CE: member still eligible");
+
+        isCouncil[member] = false;
+
+        // Mark their term as ended early (prevents immediate re-election)
+        lastTermEndDate[member] = uint64(block.timestamp);
+
+        emit CandidateUnregistered(member);
+        _log("ce_member_removed");
+
+        // Log reason to ProofLedger
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(member, reason, msg.sender) {} catch {}
+        }
+    }
+
     function _eligible(address a) internal view returns (bool) {
-        if (a==address(0)) return false;
-        if (vaultHub.vaultOf(a)==address(0)) return false;
-        return seer.getScore(a) >= minCouncilScore;
+        if (a == address(0)) return false;
+        if (vaultHub.vaultOf(a) == address(0)) return false;
+        // Delegate eligibility check to Seer
+        return seer.getScore(a) >= minCouncilScoreStrict;
+    }
+
+    /// Check if member can serve based on term limits (prevents entrenchment)
+    function _canServe(address a) internal view returns (bool) {
+        // If never served, can serve
+        if (consecutiveTermsServed[a] == 0) return true;
+        
+        // If currently serving and at max consecutive terms, cannot serve again
+        if (isCouncil[a] && consecutiveTermsServed[a] >= maxConsecutiveTerms) {
+            return false;
+        }
+        
+        // If not currently serving, check cooldown period
+        if (!isCouncil[a]) {
+            // If they hit max terms previously, must complete cooldown
+            if (consecutiveTermsServed[a] >= maxConsecutiveTerms) {
+                return block.timestamp >= lastTermEndDate[a] + cooldownPeriod;
+            }
+        }
+        
+        return true;
+    }
+    
+    /// Public function to check term limit eligibility
+    function canServeNextTerm(address member) external view returns (bool eligible, uint8 termsServed, uint64 cooldownEnds) {
+        eligible = _eligible(member) && _canServe(member);
+        termsServed = consecutiveTermsServed[member];
+        cooldownEnds = lastTermEndDate[member] + cooldownPeriod;
     }
 
     function _log(string memory action) internal {

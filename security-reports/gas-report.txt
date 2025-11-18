@@ -1,0 +1,2931 @@
+
+  Commerce Complete Coverage
+    MerchantRegistry Additional TEST Helpers
+      ✔ TEST_if_vaultAndScore
+      ✔ TEST_if_vaultAndScore - no vault
+      ✔ TEST_cover_additional_branches - all variants
+      ✔ TEST_cover_additional_branches - with forces
+      ✔ TEST_force_eval_360_and_neighbors
+      ✔ TEST_force_eval_360_and_neighbors - with thresholds
+      ✔ TEST_line365_condexpr_variant2
+      ✔ TEST_line365_condexpr_variant2 - with force
+      ✔ TEST_line367_condexpr_variant2
+      ✔ TEST_line367_condexpr_variant2 - with forces
+      ✔ TEST_line374_condexpr_variant
+      ✔ TEST_line374_condexpr_variant - force left
+      ✔ TEST_force_eval_367_variants
+      ✔ TEST_force_eval_367_variants - with forces
+      ✔ TEST_force_eval_369_370_combo
+      ✔ TEST_force_eval_369_370_combo - zero amount
+      ✔ TEST_dup_constructor_or_local
+      ✔ TEST_dup_constructor_or_local2
+      ✔ TEST_dup_constructor_or_msgsender_variant
+      ✔ TEST_trick_constructor_or_line87 - with zero
+      ✔ TEST_trick_constructor_or_line87 - with address
+      ✔ TEST_line87_txorigin_variant
+      ✔ TEST_line87_ledger_security_variant - with zero
+      ✔ TEST_line87_ledger_security_variant - with address
+      ✔ TEST_line118_msgsender_false_arm
+      ✔ TEST_line130_msgsender_vaultZero_false - no force
+      ✔ TEST_line130_msgsender_vaultZero_false - with force
+    MerchantRegistry Combined Branch Coverage
+      ✔ should cover all merchant status branches
+      ✔ should cover all vault presence branches
+      ✔ should cover all score threshold branches
+      ✔ should cover refund threshold branches
+      ✔ should cover dispute threshold branches
+      ✔ should cover all force flag combinations
+    MerchantRegistry Line-Specific Branch Coverage
+      ✔ should cover line 365 condexpr - all combinations
+      ✔ should cover line 367 condexpr - all combinations
+      ✔ should cover line 374 condexpr - all combinations
+      ✔ should cover line 367 variants - all combinations
+      ✔ should cover lines 369-370 combo - all combinations
+    MerchantRegistry Constructor and Line 87 Coverage
+      ✔ should cover constructor OR chain variants
+      ✔ should cover line 87 with zero addresses
+      ✔ should cover line 87 with valid addresses
+    MerchantRegistry Lines 118 and 130 Coverage
+      ✔ should cover line 118 merchant status check
+      ✔ should cover line 130 vault zero check - both branches
+    MerchantRegistry Dense 360-375 Hotspot Coverage
+      ✔ should cover 360 neighbors - all merchant states
+      ✔ should cover 360 neighbors with vault presence
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 1/3)
+    Basic TEST toggle functions
+      ✔ TEST_setOnlyDAOOff
+      ✔ TEST_setForceAlreadyMerchant
+      ✔ TEST_setForceNoVault
+      ✔ TEST_setForceLowScore
+      ✔ TEST_setForceZeroSenderRefund
+      ✔ TEST_setForceZeroSenderDispute
+    Eval functions - Part 1
+      ✔ TEST_eval_addMerchant_flags
+      ✔ TEST_eval_addMerchant_subexpr
+      ✔ TEST_eval_noteRefund_forceFlag
+      ✔ TEST_eval_noteDispute_forceFlag
+      ✔ TEST_exercise_addMerchant_checks
+      ✔ TEST_exercise_noteFlags
+      ✔ TEST_exec_addMerchant_branches
+      ✔ TEST_cover_addMerchant_variants
+    Conditional TEST functions
+      ✔ TEST_if_alreadyMerchant_left
+      ✔ TEST_if_forceAlready_right
+      ✔ TEST_if_noVault_left
+      ✔ TEST_if_forceNoVault_right
+      ✔ TEST_if_lowScore_left
+      ✔ TEST_if_forceLowScore_right
+      ✔ TEST_exec_addMerchant_ifvariants
+    Status check functions
+      ✔ TEST_if_merchant_status_none
+      ✔ TEST_if_vaultHub_vaultOf_isZero
+      ✔ TEST_if_seer_getScore_lt_min
+      ✔ TEST_if_refund_threshold_reached
+      ✔ TEST_if_dispute_threshold_reached
+    Force variants
+      ✔ TEST_if_vaultOf_isZero_or_force
+      ✔ TEST_if_seer_score_below_min_or_force
+      ✔ TEST_if_alreadyMerchant_or_force
+      ✔ TEST_if_onlyDAO_off_flag
+    Vault and score checks
+      ✔ TEST_if_vaultAndScore
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 2/3)
+    Additional coverage functions - Part 1
+      ✔ TEST_cover_additional_branches
+      ✔ TEST_force_eval_360_and_neighbors
+      ✔ TEST_line365_condexpr_variant2
+      ✔ TEST_line367_condexpr_variant2
+      ✔ TEST_line374_condexpr_variant
+      ✔ TEST_force_eval_367_variants
+      ✔ TEST_force_eval_369_370_combo
+    Constructor and local variants
+      ✔ TEST_dup_constructor_or_local
+      ✔ TEST_dup_constructor_or_local2
+      ✔ TEST_dup_constructor_or_msgsender_variant
+      ✔ TEST_trick_constructor_or_line87
+      ✔ TEST_line87_txorigin_variant
+      ✔ TEST_line87_ledger_security_variant
+    Specific line coverage
+      ✔ TEST_line118_msgsender_false_arm
+      ✔ TEST_line130_msgsender_vaultZero_false
+      ✔ TEST_line250_condexpr_alt
+      ✔ TEST_force_eval_line87_msgsender
+      ✔ TEST_force_eval_addMerchant_msgsender_variants
+      ✔ TEST_line118_already_or_force
+      ✔ TEST_line130_vaultZero_or_force
+      ✔ TEST_line238_refunds_threshold
+      ✔ TEST_line250_condexpr_variant
+      ✔ TEST_line291_sender_zero_or_force_refund
+      ✔ TEST_line305_seer_lt_or_force
+    Additional IF variants
+      ✔ TEST_if_addMerchant_or_force
+      ✔ TEST_if_vaultOf_or_force2
+      ✔ TEST_if_seer_lt_min_or_force2
+      ✔ TEST_cover_addMerchant_near118_130
+    Execution functions with state changes
+      ✔ TEST_exec_addMerchant_msgsender_full
+      ✔ TEST_exec_note_guards_and_restore
+    More conditional checks
+      ✔ TEST_if_msgsender_alreadyMerchant
+      ✔ TEST_if_constructor_zero_check
+      ✔ TEST_exec_addMerchant_msgsender_ifvariants
+      ✔ TEST_line130_msgsender_vaultZero_or_force
+    Coverage region tests
+      ✔ TEST_cover_250_300_region
+      ✔ TEST_cover_mass_250_410
+    All force flag combinations
+      ✔ should test all 64 combinations of 6 boolean flags
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 3/3)
+    Escrow eval functions
+      ✔ TEST_eval_open_checks
+      ✔ TEST_if_securityCheck_addr
+      ✔ TEST_if_escrow_state_eq
+      ✔ TEST_if_escrow_buyerVault_zero
+      ✔ TEST_if_escrow_sellerVault_zero
+      ✔ TEST_exec_open_ifvariants
+    Access check functions
+      ✔ TEST_eval_access_checks
+      ✔ TEST_if_buyerVault_zero
+      ✔ TEST_if_release_allowed
+      ✔ TEST_if_refund_allowed
+      ✔ TEST_exec_access_ifvariants
+      ✔ TEST_cover_escrow_more
+    Hotspot functions
+      ✔ TEST_hotspot_300s
+      ✔ TEST_hotspot_330s
+      ✔ TEST_hotspot_360s
+      ✔ TEST_hotspot_490s
+      ✔ TEST_cover_post360s
+    Message sender specific checks
+      ✔ TEST_if_msgsender_release_allowed
+      ✔ TEST_if_msgsender_refund_allowed
+      ✔ TEST_if_msgsender_dispute_allowed
+      ✔ TEST_if_notFunded
+      ✔ TEST_if_resolve_buyerWins_branch
+      ✔ TEST_force_eval_release_refund_resolve
+    Line-specific conditional expressions
+      ✔ TEST_line435_condexpr_variants
+      ✔ TEST_line447_condexpr_variants
+      ✔ TEST_line456_condexpr_variants
+      ✔ TEST_line466_condexpr_variants
+      ✔ TEST_line503_506_combo
+    Duplicate and extended variants
+      ✔ TEST_dup_line435_with_locals
+      ✔ TEST_line435_msgsender_include
+      ✔ TEST_line447_many_ors
+      ✔ TEST_line503_extended_variants
+      ✔ TEST_line644_combo
+      ✔ TEST_line371_alt
+    Comprehensive variant combinations
+      ✔ should test all hotspot functions with different parameters
+      ✔ should test all line-specific expressions in sequence
+      ✔ should test all extended variants
+    Massive permutation testing
+      ✔ should test all boolean flag permutations for open_ifvariants
+      ✔ should test all score thresholds
+      ✔ should test multiple amounts
+      ✔ should test all refund/dispute counts
+    Final comprehensive coverage
+      ✔ should exercise every TEST function at least once
+
+  VFIDECommerce: Push to 95% Coverage
+    MerchantRegistry TEST Helpers - Branch Coverage
+      ✔ should exercise TEST_setOnlyDAOOff
+      ✔ should exercise TEST_setForceAlreadyMerchant
+      ✔ should exercise TEST_setForceNoVault
+      ✔ should exercise TEST_setForceLowScore
+      ✔ should exercise TEST_setForceZeroSenderRefund
+      ✔ should exercise TEST_setForceZeroSenderDispute
+    MerchantRegistry TEST Helpers - Conditional Branches
+      ✔ should exercise TEST_if_alreadyMerchant_left - true
+      ✔ should exercise TEST_if_alreadyMerchant_left - false
+      ✔ should exercise TEST_if_forceAlready_right - true
+      ✔ should exercise TEST_if_forceAlready_right - false
+      ✔ should exercise TEST_if_noVault_left - true
+      ✔ should exercise TEST_if_noVault_left - false
+      ✔ should exercise TEST_if_forceNoVault_right - true
+      ✔ should exercise TEST_if_forceNoVault_right - false
+      ✔ should exercise TEST_if_lowScore_left - true
+      ✔ should exercise TEST_if_lowScore_left - false
+      ✔ should exercise TEST_if_forceLowScore_right - true
+      ✔ should exercise TEST_if_forceLowScore_right - false
+    MerchantRegistry TEST Helpers - Complex Variants
+      ✔ should exercise TEST_exec_addMerchant_ifvariants - all false
+      ✔ should exercise TEST_exec_addMerchant_ifvariants - forceA true
+      ✔ should exercise TEST_exec_addMerchant_ifvariants - forceB true
+      ✔ should exercise TEST_exec_addMerchant_ifvariants - forceC true
+      ✔ should exercise TEST_exec_addMerchant_ifvariants - all forces true
+    MerchantRegistry TEST Helpers - Status Checks
+      ✔ should exercise TEST_if_merchant_status_none - true
+      ✔ should exercise TEST_if_merchant_status_none - false
+      ✔ should exercise TEST_if_vaultHub_vaultOf_isZero - true
+      ✔ should exercise TEST_if_vaultHub_vaultOf_isZero - false
+    MerchantRegistry TEST Helpers - addMerchant Variants
+      ✔ should exercise TEST_cover_addMerchant_variants - not merchant
+      ✔ should exercise TEST_cover_addMerchant_variants - is merchant
+      ✔ should exercise TEST_cover_addMerchant_variants - force already
+      ✔ should exercise TEST_cover_addMerchant_variants - no vault left
+      ✔ should exercise TEST_cover_addMerchant_variants - has vault left
+      ✔ should exercise TEST_cover_addMerchant_variants - force no vault
+      ✔ should exercise TEST_cover_addMerchant_variants - low score left
+      ✔ should exercise TEST_cover_addMerchant_variants - good score left
+      ✔ should exercise TEST_cover_addMerchant_variants - force low score
+    MerchantRegistry TEST Helpers - Additional Eval Functions
+      ✔ should exercise TEST_eval_addMerchant_flags
+      ✔ should exercise TEST_eval_addMerchant_subexpr
+      ✔ should exercise TEST_eval_noteRefund_forceFlag
+      ✔ should exercise TEST_eval_noteDispute_forceFlag
+      ✔ should exercise TEST_exercise_addMerchant_checks
+      ✔ should exercise TEST_exercise_noteFlags
+      ✔ should exercise TEST_exec_addMerchant_branches
+
+  Commerce: MerchantRegistry + CommerceEscrow
+    ✔ merchant can register and buyer can open/fund/release an escrow
+    ✔ merchant can request refund and disputes/resolution work
+
+  Commerce negative paths and auto-suspend
+    ✔ open reverts for zero amount and unregistered merchant and locked vaults
+    ✔ markFunded reverts when not enough balance and release/refund unauthorized
+    ✔ auto-suspends merchant after repeated refunds/disputes
+
+  CouncilElection Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      ✔ should set default council size to 12
+      ✔ should set default term to 180 days
+      ✔ should revert if deploying with zero addresses
+    Module Configuration
+      ✔ should allow DAO to set modules
+      ✔ should revert if non-DAO tries to set modules
+    Parameter Configuration
+      ✔ should allow DAO to set params
+      ✔ should revert if setting council size to zero
+      ✔ should revert if non-DAO tries to set params
+    Candidate Registration
+
+      1) should allow eligible user to register
+      ✔ should revert if not eligible (low score)
+      ✔ should revert if not eligible (no vault)
+
+      2) should allow candidate to unregister
+    Council Setting
+
+      3) "before each" hook for "should allow DAO to set council"
+    Council Refresh
+
+      4) "before each" hook for "should allow DAO to refresh council"
+
+  DAO Contract Tests
+    Deployment and Setup
+      ✔ should set admin correctly
+      ✔ should set default voting period
+      ✔ should set default quorum
+      ✔ should allow admin to set modules
+      ✔ should revert if non-admin tries to set admin
+    Proposal Creation
+      ✔ should create a proposal
+      ✔ should revert if proposer not eligible
+      ✔ should revert if proposer has no vault
+      ✔ should allow zero target address
+    Voting
+      ✔ should allow eligible voter to vote
+      ✔ should revert if already voted
+      ✔ should revert if not eligible to vote
+      ✔ should count votes correctly
+    Finalization
+      ✔ should finalize passed proposal
+      ✔ should finalize failed proposal
+      ✔ should revert if voting not ended
+    Parameter Updates
+      ✔ should allow admin to update voting period
+      ✔ should revert if non-admin tries to update params
+
+  DAOTimelock Contract Tests
+    Deployment
+      ✔ should set admin correctly
+      ✔ should set default delay to 48 hours
+      ✔ should revert if deploying with zero admin
+    Admin Functions
+      ✔ should allow admin to update admin
+      ✔ should revert if non-admin tries to set admin
+      ✔ should revert if setting admin to zero
+      ✔ should allow admin to update delay
+      ✔ should allow admin to set ledger
+      ✔ should allow admin to set panic guard
+    Queue Transaction
+      ✔ should queue a transaction
+      ✔ should revert if non-admin tries to queue
+      ✔ should revert if queuing same transaction twice
+      ✔ should calculate correct ETA
+    Cancel Transaction
+      ✔ should cancel a queued transaction
+      ✔ should revert if non-admin tries to cancel
+      ✔ should revert if cancelling non-existent transaction
+    Execute Transaction
+      ✔ should execute after delay
+      ✔ should revert if executed too early
+      ✔ should revert if executing non-existent transaction
+    Edge Cases
+      ✔ should handle zero value transactions
+      ✔ should handle empty data
+      ✔ should handle different delays
+
+  DevReserveVestingVault
+    Deployment
+      ✔ should deploy with correct VFIDE
+      ✔ should deploy with correct beneficiary
+      ✔ should deploy with correct vaultHub
+      ✔ should deploy with correct allocation
+      ✔ should set correct cliff period
+      ✔ should set correct vesting period
+      ✔ should revert on zero VFIDE
+      ✔ should revert on zero beneficiary
+      ✔ should allow zero securityHub (optional)
+      ✔ should revert on zero allocation
+    Views - vested()
+      ✔ should return 0 before presale launch
+      ✔ should return 0 before cliff
+      ✔ should return partial amount after cliff
+      ✔ should return full allocation at end
+      ✔ should calculate linear vesting correctly
+    Views - claimable()
+      ✔ should return 0 before cliff
+      ✔ should return vested minus claimed
+    Claim
+      ✔ should revert if presale not launched
+      ✔ should revert before cliff
+      ✔ should allow claim after cliff
+      ✔ should transfer to beneficiary's vault
+      ✔ should emit Claimed event
+      ✔ should revert if not beneficiary
+      ✔ should revert if vault is locked
+      ✔ should allow multiple partial claims
+      ✔ should sync start on first claim
+      ✔ should emit SyncedStart event on first claim
+    pauseClaims
+      ✔ should allow beneficiary to pause
+      ✔ should allow beneficiary to unpause
+      ✔ should emit PauseSet event
+      ✔ should revert if not beneficiary
+      ✔ should prevent claims when paused
+      ✔ should allow claims when unpaused
+    Edge Cases
+      ✔ should handle full vesting period
+      ✔ should handle claiming everything in one go at end
+      ✔ should correctly track totalClaimed across claims
+      ✔ should handle beneficiaryVault call
+
+  DevReserveVestingVault
+    Deployment
+      ✔ should deploy with correct VFIDE
+      ✔ should deploy with correct beneficiary
+      ✔ should deploy with correct vaultHub
+      ✔ should deploy with correct allocation
+      ✔ should set correct cliff period
+      ✔ should set correct vesting period
+      ✔ should revert on zero VFIDE
+      ✔ should revert on zero beneficiary
+      ✔ should allow zero securityHub (optional)
+    syncStart
+
+      5) should sync start time from presale
+
+      6) should calculate cliff timestamp correctly
+
+      7) should calculate end timestamp correctly
+
+      8) should emit SyncedStart event
+
+      9) should be idempotent
+    claimable
+
+      10) "before each" hook for "should return 0 before cliff"
+    claim
+
+      11) "before each" hook for "should revert before cliff"
+    setPause
+
+      12) should allow beneficiary to pause
+
+      13) should allow beneficiary to unpause
+
+      14) should emit PauseSet event
+
+      15) should revert if not beneficiary
+    Edge Cases
+
+      16) should handle full vesting period
+
+      17) should handle claiming everything in one go at end
+
+  EmergencyControl Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      ✔ should set breaker correctly
+      ✔ should set default cooldown to 5 minutes
+      ✔ should revert if deploying with zero addresses
+    Module Configuration
+      ✔ should allow DAO to set modules
+      ✔ should revert if non-DAO tries to set modules
+    Cooldown Configuration
+      ✔ should allow DAO to set cooldown
+      ✔ should revert if non-DAO tries to set cooldown
+    Committee Management
+      ✔ should allow DAO to add member
+      ✔ should revert if adding zero address
+      ✔ should revert if adding duplicate member
+      ✔ should allow DAO to remove member
+      ✔ should revert if removing non-member
+      ✔ should allow DAO to reset committee
+      ✔ should revert if threshold exceeds member count
+    Committee Voting
+      ✔ should allow member to vote for halt
+      ✔ should allow member to vote for unhalt
+      ✔ should revert if non-member tries to vote
+      ✔ should revert if member votes twice for same stance
+      ✔ should trigger when threshold reached
+    DAO Toggle
+      ✔ should allow DAO to toggle halt
+      ✔ should revert if non-DAO tries to toggle
+      ✔ should enforce cooldown
+      ✔ should allow toggle after cooldown passes
+    Vote Reset
+
+      18) should allow DAO to reset votes
+
+      19) should revert if non-DAO tries to reset
+
+  Finance Complete Coverage
+    StablecoinRegistry Additional TEST Helpers
+      ✔ TEST_eval_onlyDAO - with DAO
+      ✔ TEST_eval_onlyDAO - with non-DAO
+      ✔ TEST_eval_onlyDAO - with TEST_onlyDAO_off enabled
+      ✔ TEST_decimalsOrTry_public - with valid token
+      ✔ TEST_decimalsOrTry_public - with invalid address
+      ✔ TEST_exec_decimals_branches - force return
+      ✔ TEST_exec_decimals_branches - staticcall
+      ✔ TEST_exec_decimals_branches - fallback
+      ✔ TEST_log_hasLedger
+
+      20) TEST_exercise_decimals_try - with forceDecimalsReturn
+
+      21) TEST_exercise_decimals_try - with staticcall
+
+      22) TEST_exercise_decimals_try - with fallback
+      ✔ TEST_exercise_deposit_send_checks
+      ✔ TEST_exercise_deposit_send_checks - with valid data
+      ✔ TEST_if_forceDecimalsReturn - false
+      ✔ TEST_if_forceDecimalsReturn - true
+      ✔ TEST_if_staticcall_ok - valid token
+      ✔ TEST_if_staticcall_ok - invalid address
+      ✔ TEST_if_deposit_notWhitelisted - not whitelisted
+      ✔ TEST_if_deposit_notWhitelisted - whitelisted
+      ✔ TEST_if_deposit_zeroAmount - zero
+      ✔ TEST_if_deposit_zeroAmount - non-zero
+      ✔ TEST_if_send_zeroToOrAmt - zero address
+      ✔ TEST_if_send_zeroToOrAmt - zero amount
+      ✔ TEST_if_send_zeroToOrAmt - valid
+      ✔ TEST_if_send_tokenIsZero - zero
+      ✔ TEST_if_send_tokenIsZero - valid
+      ✔ TEST_cover_decimals_and_deposit - comprehensive
+      ✔ TEST_cover_decimals_and_deposit - force decimals
+      ✔ TEST_cover_decimals_and_deposit - all zero states
+    StablecoinRegistry Decimals Branch Exhaustive
+
+      23) should cover all decimals branches with force flag
+      ✔ should cover all staticcall branches
+      ✔ should cover all exec_decimals_branches paths
+    StablecoinRegistry Deposit/Send Validation Exhaustive
+      ✔ should cover all deposit validation branches
+      ✔ should cover all amount validation branches
+      ✔ should cover all send validation branches
+      ✔ should cover all token zero branches
+    StablecoinRegistry Combined Coverage
+      ✔ should cover all combinations of deposit/send checks
+      ✔ should cover comprehensive decimals and deposit combinations
+    EcoTreasuryVault Additional TEST Helpers
+
+      24) TEST_eval_onlyDAO - with DAO
+
+      25) TEST_eval_onlyDAO - with non-DAO
+
+      26) TEST_eval_onlyDAO - with TEST_onlyDAO_off_Tx enabled
+
+      27) TEST_log_hasLedger
+
+      28) TEST_eval_hasModules
+
+      29) TEST_if_deposit_zeroAmount - zero
+
+      30) TEST_if_deposit_zeroAmount - non-zero
+
+      31) TEST_if_send_zeroToOrAmt - zero address
+
+      32) TEST_if_send_zeroToOrAmt - zero amount
+
+      33) TEST_if_send_zeroToOrAmt - valid
+
+      34) TEST_if_token_not_ok - not whitelisted
+
+      35) TEST_if_token_not_ok - whitelisted
+
+      36) TEST_if_token_addr_zero - zero
+
+      37) TEST_if_token_addr_zero - valid
+    EcoTreasuryVault Validation Branch Exhaustive
+
+      38) should cover all deposit amount validation branches
+
+      39) should cover all send validation branches
+
+      40) should cover all token validation branches
+
+      41) should cover all token address zero branches
+    EcoTreasuryVault Module and DAO Exhaustive
+
+      42) should cover eval_onlyDAO for all states
+
+      43) should cover hasModules check
+
+      44) should cover log_hasLedger for all states
+
+  VFIDEFinance - Exhaustive TEST Coverage
+    StablecoinRegistry TEST Functions
+      ✔ TEST_setOnlyDAOOff - toggle onlyDAO bypass
+      ✔ TEST_setForceDecimals - set forced decimals value
+      ✔ TEST_eval_onlyDAO - evaluate DAO check
+      ✔ TEST_decimalsOrTry_public - get token decimals
+      ✔ TEST_exec_decimals_branches - all decimals branches
+      ✔ TEST_log_hasLedger - check ledger exists
+      ✔ TEST_exercise_decimals_try - exercise staticcall paths
+      ✔ TEST_exercise_deposit_send_checks - deposit/send validations
+      ✔ TEST_if_forceDecimalsReturn - check force flag
+      ✔ TEST_if_staticcall_ok - staticcall success check
+      ✔ TEST_if_deposit_notWhitelisted - deposit whitelist check
+      ✔ TEST_if_deposit_zeroAmount - zero amount check
+      ✔ TEST_if_send_zeroToOrAmt - send zero checks
+      ✔ TEST_if_send_tokenIsZero - token zero check
+      ✔ TEST_cover_decimals_and_deposit - comprehensive coverage
+      ✔ TEST_exec_decimals_and_tx_ifvariants - all if variants
+      ✔ TEST_if_asset_ok - asset whitelist check
+      ✔ TEST_if_token_staticcall_dec_ok - decimals staticcall
+      ✔ TEST_if_deposit_checks_explicit - explicit deposit checks
+      ✔ TEST_if_send_allowed_and_tokenNonZero - send checks
+      ✔ TEST_if_asset_not_ok - negative asset check
+      ✔ TEST_if_staticcall_returns_short - short return check
+      ✔ TEST_if_treasury_force_flags - force flag checks
+      ✔ TEST_if_deposit_send_whitelist_and_zero - combined checks
+      ✔ TEST_if_force_flags_state - force flags state
+      ✔ TEST_cover_more_finance - more coverage
+      ✔ TEST_cover_finance_more2 - additional coverage
+      ✔ TEST_exec_finance_413_checks - line 413 checks
+      ✔ TEST_exec_decimals_for_token - decimals execution
+    EcoTreasuryVault TEST Functions
+      ✔ TEST_setOnlyDAOOff_Tx - toggle DAO bypass for treasury
+      ✔ TEST_setForceDepositInsufficient - force deposit insufficient
+      ✔ TEST_setForceSendInsufficient - force send insufficient
+      ✔ TEST_eval_deposit_checks - deposit validation
+      ✔ TEST_eval_send_checks - send validation
+      ✔ TEST_if_send_zero_guard - send zero guard
+      ✔ TEST_exec_treasury_ifvariants - all treasury variants
+      ✔ TEST_if_to_or_amount_zero - zero checks
+      ✔ TEST_if_token_is_vfide_or_whitelisted - token checks
+      ✔ TEST_if_TEST_force_flags_either - force flags OR
+      ✔ TEST_exec_send_variants - send variants
+    Combined exhaustive tests
+      ✔ should test all registry TEST functions in sequence
+      ✔ should test all treasury TEST functions in sequence
+      ✔ should test all boolean combinations
+
+  VFIDEFinance: Push to 100% Coverage
+    StablecoinRegistry TEST Helpers
+      ✔ should exercise TEST_setOnlyDAOOff
+      ✔ should exercise TEST_setForceDecimals
+      ✔ should exercise TEST_if_deposit_zeroAmount - true branch
+      ✔ should exercise TEST_if_deposit_zeroAmount - false branch
+      ✔ should exercise TEST_if_send_zeroToOrAmt - zero address
+      ✔ should exercise TEST_if_send_zeroToOrAmt - zero amount
+      ✔ should exercise TEST_if_send_zeroToOrAmt - both non-zero
+      ✔ should exercise TEST_if_send_tokenIsZero - true branch
+      ✔ should exercise TEST_if_send_tokenIsZero - false branch
+    StablecoinRegistry TEST Helpers - Additional
+      ✔ should exercise TEST_cover_decimals_and_deposit with forceDecimalsReturn=true
+      ✔ should exercise TEST_cover_decimals_and_deposit with forceDecimalsReturn=false
+      ✔ should exercise TEST_cover_decimals_and_deposit with non-whitelisted token
+      ✔ should exercise TEST_cover_decimals_and_deposit with zero amount
+      ✔ should exercise TEST_cover_decimals_and_deposit with zero address recipient
+      ✔ should exercise TEST_cover_decimals_and_deposit with zero token address
+    StablecoinRegistry Modifier Branches
+      ✔ should test onlyDAO modifier - DAO can call
+      ✔ should test onlyDAO modifier - non-DAO reverts
+      ✔ should test onlyDAO modifier - TEST_onlyDAO_off bypasses check
+    StablecoinRegistry Admin Functions
+      ✔ should test setLedger
+      ✔ should test addAsset with forced decimals
+      ✔ should test addAsset with staticcall decimals
+      ✔ should test removeAsset
+      ✔ should test setSymbolHint
+    EcoTreasuryVault Admin Functions
+      ✔ should test setModules
+
+  StablecoinRegistry and EcoTreasuryVault
+    ✔ DAO can whitelist asset and treasury accepts deposits
+    ✔ non-DAO cannot add asset
+
+  StablecoinRegistry and EcoTreasuryVault extra flows
+    ✔ DAO can remove asset and set symbol hint
+    ✔ treasury send works for whitelisted stable and VFIDE, and reverts for non-DAO
+
+  GovernanceHooks
+    Deployment
+      ✔ should deploy with correct ledger
+      ✔ should deploy with correct seer
+
+      45) should emit ModulesSet on deployment
+      ✔ should deploy with zero address ledger (optional)
+      ✔ should deploy with zero address seer (optional)
+      ✔ should deploy with both zero addresses
+    setModules
+      ✔ should update ledger address
+      ✔ should update seer address
+      ✔ should update both addresses
+      ✔ should emit ModulesSet
+      ✔ should allow setting zero addresses
+      ✔ should allow anyone to call setModules
+    onProposalQueued
+      ✔ should execute without reverting
+      ✔ should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal IDs
+      ✔ should handle zero value proposals
+      ✔ should handle zero target address
+    onVoteCast
+      ✔ should execute without reverting for support vote
+      ✔ should execute without reverting for against vote
+      ✔ should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple voters
+      ✔ should handle zero address voter
+    onFinalized
+      ✔ should execute for passed proposal
+      ✔ should execute for failed proposal
+      ✔ should log system event when ledger is set (passed)
+      ✔ should log system event when ledger is set (failed)
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal finalizations
+    Hook Integration Flow
+      ✔ should execute complete governance flow
+      ✔ should handle multiple proposals simultaneously
+      ✔ should work with ledger logging disabled
+    Edge Cases
+      ✔ should handle ledger reverts gracefully
+      ✔ should allow rapid successive calls
+      ✔ should handle very large proposal IDs
+
+      46) should allow module updates mid-flow
+
+  Interface Compliance Tests
+    IVFIDEToken Interface
+
+      47) Should implement all IVFIDEToken interface functions
+    IDAO Interface
+
+      48) Should verify DAO interface structure
+    ISeer Interface
+
+      49) Should verify Seer reputation interface
+    IProofLedger Interface
+
+      50) Should verify ProofLedger interface functions
+    IVaultHub Interface
+
+      51) Should verify VaultHub interface compliance
+    ISecurityHub Interface
+
+      52) Should verify SecurityHub emergency interface
+    ICouncilElection Interface
+
+      53) Should verify CouncilElection interface functions
+    IEmergencyControl Interface
+
+      54) Should verify EmergencyControl interface
+    IDAOTimelock Interface
+
+      55) Should verify Timelock interface compliance
+    ICommerceEscrow Interface
+
+      56) Should verify Commerce escrow interface
+    IMerchantRegistry Interface
+
+      57) Should verify MerchantRegistry interface
+    IReviewRegistry Interface
+
+      58) Should verify ReviewRegistry interface compliance
+    IGovernanceHooks Interface
+
+      59) Should verify GovernanceHooks callback interface
+    IProofScoreBurnRouter Interface
+
+      60) Should verify ProofScoreBurnRouter interface
+    ISystemHandover Interface
+
+      61) Should verify SystemHandover interface functions
+    IVFIDEPresale Interface
+
+      62) Should verify Presale interface compliance
+    IUserVault Interface
+
+      63) Should verify UserVault interface functions
+    IVaultFactory Interface
+
+      64) Should verify VaultFactory creation interface
+    IStablecoinRegistry Interface
+
+      65) Should verify StablecoinRegistry interface
+    IDevReserveVestingVault Interface
+
+      66) Should verify DevReserveVestingVault interface
+    IEcoTreasuryVault Interface
+
+      67) Should verify EcoTreasuryVault interface compliance
+    ISanctumFund Interface
+
+      68) Should verify SanctumFund interface functions
+    IGuardianLock Interface
+
+      69) Should verify GuardianLock security interface
+    IGuardianRegistry Interface
+
+      70) Should verify GuardianRegistry interface
+    IPanicGuard Interface
+
+      71) Should verify PanicGuard emergency interface
+    IEmergencyBreaker Interface
+
+      72) Should verify EmergencyBreaker circuit breaker interface
+    IERC20Minimal Interface
+
+      73) Should verify ERC20 minimal interface compliance
+    Cross-Interface Integration
+
+      74) Should verify interfaces work together
+
+      75) Should verify DAO and Timelock interface integration
+
+      76) Should verify Seer and Ledger interface integration
+
+  ProofLedger
+    Deployment
+      ✔ should deploy with correct DAO
+      ✔ should revert on zero address DAO
+    setDAO
+      ✔ should allow DAO to update DAO address
+      ✔ should emit DAOSet event
+      ✔ should revert if non-DAO tries to update
+      ✔ should revert on zero address
+      ✔ should allow DAO to be set to itself
+      ✔ should allow chained DAO updates
+    logEvent
+      ✔ should emit Log event with all parameters
+      ✔ should allow anyone to log events
+      ✔ should handle zero amount
+      ✔ should handle empty strings
+      ✔ should handle very large amounts
+      ✔ should handle long action strings
+      ✔ should handle long note strings
+      ✔ should log multiple events in sequence
+      ✔ should preserve msg.sender in 'by' field
+      ✔ should use current block timestamp
+    logSystemEvent
+      ✔ should emit LogSystem event with all parameters
+      ✔ should allow anyone to log system events
+      ✔ should handle empty action string
+      ✔ should handle zero addresses
+      ✔ should handle long action strings
+      ✔ should log multiple system events
+      ✔ should use current block timestamp
+    Mixed Logging
+      ✔ should support both log types simultaneously
+      ✔ should handle high-frequency logging
+      ✔ should maintain independent event streams
+    Access Control
+      ✔ should allow only DAO to change DAO
+      ✔ should allow anyone to log events
+      ✔ should allow anyone to log system events
+    Edge Cases
+      ✔ should handle DAO transferring to self
+      ✔ should handle rapid DAO transfers
+      ✔ should handle maximum uint256 amount in logs
+      ✔ should handle special characters in strings
+      ✔ should not revert on consecutive identical logs
+
+  ProofScoreBurnRouter
+    Deployment
+      ✔ should deploy with correct seer
+      ✔ should deploy with correct treasury
+      ✔ should deploy with correct sanctum
+      ✔ should deploy with correct vfideToken
+      ✔ should set default baseBurnRate to 50 (0.5%)
+      ✔ should set default maxBurnRate to 250 (2.5%)
+      ✔ should set default sanctumRate to 25 (0.25%)
+
+      77) should emit ModulesSet on deployment
+      ✔ should revert on zero seer address
+      ✔ should revert on zero treasury address
+      ✔ should revert on zero vfide token address
+      ✔ should allow zero sanctum address (optional)
+    setModules
+      ✔ should update seer address
+      ✔ should update treasury address
+      ✔ should update sanctum address
+      ✔ should update vfideToken address
+      ✔ should emit ModulesSet
+      ✔ should allow anyone to call setModules
+    route - Burn Rate Calculation
+      ✔ should apply baseBurnRate/2 for score >= 900
+      ✔ should apply maxBurnRate for score <= 300
+
+      78) should apply linear interpolation for score 500
+      ✔ should apply linear interpolation for score 600
+      ✔ should handle score 1000 (maximum)
+      ✔ should handle score 0 (minimum)
+    route - Amount Routing
+
+      79) should route burn amount to treasury
+
+      80) should route sanctum amount to sanctum
+
+      81) should return total deducted amount
+
+      82) should handle zero amount
+
+      83) should handle very large amounts
+      ✔ should not call treasury if burn amount is zero
+
+      84) should not call sanctum if sanctum amount is zero
+    route - Events
+
+      85) should emit RouteExecuted with correct parameters
+      ✔ should emit Adjusted with correct score and rates
+
+      86) should emit both RouteExecuted and Adjusted
+    adjustScore
+
+      87) should emit Adjusted event
+      ✔ should fetch current score from seer
+      ✔ should calculate burn rate based on score
+
+      88) should handle increase flag true
+
+      89) should handle increase flag false
+
+      90) should handle zero delta
+
+      91) should allow anyone to call adjustScore
+    Edge Cases
+
+      92) should handle multiple routes for same user
+
+      93) should handle routes for different users
+      ✔ should handle score changes between routes
+      ✔ should handle uninitialized score (defaults to 500)
+      ✔ should handle boundary scores correctly
+
+  Advanced Security Testing - Critical Attack Vectors
+    Front-Running Protection
+      ✔ should prevent front-running in presale buy orders
+      ✔ should prevent front-running in escrow release
+      ✔ should prevent MEV extraction from Commerce transactions
+    Flash Loan Attack Protection
+      ✔ should prevent flash loan governance attacks
+      ✔ should prevent flash loan manipulation of merchant scores
+    Oracle Manipulation
+
+      94) should prevent Seer score manipulation
+      ✔ should validate score thresholds cannot be bypassed
+    Timestamp Manipulation
+      ✔ should be resilient to block.timestamp manipulation
+    Denial of Service (DoS) Attacks
+      ✔ should prevent DoS via unbounded loops
+      ✔ should prevent DoS via always-reverting fallback
+      ✔ should prevent DoS via block gas limit
+    Access Control Edge Cases
+      ✔ should prevent privilege escalation via delegatecall
+      ✔ should prevent admin key compromise simulation
+      ✔ should prevent ownership transfer exploits
+    Integer Boundary Exploits
+      ✔ should handle maximum uint256 amounts safely
+      ✔ should prevent precision loss in calculations
+    Cross-Contract Reentrancy
+      ✔ should prevent reentrancy across multiple contracts
+    Upgrade/Migration Vulnerabilities
+      ✔ should test SystemHandover under attack
+      ✔ should test emergency pause mechanisms
+    Economic Attacks
+      ✔ should prevent dust attacks on token economics
+      ✔ should prevent fee/burn manipulation
+
+  Seer Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      ✔ should set default base score to 500
+      ✔ should set default min score to 100
+      ✔ should set default max score to 1000
+      ✔ should revert if deploying with zero DAO
+    Module Configuration
+      ✔ should allow DAO to set modules
+      ✔ should revert if non-DAO tries to set modules
+
+      95) should revert if setting DAO to zero
+    Policy Configuration
+      ✔ should allow DAO to set policy
+      ✔ should revert if non-DAO tries to set policy
+    Score Management
+
+      96) should initialize user with base score
+
+      97) should allow DAO to set score directly
+
+      98) should revert if non-DAO tries to set score
+
+      99) should get score correctly
+      ✔ should return base score for uninitialized user
+    Governance Checks
+
+      100) should check if user meets min score for governance
+
+      101) should fail if user below min score
+
+      102) should return minForGovernance value
+    Commerce Checks
+
+      103) should check if user meets min score for commerce
+
+      104) should fail if user below min score
+
+      105) should return minForCommerce value
+    Flagging System
+
+      106) should allow DAO to flag user
+
+      107) should revert if non-DAO tries to flag
+
+      108) should allow DAO to unflag user
+
+      109) should check if user is flagged
+    Score Adjustments
+
+      110) "before each" hook for "should increase score"
+    Batch Operations
+
+      111) should initialize multiple users
+
+      112) should handle multiple score updates
+    Edge Cases
+
+      113) should handle zero score setting
+
+      114) should handle score updates for same user multiple times
+
+      115) should track last update timestamp
+
+  SystemHandover
+    Deployment
+      ✔ should deploy with correct devMultisig
+      ✔ should deploy with correct DAO
+      ✔ should deploy with correct timelock
+      ✔ should deploy with correct seer
+      ✔ should deploy with correct ledger
+      ✔ should set minAvgCouncilScore from seer
+      ✔ should set default monthsDelay to 180 days
+      ✔ should set default maxExtensions to 1
+      ✔ should set extensionSpan to 60 days
+      ✔ should revert on zero dev address
+      ✔ should revert on zero dao address
+      ✔ should revert on zero timelock address
+      ✔ should revert on zero seer address
+      ✔ should allow zero ledger address (optional)
+    armFromPresale
+      ✔ should arm handover after presale starts
+      ✔ should calculate handoverAt correctly
+      ✔ should emit Armed event
+      ✔ should be idempotent (can call multiple times)
+      ✔ should revert if presale not started
+      ✔ should allow anyone to arm
+      ✔ should log to ledger
+    setParams
+      ✔ should allow dev to update monthsDelay
+      ✔ should allow dev to update minAvgCouncilScore
+      ✔ should allow dev to update maxExtensions
+      ✔ should allow dev to update extensionSpan
+      ✔ should enforce minimum monthsDelay of 90 days
+      ✔ should update handoverAt if already armed
+      ✔ should emit ParamsSet event
+      ✔ should revert if non-dev tries to set params
+      ✔ should log to ledger
+    extendOnceIfNeeded
+      ✔ should extend if network score is below threshold
+      ✔ should add extensionSpan to handoverAt
+      ✔ should increment extensionsUsed
+      ✔ should not extend if network score is at threshold
+      ✔ should not extend if network score is above threshold
+      ✔ should revert if max extensions reached
+      ✔ should revert if non-dev tries to extend
+      ✔ should log to ledger when extended
+      ✔ should allow extension with maxExtensions = 2
+    executeHandover
+      ✔ should execute handover after deadline
+      ✔ should call dao.setAdmin
+      ✔ should call timelock.setAdmin with DAO address
+      ✔ should emit Executed event
+      ✔ should use DAO address if newAdmin is zero
+      ✔ should revert if executed too early
+      ✔ should revert if non-dev tries to execute
+      ✔ should include extensionsUsed in event
+      ✔ should log to ledger
+    setLedger
+      ✔ should allow dev to update ledger
+      ✔ should emit LedgerSet event
+      ✔ should allow setting to zero address
+      ✔ should revert if non-dev tries to set ledger
+    Complete Handover Flow
+      ✔ should execute full handover lifecycle
+
+  VFIDEToken - Exhaustive TEST Coverage
+    TEST_setForceSecurityStaticcallFail
+      ✔ should toggle security staticcall fail flag
+    TEST_setForceVaultHubZero
+      ✔ should toggle vaultHub zero flag
+    TEST_setForcePolicyLockedRequireRouter
+      ✔ should toggle policy locked router requirement flag
+    TEST_check_locked
+      ✔ should check if vault is locked
+      ✔ should return false for unlocked vault
+      ✔ should return true for locked vault
+    TEST_check_isVault
+      ✔ should check if address is a vault
+      ✔ should return false for non-vault address
+      ✔ should return true for vault address
+    TEST_force_router_requirement
+      ✔ should execute router requirement check
+      ✔ should work with policy locked flag
+    Combined TEST scenarios
+      ✔ should test all flags together
+      ✔ should test locked check with different vaults
+      ✔ should test isVault check with hub configuration
+    Edge cases and permutations
+      ✔ should handle all boolean flag permutations
+      ✔ should test multiple vault addresses
+      ✔ should test all TEST functions in sequence
+
+  VFIDEToken basic flows
+    ✔ pre-mints dev reserve to vesting vault
+    ✔ allows owner to disable vaultOnly and set presale, presale mints within cap
+    ✔ transfers update balances
+
+  VFIDEToken edge cases and fee routing
+    ✔ presale cap is enforced
+    ✔ fee routing: burn + sanctum to treasury sink
+    ✔ policy lock prevents disabling critical modules
+    ✔ vaultOnly enforces transfers when enabled
+
+  VFIDEToken additional behaviors
+    ✔ approve/increase/decrease allowance and transferFrom
+    ✔ systemExempt bypasses vaultOnly and fees
+    ✔ securityHub lock prevents transfers involving locked vaults
+    ✔ burn sink receives burn amount instead of hard burn
+
+  VFIDECommerce extra branch coverage
+    ✔ open reverts when amount == 0 (COM_BadAmount)
+    ✔ open reverts when merchant status is NONE / SUSPENDED / DELISTED
+
+    116) resolve onlyDAO and buyerWins / sellerWins success paths
+
+  VFIDECommerce targeted branch tests
+    ✔ MerchantRegistry: addMerchant TEST toggles and constructor zeros
+    ✔ MerchantRegistry: TEST force zero-sender refund/dispute revert COM_Zero
+
+    117) CommerceEscrow: resolve buyerWins true branch is exercised
+
+  VFIDECommerce constructor/resolve branch sweeps
+    ✔ MerchantRegistry constructor reverts for each zero param (COM_Zero)
+    ✔ CommerceEscrow constructor reverts for each zero param (COM_Zero)
+
+    118) resolve buyerWins true/false arms explicitly exercised
+
+  VFIDECommerce coverage-focused tests
+    ✔ addMerchant rejects when no vault or low score then succeeds when set
+    ✔ _noteRefund auto-suspends after threshold and _noteDispute similarly
+    ✔ escrow open/money flow: open, markFunded (insufficient), fund, release/refund/dispute/resolve paths
+    ✔ constructor reverts with zero addresses for MerchantRegistry and CommerceEscrow
+    ✔ addMerchant rejects duplicate and _noteRefund/_noteDispute reject unknown merchant
+    ✔ open rejects zero amount, suspended merchant, and missing buyer vault
+
+    119) markFunded/release/refund/resolve negative paths (bad state, transfer failures, onlyDAO)
+
+  VFIDECommerce extra focused tests (TEST_* toggles)
+    ✔ TEST_forceAlreadyMerchant forces addMerchant to revert
+    ✔ TEST_forceNoVault forces addMerchant to revert
+    ✔ TEST_forceLowScore forces addMerchant to revert
+    ✔ TEST_setForceZeroSenderRefund triggers COM_Zero branch in _noteRefund
+    ✔ TEST_setForceZeroSenderDispute triggers COM_Zero branch in _noteDispute
+
+    120) auto-suspend triggers via repeated refunds/disputes (coverage of counter branches)
+
+  VFIDECommerce focused branch tests
+    ✔ addMerchant: TEST_forceAlreadyMerchant triggers COM_AlreadyMerchant
+    ✔ addMerchant: TEST_forceNoVault triggers COM_NotAllowed
+    ✔ addMerchant: TEST_forceLowScore triggers COM_NotAllowed
+    ✔ _noteRefund/_noteDispute: TEST zero-sender branches
+
+    121) open/markFunded: buyer missing vault and not-funded branches
+
+    122) release/refund/resolve: transfer failure paths using ERC20FailTransfer
+
+  VFIDECommerce micro-batch 1 (focused)
+    ✔ addMerchant reverts when merchant has no vault
+    ✔ addMerchant reverts when seer score is below min
+    ✔ addMerchant reverts on duplicate registration
+    ✔ _noteRefund reverts when called for zero address (COM_Zero branch)
+    ✔ open reverts when buyer has no vault (missing buyer vault branch)
+
+  VFIDECommerce micro-batch 2 (TEST toggles & zero-sender)
+    ✔ TEST_setForceAlreadyMerchant flips already-merchant branch
+    ✔ TEST_setForceNoVault flips no-vault branch even when vault exists
+    ✔ TEST_setForceLowScore flips low-score branch regardless of score
+    ✔ TEST zero-sender refund/dispute toggles hit COM_Zero branches
+    ✔ open path: buyer vault present and merchant active succeeds
+
+  VFIDECommerce micro-batch 3 (mocks & reentrancy)
+    ✔ release succeeds with GasDrainer token (covers gas-heavy transfer path)
+    ✔ Reentering token: transfer triggers reentrant release and original tx reverts leaving state unchanged
+    ✔ Reentering token: normal transfer (no reenter target) succeeds
+
+  VFIDECommerce micro-batch 4 (DAO paths & resolve permutations)
+    ✔ DAO can release an escrow (not buyer) and state becomes RELEASED
+    ✔ DAO can refund an escrow (not merchant) and state becomes REFUNDED and merchant _noteRefund called
+    ✔ DAO resolve buyerWins=true transfers to buyer and state RESOLVED
+    ✔ DAO resolve buyerWins=false transfers to seller and state RESOLVED
+    ✔ non-DAO cannot call resolve (onlyDAO enforcement)
+
+  VFIDECommerce micro-batch 5 (cond-expr permutations & disputes)
+    ✔ addMerchant succeeds when score == min (boundary)
+    ✔ addMerchant reverts when score == min-1 (boundary)
+    ✔ combined TEST toggles: forceNoVault with v==0 and forceAlreadyMerchant when appropriate
+    ✔ _noteDispute auto-suspends merchant after threshold
+
+  VFIDECommerce micro-batch 6 (permute small branches)
+    ✔ _noteRefund increments but does not suspend when below threshold
+    ✔ _noteDispute increments but does not suspend when below threshold
+    ✔ addMerchant with both TEST_forceNoVault and TEST_forceLowScore true reverts (OR branches)
+    ✔ release reverts when called by stranger (NotAllowed branch)
+
+  VFIDECommerce micro-batch 7 (state/negative branches)
+    ✔ release reverts when escrow is not FUNDED (BadState)
+    ✔ refund reverts when escrow is not FUNDED or DISPUTED (BadState)
+    ✔ dispute reverts when escrow is not FUNDED (BadState)
+    ✔ markFunded reverts when contract balance is insufficient (NotFunded)
+
+  VFIDECommerce micro-batch 8 (remaining conditionals & transfer-fail)
+    ✔ adding merchant twice reverts (AlreadyMerchant)
+    ✔ _noteRefund/_noteDispute on non-merchant reverts (NotMerchant)
+    ✔ auto-suspend via refunds reaches threshold and sets SUSPENDED
+    ✔ open reverts when merchant is SUSPENDED
+    ✔ release/refund/resolve revert when transfer returns false (transfer-fail token)
+
+  VFIDECommerce additional coverage tests
+
+    123) "before each" hook for "open reverts when merchant is suspended"
+
+  VFIDECommerce reentrancy resilience
+
+    124) attempted reentrancy via token.transfer should not break state (release remains safe)
+
+  VFIDECommerce security fuzz - malicious token behaviors
+
+    125) GasDrainer token: release succeeds even when token consumes more gas
+
+    126) ERC20ReturnFalse: release/refund/resolve revert when token returns false
+
+    127) combination randomized small sequences (open->fund->action) don't corrupt state
+
+  VFIDECommerce security & boundary tests
+
+    128) open reverts with COM_SecLocked when buyer or merchant vault locked
+
+    129) release/refund revert with COM_SecLocked when vault locked
+
+    130) failed transfer leaves escrow state unchanged
+
+    131) open with very large amount reverts or handles safely (boundary test)
+
+  VFIDEFinance targeted branch tests
+    ✔ StablecoinRegistry constructor and TEST_setForceDecimals & decimals fallback
+    ✔ EcoTreasuryVault: depositStable guards and TEST force insufficient
+    ✔ EcoTreasuryVault: send guards, not-whitelisted, transfer fail and TEST force send insufficient
+    ✔ onlyDAO toggle for EcoTreasury setModules
+
+  VFIDEFinance coverage-focused tests
+    ✔ setDAO and setLedger by DAO and addAsset fallback decimals path
+    ✔ removeAsset reverts when not whitelisted and depositStable edge cases
+    ✔ treasury send rejects zero token address and non-whitelisted tokens
+    ✔ noteVFIDE emits ReceivedVFIDE
+    ✔ setModules, depositStable success and send success with logging
+    ✔ depositStable and send detect FI_Insufficient when token returns false
+
+  VFIDEFinance extra focused tests
+    ✔ addAsset then adding again reverts with FI_AlreadyWhitelisted
+    ✔ TEST_setForceDecimals overrides decimals stored
+    ✔ removeAsset reverts when not whitelisted and setSymbolHint reverts
+    ✔ depositStable reverts when transferFrom returns false or TEST forced
+    ✔ send reverts for zero token and non-whitelisted and TEST forced insufficient
+
+  VFIDEFinance focused branch tests
+    ✔ _decimalsOrTry: staticcall failure returns fallback 18 (reverting contract)
+    ✔ _decimalsOrTry: EOA (no decimals) falls back to 18
+    ✔ onlyDAO TEST toggle allows non-dao calls
+    ✔ depositStable respects TEST_setForceDepositInsufficient
+    ✔ send respects TEST_setForceSendInsufficient
+
+  VFIDEFinance microbatch1 tests
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0x9Af08Cf7E32001ae7422FFED84102b325D249be1
+deploying token2
+deployed token2 0xf5C1078628a8Da58feb58e750c77912619a3a014
+    ✔ addAsset uses token.decimals and falling back when decimals() reverts
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0xc8abAA8669e9ac15141E55a188a1D4deC4b193F1
+deploying token2
+deployed token2 0x2816463F074cDFFdCEe8Ad4e636f8420e444a4A8
+    ✔ TEST_setForceDecimals forces a chosen decimals value
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0xE6bBBdaEb26E87fA2314968c32cD52a96C81786c
+deploying token2
+deployed token2 0x0fBAf76a66C88098e041ECeA523bA8485bB812FF
+    ✔ addAsset rejects zero address and duplicate adds
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0xe82A0f43862DB3b04E316a75D96B9dc301CA81Ec
+deploying token2
+deployed token2 0x61Ee2E69d7c874B1b8306d1A3Cc555E67598ee27
+    ✔ removeAsset and setSymbolHint guarded by onlyDAO and token must be whitelisted
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0x0Dd0B1c3db4502766fD3a6B99CCE4014B5332a77
+deploying token2
+deployed token2 0xf23255947866Cf265bE3C5b12CdfeDD05aF50DC3
+    ✔ depositStable rejects non-whitelisted and transfer failures
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0xc1b504058857334F5b3E99668791B35B07242e80
+deploying token2
+deployed token2 0x50eB9062278B33676ea188936D5A5A3B57AE8e26
+    ✔ send rejects zero-target, non-whitelisted and can send when whitelisted
+
+  VFIDEFinance micro-batch 2 (vfide token path & onlyDAO toggle)
+    ✔ send allows vfideToken even if not whitelisted
+    ✔ onlyDAO toggle for treasury.setModules allows non-dao when TEST flag set
+
+  VFIDEFinance micro-batch 3 (admin guards & send/deposit edge cases)
+    ✔ setDAO rejects zero address and setLedger onlyDAO behavior
+    ✔ add/remove/setSymbolHint guards and duplicate add
+    ✔ depositStable/send edge cases: zero amount, token==zero, non-whitelist
+
+  VFIDEFinance micro-batch 4 (decimals permutations & transfer-fail)
+    ✔ _decimalsOrTry: contract that reverts falls back to 18
+    ✔ _decimalsOrTry: TEST_setForceDecimals overrides return value
+    ✔ depositStable reverts when token.transferFrom returns false (ERC20FailTransfer)
+    ✔ depositStable respects TEST_setForceDepositInsufficient independent of token behavior
+
+  VFIDEFinance more focused tests
+    ✔ addAsset -> setSymbolHint -> removeAsset success path
+    ✔ onlyDAO modifier blocks non-dao and TEST_setOnlyDAOOff allows it
+    ✔ depositStable success and TEST forced insufficient path
+    ✔ send success path by DAO and TEST forced send insufficient
+
+  VFIDEFinance targeted branch tests
+    ✔ onlyDAO modifier rejects non-dao calls and allows dao when set
+    ✔ _decimalsOrTry: force decimals via TEST helper and via staticcall fallback
+    ✔ depositStable detects FI_Insufficient when transferFrom returns false
+    ✔ send covers not-whitelisted, not-allowed, and FI_Insufficient paths
+
+  VFIDEPresale
+    Deployment
+      ✔ should deploy with correct vfide
+      ✔ should deploy with correct vaultHub
+      ✔ should deploy with correct registry
+      ✔ should start as active
+      ✔ should set default tier prices
+      ✔ should enable all tiers by default
+      ✔ should set default maxPerAddress
+      ✔ should set default referral bonuses
+      ✔ should revert on zero vfide
+      ✔ should revert on zero vaultHub
+      ✔ should revert on zero registry
+      ✔ should allow zero ledger (optional)
+      ✔ should allow zero securityHub (optional)
+    setActive
+      ✔ should allow owner to deactivate
+      ✔ should allow owner to reactivate
+      ✔ should emit ActiveSet event
+      ✔ should revert if non-owner tries
+    setTierEnabled
+      ✔ should allow owner to disable tier
+      ✔ should allow owner to enable disabled tier
+      ✔ should emit TierEnabled event
+      ✔ should revert on invalid tier
+      ✔ should revert if non-owner tries
+    setPrices
+      ✔ should allow owner to update prices
+      ✔ should emit PricesSet event
+      ✔ should revert if non-owner tries
+    setMaxPerAddress
+      ✔ should allow owner to update cap
+      ✔ should emit MaxPerAddressSet event
+      ✔ should revert if non-owner tries
+    setReferralBps
+      ✔ should allow owner to update bonuses
+      ✔ should emit ReferralBpsSet event
+      ✔ should allow zero bonuses
+      ✔ should revert if non-owner tries
+    launch
+      ✔ should set presaleStartTime
+      ✔ should emit Launched event
+      ✔ should revert if already launched
+      ✔ should revert if non-owner tries
+    Edge Cases
+      ✔ should handle transferOwnership
+      ✔ should allow new owner to call admin functions
+      ✔ should prevent old owner from calling admin functions
+      ✔ should handle all tiers disabled
+      ✔ should handle very low prices
+      ✔ should handle very high prices
+      ✔ should handle very high maxPerAddress
+      ✔ should handle zero maxPerAddress
+      ✔ should handle max referral bonuses
+    Module Updates
+      ✔ should allow owner to update all modules
+      ✔ should emit ModulesSet
+      ✔ should revert on zero vfide in setModules
+      ✔ should revert if non-owner tries setModules
+
+  VFIDESecurity - GuardianRegistry
+    Deployment
+      ✔ should deploy with correct DAO
+      ✔ should revert on zero DAO
+    addGuardian
+      ✔ should allow DAO to add guardian
+      ✔ should increment guardian count
+      ✔ should emit GuardianAdded event
+      ✔ should revert if non-DAO tries
+      ✔ should revert if already member
+      ✔ should handle multiple guardians per vault
+    removeGuardian
+      ✔ should allow DAO to remove guardian
+      ✔ should decrement guardian count
+      ✔ should emit GuardianRemoved event
+      ✔ should revert if non-DAO tries
+      ✔ should revert if not member
+    setThreshold
+      ✔ should allow DAO to set threshold
+      ✔ should emit ThresholdSet event
+      ✔ should revert if threshold > guardianCount
+      ✔ should revert if non-DAO tries
+
+  VFIDESecurity - SecurityHub
+    Deployment
+      ✔ should deploy with correct components
+    isLocked
+      ✔ should return true if emergency breaker halted
+      ✔ should return true if guardian locked
+      ✔ should return true if panic guard locked
+      ✔ should return false if all unlocked
+      ✔ should prioritize emergency breaker
+
+  VFIDESecurity - GuardianLock
+    ✔ should test M-of-N guardian voting
+
+  VFIDESecurity - PanicGuard
+    ✔ should test automatic quarantine
+
+  VFIDESecurity - EmergencyBreaker
+    ✔ should test global halt mechanism
+
+  VFIDEToken branch-combination tests
+    ✔ cover some fee/router and vault/security helper branches
+
+  VFIDEToken coverage-focused tests
+    ✔ owner admin paths: set modules and ledger
+    ✔ presale reverts and vault-only presale target enforcement
+    ✔ zero transfer emits Transfer(...,0) and approve zero reverts
+    ✔ security lock prevents transfer when vault is locked
+    ✔ vaultOnly enforcement and insufficient balance revert
+    ✔ burn router branches: hard burn, soft burn and sanctum routing
+    ✔ policyLocked prevents removing router and ledger try/catch paths
+    ✔ owner transferOwnership, decreaseAllowance underflow, presale mint to zero and router-required transfer
+    ✔ constructor edge reverts and approve success
+    ✔ constructor with optional modules set and callStatic approve return
+    ✔ allowance and transferFrom happy paths
+    ✔ callStatic approve returns true and securityHub unlocked path
+    ✔ _isVault false path and presale target mismatch
+    ✔ _vaultOfAddr returns address(0) when vaultHub unset (securityHub present) and transfer proceeds when exempt
+    ✔ _locked branch where staticcall fails (ok=false) causes VF_LOCKED
+
+  VFIDEToken exhaustive branch tests
+    ✔ hard burn (burnAmt>0, burnSink=0) decreases totalSupply and emits Transfer to zero
+    ✔ soft burn (burnSink non-zero) credits sink balance
+    ✔ sanctum explicit sink receives sanctumAmt and FeeApplied emitted
+    ✔ sanctum fallback to treasurySink when sanctumSink==0
+    ✔ sanctum sink missing causes revert
+    ✔ systemExempt skips router fees
+    ✔ policyLocked requires router when set
+    ✔ securityHub locked vault causes VF_LOCKED revert
+
+  VFIDEToken extra focused tests
+    ✔ _isVault returns true/false and TEST flag forces false
+    ✔ _locked staticcall behavior and TEST force path
+    ✔ policyLocked requires router when locked and no router present
+    ✔ burn router hard burn vs soft burn paths
+
+  VFIDEToken focused branch tests
+    ✔ _isVault respects vaultHub and TEST_force_vaultHub_zero
+    ✔ _locked: staticcall fail toggle and security responses
+    ✔ router fee paths: burn + sanctum fallback to treasurySink and FeeApplied emitted
+    ✔ TEST_force_policyLocked_require_router triggers router-required revert
+
+  VFIDEToken micro-batch 1 (vault, lock, policy, presale)
+    ✔ _isVault returns true when vault hub maps owner->self and false when TEST_force_vaultHub_zero set
+    ✔ _locked returns true when securityHub reports locked and when TEST forces staticcall fail
+    ✔ policy lock requires router: lockPolicy -> TEST_force_router_requirement reverts when no router
+    ✔ setBurnRouter reverts when policyLocked and router==0 (VF_POLICY_LOCKED)
+    ✔ mintPresale enforces vault-only target when vaultOnly is true
+
+  VFIDEToken microbatch 10 — presale & policy guards
+    ✔ mintPresale exceeding PRESALE_SUPPLY_CAP reverts with VF_CAP
+    ✔ presale mint to non-vault address reverts when vaultOnly active
+    ✔ setBurnRouter and setTreasurySink revert to zero when policyLocked
+    ✔ TEST_force_policyLocked_require_router enforces router requirement when toggled
+
+  VFIDEToken microbatch 11 — security locks & TEST toggles
+    ✔ securityHub locked -> transfers revert with VF_LOCKED
+    ✔ TEST_setForceSecurityStaticcallFail forces locked even if hub says unlocked
+    ✔ TEST_setForceVaultHubZero makes _isVault return false
+    ✔ when security unlocked and vaults set transfers succeed
+
+  VFIDEToken microbatch 12 — matrix sweep for fee/exception permutations
+scenario 0 ownerEx=false aliceEx=false
+    ✔ scenario 0: no fees
+scenario 1 ownerEx=false aliceEx=false
+hard-burn debug beforeTotal=40100000000000000000000000 afterTotal=40099995000000000000000000 burnAmt=5000000000000000000
+    ✔ scenario 1: hard-burn
+scenario 2 ownerEx=false aliceEx=false
+    ✔ scenario 2: soft-burn
+scenario 3 ownerEx=false aliceEx=false
+    ✔ scenario 3: sanctum->bob
+scenario 4 ownerEx=false aliceEx=false
+    ✔ scenario 4: sanctum sink=0 & no treasury -> revert
+scenario 5 ownerEx=false aliceEx=false
+    ✔ scenario 5: both fees sinks non-zero
+scenario 6 ownerEx=true aliceEx=false
+    ✔ scenario 6: fromExempt bypass
+scenario 7 ownerEx=false aliceEx=true
+    ✔ scenario 7: toExempt bypass
+scenario 8 ownerEx=false aliceEx=false
+    ✔ scenario 8: transferFrom with fees
+
+  VFIDEToken microbatch 13 — policy/vault/presale/security/approve edges
+    ✔ transfer 0 emits Transfer and returns (short-circuit)
+    ✔ presale mint must target a registered vault when vaultOnly=true
+    ✔ lockPolicy prevents disabling vaultOnly and prevents setting router/treasury to zero
+    ✔ security hub locked vaults cause transfer reverts (from locked vault)
+    ✔ TEST_force_security_staticcall_fail also causes locked behavior
+    ✔ approve and transferFrom updates allowance and transfers correctly
+    ✔ TEST_setForceVaultHubZero disables vault recognition
+
+  VFIDEToken microbatch 14 — _isVault and vaultHub edge cases
+    ✔ v==a && v!=0 -> _isVault true
+    ✔ v==0 fallback: vaultOf returns 0 -> _isVault false
+    ✔ v!=a and v!=0 -> _isVault false
+    ✔ TEST_setForceVaultHubZero causes vault checks to be false
+
+  VFIDEToken microbatch 15 — policy/router/treasury/fee matrix
+    ✔ matrix 0: router present, no fees
+    ✔ matrix 1: router present, hard burn
+    ✔ matrix 2: sanctum sink zero + no treasury -> revert
+    ✔ matrix 3: router absent + policyLocked -> revert
+    ✔ matrix 4: router absent + policyUnlocked -> ok
+    ✔ matrix 5: fromExempt bypass
+    ✔ matrix 6: toExempt bypass
+    ✔ matrix 7: transferFrom with fees
+
+  VFIDEToken microbatch 16 — exhaustive sink/fee/treasury permutations
+    ✔ case 0: sanctum Z -> treasury
+    ✔ case 1: sanctum Z -> no treasury revert
+    ✔ case 2: soft burn to bob
+    ✔ case 3: soft burn charlie + sanctum bob
+    ✔ case 4: hard burn + sanctum->treasury
+    ✔ case 5: transferFrom soft+sanctum
+    ✔ case 6: fromExempt bypass sinks
+    ✔ case 7: policyLocked + TEST_force require router
+
+  VFIDEToken microbatch 17 — remaining cond-exprs, vaultOnly=false and TEST toggles
+    ✔ both fees non-zero, sanctumSink==Z -> treasury when set, burn soft to charlie
+    ✔ both fees non-zero, sanctumSink==Z with no treasury -> revert
+    ✔ vaultOnly=false allows transfers to non-vault addresses
+    ✔ transferFrom works when vaultOnly=false and TEST_force_vaultHub_zero toggled
+    ✔ security staticcall fail (TEST) causes locked behavior
+    ✔ policyLocked + TEST_force_policyLocked_require_router with router removed reverts via view helper
+
+  VFIDEToken microbatch 18 — final cond-expr/sink/vault/policy permutations
+    ✔ both fees non-zero with mixed sinks (sanctum Z -> treasury, burnSink non-zero) across transfer and transferFrom
+    ✔ sanctum explicit sink non-zero receives sanctum (no treasury involvement)
+    ✔ vaultOnly true + to not vault should revert; vaultOnly false allows it
+    ✔ TEST_force_vaultHub_zero + vaultOnly true yields from/to vault checks false, but transfer still allowed when owner not vault
+    ✔ TEST_check_locked and TEST_force_security_staticcall_fail exercises locked helper
+    ✔ explicit router-required view helper triggers when policyLocked and router removed
+
+  VFIDEToken microbatch19 - fee & sink permutations
+    ✔ applies both burn and sanctum amounts when both sinks present (transfer)
+    ✔ falls back to treasury when sanctumSink is zero (transferFrom)
+    ✔ handles burnSink = zero (soft burn to sanctum) and vaultOnly toggles
+    ✔ respects TEST toggles forcing vaultHub zero and security staticcall failure
+
+  VFIDEToken micro-batch 2 (burn router fees & systemExempt)
+    ✔ applies burn and sanctum amounts, using treasurySink fallback
+    ✔ systemExempt bypasses fees for exempt addresses
+
+  VFIDEToken microbatch20 - leftover fee/vault/policy permutations
+    ✔ hard burn when burnSink == zero and sanctum routes to treasury
+    ✔ soft burn and sanctum to explicit sinks (both non-zero)
+    ✔ systemExempt bypasses router fees
+    ✔ policyLocked requires router (TEST helper path and view)
+    ✔ vault recognition: vaultOf returns same address (v==a) -> _isVault true
+
+  VFIDEToken microbatch21 - combinatorial fee/sink permutations
+    ✔ combo: both non-zero sinks non-zero
+    ✔ combo: sanctum zero -> treasury fallback
+    ✔ combo: burnSink zero -> hard burn
+    ✔ combo: both sinks zero -> treasury+hardburn
+    ✔ combo: transferFrom path with both fees
+
+  VFIDEToken microbatch22 - broad permutation sweep
+    ✔ sweeps many permutations without throwing (collects results)
+
+  VFIDEToken microbatch-23 — burn sink and sanctum fallback
+    ✔ hard burn when burnSink == address(0) reduces totalSupply and leaves recipient with net
+    ✔ soft burn (burnSink set) and sanctum fallback to treasury when sanctumSink == zero
+
+  VFIDEToken microbatch-24 — presale + vaultOnly combos
+    ✔ reverts when vaultOnly is true and presale target is not a vault
+    ✔ succeeds when vaultOnly is true and presale target is a registered vault
+
+  VFIDEToken microbatch-25 — security staticcall failures and policy-lock router requirement
+    ✔ reverts transfers when security hub marks vault as locked
+    ✔ reverts when TEST_setForceSecurityStaticcallFail toggled
+    ✔ router-required path reverts when TEST_setForcePolicyLockedRequireRouter is set and no router
+
+  VFIDEToken microbatch-26 — transferFrom and allowance flows
+    ✔ reverts when allowance is insufficient for transferFrom
+    ✔ succeeds and decreases allowance when allowance is sufficient
+
+  VFIDEToken microbatch-27 — small edge cases (zero-transfer, allowance underflow, approve zero)
+    ✔ emits Transfer and returns early for zero-amount transfer
+    ✔ decreaseAllowance reverts on underflow
+    ✔ approve reverts when spender is the zero address
+
+  VFIDEToken microbatch-28 — router/policy, systemExempt permutations, sanctum fallback, TEST helpers
+    ✔ lockPolicy requires router (policyLocked path) — transfer reverts when no router
+    ✔ TEST_force_policyLocked_require_router view helper reverts when forced and no router
+    ✔ systemExempt bypass: transfers succeed when both endpoints are system-exempt even if not vaults
+    ✔ sanctum fallback to treasurySink when sanctumSink==address(0)
+    ✔ sanctum sink missing + treasurySink unset reverts with 'sanctum sink=0'
+    ✔ TEST_setForceVaultHubZero makes _isVault return false even when vaultHub maps
+    ✔ TEST_setForceSecurityStaticcallFail causes transfer to revert (VF_LOCKED path)
+    ✔ admin setters revert when policy locked (setVaultOnly, setBurnRouter, setTreasurySink)
+    ✔ setPresale marks presale as exempt when non-zero and clears when zero
+
+  VFIDEToken microbatch-29 — admin policy lock guards & presale branches
+    ✔ setVaultOnly(false) reverts after policy locked (VF_POLICY_LOCKED)
+    ✔ setBurnRouter(0) reverts after policy locked (VF_POLICY_LOCKED)
+    ✔ setTreasurySink(0) reverts after policy locked (VF_POLICY_LOCKED)
+    ✔ setPresale sets presale and marks it systemExempt when non-zero, and clears only when zero
+
+  VFIDEToken microbatch 3 — soft-burn sinks & vaultOnly/policy toggles
+    ✔ applies soft-burn and sends sanctum portion to sanctumSink when configured
+    ✔ transfer of zero amount is a no-op (balances unchanged) but returns success
+    ✔ cannot disable vaultOnly when policyLocked
+
+  VFIDEToken microbatch-30 — fee/exception permutations and transferFrom variants
+    ✔ fromExempt only: fees bypassed when sender exempt
+    ✔ toExempt only: fees bypassed when recipient exempt
+    ✔ hard burn path when burnSink==address(0)
+    ✔ soft burn path when burnSink non-zero credits sink
+    ✔ both fees zero: no FeeApplied emitted and transfer proceeds
+    ✔ transferFrom allowance decrement with fees applied
+
+  VFIDEToken microbatch-31 — policy branches, securityHub absence, VF_CAP via harness
+    ✔ setVaultOnly(true) succeeds after policy locked (no revert path)
+    ✔ transfer proceeds when securityHub is not set (no lock check path)
+    ✔ VF_CAP revert can be triggered via harness exposed _mint
+
+  VFIDEToken microbatch-32 — owner guards, vaultOnly toggles and presale unset
+    ✔ owner can disable vaultOnly when policy not locked
+    ✔ non-owner cannot lock policy (OWN: not owner)
+    ✔ setPresale to zero clears presale and does not set systemExempt
+    ✔ TEST_force_router_requirement: when TEST flag off and policyUnlocked does not revert, when forced it reverts without router
+
+  VFIDEToken microbatch-33 — both-fees non-zero and router-required explicit
+    ✔ both burnAmt and sanctumAmt non-zero with non-zero sinks credits both sinks and emits FeeApplied
+    ✔ policyLocked + no router: transfer reverts with 'router required' (explicit) 
+
+  VFIDEToken microbatch-34 — policy-locked setters + fee permutations + TEST view
+    ✔ setBurnRouter(0) and setTreasurySink(0) revert once policyLocked (custom error)
+    ✔ TEST view helper reverts with 'router required' when forced and no router present
+    ✔ sanctum-only (burnAmt==0, sanctumAmt>0) credits sanctum sink or treasury fallback
+    ✔ burn-only (sanctumAmt==0, burnAmt>0) handles hard burn vs soft burn
+
+  VFIDEToken microbatch-35 — zero/zero-address and policyLocked+router present paths
+    ✔ zero-amount transfer emits Transfer(from,to,0) and returns
+    ✔ transfer to zero address reverts with VF_ZERO custom error
+    ✔ policyLocked + burnRouter present allows transfers (no 'router required' revert)
+    ✔ setPresale to non-zero sets systemExempt and clearing to zero clears it
+
+  VFIDEToken microbatch-36 — harness expose transfer and vaultOnly enable under policyLocked
+    ✔ _transfer reverts when from==address(0) (VF_ZERO) via harness call
+    ✔ lockPolicy + setVaultOnly(true) succeeds (policyLocked + enabling is allowed)
+
+  VFIDEToken microbatch-37 — systemExempt toggles, presale event, TEST router-pass path
+    ✔ setSystemExempt true then false emits events and updates mapping
+    ✔ setPresale emits PresaleSet and sets systemExempt when non-zero
+    ✔ TEST flag + router present causes TEST_force_router_requirement to NOT revert
+
+  VFIDEToken microbatch-38 — explicit coverage for setVaultOnly, setPresale and TEST router permutations
+    ✔ setVaultOnly: before lock can disable; after lock enabling is allowed and disabling reverts
+    ✔ setPresale non-zero emits PresaleSet and sets systemExempt; setting zero emits PresaleSet (clears presale addr)
+    ✔ TEST router-check permutations: (1) policyLocked true + no router -> revert; (2) TEST flag true + router present -> pass; (3) neither flagged -> pass
+
+  VFIDEToken microbatch-39 — final permutations for setVaultOnly, setPresale and router-required arms
+    ✔ setVaultOnly explicit toggles and double-calls exercise both arms
+    ✔ setPresale repeated sets and clearing cover the mapping/event arms
+    ✔ policyUnlocked + no router should allow transfer (no router-required revert)
+    ✔ TEST flag true + no router causes transfer to revert with 'router required'
+
+  VFIDEToken microbatch 4 — router-required, hard-burn, security lock, vaultOnly toggle
+    ✔ hard burn path: burnSink==address(0) decreases totalSupply
+    ✔ router-required when policyLocked: TEST_force_router_requirement reverts when router absent
+    ✔ systemExempt bypasses fees (no burn applied when exempt)
+    ✔ securityHub staticcall forced-fail results in VF_LOCKED revert
+    ✔ vaultOnly toggle off allows EOA transfers between non-vault addresses
+
+  VFIDEToken microbatch-40 — admin-only reverts (non-owner calls)
+    ✔ non-owner cannot call setVaultOnly
+    ✔ non-owner cannot call setPresale
+    ✔ non-owner cannot call setBurnRouter
+    ✔ non-owner cannot call setTreasurySink
+
+  VFIDEToken microbatch-41 — transferFrom with policyLocked + router present/absent
+    ✔ transferFrom succeeds when policyLocked and burnRouter present
+    ✔ transferFrom reverts with 'router required' when policyLocked and no router
+
+  VFIDEToken microbatch 5 — burn/sanctum permutations & vaultOnly rejections
+    ✔ sanctum fallback: when sanctumSink==0, token sends sanctumAmt to treasurySink
+    ✔ TEST_force_policyLocked_require_router triggers router-required check when toggled
+    ✔ soft-burn to non-zero burnSink increases sink balance
+    ✔ vaultOnly active rejects transfers to non-vault recipients
+
+  VFIDEToken microbatch 6 — fee permutations & systemExempt combos
+    ✔ burn+sanctum both non-zero with sanctumSink != recipient routes correctly
+    ✔ sender exempt bypasses fees while recipient exempt also bypasses
+    ✔ transferFrom path applies fees the same as transfer
+
+  VFIDEToken microbatch 7 — presale & policy guards
+    ✔ presale target must be a vault when vaultOnly is active
+    ✔ presale cap honored: cannot exceed PRESALE_SUPPLY_CAP
+    ✔ policy lock prevents setBurnRouter to zero (reverts with VF_POLICY_LOCKED)
+
+  VFIDEToken microbatch 8 — transfer cond-expr & router-required branches
+    ✔ transfer 0 amount is a no-op (emits Transfer 0) and balances unchanged
+    ✔ policyLocked requires router when no burnRouter set (revert "router required")
+    ✔ hard-burn path reduces totalSupply when burnSink == address(0)
+    ✔ sanctum with zero treasurySink reverts with "sanctum sink=0" when sanctumSink == address(0)
+
+  VFIDEToken microbatch 9 — burn-router permutations & systemExempt combos
+    ✔ burn+sanctum both non-zero with sanctumSink != recipient routes correctly (soft-burn to burnSink)
+    ✔ soft-burn (burnSink != 0) does not reduce totalSupply
+    ✔ systemExempt sender bypasses fees
+    ✔ transferFrom applies fees same as transfer
+
+  VFIDEToken negative owner & policy tests
+    ✔ onlyOwner modifier rejects non-owner calls
+    ✔ transferOwnership rejects zero address and non-owner attempts
+    ✔ policy lock prevents removing router/treasury and setVaultOnly disabling
+
+  VFIDEToken permutation engine to flip branches
+    ✔ exercise to/from locked vault branches and mixed systemExempt combos
+    ✔ router present vs absent with TEST flag permutations
+    ✔ burn/sanctum permutations: zero/non-zero sinks and amounts
+
+  VFIDEToken permutations (router/burn/sanctum/systemExempt/policyLocked)
+    ✔ hard burn with fees applied and policyUnlocked decreases totalSupply
+    ✔ soft burn credits burnSink when present and fees enabled
+    ✔ sanctum explicit sink receives sanctumAmt and FeeApplied fires (with fees)
+    ✔ sanctum fallback goes to treasury sink if sanctumSink==0
+    ✔ systemExempt true bypasses fees across router permutations
+    ✔ policyLocked with router present allows transfer
+    ✔ policyLocked requires router when locked after router removal
+    ✔ combination: soft burn + sanctum explicit + systemExempt false triggers both sink credits
+
+  VFIDEToken TEST-ONLY helper coverage
+    ✔ TEST helpers: force router requirement and vault/staticcall checks
+
+  VFIDETrust - Seer (ProofScore)
+    Deployment
+      ✔ should deploy with correct DAO
+      ✔ should deploy with correct ledger
+      ✔ should deploy with correct vaultHub
+      ✔ should set default thresholds
+      ✔ should set score constants
+      ✔ should revert on zero DAO
+      ✔ should allow zero ledger (optional)
+      ✔ should allow zero vaultHub (optional)
+    getScore
+      ✔ should return 500 (NEUTRAL) for uninitialized users
+      ✔ should return set score for initialized users
+      ✔ should return 500 (NEUTRAL) if explicitly set to 0
+      ✔ should return 1000 if set to maximum
+      ✔ should handle multiple users independently
+    setScore
+      ✔ should allow DAO to set score
+      ✔ should emit ScoreSet event
+      ✔ should emit event with old score
+      ✔ should revert if non-DAO tries to set
+      ✔ should revert on zero address
+      ✔ should revert on score > MAX_SCORE
+      ✔ should allow setting score to 0 (returns NEUTRAL)
+      ✔ should allow setting score to 1000
+      ✔ should overwrite previous scores
+    reward
+      ✔ should increase score
+      ✔ should emit ScoreSet event
+      ✔ should cap at MAX_SCORE
+      ✔ should handle reward from uninitialized (500)
+      ✔ should revert if non-DAO tries
+      ✔ should handle zero delta
+      ✔ should handle very large delta
+    punish
+      ✔ should decrease score
+      ✔ should emit ScoreSet event
+      ✔ should floor at MIN_SCORE (0, displayed as NEUTRAL)
+      ✔ should handle punish from uninitialized (500)
+      ✔ should revert if non-DAO tries
+      ✔ should handle zero delta
+      ✔ should handle very large delta
+    setThresholds
+      ✔ should allow DAO to update thresholds
+      ✔ should emit ThresholdsSet event
+      ✔ should revert if low > high
+      ✔ should revert if high > MAX_SCORE
+      ✔ should revert if non-DAO tries
+      ✔ should allow low = high
+      ✔ should allow high = MAX_SCORE
+      ✔ should allow low = MIN_SCORE (0)
+    setModules
+      ✔ should allow DAO to update modules
+      ✔ should emit LedgerSet event
+      ✔ should emit HubSet event
+      ✔ should revert on zero ledger
+      ✔ should revert on zero vaultHub
+      ✔ should revert if non-DAO tries
+    Complex Score Management
+      ✔ should handle multiple reward/punish cycles
+      ✔ should handle score changes for multiple users
+      ✔ should maintain independent scores
+    Edge Cases
+      ✔ should handle score at boundaries
+      ✔ should handle alternating rewards and punishments
+      ✔ should handle setting same score multiple times
+
+  VaultInfrastructure - VaultHub
+    Deployment
+      ✔ should deploy successfully
+      ✔ should set owner correctly
+    ensureVault
+
+      132) should create vault for new user
+
+      133) should return existing vault on second call
+
+      134) should create different vaults for different users
+
+      135) should use deterministic CREATE2
+    vaultOf
+      ✔ should return zero for users without vault
+
+      136) should return vault address after creation
+    ownerOf
+
+      137) should return zero for non-vault addresses
+
+      138) should return owner after vault creation
+    Module Management
+
+      139) should allow owner to set modules
+
+      140) should revert if non-owner tries to set modules
+
+      141) should emit ModulesSet event
+    Edge Cases
+
+      142) should handle multiple vault creations
+
+      143) should maintain registry bidirectional mapping
+
+  VaultInfrastructure - UserVault
+    Guardian Management
+      ✔ should allow owner to add guardians
+      ✔ should allow owner to remove guardians
+      ✔ should set next of kin
+    Recovery Process
+      ✔ should allow guardian-approved recovery
+      ✔ should enforce threshold for recovery
+    Transfer Functions
+      ✔ should allow owner to transfer tokens
+      ✔ should enforce security lock
+    Emergency Functions
+      ✔ should handle panic mode
+      ✔ should respect security hub
+
+  VaultInfrastructure - Integration
+    ✔ should test complete vault lifecycle
+    ✔ should test security integration
+    ✔ should test logging integration
+
+  Coverage: addMerchant and Additional Functions
+
+    144) "before all" hook in "Coverage: addMerchant and Additional Functions"
+
+  both-bruteforce3: combined permutations using many helpers and toggles
+    ✔ sweeps many helpers in MR + Vault to flip stubborn arms
+
+  Coverage Bruteforce: More TEST Functions
+
+    145) "before all" hook in "Coverage Bruteforce: More TEST Functions"
+
+  VFIDECommerce - Exhaustive TEST Coverage
+    Force Flag Setters
+      ✔ should set all force flags on MerchantRegistry
+      ✔ should set zero sender force flags on MerchantRegistry
+    Evaluation Functions
+      ✔ should evaluate addMerchant flags
+      ✔ should evaluate addMerchant subexpressions
+      ✔ should exercise addMerchant checks
+      ✔ should exercise note flags
+    Individual If Variants
+      ✔ should test all merchant status checks
+      ✔ should test vault zero checks
+      ✔ should test score checks
+      ✔ should test threshold checks
+      ✔ should test compound OR conditions
+      ✔ should test vaultAndScore combined check
+    Branch Execution Functions
+      ✔ should execute addMerchant branches with all force combinations
+      ✔ should execute addMerchant ifvariants with all force combinations
+      ✔ should execute addMerchant msgsender variants
+      ✔ should execute note guards with refund/dispute combinations
+    Coverage Functions
+      ✔ should cover addMerchant variants
+      ✔ should cover additional branches with all parameters
+      ✔ should cover 360 and neighbors with combinations
+      ✔ should cover 250-300 region with all force flags
+      ✔ should cover mass 250-410 region with all force combinations
+      ✔ should cover addMerchant near lines 118-130
+    Line-Specific Conditional Variants
+      ✔ should test line 365 conditional variants
+      ✔ should test line 367 conditional variants
+      ✔ should test line 374 conditional variant
+      ✔ should test line 250 conditional variants
+      ✔ should test line 118 already or force
+      ✔ should test line 130 vaultZero or force
+      ✔ should test line 130 msgsender vaultZero variants
+      ✔ should test line 238 refunds threshold
+      ✔ should test line 291 sender zero or force refund
+      ✔ should test line 305 seer lt or force
+    Constructor and Sender Variants
+      ✔ should test constructor duplicates
+      ✔ should test line 87 variants
+      ✔ should test line 118 msgsender false arm
+      ✔ should test msgsender alreadyMerchant
+      ✔ should test constructor zero check
+      ✔ should test addMerchant msgsender ifvariants
+      ✔ should test force eval addMerchant msgsender variants
+    Hotspot Functions
+      ✔ should test hotspot 300s
+      ✔ should test hotspot 330s
+      ✔ should test hotspot 360s
+      ✔ should test hotspot 490s
+    Escrow Functions
+      ✔ should test eval open checks
+      ✔ should test securityCheck addr
+      ✔ should test escrow state checks
+      ✔ should test escrow vault zero checks
+      ✔ should test open ifvariants with all force combinations
+      ✔ should test eval access checks
+      ✔ should test buyerVault zero check
+      ✔ should test access allowed checks
+      ✔ should test exec access ifvariants
+      ✔ should test cover escrow more with force combinations
+      ✔ should test msgsender access allowed checks
+      ✔ should test notFunded check
+      ✔ should test resolve buyerWins branch
+    Lines 435-525 Exhaustive Variants
+      ✔ should test all line 435 variants
+      ✔ should test all line 447 variants
+      ✔ should test all line 456 variants
+      ✔ should test line 466 variants
+      ✔ should test line 472 force combo
+      ✔ should test line 486 combo alt
+      ✔ should test line 498 force variants
+      ✔ should test all line 503 variants
+      ✔ should test line 506 variants
+      ✔ should test all line 523-526 variants
+    Lines 644-886 Exhaustive Variants
+      ✔ should test all line 644 variants
+      ✔ should test all line 664 variants
+      ✔ should test all line 871 variants
+      ✔ should test all line 886 variants
+      ✔ should test all line 964-1060 variants
+    Post-360s and State Transitions
+      ✔ should test cover post360s
+      ✔ should test force eval release refund resolve
+      ✔ should test force eval 367 variants
+      ✔ should test force eval 369-370 combo
+      ✔ should test additional force variants
+      ✔ should test line 371 alt
+      ✔ should test line 372 local and msgsender
+
+  VFIDECommerce - Production Paths via TEST Helpers
+    Lines 87, 118, 130: Constructor/Initialization Conditionals
+      ✔ should cover line 87 constructor validation via TEST helpers
+      ✔ should cover line 118 addMerchant already merchant check
+      ✔ should cover line 130 vault zero check via force flag
+    Lines 250-456: Complex Production Conditional Expressions
+      ✔ should cover production code via actual escrow operations
+    Real Production Escrow State Transitions
+      ✔ should create and fund escrow
+      ✔ should release escrow funds to merchant
+      ✔ should refund escrow funds to buyer
+      ✔ should handle dispute and resolve buyerWins=true
+      ✔ should handle dispute and resolve buyerWins=false
+    Error Paths and Edge Cases
+      ✔ should revert on opening escrow with zero amount
+      ✔ should revert on opening escrow with non-merchant
+      ✔ should revert on buyer with no vault
+      ✔ should revert on markFunded without sufficient balance
+      ✔ should revert on release if not FUNDED state
+      ✔ should revert on unauthorized release
+    Auto-Suspend Thresholds
+      ✔ should auto-suspend merchant after excessive refunds
+      ✔ should auto-suspend merchant after excessive disputes
+
+  VFIDECommerce - Systematic TEST Helper Coverage Part 1 (lines 295-560)
+    Lines 295-365: Using existing TEST helpers
+      ✔ should cover line 295-309 via TEST_exec_addMerchant_branches
+      ✔ should cover line 365 cond-expr via TEST_line365_condexpr_variant2
+    Lines 329-410: More TEST helper coverage
+      ✔ should cover lines 329-410 via TEST_cover_addMerchant_variants
+    Lines 435-456: Complex nested conditional expressions
+      ✔ should cover line 435 condexpr variants systematically
+      ✔ should cover line 435 additional variants
+      ✔ should cover line 447 condexpr variants systematically
+      ✔ should cover line 456 condexpr variants systematically
+    Lines 466-526: More complex conditional branches
+      ✔ should cover line 466 condexpr variants
+      ✔ should cover line 472 force combo variants
+      ✔ should cover line 486 combo alt variants
+      ✔ should cover line 498 force variants
+      ✔ should cover line 503-506 combo variants
+
+  VFIDECommerce - Systematic TEST Helper Coverage Part 2 (lines 560-1000)
+    Line 644: Multiple TEST helper variants
+      ✔ should cover line 644 combo variants
+      ✔ should cover line 644 force flags systematically
+    Line 664: Exhaustive TEST helper coverage
+      ✔ should cover line 664 force mix variants
+      ✔ should cover line 664 alt2 variants
+      ✔ should cover line 664 threshold local variants
+      ✔ should cover line 664 exhaustive with all parameter combinations
+      ✔ should cover line 664 injected zero variants
+      ✔ should cover line 664 msgsender vault variants
+      ✔ should cover line 664 localdup order variants
+      ✔ should cover line 664 threshold ifelse variants
+      ✔ should cover line 664 ternary vs if variants
+      ✔ should cover line 664 combined mask variants
+    Line 871: TEST helper variants
+      ✔ should cover line 871 force alt
+      ✔ should cover line 871 deep variants
+      ✔ should cover line 871 injected variants
+    Line 886: TEST helper variants
+      ✔ should cover line 886 toggle variants
+    Line 964: Complex TEST helper variants
+      ✔ should cover line 964 combo variants
+      ✔ should cover line 964 injected variants
+      ✔ should cover line 964 ifelse variants
+      ✔ should cover line 964 msgsender variants
+      ✔ should cover line 964-1060 combined variants
+
+  VFIDECommerce - Systematic TEST Helper Coverage Part 3 (remaining functions)
+    Line 1060 and related variants
+      ✔ should cover TEST_line1060_condexpr_alt
+      ✔ should cover TEST_line1060_injected
+      ✔ should cover TEST_line1060_ternary_local
+    Additional line 435 exhaustive variants
+      ✔ should cover TEST_line435_single_arm_left and right
+
+      146) should cover TEST_line435_force_variants3
+
+      147) should cover TEST_line435_exhaustive2
+      ✔ should cover TEST_line435_force_left2
+
+      148) should cover TEST_435_vault_zero
+
+      149) should cover TEST_435_status_suspended
+    Additional line 447 variants
+
+      150) should cover TEST_line447_split_arms
+      ✔ should cover TEST_line447_force_right2
+
+      151) should cover TEST_line447_extra3
+
+      152) should cover TEST_line447_msgsender_variant
+    Additional line 456 variants
+
+      153) should cover TEST_line456_single_left and right
+
+      154) should cover TEST_line456_ternary_localdup
+
+      155) should cover TEST_line456_expand_arms
+      ✔ should cover TEST_456_amount_zero
+    Additional line 503-526 variants
+      ✔ should cover TEST_line503_force_msgsender
+      ✔ should cover TEST_line503_injected_msg_local
+      ✔ should cover TEST_line503_msg_variant2
+
+      156) should cover TEST_line503_nested_alt
+
+      157) should cover TEST_line503_msg_injected
+
+      158) should cover TEST_line503_cond_split2
+
+      159) should cover TEST_line503_force_all
+      ✔ should cover TEST_line503_condexpr_deep
+
+      160) should cover TEST_line506_force_injected
+
+      161) should cover TEST_line506_msgsender_force
+
+      162) should cover TEST_503_state_disputed
+
+      163) should cover TEST_503_mm_suspended
+    Line 523-526 exhaustive variants
+
+      164) should cover TEST_line523_force_toggle
+
+      165) should cover TEST_line523_single_toggle
+
+      166) should cover TEST_line523_injected_toggle
+
+      167) should cover TEST_line523_exhaustive
+
+      168) should cover TEST_line523_localdup2
+
+      169) should cover TEST_line524_msgsender_variant
+
+      170) should cover TEST_line524_injected_zero2
+
+      171) should cover TEST_line525_combo
+
+      172) should cover TEST_line525_injected_combo
+
+      173) should cover TEST_line525_expand
+      ✔ should cover TEST_line525_msgsender_toggle
+
+      174) should cover TEST_line525_injected_addr
+
+      175) should cover TEST_line526_ternary_split
+
+      176) should cover TEST_line526_combined
+    Line 871 and 886 additional variants
+
+      177) should cover TEST_line871_msgsender
+
+      178) should cover TEST_line871_localdup
+
+      179) should cover TEST_line871_threshold_ifelse
+      ✔ should cover TEST_line871_886_combined
+
+      180) should cover TEST_line871_injected_zero
+
+      181) should cover TEST_line871_msgsender_vault
+      ✔ should cover TEST_line886_ifelse
+      ✔ should cover TEST_line886_ternary_local
+      ✔ should cover TEST_line886_deep
+      ✔ should cover TEST_line886_localdup_order
+      ✔ should cover TEST_line886_ternary_vs_if
+    Line 964 additional variants
+      ✔ should cover TEST_line964_deep
+
+      182) should cover TEST_line964_msgsender_variant
+    Line 664 additional exhaustive variants
+
+      183) should cover TEST_664_thresholds_msgsender
+      ✔ should cover TEST_line664_force_mix2
+
+  coverage.escrow.bruteforce: exercise escrow hotspots
+    ✔ runs permutations of helpers and tries production flows safely
+
+  Final Push: All Remaining TEST Functions Part 1
+
+    184) "before all" hook in "Final Push: All Remaining TEST Functions Part 1"
+
+  Final Push: All Remaining TEST Functions Part 2
+
+    185) "before all" hook in "Final Push: All Remaining TEST Functions Part 2"
+
+  Final Coverage Push: All Remaining Variants
+
+    186) "before all" hook in "Final Coverage Push: All Remaining Variants"
+
+  VFIDEFinance: Exhaustive Coverage to 100%
+    Lines 80, 87, 143: DAO checks and asset validation
+      ✔ should cover onlyDAO modifier false branch (line 80, 87)
+      ✔ should cover asset validation branches (line 143)
+    Lines 182, 199, 268-299: Decimals and staticcall branches
+      ✔ should cover decimals force return branch (line 182)
+      ✔ should cover staticcall success/failure branches (line 199, 273, 277, 278)
+      ✔ should cover TEST_exercise_decimals_try branches (line 268)
+      ✔ should cover TEST_if_staticcall_returns_short (line 282)
+      ✔ should cover TEST_if_asset_ok and TEST_if_asset_not_ok (lines 268, 299)
+    Lines 320, 333, 349, 359, 362: Treasury deposit/send conditionals
+      ✔ should cover depositStable checks (line 320, 333)
+      ✔ should cover send validation branches (line 349, 359, 362)
+    Lines 379-383, 426, 470: Treasury insufficient balance branches
+      ✔ should cover deposit insufficient balance branches (line 379, 381, 383)
+      ✔ should cover send insufficient balance branches (line 426, 470)
+    Lines 494, 517, 521, 525, 531-533: TEST helper conditionals
+      ✔ should cover all TEST_if_send_zero_guard branches (line 494)
+      ✔ should cover TEST_if_to_or_amount_zero branches (line 517, 521)
+      ✔ should cover TEST_exec_treasury_ifvariants (line 525, 531, 532)
+      ✔ should cover TEST_exec_send_variants (line 531, 533)
+      ✔ should cover TEST_if_token_is_vfide_or_whitelisted (line 532)
+      ✔ should cover TEST_exec_decimals_and_tx_ifvariants with all combinations (line 320)
+    Additional edge cases for complete coverage
+      ✔ should cover ledger logging branches
+      ✔ should cover all eval helpers
+      ✔ should verify registry view functions
+      ✔ should cover TEST_if_deposit_checks_explicit (line 320)
+      ✔ should cover TEST_if_send_allowed_and_tokenNonZero (line 349)
+      ✔ should test successful depositStable and send flows
+    Additional edge case coverage for 100%
+      ✔ should cover line 87 onlyDAO false branch via removeAsset
+
+      187) should cover line 182 decimals cond-expr right branch
+
+      188) should cover line 199 if-false branch (staticcall succeeds)
+      ✔ should cover line 320 depositStable cond-expr right branch
+      ✔ should cover line 333 send if-false branch (amount > 0)
+      ✔ should cover line 349 send cond-expr right branch
+
+      189) should cover line 359 cond-expr right branch in validation
+      ✔ should cover line 362 if-false branch (recipient not zero)
+
+      190) should cover lines 379-383 TEST helper branches
+      ✔ should cover line 426 if-false branch (whitelist check passes)
+      ✔ should cover line 470 if-false branch in send
+
+      191) should cover lines 525, 531, 533 cond-expr right branches
+
+      192) should exercise all TEST flag combinations
+
+      193) should test edge cases for decimals detection
+      ✔ should test setSymbolHint coverage
+
+      194) should test depositVFIDE and sendVFIDE paths
+      ✔ should test all remaining conditional paths
+
+  Finance Remaining 20 Branches
+    Line 87: DAO authorization branch
+
+      195) should cover DAO-authorized path
+
+      196) should cover DAO-authorized success
+    Line 182: decimalsOrTry branches
+
+      197) should test decimals detection with force flag off
+
+      198) should test decimals detection with force flag on
+
+      199) should test decimals branches exhaustively
+    Line 199: staticcall failure branch
+
+      200) should cover staticcall failure path
+
+      201) should cover staticcall success path
+
+      202) should test exercise decimals try
+    Line 320: amount validation branches
+
+      203) should test zero amount branch
+
+      204) should test non-zero amount branch
+    Line 333: send amount validation
+
+      205) should test amount == 0 branch (left arm)
+
+      206) should test amount != 0 branch
+
+      207) should test send checks
+    Conditional expression branches
+
+      208) should test asset checks
+
+      209) should test deposit checks explicit
+
+      210) should test token checks
+    Force flags and comprehensive checks
+
+      211) should test force flags state
+
+      212) should test treasury force flags
+
+      213) should test deposit/send whitelist and zero checks
+    Comprehensive Finance coverage
+
+      214) should test exercise deposit/send checks
+
+      215) should test if forceDecimalsReturn
+
+      216) should test if deposit notWhitelisted
+
+      217) should test if deposit zeroAmount
+
+      218) should test cover decimals and deposit
+
+      219) should test exec decimals and tx ifvariants
+
+      220) should test cover more finance
+
+      221) should test cover finance more2
+
+      222) should test exec finance 413 checks
+
+      223) should test exec decimals for token
+
+  big helpers: deterministic helpers for commerce + finance
+    ✔ calls commerce msg.sender helpers and toggles to flip branch arms
+    ✔ calls finance helpers to deterministically hit decimals/send branch arms
+
+  bruteforce: commerce + finance permutation sweep
+    ✔ runs a compact set of ordered permutations for both subsystems
+
+  sequence: commerce addMerchant ordered-call sweep (118/130)
+    ✔ runs ordered helper + production call sequences to hit missing branch indexes
+
+  coverage.finish.commerce.250_410.narrow
+    ✔ calls mass/region/hotspot helpers with permutations to flip escrow-region arms
+
+  coverage.finish.commerce.250_410 - focused escrow cluster
+    ✔ exercises many TEST helpers across 250-410 region to flip branch arms
+
+  micro: addMerchant line 118/130 deterministic sweep
+    ✔ exhaustively calls production addMerchant with force flags and msg.sender variants
+
+  coverage.finish.commerce.addMerchant.targeted - flip msg.sender/vault arms (118/130)
+    ✔ registers a merchant and exercises msg.sender-specific helpers to flip both arms
+
+  bruteforce: addMerchant permutations to flip stubborn arms
+    ✔ permutations of toggles, helpers and production calls to flip remaining branch nodes
+
+  bruteforce2: commerce addMerchant deep permutations for lines ~118/130 and escrow cluster
+    ✔ exhaustively calls TEST helpers and production addMerchant in many orders to hit missing index arms
+
+  coverage.finish.commerce.addMerchant.combine
+    ✔ executes both true and false arms for addMerchant lines ~118 and ~130 (explicit + msg.sender)
+
+  coverage.finish.commerce.addMerchant.exhaustive - exhaust permutations for lines 118/130
+    ✔ calls addMerchant-related pinpoint helpers with all signer/force permutations
+
+  coverage.finish.commerce.addMerchant.extra2 - exhaustive addMerchant permutations
+    ✔ runs many permutations of addMerchant TEST helpers to flip left/right/msg.sender arms
+
+  coverage.finish.commerce.addMerchant.forceLeft - force alreadyMerchant arm
+    ✔ forces alreadyMerchant and calls narrow helpers to hit left arms
+
+  coverage.finish.commerce.addMerchant.forceRight - force noVault/lowScore arm
+    ✔ forces noVault/lowScore and calls narrow helpers to hit right arms
+
+  coverage.finish.commerce.addMerchant.narrow - target lines 118/130
+    ✔ targets addMerchant left/right and msg.sender vaultZero arms
+
+  coverage.finish.commerce.addMerchant.narrow3
+
+    224) targets addMerchant lines ~118 and ~130 including msg.sender variants and force flags
+
+  coverage.finish.commerce.addMerchant.narrow4
+    ✔ registers one signer and uses a no-vault signer to flip left/right msg.sender arms
+
+  micro-orderings: addMerchant ordered sequences to hit index-specific arms
+    ✔ runs a few ordered sequences that previously left index=0 uncovered
+
+  coverage.finish.commerce.addMerchant.pinpoint - call exact line helpers
+    ✔ exercises pinpoint helpers TEST_line118_*/TEST_line130_* and msg.sender variants
+
+  coverage.finish.commerce.addMerchant - focused addMerchant helpers
+    ✔ exercises addMerchant conditional arms via TEST helpers and msg.sender variants
+
+  coverage.finish.commerce.exec.addMerchant - call addMerchant to exercise production branches
+    ✔ calls addMerchant with registered, no-vault and low-score signers to exercise real branches
+
+  coverage.finish.commerce.stateful - stateful escrow and merchant flows
+    ✔ creates merchant, opens/funds/resolve/refund/dispute/resolve flows and triggers refund/dispute thresholds
+
+  coverage: targeted extra arms
+    ✔ mocks: transferFrom allowance revert arms (GasDrainer & Reentering)
+    ✔ CommerceEscrow: refund/dispute caller permutations exercise NotAllowed and success paths
+    ✔ Finance: onlyDAO and NotWhitelisted arms
+
+  coverage.finish.extra10 - final pinpoint sweep
+
+    225) MerchantRegistry extra helpers
+
+    226) StablecoinRegistry extra helpers
+
+  coverage.finish.extra11 - escrow & treasury pinpoint helpers
+
+    227) Escrow helpers and securityCheck
+
+    228) Treasury helpers
+
+  coverage.finish.extra12 - pinpoint helper sweep (Commerce)
+
+    229) MerchantRegistry pinpoint helpers and permutations
+
+    230) Escrow pinpoint helpers exercise open/access arms
+
+  coverage.finish.extra13 - additional Commerce pinpoint helpers
+
+    231) covers extra MerchantRegistry combined branches
+
+  coverage.finish.extra14 - Finance pinpoint helpers
+
+    232) covers composite finance helper with permutations
+
+  coverage.finish.extra15 - stateful Commerce flows to flip branches
+
+    233) creates merchant, triggers refund/dispute thresholds and escrow flows
+
+  coverage.finish.extra16 - broad permutations to flip remaining arms
+
+    234) sweeps many TEST helpers in Commerce and Finance
+
+  coverage.finish.extra17 - pinpoint helpers for remaining Commerce arms
+
+    235) exercises newly added TEST helpers in MerchantRegistry and CommerceEscrow
+
+  coverage.finish.extra18 - targeted helpers to flip Commerce remaining arms
+
+    236) calls pinpoint helpers with permutations to flip branch arms
+
+  coverage.finish.extra19 - hotspot helpers for Commerce (300-410, 490-610)
+
+    237) exercises hotspot helpers with permutations
+
+  coverage.finish.extra2 - targeted branch hits
+
+    238) MerchantRegistry: exercise addMerchant subexprs and force flags
+    ✔ Finance: decimals helper and deposit/send insufficient paths
+
+  coverage.finish.extra20 - sweep all TEST helpers to flip remaining arms
+    ✔ sweeps MR and CE TEST helpers broadly
+
+  coverage.finish.extra21 - Finance sweep to flip remaining arms
+    ✔ exercises StablecoinRegistry and EcoTreasuryVault TEST helpers
+
+  coverage.finish.extra22 - finance hotspot helper sweep
+    ✔ calls TEST_cover_finance_more2 with permutations to flip branches
+
+  coverage.finish.extra23 - Commerce pinpoint near lines 118/130
+    ✔ exercises TEST_cover_addMerchant_near118_130 and toggles flags
+
+  coverage.finish.extra24 - Commerce region 250-300 helper
+    ✔ calls TEST_cover_250_300_region with permutations to flip arms
+
+  coverage.finish.extra25 - flip addMerchant and 250-300 region arms
+    ✔ flips alreadyMerchant and vault/noVault arms and exercises 250-300 region
+
+  coverage.finish.extra26 - msg.sender addMerchant helpers (line 118/130)
+    ✔ calls msg.sender-based helpers to flip the exact addMerchant arms
+
+  coverage.finish.extra27 - msg.sender vault helper (line 130)
+    ✔ uses msg.sender vault helper to flip vaultZero arms
+
+  coverage.finish.extra28 - mass 250-410 region tester
+    ✔ calls TEST_cover_mass_250_410 with permutations to flip many arms
+
+  coverage.finish.extra29 - addMerchant permutations
+    ✔ exercises addMerchant conditional arms via TEST helpers
+
+  coverage.finish.extra3 - final targeted branch hits
+
+    239) MerchantRegistry: hit addMerchant already/noVault/lowScore arms
+
+    240) MerchantRegistry: noteDispute zero-flag and CommerceEscrow access NotAllowed arms
+    ✔ Finance: ledger revert try/catch and send zero/to checks
+
+  coverage.finish.extra30 - escrow release/refund/dispute permutations
+    ✔ opens/funds escrows and exercises allowed and not-allowed arms
+
+  coverage.finish.extra31 - pinpoint addMerchant msg.sender arms
+    ✔ toggles TEST flags and calls msg.sender helpers to flip arms
+
+  coverage.finish.extra32 - mass coverage 250-410 region
+    ✔ calls mass and region helpers with permutations to flip arms
+
+  coverage.finish.extra33 - extended permutations for 300-410 hotspots
+    ✔ exercises many hotspot helpers with permutations
+
+  coverage.finish.extra34 - broad sweep of TEST helpers
+    ✔ calls a broad set of TEST helpers to flip remaining arms
+
+  coverage.finish.extra4 - TEST-only helpers exercise
+
+    241) Commerce: use TEST_exercise_addMerchant_checks to flip arms
+    ✔ Finance: use TEST_exercise_decimals_try and TEST_exercise_deposit_send_checks
+
+  coverage.finish.extra5 - target remaining branch arms
+
+    242) Commerce: hit addMerchant and noteRefund/noteDispute arms
+    ✔ Finance: exercise decimals fallback and deposit/send failure arms
+
+    243) Call new contracts-min TEST_cover helpers to exercise remaining arms
+
+  coverage.finish.extra6 - exercise explicit if/else helpers permutations
+    ✔ Commerce: call TEST_exec_addMerchant_ifvariants with permutations
+    ✔ CommerceEscrow: exercise TEST_exec_open_ifvariants and access masks
+    ✔ Finance: call TEST_exec_decimals_and_tx_ifvariants permutations
+
+  coverage.finish.extra7 - extra permutations and signer variations
+
+    244) MerchantRegistry: toggle flags and call if-helpers with different signers
+
+    245) CommerceEscrow: call access helpers from different callers to flip arms
+    ✔ Finance: flip whitelist and zero-amount arms for StablecoinRegistry and EcoTreasury
+
+  coverage.finish.extra8 - broader sweep for remaining arms
+    ✔ MerchantRegistry/Commerce: sweep permutations and signer-varied calls
+
+    246) CommerceEscrow: force buyerVault zero and access masks with different ids
+    ✔ Finance: additional permutations on decimals/send/deposit helpers
+
+  coverage.finish.extra9 - pinpoint helpers to flip last arms
+
+    247) MerchantRegistry pinpoint helpers
+
+    248) Finance pinpoint helpers
+
+  bruteforce: finance send/decimals permutations to flip stubborn arms (~399)
+    ✔ runs many ordered combinations of send/mint/toggles/helpers to hit missing branch nodes
+
+  coverage.finish.finance.399.exhaustive - exhaustive permutations to flip finance arms
+    ✔ runs permutations over decimals/staticcall, whitelist, zero-amount and token-zero checks
+
+  micro: finance line ~399 deterministic sweep
+    ✔ calls EcoTreasuryVault.send and StablecoinRegistry helpers in ordered permutations to flip specific arms
+
+  coverage.finish.finance.399.narrow - decimals and deposit/send guard branches
+    ✔ exercises decimals staticcall success/fail and deposit/send checks
+
+  micro-orderings: finance ordered sequences to target index-specific arms (~399)
+    ✔ runs a few ordered sequences of send/mint/toggles to exercise send branches
+
+  sequence: finance send/decimals ordered-call sweep (~399)
+    ✔ runs ordered sequences of decimals helpers and send() permutations to hit missing branch indexes
+
+  coverage.finish.finance.399 - focused finance hotspot
+    ✔ exercises finance branches including decimals staticcall fallback and send/deposit guards
+
+  coverage.finish.finance.send.exec - call EcoTreasuryVault.send to execute branches
+    ✔ executes send() with token zero, zero amount, not-whitelisted and success paths
+
+  Commerce Bruteforce: Lines 664, 871, 964 Exhaustive
+
+    249) "before all" hook in "Commerce Bruteforce: Lines 664, 871, 964 Exhaustive"
+
+  coverage: finish remaining branch arms
+    ✔ MerchantRegistry: _noteRefund and _noteDispute hit COM_Zero via TEST toggles
+    ✔ StablecoinRegistry & EcoTreasury: exercise TEST decimal and insufficient flags
+    ✔ mocks: exercise TEST_checkAllowance branches and MerchantRegistry addMerchant TEST toggles
+    ✔ StablecoinRegistry: ledger revert path is caught (try/catch) to exercise both arms
+    ✔ invoke TEST helpers to exercise conditional sub-expressions
+    ✔ mocks: transferFrom success and failure arms for GasDrainer and Reentering
+    ✔ finance: onlyDAO gates for StablecoinRegistry and EcoTreasury (DAO vs non-DAO)
+
+  helpers-focused: commerce deterministic helpers
+    ✔ calls TEST_exec_addMerchant_msgsender_full and note guards with permutations
+
+  helpers-focused: finance deterministic helpers
+    ✔ calls TEST_exec_send_variants and decimals wrapper with permutations
+
+  coverage.pinpoint.next: flip specific Commerce branch arms
+    ✔ toggles TEST flags, calls msg.sender variants and mass helpers
+
+  coverage.pinpoint.top: targeted helpers for top missing arms
+    ✔ targets commerce addMerchant arms and finance send/decimals arms
+
+  coverage.pinpoint.top2: target more top canonical misses
+    ✔ calls new pinpoint helpers and toggles flags
+
+  Coverage: Production Flow - Targeted Branch Tests
+    Line 87: Constructor zero-address checks
+      ✔ should cover constructor OR-chain branches via TEST helpers
+    Line 118: _noteRefund msg.sender check
+      ✔ should cover msg.sender == address(0) check via TEST helper
+    Line 130: _noteDispute msg.sender check
+      ✔ should cover msg.sender == address(0) check via TEST helper
+    Lines 250-466: Complete escrow state transitions
+      ✔ should cover open -> funded -> released flow
+      ✔ should cover open -> funded -> refund flow
+      ✔ should cover open -> funded -> dispute -> resolve flow
+      ✔ should cover dispute resolution in merchant favor
+      ✔ should cover DAO-initiated release
+      ✔ should cover DAO-initiated refund
+      ✔ should cover merchant-initiated dispute
+    Error paths and edge cases
+      ✔ should revert on zero amount escrow
+      ✔ should revert when marking funded with insufficient balance
+      ✔ should revert on unauthorized release
+      ✔ should revert when releasing from wrong state
+    Merchant suspension threshold
+      ✔ should trigger auto-suspension after refund threshold via _noteRefund
+      ✔ should trigger auto-suspension after dispute threshold via _noteDispute
+
+  Commerce: Push to 100% Coverage - Final Push
+    Line 87: removeMerchant branch
+
+      250) "before each" hook for "should hit line 87 when removing active merchant"
+
+  Push to 100%: Missing Branch Coverage
+
+    251) "before all" hook in "Push to 100%: Missing Branch Coverage"
+
+  coverage.target.min - exercise contracts-min helpers
+
+    252) MerchantRegistry (contracts-min): flip subexpr arms via TEST_exercise_addMerchant_checks
+
+    253) StablecoinRegistry (contracts-min): exercise decimals and deposit/send checks
+
+  Coverage: Uncovered Branches Test
+    MerchantRegistry - onlyDAO modifier (line 87)
+      ✔ should cover both arms of onlyDAO modifier
+      ✔ should exercise line 87 with tx.origin variant
+      ✔ should exercise line 87 with ledger security variant
+    MerchantRegistry - _noteRefund (line 118)
+      ✔ should cover msg.sender == address(0) branch
+      ✔ should cover force flag for refund
+      ✔ should cover line 118 with OR combinations
+    MerchantRegistry - _noteDispute (line 130)
+      ✔ should cover msg.sender checks for dispute
+      ✔ should cover force flag for dispute
+    MerchantRegistry - addMerchant checks (line 250)
+      ✔ should cover line 250 conditional expression variants
+      ✔ should cover all addMerchant force flag combinations
+      ✔ should cover if/else branches in addMerchant flow
+    MerchantRegistry - line 276 (threshold checks)
+      ✔ should cover threshold checks for refunds
+      ✔ should cover threshold checks for disputes
+    MerchantRegistry - lines 291-310 (vault and score checks)
+      ✔ should cover vault zero check with OR force (line 299)
+      ✔ should cover score check with OR force (line 304)
+      ✔ should cover already merchant check with OR force (line 308)
+    MerchantRegistry - Additional branch coverage
+      ✔ should cover vault and score combined checks
+      ✔ should cover line 365-374 conditional expression variants
+      ✔ should cover if/else for vault isZero
+      ✔ should cover if/else for score check
+      ✔ should cover merchant status check
+    StablecoinRegistry - uncovered branches
+      ✔ should cover line 80 removeAsset branch
+      ✔ should cover line 87 setSymbolHint branch
+      ✔ should cover addAsset with different decimals
+    CommerceEscrow - additional uncovered branches
+      ✔ should cover release permission checks as different callers
+      ✔ should cover refund permission checks
+      ✔ should cover notFunded check
+      ✔ should cover combined release/refund/resolve logic
+    MerchantRegistry - msg.sender variants
+      ✔ should cover msg.sender-based branches as merchant
+      ✔ should cover msg.sender-based branches with force flags
+      ✔ should cover note guards with restore
+    Mass coverage helpers
+      ✔ should cover mass region 250-410
+      ✔ should cover region 250-300
+      ✔ should cover addMerchant near 118-130
+    Additional pinpoint helpers
+      ✔ should cover vaultOf OR force variants
+      ✔ should cover seer LT min OR force variants
+
+  Coverage: Additional Uncovered Branches - Part 2
+
+    254) covers remaining Commerce and Finance branches systematically
+
+  Coverage: CommerceEscrow Uncovered Branches
+    ✔ covers dense branch clusters in lines 435-664 and beyond
+
+  Coverage: VFIDEFinance Uncovered Branches
+
+    255) covers remaining Finance contract branches systematically
+
+  TEST-ONLY forced-branch coverage helpers
+    ✔ MerchantRegistry: force AlreadyMerchant and zero-sender branches
+    ✔ StablecoinRegistry: force decimals fallback/override path
+    ✔ EcoTreasuryVault: force deposit/send insufficient errors
+    ✔ VFIDEToken: check forced vault/staticcall/router branches
+    ✔ mocks: exercise ERC20Mock failure branches and LedgerMock paths
+
+  Deterministic fuzz: Finance / Token / Commerce (sanity)
+    ✔ runs a deterministic sequence of randomized actions without crashing
+
+  Mocks coverage: LedgerMock and ReenteringERC20
+    ✔ LedgerMock: exercises emit and revert branches via StablecoinRegistry calls
+    ✔ LedgerMock: exercises logEvent path (addAsset) both emit and revert branches
+    ✔ LedgerMock: direct calls exercise both logSystemEvent/logEvent branches
+    ✔ ReenteringERC20: covers balance guard and reentry path
+    ✔ ReverterEscrow: covers release/refund emit and revert paths
+    ✔ BurnRouterMock: set and computeFees paths
+    ✔ ReenteringERC20: transferFrom allowance branches (allowance/underflow and success)
+    ✔ GasDrainerERC20: transfer and transferFrom paths (balance guard and success)
+    ✔ GasDrainerERC20: explicit allowance-revert branch (zero allowance and small value)
+    ✔ GasDrainerERC20: TEST_checkAllowance covers both branches (false then true)
+    ✔ ReenteringERC20: explicit allowance-revert branch (zero allowance)
+    ✔ ReenteringERC20: TEST_checkAllowance covers both branches (false then true)
+    ✔ MerchantRegistryMock: setMerchant and info cover status branches
+
+  Extra mock branch coverage
+    ✔ GasDrainer: extra TEST_checkAllowance edge cases and transferFrom reverts/succeeds
+    ✔ ReenteringERC20: transfer with default (no reenter target) and with reenter target
+
+  Uncovered mocks coverage
+    ✔ ReenterTargetMock emits Released
+    ✔ ReverterEscrow emits and reverts correctly
+    ✔ RevertingDecimals fallback reverts on plain call
+    ✔ SecurityHubMock and SeerMock basic behaviors
+    ✔ VaultHubMock vaultOf and TestVFIDEHarness TEST helpers
+    ✔ LedgerMock logEvent and logSystemEvent revert paths
+
+·----------------------------------------------------------------------------------------|---------------------------|-------------|-----------------------------·
+|                                  [90mSolc version: 0.8.30[39m                                  ·  [90mOptimizer enabled: true[39m  ·  [90mRuns: 200[39m  ·  [90mBlock limit: 30000000 gas[39m  │
+·························································································|···························|·············|······························
+|  [32m[1mMethods[22m[39m                                                                                                                                                       │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [1mContract[22m                                   ·  [1mMethod[22m                                  ·  [32mMin[39m        ·  [32mMax[39m        ·  [32mAvg[39m        ·  [1m# calls[22m      ·  [1musd (avg)[22m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mBurnRouterMock[39m                             ·  set                                     ·      [36m30787[39m  ·     [31m111035[39m  ·      51977  ·          [90m227[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mCommerceEscrow[39m                             ·  dispute                                 ·      [36m46451[39m  ·      [31m48981[39m  ·      46881  ·           [90m19[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mCommerceEscrow[39m                             ·  markFunded                              ·      [36m38790[39m  ·      [31m39139[39m  ·      38962  ·           [90m54[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mCommerceEscrow[39m                             ·  open                                    ·     [36m186125[39m  ·     [31m223521[39m  ·     200632  ·          [90m109[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mCommerceEscrow[39m                             ·  refund                                  ·      [36m63160[39m  ·      [31m82917[39m  ·      73456  ·           [90m21[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mCommerceEscrow[39m                             ·  release                                 ·      [36m48885[39m  ·     [31m144058[39m  ·      69612  ·           [90m10[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mCommerceEscrow[39m                             ·  resolve                                 ·      [36m47274[39m  ·      [31m64374[39m  ·      54391  ·           [90m15[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/ProofLedger.sol:ProofLedger[39m  ·  logEvent                                ·      [36m26073[39m  ·      [31m64570[39m  ·      30255  ·           [90m47[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/ProofLedger.sol:ProofLedger[39m  ·  logSystemEvent                          ·      [36m25035[39m  ·      [31m51740[39m  ·      27042  ·           [90m33[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/ProofLedger.sol:ProofLedger[39m  ·  setDAO                                  ·      [36m25034[39m  ·      [31m27834[39m  ·      27398  ·           [90m13[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/Seer.sol:Seer[39m                ·  setModules                              ·      [36m42295[39m  ·      [31m67703[39m  ·      59234  ·            [90m3[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/Seer.sol:Seer[39m                ·  setPolicy                               ·          -  ·          -  ·      43778  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/VFIDETrust.sol:Seer[39m          ·  punish                                  ·      [36m38157[39m  ·      [31m60065[39m  ·      45328  ·           [90m16[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/VFIDETrust.sol:Seer[39m          ·  reward                                  ·      [36m40044[39m  ·      [31m59996[39m  ·      44506  ·           [90m17[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/VFIDETrust.sol:Seer[39m          ·  setModules                              ·          -  ·          -  ·      36685  ·            [90m5[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/VFIDETrust.sol:Seer[39m          ·  setScore                                ·      [36m39826[39m  ·      [31m59798[39m  ·      54976  ·           [90m35[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mcontracts-min/VFIDETrust.sol:Seer[39m          ·  setThresholds                           ·      [36m39527[39m  ·      [31m39551[39m  ·      39547  ·            [90m6[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mCouncilElection[39m                            ·  setModules                              ·          -  ·          -  ·      47902  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mCouncilElection[39m                            ·  setParams                               ·          -  ·          -  ·      44500  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAO[39m                                        ·  finalize                                ·      [36m29592[39m  ·     [31m103871[39m  ·      66732  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAO[39m                                        ·  propose                                 ·     [36m143442[39m  ·     [31m163690[39m  ·     159202  ·           [90m18[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAO[39m                                        ·  setModules                              ·          -  ·          -  ·      39077  ·           [90m18[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAO[39m                                        ·  setParams                               ·          -  ·          -  ·      30403  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAO[39m                                        ·  vote                                    ·          -  ·          -  ·      71328  ·           [90m10[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAOTimelock[39m                                ·  cancel                                  ·          -  ·          -  ·      44608  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAOTimelock[39m                                ·  execute                                 ·          -  ·          -  ·      52861  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAOTimelock[39m                                ·  queueTx                                 ·      [36m90741[39m  ·     [31m131082[39m  ·     102590  ·           [90m24[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAOTimelock[39m                                ·  setAdmin                                ·          -  ·          -  ·      40945  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAOTimelock[39m                                ·  setDelay                                ·      [36m40780[39m  ·      [31m40792[39m  ·      40788  ·            [90m3[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAOTimelock[39m                                ·  setLedger                               ·      [36m40955[39m  ·      [31m58055[39m  ·      56630  ·           [90m24[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDAOTimelock[39m                                ·  setPanicGuard                           ·          -  ·          -  ·      60176  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDevReserveVestingVault[39m                     ·  beneficiaryVault                        ·          -  ·          -  ·      47477  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDevReserveVestingVault[39m                     ·  claim                                   ·      [36m70128[39m  ·     [31m158828[39m  ·     143295  ·           [90m16[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mDevReserveVestingVault[39m                     ·  pauseClaims                             ·      [36m33849[39m  ·      [31m55760[39m  ·      50282  ·            [90m8[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEcoTreasuryVault[39m                           ·  depositStable                           ·      [36m52168[39m  ·      [31m83052[39m  ·      60730  ·           [90m37[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEcoTreasuryVault[39m                           ·  noteVFIDE                               ·          -  ·          -  ·      25872  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEcoTreasuryVault[39m                           ·  send                                    ·      [36m55976[39m  ·      [31m82983[39m  ·      70072  ·           [90m38[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEcoTreasuryVault[39m                           ·  setModules                              ·      [36m47414[39m  ·      [31m84654[39m  ·      54702  ·            [90m6[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEcoTreasuryVault[39m                           ·  TEST_setForceDepositInsufficient        ·      [36m21944[39m  ·      [31m43856[39m  ·      30119  ·           [90m35[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEcoTreasuryVault[39m                           ·  TEST_setForceSendInsufficient           ·      [36m21746[39m  ·      [31m43658[39m  ·      25814  ·          [90m230[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEcoTreasuryVault[39m                           ·  TEST_setOnlyDAOOff_Tx                   ·      [36m24054[39m  ·      [31m43966[39m  ·      27367  ·           [90m29[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEmergencyBreakerMock[39m                       ·  setHalted                               ·          -  ·          -  ·      43596  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEmergencyControl[39m                           ·  addMember                               ·          -  ·          -  ·      82861  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEmergencyControl[39m                           ·  committeeVote                           ·      [36m85906[39m  ·     [31m122737[39m  ·      93308  ·           [90m10[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEmergencyControl[39m                           ·  daoToggle                               ·      [36m49930[39m  ·      [31m88715[39m  ·      75787  ·            [90m6[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEmergencyControl[39m                           ·  removeMember                            ·          -  ·          -  ·      38830  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEmergencyControl[39m                           ·  resetCommittee                          ·          -  ·          -  ·     137472  ·            [90m9[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEmergencyControl[39m                           ·  setCooldown                             ·          -  ·          -  ·      40883  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mEmergencyControl[39m                           ·  setModules                              ·          -  ·          -  ·      45021  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mERC20FailTransfer[39m                          ·  approve                                 ·          -  ·          -  ·      45951  ·            [90m5[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mERC20FailTransfer[39m                          ·  mint                                    ·      [36m45869[39m  ·      [31m45953[39m  ·      45931  ·            [90m7[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mERC20Mock[39m                                  ·  approve                                 ·      [36m26039[39m  ·      [31m45951[39m  ·      43623  ·           [90m31[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mERC20Mock[39m                                  ·  mint                                    ·      [36m33894[39m  ·      [31m68178[39m  ·      53361  ·           [90m95[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mERC20Mock[39m                                  ·  transfer                                ·      [36m34307[39m  ·      [31m51431[39m  ·      39982  ·           [90m32[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mERC20PresaleMock[39m                           ·  mint                                    ·      [36m44087[39m  ·      [31m44099[39m  ·      44093  ·           [90m98[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGasDrainerERC20[39m                            ·  approve                                 ·      [36m44057[39m  ·      [31m44069[39m  ·      44064  ·            [90m7[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGasDrainerERC20[39m                            ·  mint                                    ·          -  ·          -  ·      44107  ·            [90m9[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGasDrainerERC20[39m                            ·  transfer                                ·          -  ·          -  ·     131563  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGasDrainerERC20[39m                            ·  transferFrom                            ·     [36m120165[39m  ·     [31m137265[39m  ·     129965  ·            [90m6[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGovernanceHooks[39m                            ·  onFinalized                             ·      [36m23898[39m  ·      [31m30656[39m  ·      29237  ·           [90m18[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGovernanceHooks[39m                            ·  onProposalQueued                        ·      [36m24358[39m  ·      [31m31116[39m  ·      29823  ·           [90m21[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGovernanceHooks[39m                            ·  onVoteCast                              ·      [36m24356[39m  ·      [31m31114[39m  ·      30076  ·           [90m29[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGovernanceHooks[39m                            ·  setModules                              ·      [36m25665[39m  ·      [31m33505[39m  ·      29365  ·           [90m12[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGuardianLockMock[39m                           ·  setLocked                               ·      [36m24113[39m  ·      [31m44025[39m  ·      34069  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGuardianRegistry[39m                           ·  addGuardian                             ·      [36m53755[39m  ·      [31m70843[39m  ·      62023  ·           [90m31[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGuardianRegistry[39m                           ·  removeGuardian                          ·          -  ·          -  ·      31722  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mGuardianRegistry[39m                           ·  setThreshold                            ·          -  ·          -  ·      49854  ·            [90m3[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mLedgerMock[39m                                 ·  logEvent                                ·      [36m28315[39m  ·      [31m28363[39m  ·      28339  ·            [90m5[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mLedgerMock[39m                                 ·  logSystemEvent                          ·      [36m29793[39m  ·      [31m29817[39m  ·      29812  ·            [90m5[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mLedgerMock[39m                                 ·  setRevert                               ·      [36m21615[39m  ·      [31m43527[39m  ·      40397  ·            [90m7[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  _noteDispute                            ·      [36m30157[39m  ·      [31m32370[39m  ·      31194  ·           [90m15[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  _noteRefund                             ·      [36m30685[39m  ·      [31m32898[39m  ·      31186  ·           [90m31[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  addMerchant                             ·      [36m88205[39m  ·     [31m108489[39m  ·      93307  ·          [90m214[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  TEST_exec_addMerchant_msgsender_full    ·      [36m42069[39m  ·      [31m42421[39m  ·      42203  ·           [90m47[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  TEST_exec_note_guards_and_restore       ·      [36m29765[39m  ·      [31m37648[39m  ·      32596  ·           [90m35[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  TEST_setForceAlreadyMerchant            ·      [36m24682[39m  ·      [31m27494[39m  ·      26265  ·          [90m245[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  TEST_setForceLowScore                   ·      [36m24826[39m  ·      [31m27638[39m  ·      26368  ·          [90m246[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  TEST_setForceNoVault                    ·      [36m24836[39m  ·      [31m27648[39m  ·      26342  ·          [90m265[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  TEST_setForceZeroSenderDispute          ·      [36m25464[39m  ·      [31m28276[39m  ·      26288  ·           [90m89[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  TEST_setForceZeroSenderRefund           ·      [36m24540[39m  ·      [31m27352[39m  ·      25519  ·           [90m95[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistry[39m                           ·  TEST_setOnlyDAOOff                      ·      [36m24572[39m  ·      [31m27384[39m  ·      27307  ·           [90m78[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mMerchantRegistryMock[39m                       ·  setMerchant                             ·      [36m32387[39m  ·      [31m32399[39m  ·      32393  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mPanicGuardMock[39m                             ·  setQuarantined                          ·      [36m24184[39m  ·      [31m44096[39m  ·      34140  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mPresaleDevVestingMock[39m                      ·  launch                                  ·          -  ·          -  ·      43295  ·            [90m9[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mPresaleDevVestingMock[39m                      ·  launchNow                               ·          -  ·          -  ·      43351  ·           [90m20[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mPresaleMock[39m                                ·  launch                                  ·          -  ·          -  ·      43295  ·           [90m26[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mProofScoreBurnRouter[39m                       ·  adjustScore                             ·      [36m33936[39m  ·      [31m34137[39m  ·      34037  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mProofScoreBurnRouter[39m                       ·  route                                   ·      [36m35927[39m  ·      [31m50926[39m  ·      49372  ·           [90m21[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mProofScoreBurnRouter[39m                       ·  setModules                              ·      [36m36366[39m  ·      [31m41954[39m  ·      37963  ·            [90m7[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mReenteringERC20[39m                            ·  approve                                 ·      [36m44062[39m  ·      [31m44074[39m  ·      44068  ·            [90m6[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mReenteringERC20[39m                            ·  mint                                    ·          -  ·          -  ·      44115  ·           [90m11[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mReenteringERC20[39m                            ·  setReenter                              ·          -  ·          -  ·      66222  ·            [90m3[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mReenteringERC20[39m                            ·  transfer                                ·      [36m41051[39m  ·      [31m58151[39m  ·      50296  ·            [90m6[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mReenteringERC20[39m                            ·  transferFrom                            ·          -  ·          -  ·      55256  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mReenterTargetMock[39m                          ·  release                                 ·          -  ·          -  ·      22633  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mReverterEscrow[39m                             ·  refund                                  ·          -  ·          -  ·      24491  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mReverterEscrow[39m                             ·  release                                 ·          -  ·          -  ·      24515  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mReverterEscrow[39m                             ·  setRevert                               ·      [36m23637[39m  ·      [31m43549[39m  ·      36912  ·            [90m3[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mSecurityHubMock[39m                            ·  setLocked                               ·      [36m22400[39m  ·      [31m44055[39m  ·      38816  ·           [90m20[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mSeerMock[39m                                   ·  setMin                                  ·      [36m21582[39m  ·      [31m26394[39m  ·      26294  ·          [90m574[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mSeerMock[39m                                   ·  setScore                                ·      [36m24150[39m  ·      [31m44086[39m  ·      42635  ·          [90m963[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mStablecoinRegistry[39m                         ·  addAsset                                ·      [36m77377[39m  ·      [31m92418[39m  ·      89268  ·          [90m128[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mStablecoinRegistry[39m                         ·  removeAsset                             ·      [36m30396[39m  ·      [31m39573[39m  ·      34801  ·           [90m17[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mStablecoinRegistry[39m                         ·  setDAO                                  ·      [36m30964[39m  ·      [31m43837[39m  ·      39197  ·           [90m11[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mStablecoinRegistry[39m                         ·  setLedger                               ·      [36m40376[39m  ·      [31m58150[39m  ·      45520  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mStablecoinRegistry[39m                         ·  setSymbolHint                           ·      [36m37051[39m  ·      [31m48629[39m  ·      46568  ·           [90m10[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mStablecoinRegistry[39m                         ·  TEST_setForceDecimals                   ·      [36m22290[39m  ·      [31m44214[39m  ·      27461  ·          [90m224[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mStablecoinRegistry[39m                         ·  TEST_setOnlyDAOOff                      ·      [36m22057[39m  ·      [31m43969[39m  ·      39183  ·           [90m50[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mStablecoinRegistryPresaleMock[39m              ·  allow                                   ·      [36m43878[39m  ·      [31m43890[39m  ·      43889  ·           [90m49[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mSystemHandover[39m                             ·  armFromPresale                          ·      [36m23817[39m  ·      [31m49532[39m  ·      48702  ·           [90m31[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mSystemHandover[39m                             ·  executeHandover                         ·      [36m54054[39m  ·      [31m54156[39m  ·      54141  ·           [90m15[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mSystemHandover[39m                             ·  extendOnceIfNeeded                      ·      [36m25898[39m  ·      [31m42108[39m  ·      39406  ·           [90m12[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mSystemHandover[39m                             ·  setLedger                               ·      [36m24851[39m  ·      [31m29891[39m  ·      28631  ·            [90m4[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mSystemHandover[39m                             ·  setParams                               ·      [36m41877[39m  ·      [31m44987[39m  ·      44055  ·           [90m12[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mTestVFIDEHarness[39m                           ·  lockPolicy                              ·          -  ·          -  ·      32173  ·            [90m2[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mTestVFIDEHarness[39m                           ·  mintPresale                             ·          -  ·          -  ·      92339  ·            [90m3[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mTestVFIDEHarness[39m                           ·  setPresale                              ·          -  ·          -  ·      73938  ·            [90m3[39m  ·          [32m[90m-[32m[39m  │
+··············································|··········································|·············|·············|·············|···············|··············
+|  [90mTestVFIDEHarness[39m                           ·  setVaultHub                             ·          -  ·          -  ·      29581  ·     
