@@ -6,8 +6,7 @@ const describeIfNotFast = process.env.FAST_TESTS ? describe.skip : describe;
 describeIfNotFast("Commerce Complete Coverage", function() {
   let registry, escrow, hub, seer, sec, ledger, token;
   let dao, admin, merchant, buyer, seller;
-
-  beforeEach(async function() {
+  beforeEach(async function () {
     [dao, admin, merchant, buyer, seller] = await ethers.getSigners();
 
     const TK = await ethers.getContractFactory("contracts-min/mocks/ERC20Mock.sol:ERC20Mock");
@@ -27,12 +26,9 @@ describeIfNotFast("Commerce Complete Coverage", function() {
     ledger = await LedgerMock.deploy(false);
 
     const MR = await ethers.getContractFactory("contracts-min/VFIDECommerce.sol:MerchantRegistry");
-    const { expect } = require("chai");
-    const { ethers } = require("hardhat");
+    registry = await MR.deploy(dao.address, token.target, hub.target, seer.target, sec.target, ledger.target);
 
-    const describeIfNotFast = process.env.FAST_TESTS ? describe.skip : describe;
-
-    describeIfNotFast("Commerce Complete Coverage", function() {
+    const CE = await ethers.getContractFactory("contracts-min/VFIDECommerce.sol:CommerceEscrow");
     escrow = await CE.deploy(dao.address, token.target, hub.target, registry.target, sec.target, ledger.target);
   });
 
