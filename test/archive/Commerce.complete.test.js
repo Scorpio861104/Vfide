@@ -27,9 +27,12 @@ describeIfNotFast("Commerce Complete Coverage", function() {
     ledger = await LedgerMock.deploy(false);
 
     const MR = await ethers.getContractFactory("contracts-min/VFIDECommerce.sol:MerchantRegistry");
-    registry = await MR.deploy(dao.address, token.target, hub.target, seer.target, sec.target, ledger.target);
+    const { expect } = require("chai");
+    const { ethers } = require("hardhat");
 
-    const CE = await ethers.getContractFactory("contracts-min/VFIDECommerce.sol:CommerceEscrow");
+    const describeIfNotFast = process.env.FAST_TESTS ? describe.skip : describe;
+
+    describeIfNotFast("Commerce Complete Coverage", function() {
     escrow = await CE.deploy(dao.address, token.target, hub.target, registry.target, sec.target, ledger.target);
   });
 

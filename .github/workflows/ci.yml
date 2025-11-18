@@ -17,8 +17,8 @@ jobs:
           node-version: '20'
       - name: Install dependencies
         run: npm install
-      - name: Hardhat tests (FAST)
-        run: npm test
+      - name: Hardhat tests
+        run: npx hardhat test --grep Smoke
       - name: Coverage
         run: COVERAGE=1 npx hardhat coverage || true
       - name: Gas report

@@ -23,6 +23,8 @@ jobs:
         run: npm run compile:zk
       - name: Toolchain verification (EVM + zkSync)
         run: npm run verify:zksync
+      - name: Fast tests (archive skipped)
+        run: npm test
       - name: Run zkSync-local skipped tests
         run: |
           echo "Skipping actual deploy; network lacks PRIVATE_KEY"

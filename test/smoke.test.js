@@ -17,27 +17,32 @@ describe("Smoke Tests - Core Functionality", function () {
     vaultHub = await VaultHubMock.deploy();
     await vaultHub.waitForDeployment();
 
-    // Deploy VFIDEToken with correct constructor args
+    // Deploy a minimal vesting vault mock and VFIDEToken with current constructor
+    const VestingVault = await ethers.getContractFactory("contracts-min/mocks/VestingVault.sol:VestingVault");
+    const vesting = await VestingVault.deploy();
+    await vesting.waitForDeployment();
+
     const VFIDEToken = await ethers.getContractFactory("VFIDEToken");
-    // VFIDEToken constructor: (presale, devVault, daoVault, treasury, seer, vaultHub)
+    // constructor(devReserveVestingVault, _vaultHub, _ledger, _treasurySink)
     token = await VFIDEToken.deploy(
-      deployer.address, // presale
-      deployer.address, // devVault  
-      deployer.address, // daoVault
-      deployer.address, // treasury
-      await seer.getAddress(),
-      await vaultHub.getAddress()
+      await vesting.getAddress(),
+      await vaultHub.getAddress(),
+      ethers.ZeroAddress,
+      ethers.ZeroAddress
     );
     await token.waitForDeployment();
+
+    // Disable vault-only for simple transfer smoke
+    await token.setVaultOnly(false);
   });
 
   it("Should deploy VFIDEToken successfully", async function () {
     expect(await token.getAddress()).to.be.properAddress;
   });
 
-  it("Should have correct total supply", async function () {
+  it("Should have initial dev reserve supply (40M)", async function () {
     const totalSupply = await token.totalSupply();
-    expect(totalSupply).to.equal(ethers.parseEther("1000000000")); // 1B tokens
+    expect(totalSupply).to.equal(ethers.parseUnits("40000000", 18));
   });
 
   it("Should allow transfers", async function () {
