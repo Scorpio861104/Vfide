@@ -1,0 +1,9 @@
+digraph "" {
+c176_MerchantRebateVault -> c654_Ownable;
+c176_MerchantRebateVault[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>MerchantRebateVault</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    setManager(address,bool)</TD></TR><TR><TD align="left">    payRebate(address,uint256,string)</TD></TR><TR><TD align="left">    burnFunds(uint256)</TD></TR><TR><TD align="left">    withdraw(address,uint256)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyManager()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    vfide<font color="blue" POINT-SIZE="10"> (IERC20)</font></TD></TR><TR><TD align="left">    isManager</TD></TR></TABLE> >];
+
+c654_Ownable[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>Ownable</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    transferOwnership(address)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyOwner()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    owner</TD></TR></TABLE> >];
+
+c677_ReentrancyGuard[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ReentrancyGuard</B></TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    nonReentrant()</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _status</TD></TR></TABLE> >];
+
+}

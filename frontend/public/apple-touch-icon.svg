@@ -1,0 +1,10 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="180" height="180" fill="#0F0F12"/>
+  <!-- Shield -->
+  <path d="M90 20L150 40V80C150 120 126 150 90 162C54 150 30 120 30 80V40L90 20Z" fill="#1A1A1D" stroke="#00F0FF" stroke-width="3"/>
+  <!-- V letterform -->
+  <path d="M55 55L90 125L125 55" stroke="#F5F3E8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Accent -->
+  <circle cx="90" cy="140" r="4" fill="#00F0FF"/>
+</svg>

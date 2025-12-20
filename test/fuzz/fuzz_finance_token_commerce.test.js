@@ -109,9 +109,7 @@ describe("Deterministic fuzz: Finance / Token / Commerce (sanity)", function () 
             break;
           }
           case 4: {
-            // toggle TEST helper: decimals
-            if (rnd() > 0.5) await registry.TEST_setForceDecimals(6, true);
-            else await registry.TEST_setForceDecimals(0, false);
+            // toggle TEST helper: decimals - REMOVED
             break;
           }
           case 5: {

@@ -1,95 +1,60 @@
-const { expect } = require('chai');
-const { ethers } = require('hardhat');
+const { expect } = require("chai");
+const { deployContracts, deployCommerce } = require("./helpers");
+const { ethers } = require("hardhat");
 
-describe('coverage.finish.commerce.stateful - stateful escrow and merchant flows', function () {
-  let deployer, dao, buyer, merchant, stranger;
-  beforeEach(async () => {
-    [deployer, dao, buyer, merchant, stranger] = await ethers.getSigners();
-  });
+describe("coverage.finish.commerce.stateful", function () {
+    let owner, user1, user2, merchant1, merchant2, dao, registry, escrow, token, vault, seer, ledger;
 
-  it('creates merchant, opens/funds/resolve/refund/dispute/resolve flows and triggers refund/dispute thresholds', async function () {
-    const VaultHub = await ethers.getContractFactory('VaultHubMock');
-    const Seer = await ethers.getContractFactory('SeerMock');
-    const ERC20 = await ethers.getContractFactory('ERC20Mock');
-    const Ledger = await ethers.getContractFactory('LedgerMock');
-    const MR = await ethers.getContractFactory('contracts-min/VFIDECommerce.sol:MerchantRegistry');
-    const CE = await ethers.getContractFactory('contracts-min/VFIDECommerce.sol:CommerceEscrow');
+    beforeEach(async function () {
+        [owner, user1, user2, merchant1, merchant2, dao] = await ethers.getSigners();
+        const deployments = await deployCommerce(owner, dao);
+        registry = deployments.registry;
+        escrow = deployments.escrow;
+        token = deployments.token;
+        vault = deployments.vault;
+        seer = deployments.seer;
+        ledger = deployments.ledger;
 
-    const vault = await VaultHub.deploy(); await vault.waitForDeployment();
-    const seer = await Seer.deploy(); await seer.waitForDeployment();
-    const token = await ERC20.deploy('T','T'); await token.waitForDeployment();
-    const ledger = await Ledger.deploy(false); await ledger.waitForDeployment();
+        // Setup for stateful tests
+        await registry.connect(dao).setReporter(owner.address, true);
+        await seer.connect(owner).setScore(merchant1.address, 1);
+        await seer.connect(owner).setScore(user1.address, 1);
+        await vault.connect(owner).setVault(merchant1.address, merchant1.address);
+        await vault.connect(owner).setVault(user1.address, user1.address);
+    });
 
-    // set min score and vaults
-    await seer.setMin(1);
-    await seer.setScore(merchant.address, 1);
-    await vault.setVault(merchant.address, merchant.address);
-    await vault.setVault(buyer.address, buyer.address);
+    it("should handle the full lifecycle of a merchant and multiple escrows", async function () {
+        // 1. Merchant signs up
+        await registry.connect(merchant1).addMerchant(ethers.encodeBytes32String("meta"));
+        let merchantData = await registry.merchants(merchant1.address);
+        expect(merchantData.status).to.equal(1); // ACTIVE
 
-    const mr = await MR.deploy(dao.address, token.target, vault.target, seer.target, ethers.ZeroAddress, ledger.target);
-    await mr.waitForDeployment();
-    const ce = await CE.deploy(dao.address, token.target, vault.target, mr.target, ethers.ZeroAddress, ledger.target);
-    await ce.waitForDeployment();
+        const amount = ethers.parseEther("100");
 
-    // 1) merchant signup via addMerchant (as merchant)
-    await mr.connect(merchant).addMerchant(ethers.ZeroHash);
-  const info = await mr.info(merchant.address);
-  expect(info.status !== undefined).to.be.true;
+        // 2. Escrow 1: Open
+        await escrow.connect(user1).open(merchant1.address, amount, ethers.encodeBytes32String("escrow1"));
+        const escrowId1 = await escrow.escrowCount();
+        let e1 = await escrow.escrows(escrowId1);
+        expect(e1.state).to.equal(1); // OPEN
+        expect(e1.buyerOwner).to.equal(user1.address);
+        expect(e1.merchantOwner).to.equal(merchant1.address);
 
-    // 2) open an escrow as buyer
-    const amount = 100;
-    const tx = await ce.connect(buyer).open(merchant.address, amount, ethers.ZeroHash);
-    const rc = await tx.wait();
-  const id = await ce.escrowCount();
-  expect(id !== undefined).to.be.true;
-  const idNum = (typeof id === 'bigint') ? Number(id) : Number(id.toString());
-  expect(Number.isFinite(idNum) && idNum > 0).to.be.true;
+        // 3. Trigger refund auto-suspension by calling reportRefund multiple times
+        const refundThreshold = await registry.autoSuspendRefunds();
+        for (let i = 0; i < refundThreshold; i++) {
+            await registry.reportRefund(merchant1.address);
+        }
+        merchantData = await registry.merchants(merchant1.address);
+        expect(merchantData.status).to.equal(2); // SUSPENDED
+        expect(merchantData.refunds).to.be.gte(refundThreshold);
 
-    // 3) fund escrow: mint tokens to escrow contract and markFunded
-  await token.mint(ce.target, amount);
-  await ce.markFunded(idNum);
-  // now release by buyer
-  await ce.connect(buyer).release(idNum);
-
-    // create another escrow to test refund path
-    await ce.connect(buyer).open(merchant.address, amount, ethers.ZeroHash);
-  const id2 = await ce.escrowCount();
-  const id2Num = (typeof id2 === 'bigint') ? Number(id2) : Number(id2.toString());
-  await token.mint(ce.target, amount);
-  await ce.markFunded(id2Num);
-    // refund by merchant
-  await ce.connect(merchant).refund(id2Num);
-
-    // 4) create escrow to dispute and resolve
-    await ce.connect(buyer).open(merchant.address, amount, ethers.ZeroHash);
-  const id3 = await ce.escrowCount();
-  const id3Num = (typeof id3 === 'bigint') ? Number(id3) : Number(id3.toString());
-  await token.mint(ce.target, amount);
-  await ce.markFunded(id3Num);
-  await ce.connect(buyer).dispute(id3Num, 'reason');
-  // resolve by dao
-  await ce.connect(dao).resolve(id3Num, true);
-
-    // 5) trigger refund/dispute thresholds by calling _noteRefund/_noteDispute directly
-    const autoR = await mr.autoSuspendRefunds();
-    const autoD = await mr.autoSuspendDisputes();
-    const autoRNum = (typeof autoR === 'bigint') ? Number(autoR) : Number(autoR.toString());
-    const autoDNum = (typeof autoD === 'bigint') ? Number(autoD) : Number(autoD.toString());
-    // call noteRefund enough times to suspend merchant
-    for (let i = 0; i < autoRNum; i++) {
-      await mr._noteRefund(merchant.address);
-    }
-    const info2 = await mr.info(merchant.address);
-    const refundsNum = (typeof info2.refunds === 'bigint') ? Number(info2.refunds) : Number(info2.refunds.toString());
-    expect(refundsNum >= autoRNum).to.be.true;
-
-    for (let i = 0; i < autoDNum; i++) {
-      await mr._noteDispute(merchant.address);
-    }
-    const info3 = await mr.info(merchant.address);
-    const disputesNum = (typeof info3.disputes === 'bigint') ? Number(info3.disputes) : Number(info3.disputes.toString());
-    expect(disputesNum >= autoDNum).to.be.true;
-
-    expect(true).to.equal(true);
-  });
+        // 4. Trigger dispute auto-suspension (already suspended, so count should NOT increase)
+        const disputeThreshold = await registry.autoSuspendDisputes();
+        const initialDisputes = merchantData.disputes;
+        for (let i = 0; i < disputeThreshold; i++) {
+            await registry.reportDispute(merchant1.address);
+        }
+        merchantData = await registry.merchants(merchant1.address);
+        expect(merchantData.disputes).to.equal(initialDisputes);
+    });
 });

@@ -16,15 +16,7 @@ pragma solidity 0.8.30;
  *  - No vault-level locks here (that’s GuardianLock/PanicGuard). This is ONLY the global breaker toggle.
  */
 
-interface IEmergencyBreaker_EC {
-    function halted() external view returns (bool);
-    function toggle(bool on, string calldata reason) external;
-}
-
-interface IProofLedger_EC {
-    function logSystemEvent(address who, string calldata action, address by) external;
-    function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
-}
+import "./SharedInterfaces.sol";
 
 error EC_NotDAO();
 error EC_Zero();
@@ -45,8 +37,8 @@ contract EmergencyControl {
     event DAOToggled(bool halt, string reason);
 
     address public dao;
-    IEmergencyBreaker_EC public breaker;
-    IProofLedger_EC public ledger; // optional
+    IEmergencyBreaker public breaker;
+    IProofLedger public ledger; // optional
 
     // anti-flap minimum time between successful toggles
     uint64 public minCooldown = 5 minutes;
@@ -54,25 +46,37 @@ contract EmergencyControl {
 
     // Committee config
     mapping(address => bool) public isMember;
+    address[] public currentMembers;
     uint8 public memberCount;
     uint8 public threshold; // M-of-N
 
     // Per-stance voting (separate counters for halt=true vs halt=false)
-    mapping(address => bool) public hasVotedHalt;
-    mapping(address => bool) public hasVotedUnhalt;
+    uint256 public epoch;
+    mapping(address => uint256) public lastVotedHaltEpoch;
+    mapping(address => uint256) public lastVotedUnhaltEpoch;
     uint8 public approvalsHalt;
     uint8 public approvalsUnhalt;
+    
+    // H-14 Fix: Vote expiry
+    uint64 public voteExpiryPeriod = 7 days;
+    uint64 public haltVotingStartTime;
+    uint64 public unhaltVotingStartTime;
 
     modifier onlyDAO() {
-        if (msg.sender != dao) revert EC_NotDAO();
+        _checkDAO();
         _;
+    }
+
+    function _checkDAO() internal view {
+        if (msg.sender != dao) revert EC_NotDAO();
     }
 
     constructor(address _dao, address _breaker, address _ledger) {
         if (_dao == address(0) || _breaker == address(0)) revert EC_Zero();
         dao = _dao;
-        breaker = IEmergencyBreaker_EC(_breaker);
-        ledger = IProofLedger_EC(_ledger);
+        breaker = IEmergencyBreaker(_breaker);
+        ledger = IProofLedger(_ledger);
+        epoch = 1;
         emit ModulesSet(_dao, _breaker, _ledger);
     }
 
@@ -80,7 +84,7 @@ contract EmergencyControl {
 
     function setModules(address _dao, address _breaker, address _ledger) external onlyDAO {
         if (_dao == address(0) || _breaker == address(0)) revert EC_Zero();
-        dao = _dao; breaker = IEmergencyBreaker_EC(_breaker); ledger = IProofLedger_EC(_ledger);
+        dao = _dao; breaker = IEmergencyBreaker(_breaker); ledger = IProofLedger(_ledger);
         emit ModulesSet(_dao, _breaker, _ledger);
         _log("ec_modules_set");
     }
@@ -93,25 +97,25 @@ contract EmergencyControl {
 
     function resetCommittee(uint8 _threshold, address[] calldata members) external onlyDAO {
         if (_threshold == 0 || _threshold > members.length) revert EC_BadThreshold();
-        // clear old members
-        for (uint256 i = 0; i < members.length; i++) {
-            // will reset mapping below
+        
+        // Clear old members
+        for (uint256 i = 0; i < currentMembers.length; i++) {
+            isMember[currentMembers[i]] = false;
         }
-        // brute-force clear by recreating mapping: we don't iterate unknown old set; rely on isMember check on add/remove afterwards.
+        delete currentMembers;
+
         // Reinitialize:
         memberCount = 0;
         threshold = _threshold;
 
-        // naive clear of vote state
-        approvalsHalt = 0;
-        approvalsUnhalt = 0;
-        // NOTE: hasVoted maps remain; they’ll be overwritten lazily by new adds.
+        _resetVotes();
 
         for (uint256 j = 0; j < members.length; j++) {
             address m = members[j];
             if (m == address(0)) revert EC_Zero();
             if (isMember[m]) revert EC_AlreadyMember();
             isMember[m] = true;
+            currentMembers.push(m);
             memberCount += 1;
             emit MemberAdded(m);
         }
@@ -119,10 +123,19 @@ contract EmergencyControl {
         _log("ec_committee_reset");
     }
 
+    function resetVotes() external onlyDAO {
+        _resetVotes();
+        // H-14 Fix: Reset vote timers
+        haltVotingStartTime = 0;
+        unhaltVotingStartTime = 0;
+        _log("ec_votes_reset");
+    }
+
     function addMember(address m) external onlyDAO {
         if (m == address(0)) revert EC_Zero();
         if (isMember[m]) revert EC_AlreadyMember();
         isMember[m] = true; memberCount += 1;
+        currentMembers.push(m);
         emit MemberAdded(m);
         _log("ec_member_add");
         // threshold unchanged; DAO should adjust separately if desired
@@ -131,6 +144,15 @@ contract EmergencyControl {
     function removeMember(address m) external onlyDAO {
         if (!isMember[m]) revert EC_NotMember();
         isMember[m] = false; memberCount -= 1;
+        
+        for (uint256 i = 0; i < currentMembers.length; i++) {
+            if (currentMembers[i] == m) {
+                currentMembers[i] = currentMembers[currentMembers.length - 1];
+                currentMembers.pop();
+                break;
+            }
+        }
+
         emit MemberRemoved(m);
         _log("ec_member_remove");
         if (threshold > memberCount) {
@@ -159,8 +181,17 @@ contract EmergencyControl {
         if (!isMember[msg.sender]) revert EC_NotMember();
 
         if (halt) {
-            if (hasVotedHalt[msg.sender]) revert EC_AlreadyVoted();
-            hasVotedHalt[msg.sender] = true;
+            // H-14 Fix: Check vote expiry and reset if expired
+            if (haltVotingStartTime > 0 && block.timestamp > haltVotingStartTime + voteExpiryPeriod) {
+                approvalsHalt = 0;
+                haltVotingStartTime = uint64(block.timestamp);
+                epoch++; // Expire old votes
+            } else if (haltVotingStartTime == 0) {
+                haltVotingStartTime = uint64(block.timestamp);
+            }
+            
+            if (lastVotedHaltEpoch[msg.sender] == epoch) revert EC_AlreadyVoted();
+            lastVotedHaltEpoch[msg.sender] = epoch;
             approvalsHalt += 1;
             emit CommitteeVote(msg.sender, true, approvalsHalt, reason);
             _logEv(msg.sender, "ec_vote_halt", approvalsHalt, reason);
@@ -173,8 +204,17 @@ contract EmergencyControl {
                 _resetVotes(); // reset both sides after decisive action
             }
         } else {
-            if (hasVotedUnhalt[msg.sender]) revert EC_AlreadyVoted();
-            hasVotedUnhalt[msg.sender] = true;
+            // H-14 Fix: Check vote expiry and reset if expired
+            if (unhaltVotingStartTime > 0 && block.timestamp > unhaltVotingStartTime + voteExpiryPeriod) {
+                approvalsUnhalt = 0;
+                unhaltVotingStartTime = uint64(block.timestamp);
+                epoch++; // Expire old votes
+            } else if (unhaltVotingStartTime == 0) {
+                unhaltVotingStartTime = uint64(block.timestamp);
+            }
+            
+            if (lastVotedUnhaltEpoch[msg.sender] == epoch) revert EC_AlreadyVoted();
+            lastVotedUnhaltEpoch[msg.sender] = epoch;
             approvalsUnhalt += 1;
             emit CommitteeVote(msg.sender, false, approvalsUnhalt, reason);
             _logEv(msg.sender, "ec_vote_unhalt", approvalsUnhalt, reason);
@@ -191,6 +231,9 @@ contract EmergencyControl {
 
     // ───────────────────────────────── Views
 
+    function hasVotedHalt(address m) external view returns (bool) { return lastVotedHaltEpoch[m] == epoch; }
+    function hasVotedUnhalt(address m) external view returns (bool) { return lastVotedUnhaltEpoch[m] == epoch; }
+
     function timeSinceLastToggle() external view returns (uint64) {
         if (lastToggleTs == 0) return type(uint64).max;
         return uint64(block.timestamp) - lastToggleTs;
@@ -202,9 +245,7 @@ contract EmergencyControl {
         // Reset counts; per-member flags remain true for this epoch but won't matter
         approvalsHalt = 0;
         approvalsUnhalt = 0;
-        // We intentionally do not clear hasVoted maps to save gas; a new epoch can be simulated by DAO calling setThreshold(threshold) no-op,
-        // or simply relying on the fact a decisive action resets counts and future votes start from zero approval.
-        // If strict replay protection is required, DAO can resetCommittee with the same members to clear flags.
+        epoch++;
     }
 
     function _enforceCooldown() internal view {

@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VFIDE Badge Collection - Complete</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #C9A227;
+            --gold-light: #E8D48A;
+            --gold-dark: #8B6914;
+            --platinum: #A8A9AD;
+            --platinum-light: #E8E8E8;
+            --obsidian: #0A0A0A;
+            --charcoal: #1C1C1E;
+            --bronze: #8C6239;
+            --bronze-light: #C8956C;
+            --merchant-blue: #4A6FA5;
+            --merchant-teal: #2D8B7A;
+            --merchant-purple: #6B5B95;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--obsidian);
+            min-height: 100vh;
+            color: var(--platinum-light);
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.4rem;
+            font-weight: 400;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+        
+        .subtitle {
+            font-weight: 300;
+            font-size: 0.8rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--platinum);
+        }
+        
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin: 60px 0 40px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(201, 162, 39, 0.1);
+        }
+        
+        .section-header h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 400;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+        
+        .section-header p {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            opacity: 0.5;
+        }
+        
+        /* Badge Grid - Fixed */
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 10px;
+        }
+        
+        /* Badge Card - Fixed overflow */
+        .badge-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px 80px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            min-height: 280px;
+        }
+        
+        .badge-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .badge-card:hover .badge-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .badge-card:hover .ambient-glow {
+            opacity: 0.25;
+        }
+        
+        /* Badge Container - Fixed sizing */
+        .badge {
+            width: 160px;
+            height: 160px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        /* Main Badge Face */
+        .badge-face {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(165deg, #1a1a1c 0%, #0d0d0d 50%, #151515 100%);
+            overflow: hidden;
+        }
+        
+        .badge-face::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 1px,
+                rgba(255,255,255,0.008) 1px,
+                rgba(255,255,255,0.008) 2px
+            );
+            border-radius: inherit;
+        }
+        
+        .badge-face::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: 
+                inset 0 3px 6px rgba(255,255,255,0.04),
+                inset 0 -3px 10px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+        
+        /* Hexagonal for permanent */
+        .badge.permanent .badge-face {
+            border-radius: 0;
+            clip-path: polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
+            width: 130px;
+            height: 150px;
+        }
+        
+        /* Shimmer */
+        .badge-shimmer {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                105deg,
+                transparent 20%,
+                rgba(255,255,255,0.02) 30%,
+                rgba(255,255,255,0.06) 50%,
+                rgba(255,255,255,0.02) 70%,
+                transparent 80%
+            );
+            transform: translateX(-100%);
+            animation: shimmer 5s ease-in-out infinite;
+            pointer-events: none;
+            border-radius: inherit;
+            clip-path: inherit;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            30%, 100% { transform: translateX(100%); }
+        }
+        
+        /* ===== TIER BORDERS ===== */
+        
+        /* LEGENDARY */
+        .tier-legendary .badge-face {
+            border: 2px solid var(--gold);
+        }
+        
+        .tier-legendary .badge-outer-ring {
+            position: absolute;
+            inset: -8px;
+            border: 1px solid var(--gold-dark);
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        
+        .tier-legendary.permanent .badge-outer-ring {
+            clip-path: polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
+            border-radius: 0;
+        }
+        
+        .tier-legendary.first-hundred .badge-face {
+            border-width: 3px;
+        }
+        
+        .tier-legendary.first-hundred .badge-outer-ring {
+            opacity: 0.7;
+            animation: ring-pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes ring-pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        
+        /* EPIC */
+        .tier-epic .badge-face {
+            border: 2px solid var(--platinum);
+        }
+        
+        /* RARE */
+        .tier-rare .badge-face {
+            border: 2px dashed var(--bronze);
+        }
+        
+        /* MERCHANT TIER */
+        .tier-merchant .badge-face {
+            border: 2px solid var(--merchant-blue);
+        }
+        
+        .tier-merchant-gold .badge-face {
+            border: 2px solid var(--gold);
+            box-shadow: inset 0 0 30px rgba(201, 162, 39, 0.1);
+        }
+        
+        .tier-merchant-platinum .badge-face {
+            border: 2px solid var(--platinum);
+        }
+        
+        .tier-merchant-diamond .badge-face {
+            border: 2px solid #60C8E8;
+            box-shadow: inset 0 0 30px rgba(96, 200, 232, 0.15);
+        }
+        
+        /* ===== ICONS ===== */
+        .badge-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .badge-icon svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+        }
+        
+        .tier-legendary .badge-icon svg { fill: var(--gold); }
+        .tier-epic .badge-icon svg { fill: var(--platinum); }
+        .tier-rare .badge-icon svg { fill: var(--bronze); }
+        .tier-merchant .badge-icon svg { fill: var(--merchant-blue); }
+        .tier-merchant-gold .badge-icon svg { fill: var(--gold); }
+        .tier-merchant-platinum .badge-icon svg { fill: var(--platinum); }
+        .tier-merchant-diamond .badge-icon svg { fill: #60C8E8; }
+        
+        /* Badge Text */
+        .badge-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+        
+        .tier-legendary .badge-title { color: var(--gold); }
+        .tier-epic .badge-title { color: var(--platinum-light); }
+        .tier-rare .badge-title { color: var(--bronze-light); }
+        .tier-merchant .badge-title { color: var(--merchant-blue); }
+        .tier-merchant-gold .badge-title { color: var(--gold); }
+        .tier-merchant-platinum .badge-title { color: var(--platinum-light); }
+        .tier-merchant-diamond .badge-title { color: #60C8E8; }
+        
+        .badge-value {
+            font-size: 0.6rem;
+            font-weight: 400;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Serial Plaque - Fixed positioning */
+        .serial-plaque {
+            position: absolute;
+            bottom: 12%;
+            background: linear-gradient(180deg, #1a1a1a, #0a0a0a);
+            border: 1px solid rgba(201, 162, 39, 0.25);
+            border-radius: 2px;
+            padding: 2px 8px;
+            z-index: 2;
+        }
+        
+        .serial-plaque span {
+            font-family: 'Montserrat', monospace;
+            font-size: 0.45rem;
+            letter-spacing: 1px;
+            color: var(--gold);
+            opacity: 0.7;
+        }
+        
+        .first-hundred .serial-plaque::before {
+            content: '★ ';
+            color: var(--gold);
+        }
+        
+        /* Progress Ring */
+        .progress-ring {
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+        }
+        
+        .progress-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 2;
+        }
+        
+        .progress-ring .bg {
+            stroke: rgba(255,255,255,0.05);
+        }
+        
+        .progress-ring .progress {
+            stroke: var(--platinum);
+            stroke-linecap: round;
+            stroke-dasharray: 440;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        
+        .progress-label {
+            position: absolute;
+            top: -20px;
+            font-size: 0.5rem;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            white-space: nowrap;
+        }
+        
+        /* Soulbound Mark - Fixed */
+        .soulbound {
+            position: absolute;
+            bottom: 55px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.3;
+        }
+        
+        .soulbound-icon {
+            width: 10px;
+            height: 10px;
+        }
+        
+        .soulbound-icon svg {
+            fill: currentColor;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Tooltip - Fixed positioning */
+        .badge-tooltip {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(180deg, #1a1a1c, #0d0d0d);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 12px 15px;
+            width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .tooltip-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        
+        .tier-legendary .tooltip-title { color: var(--gold); }
+        .tier-epic .tooltip-title { color: var(--platinum-light); }
+        .tier-rare .tooltip-title { color: var(--bronze-light); }
+        .tier-merchant .tooltip-title,
+        .tier-merchant-gold .tooltip-title,
+        .tier-merchant-platinum .tooltip-title,
+        .tier-merchant-diamond .tooltip-title { color: var(--merchant-blue); }
+        
+        .tooltip-story {
+            font-size: 0.65rem;
+            font-weight: 300;
+            line-height: 1.5;
+            color: var(--platinum);
+            margin-bottom: 8px;
+        }
+        
+        .tooltip-stats {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .tooltip-stat {
+            text-align: center;
+        }
+        
+        .tooltip-stat-value {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+        
+        .tooltip-stat-label {
+            font-size: 0.5rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.4;
+        }
+        
+        /* Ambient glow */
+        .ambient-glow {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0.08;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .tier-legendary .ambient-glow { background: var(--gold); }
+        .tier-epic .ambient-glow { background: var(--platinum); }
+        .tier-rare .ambient-glow { background: var(--bronze); }
+        .tier-merchant .ambient-glow,
+        .tier-merchant-gold .ambient-glow,
+        .tier-merchant-platinum .ambient-glow,
+        .tier-merchant-diamond .ambient-glow { background: var(--merchant-blue); }
+        
+        /* ===== PROFILE CARD - Fixed ===== */
+        .profile-section {
+            margin-top: 80px;
+            padding: 40px 20px;
+            border-top: 1px solid rgba(201, 162, 39, 0.1);
+        }
+        
+        .profile-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-weight: 400;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--gold);
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .profile-card {
+            max-width: 500px;
+            margin: 0 auto;
+            background: linear-gradient(165deg, #141416 0%, #0a0a0a 50%, #0f0f0f 100%);
+            border: 1px solid rgba(201, 162, 39, 0.25);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .profile-header {
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(201, 162, 39, 0.08), transparent);
+            border-bottom: 1px solid rgba(201, 162, 39, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .profile-avatar {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--obsidian);
+            flex-shrink: 0;
+        }
+        
+        .profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .profile-address {
+            font-family: monospace;
+            font-size: 0.7rem;
+            opacity: 0.5;
+            margin-bottom: 4px;
+        }
+        
+        .profile-score {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .profile-score-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+        
+        .profile-score-label {
+            font-size: 0.6rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.4;
+        }
+        
+        .profile-tier {
+            padding: 3px 10px;
+            background: rgba(201, 162, 39, 0.15);
+            border: 1px solid var(--gold);
+            border-radius: 15px;
+            font-size: 0.55rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+        
+        .profile-badges {
+            padding: 20px 25px;
+        }
+        
+        .profile-badges-title {
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.35;
+            margin-bottom: 15px;
+        }
+        
+        .profile-badges-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .profile-badge {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(165deg, #1a1a1c, #0d0d0d);
+            border: 1px solid var(--gold-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .profile-badge.permanent {
+            border-radius: 0;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+        
+        .profile-badge svg {
+            width: 22px;
+            height: 22px;
+            fill: var(--gold);
+        }
+        
+        .profile-badge.epic svg { fill: var(--platinum); }
+        .profile-badge.epic { border-color: var(--platinum); }
+        
+        .profile-badge.merchant svg { fill: var(--merchant-blue); }
+        .profile-badge.merchant { border-color: var(--merchant-blue); }
+        
+        .profile-badge.locked {
+            opacity: 0.15;
+            border-color: rgba(255,255,255,0.1);
+        }
+        
+        .profile-badge.locked svg { fill: rgba(255,255,255,0.3); }
+        
+        .profile-stats {
+            padding: 15px 25px;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid rgba(255,255,255,0.03);
+        }
+        
+        .profile-stat {
+            text-align: center;
+        }
+        
+        .profile-stat-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            color: var(--gold);
+        }
+        
+        .profile-stat-label {
+            font-size: 0.5rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.35;
+        }
+        
+        .profile-footer {
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(201, 162, 39, 0.08);
+        }
+        
+        .profile-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            color: var(--gold);
+            opacity: 0.5;
+        }
+        
+        .profile-date {
+            font-size: 0.55rem;
+            opacity: 0.25;
+        }
+        
+        .share-btn {
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: var(--obsidian);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .share-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(201, 162, 39, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>VFIDE</h1>
+            <p class="subtitle">Achievement Collection</p>
+        </header>
+        
+        <!-- CORE BADGES -->
+        <div class="badge-grid">
+            
+            <!-- PIONEER -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge permanent tier-legendary first-hundred">
+                    <div class="badge-outer-ring"></div>
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><path d="M24 4L6 14v2h36v-2L24 4z"/><rect x="10" y="18" width="4" height="18" rx="1"/><rect x="18" y="18" width="4" height="18" rx="1"/><rect x="26" y="18" width="4" height="18" rx="1"/><rect x="34" y="18" width="4" height="18" rx="1"/><rect x="6" y="36" width="36" height="4" rx="1"/></svg>
+                        </div>
+                        <div class="badge-title">Pioneer</div>
+                        <div class="badge-value">+30 PROOF</div>
+                        <div class="serial-plaque"><span>#0047 / 10K</span></div>
+                    </div>
+                </div>
+                <div class="soulbound">
+                    <span class="soulbound-icon"><svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2z"/></svg></span>
+                    Soulbound
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Pioneer #47</div>
+                    <div class="tooltip-story">Among the first 100 believers. This badge can never be earned again.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">Top 1%</div><div class="tooltip-stat-label">Rarity</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">Forever</div><div class="tooltip-stat-label">Duration</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- GENESIS -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge permanent tier-legendary">
+                    <div class="badge-outer-ring"></div>
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="5"/><path d="M24 4v8M24 36v8M4 24h8M36 24h8" stroke="currentColor" stroke-width="3" fill="none"/><path d="M10 10l6 6M32 32l6 6M10 38l6-6M32 16l6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                        </div>
+                        <div class="badge-title">Genesis</div>
+                        <div class="badge-value">+40 PROOF</div>
+                    </div>
+                </div>
+                <div class="soulbound">
+                    <span class="soulbound-icon"><svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2z"/></svg></span>
+                    Soulbound
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Genesis</div>
+                    <div class="tooltip-story">Presale participant. Your wallet is part of the origin story.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">Presale</div><div class="tooltip-stat-label">Era</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">Forever</div><div class="tooltip-stat-label">Duration</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FOUNDER -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge permanent tier-legendary first-hundred">
+                    <div class="badge-outer-ring"></div>
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><path d="M6 30l6-14 6 8 6-12 6 12 6-8 6 14H6z"/><path d="M6 30h36v5H6z"/><circle cx="12" cy="14" r="2.5"/><circle cx="24" cy="10" r="2.5"/><circle cx="36" cy="14" r="2.5"/></svg>
+                        </div>
+                        <div class="badge-title">Founder</div>
+                        <div class="badge-value">+50 PROOF</div>
+                        <div class="serial-plaque"><span>#0023 / 1K</span></div>
+                    </div>
+                </div>
+                <div class="soulbound">
+                    <span class="soulbound-icon"><svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2z"/></svg></span>
+                    Soulbound
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Founder #23</div>
+                    <div class="tooltip-story">First 1,000 to reach 800+ ProofScore. Elite trust proven early.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">Top 0.1%</div><div class="tooltip-stat-label">Rarity</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">800+</div><div class="tooltip-stat-label">Score Req</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ELITE -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge permanent tier-legendary">
+                    <div class="badge-outer-ring"></div>
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><polygon points="24,4 28,16 42,16 31,24 35,38 24,30 13,38 17,24 6,16 20,16"/></svg>
+                        </div>
+                        <div class="badge-title">Elite</div>
+                        <div class="badge-value">+50 PROOF</div>
+                    </div>
+                </div>
+                <div class="soulbound">
+                    <span class="soulbound-icon"><svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2z"/></svg></span>
+                    Soulbound
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Elite Achiever</div>
+                    <div class="tooltip-story">ProofScore 900+. Top 5% of all users. Maximum trust.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">Top 5%</div><div class="tooltip-stat-label">Percentile</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">0.25%</div><div class="tooltip-stat-label">Fee Rate</div></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- MERCHANT BADGES -->
+        <div class="section-header">
+            <h2>Merchant Achievements</h2>
+            <p>Performance-based badges for active sellers</p>
+        </div>
+        
+        <div class="badge-grid">
+            
+            <!-- VERIFIED SELLER -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge tier-merchant">
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><rect x="8" y="12" width="32" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 20h32" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="28" r="4"/><path d="M16 28h8" stroke="currentColor" stroke-width="2"/></svg>
+                        </div>
+                        <div class="badge-title">Verified</div>
+                        <div class="badge-value">+25 PROOF</div>
+                    </div>
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Verified Seller</div>
+                    <div class="tooltip-story">Completed identity verification and 50+ successful sales. Entry to merchant program.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">50+</div><div class="tooltip-stat-label">Sales</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">365 days</div><div class="tooltip-stat-label">Duration</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TRUSTED MERCHANT -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge tier-merchant">
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><path d="M24 4L8 12v12c0 10 16 16 16 16s16-6 16-16V12L24 4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 24l4 4 8-8" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+                        </div>
+                        <div class="badge-title">Trusted</div>
+                        <div class="badge-value">+35 PROOF</div>
+                    </div>
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Trusted Merchant</div>
+                    <div class="tooltip-story">200+ sales, 4.5+ rating, zero disputes in last 90 days. Reliable performer.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">200+</div><div class="tooltip-stat-label">Sales</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">4.5+</div><div class="tooltip-stat-label">Rating</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PLATINUM MERCHANT -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge tier-merchant-platinum">
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><polygon points="24,4 40,16 24,44 8,16"/><polygon points="24,4 40,16 24,16 8,16" opacity="0.3"/><path d="M18 22l4 4 6-6" stroke="#0a0a0a" stroke-width="2" fill="none"/></svg>
+                        </div>
+                        <div class="badge-title">Platinum</div>
+                        <div class="badge-value">+45 PROOF</div>
+                    </div>
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Platinum Merchant</div>
+                    <div class="tooltip-story">500+ sales, $50K+ volume, 4.7+ rating. Top 10% of all merchants.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">$50K+</div><div class="tooltip-stat-label">Volume</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">Top 10%</div><div class="tooltip-stat-label">Rank</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- GOLD MERCHANT -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge permanent tier-merchant-gold">
+                    <div class="badge-outer-ring" style="border-color: var(--gold-dark);"></div>
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 12v24M16 20h16M18 28h12" stroke="currentColor" stroke-width="2"/></svg>
+                        </div>
+                        <div class="badge-title">Gold</div>
+                        <div class="badge-value">+55 PROOF</div>
+                    </div>
+                </div>
+                <div class="soulbound">
+                    <span class="soulbound-icon"><svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2z"/></svg></span>
+                    Soulbound
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Gold Merchant</div>
+                    <div class="tooltip-story">1,000+ sales, $100K+ volume, 4.8+ rating, zero disputes. Exceptional track record.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">$100K+</div><div class="tooltip-stat-label">Volume</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">4.8+</div><div class="tooltip-stat-label">Rating</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DIAMOND MERCHANT -->
+            <div class="badge-card">
+                <div class="ambient-glow" style="background: #60C8E8;"></div>
+                <div class="badge permanent tier-merchant-diamond">
+                    <div class="badge-outer-ring" style="border-color: #60C8E8;"></div>
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><polygon points="24,2 44,18 24,46 4,18"/><polygon points="24,2 44,18 24,18 4,18" opacity="0.4"/><polygon points="24,18 44,18 24,46" opacity="0.2"/></svg>
+                        </div>
+                        <div class="badge-title">Diamond</div>
+                        <div class="badge-value">+70 PROOF</div>
+                    </div>
+                </div>
+                <div class="soulbound">
+                    <span class="soulbound-icon"><svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2z"/></svg></span>
+                    Soulbound
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Diamond Merchant</div>
+                    <div class="tooltip-story">5,000+ sales, $500K+ volume, 4.9+ rating, zero disputes ever. The pinnacle of merchant trust.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">$500K+</div><div class="tooltip-stat-label">Volume</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">Top 1%</div><div class="tooltip-stat-label">Rank</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FAST SHIPPER -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge tier-merchant">
+                    <div class="progress-ring">
+                        <svg viewBox="0 0 160 160">
+                            <circle class="bg" cx="80" cy="80" r="70"/>
+                            <circle class="progress" cx="80" cy="80" r="70" style="stroke-dashoffset: 0; stroke: var(--merchant-blue);"/>
+                        </svg>
+                    </div>
+                    <div class="progress-label">Avg: 1.2 days</div>
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><path d="M40 18H32V10H8v22h4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M32 18v14h8l4-8v-6h-12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="34" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="36" cy="34" r="4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        </div>
+                        <div class="badge-title">Fast Ship</div>
+                        <div class="badge-value">+20 PROOF</div>
+                    </div>
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Fast Shipper</div>
+                    <div class="tooltip-story">Average shipping time under 2 days for 100+ orders. Speed matters.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">&lt;2 days</div><div class="tooltip-stat-label">Avg Ship</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">90 days</div><div class="tooltip-stat-label">Duration</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ZERO RETURNS -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge tier-merchant">
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 24l6 6 10-12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+                        </div>
+                        <div class="badge-title">Zero Returns</div>
+                        <div class="badge-value">+30 PROOF</div>
+                    </div>
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Zero Returns</div>
+                    <div class="tooltip-story">300+ sales with zero return requests. Product accuracy and customer satisfaction.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">300+</div><div class="tooltip-stat-label">Sales</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">0%</div><div class="tooltip-stat-label">Return Rate</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TOP RATED -->
+            <div class="badge-card">
+                <div class="ambient-glow"></div>
+                <div class="badge permanent tier-merchant-gold">
+                    <div class="badge-outer-ring" style="border-color: var(--gold-dark);"></div>
+                    <div class="badge-face">
+                        <div class="badge-shimmer"></div>
+                        <div class="badge-icon">
+                            <svg viewBox="0 0 48 48"><polygon points="24,4 28,16 42,16 31,24 35,38 24,30 13,38 17,24 6,16 20,16" fill="none" stroke="currentColor" stroke-width="2"/><polygon points="24,10 26,16 32,16 27,20 29,26 24,22 19,26 21,20 16,16 22,16"/></svg>
+                        </div>
+                        <div class="badge-title">Top Rated</div>
+                        <div class="badge-value">+40 PROOF</div>
+                    </div>
+                </div>
+                <div class="soulbound">
+                    <span class="soulbound-icon"><svg viewBox="0 0 24 24"><path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2z"/></svg></span>
+                    Soulbound
+                </div>
+                <div class="badge-tooltip">
+                    <div class="tooltip-title">Top Rated Seller</div>
+                    <div class="tooltip-story">Maintained 4.9+ rating for 6+ months with 500+ reviews. Customer favorite.</div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">4.9+</div><div class="tooltip-stat-label">Rating</div></div>
+                        <div class="tooltip-stat"><div class="tooltip-stat-value">500+</div><div class="tooltip-stat-label">Reviews</div></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- PROFILE CARD SECTION -->
+        <div class="profile-section">
+            <h2>Shareable Profile</h2>
+            
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar">V</div>
+                    <div class="profile-info">
+                        <div class="profile-address">0x742d...f0bE71</div>
+                        <div class="profile-score">
+                            <span class="profile-score-value">847</span>
+                            <span class="profile-score-label">ProofScore</span>
+                            <span class="profile-tier">Trusted</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-badges">
+                    <div class="profile-badges-title">Earned Badges (8 of 27)</div>
+                    <div class="profile-badges-grid">
+                        <div class="profile-badge permanent" title="Pioneer"><svg viewBox="0 0 48 48"><path d="M24 4L6 14v2h36v-2L24 4z"/><rect x="12" y="18" width="3" height="16"/><rect x="22" y="18" width="3" height="16"/><rect x="33" y="18" width="3" height="16"/><rect x="6" y="34" width="36" height="4"/></svg></div>
+                        <div class="profile-badge permanent" title="Genesis"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="5"/><path d="M24 6v8M24 34v8M6 24h8M34 24h8" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>
+                        <div class="profile-badge epic" title="Voter"><svg viewBox="0 0 48 48"><rect x="12" y="10" width="24" height="28" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 22l4 4 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>
+                        <div class="profile-badge merchant" title="Verified Seller"><svg viewBox="0 0 48 48"><rect x="10" y="14" width="28" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 22h28" stroke="currentColor" stroke-width="2"/></svg></div>
+                        <div class="profile-badge merchant" title="Trusted Merchant"><svg viewBox="0 0 48 48"><path d="M24 6L10 14v10c0 10 14 16 14 16s14-6 14-16V14L24 6z" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+                        <div class="profile-badge merchant" title="Fast Shipper"><svg viewBox="0 0 48 48"><path d="M38 20H30V12H10v20h4M30 20v12h8l4-8v-4h-12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="34" r="3"/><circle cx="34" cy="34" r="3"/></svg></div>
+                        <div class="profile-badge permanent locked" title="Diamond (Locked)"><svg viewBox="0 0 48 48"><polygon points="24,4 42,18 24,44 6,18"/></svg></div>
+                        <div class="profile-badge permanent locked" title="Elite (Locked)"><svg viewBox="0 0 48 48"><polygon points="24,6 28,16 40,16 30,24 34,36 24,28 14,36 18,24 8,16 20,16"/></svg></div>
+                    </div>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="profile-stat"><div class="profile-stat-value">2.3y</div><div class="profile-stat-label">Age</div></div>
+                    <div class="profile-stat"><div class="profile-stat-value">847</div><div class="profile-stat-label">Txns</div></div>
+                    <div class="profile-stat"><div class="profile-stat-value">0</div><div class="profile-stat-label">Disputes</div></div>
+                    <div class="profile-stat"><div class="profile-stat-value">0.75%</div><div class="profile-stat-label">Fee</div></div>
+                </div>
+                
+                <div class="profile-footer">
+                    <div class="profile-logo">VFIDE</div>
+                    <div class="profile-date">Dec 17, 2025</div>
+                    <button class="share-btn">Share</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>

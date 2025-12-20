@@ -1,55 +1,40 @@
 const { expect } = require("chai");
+const { deployContracts } = require("./helpers");
 const { ethers } = require("hardhat");
 
 describe("coverage.finish.commerce.addMerchant.narrow4", function () {
-  it("registers one signer and uses a no-vault signer to flip left/right msg.sender arms", async function () {
-    const [deployer, registrar, novault, vaultOwner] = await ethers.getSigners();
+    let owner, user1, user2, merchant1, merchant2, dao, registry, token, vault, seer, ledger;
 
-    const ERC20 = await ethers.getContractFactory("ERC20Mock");
-    const erc = await ERC20.deploy("TF", "TF");
-    await erc.waitForDeployment();
+    beforeEach(async function () {
+        [owner, user1, user2, merchant1, merchant2, dao] = await ethers.getSigners();
+        ({ registry, token, vault, seer, ledger } = await deployContracts(owner, dao, user1, user2, merchant1, merchant2));
+    });
 
-    const VaultHub = await ethers.getContractFactory("VaultHubMock");
-    const vault = await VaultHub.deploy();
-    await vault.waitForDeployment();
+    it("should correctly identify an existing merchant", async function () {
+        // Add user1 as a merchant
+        await registry.connect(user1).addMerchant(ethers.encodeBytes32String("meta"));
 
-    const Seer = await ethers.getContractFactory("SeerMock");
-    const seer = await Seer.deploy();
-    await seer.waitForDeployment();
+        // Check their status
+        const merchantData = await registry.merchants(user1.address);
+        expect(merchantData.status).to.equal(1); // 1 is ACTIVE in the new contract
+    });
 
-    const Ledger = await ethers.getContractFactory("LedgerMock");
-    const ledger = await Ledger.deploy(false);
-    await ledger.waitForDeployment();
+    it("should revert when a user with no vault tries to register", async function () {
+        // user3 is not set up with a vault in the helpers
+        const [, , , , , , user3] = await ethers.getSigners();
+        await seer.connect(owner).setScore(user3.address, 1); // Give them a passing score
 
-  // Set up seer and vault BEFORE deploying MerchantRegistry so constructor reads correct minScore
-  await seer.setMin(1);
-  await seer.setScore(registrar.address, 1);
-  await seer.setScore(novault.address, 0);
-  await vault.setVault(registrar.address, vaultOwner.address);
+        await expect(
+            registry.connect(user3).addMerchant(ethers.encodeBytes32String("meta"))
+        ).to.be.revertedWithCustomError(registry, "COM_NotAllowed");
+    });
 
-  const MR = await ethers.getContractFactory("MerchantRegistry");
-  const ZERO = '0x0000000000000000000000000000000000000000';
-  const mr = await MR.deploy(deployer.address, erc.target, vault.target, seer.target, ZERO, ledger.target);
-  await mr.waitForDeployment();
+    it("should revert when a user with a low score tries to register", async function () {
+        // user2 has a vault, but we'll set their score to 0
+        await seer.connect(owner).setScore(user2.address, 0);
 
-  // Registrar actually calls addMerchant so merchants[registrar] != NONE (left arm)
-  const META = '0x' + '00'.repeat(32);
-  await mr.connect(registrar).addMerchant(META);
-
-    // Now call pinpoint helper from registrar to exercise the left-alreadyMerchant arm
-    const leftBefore = await mr.TEST_if_alreadyMerchant_left(registrar.address);
-    expect(leftBefore).to.equal(true);
-
-    // Also call TEST_line118_already_or_force from registrar (msg param) to ensure coverage attributed
-    const l2 = await mr.TEST_line118_already_or_force(registrar.address, false);
-    expect(l2).to.equal(true);
-
-    // Now using novault (no vault set) call the msg.sender vault-zero helper to exercise that arm
-    const vZero = await mr.connect(novault).TEST_line130_msgsender_vaultZero_or_force(false);
-    expect(vZero).to.equal(true);
-
-    // Finally exercise low-score branch by ensuring seer score < min for novault and calling helper
-  const lowScore = await mr.TEST_if_seer_score_below_min_or_force(novault.address, false);
-    expect(lowScore).to.equal(true);
-  });
+        await expect(
+            registry.connect(user2).addMerchant(ethers.encodeBytes32String("meta"))
+        ).to.be.revertedWithCustomError(registry, "COM_NotAllowed");
+    });
 });

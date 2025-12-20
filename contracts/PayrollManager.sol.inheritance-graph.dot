@@ -1,0 +1,4 @@
+digraph "" {
+c461_PayrollManager[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>PayrollManager</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    createStream(address,address,uint256,uint256)</TD></TR><TR><TD align="left">    topUp(uint256,uint256)</TD></TR><TR><TD align="left">    withdraw(uint256)</TD></TR><TR><TD align="left">    claimable(uint256)</TD></TR><TR><TD align="left">    cancelStream(uint256)</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    streams</TD></TR><TR><TD align="left">    nextStreamId</TD></TR></TABLE> >];
+
+}

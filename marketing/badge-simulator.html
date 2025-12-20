@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VFIDE ProofScore Simulator - Check Your Eligibility</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vfide-gold: #FFD700;
+            --vfide-purple: #6B46C1;
+            --vfide-dark: #0D0D0D;
+            --vfide-green: #10B981;
+            --vfide-red: #EF4444;
+            --vfide-blue: #3B82F6;
+            --card-bg: #1A1A2E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #9CA3AF;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #0D0D0D 0%, #1A1A2E 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--vfide-gold), #FFB800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        
+        /* Connect Section */
+        .connect-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .wallet-btn {
+            background: linear-gradient(135deg, var(--vfide-gold), #FFB800);
+            color: var(--vfide-dark);
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .wallet-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+        
+        .wallet-btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .wallet-icon {
+            font-size: 1.4rem;
+        }
+        
+        /* Manual Input Section */
+        .manual-input {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .manual-input p {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+        
+        .address-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 15px;
+            font-family: monospace;
+        }
+        
+        .address-input:focus {
+            outline: none;
+            border-color: var(--vfide-gold);
+        }
+        
+        .analyze-btn {
+            background: transparent;
+            color: var(--vfide-gold);
+            border: 2px solid var(--vfide-gold);
+            padding: 12px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .analyze-btn:hover {
+            background: var(--vfide-gold);
+            color: var(--vfide-dark);
+        }
+        
+        /* Loading State */
+        .loading {
+            display: none;
+            padding: 50px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 215, 0, 0.2);
+            border-top-color: var(--vfide-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading p {
+            color: var(--text-secondary);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        /* Results Section */
+        .results {
+            display: none;
+        }
+        
+        .results.active {
+            display: block;
+        }
+        
+        /* Score Card */
+        .score-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            border: 2px solid transparent;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .score-card.elite {
+            border-color: var(--vfide-gold);
+            background: linear-gradient(135deg, rgba(107, 70, 193, 0.2), rgba(255, 215, 0, 0.1));
+        }
+        
+        .score-card.trusted {
+            border-color: var(--vfide-green);
+        }
+        
+        .score-card.neutral {
+            border-color: var(--text-secondary);
+        }
+        
+        .score-card.risky {
+            border-color: var(--vfide-red);
+        }
+        
+        .score-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        
+        .score-value {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .score-card.elite .score-value {
+            background: linear-gradient(135deg, var(--vfide-gold), #FFB800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .score-card.trusted .score-value {
+            color: var(--vfide-green);
+        }
+        
+        .score-card.neutral .score-value {
+            color: var(--text-secondary);
+        }
+        
+        .score-card.risky .score-value {
+            color: var(--vfide-red);
+        }
+        
+        .score-tier {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .fee-indicator {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 25px;
+            border-radius: 50px;
+            display: inline-block;
+            font-size: 1rem;
+        }
+        
+        /* Analysis Grid */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .analysis-item {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .analysis-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .analysis-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--vfide-gold);
+            margin-bottom: 5px;
+        }
+        
+        .analysis-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Badge Eligibility */
+        .badge-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .badge-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .badge-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .badge-item.eligible {
+            border-color: var(--vfide-green);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .badge-item.close {
+            border-color: var(--vfide-gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        .badge-item.locked {
+            opacity: 0.5;
+        }
+        
+        .badge-icon {
+            font-size: 2.5rem;
+        }
+        
+        .badge-info {
+            flex: 1;
+        }
+        
+        .badge-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 3px;
+        }
+        
+        .badge-requirement {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        .badge-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-status.eligible {
+            background: var(--vfide-green);
+            color: white;
+        }
+        
+        .badge-status.close {
+            background: var(--vfide-gold);
+            color: var(--vfide-dark);
+        }
+        
+        .badge-status.locked {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+        }
+        
+        /* Improvement Tips */
+        .tips-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .tips-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .tip-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tip-item:last-child {
+            border-bottom: none;
+        }
+        
+        .tip-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .tip-content h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+        
+        .tip-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .tip-impact {
+            color: var(--vfide-green);
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        
+        /* Share Section */
+        .share-section {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(107, 70, 193, 0.3), rgba(255, 215, 0, 0.1));
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .share-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .share-section p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .share-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .share-btn {
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            border: none;
+            font-size: 1rem;
+        }
+        
+        .share-btn.twitter {
+            background: #1DA1F2;
+            color: white;
+        }
+        
+        .share-btn.copy {
+            background: var(--vfide-gold);
+            color: var(--vfide-dark);
+        }
+        
+        .share-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        /* CTA */
+        .cta-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .cta-section h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+        
+        .cta-section p {
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+        }
+        
+        .cta-btn {
+            background: linear-gradient(135deg, var(--vfide-gold), #FFB800);
+            color: var(--vfide-dark);
+            font-size: 1.3rem;
+            font-weight: 700;
+            padding: 18px 50px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .cta-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: var(--vfide-gold);
+            text-decoration: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .score-value {
+                font-size: 3.5rem;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .badge-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero -->
+        <div class="hero">
+            <h1>🔮 ProofScore Simulator</h1>
+            <p>Connect your wallet to see your projected VFIDE ProofScore and badge eligibility</p>
+        </div>
+        
+        <!-- Connect Section -->
+        <div class="connect-section" id="connectSection">
+            <button class="wallet-btn" id="connectBtn">
+                <span class="wallet-icon">🦊</span>
+                Connect Wallet
+            </button>
+            
+            <div class="manual-input">
+                <p>Or enter any Ethereum address to analyze</p>
+                <input type="text" class="address-input" id="addressInput" placeholder="0x..." />
+                <br>
+                <button class="analyze-btn" id="analyzeBtn">Analyze Address</button>
+            </div>
+        </div>
+        
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing on-chain history...</p>
+        </div>
+        
+        <!-- Results -->
+        <div class="results" id="results">
+            <!-- Score Card -->
+            <div class="score-card" id="scoreCard">
+                <div class="score-label">Your Projected ProofScore</div>
+                <div class="score-value" id="scoreValue">742</div>
+                <div class="score-tier" id="scoreTier">TRUSTED</div>
+                <div class="fee-indicator">
+                    Estimated Fee Rate: <strong id="feeRate">1.0%</strong>
+                </div>
+            </div>
+            
+            <!-- Analysis Grid -->
+            <div class="analysis-grid">
+                <div class="analysis-item">
+                    <div class="analysis-icon">📅</div>
+                    <div class="analysis-value" id="walletAge">2.3y</div>
+                    <div class="analysis-label">Wallet Age</div>
+                </div>
+                <div class="analysis-item">
+                    <div class="analysis-icon">💳</div>
+                    <div class="analysis-value" id="txCount">847</div>
+                    <div class="analysis-label">Transactions</div>
+                </div>
+                <div class="analysis-item">
+                    <div class="analysis-icon">🔄</div>
+                    <div class="analysis-value" id="defiInteractions">23</div>
+                    <div class="analysis-label">DeFi Protocols</div>
+                </div>
+                <div class="analysis-item">
+                    <div class="analysis-icon">🖼️</div>
+                    <div class="analysis-value" id="nftCount">12</div>
+                    <div class="analysis-label">NFTs Held</div>
+                </div>
+            </div>
+            
+            <!-- Badge Eligibility -->
+            <div class="badge-section">
+                <h2>🏅 Badge Eligibility</h2>
+                <div class="badge-grid" id="badgeGrid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Improvement Tips -->
+            <div class="tips-section">
+                <h2>💡 How To Improve Your Score</h2>
+                <div id="tipsContainer">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Share Section -->
+            <div class="share-section">
+                <h2>📣 Share Your Results</h2>
+                <p>Flex your ProofScore on Twitter</p>
+                <div class="share-buttons">
+                    <a class="share-btn twitter" id="twitterShare" href="#" target="_blank">
+                        🐦 Share on Twitter
+                    </a>
+                    <button class="share-btn copy" id="copyBtn">
+                        📋 Copy Result
+                    </button>
+                </div>
+            </div>
+            
+            <!-- CTA -->
+            <div class="cta-section">
+                <h2>Ready to Earn Your Real Score?</h2>
+                <p>Join the presale and lock in your Pioneer badge</p>
+                <a href="https://vfide.io" class="cta-btn" target="_blank">Join VFIDE Presale →</a>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>This is a simulation based on on-chain data analysis. Actual ProofScore may vary based on VFIDE ecosystem activity.</p>
+        <p style="margin-top: 10px;">Built by <a href="https://vfide.io">VFIDE</a> | The Trust Layer for Crypto</p>
+    </footer>
+    
+    <script>
+        // Badge definitions
+        const badges = [
+            { id: 'pioneer', name: 'Pioneer', icon: '🏛️', requirement: 'First 10,000 users', points: 30, permanent: true },
+            { id: 'genesis', name: 'Genesis Presale', icon: '✨', requirement: 'Presale participant', points: 40, permanent: true },
+            { id: 'founding', name: 'Founding Member', icon: '👑', requirement: 'First 1,000 to reach 800+ score', points: 50, permanent: true },
+            { id: 'active_trader', name: 'Active Trader', icon: '⚡', requirement: '50+ trades in 90 days', points: 20, permanent: false },
+            { id: 'governance', name: 'Governance Voter', icon: '🗳️', requirement: 'Vote on 10+ DAO proposals', points: 25, permanent: false },
+            { id: 'trusted_endorser', name: 'Trusted Endorser', icon: '🤝', requirement: '5+ quality endorsements given', points: 30, permanent: true },
+            { id: 'verified_merchant', name: 'Verified Merchant', icon: '💎', requirement: '100+ trades, zero disputes', points: 40, permanent: false },
+            { id: 'clean_record', name: 'Clean Record', icon: '🛡️', requirement: '1 year with no negative events', points: 20, permanent: false },
+            { id: 'elite_achiever', name: 'Elite Achiever', icon: '🏆', requirement: 'Reach ProofScore 900+', points: 50, permanent: true },
+            { id: 'guardian', name: 'Guardian', icon: '🛡️', requirement: '2+ years never below 700 score', points: 40, permanent: true }
+        ];
+        
+        // Simulated analysis function
+        function analyzeWallet(address) {
+            // In production, this would call an API to analyze on-chain data
+            // For demo, we generate semi-random but realistic data based on address
+            
+            const hash = address.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+            
+            const walletAgeYears = (hash % 50) / 10 + 0.5;
+            const txCount = (hash % 1000) + 50;
+            const defiCount = (hash % 30) + 1;
+            const nftCount = (hash % 50);
+            
+            // Calculate base score
+            let baseScore = 500; // Start at neutral
+            
+            // Wallet age bonus (up to +150)
+            baseScore += Math.min(walletAgeYears * 50, 150);
+            
+            // Transaction history bonus (up to +100)
+            baseScore += Math.min(txCount / 10, 100);
+            
+            // DeFi activity bonus (up to +100)
+            baseScore += Math.min(defiCount * 4, 100);
+            
+            // NFT holdings bonus (up to +50)
+            baseScore += Math.min(nftCount * 2, 50);
+            
+            // Add some randomness
+            baseScore += (hash % 100) - 50;
+            
+            // Clamp to valid range
+            baseScore = Math.max(300, Math.min(950, Math.round(baseScore)));
+            
+            // Determine badge eligibility
+            const badgeEligibility = badges.map(badge => {
+                let eligible = false;
+                let close = false;
+                
+                switch(badge.id) {
+                    case 'pioneer':
+                        eligible = true; // Presale means pioneer eligible
+                        break;
+                    case 'genesis':
+                        eligible = true; // Presale participant
+                        break;
+                    case 'founding':
+                        close = baseScore >= 700 && baseScore < 800;
+                        eligible = baseScore >= 800;
+                        break;
+                    case 'active_trader':
+                        close = txCount >= 30 && txCount < 50;
+                        eligible = txCount >= 50;
+                        break;
+                    case 'governance':
+                        close = false; // Need DAO participation
+                        eligible = false;
+                        break;
+                    case 'trusted_endorser':
+                        close = false; // Need ecosystem activity
+                        eligible = false;
+                        break;
+                    case 'verified_merchant':
+                        close = txCount >= 80 && txCount < 100;
+                        eligible = txCount >= 100;
+                        break;
+                    case 'clean_record':
+                        close = walletAgeYears >= 0.8 && walletAgeYears < 1;
+                        eligible = walletAgeYears >= 1;
+                        break;
+                    case 'elite_achiever':
+                        close = baseScore >= 850 && baseScore < 900;
+                        eligible = baseScore >= 900;
+                        break;
+                    case 'guardian':
+                        close = walletAgeYears >= 1.5 && walletAgeYears < 2;
+                        eligible = walletAgeYears >= 2 && baseScore >= 700;
+                        break;
+                }
+                
+                return { ...badge, eligible, close };
+            });
+            
+            // Generate tips
+            const tips = [];
+            
+            if (walletAgeYears < 1) {
+                tips.push({
+                    icon: '📅',
+                    title: 'Wallet Age Building',
+                    description: 'Your wallet is relatively new. Time builds trust - keep using this wallet consistently.',
+                    impact: '+10 pts/month as wallet ages'
+                });
+            }
+            
+            if (txCount < 100) {
+                tips.push({
+                    icon: '💳',
+                    title: 'Increase Activity',
+                    description: 'More transactions demonstrate active, legitimate usage patterns.',
+                    impact: '+1 pt per 10 transactions'
+                });
+            }
+            
+            if (defiCount < 5) {
+                tips.push({
+                    icon: '🔄',
+                    title: 'Explore DeFi',
+                    description: 'Interact with more protocols to show diverse ecosystem engagement.',
+                    impact: '+5 pts per new protocol'
+                });
+            }
+            
+            if (baseScore < 800) {
+                tips.push({
+                    icon: '🏛️',
+                    title: 'Join Presale Early',
+                    description: 'Pioneer badge (first 10,000) gives permanent +30 pts boost.',
+                    impact: '+30 pts permanent'
+                });
+            }
+            
+            tips.push({
+                icon: '🗳️',
+                title: 'Participate in Governance',
+                description: 'Vote on DAO proposals to earn Governance Voter badge.',
+                impact: '+25 pts with badge'
+            });
+            
+            return {
+                score: baseScore,
+                walletAge: walletAgeYears.toFixed(1) + 'y',
+                txCount,
+                defiCount,
+                nftCount,
+                badges: badgeEligibility,
+                tips
+            };
+        }
+        
+        // Get tier info based on score
+        function getTierInfo(score) {
+            if (score >= 900) return { tier: 'ELITE', fee: '0.25%', class: 'elite' };
+            if (score >= 800) return { tier: 'EXCELLENT', fee: '0.5%', class: 'elite' };
+            if (score >= 700) return { tier: 'TRUSTED', fee: '0.75%', class: 'trusted' };
+            if (score >= 600) return { tier: 'ESTABLISHED', fee: '1.0%', class: 'trusted' };
+            if (score >= 500) return { tier: 'NEUTRAL', fee: '1.75%', class: 'neutral' };
+            if (score >= 400) return { tier: 'UNCERTAIN', fee: '2.5%', class: 'risky' };
+            return { tier: 'AT RISK', fee: '5.0%', class: 'risky' };
+        }
+        
+        // Render results
+        function renderResults(data) {
+            const tierInfo = getTierInfo(data.score);
+            
+            // Score card
+            document.getElementById('scoreValue').textContent = data.score;
+            document.getElementById('scoreTier').textContent = tierInfo.tier;
+            document.getElementById('feeRate').textContent = tierInfo.fee;
+            document.getElementById('scoreCard').className = 'score-card ' + tierInfo.class;
+            
+            // Analysis grid
+            document.getElementById('walletAge').textContent = data.walletAge;
+            document.getElementById('txCount').textContent = data.txCount.toLocaleString();
+            document.getElementById('defiInteractions').textContent = data.defiCount;
+            document.getElementById('nftCount').textContent = data.nftCount;
+            
+            // Badges
+            const badgeGrid = document.getElementById('badgeGrid');
+            badgeGrid.innerHTML = data.badges.map(badge => `
+                <div class="badge-item ${badge.eligible ? 'eligible' : badge.close ? 'close' : 'locked'}">
+                    <div class="badge-icon">${badge.icon}</div>
+                    <div class="badge-info">
+                        <div class="badge-name">${badge.name} (+${badge.points} pts)</div>
+                        <div class="badge-requirement">${badge.requirement}</div>
+                    </div>
+                    <span class="badge-status ${badge.eligible ? 'eligible' : badge.close ? 'close' : 'locked'}">
+                        ${badge.eligible ? '✓ Eligible' : badge.close ? 'Close!' : 'Locked'}
+                    </span>
+                </div>
+            `).join('');
+            
+            // Tips
+            const tipsContainer = document.getElementById('tipsContainer');
+            tipsContainer.innerHTML = data.tips.map(tip => `
+                <div class="tip-item">
+                    <div class="tip-icon">${tip.icon}</div>
+                    <div class="tip-content">
+                        <h3>${tip.title}</h3>
+                        <p>${tip.description}</p>
+                        <div class="tip-impact">${tip.impact}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Update share links
+            const shareText = `🔮 My projected VFIDE ProofScore: ${data.score} (${tierInfo.tier})\n\n${data.badges.filter(b => b.eligible).length} badges eligible!\n\nCheck yours at vfide.io/simulator\n\n#VFIDE #ProofScore #CryptoTrust`;
+            document.getElementById('twitterShare').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+            
+            document.getElementById('copyBtn').onclick = () => {
+                navigator.clipboard.writeText(shareText);
+                alert('Copied to clipboard!');
+            };
+        }
+        
+        // Event handlers
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    runAnalysis(accounts[0]);
+                } catch (error) {
+                    alert('Failed to connect wallet: ' + error.message);
+                }
+            } else {
+                alert('Please install MetaMask or use the manual address input below');
+            }
+        });
+        
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            const address = document.getElementById('addressInput').value.trim();
+            if (address.match(/^0x[a-fA-F0-9]{40}$/)) {
+                runAnalysis(address);
+            } else {
+                alert('Please enter a valid Ethereum address (0x...)');
+            }
+        });
+        
+        function runAnalysis(address) {
+            // Show loading
+            document.getElementById('connectSection').style.display = 'none';
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                const data = analyzeWallet(address);
+                
+                // Hide loading, show results
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('results').classList.add('active');
+                
+                renderResults(data);
+            }, 2000);
+        }
+        
+        // Demo mode - auto-analyze a sample address after 10 seconds if no interaction
+        let demoTimeout = setTimeout(() => {
+            if (document.getElementById('connectSection').style.display !== 'none') {
+                document.getElementById('addressInput').value = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bE71';
+                runAnalysis('0x742d35Cc6634C0532925a3b844Bc9e7595f0bE71');
+            }
+        }, 10000);
+        
+        // Clear demo timeout on any user interaction
+        document.addEventListener('click', () => clearTimeout(demoTimeout));
+    </script>
+</body>
+</html>

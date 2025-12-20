@@ -43,7 +43,7 @@ describe("VFIDECommerce security fuzz - malicious token behaviors", function () 
     const gasToken = await Gas.deploy();
     await gasToken.waitForDeployment();
 
-    Commerce = await ethers.getContractFactory("CommerceEscrow");
+    Commerce = await ethers.getContractFactory("CommerceEscrowTestable");
     commerce = await Commerce.deploy(owner.address, gasToken.target, vaultHub.target, registry.target, security.target, ledger.target);
     await commerce.waitForDeployment();
 
@@ -70,7 +70,7 @@ describe("VFIDECommerce security fuzz - malicious token behaviors", function () 
     const bad = await Bad.deploy();
     await bad.waitForDeployment();
 
-    Commerce = await ethers.getContractFactory("CommerceEscrow");
+    Commerce = await ethers.getContractFactory("CommerceEscrowTestable");
     commerce = await Commerce.deploy(owner.address, bad.target, vaultHub.target, registry.target, security.target, ledger.target);
     await commerce.waitForDeployment();
 
@@ -92,7 +92,7 @@ describe("VFIDECommerce security fuzz - malicious token behaviors", function () 
     const fail = await Fail.deploy();
     await fail.waitForDeployment();
 
-    Commerce = await ethers.getContractFactory("CommerceEscrow");
+    Commerce = await ethers.getContractFactory("CommerceEscrowTestable");
     commerce = await Commerce.deploy(owner.address, fail.target, vaultHub.target, registry.target, security.target, ledger.target);
     await commerce.waitForDeployment();
 

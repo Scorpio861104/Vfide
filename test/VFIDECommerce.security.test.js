@@ -37,7 +37,7 @@ describe("VFIDECommerce security & boundary tests", function () {
   registry = await Registry.deploy(owner.address, tokenFail.target, vaultHub.target, seer.target, security.target, ledger.target);
     await registry.waitForDeployment();
 
-    Commerce = await ethers.getContractFactory("CommerceEscrow");
+    Commerce = await ethers.getContractFactory("CommerceEscrowTestable");
     commerce = await Commerce.deploy(owner.address, tokenFail.target, vaultHub.target, registry.target, security.target, ledger.target);
     await commerce.waitForDeployment();
   });

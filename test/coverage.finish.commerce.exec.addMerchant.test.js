@@ -1,49 +1,48 @@
-const { expect } = require('chai');
-const { ethers } = require('hardhat');
+const { expect } = require("chai");
+const { deployContracts } = require("./helpers");
+const { ethers } = require("hardhat");
 
-describe('coverage.finish.commerce.exec.addMerchant - call addMerchant to exercise production branches', function () {
-  let signers;
-  beforeEach(async () => { signers = await ethers.getSigners(); });
+describe("coverage.finish.commerce.exec.addMerchant", function () {
+    let owner, user1, user2, merchant1, merchant2, dao, registry, token, vault, seer, ledger;
 
-  it('calls addMerchant with registered, no-vault and low-score signers to exercise real branches', async function () {
-    const [deployer, dao, m1, m2, m3] = signers;
+    beforeEach(async function () {
+        [owner, user1, user2, merchant1, merchant2, dao] = await ethers.getSigners();
+        ({ registry, token, vault, seer, ledger } = await deployContracts(owner, dao, user1, user2, merchant1, merchant2));
+    });
 
-    const VaultHub = await ethers.getContractFactory('VaultHubMock');
-    const Seer = await ethers.getContractFactory('SeerMock');
-    const ERC20 = await ethers.getContractFactory('ERC20Mock');
-    const Ledger = await ethers.getContractFactory('LedgerMock');
-    const MR = await ethers.getContractFactory('contracts-min/VFIDECommerce.sol:MerchantRegistry');
+    it("should successfully register a valid merchant", async function () {
+        // user1 has a vault and passing score from the helper
+        await registry.connect(user1).addMerchant(ethers.encodeBytes32String("meta"));
+        const merchantData = await registry.merchants(user1.address);
+        expect(merchantData.status).to.equal(1); // ACTIVE
+    });
 
-    const vault = await VaultHub.deploy(); await vault.waitForDeployment();
-    const seer = await Seer.deploy(); await seer.waitForDeployment();
-    const token = await ERC20.deploy('T','T'); await token.waitForDeployment();
-    const ledger = await Ledger.deploy(false); await ledger.waitForDeployment();
+    it("should revert when trying to register an existing merchant", async function () {
+        // Register user1 first
+        await registry.connect(user1).addMerchant(ethers.encodeBytes32String("meta"));
 
-    // configure: m1 will be registered; m2 no vault; m3 low score
-    await seer.setMin(10);
-    await seer.setScore(m1.address, 20);
-    await seer.setScore(m3.address, 5);
-    await vault.setVault(m1.address, m1.address);
+        // Try to register user1 again
+        await expect(
+            registry.connect(user1).addMerchant(ethers.encodeBytes32String("meta"))
+        ).to.be.revertedWithCustomError(registry, "COM_AlreadyMerchant");
+    });
 
-    const mr = await MR.deploy(dao.address, token.target, vault.target, seer.target, ethers.ZeroAddress, ledger.target);
-    await mr.waitForDeployment();
+    it("should revert when a user with no vault tries to register", async function () {
+        // user3 has no vault
+        const [, , , , , , user3] = await ethers.getSigners();
+        await seer.connect(owner).setScore(user3.address, 1); // Give a passing score
 
-    // 1) register m1 successfully
-    await mr.connect(m1).addMerchant(ethers.ZeroHash);
+        await expect(
+            registry.connect(user3).addMerchant(ethers.encodeBytes32String("meta"))
+        ).to.be.revertedWithCustomError(registry, "COM_NotAllowed");
+    });
 
-    // 2) calling addMerchant again as m1 -> should revert COM_AlreadyMerchant (exercises the alreadyMerchant branch)
-    try { await mr.connect(m1).addMerchant(ethers.ZeroHash); } catch (e) {}
+    it("should revert when a user with a low score tries to register", async function () {
+        // user2 has a vault, but we'll give them a low score
+        await seer.connect(owner).setScore(user2.address, 0);
 
-    // 3) m2 has no vault -> should revert COM_NotAllowed
-    try { await mr.connect(m2).addMerchant(ethers.ZeroHash); } catch (e) {}
-
-    // 4) m3 has low score -> should revert COM_NotAllowed
-    try { await mr.connect(m3).addMerchant(ethers.ZeroHash); } catch (e) {}
-
-    // 5) force flags: set TEST_forceNoVault and call addMerchant for m2 (should still revert but exercise force branch)
-    await mr.TEST_setForceNoVault(true);
-    try { await mr.connect(m2).addMerchant(ethers.ZeroHash); } catch (e) {}
-
-    expect(true).to.equal(true);
-  });
+        await expect(
+            registry.connect(user2).addMerchant(ethers.encodeBytes32String("meta"))
+        ).to.be.revertedWithCustomError(registry, "COM_NotAllowed");
+    });
 });

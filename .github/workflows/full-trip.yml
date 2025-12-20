@@ -1,0 +1,77 @@
+name: Full Trip
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, develop, feature/**, copilot/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  full-trip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Graphviz (for Surya)
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+
+      - name: Install Foundry
+        run: |
+          curl -L https://foundry.paradigm.xyz | bash
+          source ~/.bashrc
+          foundryup
+
+      - name: Run full trip
+        env:
+          # Optional: set to provide zk diff capture
+          PRIVATE_KEY: ${{ secrets.ZKSYNC_PRIVATE_KEY }}
+        run: |
+          bash scripts/full-trip.sh
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-trip-coverage
+          path: |
+            coverage
+            coverage.json
+          if-no-files-found: ignore
+
+      - name: Upload diff outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-trip-diff
+          path: diff-out
+          if-no-files-found: ignore
+
+      - name: Upload gas report
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-trip-gas
+          path: gas-report.txt
+          if-no-files-found: ignore
+
+      - name: Upload surya graph
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-trip-surya
+          path: surya-graph.png
+          if-no-files-found: ignore
+
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-trip-docs
+          path: docs
+          if-no-files-found: ignore

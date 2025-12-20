@@ -44,7 +44,7 @@ describe("VFIDECommerce micro-batch 3 (mocks & reentrancy)", function () {
     registry = await Registry.deploy(owner.address, gasToken.target, vaultHub.target, seer.target, security.target, ledger.target);
     await registry.waitForDeployment();
 
-    Commerce = await ethers.getContractFactory("CommerceEscrow");
+    Commerce = await ethers.getContractFactory("CommerceEscrowTestable");
     commerce = await Commerce.deploy(owner.address, gasToken.target, vaultHub.target, registry.target, security.target, ledger.target);
     await commerce.waitForDeployment();
 
@@ -73,7 +73,7 @@ describe("VFIDECommerce micro-batch 3 (mocks & reentrancy)", function () {
     const Registry2 = await ethers.getContractFactory("MerchantRegistry");
     const registry2 = await Registry2.deploy(owner.address, reentToken.target, vaultHub.target, seer.target, security.target, ledger.target);
     await registry2.waitForDeployment();
-    const Commerce2 = await ethers.getContractFactory("CommerceEscrow");
+    const Commerce2 = await ethers.getContractFactory("CommerceEscrowTestable");
     const commerce2 = await Commerce2.deploy(owner.address, reentToken.target, vaultHub.target, registry2.target, security.target, ledger.target);
     await commerce2.waitForDeployment();
     await vaultHub.setVault(buyer.address, buyer.address);
@@ -99,7 +99,7 @@ describe("VFIDECommerce micro-batch 3 (mocks & reentrancy)", function () {
     const Registry3 = await ethers.getContractFactory("MerchantRegistry");
     const registry3 = await Registry3.deploy(owner.address, reentToken.target, vaultHub.target, seer.target, security.target, ledger.target);
     await registry3.waitForDeployment();
-    const Commerce3 = await ethers.getContractFactory("CommerceEscrow");
+    const Commerce3 = await ethers.getContractFactory("CommerceEscrowTestable");
     const commerce3 = await Commerce3.deploy(owner.address, reentToken.target, vaultHub.target, registry3.target, security.target, ledger.target);
     await commerce3.waitForDeployment();
     await vaultHub.setVault(buyer.address, buyer.address);

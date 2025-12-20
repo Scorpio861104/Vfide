@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VFIDE Badge Leaderboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(90deg, #FFD700, #FF6B6B, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #888;
+            font-size: 1.2rem;
+        }
+        
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(255,215,0,0.2);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            color: #aaa;
+            margin-top: 5px;
+        }
+        
+        /* Leaderboard Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 25px;
+            padding: 10px 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #888;
+        }
+        
+        .tab:hover, .tab.active {
+            background: linear-gradient(135deg, #FFD700, #FF6B6B);
+            color: #000;
+            border-color: transparent;
+        }
+        
+        /* Leaderboard Table */
+        .leaderboard {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        
+        .leaderboard-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 200px 150px 120px;
+            padding: 20px 30px;
+            background: rgba(255,255,255,0.05);
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+        
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 200px 150px 120px;
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            align-items: center;
+            transition: background 0.3s;
+        }
+        
+        .leaderboard-row:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .rank {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .rank-1 { color: #FFD700; }
+        .rank-2 { color: #C0C0C0; }
+        .rank-3 { color: #CD7F32; }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .user-name {
+            font-weight: 600;
+        }
+        
+        .user-address {
+            color: #666;
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+        
+        /* Badge Pills */
+        .badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .badge-pill {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-pioneer {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+        }
+        
+        .badge-genesis {
+            background: linear-gradient(135deg, #4A0080, #7B68EE);
+            color: #fff;
+        }
+        
+        .badge-founder {
+            background: linear-gradient(135deg, #9400D3, #FF1493);
+            color: #fff;
+        }
+        
+        .badge-elite {
+            background: linear-gradient(135deg, #00CED1, #20B2AA);
+            color: #000;
+        }
+        
+        .badge-guardian {
+            background: linear-gradient(135deg, #DC143C, #8B0000);
+            color: #fff;
+        }
+        
+        .badge-merchant {
+            background: linear-gradient(135deg, #7851A9, #9370DB);
+            color: #fff;
+        }
+        
+        .badge-more {
+            background: rgba(255,255,255,0.1);
+            color: #888;
+        }
+        
+        .proofscore {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        
+        .score-high { color: #50C878; }
+        .score-medium { color: #FFD700; }
+        .score-low { color: #FF6B6B; }
+        
+        .badge-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge-count-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #FFD700;
+        }
+        
+        .badge-count-label {
+            color: #888;
+            font-size: 0.85rem;
+        }
+        
+        /* Top 3 Highlight */
+        .top-3 {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 20px;
+            margin: 40px 0;
+            align-items: end;
+        }
+        
+        .podium-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .podium-card.first {
+            border-color: #FFD700;
+            box-shadow: 0 0 40px rgba(255,215,0,0.3);
+        }
+        
+        .podium-rank {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .podium-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            border: 3px solid rgba(255,255,255,0.2);
+        }
+        
+        .first .podium-avatar {
+            border-color: #FFD700;
+            width: 100px;
+            height: 100px;
+        }
+        
+        .podium-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .podium-badges {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        .podium-score {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #50C878;
+        }
+        
+        .podium-badge-count {
+            color: #FFD700;
+            font-weight: 600;
+        }
+        
+        /* Badge Category Filter */
+        .category-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .category-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #888;
+        }
+        
+        .category-btn:hover, .category-btn.active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .category-icon {
+            font-size: 1.2rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 900px) {
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .top-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .leaderboard-header,
+            .leaderboard-row {
+                grid-template-columns: 60px 1fr 100px;
+            }
+            
+            .badges, .badge-count {
+                display: none;
+            }
+        }
+        
+        /* Live indicator */
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #50C878;
+            font-size: 0.9rem;
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #50C878;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        footer a {
+            color: #FFD700;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏆 VFIDE Badge Leaderboard</h1>
+            <p class="subtitle">Who has the most earned trust?</p>
+            <div class="live-indicator" style="justify-content: center; margin-top: 15px;">
+                <span class="live-dot"></span>
+                <span>Live on-chain data</span>
+            </div>
+        </header>
+        
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value">2,847</div>
+                <div class="stat-label">Pioneers Minted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">12,453</div>
+                <div class="stat-label">Total Badges Earned</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">847</div>
+                <div class="stat-label">Elite Achievers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">7,156</div>
+                <div class="stat-label">Pioneers Remaining</div>
+            </div>
+        </div>
+        
+        <!-- Top 3 Podium -->
+        <div class="top-3">
+            <div class="podium-card">
+                <div class="podium-rank">🥈</div>
+                <div class="podium-avatar">JD</div>
+                <div class="podium-name">JohnDeFi.eth</div>
+                <div class="user-address">0x1234...5678</div>
+                <div class="podium-badges">
+                    <span class="badge-pill badge-pioneer">Pioneer</span>
+                    <span class="badge-pill badge-guardian">Guardian</span>
+                </div>
+                <div class="podium-score">9,450</div>
+                <div class="podium-badge-count">21 Badges</div>
+            </div>
+            
+            <div class="podium-card first">
+                <div class="podium-rank">👑</div>
+                <div class="podium-avatar">VK</div>
+                <div class="podium-name">VFIDEKing.eth</div>
+                <div class="user-address">0xabcd...ef01</div>
+                <div class="podium-badges">
+                    <span class="badge-pill badge-pioneer">Pioneer #1</span>
+                    <span class="badge-pill badge-founder">Founder</span>
+                    <span class="badge-pill badge-elite">Elite</span>
+                </div>
+                <div class="podium-score">9,847</div>
+                <div class="podium-badge-count">27 Badges (ALL)</div>
+            </div>
+            
+            <div class="podium-card">
+                <div class="podium-rank">🥉</div>
+                <div class="podium-avatar">CW</div>
+                <div class="podium-name">CryptoWhale</div>
+                <div class="user-address">0x9876...5432</div>
+                <div class="podium-badges">
+                    <span class="badge-pill badge-genesis">Genesis</span>
+                    <span class="badge-pill badge-merchant">Merchant</span>
+                </div>
+                <div class="podium-score">9,320</div>
+                <div class="podium-badge-count">18 Badges</div>
+            </div>
+        </div>
+        
+        <!-- Category Filters -->
+        <div class="category-filters">
+            <div class="category-btn active">
+                <span class="category-icon">🏆</span>
+                <span>All Badges</span>
+            </div>
+            <div class="category-btn">
+                <span class="category-icon">🏛️</span>
+                <span>Pioneer</span>
+            </div>
+            <div class="category-btn">
+                <span class="category-icon">⚡</span>
+                <span>Activity</span>
+            </div>
+            <div class="category-btn">
+                <span class="category-icon">🤝</span>
+                <span>Trust</span>
+            </div>
+            <div class="category-btn">
+                <span class="category-icon">💎</span>
+                <span>Commerce</span>
+            </div>
+            <div class="category-btn">
+                <span class="category-icon">🛡️</span>
+                <span>Security</span>
+            </div>
+            <div class="category-btn">
+                <span class="category-icon">📚</span>
+                <span>Education</span>
+            </div>
+        </div>
+        
+        <!-- Leaderboard Table -->
+        <div class="leaderboard">
+            <div class="leaderboard-header">
+                <span>Rank</span>
+                <span>User</span>
+                <span>Badges</span>
+                <span>ProofScore</span>
+                <span>Total</span>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank rank-1">#1</span>
+                <div class="user-info">
+                    <div class="avatar">VK</div>
+                    <div>
+                        <div class="user-name">VFIDEKing.eth</div>
+                        <div class="user-address">0xabcd...ef01</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-pioneer">Pioneer</span>
+                    <span class="badge-pill badge-founder">Founder</span>
+                    <span class="badge-pill badge-elite">Elite</span>
+                    <span class="badge-pill badge-more">+24</span>
+                </div>
+                <span class="proofscore score-high">9,847</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">27</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank rank-2">#2</span>
+                <div class="user-info">
+                    <div class="avatar">JD</div>
+                    <div>
+                        <div class="user-name">JohnDeFi.eth</div>
+                        <div class="user-address">0x1234...5678</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-pioneer">Pioneer</span>
+                    <span class="badge-pill badge-guardian">Guardian</span>
+                    <span class="badge-pill badge-merchant">Merchant</span>
+                    <span class="badge-pill badge-more">+18</span>
+                </div>
+                <span class="proofscore score-high">9,450</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">21</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank rank-3">#3</span>
+                <div class="user-info">
+                    <div class="avatar">CW</div>
+                    <div>
+                        <div class="user-name">CryptoWhale</div>
+                        <div class="user-address">0x9876...5432</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-genesis">Genesis</span>
+                    <span class="badge-pill badge-merchant">Elite Merch</span>
+                    <span class="badge-pill badge-more">+16</span>
+                </div>
+                <span class="proofscore score-high">9,320</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">18</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank">#4</span>
+                <div class="user-info">
+                    <div class="avatar">DM</div>
+                    <div>
+                        <div class="user-name">DeFiMaster</div>
+                        <div class="user-address">0xdef1...cafe</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-pioneer">Pioneer</span>
+                    <span class="badge-pill badge-elite">Power User</span>
+                    <span class="badge-pill badge-more">+13</span>
+                </div>
+                <span class="proofscore score-high">9,180</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">15</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank">#5</span>
+                <div class="user-info">
+                    <div class="avatar">TH</div>
+                    <div>
+                        <div class="user-name">TrustHunter</div>
+                        <div class="user-address">0xba5e...dead</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-guardian">Fraud Hunter</span>
+                    <span class="badge-pill badge-pioneer">Pioneer</span>
+                    <span class="badge-pill badge-more">+12</span>
+                </div>
+                <span class="proofscore score-high">9,050</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">14</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank">#6</span>
+                <div class="user-info">
+                    <div class="avatar">SA</div>
+                    <div>
+                        <div class="user-name">SatoshiAcolyte</div>
+                        <div class="user-address">0x21e8...0000</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-genesis">Genesis</span>
+                    <span class="badge-pill badge-elite">Educator</span>
+                    <span class="badge-pill badge-more">+10</span>
+                </div>
+                <span class="proofscore score-medium">8,890</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">12</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank">#7</span>
+                <div class="user-info">
+                    <div class="avatar">MB</div>
+                    <div>
+                        <div class="user-name">MoonBoy2024</div>
+                        <div class="user-address">0x1337...8008</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-pioneer">Pioneer</span>
+                    <span class="badge-pill badge-elite">Daily Champ</span>
+                    <span class="badge-pill badge-more">+9</span>
+                </div>
+                <span class="proofscore score-medium">8,750</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">11</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank">#8</span>
+                <div class="user-info">
+                    <div class="avatar">YW</div>
+                    <div>
+                        <div class="user-name">YieldWhisperer</div>
+                        <div class="user-address">0xfeed...babe</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-merchant">Merchant</span>
+                    <span class="badge-pill badge-elite">Zero Dispute</span>
+                    <span class="badge-pill badge-more">+8</span>
+                </div>
+                <span class="proofscore score-medium">8,620</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">10</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank">#9</span>
+                <div class="user-info">
+                    <div class="avatar">DD</div>
+                    <div>
+                        <div class="user-name">DiamondDegen</div>
+                        <div class="user-address">0xd1a4...0nd5</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-pioneer">Pioneer</span>
+                    <span class="badge-pill badge-elite">Active Trader</span>
+                    <span class="badge-pill badge-more">+7</span>
+                </div>
+                <span class="proofscore score-medium">8,510</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">9</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-row">
+                <span class="rank">#10</span>
+                <div class="user-info">
+                    <div class="avatar">CK</div>
+                    <div>
+                        <div class="user-name">CryptoKaren</div>
+                        <div class="user-address">0xc4fe...babe</div>
+                    </div>
+                </div>
+                <div class="badges">
+                    <span class="badge-pill badge-genesis">Genesis</span>
+                    <span class="badge-pill badge-elite">Mentor</span>
+                    <span class="badge-pill badge-more">+6</span>
+                </div>
+                <span class="proofscore score-medium">8,400</span>
+                <div class="badge-count">
+                    <span class="badge-count-number">8</span>
+                    <span class="badge-count-label">badges</span>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Powered by VFIDE • <a href="#">View Smart Contract</a> • Updated every block</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                Earn badges through actions, not money. Your trust is your discount.
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab, .category-btn').forEach(tab => {
+            tab.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.tab, .category-btn').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // Simulate live updates
+        function animateCounter(element, target) {
+            let current = parseInt(element.textContent.replace(/,/g, ''));
+            const increment = (target - current) / 50;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= target) || (increment < 0 && current <= target)) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = Math.floor(current).toLocaleString();
+            }, 30);
+        }
+        
+        // Random badge count update simulation
+        setInterval(() => {
+            const statValues = document.querySelectorAll('.stat-value');
+            const randomStat = statValues[Math.floor(Math.random() * 2)]; // Only update first 2
+            const currentValue = parseInt(randomStat.textContent.replace(/,/g, ''));
+            animateCounter(randomStat, currentValue + 1);
+        }, 5000);
+    </script>
+</body>
+</html>

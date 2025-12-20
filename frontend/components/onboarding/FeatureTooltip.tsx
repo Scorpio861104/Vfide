@@ -1,0 +1,146 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Lightbulb } from "lucide-react";
+
+interface FeatureTooltipProps {
+  id: string;
+  title: string;
+  description: string;
+  position?: "top" | "bottom" | "left" | "right";
+  arrow?: boolean;
+  onClose?: () => void;
+  autoShow?: boolean;
+  delay?: number;
+}
+
+export function FeatureTooltip({
+  id,
+  title,
+  description,
+  position = "top",
+  arrow = true,
+  onClose,
+  autoShow = true,
+  delay = 1000
+}: FeatureTooltipProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Check if this tooltip has been dismissed before
+    const dismissedTooltips = JSON.parse(
+      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+    );
+
+    if (!dismissedTooltips.includes(id) && autoShow) {
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, delay);
+      return () => clearTimeout(timer);
+    }
+  }, [id, autoShow, delay]);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    
+    // Save to localStorage
+    const dismissedTooltips = JSON.parse(
+      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+    );
+    if (!dismissedTooltips.includes(id)) {
+      dismissedTooltips.push(id);
+      localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(dismissedTooltips));
+    }
+    
+    onClose?.();
+  };
+
+  const positionClasses = {
+    top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
+    bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
+    left: "right-full top-1/2 -translate-y-1/2 mr-2",
+    right: "left-full top-1/2 -translate-y-1/2 ml-2"
+  };
+
+  const arrowClasses = {
+    top: "absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-[#00F0FF]",
+    bottom: "absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 border-8 border-transparent border-b-[#00F0FF]",
+    left: "absolute left-full top-1/2 -translate-y-1/2 -ml-1 border-8 border-transparent border-l-[#00F0FF]",
+    right: "absolute right-full top-1/2 -translate-y-1/2 -mr-1 border-8 border-transparent border-r-[#00F0FF]"
+  };
+
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.2 }}
+          className={`absolute ${positionClasses[position]} z-50 w-64`}
+        >
+          <div className="relative bg-gradient-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#00F0FF] rounded-lg shadow-2xl p-4">
+            {arrow && <div className={arrowClasses[position]} />}
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-[#00F0FF]/20 rounded-full flex items-center justify-center">
+                <Lightbulb size={16} className="text-[#00F0FF]" />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-[#F5F3E8] mb-1">
+                  {title}
+                </h4>
+                <p className="text-xs text-[#A0A0A5] leading-relaxed">
+                  {description}
+                </p>
+              </div>
+              
+              <button
+                onClick={handleClose}
+                className="flex-shrink-0 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
+                aria-label="Dismiss tooltip"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// Hook to manage tooltip visibility
+export function useFeatureTooltip(id: string) {
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const dismissedTooltips = JSON.parse(
+      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+    );
+    return !dismissedTooltips.includes(id);
+  });
+
+  const dismiss = () => {
+    setIsVisible(false);
+    const dismissedTooltips = JSON.parse(
+      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+    );
+    if (!dismissedTooltips.includes(id)) {
+      dismissedTooltips.push(id);
+      localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(dismissedTooltips));
+    }
+  };
+
+  const reset = () => {
+    setIsVisible(true);
+    const dismissedTooltips = JSON.parse(
+      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+    );
+    const filtered = dismissedTooltips.filter((tooltipId: string) => tooltipId !== id);
+    localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(filtered));
+  };
+
+  return { isVisible, dismiss, reset };
+}

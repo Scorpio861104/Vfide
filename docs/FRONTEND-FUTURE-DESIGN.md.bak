@@ -1,0 +1,1197 @@
+# VFIDE Frontend Design System: VFIDE Meets Future
+**Version**: 1.0  
+**Theme**: Medieval Crusader + Cyberpunk/Sci-Fi  
+**Philosophy**: "Ancient honor, future tech"  
+**Date**: December 3, 2025  
+
+---
+
+## 1. Design Philosophy
+
+### 1.1 Core Concept
+**"The New VFIDE protecting digital commerce"**
+
+The VFIDE were medieval warrior-monks who invented banking, protected pilgrims, and created the first international financial system. VFIDE merchants are the **modern Templars** - protecting buyers with ProofScore, creating trust in decentralized commerce.
+
+**Visual Identity**:
+- **Medieval Elements**: Red cross (Templar symbol), Gothic typography, stone/chainmail textures, heraldic shields, wax seals, ancient scrolls
+- **Futuristic Elements**: Neon accents, holographic effects, digital HUDs, glowing lines, particle effects, cyber grids, matrix-style data streams
+
+**Color Philosophy**:
+- Primary: **Primary Red** (#C41E3A) - Honor, blood oath, commitment
+- Secondary: **Cyber Blue** (#00F0FF) - Technology, trust, future
+- Accent: **Gold** (#FFD700) - Wealth, ProofScore achievement, elite status
+- Background: **Dark Stone** (#1A1A1D) - Medieval castle walls, space black
+- Neutral: **Steel Gray** (#4A4A4F) - Chainmail, metal armor
+
+---
+
+## 2. Complete VFIDE Ecosystem Modules
+
+### 2.1 Core Contracts Mapped to Frontend Features
+
+| Smart Contract | Frontend Module | User-Facing Feature |
+|----------------|-----------------|---------------------|
+| **VFIDEToken.sol** | Token Dashboard | Balance, burns, transfers |
+| **ProofScoreBurnRouter.sol** | ProofScore System | Score display, tier badges, burn tracking |
+| **VFIDETrust.sol** (Seer) | Trust Explorer | Reputation lookup, endorsements, disputes |
+| **MerchantPortal.sol** | Merchant Dashboard | Payments, analytics, settings |
+| **EscrowManager.sol** | Escrow Interface | Active escrows, release, disputes |
+| **VaultInfrastructure.sol** | Vault Manager | Create vault, deposit, withdraw, lock |
+| **GuardianNodeSale.sol** | Guardian Marketplace | Buy nodes, track investment, claim rewards |
+| **DAOTimelockV2.sol** | Governance Portal | Vote on proposals, view timelock queue |
+| **CouncilElection.sol** | Council Voting | Elect guardians, view candidates |
+| **RevenueSplitter.sol** | Treasury View | Revenue distribution, fee tracking |
+| **VFIDECommerce.sol** | Checkout Page | Payment processing, ProofScore display |
+| **VFIDEFinance.sol** | Finance Dashboard | DAO budget, spending, reserves |
+| **DevReserveVestingVault.sol** | Vesting Tracker | Dev team vesting schedule |
+| **MerchantRebateVault.sol** | Rebate Tracker | Ecosystem fees, merchant rebates |
+| **SubscriptionManager.sol** | Subscription Portal | Recurring payments, manage subscriptions |
+| **EmergencyControl.sol** | Emergency Panel | Pause/unpause, emergency actions (admin only) |
+| **SystemHandover.sol** | Decentralization Timeline | Countdown to full DAO control |
+
+---
+
+## 3. Four VFIDE Websites (Unified Theme)
+
+### 3.1 merchant.vfide.com - The Merchant Citadel
+
+**Purpose**: Merchant onboarding, dashboard, analytics, settings  
+**Vibe**: "Your digital fortress for commerce"  
+
+**Homepage**:
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                    ⚔️  VFIDE MERCHANT CITADEL                 ║
+║                                                               ║
+║         "Join the Order. Accept payments. 0% fees."          ║
+║                                                               ║
+║   [🛡️ CONNECT WALLET - BECOME A MERCHANT]                    ║
+║                                                               ║
+║   ───────────────────────────────────────────────────────    ║
+║                                                               ║
+║   Your ProofScore: [▰▰▰▰▰▰▱▱▱▱] 650/1000  (Knight Rank)     ║
+║   Monthly Limit: $10,000                                     ║
+║   This Month: $2,450 (24% used) ███░░░░░░░                   ║
+║                                                               ║
+║   ───────────────────────────────────────────────────────    ║
+║                                                               ║
+║   📊 RECENT TRANSACTIONS                                      ║
+║   ┌─────────────────────────────────────────────────┐       ║
+║   │ 0x1234...5678  │ $245.00 USDC │ ⏳ Escrow (6d)  │       ║
+║   │ 0xabcd...ef00  │ $89.99 USDT  │ ✅ Released     │       ║
+║   │ 0x9876...4321  │ $1,250.00 DAI│ ⚠️ Dispute      │       ║
+║   └─────────────────────────────────────────────────┘       ║
+║                                                               ║
+║   Quick Actions:                                              ║
+║   [⚔️ Release Escrow] [🛡️ View Disputes] [⚙️ Settings]       ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+**Key Components**:
+- **Wallet Connect Button**: Glowing red Templar cross, "Join the Order" CTA
+- **ProofScore Display**: Progress bar styled as "honor blade" filling with gold
+- **Transaction Table**: Scrolls with Gothic borders, rows fade in with particle effect
+- **Dashboard Panels**: Stone-textured cards with cyber-blue neon edges
+- **Navigation**: Medieval banner flags with holographic text
+
+**Tech Stack**:
+- Next.js 14 (App Router)
+- wagmi v2 + viem (Web3)
+- Framer Motion (animations)
+- Tailwind CSS (utility-first)
+- CSS gradients (no image textures)
+- SVG VFIDE symbol (single icon)
+
+---
+
+### 3.2 pay.vfide.com - The Sacred Checkout
+
+**Purpose**: Buyer-facing payment page  
+**Vibe**: "Trust forged in code"  
+
+**Checkout Page**:
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                    ⚔️  VFIDE SECURE PAYMENT                   ║
+║                                                               ║
+║   Merchant: CryptoStore NFTs                                  ║
+║   ProofScore: [▰▰▰▰▰▰▰▰▱▱] 820/1000  🏆 ELITE KNIGHT         ║
+║                                                               ║
+║   ───────────────────────────────────────────────────────    ║
+║                                                               ║
+║   Item: "Genesis NFT Collection Pass"                        ║
+║   Price: 250 USDC                                             ║
+║                                                               ║
+║   🛡️ Protected by 7-day escrow                               ║
+║   ⚔️ Dispute resolution available                            ║
+║   ✨ Gas subsidy active (merchant score ≥750)                ║
+║                                                               ║
+║   ───────────────────────────────────────────────────────    ║
+║                                                               ║
+║   [🦊 PAY WITH METAMASK]                                      ║
+║   [🔗 PAY WITH WALLETCONNECT]                                 ║
+║                                                               ║
+║   ℹ️ Your payment is held in escrow for 7 days.             ║
+║      Release after confirming delivery.                       ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+**Key Components**:
+- **Merchant ProofScore Badge**: Glowing shield with score, tier rank (Bronze, Silver, Gold, Platinum)
+- **Payment Button**: Red Templar cross that pulses, "Press to pay" with cyber glow
+- **Escrow Timer**: Animated hourglass with holographic sand (digital particles)
+- **Security Icons**: Small shields, swords, crosses indicating protection features
+- **Success Animation**: Templar cross glows, sword strikes, "Payment Sealed" message
+
+---
+
+### 3.3 vfide.com - The Temple Gate (Marketing)
+
+**Purpose**: Landing page, education, SEO  
+**Vibe**: "Enter the Order"  
+
+**Homepage Hero**:
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║                    [VFIDE SYMBOL SVG]                         ║
+║           THE NEW KNIGHTS TEMPLAR OF COMMERCE                 ║
+║                                                               ║
+║         Accept crypto payments. Build trust. Pay 0%.          ║
+║                                                               ║
+║   [🛡️ JOIN AS MERCHANT]     [⚔️ LEARN MORE]                  ║
+║                                                               ║
+║   ───────────────────────────────────────────────────────    ║
+║                                                               ║
+║   Why Merchants Choose VFIDE:                                 ║
+║                                                               ║
+║   💰 0% Fees (vs 2.9% credit cards)                          ║
+║      Save $3,588/year per $10k/month sales                   ║
+║                                                               ║
+║   🛡️ ProofScore Trust (1-1000)                               ║
+║      Build reputation, unlock unlimited processing           ║
+║                                                               ║
+║   ⚔️ No KYC Required                                          ║
+║      Wallet = identity. Global access. <2 min setup.         ║
+║                                                               ║
+║   ⚡ Instant Settlement                                       ║
+║      No 1-2 day wait like credit cards                       ║
+║                                                               ║
+║   🌐 Multi-Chain Support                                      ║
+║      zkSync, Polygon, Arbitrum, Optimism, Base               ║
+║                                                               ║
+║   [📖 READ WHITEPAPER]  [💬 JOIN DISCORD]  [🐦 TWITTER]      ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+**Sections**:
+1. **Hero**: VFIDE symbol SVG (animated glow), clean text
+2. **Value Props**: 4 cards with icons, neon borders
+3. **How It Works**: 3-step process with animated timeline (CSS transitions)
+4. **ProofScore Explained**: Interactive slider demo (0-1000, see tier benefits)
+5. **Case Studies**: Merchant testimonials (text-based, no photos)
+6. **Security Audit**: Trail of Bits badge (text + checkmark)
+7. **Footer**: Clean typography, social links as simple icons
+
+**Tech Stack**:
+- Astro (fast static site generation)
+- CSS animations (scroll effects, transitions)
+- Framer Motion (if needed for complex animations)
+- SVG VFIDE symbol (single asset)
+
+---
+
+### 3.4 explorer.vfide.com - The Hall of Records
+
+**Purpose**: Blockchain explorer (ProofScore lookup, transactions, leaderboard)  
+**Vibe**: "Ancient scrolls meet digital ledger"  
+
+**Homepage**:
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                    📜  VFIDE HALL OF RECORDS                  ║
+║                                                               ║
+║   Search ProofScore:                                          ║
+║   [0x____________________________________________]  [🔍]      ║
+║                                                               ║
+║   ───────────────────────────────────────────────────────    ║
+║                                                               ║
+║   🏆 LEADERBOARD (Top Knights)                                ║
+║   ┌─────────────────────────────────────────────────┐       ║
+║   │ Rank │ Address       │ ProofScore │ Tier        │       ║
+║   ├──────┼───────────────┼────────────┼─────────────┤       ║
+║   │  👑  │ 0x1234...5678 │ 985/1000   │ ⚔️ TEMPLAR  │       ║
+║   │  🥈  │ 0xabcd...ef00 │ 920/1000   │ 🏆 ELITE    │       ║
+║   │  🥉  │ 0x9876...4321 │ 875/1000   │ 🏆 ELITE    │       ║
+║   │   4  │ 0xdef0...1234 │ 810/1000   │ 🛡️ KNIGHT   │       ║
+║   │   5  │ 0x5678...9abc │ 780/1000   │ 🛡️ KNIGHT   │       ║
+║   └─────────────────────────────────────────────────┘       ║
+║                                                               ║
+║   📊 NETWORK STATS                                            ║
+║   ┌──────────────────────────────────┐                       ║
+║   │ Total Merchants:    1,245        │                       ║
+║   │ Total Transactions: 89,450       │                       ║
+║   │ Total Volume:       $2.4M        │                       ║
+║   │ Avg ProofScore:     682/1000     │                       ║
+║   │ VFIDE Burned:       125,000      │                       ║
+║   └──────────────────────────────────┘                       ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+**Key Features**:
+- **ProofScore Lookup**: Search any address, see full history (transactions, disputes, endorsements)
+- **Leaderboard**: Top 100 merchants ranked by ProofScore (animated rank changes)
+- **Network Stats**: Real-time counters with particle effects
+- **Transaction Feed**: Live stream of payments (Matrix-style falling data)
+- **Tier Badges**: Visual rank system (Squire → Knight → Elite → Templar)
+
+---
+
+## 4. Design System Components
+
+### 4.1 Typography
+
+**Primary Font**: **"Cinzel"** (Google Fonts)
+- Medieval-inspired serif for headers
+- Evokes ancient Roman inscriptions, Templar manuscripts
+- Weight: 700 (Bold) for titles, 400 (Regular) for body
+
+**Secondary Font**: **"Orbitron"** (Google Fonts)
+- Futuristic geometric sans-serif for UI elements
+- Used for: Numbers, data, buttons, labels
+- Weight: 900 (Black) for emphasis, 400 (Regular) for body
+
+**Code Font**: **"Fira Code"** (Google Fonts)
+- Monospace for wallet addresses, transaction hashes
+- Ligatures enabled for arrows (->), equals (==)
+
+**Example**:
+```css
+/* Headers: Medieval */
+h1, h2, h3 {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  color: #C41E3A; /* Primary Red */
+  text-shadow: 0 0 10px rgba(196, 30, 58, 0.5);
+}
+
+/* UI Text: Futuristic */
+button, label, .ui-text {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Data: Monospace */
+.address, .hash, code {
+  font-family: 'Fira Code', monospace;
+  color: #00F0FF; /* Cyber Blue */
+  background: rgba(0, 240, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+```
+
+---
+
+### 4.2 Color Palette
+
+| Color Name | Hex | Usage | Templar Element | Future Element |
+|------------|-----|-------|----------------|----------------|
+| **Primary Red** | #C41E3A | Primary CTA, ProofScore 751+ | Red cross, blood oath | Danger alerts, important |
+| **Cyber Blue** | #00F0FF | Interactive elements, links | - | Holograms, neon glow |
+| **Gold** | #FFD700 | Elite badges, achievements | Treasure, wealth, honor | Premium features |
+| **Dark Stone** | #1A1A1D | Background, panels | Castle walls, night | Space black, void |
+| **Steel Gray** | #4A4A4F | Borders, dividers, text | Chainmail, armor | Metal, chrome |
+| **White Parchment** | #F5F3E8 | Text on dark bg | Ancient scrolls | Holographic text |
+| **Emerald Green** | #50C878 | Success states | - | Matrix green, active |
+| **Blood Orange** | #FF4500 | Warnings, disputes | - | Alert, danger |
+
+**Gradient Examples**:
+```css
+/* Cross Symbol Glow */
+.templar-cross {
+  background: linear-gradient(135deg, #C41E3A 0%, #FF4500 100%);
+  box-shadow: 0 0 20px rgba(196, 30, 58, 0.6);
+}
+
+/* Cyber HUD */
+.cyber-panel {
+  background: linear-gradient(135deg, #1A1A1D 0%, #4A4A4F 100%);
+  border: 1px solid #00F0FF;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+}
+
+/* Elite Gold Badge */
+.elite-badge {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+}
+```
+
+---
+
+### 4.3 ProofScore Tier System (Visual Design)
+
+| Tier | Score Range | Badge | Color | Icon | Title |
+|------|------------|-------|-------|------|-------|
+| **Squire** | 0-500 | ![](squire.svg) | Steel Gray | 🛡️ | "Apprentice Merchant" |
+| **Knight** | 501-750 | ![](knight.svg) | Cyber Blue | ⚔️ | "Trusted Knight" |
+| **Elite** | 751-900 | ![](elite.svg) | Gold | 🏆 | "Elite Commander" |
+| **Templar** | 901-1000 | ![](templar.svg) | Primary Red | 👑 | "Grand Master Templar" |
+
+**Badge Design**:
+- **Squire**: Simple shield outline, no fill
+- **Knight**: Shield with cross, blue glow
+- **Elite**: Shield with cross, gold glow, particle effects
+- **Templar**: Ornate shield, red glow, animated particles, crown above
+
+**CSS Example**:
+```css
+.proofscore-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  animation: glow 2s ease-in-out infinite;
+}
+
+.proofscore-badge.squire {
+  background: linear-gradient(135deg, #4A4A4F 0%, #6A6A6F 100%);
+  color: #F5F3E8;
+  box-shadow: 0 0 10px rgba(74, 74, 79, 0.4);
+}
+
+.proofscore-badge.knight {
+  background: linear-gradient(135deg, #00F0FF 0%, #0080FF 100%);
+  color: #1A1A1D;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+}
+
+.proofscore-badge.elite {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #1A1A1D;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  animation: pulse-gold 1.5s ease-in-out infinite;
+}
+
+.proofscore-badge.templar {
+  background: linear-gradient(135deg, #C41E3A 0%, #FF4500 100%);
+  color: #F5F3E8;
+  box-shadow: 0 0 25px rgba(196, 30, 58, 1);
+  animation: pulse-red 1s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.08) rotate(1deg); }
+}
+```
+
+---
+
+### 4.4 Button Styles
+
+**Primary Button** (Cross Symbol):
+```css
+.btn-primary {
+  background: linear-gradient(135deg, #C41E3A 0%, #FF4500 100%);
+  border: 2px solid #FFD700;
+  color: #F5F3E8;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  padding: 12px 32px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  box-shadow: 0 0 20px rgba(196, 30, 58, 0.6);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '⚔️';
+  position: absolute;
+  left: 12px;
+  font-size: 20px;
+  animation: sword-strike 2s ease-in-out infinite;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 30px rgba(196, 30, 58, 1);
+  transform: translateY(-2px);
+}
+
+@keyframes sword-strike {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(10deg); }
+}
+```
+
+**Secondary Button** (Cyber):
+```css
+.btn-secondary {
+  background: transparent;
+  border: 2px solid #00F0FF;
+  color: #00F0FF;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 400;
+  padding: 12px 32px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(0, 240, 255, 0.1);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+}
+```
+
+---
+
+### 4.5 Card/Panel Component
+
+**Merchant Dashboard Card**:
+```jsx
+// components/TemplarCard.tsx
+export function TemplarCard({ title, children, tier = "knight" }) {
+  return (
+    <div className="templar-card" data-tier={tier}>
+      <div className="card-header">
+        <h3>{title}</h3>
+        <div className="corner-ornament">⚔️</div>
+      </div>
+      <div className="card-body">
+        {children}
+      </div>
+    </div>
+  );
+}
+```
+
+```css
+/* TemplarCard.css */
+.templar-card {
+  background: linear-gradient(135deg, #1A1A1D 0%, #2A2A2F 100%);
+  border: 2px solid #4A4A4F;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.templar-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    #C41E3A 0%, 
+    #00F0FF 50%, 
+    #C41E3A 100%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+.card-header h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 24px;
+  color: #F5F3E8;
+  margin: 0;
+}
+
+.corner-ornament {
+  font-size: 24px;
+  opacity: 0.5;
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+```
+
+---
+
+### 4.6 Wallet Connect Component
+
+**WalletConnectButton.tsx**:
+```jsx
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
+import { WalletConnectConnector } from 'wagmi/connectors/walletConnect';
+
+export function WalletConnectButton() {
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
+
+  if (isConnected) {
+    return (
+      <div className="wallet-connected">
+        <div className="templar-seal">
+          <div className="seal-glow"></div>
+          <span className="seal-icon">🛡️</span>
+        </div>
+        <div className="wallet-info">
+          <span className="wallet-label">Knight</span>
+          <span className="wallet-address">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+        </div>
+        <button className="btn-disconnect" onClick={() => disconnect()}>
+          ⚔️ Leave Order
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="wallet-connect-panel">
+      <h2>Join the Order</h2>
+      <p>Connect your wallet to become a VFIDE merchant</p>
+      
+      <button 
+        className="btn-primary wallet-btn"
+        onClick={() => connect({ connector: new MetaMaskConnector() })}
+      >
+        🦊 Connect MetaMask
+      </button>
+      
+      <button 
+        className="btn-secondary wallet-btn"
+        onClick={() => connect({ connector: new WalletConnectConnector({ projectId: 'YOUR_PROJECT_ID' }) })}
+      >
+        🔗 WalletConnect
+      </button>
+    </div>
+  );
+}
+```
+
+```css
+/* WalletConnectButton.css */
+.wallet-connected {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #1A1A1D 0%, #2A2A2F 100%);
+  border: 2px solid #00F0FF;
+  border-radius: 12px;
+  padding: 12px 20px;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+}
+
+.templar-seal {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seal-glow {
+  position: absolute;
+  inset: -4px;
+  background: radial-gradient(circle, rgba(196, 30, 58, 0.6) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.seal-icon {
+  font-size: 32px;
+  z-index: 1;
+}
+
+.wallet-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.wallet-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  color: #00F0FF;
+  text-transform: uppercase;
+}
+
+.wallet-address {
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  color: #F5F3E8;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+```
+
+---
+
+## 5. Animation Library
+
+### 5.1 Key Animations
+
+**Page Load**:
+```javascript
+// Framer Motion page transition
+import { motion } from 'framer-motion';
+
+export const PageTransition = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    transition={{ duration: 0.5 }}
+  >
+    {children}
+  </motion.div>
+);
+```
+
+**VFIDE Symbol Pulse Animation**:
+```javascript
+// CSS-based SVG animation (no heavy 3D libraries)
+import { motion } from 'framer-motion';
+
+export function VFIDESymbol() {
+  return (
+    <motion.svg
+      width="120"
+      height="120"
+      viewBox="0 0 120 120"
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ 
+        opacity: [0.8, 1, 0.8],
+        scale: [0.95, 1.05, 0.95]
+      }}
+      transition={{ 
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+    >
+      {/* VFIDE symbol path (single SVG) */}
+      <path
+        d="M60 10 L50 40 L35 70 L60 110 L85 70 L70 40 Z"
+        fill="url(#primaryGradient)"
+        stroke="#00F0FF"
+        strokeWidth="2"
+      />
+      <defs>
+        <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#C41E3A" />
+          <stop offset="100%" stopColor="#FF4500" />
+        </linearGradient>
+      </defs>
+    </motion.svg>
+  );
+}
+```
+
+**ProofScore Count-Up**:
+```javascript
+// React component with animated counter
+import { useEffect, useState } from 'react';
+
+export function ProofScoreCounter({ score }) {
+  const [displayScore, setDisplayScore] = useState(0);
+  
+  useEffect(() => {
+    let start = 0;
+    const end = score;
+    const duration = 2000; // 2 seconds
+    const increment = end / (duration / 16); // 60fps
+    
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setDisplayScore(end);
+        clearInterval(timer);
+      } else {
+        setDisplayScore(Math.floor(start));
+      }
+    }, 16);
+    
+    return () => clearInterval(timer);
+  }, [score]);
+  
+  return (
+    <div className="proofscore-counter">
+      <span className="score-value">{displayScore}</span>
+      <span className="score-max">/1000</span>
+    </div>
+  );
+}
+```
+
+---
+
+## 6. Technical Implementation Plan
+
+### 6.1 Tech Stack (Unified Across All Sites)
+
+**Frontend Framework**:
+- **Next.js 14** (App Router) - merchant, pay, explorer
+- **Astro** (static) - marketing site (vfide.com)
+
+**Web3 Integration**:
+- **wagmi v2** (React hooks for Ethereum)
+- **viem** (TypeScript-native Ethereum library)
+- **RainbowKit** (wallet connection UI - customized with Professional theme)
+
+**UI/Styling**:
+- **Tailwind CSS** (utility-first)
+- **Framer Motion** (animations)
+- **Three.js** (3D graphics - Templar cross, particle effects)
+- **GSAP** (scroll animations)
+- **Lottie** (micro-animations - icons, loaders)
+
+**State Management**:
+- **Zustand** (lightweight state)
+- **React Query** (data fetching, caching)
+
+**Database**:
+- **Supabase** (PostgreSQL, auth, realtime)
+
+**Hosting**:
+- **Vercel** (Next.js sites)
+- **Cloudflare Pages** (Astro marketing site)
+
+---
+
+### 6.2 File Structure
+
+```
+/workspaces/Vfide/
+├── frontend/
+│   ├── merchant/               # merchant.vfide.com (Next.js)
+│   │   ├── app/
+│   │   │   ├── (dashboard)/
+│   │   │   │   ├── page.tsx    # Main dashboard
+│   │   │   │   ├── escrow/     # Escrow management
+│   │   │   │   ├── disputes/   # Dispute resolution
+│   │   │   │   ├── settings/   # Merchant settings
+│   │   │   │   └── analytics/  # Sales analytics
+│   │   │   ├── onboarding/     # <2 min KYC-free flow
+│   │   │   └── layout.tsx      # Professional theme wrapper
+│   │   ├── components/
+│   │   │   ├── WalletConnect.tsx
+│   │   │   ├── TemplarCard.tsx
+│   │   │   ├── ProofScoreBadge.tsx
+│   │   │   ├── TransactionTable.tsx
+│   │   │   └── EscrowTimer.tsx
+│   │   ├── hooks/
+│   │   │   ├── useProofScore.ts
+│   │   │   ├── useEscrow.ts
+│   │   │   └── useMerchantStats.ts
+│   │   ├── styles/
+│   │   │   ├── templar-theme.css
+│   │   │   └── animations.css
+│   │   └── public/
+│   │       ├── textures/        # Stone, chainmail, metal
+│   │       └── icons/           # Shields, swords, crosses
+│   │
+│   ├── pay/                    # pay.vfide.com (Next.js)
+│   │   ├── app/
+│   │   │   ├── [merchantId]/   # Dynamic checkout pages
+│   │   │   └── success/        # Payment success animation
+│   │   ├── components/
+│   │   │   ├── CheckoutForm.tsx
+│   │   │   ├── MerchantCard.tsx
+│   │   │   └── PaymentButton.tsx
+│   │   └── styles/
+│   │       └── checkout.css
+│   │
+│   ├── marketing/              # vfide.com (Astro)
+│   │   ├── src/
+│   │   │   ├── pages/
+│   │   │   │   ├── index.astro # Hero, value props
+│   │   │   │   ├── how-it-works.astro
+│   │   │   │   ├── merchants.astro
+│   │   │   │   ├── whitepaper.astro
+│   │   │   │   └── about.astro
+│   │   │   ├── components/
+│   │   │   │   ├── Hero3D.astro # Three.js Templar cross
+│   │   │   │   ├── ValueProp.astro
+│   │   │   │   └── CaseStudy.astro
+│   │   │   └── layouts/
+│   │   │       └── BaseLayout.astro
+│   │   └── public/
+│   │       ├── videos/         # Templar-themed promo
+│   │       └── case-studies/
+│   │
+│   ├── explorer/               # explorer.vfide.com (Next.js)
+│   │   ├── app/
+│   │   │   ├── page.tsx        # Search + leaderboard
+│   │   │   ├── address/[id]/   # ProofScore details
+│   │   │   └── stats/          # Network statistics
+│   │   ├── components/
+│   │   │   ├── Leaderboard.tsx
+│   │   │   ├── ProofScoreSearch.tsx
+│   │   │   └── TransactionFeed.tsx
+│   │   └── styles/
+│   │       └── explorer.css
+│   │
+│   ├── shared/                 # Shared across all sites
+│   │   ├── components/
+│   │   │   ├── Navigation.tsx  # Unified nav (medieval banners)
+│   │   │   ├── Footer.tsx      # Unified footer (Gothic)
+│   │   │   └── Logo.tsx # Animated logo
+│   │   ├── contracts/          # ABI files
+│   │   │   ├── VFIDEToken.json
+│   │   │   ├── ProofScoreBurnRouter.json
+│   │   │   ├── MerchantPortal.json
+│   │   │   └── EscrowManager.json
+│   │   ├── hooks/
+│   │   │   └── useVFIDEContracts.ts
+│   │   └── utils/
+│   │       ├── formatters.ts   # Address, currency formatting
+│   │       └── tierCalculator.ts # ProofScore → tier
+│   │
+│   └── package.json            # Monorepo root
+│
+├── contracts/                  # Smart contracts (existing)
+├── docs/                       # Documentation (existing)
+└── integrations/               # Shopify/WooCommerce plugins (existing)
+```
+
+---
+
+## 7. Priority Roadmap
+
+### Phase 1: Design System Foundation (Week 1-2)
+
+**Tasks**:
+- [x] Create design system document (this file)
+- [ ] Set up Next.js monorepo (merchant, pay, explorer)
+- [ ] Install dependencies (wagmi, viem, Framer Motion, Three.js)
+- [ ] Create base Tailwind config with Templar colors
+- [ ] Download/license fonts (Cinzel, Orbitron, Fira Code)
+- [ ] Create texture assets (stone, chainmail, metal)
+- [ ] Design ProofScore tier badges (Bronze, Silver, Gold, Platinum)
+
+**Deliverable**: Reusable component library (buttons, cards, badges, VFIDE symbol SVG)
+
+---
+
+### Phase 2: Merchant Dashboard (Week 3-4)
+
+**Tasks**:
+- [ ] Build merchant.vfide.com homepage
+- [ ] Implement WalletConnect component
+- [ ] Create dashboard layout (medieval banners navigation)
+- [ ] Build transaction table with escrow timers
+- [ ] Implement ProofScore display with animated counter
+- [ ] Add "Release Escrow" and "View Disputes" actions
+- [ ] Integrate with smart contracts (read-only first)
+
+**Deliverable**: Functional merchant dashboard (read-only)
+
+---
+
+### Phase 3: Payment Checkout (Week 5-6)
+
+**Tasks**:
+- [ ] Build pay.vfide.com checkout page
+- [ ] Implement merchant ProofScore badge display
+- [ ] Add payment button with Templar cross animation
+- [ ] Build escrow countdown timer (holographic hourglass)
+- [ ] Create payment success animation (sword strike, "Sealed")
+- [ ] Integrate with EscrowManager.sol (write transactions)
+
+**Deliverable**: Fully functional payment checkout
+
+---
+
+### Phase 4: Marketing Site (Week 7-8)
+
+**Tasks**:
+- [ ] Build vfide.com with Astro
+- [ ] Create hero section with 3D rotating Templar cross (Three.js)
+- [ ] Add value props with animated icons
+- [ ] Build "How It Works" timeline (scroll animation)
+- [ ] Create ProofScore interactive demo
+- [ ] Write copy for all sections
+- [ ] SEO optimization
+
+**Deliverable**: Marketing site live
+
+---
+
+### Phase 5: Blockchain Explorer (Week 9-10)
+
+**Tasks**:
+- [ ] Build explorer.vfide.com
+- [ ] Implement ProofScore search
+- [ ] Create leaderboard (top 100 merchants)
+- [ ] Add network stats dashboard
+- [ ] Build transaction feed (Matrix-style live stream)
+- [ ] Integrate with indexer (The Graph or Supabase)
+
+**Deliverable**: Blockchain explorer live
+
+---
+
+### Phase 6: Advanced Features (Week 11-12)
+
+**Tasks**:
+- [ ] Guardian Node marketplace (buy nodes)
+- [ ] DAO governance portal (vote on proposals)
+- [ ] Vault manager (create, deposit, withdraw)
+- [ ] Subscription manager (recurring payments)
+- [ ] Multi-language support (EN, ES, FR, ZH)
+- [ ] Mobile responsive optimization
+- [ ] Performance optimization (lazy loading, image optimization)
+
+**Deliverable**: Full-featured VFIDE frontend ecosystem
+
+---
+
+## 8. User Flows (With Templar Theme)
+
+### 8.1 Merchant Onboarding (<2 Minutes)
+
+**Step 1: Land on merchant.vfide.com**
+- Hero: "Join the Order. Accept payments. 0% fees."
+- Giant red Templar cross rotating in 3D (Three.js)
+- CTA: "🛡️ CONNECT WALLET - BECOME A MERCHANT" (glowing button)
+
+**Step 2: Connect Wallet**
+- Click button → MetaMask popup
+- Sign message: "I pledge to uphold honor in commerce"
+- Wallet connected → Medieval "seal" animation (wax stamp glowing)
+
+**Step 3: ProofScore Assigned**
+- Automatic: 500/1000 (Squire tier)
+- Monthly limit: $1,000
+- Animation: Shield badge materializes with particle effect
+- Message: "Welcome, Squire. Earn higher limits by building reputation."
+
+**Step 4: Choose Platform**
+- Options: Shopify, WooCommerce, Custom API
+- Click Shopify → Get API key instantly
+- Copy-paste instructions with animated scroll
+- Done! Ready to accept payments.
+
+**Total Time**: 90 seconds ✅
+
+---
+
+### 8.2 Buyer Payment Flow
+
+**Step 1: Buyer visits pay.vfide.com/mch_0x1234**
+- Checkout page with item details
+- Merchant ProofScore badge: "⚔️ Knight (650/1000)"
+- Security icons: 🛡️ 7-day escrow, ⚔️ Dispute resolution
+
+**Step 2: Connect Wallet & Pay**
+- Click "🦊 PAY WITH METAMASK"
+- MetaMask popup for 250 USDC approval + payment
+- Transaction sent
+
+**Step 3: Payment Processing**
+- Loading animation: Templar cross spins, sword strikes
+- Blockchain confirmation: 3 blocks (~30 seconds on zkSync)
+- Success: "Payment Sealed" with glowing red seal
+
+**Step 4: Escrow Timer Starts**
+- Animated hourglass: 7 days countdown
+- Buyer can release early if satisfied
+- Merchant sees payment in dashboard (pending release)
+
+**Total Time**: 2 minutes
+
+---
+
+## 9. Accessibility & Responsiveness
+
+### 9.1 Accessibility (WCAG 2.1 AA)
+
+**Requirements**:
+- ✅ Color contrast ratio ≥4.5:1 (text on background)
+- ✅ Keyboard navigation (all interactive elements)
+- ✅ Screen reader support (ARIA labels)
+- ✅ Focus indicators (visible outlines)
+- ✅ Alt text for images (shields, crosses, badges)
+
+**Implementation**:
+```jsx
+// Example: Accessible button
+<button 
+  className="btn-primary"
+  aria-label="Connect MetaMask wallet to join VFIDE"
+  tabIndex={0}
+>
+  🦊 Connect MetaMask
+</button>
+```
+
+---
+
+### 9.2 Responsive Design
+
+**Breakpoints**:
+- **Mobile**: 320px - 768px (80% of traffic)
+- **Tablet**: 769px - 1024px
+- **Desktop**: 1025px+ (target)
+
+**Mobile Optimizations**:
+- Collapse navigation to hamburger menu (Templar cross icon)
+- Stack cards vertically
+- Simplify 3D effects (disable Three.js on mobile, use static images)
+- Touch-friendly buttons (min 44px × 44px)
+
+**Example**:
+```css
+/* Desktop: 3D Templar cross */
+@media (min-width: 1025px) {
+  .templar-hero {
+    background: url('/3d-cross-scene.webp');
+  }
+}
+
+/* Mobile: Static image */
+@media (max-width: 768px) {
+  .templar-hero {
+    background: url('/templar-cross-2d.webp');
+  }
+}
+```
+
+---
+
+## 10. Next Immediate Actions
+
+### Priority 0 (DO NOW):
+
+1. **Set up Next.js monorepo** (2 hours)
+   ```bash
+   cd /workspaces/Vfide
+   mkdir frontend
+   cd frontend
+   npx create-next-app@latest merchant --typescript --tailwind --app
+   npx create-next-app@latest pay --typescript --tailwind --app
+   npx create-next-app@latest explorer --typescript --tailwind --app
+   npm create astro@latest marketing
+   ```
+
+2. **Install Web3 dependencies** (30 min)
+   ```bash
+   npm install wagmi viem @tanstack/react-query
+   npm install @rainbow-me/rainbowkit
+   npm install framer-motion three @react-three/fiber
+   npm install zustand
+   ```
+
+3. **Download fonts** (15 min)
+   - Google Fonts: Cinzel, Orbitron, Fira Code
+   - Add to `layout.tsx`
+
+4. **Create Tailwind config with Professional theme** (1 hour)
+   ```javascript
+   // tailwind.config.js
+   module.exports = {
+     theme: {
+       extend: {
+         colors: {
+           'primary-red': '#C41E3A',
+           'cyber-blue': '#00F0FF',
+           'gold': '#FFD700',
+           'dark-stone': '#1A1A1D',
+           'steel-gray': '#4A4A4F',
+           'parchment': '#F5F3E8',
+         },
+         fontFamily: {
+           'medieval': ['Cinzel', 'serif'],
+           'cyber': ['Orbitron', 'sans-serif'],
+           'code': ['Fira Code', 'monospace'],
+         },
+       },
+     },
+   };
+   ```
+
+5. **Create first component: WalletConnect** (2 hours)
+   - Build `WalletConnectButton.tsx`
+   - Templar seal animation
+   - MetaMask + WalletConnect support
+
+---
+
+**Total Time to First Working Prototype**: 1 week (40 hours)
+
+**Success Criteria**:
+- ✅ Merchant can connect wallet
+- ✅ ProofScore displays correctly
+- ✅ Professional theme applied (red cross, Gothic fonts, dark stone bg)
+- ✅ Payment checkout page functional
+- ✅ Transactions write to blockchain
+
+---
+
+## 11. Conclusion
+
+**What You Now Have**:
+- Complete design system (colors, typography, components)
+- ProofScore tier system (Squire → Knight → Elite → Templar)
+- 4 website architectures (merchant, pay, marketing, explorer)
+- Technical implementation plan (Next.js, wagmi, Tailwind)
+- Animation library (Framer Motion, Three.js)
+- Accessibility guidelines (WCAG 2.1 AA)
+- 12-week roadmap
+
+**Theme Summary**:
+- **Visual**: Red Templar cross + neon blue cyber glow
+- **Typography**: Cinzel (medieval) + Orbitron (futuristic)
+- **Colors**: Dark stone backgrounds, gold accents, red/blue gradients
+- **Animations**: Sword strikes, particle effects, holographic text
+- **Philosophy**: "Ancient honor meets future tech"
+
+**Next Action**: Set up Next.js monorepo and create WalletConnect component.
+
+**Go build the Temple.** ⚔️🛡️✨
+
+---
+
+**END OF DESIGN DOCUMENT**

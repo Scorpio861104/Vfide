@@ -1,0 +1,77 @@
+name: VFIDE CI
+
+on:
+  push:
+    branches: [ main, feature/**, copilot/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install
+      - name: Hardhat tests
+        run: npx hardhat test --grep Smoke
+      - name: Coverage
+        run: COVERAGE=1 npx hardhat coverage || true
+      - name: Gas report
+        run: GAS_REPORT=1 npx hardhat test --grep Smoke || true
+      - name: Size report
+        run: npx hardhat size-contracts || true
+      - name: Aggregate
+        run: npm run aggregate || true
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: reports/latest
+
+  security-static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Slither & Mythril
+        run: |
+          pip install slither-analyzer mythril
+      - name: Run security scripts
+        run: bash scripts/security-run.sh
+      - name: Upload security artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: reports/latest
+
+  nightly-symbolic:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Mythril
+        run: pip install mythril
+      - name: Mythril full run
+        run: |
+          for f in contracts/*.sol; do myth analyze "$f" -o text > "mythril-$(basename $f .sol).txt" || true; done
+          mkdir -p reports/latest; cp mythril-*.txt reports/latest/ || true
+      - name: Upload nightly artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mythril-nightly
+          path: reports/latest
+
+schedule:
+  - cron: '0 2 * * *'

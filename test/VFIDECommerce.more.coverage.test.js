@@ -37,9 +37,11 @@ describe("VFIDECommerce additional coverage tests", function () {
     registry = await Registry.deploy(owner.address, tokenFail.target, vaultHub.target, seer.target, security.target, ledger.target);
     await registry.waitForDeployment();
 
-    Commerce = await ethers.getContractFactory("CommerceEscrow");
+    Commerce = await ethers.getContractFactory("CommerceEscrowTestable");
     commerce = await Commerce.deploy(owner.address, tokenFail.target, vaultHub.target, registry.target, security.target, ledger.target);
     await commerce.waitForDeployment();
+    await registry.connect(owner).setReporter(commerce.target, true);
+    await registry.connect(owner).setReporter(owner.address, true);
 
     // setup vaults and seer
     await vaultHub.setVault(buyer.address, buyer.address);
@@ -52,8 +54,8 @@ describe("VFIDECommerce additional coverage tests", function () {
   it("open reverts when merchant is suspended", async function () {
     // suspend merchant via refunds
     for (let i = 0; i < 6; i++) {
-      // need merchant to exist; calling _noteRefund by registry (any caller)
-      await registry._noteRefund(merchant.address);
+      // need merchant to exist; calling reportRefund by registry (any caller)
+      await registry.reportRefund(merchant.address);
     }
     const amount = ethers.parseUnits("1", 18);
     await expect(commerce.connect(buyer).open(merchant.address, amount, ethers.id("s1"))).to.be.reverted;
