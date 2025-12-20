@@ -1,4 +1,0 @@
-digraph "" {
-c142_ProofLedger[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ProofLedger</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    setDAO(address)</TD></TR><TR><TD align="left">    logEvent(address,string,uint256,string)</TD></TR><TR><TD align="left">    logSystemEvent(address,string,address)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyDAO()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    dao</TD></TR></TABLE> >];
-
-}

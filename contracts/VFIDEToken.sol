@@ -1,75 +1,61 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import "./SharedInterfaces.sol";
+
 /**
- * VFIDEToken (zkSync Era ready) — FINAL
+ * VFIDEToken (zkSync Era ready)
  * ----------------------------------------------------------
- * - Total supply cap: 200,000,000 VFIDE (18 decimals)
- * - Dev reserve: 40,000,000 pre-minted to DevReserveVestingVault (constructor)
- * - Presale mint cap: 75,000,000 (only `presale` can mint within cap)
- * - Vault-only transfer rule (via VaultHub): wallets cannot hold VFIDE
- * - System exemptions for infra contracts (presale, DAO, routers, treasury)
- * - ProofScore-aware fees/burns via external BurnRouter (computeFees view)
- * - SecurityHub lock check (PanicGuard/GuardianLock integration)
- * - ProofLedger hooks (best-effort) for transparency
- * - NEW: policy lock to make enforcement non-optional post-launch
- * - NEW: presale mint must target a valid vault when vaultOnly is true
+ * SUPPLY (ALL MINTED AT GENESIS):
+ * - Total supply: 200,000,000 VFIDE (18 decimals)
+ * - Dev reserve: 50,000,000 → DevReserveVestingVault (locked)
+ * - Presale allocation: 50,000,000 → PresaleContract (35M base + 15M bonus)
+ * - Treasury/Operations: 100,000,000 → Treasury (liquidity, CEX, operations)
+ * 
+ * VAULT-ONLY (ON BY DEFAULT):
+ * - Users MUST use vaults for transfers (enables recovery/ProofScore)
+ * - Exchanges/contracts can be whitelisted by owner
+ * - System contracts (presale, sinks) auto-exempt
+ * - Mints/burns always allowed
+ * 
+ * FEATURES:
+ * - ProofScore-aware fees/burns via BurnRouter
+ * - SecurityHub lock checks (PanicGuard/Guardian)
+ * - ProofLedger event logging
+ * - Policy lock (makes vault-only permanent)
+ * - Circuit breaker (emergency bypass)
+ * - Blacklist support
+ * - EIP-2612 permit
  */
-
-/// ─────────────────────────── Minimal Interfaces
-interface IVaultHub {
-    function vaultOf(address owner) external view returns (address);
-}
-
-interface ISecurityHub {
-    function isLocked(address vault) external view returns (bool);
-}
-
-interface IProofLedgerToken {
-    function logSystemEvent(address who, string calldata action, address by) external;
-    function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
-}
-
-/**
- * Router interface: computes fee amounts/sinks based on ProofScore.
- * Token uses returned amounts to burn and route charity/treasury portions.
- */
-interface IProofScoreBurnRouterToken {
-    function computeFees(
-        address from,
-        address to,
-        uint256 amount
-    ) external view returns (
-        uint256 burnAmount,
-        uint256 sanctumAmount,
-        address sanctumSink,  // usually Treasury or SanctumFund
-        address burnSink      // optional burn sink; if zero, token burns to address(0)
-    );
-}
-
-/// ─────────────────────────── Lightweight Ownable
-abstract contract Ownable {
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    address public owner;
-    constructor() { owner = msg.sender; emit OwnershipTransferred(address(0), msg.sender); }
-    modifier onlyOwner() { require(msg.sender == owner, "OWN: not owner"); _; }
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "OWN: zero");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
-    }
-}
 
 /// ─────────────────────────── ERC20 (no OZ deps; 0.8.x checked math)
-contract VFIDEToken is Ownable {
+contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Constants
-    string public constant name = "VFIDE";
+    string public constant name = "VFIDE Token";  // WHITEPAPER: "VFIDE Token"
     string public constant symbol = "VFIDE";
     uint8  public constant decimals = 18;
 
     uint256 public constant MAX_SUPPLY = 200_000_000e18;
-    uint256 public constant DEV_RESERVE_SUPPLY = 40_000_000e18;
-    uint256 public constant PRESALE_SUPPLY_CAP = 75_000_000e18;
+    uint256 public constant DEV_RESERVE_SUPPLY = 50_000_000e18;
+    uint256 public constant PRESALE_CAP = 50_000_000e18;
+
+    // ─────────────────────────── Anti-Whale Protection
+    // All limits configurable by owner, can be disabled by setting to 0
+    uint256 public maxTransferAmount = 2_000_000e18;     // 2M VFIDE max per transfer (1% of supply)
+    uint256 public maxWalletBalance = 4_000_000e18;      // 4M VFIDE max per wallet (2% of supply)
+    uint256 public dailyTransferLimit = 5_000_000e18;    // 5M VFIDE max per 24h (2.5% of supply)
+    uint256 public transferCooldown = 0;                  // Seconds between transfers (0 = disabled)
+    
+    // Tracking for daily limits and cooldowns
+    mapping(address => uint256) public dailyTransferred;
+    mapping(address => uint256) public dailyResetTime;
+    mapping(address => uint256) public lastTransferTime;
+    
+    // Exemptions from whale limits (exchanges, contracts, etc.)
+    mapping(address => bool) public whaleLimitExempt;
+    
+    event AntiWhaleSet(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown);
+    event WhaleLimitExemptSet(address indexed addr, bool exempt);
 
     /// Storage
     uint256 public totalSupply;
@@ -77,27 +63,40 @@ contract VFIDEToken is Ownable {
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
 
-    // Modules
-    IVaultHub public vaultHub;                    // required for vault-only rule
-    ISecurityHub public securityHub;              // optional lock checks
-    IProofLedgerToken public ledger;              // optional event ledger
-    IProofScoreBurnRouterToken public burnRouter; // score-based fee calc
+    /// Modules & config
+    IVaultHub public vaultHub;                    // vault registry (required)
+    ISecurityHub public securityHub;              // lock checks (optional)
+    IProofLedger public ledger;                   // event logging (optional)
+    IProofScoreBurnRouterToken public burnRouter; // fee calculator (optional)
 
-    // Policy
-    bool public vaultOnly = true;                 // enforce vault-only transfers
-    bool public policyLocked = false;             // once locked, cannot disable enforcement
-    mapping(address => bool) public systemExempt; // bypass vault check & fees
+    /// Policy settings
+    bool public vaultOnly = true;                 // VAULT-ONLY ON BY DEFAULT (user security)
+    bool public policyLocked = false;             // once locked, cannot disable vault-only
+    bool public circuitBreaker = false;           // emergency bypass
+    uint256 public circuitBreakerExpiry = 0;      // auto-disable timestamp (0 = indefinite)
+    uint256 public constant MAX_CIRCUIT_BREAKER_DURATION = 7 days; // maximum allowed duration
     
-    // Emergency controls (DAO-only, for router failures)
-    address public emergencyDAO;                  // can temporarily disable router requirement
-    bool public emergencyRouterBypass = false;    // temporary bypass if router fails
+    /// Exemptions
+    mapping(address => bool) public systemExempt; // bypass all checks (presale, sinks, etc)
+    mapping(address => bool) public whitelisted;  // bypass vault-only (exchanges)
 
-    // Presale control
-    address public presale;
-    uint256 public presaleMinted; // must never exceed PRESALE_SUPPLY_CAP
+    // Presale control (set at genesis, receives 50M tokens)
+    address public presaleContract;
 
     // Sinks (fallbacks if router is unset or returns zero sinks)
     address public treasurySink;  // sanctuary/treasury receiver for charity share
+    address public sanctumSink; // Optional: Burn to Sanctum instead of 0x0
+    
+    // Sanctions / Compliance
+    mapping(address => bool) public isBlacklisted;
+    // L-1 Fix: Enhanced BlacklistSet event with caller for audit trail
+    event BlacklistSet(address indexed user, bool status, address indexed setBy);
+
+    // EIP-2612 Permit
+    bytes32 public DOMAIN_SEPARATOR;
+    // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+    mapping(address => uint256) public nonces;
 
     /// Events
     event VaultHubSet(address indexed hub);
@@ -105,48 +104,49 @@ contract VFIDEToken is Ownable {
     event LedgerSet(address indexed ledger);
     event BurnRouterSet(address indexed router);
     event TreasurySinkSet(address indexed sink);
+    event SanctumSinkSet(address indexed sink);
     event SystemExemptSet(address indexed who, bool isExempt);
+    event Whitelisted(address indexed addr, bool status);
     event VaultOnlySet(bool enabled);
+    event ExemptSet(address indexed target, bool exempt);
     event PolicyLocked();
-    event PresaleSet(address indexed presale);
-    event PresaleMint(address indexed to, uint256 amount);
-    event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, address sanctumSink);
-    event EmergencyDAOSet(address indexed dao);
-    event EmergencyRouterBypassSet(bool enabled, string reason);
+    event CircuitBreakerSet(bool active, uint256 expiry);
+    event PresaleContractSet(address indexed presale);
+    event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address indexed sanctumSink, address ecosystemSink);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
     /// Errors
     error VF_ZERO();
     error VF_CAP();
-    error VF_NOT_PRESALE();
     error VF_LOCKED();
     error VF_POLICY_LOCKED();
-    error VF_NOT_EMERGENCY_DAO();
+    error Token_NotVault();
+    error VF_MaxTransferExceeded();
+    error VF_MaxWalletExceeded();
+    error VF_DailyLimitExceeded();
+    error VF_TransferCooldown();
 
-    /// Constructor: pre-mint dev reserve to the vesting vault
-    uint256 public immutable ownershipTransferDeadline;
-    address public immutable daoMultiSig; // Multi-sig wallet for DAO
-    bool public ownershipTransferred;
-
+    /// Constructor: mint full supply and distribute at genesis
     constructor(
-        address devReserveVestingVault, // MUST be deployed before token
+        address devReserveVestingVault, // MUST be deployed before token (receives 50M locked)
+        address _presaleContract,       // MUST be deployed before token (receives 50M for sale)
+        address treasury,               // Treasury/Owner address (receives 100M for operations/liquidity)
         address _vaultHub,              // MAY be zero at deploy; can be set later
         address _ledger,                // optional
         address _treasurySink           // recommended: EcoTreasuryVault
-        address _daoMultiSig
     ) {
-        require(_daoMultiSig != address(0), "DAO multi-sig not set");
-        daoMultiSig = _daoMultiSig;
-        ownershipTransferDeadline = block.timestamp + 365 days; // 1 year
-        ownershipTransferred = false;
-
         if (devReserveVestingVault == address(0)) revert VF_ZERO();
+        if (_presaleContract == address(0)) revert VF_ZERO();
+        if (treasury == address(0)) revert VF_ZERO();
 
-        // Require dev vault is a contract to prevent misconfig at genesis.
+        // Require dev vault and presale are contracts to prevent misconfig
         uint256 size;
         assembly { size := extcodesize(devReserveVestingVault) }
         require(size > 0, "devVault !contract");
+        assembly { size := extcodesize(_presaleContract) }
+        require(size > 0, "presale !contract");
+        // Treasury can be EOA or contract (for multisig/DAO)
 
         // Optional modules (can be set later)
         if (_vaultHub != address(0)) {
@@ -154,7 +154,7 @@ contract VFIDEToken is Ownable {
             emit VaultHubSet(_vaultHub);
         }
         if (_ledger != address(0)) {
-            ledger = IProofLedgerToken(_ledger);
+            ledger = IProofLedger(_ledger);
             emit LedgerSet(_ledger);
         }
         if (_treasurySink != address(0)) {
@@ -162,18 +162,48 @@ contract VFIDEToken is Ownable {
             emit TreasurySinkSet(_treasurySink);
         }
 
-        // Pre-mint dev reserve
-        _mint(devReserveVestingVault, DEV_RESERVE_SUPPLY);
-        _logEv(devReserveVestingVault, "premint_dev_reserve", DEV_RESERVE_SUPPLY, "40M to vesting vault");
-    }
+        // Set presale contract
+        presaleContract = _presaleContract;
+        systemExempt[_presaleContract] = true;
+        emit PresaleContractSet(_presaleContract);
+        emit SystemExemptSet(_presaleContract, true);
+        
+        // Exempt genesis allocation addresses from whale limits
+        whaleLimitExempt[devReserveVestingVault] = true;
+        whaleLimitExempt[_presaleContract] = true;
+        whaleLimitExempt[treasury] = true;
 
-    function finalizeOwnershipTransfer() external {
-        require(block.timestamp >= ownershipTransferDeadline, "Ownership transfer not yet allowed");
-        require(!ownershipTransferred, "Ownership already transferred");
+        // EIP-712 Domain Separator
+        uint256 chainId;
+        assembly { chainId := chainid() }
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes(name)),
+                keccak256(bytes("1")),
+                chainId,
+                address(this)
+            )
+        );
 
-        // Transfer ownership to the DAO multi-sig wallet
-        transferOwnership(daoMultiSig);
-        ownershipTransferred = true;
+        // Mint full 200M supply at genesis and distribute
+        totalSupply = MAX_SUPPLY;
+        
+        // 50M to Dev Reserve Vesting Vault (locked)
+        _balances[devReserveVestingVault] = DEV_RESERVE_SUPPLY;
+        emit Transfer(address(0), devReserveVestingVault, DEV_RESERVE_SUPPLY);
+        _logEv(devReserveVestingVault, "premint_dev_reserve", DEV_RESERVE_SUPPLY, "50M locked");
+        
+        // 50M to Presale Contract (35M base + 15M bonus)
+        _balances[_presaleContract] = PRESALE_CAP;
+        emit Transfer(address(0), _presaleContract, PRESALE_CAP);
+        _logEv(_presaleContract, "premint_presale", PRESALE_CAP, "50M for presale");
+        
+        // 100M to Treasury (operations, liquidity, CEX, trading)
+        uint256 treasuryAmount = MAX_SUPPLY - DEV_RESERVE_SUPPLY - PRESALE_CAP;
+        _balances[treasury] = treasuryAmount;
+        emit Transfer(address(0), treasury, treasuryAmount);
+        _logEv(treasury, "premint_treasury", treasuryAmount, "100M for operations");
     }
 
     // ─────────────────────────── ERC20 standard
@@ -198,12 +228,25 @@ contract VFIDEToken is Ownable {
         return true;
     }
 
-    function transfer(address to, uint256 amount) external returns (bool) {
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
+        // M-4 Fix: Add upper bound on deadline to prevent indefinite approvals
+        require(block.timestamp <= deadline, "VFIDE: expired deadline");
+        require(deadline <= block.timestamp + 30 days, "VFIDE: deadline too far");
+        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++));
+        bytes32 hash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
+        address signer = ecrecover(hash, v, r, s);
+        require(signer != address(0) && signer == owner, "VFIDE: invalid signature");
+        _approve(owner, spender, value);
+    }
+
+    function transfer(address to, uint256 amount) external nonReentrant returns (bool) {
         _transfer(msg.sender, to, amount);
         return true;
     }
 
-    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) external nonReentrant returns (bool) {
+        // Spender must not be blacklisted
+        require(!isBlacklisted[msg.sender], "Sanctioned");
         uint256 cur = _allowances[from][msg.sender];
         require(cur >= amount, "allow");
         _approve(from, msg.sender, cur - amount);
@@ -214,15 +257,10 @@ contract VFIDEToken is Ownable {
     // ─────────────────────────── Admin / Modules
 
     function setVaultHub(address hub) external onlyOwner {
+        require(hub != address(0), "VF: zero address");
         vaultHub = IVaultHub(hub);
         emit VaultHubSet(hub);
         _log("vault_hub_set");
-    }
-
-    /// Alias for setVaultHub (terminology consistency with overview)
-    function setVaultFactory(address factory) external onlyOwner {
-        setVaultHub(factory);
-        // Event already emitted by setVaultHub, no need to duplicate
     }
 
     function setSecurityHub(address hub) external onlyOwner {
@@ -232,7 +270,7 @@ contract VFIDEToken is Ownable {
     }
 
     function setLedger(address _ledger) external onlyOwner {
-        ledger = IProofLedgerToken(_ledger);
+        ledger = IProofLedger(_ledger);
         emit LedgerSet(_ledger);
         _log("ledger_set");
     }
@@ -251,10 +289,28 @@ contract VFIDEToken is Ownable {
         _log("treasury_sink_set");
     }
 
+    function setSanctumSink(address _sanctum) external onlyOwner {
+        if (policyLocked) require(_sanctum != address(0), "VF: cannot set zero when locked");
+        require(_sanctum != address(0), "VF: zero address");
+        sanctumSink = _sanctum;
+        emit SanctumSinkSet(_sanctum);
+        _log("sanctum_sink_set");
+    }
+
+    /// @notice Exempt address from all checks (fees + vault-only) - use for system contracts
     function setSystemExempt(address who, bool isExempt) external onlyOwner {
+        require(who != address(0), "VF: zero address");
         systemExempt[who] = isExempt;
         emit SystemExemptSet(who, isExempt);
         _logEv(who, isExempt ? "exempt_on" : "exempt_off", 0, "");
+    }
+    
+    /// @notice Whitelist address to bypass vault-only rule - use for exchanges/DEXs
+    function setWhitelist(address addr, bool status) external onlyOwner {
+        require(addr != address(0), "VF: zero address");
+        whitelisted[addr] = status;
+        emit Whitelisted(addr, status);
+        _logEv(addr, status ? "whitelist_add" : "whitelist_remove", 0, "");
     }
 
     function setVaultOnly(bool enabled) external onlyOwner {
@@ -271,72 +327,140 @@ contract VFIDEToken is Ownable {
         _log("policy_locked");
     }
 
-    function setPresale(address _presale) external onlyOwner {
-        presale = _presale;
-        if (_presale != address(0)) {
-            systemExempt[_presale] = true; // presale ops bypass vault rule/fees; mint target still must be a vault
-            emit SystemExemptSet(_presale, true);
+    /// Emergency switch to bypass external calls (SecurityHub/BurnRouter) if they fail.
+    /// Can be toggled even if policyLocked is true, to ensure liveness.
+    /**
+     * @notice Emergency switch to bypass external calls if they fail
+     * @dev Can be toggled even if policyLocked is true to ensure liveness
+     * @dev Circuit breaker auto-disables after duration to prevent abuse
+     * @param _active True to enable circuit breaker, false to disable
+     * @param _duration Duration in seconds (max 7 days). Ignored when disabling.
+     */
+    function setCircuitBreaker(bool _active, uint256 _duration) external onlyOwner {
+        if (_active) {
+            require(_duration > 0 && _duration <= MAX_CIRCUIT_BREAKER_DURATION, "VF: invalid duration");
+            circuitBreaker = true;
+            circuitBreakerExpiry = block.timestamp + _duration;
+        } else {
+            circuitBreaker = false;
+            circuitBreakerExpiry = 0;
         }
-        emit PresaleSet(_presale);
-        _log("presale_set");
+        emit CircuitBreakerSet(_active, circuitBreakerExpiry);
+        _log(_active ? "circuit_breaker_on" : "circuit_breaker_off");
+    }
+    
+    /**
+     * @notice Check if circuit breaker is currently active (respects expiry)
+     * @return True if circuit breaker is active and not expired
+     */
+    function isCircuitBreakerActive() public view returns (bool) {
+        if (!circuitBreaker) return false;
+        if (circuitBreakerExpiry > 0 && block.timestamp >= circuitBreakerExpiry) return false;
+        return true;
     }
 
-    /// Set emergency DAO address (one-time or DAO-controlled)
-    function setEmergencyDAO(address _dao) external onlyOwner {
-        if (_dao == address(0)) revert VF_ZERO();
-        emergencyDAO = _dao;
-        emit EmergencyDAOSet(_dao);
-        _log("emergency_dao_set");
+    function setBlacklist(address user, bool status) external onlyOwner {
+        isBlacklisted[user] = status;
+        emit BlacklistSet(user, status, msg.sender);
     }
 
-    /// Emergency bypass for router requirement (DAO-only, temporary, logged)
-    function setEmergencyRouterBypass(bool enabled, string calldata reason) external {
-        if (msg.sender != emergencyDAO) revert VF_NOT_EMERGENCY_DAO();
-        emergencyRouterBypass = enabled;
-        emit EmergencyRouterBypassSet(enabled, reason);
-        _logEv(msg.sender, enabled ? "emergency_bypass_on" : "emergency_bypass_off", 0, reason);
+    // ─────────────────────────── Anti-Whale Admin Functions
+    
+    /**
+     * @notice Set anti-whale limits (set to 0 to disable any limit)
+     * @param _maxTransfer Max tokens per single transfer (0 = disabled)
+     * @param _maxWallet Max tokens per wallet (0 = disabled)
+     * @param _dailyLimit Max tokens transferred per 24h (0 = disabled)
+     * @param _cooldown Seconds between transfers (0 = disabled)
+     */
+    function setAntiWhale(
+        uint256 _maxTransfer,
+        uint256 _maxWallet,
+        uint256 _dailyLimit,
+        uint256 _cooldown
+    ) external onlyOwner {
+        // Sanity checks: limits should be reasonable if enabled
+        if (_maxTransfer > 0) require(_maxTransfer >= 100_000e18, "min 100k");
+        if (_maxWallet > 0) require(_maxWallet >= 200_000e18, "min 200k");
+        if (_dailyLimit > 0) require(_dailyLimit >= 500_000e18, "min 500k");
+        if (_cooldown > 0) require(_cooldown <= 1 hours, "max 1 hour cooldown");
+        
+        maxTransferAmount = _maxTransfer;
+        maxWalletBalance = _maxWallet;
+        dailyTransferLimit = _dailyLimit;
+        transferCooldown = _cooldown;
+        
+        emit AntiWhaleSet(_maxTransfer, _maxWallet, _dailyLimit, _cooldown);
+        _log("anti_whale_updated");
     }
-
-    // ─────────────────────────── Presale mint (within 75M cap)
-    function mintPresale(address to, uint256 amount) external {
-        if (msg.sender != presale) revert VF_NOT_PRESALE();
-        if (amount == 0) revert VF_ZERO();
-        if (presaleMinted + amount > PRESALE_SUPPLY_CAP) revert VF_CAP();
-
-        // NEW: when vaultOnly is active, enforce presale target is a registered vault
-        if (vaultOnly) {
-            require(_isVault(to), "presale target !vault");
-        }
-
-        presaleMinted += amount;
-        _mint(to, amount);
-        emit PresaleMint(to, amount);
-        _logEv(to, "presale_mint", amount, "");
+    
+    /**
+     * @notice Exempt address from whale limits (for exchanges, liquidity pools, etc.)
+     */
+    function setWhaleLimitExempt(address addr, bool exempt) external onlyOwner {
+        whaleLimitExempt[addr] = exempt;
+        emit WhaleLimitExemptSet(addr, exempt);
     }
 
     // ─────────────────────────── Internal core
 
     function _transfer(address from, address to, uint256 amount) internal {
+        // 1. Sanctions check
+        require(!isBlacklisted[from] && !isBlacklisted[to], "Sanctioned");
+
+        // 2. Anti-whale checks (skip for exempt addresses like exchanges, mints, burns)
+        if (!whaleLimitExempt[from] && !whaleLimitExempt[to] && 
+            !systemExempt[from] && !systemExempt[to] &&
+            from != address(0) && to != address(0)) {
+            _checkWhaleProtection(from, to, amount);
+        }
+
+        // 3. Auto-create vaults if needed (vault-only enforcement)
+        if (vaultOnly && address(vaultHub) != address(0)) {
+            // Auto-create vault for recipient if needed (EOA receiving first tokens)
+            if (!_isContract(to) && to != address(0) && !systemExempt[to] && !whitelisted[to]) {
+                // Check if recipient owns a vault (handles recovery scenarios)
+                if (!_hasVault(to)) {
+                    // Try to create vault - will revert if vaultHub not set or fails
+                    try vaultHub.ensureVault(to) returns (address vault) {
+                        // Vault created or already exists
+                        _logEv(vault, "vault_auto_created", 0, "");
+                    } catch {
+                        // Creation failed - revert
+                        revert Token_NotVault();
+                    }
+                }
+            }
+            
+            // 3. Vault-only enforcement
+            // FROM must be: mint, system exempt, whitelisted, vault, or owns a vault
+            bool fromOk = (from == address(0) || systemExempt[from] || whitelisted[from] || 
+                          _isVault(from) || _hasVault(from));
+            
+            // TO must be: burn, sink, system exempt, whitelisted, vault, or owns a vault
+            bool toOk = (to == address(0) || to == treasurySink || to == sanctumSink || 
+                        systemExempt[to] || whitelisted[to] || _isVault(to) || _hasVault(to));
+            
+            if (!fromOk) revert Token_NotVault();
+            if (!toOk) revert Token_NotVault();
+        }
+
         if (from == address(0) || to == address(0)) revert VF_ZERO();
         if (amount == 0) { emit Transfer(from, to, 0); return; }
 
-        // SecurityHub lock check (if set)
+        // Optimization: Fetch vaults once if needed for SecurityHub
+        address fromVault;
+        address toVault;
         if (address(securityHub) != address(0)) {
-            address fromVault = _vaultOfAddr(from);
-            address toVault   = _vaultOfAddr(to);
+            fromVault = _vaultOfAddr(from);
+            toVault   = _vaultOfAddr(to);
+        }
+
+        // SecurityHub lock check (if set and not bypassed)
+        if (address(securityHub) != address(0) && !isCircuitBreakerActive()) {
             if ((fromVault != address(0) && _locked(fromVault)) ||
                 (toVault   != address(0) && _locked(toVault))) {
                 revert VF_LOCKED();
-            }
-        }
-
-        // Vault-only rule (unless system-exempt endpoint)
-        if (vaultOnly) {
-            if (!systemExempt[from]) {
-                require(_isVault(from), "from !vault");
-            }
-            if (!systemExempt[to]) {
-                require(_isVault(to), "to !vault");
             }
         }
 
@@ -347,30 +471,43 @@ contract VFIDEToken is Ownable {
 
         uint256 remaining = amount;
 
-        // Dynamic fees via burn router (if present and not exempt)
-        if (address(burnRouter) != address(0) && !(systemExempt[from] || systemExempt[to])) {
-            (uint256 burnAmt, uint256 sanctumAmt, address sanctumSink, address burnSink) =
+        // Dynamic fees via burn router (if present and not exempt and not bypassed)
+        if (address(burnRouter) != address(0) && !isCircuitBreakerActive() && !(systemExempt[from] || systemExempt[to])) {
+            (uint256 _burnAmt, uint256 _sanctumAmt, uint256 _ecoAmt, address _sanctumSink, address _ecoSink, address _burnSink) =
                 burnRouter.computeFees(from, to, amount);
 
-            if (burnAmt > 0) {
-                address sink = (burnSink == address(0)) ? address(0) : burnSink;
-                _applyBurn(from, sink, burnAmt);
-                remaining -= burnAmt;
+            if (_burnAmt > 0) {
+                address sink = (_burnSink == address(0)) ? address(0) : _burnSink;
+                _applyBurn(from, sink, _burnAmt);
+                remaining -= _burnAmt;
+                
+                // Record burn for daily cap tracking (sustainability)
+                try IProofScoreBurnRouter(address(burnRouter)).recordBurn(_burnAmt) {} catch {}
             }
-            if (sanctumAmt > 0) {
-                address sink2 = (sanctumSink == address(0)) ? treasurySink : sanctumSink;
+            if (_sanctumAmt > 0) {
+                address sink2 = (_sanctumSink == address(0)) ? treasurySink : _sanctumSink;
                 require(sink2 != address(0), "sanctum sink=0");
-                _balances[sink2] += sanctumAmt;
-                emit Transfer(from, sink2, sanctumAmt);
-                remaining -= sanctumAmt;
+                _balances[sink2] += _sanctumAmt;
+                emit Transfer(from, sink2, _sanctumAmt);
+                remaining -= _sanctumAmt;
             }
-            if (burnAmt > 0 || sanctumAmt > 0) {
-                emit FeeApplied(from, to, burnAmt, sanctumAmt, (sanctumSink == address(0) ? treasurySink : sanctumSink));
+            if (_ecoAmt > 0) {
+                address sink3 = (_ecoSink == address(0)) ? treasurySink : _ecoSink;
+                require(sink3 != address(0), "eco sink=0");
+                _balances[sink3] += _ecoAmt;
+                emit Transfer(from, sink3, _ecoAmt);
+                remaining -= _ecoAmt;
             }
+
+            if (_burnAmt > 0 || _sanctumAmt > 0 || _ecoAmt > 0) {
+                emit FeeApplied(from, to, _burnAmt, _sanctumAmt, _ecoAmt, (_sanctumSink == address(0) ? treasurySink : _sanctumSink), (_ecoSink == address(0) ? treasurySink : _ecoSink));
+            }
+            
+            // Record volume for adaptive fee tracking (sustainability)
+            try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch {}
         } else {
             // If policy is locked we require a router be present so fees cannot be bypassed
-            // Emergency DAO can temporarily bypass this requirement if router fails
-            if (policyLocked && !emergencyRouterBypass) {
+            if (policyLocked) {
                 require(address(burnRouter) != address(0), "router required");
             }
         }
@@ -409,12 +546,29 @@ contract VFIDEToken is Ownable {
     }
 
     // ─────────────────────────── Helpers
-
-    function _isVault(address a) internal view returns (bool) {
+    
+    function _isContract(address addr) internal view returns (bool) {
+        uint256 size;
+        assembly { size := extcodesize(addr) }
+        return size > 0;
+    }
+    
+    function _isVault(address addr) internal view returns (bool) {
         if (address(vaultHub) == address(0)) return false;
-        address v = vaultHub.vaultOf(a);
-        // A valid vault returns itself when queried
-        return v == a && v != address(0);
+        try vaultHub.isVault(addr) returns (bool v) {
+            return v;
+        } catch {
+            return false;
+        }
+    }
+    
+    function _hasVault(address owner) internal view returns (bool) {
+        if (address(vaultHub) == address(0)) return false;
+        try vaultHub.vaultOf(owner) returns (address vault) {
+            return vault != address(0);
+        } catch {
+            return false;
+        }
     }
 
     function _vaultOfAddr(address a) internal view returns (address) {
@@ -423,14 +577,84 @@ contract VFIDEToken is Ownable {
     }
 
     function _locked(address vault) internal view returns (bool) {
-        (bool success, bytes memory data) = address(securityHub).staticcall(
-            abi.encodeWithSelector(ISecurityHub.isLocked.selector, vault)
-        );
+        (bool ok, bytes memory d) = address(securityHub).staticcall(abi.encodeWithSelector(ISecurityHub.isLocked.selector, vault));
+        // H-1 Fix: Default to unlocked on call failure to prevent fund lockout
+        if (!ok || d.length < 32) return false;
+        return abi.decode(d, (bool));
+    }
+    
+    // ─────────────────────────── Anti-Whale Protection Logic
+    
+    /**
+     * @dev Check and enforce all anti-whale protections
+     * Reverts if any limit is exceeded
+     */
+    function _checkWhaleProtection(address from, address to, uint256 amount) internal {
+        // 1. Max transfer amount check
+        if (maxTransferAmount > 0 && amount > maxTransferAmount) {
+            revert VF_MaxTransferExceeded();
+        }
         
-        // If call failed or returned invalid data, assume locked (safe default)
-        if (!success || data.length < 32) return true;
+        // 2. Max wallet balance check (for recipient)
+        if (maxWalletBalance > 0) {
+            uint256 recipientNewBalance = _balances[to] + amount;
+            if (recipientNewBalance > maxWalletBalance) {
+                revert VF_MaxWalletExceeded();
+            }
+        }
         
-        return abi.decode(data, (bool));
+        // 3. Daily transfer limit check (for sender)
+        if (dailyTransferLimit > 0) {
+            // Reset daily counter if 24h has passed
+            if (block.timestamp >= dailyResetTime[from] + 24 hours) {
+                dailyTransferred[from] = 0;
+                dailyResetTime[from] = block.timestamp;
+            }
+            
+            if (dailyTransferred[from] + amount > dailyTransferLimit) {
+                revert VF_DailyLimitExceeded();
+            }
+            
+            // Update daily transferred amount
+            dailyTransferred[from] += amount;
+        }
+        
+        // 4. Transfer cooldown check (for sender)
+        if (transferCooldown > 0) {
+            if (lastTransferTime[from] > 0 && 
+                block.timestamp < lastTransferTime[from] + transferCooldown) {
+                revert VF_TransferCooldown();
+            }
+            lastTransferTime[from] = block.timestamp;
+        }
+    }
+    
+    /**
+     * @dev View function to check remaining daily allowance
+     */
+    function remainingDailyLimit(address account) external view returns (uint256) {
+        if (dailyTransferLimit == 0) return type(uint256).max; // No limit
+        
+        // If reset time has passed, return full limit
+        if (block.timestamp >= dailyResetTime[account] + 24 hours) {
+            return dailyTransferLimit;
+        }
+        
+        // Return remaining
+        if (dailyTransferred[account] >= dailyTransferLimit) return 0;
+        return dailyTransferLimit - dailyTransferred[account];
+    }
+    
+    /**
+     * @dev View function to check time until next transfer allowed
+     */
+    function cooldownRemaining(address account) external view returns (uint256) {
+        if (transferCooldown == 0) return 0;
+        if (lastTransferTime[account] == 0) return 0;
+        
+        uint256 unlockTime = lastTransferTime[account] + transferCooldown;
+        if (block.timestamp >= unlockTime) return 0;
+        return unlockTime - block.timestamp;
     }
 
     function _log(string memory action) internal {
@@ -438,5 +662,209 @@ contract VFIDEToken is Ownable {
     }
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                         VIEW/PREVIEW FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @notice Check if a transfer can be executed
+     * @param from Sender address
+     * @param to Recipient address
+     * @param amount Transfer amount
+     * @return canDo Whether transfer would succeed
+     * @return reason Failure reason if canDo is false
+     */
+    function canTransfer(address from, address to, uint256 amount) external view returns (bool canDo, string memory reason) {
+        // Sanctions check
+        if (isBlacklisted[from]) return (false, "Sender blacklisted");
+        if (isBlacklisted[to]) return (false, "Recipient blacklisted");
+        
+        // Balance check
+        if (_balances[from] < amount) return (false, "Insufficient balance");
+        
+        // Anti-whale checks
+        if (!whaleLimitExempt[from] && !whaleLimitExempt[to] && 
+            !systemExempt[from] && !systemExempt[to] &&
+            from != address(0) && to != address(0)) {
+            
+            // Max transfer
+            if (maxTransferAmount > 0 && amount > maxTransferAmount) {
+                return (false, "Exceeds max transfer amount");
+            }
+            
+            // Max wallet
+            if (maxWalletBalance > 0 && (_balances[to] + amount) > maxWalletBalance) {
+                return (false, "Exceeds max wallet balance");
+            }
+            
+            // Daily limit
+            if (dailyTransferLimit > 0) {
+                uint256 transferred = dailyTransferred[from];
+                if (block.timestamp < dailyResetTime[from] + 24 hours) {
+                    if (transferred + amount > dailyTransferLimit) {
+                        return (false, "Exceeds daily transfer limit");
+                    }
+                }
+            }
+            
+            // Cooldown
+            if (transferCooldown > 0 && lastTransferTime[from] > 0) {
+                if (block.timestamp < lastTransferTime[from] + transferCooldown) {
+                    return (false, "Transfer cooldown active");
+                }
+            }
+        }
+        
+        // Vault-only check
+        if (vaultOnly && address(vaultHub) != address(0)) {
+            bool fromOk = (from == address(0) || systemExempt[from] || whitelisted[from] || 
+                          _isVault(from) || _hasVault(from));
+            bool toOk = (to == address(0) || to == treasurySink || to == sanctumSink || 
+                        systemExempt[to] || whitelisted[to] || _isVault(to) || _hasVault(to));
+            
+            if (!fromOk) return (false, "Sender must use vault");
+            if (!toOk) return (false, "Recipient must use vault");
+        }
+        
+        // SecurityHub lock check
+        if (address(securityHub) != address(0) && !isCircuitBreakerActive()) {
+            address fromVault = _vaultOfAddr(from);
+            address toVault = _vaultOfAddr(to);
+            
+            if (fromVault != address(0) && _locked(fromVault)) {
+                return (false, "Sender vault is locked");
+            }
+            if (toVault != address(0) && _locked(toVault)) {
+                return (false, "Recipient vault is locked");
+            }
+        }
+        
+        return (true, "");
+    }
+    
+    /**
+     * @notice Preview fees that would be applied to a transfer
+     * @param from Sender address
+     * @param to Recipient address
+     * @param amount Transfer amount
+     * @return burnAmount Amount that would be burned
+     * @return sanctumAmount Amount sent to sanctum/charity
+     * @return ecosystemAmount Amount sent to ecosystem treasury
+     * @return netReceived Net amount recipient would receive
+     */
+    function previewTransferFees(address from, address to, uint256 amount) external view returns (
+        uint256 burnAmount,
+        uint256 sanctumAmount,
+        uint256 ecosystemAmount,
+        uint256 netReceived
+    ) {
+        // No fees for exempt addresses or if router not set
+        if (systemExempt[from] || systemExempt[to] || address(burnRouter) == address(0) || isCircuitBreakerActive()) {
+            return (0, 0, 0, amount);
+        }
+        
+        // Get fees from router
+        (burnAmount, sanctumAmount, ecosystemAmount, , , ) = burnRouter.computeFees(from, to, amount);
+        
+        netReceived = amount - burnAmount - sanctumAmount - ecosystemAmount;
+    }
+    
+    /**
+     * @notice Get comprehensive transfer limits for an address
+     * @param account Address to check
+     * @return maxPerTransfer Maximum allowed per transfer
+     * @return maxWallet Maximum wallet balance
+     * @return dailyLimit Daily transfer limit
+     * @return dailyRemaining Remaining daily allowance
+     * @return cooldownSecs Cooldown between transfers
+     * @return cooldownRemain Time until next transfer allowed
+     * @return isExempt Whether address is exempt from limits
+     */
+    function getTransferLimitsFor(address account) external view returns (
+        uint256 maxPerTransfer,
+        uint256 maxWallet,
+        uint256 dailyLimit,
+        uint256 dailyRemaining,
+        uint256 cooldownSecs,
+        uint256 cooldownRemain,
+        bool isExempt
+    ) {
+        isExempt = whaleLimitExempt[account] || systemExempt[account];
+        
+        if (isExempt) {
+            maxPerTransfer = type(uint256).max;
+            maxWallet = type(uint256).max;
+            dailyLimit = type(uint256).max;
+            dailyRemaining = type(uint256).max;
+            cooldownSecs = 0;
+            cooldownRemain = 0;
+        } else {
+            maxPerTransfer = maxTransferAmount > 0 ? maxTransferAmount : type(uint256).max;
+            maxWallet = maxWalletBalance > 0 ? maxWalletBalance : type(uint256).max;
+            dailyLimit = dailyTransferLimit > 0 ? dailyTransferLimit : type(uint256).max;
+            
+            // Calculate daily remaining
+            if (dailyTransferLimit > 0) {
+                if (block.timestamp >= dailyResetTime[account] + 24 hours) {
+                    dailyRemaining = dailyTransferLimit;
+                } else if (dailyTransferred[account] >= dailyTransferLimit) {
+                    dailyRemaining = 0;
+                } else {
+                    dailyRemaining = dailyTransferLimit - dailyTransferred[account];
+                }
+            } else {
+                dailyRemaining = type(uint256).max;
+            }
+            
+            cooldownSecs = transferCooldown;
+            
+            // Calculate cooldown remaining
+            if (transferCooldown > 0 && lastTransferTime[account] > 0) {
+                uint256 unlockTime = lastTransferTime[account] + transferCooldown;
+                cooldownRemain = block.timestamp >= unlockTime ? 0 : unlockTime - block.timestamp;
+            } else {
+                cooldownRemain = 0;
+            }
+        }
+    }
+    
+    /**
+     * @notice Get daily transfer statistics for a user
+     * @param user Address to query
+     * @return transferred Amount transferred today
+     * @return limit Daily limit
+     * @return remaining Remaining allowance
+     * @return resetTime When current period started
+     * @return nextResetTime When limit resets
+     */
+    function getDailyTransferStats(address user) external view returns (
+        uint256 transferred,
+        uint256 limit,
+        uint256 remaining,
+        uint256 resetTime,
+        uint256 nextResetTime
+    ) {
+        if (whaleLimitExempt[user] || systemExempt[user]) {
+            limit = type(uint256).max;
+            remaining = type(uint256).max;
+            return (0, limit, remaining, 0, 0);
+        }
+        
+        limit = dailyTransferLimit;
+        resetTime = dailyResetTime[user];
+        nextResetTime = resetTime + 24 hours;
+        
+        // Check if we're in a new period
+        if (block.timestamp >= nextResetTime) {
+            transferred = 0;
+            remaining = limit;
+            resetTime = block.timestamp;
+            nextResetTime = block.timestamp + 24 hours;
+        } else {
+            transferred = dailyTransferred[user];
+            remaining = transferred >= limit ? 0 : limit - transferred;
+        }
     }
 }

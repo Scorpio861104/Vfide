@@ -1,0 +1,8 @@
+digraph "" {
+c745_Ownable[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>Ownable</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    transferOwnership(address)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyOwner()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    owner</TD></TR></TABLE> >];
+
+c768_ReentrancyGuard[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ReentrancyGuard</B></TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    nonReentrant()</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _status</TD></TR></TABLE> >];
+
+c267_SubscriptionManager[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>SubscriptionManager</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    createSubscription(address,address,uint256,uint256,string)</TD></TR><TR><TD align="left">    cancelSubscription(uint256)</TD></TR><TR><TD align="left">    processPayment(uint256)</TD></TR><TR><TD align="left">    getSubscription(uint256)</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    subCount</TD></TR><TR><TD align="left">    subscriptions</TD></TR><TR><TD align="left">    vaultHub<font color="blue" POINT-SIZE="10"> (IVaultHub)</font></TD></TR></TABLE> >];
+
+}

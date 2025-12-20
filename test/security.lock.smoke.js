@@ -19,7 +19,7 @@ describe('SecurityHub Lock Smoke', function () {
     expect(await hub.isLocked(await user.getAddress())).to.equal(false);
 
     // Lock user vault (simulate) then attempt a score mutation path
-    await hub.lockVault(await user.getAddress());
+    await hub.setLocked(user.address, true);
     expect(await hub.isLocked(await user.getAddress())).to.equal(true);
 
     // Attempt threshold update from non-DAO should revert anyway; locking just contextually informative

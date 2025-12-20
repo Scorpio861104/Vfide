@@ -18,14 +18,21 @@ describe("Smoke Tests - Core Functionality", function () {
     await vaultHub.waitForDeployment();
 
     // Deploy a minimal vesting vault mock and VFIDEToken with current constructor
-    const VestingVault = await ethers.getContractFactory("contracts-min/mocks/VestingVault.sol:VestingVault");
+    const VestingVault = await ethers.getContractFactory("VestingVault");
     const vesting = await VestingVault.deploy();
     await vesting.waitForDeployment();
 
+    // Deploy a minimal presale mock
+    const PresaleMock = await ethers.getContractFactory("PresaleMock");
+    const presale = await PresaleMock.deploy();
+    await presale.waitForDeployment();
+
     const VFIDEToken = await ethers.getContractFactory("VFIDEToken");
-    // constructor(devReserveVestingVault, _vaultHub, _ledger, _treasurySink)
+    // constructor(devReserveVestingVault, _presaleContract, treasury, _vaultHub, _ledger, _treasurySink)
     token = await VFIDEToken.deploy(
       await vesting.getAddress(),
+      await presale.getAddress(),
+      deployer.address,
       await vaultHub.getAddress(),
       ethers.ZeroAddress,
       ethers.ZeroAddress
@@ -40,13 +47,15 @@ describe("Smoke Tests - Core Functionality", function () {
     expect(await token.getAddress()).to.be.properAddress;
   });
 
-  it("Should have initial dev reserve supply (40M)", async function () {
+  it("Should have initial total supply (200M)", async function () {
     const totalSupply = await token.totalSupply();
-    expect(totalSupply).to.equal(ethers.parseUnits("40000000", 18));
+    // 50M dev reserve + 50M presale + 100M treasury = 200M total
+    expect(totalSupply).to.equal(ethers.parseUnits("200000000", 18));
   });
 
   it("Should allow transfers", async function () {
     const amount = ethers.parseEther("100");
+    // Treasury (deployer) already has 100M tokens
     await token.transfer(alice.address, amount);
     expect(await token.balanceOf(alice.address)).to.equal(amount);
   });
@@ -73,7 +82,7 @@ describe("Smoke Tests - Commerce", function () {
     await token.waitForDeployment();
 
     // Deploy MerchantRegistry
-    const MR = await ethers.getContractFactory("contracts-min/VFIDECommerce.sol:MerchantRegistry");
+    const MR = await ethers.getContractFactory("MerchantRegistry");
     merchantRegistry = await MR.deploy(
       deployer.address,
       await token.getAddress(),

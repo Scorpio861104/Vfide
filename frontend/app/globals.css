@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* VFIDE Colors - Modern Fintech Palette */
+    --accent: #00F0FF;
+    --accent-dark: #0080FF;
+    --accent-glow: rgba(0, 240, 255, 0.3);
+    
+    --accent-green: #00FF88;
+    --accent-purple: #A78BFA;
+    --accent-gold: #FFD700;
+    
+    --danger: #EF4444;
+    --success: #22C55E;
+    --warning: #F59E0B;
+    
+    --bg-dark: #0F0F12;
+    --bg-panel: #1A1A1F;
+    --bg-panel-hover: #252530;
+    
+    --text-primary: #F5F5F7;
+    --text-secondary: #B8B8BD;
+    --text-muted: #8A8A8F;
+    
+    --border: #2A2A35;
+  }
+  
+  /* Typography improvements */
+  html {
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  
+  body {
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
+  /* Clean display fonts */
+  [class*="font-display"] {
+    letter-spacing: 0.01em;
+    font-weight: 600;
+  }
+  
+  /* Container alignment consistency */
+  .container {
+    max-width: 1280px;
+  }
+  
+  /* Improve paragraph readability */
+  p {
+    line-height: 1.7;
+  }
+  
+  /* Better small text */
+  .text-xs, .text-sm {
+    letter-spacing: 0.02em;
+  }
+}
+
+@layer utilities {
+  .text-accent {
+    color: var(--accent);
+  }
+  
+  .bg-dark {
+    background-color: var(--bg-dark);
+  }
+  
+  .bg-panel {
+    background-color: var(--bg-panel);
+  }
+  
+  .text-text-primary {
+    color: var(--text-primary);
+  }
+  
+  .text-text-secondary {
+    color: var(--text-secondary);
+  }
+  
+  .border-border {
+    border-color: var(--border);
+  }
+}

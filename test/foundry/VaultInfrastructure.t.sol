@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
-import "../../contracts-prod/VaultInfrastructure.sol";
+import "../../contracts/VaultInfrastructure.sol";
 
 contract VaultInfrastructureFuzzTest is Test {
     VaultInfrastructure vaultHub;

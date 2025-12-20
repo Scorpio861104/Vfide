@@ -1,7 +1,29 @@
 {
-  "name": "vfide-hardhat-tests",
-  "version": "0.1.0",
-  "private": true,
+  "name": "vfide",
+  "version": "1.0.0",
+  "description": "Trust-Based Commerce Protocol on zkSync Era",
+  "author": "VFIDE Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Scorpio861104/Vfide.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Scorpio861104/Vfide/issues"
+  },
+  "homepage": "https://github.com/Scorpio861104/Vfide#readme",
+  "keywords": [
+    "blockchain",
+    "defi",
+    "zkSync",
+    "ethereum",
+    "smart-contracts",
+    "commerce",
+    "escrow",
+    "reputation",
+    "governance"
+  ],
+  "private": false,
   "scripts": {
     "test": "FAST_TESTS=1 hardhat compile && FAST_TESTS=1 hardhat test --no-compile",
     "test:full": "hardhat compile && hardhat test --no-compile",

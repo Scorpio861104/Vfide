@@ -2,21 +2,35 @@
 pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
-import "../../contracts-prod/DAOTimelock.sol";
-import "../../contracts-prod/mocks/LedgerMock.sol";
-import "../../contracts-prod/mocks/PanicGuardMock.sol";
+import "../../contracts/DAOTimelock.sol";
+import "../../contracts/mocks/LedgerMock.sol";
+import "../../contracts/mocks/PanicGuardMock.sol";
+
+/// @dev Target contract for timelock tests that accepts calls
+contract TimelockTarget {
+    function dummy() external pure returns (bool) {
+        return true;
+    }
+    
+    function dummy(uint256) external pure returns (bool) {
+        return true;
+    }
+    
+    receive() external payable {}
+}
 
 contract DAOTimelockTest is Test {
     DAOTimelock public timelock;
     LedgerMock public ledger;
     PanicGuardMock public panicGuard;
+    TimelockTarget public target;
     
     address constant ADMIN = address(0x1);
-    address constant TARGET = address(0x2);
     
     function setUp() public {
-        ledger = new LedgerMock();
+        ledger = new LedgerMock(false);
         panicGuard = new PanicGuardMock();
+        target = new TimelockTarget();
         
         vm.prank(ADMIN);
         timelock = new DAOTimelock(ADMIN);
@@ -37,7 +51,7 @@ contract DAOTimelockTest is Test {
         bytes memory data = abi.encodeWithSignature("dummy()");
         
         vm.prank(ADMIN);
-        bytes32 id = timelock.queueTx(TARGET, 0, data);
+        bytes32 id = timelock.queueTx(address(target), 0, data);
         
         (, , , uint64 eta, ) = timelock.queue(id);
         assertEq(eta, uint64(block.timestamp) + customDelay, "ETA incorrect");
@@ -51,7 +65,7 @@ contract DAOTimelockTest is Test {
         bytes memory data = abi.encodeWithSignature("dummy()");
         
         vm.prank(ADMIN);
-        bytes32 id = timelock.queueTx(TARGET, 0, data);
+        bytes32 id = timelock.queueTx(address(target), 0, data);
         
         vm.warp(block.timestamp + timeElapsed);
         
@@ -61,13 +75,14 @@ contract DAOTimelockTest is Test {
     
     /// @notice Fuzz test: Can execute after delay passes
     function testFuzz_CanExecuteAfterDelay(uint64 extraTime) public {
-        vm.assume(extraTime < 365 days);
+        // Must stay within 7-day expiry window
+        vm.assume(extraTime < 7 days);
         
         uint64 delay = timelock.delay();
         bytes memory data = abi.encodeWithSignature("dummy()");
         
         vm.prank(ADMIN);
-        bytes32 id = timelock.queueTx(TARGET, 0, data);
+        bytes32 id = timelock.queueTx(address(target), 0, data);
         
         vm.warp(block.timestamp + delay + extraTime);
         
@@ -84,7 +99,7 @@ contract DAOTimelockTest is Test {
         bytes memory data = abi.encodeWithSignature("dummy()");
         
         vm.prank(ADMIN);
-        bytes32 id = timelock.queueTx(TARGET, 0, data);
+        bytes32 id = timelock.queueTx(address(target), 0, data);
         
         // Enable global risk
         panicGuard.setGlobalRisk(true);
@@ -92,11 +107,13 @@ contract DAOTimelockTest is Test {
         // Try to execute at normal delay + some extra (but less than 6 hours)
         vm.warp(block.timestamp + delay + extraTime);
         
+        vm.prank(ADMIN);
         vm.expectRevert();
         timelock.execute(id);
         
         // Should work after 6 hours
         vm.warp(block.timestamp + 6 hours - extraTime + 1);
+        vm.prank(ADMIN);
         timelock.execute(id);
     }
     
@@ -107,10 +124,10 @@ contract DAOTimelockTest is Test {
         bytes memory data = abi.encodeWithSignature("dummy()");
         
         vm.startPrank(ADMIN);
-        timelock.queueTx(TARGET, value, data);
+        timelock.queueTx(address(target), value, data);
         
         vm.expectRevert(TL_AlreadyQueued.selector);
-        timelock.queueTx(TARGET, value, data);
+        timelock.queueTx(address(target), value, data);
         
         vm.stopPrank();
     }
@@ -122,7 +139,7 @@ contract DAOTimelockTest is Test {
         bytes memory data = abi.encodeWithSignature("dummy()");
         
         vm.startPrank(ADMIN);
-        bytes32 id = timelock.queueTx(TARGET, value, data);
+        bytes32 id = timelock.queueTx(address(target), value, data);
         
         timelock.cancel(id);
         
@@ -142,7 +159,7 @@ contract DAOTimelockTest is Test {
         
         vm.prank(caller);
         vm.expectRevert(TL_NotAdmin.selector);
-        timelock.queueTx(TARGET, 0, data);
+        timelock.queueTx(address(target), 0, data);
     }
     
     /// @notice Fuzz test: Cannot execute transaction twice
@@ -153,13 +170,15 @@ contract DAOTimelockTest is Test {
         bytes memory data = abi.encodeWithSignature("dummy()");
         
         vm.prank(ADMIN);
-        bytes32 id = timelock.queueTx(TARGET, value, data);
+        bytes32 id = timelock.queueTx(address(target), value, data);
         
         vm.warp(block.timestamp + timelock.delay());
         
+        vm.prank(ADMIN);
         timelock.execute(id);
         
         // Try to execute again
+        vm.prank(ADMIN);
         vm.expectRevert();
         timelock.execute(id);
     }
@@ -188,11 +207,11 @@ contract DAOTimelockTest is Test {
         bytes memory data = abi.encodeWithSignature("dummy()");
         vm.prank(ADMIN);
         vm.expectRevert(TL_NotAdmin.selector);
-        timelock.queueTx(TARGET, 0, data);
+        timelock.queueTx(address(target), 0, data);
         
         // New admin should be able to queue
         vm.prank(newAdmin);
-        timelock.queueTx(TARGET, 0, data);
+        timelock.queueTx(address(target), 0, data);
     }
     
     /// @notice Fuzz test: Multiple transactions can be queued
@@ -205,7 +224,7 @@ contract DAOTimelockTest is Test {
         
         for (uint256 i = 0; i < numTxs; i++) {
             bytes memory data = abi.encodeWithSignature("dummy(uint256)", i);
-            ids[i] = timelock.queueTx(TARGET, i, data);
+            ids[i] = timelock.queueTx(address(target), i, data);
         }
         
         // All should be queued

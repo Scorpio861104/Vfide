@@ -31,10 +31,29 @@ const VIA_IR = !process.env.COVERAGE && !process.env.NO_VIA_IR; // Allow disabli
 
 module.exports = {
   solidity: {
-    version: "0.8.30",
-    settings: {
-      optimizer: { enabled: true, runs: process.env.COVERAGE ? 1 : 200 },
-      viaIR: VIA_IR
+    compilers: [{
+      version: "0.8.30",
+      settings: {
+        optimizer: { enabled: true, runs: process.env.COVERAGE ? 1 : 20 }, // Very low runs for smaller bytecode
+        viaIR: VIA_IR
+      }
+    }],
+    overrides: {
+      // Large contracts need special handling
+      "contracts/BadgeManager.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: { enabled: true, runs: 1 },
+          viaIR: true
+        }
+      },
+      "contracts/VaultInfrastructure.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: { enabled: true, runs: 1 },
+          viaIR: true
+        }
+      }
     }
   },
   mocha: {
@@ -52,8 +71,10 @@ module.exports = {
     },
   },
   paths: {
-    sources: "./contracts-min",
-    mocks: "./contracts-min/mocks"
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache/hardhat",
+    artifacts: "./artifacts"
   },
   networks: {
     hardhat: {

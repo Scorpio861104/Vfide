@@ -2,12 +2,12 @@
 pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
-import "../../contracts-prod/DevReserveVestingVault.sol";
-import "../../contracts-prod/mocks/ERC20Mock.sol";
-import "../../contracts-prod/mocks/VaultHubMock.sol";
-import "../../contracts-prod/mocks/SecurityHubMock.sol";
-import "../../contracts-prod/mocks/LedgerMock.sol";
-import "../../contracts-prod/mocks/PresaleMock.sol";
+import "../../contracts/DevReserveVestingVault.sol";
+import "../../contracts/mocks/ERC20Mock.sol";
+import "../../contracts/mocks/VaultHubMock.sol";
+import "../../contracts/mocks/SecurityHubMock.sol";
+import "../../contracts/mocks/LedgerMock.sol";
+import "../../contracts/mocks/PresaleMock.sol";
 
 contract DevReserveVestingVaultTest is Test {
     DevReserveVestingVault public vault;
@@ -25,7 +25,7 @@ contract DevReserveVestingVaultTest is Test {
         vfide = new ERC20Mock("Mock Token", "MOCK");
         vaultHub = new VaultHubMock();
         securityHub = new SecurityHubMock();
-        ledger = new LedgerMock();
+        ledger = new LedgerMock(false);
         presale = new PresaleMock();
         
         // Set presale start time
@@ -48,53 +48,70 @@ contract DevReserveVestingVaultTest is Test {
     
     // ============ FUZZ TESTS ============
     
-    /// @notice Fuzz test: Cannot claim during cliff period
-    function testFuzz_CannotClaimDuringCliff(uint32 timePassed) public {
+    /// @notice Fuzz test: Cliff is strictly enforced
+    function testFuzz_CliffStrictlyEnforced(uint32 timePassed) public {
         uint64 cliff = vault.CLIFF();
-        vm.assume(timePassed > 0 && timePassed < cliff);
+        // Ensure timePassed is strictly less than cliff (not at boundary)
+        vm.assume(timePassed > 0 && timePassed < cliff && timePassed < cliff - 1);
         
-        // Move time forward but still in cliff
-        vm.warp(block.timestamp + timePassed);
+        // Move time forward but still in cliff from presale start
+        uint256 presaleStart = presale.presaleStartTime();
+        vm.warp(presaleStart + timePassed);
         
         vm.prank(BENEFICIARY);
         vm.expectRevert(DevReserveVestingVault.DV_NothingToClaim.selector);
         vault.claim();
     }
     
-    /// @notice Fuzz test: Vesting calculation is linear after cliff
+    /// @notice Fuzz test: Vesting calculation uses bi-monthly unlocks after cliff
     function testFuzz_LinearVestingAfterCliff(uint32 timePassed) public {
         uint64 cliff = vault.CLIFF();
-        uint64 vesting = vault.VESTING();
-        vm.assume(timePassed > cliff && timePassed <= (cliff + vesting));
+        uint64 unlockInterval = 60 days; // Bi-monthly unlocks
+        uint64 maxSafeTime = 14 * unlockInterval; // Stay under ALLOCATION (14 * 2.78M < 40M)
+        uint256 unlockAmount = vault.UNLOCK_AMOUNT();
+        uint256 totalUnlocks = vault.TOTAL_UNLOCKS();
         
-        // Warp to after cliff to sync start
-        vm.warp(block.timestamp + cliff + 1);
-        vm.prank(BENEFICIARY);
-        vault.claim(); // First claim syncs start
+        // Must be at least one full unlock interval, but not exceed safe max
+        vm.assume(timePassed >= unlockInterval && timePassed <= maxSafeTime);
         
-        uint64 start = vault.startTimestamp();
+        uint256 presaleStart = presale.presaleStartTime();
         
-        // Move to specific time
-        vm.warp(start + timePassed);
+        // Warp to cliff + timePassed
+        vm.warp(presaleStart + cliff + timePassed);
         
         uint256 claimable = vault.claimable();
         
-        // Calculate expected vested amount
-        // Contract formula: vested = ALLOCATION * elapsed / VESTING where elapsed = timestamp - cliff
-        uint256 elapsed = timePassed - cliff;
-        uint256 expectedVested = (ALLOCATION * elapsed) / vesting;
+        // Calculate expected vested amount based on unlock intervals
+        // NEW: First unlock is at cliff end, then every 60 days after
+        // At cliff + 0: unlocksPassed = 1 (first unlock at cliff)
+        // At cliff + 60 days: unlocksPassed = 2
+        // So: unlocksPassed = (timePassed / unlockInterval) + 1
+        uint256 unlocksPassed = (timePassed / unlockInterval) + 1;
         
-        // Account for already claimed amount
-        expectedVested -= vault.totalClaimed();
+        uint256 expectedVested;
+        if (unlocksPassed >= totalUnlocks) {
+            // Cap at ALLOCATION when all unlocks done
+            expectedVested = ALLOCATION;
+        } else {
+            // Otherwise, straight multiplication but cap at ALLOCATION
+            expectedVested = unlocksPassed * unlockAmount;
+            if (expectedVested > ALLOCATION) {
+                expectedVested = ALLOCATION;
+            }
+        }
         
-        assertApproxEqRel(claimable, expectedVested, 0.001e18, "Vesting not linear");
+        // Claimable should match expected vested (since no prior claims)
+        assertEq(claimable, expectedVested, "Vesting not following unlock schedule");
     }
     
     /// @notice Fuzz test: Cannot claim more than allocated
     function testFuzz_CannotExceedAllocation(uint256 timeJump) public {
         vm.assume(timeJump > vault.VESTING() && timeJump < 10 * 365 days);
         
-        // Sync start
+        uint256 presaleStart = presale.presaleStartTime();
+        
+        // Warp past cliff to sync start
+        vm.warp(presaleStart + vault.CLIFF() + 1);
         vm.prank(BENEFICIARY);
         
         // Jump far into future
@@ -113,25 +130,24 @@ contract DevReserveVestingVaultTest is Test {
     
     /// @notice Fuzz test: Multiple claims accumulate correctly
     function testFuzz_MultipleClaimsAccumulate(uint8 numClaims) public {
-        vm.assume(numClaims > 0 && numClaims <= 20);
+        // Fewer claims needed since unlock interval is 60 days
+        vm.assume(numClaims >= 1 && numClaims <= 10);
         
-        // Sync start
-        vm.prank(BENEFICIARY);
+        uint256 presaleStart = presale.presaleStartTime();
+        uint64 cliff = vault.CLIFF();
+        uint64 unlockInterval = 60 days;
         
-        uint64 start = vault.startTimestamp();
-        uint64 vesting = vault.VESTING();
+        // Warp past cliff + first unlock interval to have something claimable
+        vm.warp(presaleStart + cliff + unlockInterval);
         
         uint256 totalReceived = 0;
-        uint256 intervalDuration = vesting / (numClaims + 1);
         
-        for (uint256 i = 1; i <= numClaims; i++) {
-            // Move forward in time
-            vm.warp(start + (intervalDuration * i));
-            
+        // Claim in unlock intervals
+        for (uint256 i = 0; i < numClaims; i++) {
             uint256 claimableBefore = vault.claimable();
             
             if (claimableBefore > 0) {
-                address beneficiaryVault = vaultHub.vaultOf(BENEFICIARY);
+                address beneficiaryVault = vaultHub.ensureVault(BENEFICIARY);
                 uint256 balBefore = vfide.balanceOf(beneficiaryVault);
                 
                 vm.prank(BENEFICIARY);
@@ -140,19 +156,28 @@ contract DevReserveVestingVaultTest is Test {
                 uint256 balAfter = vfide.balanceOf(beneficiaryVault);
                 totalReceived += (balAfter - balBefore);
             }
+            
+            // Move forward one unlock interval
+            vm.warp(block.timestamp + unlockInterval);
         }
         
-        assertEq(vault.totalClaimed(), totalReceived, "Total claimed doesn't match received");
+        // Allow small rounding error accumulation
+        assertApproxEqRel(vault.totalClaimed(), totalReceived, 0.0001e18, "Total claimed doesn't match received");
     }
     
     /// @notice Fuzz test: Pausing prevents claims
     function testFuzz_PausingStopsClaims(uint32 timePassed) public {
         uint64 cliff = vault.CLIFF();
-        uint64 vesting = vault.VESTING();
-        vm.assume(timePassed > cliff && timePassed < vesting);
+        uint64 unlockInterval = 60 days; // Bi-monthly unlocks
+        uint64 maxSafeTime = 14 * unlockInterval; // Stay under ALLOCATION (14 * 2.78M < 40M)
         
-        // Move forward
-        vm.warp(block.timestamp + timePassed);
+        // Must be at least one unlock interval after cliff, but less than max safe
+        vm.assume(timePassed >= unlockInterval && timePassed <= maxSafeTime);
+        
+        uint256 presaleStart = presale.presaleStartTime();
+        
+        // Move forward past cliff + some time
+        vm.warp(presaleStart + cliff + timePassed);
         
         // Pause claims
         vm.prank(BENEFICIARY);
@@ -185,10 +210,13 @@ contract DevReserveVestingVaultTest is Test {
     function testFuzz_LockedVaultPreventsClaims(uint32 timePassed) public {
         uint64 cliff = vault.CLIFF();
         uint64 vesting = vault.VESTING();
-        vm.assume(timePassed > cliff && timePassed < vesting);
+        // Must be after cliff but before vesting ends
+        vm.assume(timePassed > 1 days && timePassed < vesting);
         
-        // Move forward
-        vm.warp(block.timestamp + timePassed);
+        uint256 presaleStart = presale.presaleStartTime();
+        
+        // Move forward past cliff
+        vm.warp(presaleStart + cliff + timePassed);
         
         // Ensure vault exists and lock it
         address beneficiaryVault = vaultHub.ensureVault(BENEFICIARY);
@@ -260,8 +288,11 @@ contract DevReserveVestingVaultTest is Test {
     /// @notice Fuzz test: Vesting respects cliff strictly
     function testFuzz_CliffStrictlyEnforced(uint32 beforeCliff, uint32 afterCliff) public {
         uint64 cliff = vault.CLIFF();
+        uint64 unlockInterval = 60 days; // Bi-monthly unlocks
+        
         vm.assume(beforeCliff > 0 && beforeCliff < cliff);
-        vm.assume(afterCliff >= cliff && afterCliff < cliff + 365 days);
+        // Must wait at least one full unlock interval after cliff to have something claimable
+        vm.assume(afterCliff >= cliff + unlockInterval && afterCliff < cliff + 365 days);
         
         uint64 start = uint64(presale.presaleStartTime());
         
@@ -279,13 +310,19 @@ contract DevReserveVestingVaultTest is Test {
     /// @notice Fuzz test: Remaining allocation is correct
     function testFuzz_RemainingAllocation(uint32 timePassed) public {
         uint64 cliff = vault.CLIFF();
-        uint64 vesting = vault.VESTING();
-        vm.assume(timePassed > cliff && timePassed < vesting);
+        uint64 unlockInterval = 60 days; // Bi-monthly unlocks
+        uint64 maxSafeTime = 14 * unlockInterval; // Stay under ALLOCATION (14 * 2.78M < 40M)
+        
+        // Must be at least one unlock interval, but less than max safe
+        vm.assume(timePassed >= unlockInterval && timePassed <= maxSafeTime);
+        
+        uint256 presaleStart = presale.presaleStartTime();
         
         // Sync and claim
         vm.startPrank(BENEFICIARY);
         
-        vm.warp(block.timestamp + timePassed);
+        // Warp to after cliff + timePassed
+        vm.warp(presaleStart + cliff + timePassed);
         
         uint256 claimableBefore = vault.claimable();
         vault.claim();

@@ -1,0 +1,144 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+import "./SharedInterfaces.sol";
+
+/**
+ * @title StablecoinRegistry
+ * @notice Manages allowed stablecoins for presale and other ecosystem uses
+ * @dev Stores decimals and enabled status for each stablecoin
+ */
+contract StablecoinRegistry is Ownable {
+    struct StablecoinInfo {
+        bool allowed;
+        uint8 decimals;
+        string symbol;
+    }
+    
+    mapping(address => StablecoinInfo) public stablecoins;
+    address[] public stablecoinList;
+    
+    event StablecoinAdded(address indexed token, uint8 decimals, string symbol);
+    event StablecoinRemoved(address indexed token);
+    event StablecoinUpdated(address indexed token, bool allowed);
+    
+    error SR_Zero();
+    error SR_AlreadyAdded();
+    error SR_NotFound();
+    
+    constructor() {}
+    
+    /**
+     * @notice Add a stablecoin to the registry
+     * @param token Address of the stablecoin
+     * @param decimals Decimals of the token (e.g., 6 for USDC/USDT, 18 for DAI)
+     * @param symbol Symbol for reference (e.g., "USDC")
+     */
+    function addStablecoin(address token, uint8 decimals, string calldata symbol) external onlyOwner {
+        if (token == address(0)) revert SR_Zero();
+        if (stablecoins[token].allowed) revert SR_AlreadyAdded();
+        
+        stablecoins[token] = StablecoinInfo({
+            allowed: true,
+            decimals: decimals,
+            symbol: symbol
+        });
+        stablecoinList.push(token);
+        
+        emit StablecoinAdded(token, decimals, symbol);
+    }
+    
+    /**
+     * @notice Remove a stablecoin from the registry
+     * @param token Address of the stablecoin to remove
+     */
+    function removeStablecoin(address token) external onlyOwner {
+        if (!stablecoins[token].allowed) revert SR_NotFound();
+        
+        stablecoins[token].allowed = false;
+        emit StablecoinRemoved(token);
+    }
+    
+    /**
+     * @notice Enable/disable a stablecoin
+     * @param token Address of the stablecoin
+     * @param allowed Whether the stablecoin is allowed
+     */
+    function setAllowed(address token, bool allowed) external onlyOwner {
+        if (stablecoins[token].decimals == 0) revert SR_NotFound();
+        stablecoins[token].allowed = allowed;
+        emit StablecoinUpdated(token, allowed);
+    }
+    
+    /**
+     * @notice Check if a stablecoin is allowed
+     * @param stable Address to check
+     * @return Whether the stablecoin is allowed
+     */
+    function isAllowed(address stable) external view returns (bool) {
+        return stablecoins[stable].allowed;
+    }
+    
+    /**
+     * @notice Alias for isAllowed - implements IStablecoinRegistry interface
+     * @param token Address to check
+     * @return Whether the stablecoin is whitelisted
+     */
+    function isWhitelisted(address token) external view returns (bool) {
+        return stablecoins[token].allowed;
+    }
+    
+    /**
+     * @notice Get decimals of a stablecoin
+     * @param stable Address to check
+     * @return Decimals of the stablecoin
+     */
+    function decimalsOf(address stable) external view returns (uint8) {
+        return stablecoins[stable].decimals;
+    }
+    
+    /**
+     * @notice Alias for decimalsOf - implements IStablecoinRegistry interface
+     * @param token Address to check
+     * @return Decimals of the stablecoin
+     */
+    function tokenDecimals(address token) external view returns (uint8) {
+        return stablecoins[token].decimals;
+    }
+    
+    /// @notice Treasury address (for interface compatibility)
+    address public treasury;
+    
+    /// @notice Set treasury address (for interface compatibility)
+    function setTreasury(address _treasury) external onlyOwner {
+        treasury = _treasury;
+    }
+    
+    /**
+     * @notice Get all registered stablecoins
+     * @return addresses Array of stablecoin addresses
+     * @return infos Array of stablecoin info
+     */
+    function getAllStablecoins() external view returns (
+        address[] memory addresses,
+        StablecoinInfo[] memory infos
+    ) {
+        addresses = stablecoinList;
+        infos = new StablecoinInfo[](stablecoinList.length);
+        
+        for (uint256 i = 0; i < stablecoinList.length; i++) {
+            infos[i] = stablecoins[stablecoinList[i]];
+        }
+    }
+    
+    /**
+     * @notice Get count of allowed stablecoins
+     */
+    function allowedCount() external view returns (uint256 count) {
+        for (uint256 i = 0; i < stablecoinList.length; i++) {
+            if (stablecoins[stablecoinList[i]].allowed) {
+                count++;
+            }
+        }
+    }
+}

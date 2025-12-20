@@ -42,6 +42,7 @@ contract EchidnaVFIDETokenHarness {
         bool isVault = token.TEST_isApprovedVault(target);
         if (isVault) {
             // If vault, attempt tiny transfer (should succeed or return true)
+            // forge-lint: disable-next-line(erc20-unchecked-transfer)
             token.transfer(target, 1);
             return true;
         } else {

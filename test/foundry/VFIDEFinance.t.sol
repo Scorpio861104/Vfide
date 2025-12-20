@@ -2,8 +2,8 @@
 pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
-import "../../contracts-prod/mocks/ERC20Mock.sol";
-import "../../contracts-prod/mocks/VFIDEFinanceMocks.sol";
+import "../../contracts/mocks/ERC20Mock.sol";
+import "../../contracts/mocks/VFIDEFinanceMocks.sol";
 
 contract VFIDEFinanceTest is Test {
     StablecoinRegistryMock public registry;

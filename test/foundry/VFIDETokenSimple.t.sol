@@ -2,11 +2,16 @@
 pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
-import "../../contracts-prod/VFIDEToken.sol";
+import "../../contracts/VFIDEToken.sol";
 
 // Simple mock for DevReserveVestingVault (just needs to be a contract that can receive tokens)
 contract DevVaultMock {
     // Empty contract that can receive tokens
+}
+
+// Simple mock for Presale
+contract PresaleMock {
+    // Empty contract
 }
 
 /// @title Simplified Foundry Fuzz Tests for VFIDEToken
@@ -14,17 +19,19 @@ contract DevVaultMock {
 contract VFIDETokenSimpleTest is Test {
     VFIDEToken token;
     DevVaultMock devVault;
+    PresaleMock presale;
     
     address vaultHub = address(0);  // Optional, can be zero
     address ledger = address(0);    // Optional, can be zero
     address treasury = address(0);   // Optional, can be zero
     
     function setUp() public {
-        // Deploy actual mock contract for devVault
+        // Deploy actual mock contracts
         devVault = new DevVaultMock();
+        presale = new PresaleMock();
         
-        // VFIDEToken constructor: (devReserveVestingVault, vaultHub, ledger, treasurySink)
-        token = new VFIDEToken(address(devVault), vaultHub, ledger, treasury);
+        // VFIDEToken constructor: (devReserveVestingVault, _presaleContract, treasury, _vaultHub, _ledger, _treasurySink)
+        token = new VFIDEToken(address(devVault), address(presale), address(this), address(0), address(0), address(0));
     }
     
     // FUZZ 1: Total supply should never exceed MAX_SUPPLY
@@ -32,21 +39,21 @@ contract VFIDETokenSimpleTest is Test {
         assertLe(token.totalSupply(), token.MAX_SUPPLY());
     }
     
-    // FUZZ 2: Dev reserve equals 40M initially
-    function testFuzz_devReserveCorrect(uint256 randomValue) public view {
-        assertEq(token.totalSupply(), token.DEV_RESERVE_SUPPLY());
+    // FUZZ 2: Total supply equals MAX_SUPPLY at genesis (all minted upfront)
+    function testFuzz_totalSupplyAtGenesis(uint256 randomValue) public view {
+        assertEq(token.totalSupply(), token.MAX_SUPPLY());
     }
     
-    // FUZZ 3: Presale minted should not exceed cap
-    function testFuzz_presaleCapNotExceeded(uint256 randomValue) public view {
-        assertLe(token.presaleMinted(), token.PRESALE_SUPPLY_CAP());
+    // FUZZ 3: Dev reserve constant is correct
+    function testFuzz_devReserveConstant(uint256 randomValue) public view {
+        assertEq(token.DEV_RESERVE_SUPPLY(), 50_000_000e18);
     }
     
     // FUZZ 4: Constants are immutable
     function testFuzz_constantsImmutable(uint256 randomValue) public view {
         assertEq(token.MAX_SUPPLY(), 200_000_000e18);
-        assertEq(token.DEV_RESERVE_SUPPLY(), 40_000_000e18);
-        assertEq(token.PRESALE_SUPPLY_CAP(), 75_000_000e18);
+        assertEq(token.DEV_RESERVE_SUPPLY(), 50_000_000e18);
+        assertEq(token.PRESALE_CAP(), 50_000_000e18);
     }
     
     // FUZZ 5: Name and symbol are correct
@@ -82,13 +89,14 @@ contract VFIDETokenSimpleTest is Test {
     // FUZZ 10: Treasury sink is set
     function testFuzz_treasurySinkSet(uint256 randomValue) public view {
         address sink = token.treasurySink();
-        assertEq(sink, treasury);
+        // treasurySink is set to address(0) in constructor
+        assertEq(sink, address(0));
     }
     
-    // FUZZ 11: Presale address starts as zero
-    function testFuzz_presaleInitiallyZero(uint256 randomValue) public view {
-        address presaleAddr = token.presale();
-        assertTrue(presaleAddr == address(0) || presaleAddr != address(0));
+    // FUZZ 11: Presale contract is set
+    function testFuzz_presaleContractSet(uint256 randomValue) public view {
+        address presaleAddr = token.presaleContract();
+        assertEq(presaleAddr, address(presale));
     }
     
     // FUZZ 12: Total supply consistency
@@ -105,11 +113,11 @@ contract VFIDETokenSimpleTest is Test {
         assertEq(allowanceVal, 0);
     }
     
-    // FUZZ 14: Presale minted is within bounds
-    function testFuzz_presaleMintedBounded(uint256 randomValue) public view {
-        uint256 presaleMinted = token.presaleMinted();
+    // FUZZ 14: Presale cap is within max supply
+    function testFuzz_presaleCapBounded(uint256 randomValue) public view {
+        uint256 presaleCap = token.PRESALE_CAP();
         uint256 maxSupply = token.MAX_SUPPLY();
-        assertTrue(presaleMinted <= maxSupply);
+        assertTrue(presaleCap <= maxSupply);
     }
     
     // FUZZ 15: Total supply is non-negative

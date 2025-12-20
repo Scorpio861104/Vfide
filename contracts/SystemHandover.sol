@@ -31,7 +31,14 @@ contract SystemHandover {
     uint8  public extensionsUsed;
     uint64 public extensionSpan = 60 days;    // extra time if network trust too low
 
-    modifier onlyDev(){ if(msg.sender!=devMultisig) revert SH_NotDev(); _; }
+    modifier onlyDev() {
+        _checkDev();
+        _;
+    }
+
+    function _checkDev() internal view {
+        if (msg.sender != devMultisig) revert SH_NotDev();
+    }
 
     constructor(address _dev, address _dao, address _timelock, address _seer, address _ledger){
         if(_dev==address(0)||_dao==address(0)||_timelock==address(0)||_seer==address(0)) revert SH_Zero();
@@ -44,6 +51,8 @@ contract SystemHandover {
         if (start!=0) return; // idempotent
         uint256 t0 = IVFIDEPresaleLike_SH(presale).presaleStartTime();
         require(t0!=0,"presale not started");
+        // forge-lint: disable-next-line(unsafe-typecast)
+        // Safe: presaleStartTime is a recent timestamp that fits in uint64
         start = uint64(t0);
         handoverAt = start + monthsDelay;
         emit Armed(start,handoverAt);

@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
-import "../../contracts-prod/EmergencyControl.sol";
+import "../../contracts/EmergencyControl.sol";
 
 contract EmergencyControlFuzzTest is Test {
     EmergencyControl emergency;

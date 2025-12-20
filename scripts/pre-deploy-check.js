@@ -1,6 +1,8 @@
 // Pre-Deployment Checklist Script
 // Run: node scripts/pre-deploy-check.js
 
+require("dotenv").config();
+
 const fs = require("fs");
 const path = require("path");
 
@@ -33,18 +35,35 @@ if (process.env.PRIVATE_KEY) {
 console.log("\n📋 2. Contract Compilation");
 const outDir = path.join(__dirname, "../out");
 if (fs.existsSync(outDir)) {
-  const contracts = [
-    "VFIDEToken", "VFIDEPresale", "DAO", "VaultInfrastructure",
-    "VFIDESecurity", "VFIDETrust", "VFIDECommerce", "VFIDEFinance",
-    "ProofLedger", "EmergencyControl", "DevReserveVestingVault",
-    "SystemHandover", "DAOTimelock", "CouncilElection"
+    const contracts = [
+    { name: "VFIDEToken", file: "VFIDEToken.sol" },
+    { name: "VFIDEPresale", file: "VFIDEPresale.sol" },
+    { name: "DAO", file: "DAO.sol" },
+    { name: "VaultInfrastructure", file: "VaultInfrastructure.sol" },
+    { name: "SecurityHub", file: "VFIDESecurity.sol" },
+    { name: "Seer", file: "VFIDETrust.sol" },
+    { name: "MerchantRegistry", file: "VFIDECommerce.sol" },
+    { name: "StablecoinRegistry", file: "VFIDEFinance.sol" },
+    { name: "ProofLedger", file: "ProofLedger.sol" },
+    { name: "EmergencyControl", file: "EmergencyControl.sol" },
+    { name: "DevReserveVestingVault", file: "DevReserveVestingVault.sol" },
+    { name: "SystemHandover", file: "SystemHandover.sol" },
+    { name: "DAOTimelock", file: "DAOTimelock.sol" },
+    { name: "CouncilElection", file: "CouncilElection.sol" }
   ];
   
   let compiled = 0;
   for (const contract of contracts) {
-    const contractPath = path.join(outDir, `${contract}.sol`, `${contract}.json`);
+    // Check if artifact exists in out/File.sol/Name.json
+    const contractPath = path.join(outDir, contract.file, `${contract.name}.json`);
     if (fs.existsSync(contractPath)) {
       compiled++;
+    } else {
+        // Fallback: check if it exists as out/Name.sol/Name.json (if file not specified or same)
+        const fallbackPath = path.join(outDir, `${contract.name}.sol`, `${contract.name}.json`);
+        if (fs.existsSync(fallbackPath)) {
+            compiled++;
+        }
     }
   }
   

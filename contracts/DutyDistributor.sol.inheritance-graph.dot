@@ -1,0 +1,9 @@
+digraph "" {
+c196_DutyDistributor -> c674_Ownable;
+c196_DutyDistributor[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>DutyDistributor</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    setParams(uint256,uint256)</TD></TR><TR><TD align="left"><font color="#FFA500">    onVoteCast(uint256,address,bool)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    onProposalQueued(uint256,address,uint256)</font></TD></TR><TR><TD align="left"><font color="#FFA500">    onFinalized(uint256,bool)</font></TD></TR><TR><TD align="left">    claimRewards()</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyDAO()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    rebateVault<font color="blue" POINT-SIZE="10"> (IMerchantRebateVault)</font></TD></TR><TR><TD align="left">    dao</TD></TR><TR><TD align="left">    userPoints</TD></TR><TR><TD align="left">    totalPoints</TD></TR><TR><TD align="left">    pointsPerVote</TD></TR><TR><TD align="left">    rewardPerPoint</TD></TR></TABLE> >];
+
+c674_Ownable[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>Ownable</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    transferOwnership(address)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyOwner()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    owner</TD></TR></TABLE> >];
+
+c697_ReentrancyGuard[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ReentrancyGuard</B></TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    nonReentrant()</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _status</TD></TR></TABLE> >];
+
+}

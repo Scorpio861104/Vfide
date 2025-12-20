@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-interface ICommerceEscrow {
-    function release(uint256 id) external;
-    function refund(uint256 id) external;
-}
+import "../SharedInterfaces.sol";
 
 contract ReenteringERC20 {
     string public name = "Reenter";
@@ -32,7 +29,7 @@ contract ReenteringERC20 {
         // attempt reentry into commerce escrow (unsafe if target is a contract)
         if (reenterTarget != address(0)) {
             // call release on reenter target - if it reverts, propagate
-            ICommerceEscrow(reenterTarget).release(reenterId);
+            IEscrowManager(reenterTarget).release(reenterId);
         }
         return true;
     }

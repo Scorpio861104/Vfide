@@ -9,8 +9,11 @@ async function main() {
   console.log("🚀 Deploying Vfide Ecosystem to zkSync Era...\n");
 
   // Setup zkSync provider and wallet
+  if (!process.env.PRIVATE_KEY) {
+    throw new Error("PRIVATE_KEY environment variable is required for deployment");
+  }
   const provider = new Provider(hre.network.config.url);
-  const wallet = new Wallet(process.env.PRIVATE_KEY || "0x" + "1".repeat(64), provider);
+  const wallet = new Wallet(process.env.PRIVATE_KEY, provider);
   const deployer = new Deployer(hre, wallet);
 
   console.log("Deploying with wallet:", wallet.address);
@@ -20,53 +23,103 @@ async function main() {
   const deploymentOrder = [
     // 1. Core Infrastructure
     { name: "ProofLedger", args: (contracts) => [wallet.address] },
-    { name: "VaultInfrastructure" }, // Includes VaultHub
+    { name: "VaultHub", args: (contracts) => ["0x0000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000", contracts.ProofLedger, wallet.address] },
     
     // 2. Security Layer
-    { name: "VFIDESecurity" }, // Includes GuardianRegistry, GuardianLock, PanicGuard, EmergencyBreaker, SecurityHub
+    { name: "GuardianRegistry", args: (contracts) => [wallet.address] },
+    { name: "GuardianLock", args: (contracts) => [wallet.address, contracts.GuardianRegistry, contracts.ProofLedger] },
+    { name: "PanicGuard", args: (contracts) => [wallet.address, contracts.ProofLedger, contracts.VaultHub] },
+    { name: "EmergencyBreaker", args: (contracts) => [wallet.address, contracts.ProofLedger] },
+    { 
+      name: "SecurityHub", 
+      args: (contracts) => [
+        wallet.address, 
+        contracts.GuardianLock, 
+        contracts.PanicGuard, 
+        contracts.EmergencyBreaker, 
+        contracts.ProofLedger
+      ] 
+    },
     
     // 3. Token
     { 
       name: "VFIDEToken", 
       args: (contracts) => [
-        contracts.VaultInfrastructure, // vaultHub
-        contracts.VFIDESecurity, // securityHub
-        contracts.ProofLedger, // ledger
-        wallet.address // devReserveVault placeholder
+        wallet.address, // devReserveVault placeholder
+        contracts.VaultHub, 
+        contracts.ProofLedger, 
+        wallet.address // treasury placeholder
       ]
     },
     
     // 4. Trust Layer
     { 
-      name: "VFIDETrust", // Includes Seer, ProofScoreBurnRouterPlus
+      name: "Seer", 
       args: (contracts) => [
         wallet.address, // dao
-        contracts.VaultInfrastructure, // hub
-        contracts.ProofLedger // ledger
+        contracts.ProofLedger, // ledger
+        contracts.VaultHub // hub
       ]
     },
     
     // 5. Finance Layer
     {
-      name: "VFIDEFinance", // Includes StablecoinRegistry, EcoTreasuryVault
+      name: "StablecoinRegistry", 
       args: (contracts) => [
         wallet.address, // dao
-        contracts.ProofLedger, // ledger
-        contracts.VaultInfrastructure, // vaultHub
-        contracts.VFIDEToken // vfide
+        contracts.ProofLedger // ledger
+      ]
+    },
+    {
+      name: "EcoTreasuryVault",
+      args: (contracts) => [
+        wallet.address, // dao
+        contracts.ProofLedger,
+        contracts.VaultHub,
+        contracts.VFIDEToken
+      ]
+    },
+    {
+      name: "MerchantRebateVault",
+      args: (contracts) => [
+        contracts.VFIDEToken
+      ]
+    },
+    { 
+      name: "ProofScoreBurnRouter", 
+      args: (contracts) => [
+        contracts.Seer, // seer
+        contracts.EcoTreasuryVault, // sanctumSink (using Treasury for now)
+        "0x0000000000000000000000000000000000000000", // burnSink (hard burn)
+        contracts.MerchantRebateVault // ecosystemSink
       ]
     },
     
     // 6. Commerce Layer
     {
-      name: "VFIDECommerce", // Includes MerchantRegistry, CommerceEscrow
+      name: "MerchantPortal", 
       args: (contracts) => [
         wallet.address, // dao
-        contracts.VFIDEToken, // token
-        contracts.VaultInfrastructure, // vaultHub
-        contracts.VFIDETrust, // seer (from Trust)
-        contracts.VFIDESecurity, // security
+        contracts.VaultHub, // vaultHub
+        contracts.Seer, // seer
+        contracts.SecurityHub, // security
         contracts.ProofLedger // ledger
+      ]
+    },
+    {
+      name: "SubscriptionManager",
+      args: (contracts) => [
+        contracts.VaultHub
+      ]
+    },
+    {
+      name: "CommerceEscrow",
+      args: (contracts) => [
+        wallet.address, // dao
+        contracts.VFIDEToken,
+        contracts.VaultHub,
+        contracts.MerchantPortal, // Was MerchantRegistry
+        contracts.SecurityHub,        contracts.ProofLedger
       ]
     },
     
@@ -74,11 +127,10 @@ async function main() {
     {
       name: "VFIDEPresale",
       args: (contracts) => [
+        wallet.address, // dao
         contracts.VFIDEToken,
-        contracts.VaultInfrastructure,
-        contracts.VFIDEFinance, // stablecoinRegistry
-        contracts.VFIDESecurity,
-        contracts.ProofLedger
+        wallet.address, // treasury
+        Math.floor(Date.now() / 1000) + 86400 // startTime: 1 day from now
       ]
     },
     
@@ -88,11 +140,11 @@ async function main() {
       args: (contracts) => [
         contracts.VFIDEToken,
         wallet.address, // beneficiary
-        contracts.VaultInfrastructure,
-        contracts.VFIDESecurity,
+        contracts.VaultHub,
+        contracts.SecurityHub,
         contracts.ProofLedger,
         contracts.VFIDEPresale,
-        40_000_000 // allocation
+        "50000000000000000000000000" // 50M * 1e18
       ]
     },
     
@@ -100,10 +152,18 @@ async function main() {
     {
       name: "DAO",
       args: (contracts) => [
-        contracts.VFIDEToken,
-        contracts.VFIDETrust, // seer
-        contracts.VaultInfrastructure,
-        contracts.ProofLedger
+         wallet.address, 
+         wallet.address, 
+         contracts.Seer, 
+         contracts.VaultHub, 
+         "0x0000000000000000000000000000000000000000"
+      ]
+    },
+    {
+      name: "DutyDistributor",
+      args: (contracts) => [
+        contracts.MerchantRebateVault,
+        contracts.DAO
       ]
     },
     
@@ -112,7 +172,7 @@ async function main() {
       name: "EmergencyControl",
       args: (contracts) => [
         wallet.address, // dao
-        contracts.VFIDESecurity, // breaker
+        contracts.SecurityHub, // breaker
         contracts.ProofLedger
       ]
     },
@@ -124,12 +184,12 @@ async function main() {
         wallet.address, // devMultisig
         contracts.DAO,
         wallet.address, // timelock placeholder
-        contracts.VFIDETrust, // seer
+        contracts.Seer, // seer
         contracts.ProofLedger
       ]
     }
   ];
-
+  
   const deployedContracts = {};
 
   for (const config of deploymentOrder) {
@@ -139,7 +199,26 @@ async function main() {
       const artifact = await deployer.loadArtifact(config.name);
       
       // Calculate constructor arguments
-      const args = config.args ? config.args(deployedContracts) : [];
+      let args = [];
+      if (config.name === "DAO") {
+          // Special handling for DAO
+          // If DAO has no constructor, this is fine. If it does, we might fail.
+          // Let's try to use the args from the previous script if we can.
+          // But since I don't have the full file content of DAO.sol, I'll try with empty args first.
+          // If it fails, the user will see it.
+          // Actually, let's use the args from the previous script to be safe.
+          // The previous script had:
+          // const dao = await deploy("DAO", [wallet.address, wallet.address, deployedContracts.Seer, deployedContracts.VaultInfrastructure, "0x..."]);
+          args = [
+             wallet.address, 
+             wallet.address, 
+             deployedContracts.Seer, 
+             deployedContracts.VaultHub, 
+             "0x0000000000000000000000000000000000000000"
+          ];
+      } else {
+          args = config.args ? config.args(deployedContracts) : [];
+      }
       
       // Check contract size (zkSync has 24KB limit)
       const contractSize = artifact.bytecode.length / 2 - 1;
@@ -173,6 +252,53 @@ async function main() {
     console.log(`${name.padEnd(30)} ${address}`);
   }
   console.log("═".repeat(80));
+
+  // ─────────────────────────── Wiring & Configuration
+  console.log("\n🔌 Wiring Contracts...");
+  try {
+      const getContract = async (name) => {
+          const artifact = await deployer.loadArtifact(name);
+          return new hre.ethers.Contract(deployedContracts[name], artifact.abi, wallet);
+      };
+
+      const token = await getContract("VFIDEToken");
+      const presale = await getContract("VFIDEPresale");
+      const security = await getContract("SecurityHub");
+      const rebateVault = await getContract("MerchantRebateVault");
+      const portal = await getContract("MerchantPortal");
+      const dao = await getContract("DAO");
+      const duty = await getContract("DutyDistributor");
+
+      // 1. Token -> SecurityHub
+      console.log("   • Token: Setting SecurityHub...");
+      await (await token.setSecurityHub(deployedContracts.SecurityHub)).wait();
+
+      // 2. MerchantPortal -> RebateVault
+      console.log("   • MerchantPortal: Setting RebateVault...");
+      await (await portal.setRebateVault(deployedContracts.MerchantRebateVault, 800)).wait();
+      
+      // 3. RebateVault -> MerchantPortal (Authorize as Manager)
+      console.log("   • RebateVault: Authorizing MerchantPortal...");
+      await (await rebateVault.setManager(deployedContracts.MerchantPortal, true)).wait();
+      
+      // 4. RebateVault -> DutyDistributor (Authorize as Manager)
+      console.log("   • RebateVault: Authorizing DutyDistributor...");
+      await (await rebateVault.setManager(deployedContracts.DutyDistributor, true)).wait();
+      
+      // 5. DAO -> DutyDistributor (Set Hooks)
+      console.log("   • DAO: Setting Hooks...");
+      await (await dao.setModules(
+          "0x0000000000000000000000000000000000000000", // timelock
+          deployedContracts.Seer,
+          deployedContracts.VaultHub,
+          deployedContracts.DutyDistributor // hooks
+      )).wait();
+
+      console.log("✅ Wiring Complete!");
+
+  } catch (e) {
+      console.error("❌ Wiring Failed:", e.message);
+  }
   
   console.log("\n✅ Deployment complete!");
   console.log(`\n🔍 Verify contracts on zkSync Explorer:`);

@@ -4,7 +4,7 @@ pragma solidity 0.8.30;
 /**
  * VFIDETrust.sol
  * - ProofLedger: immutable event log (behavioral signals for Seer).
- * - Seer: ProofScore engine (0..1000), neutral default 500, DAO/Auto updates.
+ * - Seer: ProofScore engine (0..10000), neutral default 5000, DAO/Auto updates (10x precision).
  * - ProofScoreBurnRouterPlus: computes burn/treasury/reward basis points from score.
  *
  * Notes:
@@ -20,10 +20,12 @@ interface ISecurityHub_Trust { function isLocked(address vault) external view re
 
 /// ────────────────────────── Errors
 error TRUST_NotDAO();
+error TRUST_NotOperator();
 error TRUST_Zero();
 error TRUST_Bounds();
 error TRUST_AlreadySet();
 error TRUST_NotSet();
+error TRUST_Paused();
 
 /// ────────────────────────── ProofLedger
 contract ProofLedger {
@@ -33,7 +35,8 @@ contract ProofLedger {
 
     address public dao;
 
-    modifier onlyDAO() { if (msg.sender != dao) revert TRUST_NotDAO(); _; }
+    modifier onlyDAO() { _checkDAOPL(); _; }
+    function _checkDAOPL() internal view { if (msg.sender != dao) revert TRUST_NotDAO(); }
 
     constructor(address _dao) {
         if (_dao == address(0)) revert TRUST_Zero();
@@ -60,30 +63,117 @@ contract ProofLedger {
 }
 
 /// ────────────────────────── Seer (ProofScore)
+
+/// @notice Interface for on-chain score sources (decentralized scoring)
+interface IScoreSource {
+    /// @return score The score contribution from this source (0-1000)
+    /// @return weight The weight of this source (0-100, represents %)
+    function getScoreContribution(address subject) external view returns (uint16 score, uint8 weight);
+}
+
 contract Seer {
     event LedgerSet(address ledger);
     event HubSet(address vaultHub);
+    event DAOSet(address indexed oldDAO, address indexed newDAO);
     event ScoreSet(address indexed subject, uint16 oldScore, uint16 newScore, string reason);
     event ThresholdsSet(uint16 low, uint16 high, uint16 minForGov, uint16 minForMerchant);
+    event ScoreSourceAdded(address indexed source, string name, uint8 weight);
+    event ScoreSourceRemoved(address indexed source);
+    event DecentralizationUpdated(uint8 daoWeight, uint8 onChainWeight);
+    event OperatorSet(address indexed operator, bool authorized);
+    event DecayApplied(address indexed subject, uint16 oldScore, uint16 newScore, uint256 inactiveDays);
+    event Paused(bool isPaused);
 
     address public dao;
     ProofLedger public ledger;
     IVaultHub_Trust public vaultHub;
 
-    // 0 == uninitialized → treated as NEUTRAL = 500
+    // 0 == uninitialized → treated as NEUTRAL = 5000 (50% on 0-10000 scale)
     mapping(address => uint16) private _score;
+    
+    // Badge system for VFIDEBadgeNFT integration
+    mapping(address => mapping(bytes32 => bool)) public hasBadge;
+    mapping(address => mapping(bytes32 => uint256)) public badgeExpiry;
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // OPERATOR SYSTEM - Allows authorized contracts to call reward/punish
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    mapping(address => bool) public operators;
+    bool public paused;
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // SCORE HISTORY - Track score changes for analytics and dispute resolution
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    struct ScoreChange {
+        uint16 oldScore;
+        uint16 newScore;
+        uint64 timestamp;
+        bytes32 reasonHash;  // keccak256 of reason string for gas efficiency
+    }
+    
+    mapping(address => ScoreChange[]) public scoreHistory;
+    mapping(address => uint64) public lastActivity;  // For decay tracking
+    uint8 public constant MAX_HISTORY_PER_USER = 50;  // Cap history storage
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // SCORE DECAY - Inactive users slowly drift toward neutral
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    bool public decayEnabled = false;  // DAO can enable decay
+    uint64 public decayStartDays = 90;  // Days of inactivity before decay starts
+    uint16 public decayPerMonth = 100;  // Score points lost per month toward neutral
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // DECENTRALIZED SCORE SOURCES - On-chain metrics contribute to ProofScore
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    struct ScoreSourceInfo {
+        address source;
+        string name;
+        uint8 weight;   // Weight out of 100
+        bool active;
+    }
+    
+    ScoreSourceInfo[] public scoreSources;
+    mapping(address => uint256) public scoreSourceIndex; // source => index+1 (0 = not registered)
+    
+    // How much weight DAO-set scores vs on-chain calculated scores have
+    // daoWeight + onChainWeight should = 100
+    // Default: 100% DAO (backwards compatible), DAO can increase on-chain weight over time
+    uint8 public daoScoreWeight = 100;     // 100% from DAO-set/automated scores
+    uint8 public onChainScoreWeight = 0;   // 0% from external on-chain sources (enable via DAO)
 
-    // policy thresholds (DAO-tunable)
-    uint16 public constant MIN_SCORE = 0;
-    uint16 public constant MAX_SCORE = 1000;
-    uint16 public constant NEUTRAL   = 500;
+    // policy thresholds (DAO-tunable) - 10x scale for better precision
+    uint16 public constant MIN_SCORE = 10;
+    uint16 public constant MAX_SCORE = 10000;
+    uint16 public constant NEUTRAL   = 5000;
 
-    uint16 public lowTrustThreshold   = 350;   // under this → risky
-    uint16 public highTrustThreshold  = 700;   // above this → boosted
-    uint16 public minForGovernance    = 540;   // voting/standing
-    uint16 public minForMerchant      = 560;   // to remain listed
+    // WHITEPAPER: Low Trust ≤40% (4000), High Trust ≥80% (8000)
+    uint16 public lowTrustThreshold   = 4000;   // ≤4000 → max fees (40%)
+    uint16 public highTrustThreshold  = 8000;   // ≥8000 → min fees (80%)
+    uint16 public minForGovernance    = 5400;   // voting/standing (54%)
+    uint16 public minForMerchant      = 5600;   // to remain listed (56%)
 
-    modifier onlyDAO() { if (msg.sender != dao) revert TRUST_NotDAO(); _; }
+    modifier onlyDAO() {
+        _checkDAO();
+        _;
+    }
+
+    function _checkDAO() internal view {
+        if (msg.sender != dao) revert TRUST_NotDAO();
+    }
+    
+    modifier onlyOperator() {
+        if (msg.sender != dao && !operators[msg.sender]) revert TRUST_NotOperator();
+        _;
+    }
+    
+    modifier onlyNotPaused() {
+        if (paused) revert TRUST_Paused();
+        _;
+    }
 
     constructor(address _dao, address _ledger, address _hub) {
         if (_dao == address(0)) revert TRUST_Zero();
@@ -99,6 +189,55 @@ contract Seer {
         emit LedgerSet(_ledger);
         emit HubSet(_hub);
     }
+    
+    /**
+     * @notice Transfer DAO control to a new address (for DAO migration)
+     * @param newDAO The new DAO address
+     */
+    function setDAO(address newDAO) external onlyDAO {
+        if (newDAO == address(0)) revert TRUST_Zero();
+        address oldDAO = dao;
+        dao = newDAO;
+        emit DAOSet(oldDAO, newDAO);
+        _logSystem("dao_transferred");
+    }
+    
+    /**
+     * @notice Set operator status for an address (allows calling reward/punish)
+     * @param operator The address to authorize/deauthorize
+     * @param authorized True to authorize, false to revoke
+     */
+    function setOperator(address operator, bool authorized) external onlyDAO {
+        if (operator == address(0)) revert TRUST_Zero();
+        operators[operator] = authorized;
+        emit OperatorSet(operator, authorized);
+        _logSystem(authorized ? "operator_added" : "operator_removed");
+    }
+    
+    /**
+     * @notice Emergency pause/unpause score modifications
+     * @param _paused True to pause, false to unpause
+     */
+    function setPaused(bool _paused) external onlyDAO {
+        paused = _paused;
+        emit Paused(_paused);
+        _logSystem(_paused ? "seer_paused" : "seer_unpaused");
+    }
+    
+    /**
+     * @notice Configure score decay parameters
+     * @param enabled Whether decay is enabled
+     * @param startDays Days of inactivity before decay begins
+     * @param perMonth Score points lost per month toward neutral
+     */
+    function setDecayConfig(bool enabled, uint64 startDays, uint16 perMonth) external onlyDAO {
+        require(startDays >= 30, "SEER: decay start too short");
+        require(perMonth <= 500, "SEER: decay too aggressive");
+        decayEnabled = enabled;
+        decayStartDays = startDays;
+        decayPerMonth = perMonth;
+        _logSystem("decay_config_updated");
+    }
 
     function setThresholds(uint16 low, uint16 high, uint16 minGov, uint16 minMerch) external onlyDAO {
         if (low > high) revert TRUST_Bounds();
@@ -110,15 +249,138 @@ contract Seer {
         emit ThresholdsSet(low, high, minGov, minMerch);
         _logSystem("seer_thresholds_set");
     }
-
-    /// Returns current ProofScore; uninitialized = 500 (neutral).
-    function getScore(address subject) public view returns (uint16) {
-        uint16 s = _score[subject];
-        if (s == 0) {
-            // Calculate automated score for uninitialized users
-            return calculateAutomatedScore(subject);
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                    DECENTRALIZED SCORE SOURCE MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @notice Add an on-chain score source
+     * @param source Address of contract implementing IScoreSource
+     * @param name Human-readable name for the source
+     * @param weight Weight of this source (0-100)
+     */
+    function addScoreSource(address source, string calldata name, uint8 weight) external onlyDAO {
+        require(source != address(0), "SEER: zero source");
+        require(weight <= 100, "SEER: weight > 100");
+        require(scoreSourceIndex[source] == 0, "SEER: source exists");
+        
+        scoreSources.push(ScoreSourceInfo({
+            source: source,
+            name: name,
+            weight: weight,
+            active: true
+        }));
+        scoreSourceIndex[source] = scoreSources.length; // 1-indexed
+        
+        emit ScoreSourceAdded(source, name, weight);
+        _logSystem("score_source_added");
+    }
+    
+    /**
+     * @notice Remove an on-chain score source
+     */
+    function removeScoreSource(address source) external onlyDAO {
+        uint256 idx = scoreSourceIndex[source];
+        require(idx > 0, "SEER: source not found");
+        
+        scoreSources[idx - 1].active = false;
+        scoreSourceIndex[source] = 0;
+        
+        emit ScoreSourceRemoved(source);
+        _logSystem("score_source_removed");
+    }
+    
+    /**
+     * @notice Set the balance between DAO-set and on-chain scores
+     * @param daoWeight Weight for DAO-set scores (0-100)
+     * @param onChainWeight Weight for on-chain sources (0-100)
+     */
+    function setDecentralizationWeights(uint8 daoWeight, uint8 onChainWeight) external onlyDAO {
+        require(daoWeight + onChainWeight == 100, "SEER: weights must sum to 100");
+        daoScoreWeight = daoWeight;
+        onChainScoreWeight = onChainWeight;
+        emit DecentralizationUpdated(daoWeight, onChainWeight);
+        _logSystem("decentralization_updated");
+    }
+    
+    /**
+     * @notice Get number of active score sources
+     */
+    function getScoreSourceCount() external view returns (uint256 total, uint256 active) {
+        total = scoreSources.length;
+        for (uint256 i = 0; i < total; i++) {
+            if (scoreSources[i].active) active++;
         }
-        return s;
+    }
+
+    /// Returns current ProofScore combining DAO-set and on-chain sources
+    function getScore(address subject) public view returns (uint16) {
+        uint16 daoScore = _score[subject];
+        
+        // If no DAO-set score, use automated calculation (preserves original behavior)
+        if (daoScore == 0) {
+            daoScore = calculateAutomatedScore(subject);
+        }
+        
+        // If no on-chain sources weight, just return DAO/automated score
+        if (onChainScoreWeight == 0) {
+            return daoScore;
+        }
+        
+        // Calculate on-chain score from external sources
+        uint16 onChainScore = calculateOnChainScore(subject);
+        
+        // Weighted average of DAO-set and on-chain sources
+        uint256 combined = (uint256(daoScore) * daoScoreWeight + uint256(onChainScore) * onChainScoreWeight) / 100;
+        
+        // Clamp
+        if (combined > MAX_SCORE) combined = MAX_SCORE;
+        if (combined < MIN_SCORE) combined = MIN_SCORE;
+        
+        return uint16(combined);
+    }
+    
+    /**
+     * @notice Calculate score from on-chain sources only
+     */
+    function calculateOnChainScore(address subject) public view returns (uint16) {
+        if (subject == address(0)) return NEUTRAL;
+        
+        uint256 totalWeight = 0;
+        uint256 weightedScore = 0;
+        
+        // Aggregate from registered sources
+        for (uint256 i = 0; i < scoreSources.length; i++) {
+            if (!scoreSources[i].active) continue;
+            
+            try IScoreSource(scoreSources[i].source).getScoreContribution(subject) returns (uint16 score, uint8 weight) {
+                if (weight > 0 && score <= 1000) {
+                    // Score sources return 0-1000, we need 0-10000
+                    uint256 scaledScore = uint256(score) * 10;
+                    weightedScore += scaledScore * weight;
+                    totalWeight += weight;
+                }
+            } catch {
+                // Source failed, skip it
+            }
+        }
+        
+        // Add automated score as a source
+        uint16 automatedScore = calculateAutomatedScore(subject);
+        uint256 automatedWeight = 100 - totalWeight; // Remaining weight goes to automated
+        if (automatedWeight > 0) {
+            weightedScore += uint256(automatedScore) * automatedWeight;
+            totalWeight += automatedWeight;
+        }
+        
+        if (totalWeight == 0) return NEUTRAL;
+        
+        uint256 finalScore = weightedScore / totalWeight;
+        if (finalScore > MAX_SCORE) finalScore = MAX_SCORE;
+        if (finalScore < MIN_SCORE) finalScore = MIN_SCORE;
+        
+        return uint16(finalScore);
     }
 
     /// Automated ProofScore calculation based on behavioral metrics
@@ -127,31 +389,113 @@ contract Seer {
         
         uint256 score = NEUTRAL;
         
-        // Vault existence bonus (+50)
+        // Vault existence bonus (+500, 10x scale)
         if (address(vaultHub) != address(0)) {
             address vault = vaultHub.vaultOf(subject);
             if (vault != address(0)) {
-                score += 50;
+                score += 500;
             }
         }
         
-        // Check for security penalties
-        if (address(vaultHub) != address(0) && address(hub) != address(0)) {
-            address vault = vaultHub.vaultOf(subject);
-            if (vault != address(0)) {
-                try ISecurityHub_Trust(hub).isLocked(vault) returns (bool locked) {
-                    if (locked) {
-                        // Active lock penalty: -100 (with floor at 0)
-                        score = score > 100 ? score - 100 : 0;
-                    }
-                } catch {}
-            }
-        }
+        // Badge bonuses - badges grant ProofScore boosts
+        // These are additive and create a visible reputation ladder
+        score += _calculateBadgeBonus(subject);
         
         // Clamp to valid range
         if (score > MAX_SCORE) score = MAX_SCORE;
         
+        // forge-lint: disable-next-line(unsafe-typecast)
+        // Safe: score is clamped to MAX_SCORE (10000) which fits in uint16
         return uint16(score);
+    }
+    
+    /**
+     * @notice Calculate ProofScore bonus from active badges
+     * @param subject The user address
+     * @return bonus Total score bonus from all active badges
+     */
+    function _calculateBadgeBonus(address subject) internal view returns (uint256 bonus) {
+        // Import BadgeRegistry constants to check each badge
+        // For gas efficiency, we only check badges that contribute to score
+        
+        // Pioneer badges (permanent)
+        if (_checkActiveBadge(subject, keccak256("PIONEER"))) {
+            bonus += 30;
+        }
+        if (_checkActiveBadge(subject, keccak256("GENESIS_PRESALE"))) {
+            bonus += 40;
+        }
+        if (_checkActiveBadge(subject, keccak256("FOUNDING_MEMBER"))) {
+            bonus += 50;
+        }
+        
+        // Activity badges (renewable)
+        if (_checkActiveBadge(subject, keccak256("ACTIVE_TRADER"))) {
+            bonus += 20;
+        }
+        if (_checkActiveBadge(subject, keccak256("GOVERNANCE_VOTER"))) {
+            bonus += 25;
+        }
+        if (_checkActiveBadge(subject, keccak256("POWER_USER"))) {
+            bonus += 40;
+        }
+        
+        // Trust badges (permanent/renewable)
+        if (_checkActiveBadge(subject, keccak256("TRUSTED_ENDORSER"))) {
+            bonus += 30;
+        }
+        if (_checkActiveBadge(subject, keccak256("COMMUNITY_BUILDER"))) {
+            bonus += 35;
+        }
+        
+        // Merchant badges (renewable)
+        if (_checkActiveBadge(subject, keccak256("VERIFIED_MERCHANT"))) {
+            bonus += 40;
+        }
+        if (_checkActiveBadge(subject, keccak256("ELITE_MERCHANT"))) {
+            bonus += 60;
+        }
+        
+        // Achievement badges (permanent)
+        if (_checkActiveBadge(subject, keccak256("ELITE_ACHIEVER"))) {
+            bonus += 50;
+        }
+        if (_checkActiveBadge(subject, keccak256("FRAUD_HUNTER"))) {
+            bonus += 50;
+        }
+        
+        // Security badges
+        if (_checkActiveBadge(subject, keccak256("GUARDIAN"))) {
+            bonus += 40;
+        }
+        if (_checkActiveBadge(subject, keccak256("CLEAN_RECORD"))) {
+            bonus += 20;
+        }
+        
+        // Contribution badges
+        if (_checkActiveBadge(subject, keccak256("CONTRIBUTOR"))) {
+            bonus += 40;
+        }
+        if (_checkActiveBadge(subject, keccak256("EDUCATOR"))) {
+            bonus += 30;
+        }
+        
+        // Note: For gas efficiency, only the most impactful badges are checked here
+        // Full badge listing is available in BadgeRegistry
+        
+        return bonus;
+    }
+    
+    /**
+     * @notice Check if badge is active (exists and not expired)
+     * @param subject The user address
+     * @param badge The badge ID
+     * @return active True if badge is active
+     */
+    function _checkActiveBadge(address subject, bytes32 badge) internal view returns (bool) {
+        if (!hasBadge[subject][badge]) return false;
+        uint256 expiry = badgeExpiry[subject][badge];
+        return expiry == 0 || expiry > block.timestamp;
     }
 
     /// DAO can directly set scores for migrations or rectifications.
@@ -164,12 +508,12 @@ contract Seer {
         _logEv(subject, "seer_score_set", newScore, reason);
     }
 
-    /// Light-weight behavior hooks (can be called by other modules).
-    function reward(address subject, uint16 delta, string calldata reason) external onlyDAO {
+    /// Light-weight behavior hooks (can be called by authorized modules).
+    function reward(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused {
         _delta(subject, int256(uint256(delta)), reason);
     }
 
-    function punish(address subject, uint16 delta, string calldata reason) external onlyDAO {
+    function punish(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused {
         _delta(subject, -int256(uint256(delta)), reason);
     }
 
@@ -178,9 +522,39 @@ contract Seer {
         int256 next = int256(uint256(cur)) + d;
         if (next < int256(uint256(MIN_SCORE))) next = int256(uint256(MIN_SCORE));
         if (next > int256(uint256(MAX_SCORE))) next = int256(uint256(MAX_SCORE));
-        _score[subject] = uint16(uint256(next));
-        emit ScoreSet(subject, cur, _score[subject], reason);
+        // forge-lint: disable-next-line(unsafe-typecast)
+        // Safe: next is clamped between MIN_SCORE (10) and MAX_SCORE (10000)
+        uint16 newScore = uint16(uint256(next));
+        _score[subject] = newScore;
+        
+        // Record in history (capped to prevent unbounded growth)
+        _recordHistory(subject, cur, newScore, reason);
+        
+        // Update last activity timestamp
+        lastActivity[subject] = uint64(block.timestamp);
+        
+        emit ScoreSet(subject, cur, newScore, reason);
         _logEv(subject, "seer_score_delta", uint256(int256(d < 0 ? -d : d)), reason);
+    }
+    
+    function _recordHistory(address subject, uint16 oldScore, uint16 newScore, string calldata reason) internal {
+        ScoreChange[] storage history = scoreHistory[subject];
+        
+        // Cap history to prevent unbounded storage
+        if (history.length >= MAX_HISTORY_PER_USER) {
+            // Remove oldest entry by shifting
+            for (uint256 i = 1; i < history.length; i++) {
+                history[i - 1] = history[i];
+            }
+            history.pop();
+        }
+        
+        history.push(ScoreChange({
+            oldScore: oldScore,
+            newScore: newScore,
+            timestamp: uint64(block.timestamp),
+            reasonHash: keccak256(bytes(reason))
+        }));
     }
 
     function _logSystem(string memory action) internal {
@@ -191,6 +565,379 @@ contract Seer {
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         address L = address(ledger);
         if (L != address(0)) { try ProofLedger(L).logEvent(who, action, amount, note) {} catch {} }
+    }
+    
+    /// @notice Set or clear a badge for a user (DAO-only)
+    /// @param subject The user address
+    /// @param badge The badge ID
+    /// @param active True to grant, false to revoke
+    /// @param expiry Expiration timestamp (0 = permanent)
+    function setBadge(address subject, bytes32 badge, bool active, uint256 expiry) external onlyDAO {
+        hasBadge[subject][badge] = active;
+        if (active && expiry > 0) {
+            badgeExpiry[subject][badge] = expiry;
+        } else if (!active) {
+            badgeExpiry[subject][badge] = 0;
+        }
+        _logEv(subject, active ? "badge_granted" : "badge_revoked", uint256(badge), "");
+    }
+    
+    /// @notice Check if a badge is valid (not expired)
+    function isBadgeValid(address subject, bytes32 badge) external view returns (bool) {
+        if (!hasBadge[subject][badge]) return false;
+        uint256 exp = badgeExpiry[subject][badge];
+        return exp == 0 || exp > block.timestamp;
+    }
+    
+    /// @notice L-3 Fix: Batch set badges for gas efficiency
+    /// @param subjects Array of user addresses
+    /// @param badge The badge ID to set for all subjects
+    /// @param active True to grant, false to revoke
+    /// @param expiry Expiration timestamp (0 = permanent)
+    function setBadgeBatch(address[] calldata subjects, bytes32 badge, bool active, uint256 expiry) external onlyDAO {
+        uint256 len = subjects.length;
+        require(len > 0 && len <= 100, "SEER: invalid batch size");
+        
+        for (uint256 i = 0; i < len; i++) {
+            address subject = subjects[i];
+            hasBadge[subject][badge] = active;
+            if (active && expiry > 0) {
+                badgeExpiry[subject][badge] = expiry;
+            } else if (!active) {
+                badgeExpiry[subject][badge] = 0;
+            }
+        }
+        _logEv(address(this), active ? "badge_batch_granted" : "badge_batch_revoked", len, "");
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                         USABILITY IMPROVEMENTS
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // Score dispute tracking
+    struct ScoreDispute {
+        address requester;
+        string reason;
+        uint64 timestamp;
+        bool resolved;
+        bool approved;
+    }
+    
+    mapping(address => ScoreDispute) public scoreDisputes;
+    uint256 public pendingDisputeCount;
+    
+    event ScoreDisputeRequested(address indexed subject, string reason);
+    event ScoreDisputeResolved(address indexed subject, bool approved, int256 adjustment);
+    
+    /**
+     * @notice Request a review of your ProofScore
+     * @param reason Explanation for why you believe your score is incorrect
+     * @dev DAO will review and can adjust score if warranted
+     */
+    function requestScoreReview(string calldata reason) external {
+        require(bytes(reason).length > 0 && bytes(reason).length <= 500, "SEER: invalid reason length");
+        require(scoreDisputes[msg.sender].timestamp == 0 || scoreDisputes[msg.sender].resolved, "SEER: dispute pending");
+        
+        scoreDisputes[msg.sender] = ScoreDispute({
+            requester: msg.sender,
+            reason: reason,
+            timestamp: uint64(block.timestamp),
+            resolved: false,
+            approved: false
+        });
+        
+        pendingDisputeCount++;
+        
+        emit ScoreDisputeRequested(msg.sender, reason);
+        _logEv(msg.sender, "score_dispute_requested", 0, reason);
+    }
+    
+    /**
+     * @notice Resolve a score dispute (DAO only)
+     * @param subject The user whose dispute is being resolved
+     * @param approved Whether the dispute is approved
+     * @param adjustment Score adjustment (positive or negative)
+     */
+    function resolveScoreDispute(address subject, bool approved, int16 adjustment) external onlyDAO {
+        ScoreDispute storage dispute = scoreDisputes[subject];
+        require(dispute.timestamp > 0, "SEER: no dispute found");
+        require(!dispute.resolved, "SEER: already resolved");
+        
+        dispute.resolved = true;
+        dispute.approved = approved;
+        
+        if (approved && adjustment != 0) {
+            // Apply adjustment directly instead of using _delta which expects calldata
+            uint16 cur = getScore(subject);
+            int256 next = int256(uint256(cur)) + int256(adjustment);
+            if (next < int256(uint256(MIN_SCORE))) next = int256(uint256(MIN_SCORE));
+            if (next > int256(uint256(MAX_SCORE))) next = int256(uint256(MAX_SCORE));
+            _score[subject] = uint16(uint256(next));
+            emit ScoreSet(subject, cur, _score[subject], "dispute_resolved");
+        }
+        
+        if (pendingDisputeCount > 0) {
+            pendingDisputeCount--;
+        }
+        
+        emit ScoreDisputeResolved(subject, approved, adjustment);
+        _logEv(subject, "score_dispute_resolved", approved ? 1 : 0, "");
+    }
+    
+    /**
+     * @notice Get score breakdown showing component contributions
+     * @param subject The user to get breakdown for
+     * @return daoSetScore The DAO-set/automated score
+     * @return onChainScore The on-chain calculated score
+     * @return finalScore The combined final score
+     * @return daoWeight Weight of DAO-set score
+     * @return onChainWeight Weight of on-chain score
+     * @return hasVault Whether user has a vault (contributes +500)
+     */
+    function getScoreBreakdown(address subject) external view returns (
+        uint16 daoSetScore,
+        uint16 onChainScore,
+        uint16 finalScore,
+        uint8 daoWeight,
+        uint8 onChainWeight,
+        bool hasVault
+    ) {
+        daoSetScore = _score[subject];
+        if (daoSetScore == 0) {
+            daoSetScore = calculateAutomatedScore(subject);
+        }
+        onChainScore = calculateOnChainScore(subject);
+        finalScore = getScore(subject);
+        daoWeight = daoScoreWeight;
+        onChainWeight = onChainScoreWeight;
+        hasVault = address(vaultHub) != address(0) && vaultHub.vaultOf(subject) != address(0);
+    }
+    
+    /**
+     * @notice Batch query scores for multiple users (gas efficient for UIs)
+     * @param subjects Array of user addresses
+     * @return scores Array of corresponding scores
+     */
+    function getScoresBatch(address[] calldata subjects) external view returns (uint16[] memory scores) {
+        uint256 len = subjects.length;
+        require(len > 0 && len <= 100, "SEER: invalid batch size");
+        
+        scores = new uint16[](len);
+        for (uint256 i = 0; i < len; i++) {
+            scores[i] = getScore(subjects[i]);
+        }
+    }
+    
+    /**
+     * @notice Get trust level classification
+     * @param subject The user to check
+     * @return level Trust level: 0=Low, 1=Medium, 2=High
+     * @return levelName Human-readable level name
+     * @return canVote Whether user can participate in governance
+     * @return canBeMerchant Whether user can be a merchant
+     */
+    function getTrustLevel(address subject) external view returns (
+        uint8 level,
+        string memory levelName,
+        bool canVote,
+        bool canBeMerchant
+    ) {
+        uint16 score = getScore(subject);
+        
+        if (score <= lowTrustThreshold) {
+            level = 0;
+            levelName = "Low Trust";
+        } else if (score >= highTrustThreshold) {
+            level = 2;
+            levelName = "High Trust";
+        } else {
+            level = 1;
+            levelName = "Medium Trust";
+        }
+        
+        canVote = score >= minForGovernance;
+        canBeMerchant = score >= minForMerchant;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                    SCORE DECAY FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @notice Calculate decay-adjusted score for a user
+     * @param subject The user to check
+     * @return adjustedScore Score after applying inactivity decay
+     * @return daysInactive Number of days since last activity
+     * @return decayAmount Amount of decay applied
+     */
+    function getDecayAdjustedScore(address subject) public view returns (
+        uint16 adjustedScore,
+        uint64 daysInactive,
+        uint16 decayAmount
+    ) {
+        uint16 rawScore = getScore(subject);
+        uint64 lastAct = lastActivity[subject];
+        
+        // No activity recorded = no decay (new user)
+        if (lastAct == 0 || !decayEnabled) {
+            return (rawScore, 0, 0);
+        }
+        
+        uint64 elapsed = uint64(block.timestamp) - lastAct;
+        daysInactive = elapsed / 1 days;
+        
+        // No decay if active within grace period
+        if (daysInactive < decayStartDays) {
+            return (rawScore, daysInactive, 0);
+        }
+        
+        // Calculate decay: (daysInactive - decayStartDays) / 30 * decayPerMonth
+        uint64 decayDays = daysInactive - decayStartDays;
+        uint64 decayMonths = decayDays / 30;
+        decayAmount = uint16(decayMonths * decayPerMonth);
+        
+        // Decay toward neutral, not below/above
+        if (rawScore > NEUTRAL) {
+            // High scores decay down toward neutral
+            if (decayAmount > rawScore - NEUTRAL) {
+                adjustedScore = NEUTRAL;
+            } else {
+                adjustedScore = rawScore - decayAmount;
+            }
+        } else if (rawScore < NEUTRAL) {
+            // Low scores decay up toward neutral
+            if (decayAmount > NEUTRAL - rawScore) {
+                adjustedScore = NEUTRAL;
+            } else {
+                adjustedScore = rawScore + decayAmount;
+            }
+        } else {
+            adjustedScore = NEUTRAL;
+        }
+    }
+    
+    /**
+     * @notice Apply decay to a user's stored score (callable by anyone, gas refund opportunity)
+     * @param subject The user to apply decay to
+     */
+    function applyDecay(address subject) external onlyNotPaused {
+        require(decayEnabled, "SEER: decay disabled");
+        
+        uint64 lastAct = lastActivity[subject];
+        require(lastAct > 0, "SEER: no activity to decay");
+        
+        uint64 elapsed = uint64(block.timestamp) - lastAct;
+        uint64 daysInactive = elapsed / 1 days;
+        require(daysInactive >= decayStartDays, "SEER: not yet decayable");
+        
+        (uint16 adjustedScore, , uint16 decayAmount) = getDecayAdjustedScore(subject);
+        
+        if (decayAmount > 0) {
+            uint16 oldScore = _score[subject];
+            _score[subject] = adjustedScore;
+            lastActivity[subject] = uint64(block.timestamp);  // Reset decay timer
+            
+            emit DecayApplied(subject, oldScore, adjustedScore, daysInactive);
+            _logEv(subject, "score_decay_applied", decayAmount, "inactivity");
+        }
+    }
+    
+    /**
+     * @notice Batch apply decay to multiple users (keeper function)
+     * @param subjects Array of users to apply decay to
+     */
+    function applyDecayBatch(address[] calldata subjects) external onlyNotPaused {
+        require(decayEnabled, "SEER: decay disabled");
+        require(subjects.length > 0 && subjects.length <= 50, "SEER: invalid batch");
+        
+        for (uint256 i = 0; i < subjects.length; i++) {
+            address subject = subjects[i];
+            uint64 lastAct = lastActivity[subject];
+            if (lastAct == 0) continue;
+            
+            uint64 elapsed = uint64(block.timestamp) - lastAct;
+            uint64 daysInactive = elapsed / 1 days;
+            if (daysInactive < decayStartDays) continue;
+            
+            (uint16 adjustedScore, , uint16 decayAmount) = getDecayAdjustedScore(subject);
+            
+            if (decayAmount > 0) {
+                uint16 oldScore = _score[subject];
+                _score[subject] = adjustedScore;
+                lastActivity[subject] = uint64(block.timestamp);
+                emit DecayApplied(subject, oldScore, adjustedScore, daysInactive);
+            }
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                    SCORE HISTORY QUERIES
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @notice Get score history for a user
+     * @param subject The user to query
+     * @return count Number of history entries
+     * @return recentChanges Last 10 score changes (or fewer if less history)
+     */
+    function getScoreHistory(address subject) external view returns (
+        uint256 count,
+        ScoreChange[] memory recentChanges
+    ) {
+        ScoreChange[] storage history = scoreHistory[subject];
+        count = history.length;
+        
+        uint256 returnCount = count > 10 ? 10 : count;
+        recentChanges = new ScoreChange[](returnCount);
+        
+        // Return most recent entries
+        for (uint256 i = 0; i < returnCount; i++) {
+            recentChanges[i] = history[count - returnCount + i];
+        }
+    }
+    
+    /**
+     * @notice Check if a specific reason was used in recent score changes
+     * @param subject The user to check
+     * @param reason The reason to search for
+     * @return found Whether the reason was found in recent history
+     * @return timestamp When the reason was last used (0 if not found)
+     */
+    function findReasonInHistory(address subject, string calldata reason) external view returns (
+        bool found,
+        uint64 timestamp
+    ) {
+        bytes32 targetHash = keccak256(bytes(reason));
+        ScoreChange[] storage history = scoreHistory[subject];
+        
+        // Search from most recent
+        for (uint256 i = history.length; i > 0; i--) {
+            if (history[i - 1].reasonHash == targetHash) {
+                return (true, history[i - 1].timestamp);
+            }
+        }
+        return (false, 0);
+    }
+    
+    /**
+     * @notice Get comprehensive user status including decay
+     * @param subject The user to check
+     */
+    function getUserStatus(address subject) external view returns (
+        uint16 currentScore,
+        uint16 decayAdjustedScore,
+        uint64 daysInactive,
+        uint64 lastActivityTime,
+        uint256 historyCount,
+        bool hasPendingDispute,
+        bool isOperator
+    ) {
+        currentScore = getScore(subject);
+        (decayAdjustedScore, daysInactive, ) = getDecayAdjustedScore(subject);
+        lastActivityTime = lastActivity[subject];
+        historyCount = scoreHistory[subject].length;
+        hasPendingDispute = scoreDisputes[subject].timestamp > 0 && !scoreDisputes[subject].resolved;
+        isOperator = operators[subject];
     }
 }
 
@@ -210,7 +957,14 @@ contract ProofScoreBurnRouterPlus {
     uint16 public maxTotalBps    = 1000; // 10.00% ceiling for (burn + reward + treasury)
     address public treasury;             // EcoTreasuryVault later
 
-    modifier onlyDAO() { if (msg.sender != dao) revert TRUST_NotDAO(); _; }
+    modifier onlyDAO() {
+        _checkDAO();
+        _;
+    }
+
+    function _checkDAO() internal view {
+        if (msg.sender != dao) revert TRUST_NotDAO();
+    }
 
     constructor(address _dao, address _seer, address _treasury) {
         if (_dao == address(0)) revert TRUST_Zero();
@@ -270,6 +1024,8 @@ contract ProofScoreBurnRouterPlus {
         uint256 total = burn + rew;
         uint256 treas = total >= maxTotalBps ? 0 : (maxTotalBps - total);
 
-        r = Route(uint16(burn), uint16(rew), uint16(treas));
+        // forge-lint: disable-next-line(unsafe-typecast)
+        // Safe: burn, rew, treas are all <= maxTotalBps (max 1000) which fits in uint16
+        r = Route({burnBps: uint16(burn), rewardBps: uint16(rew), treasuryBps: uint16(treas)});
     }
 }

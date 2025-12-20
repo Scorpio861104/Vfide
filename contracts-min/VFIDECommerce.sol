@@ -1,1 +1,0 @@
-../contracts/VFIDECommerce.sol

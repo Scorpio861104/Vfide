@@ -16,16 +16,7 @@ pragma solidity 0.8.30;
  * (exact ratios configurable by DAO)
  */
 
-interface IERC20_Sanctum {
-    function transfer(address to, uint256 amount) external returns (bool);
-    function transferFrom(address from, address to, uint256 amount) external returns (bool);
-    function balanceOf(address account) external view returns (uint256);
-}
-
-interface IProofLedger_Sanctum {
-    function logSystemEvent(address who, string calldata action, address by) external;
-    function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
-}
+import "./SharedInterfaces.sol";
 
 error SANCT_NotDAO();
 error SANCT_Zero();
@@ -33,29 +24,9 @@ error SANCT_NotApproved();
 error SANCT_AlreadyApproved();
 error SANCT_InsufficientBalance();
 
-abstract contract Ownable {
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    address public owner;
-    constructor() { owner = msg.sender; emit OwnershipTransferred(address(0), msg.sender); }
-    modifier onlyOwner() { require(msg.sender == owner, "not owner"); _; }
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "zero");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
-    }
-}
-
-abstract contract ReentrancyGuard {
-    uint256 private _status = 1;
-    modifier nonReentrant() {
-        require(_status == 1, "reentrancy");
-        _status = 2;
-        _;
-        _status = 1;
-    }
-}
-
 contract SanctumVault is Ownable, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+    
     /// Events
     event DAOSet(address dao);
     event LedgerSet(address ledger);
@@ -70,7 +41,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     /// DAO control (can be DAO contract or multisig)
     address public dao;
-    IProofLedger_Sanctum public ledger;
+    IProofLedger public ledger;
 
     /// Charity registry
     struct CharityInfo {
@@ -100,27 +71,37 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     mapping(uint256 => Disbursement) public disbursements;
 
     /// Governance
-    uint8 public approvalsRequired = 2; // Multi-sig style: require N approvals
+    uint8 public approvalsRequired = 1; // Default to 1 (DAO only)
     mapping(address => bool) public isApprover; // DAO members who can approve
+    mapping(address => uint256) public approverIndex; // M-4 Fix: O(1) removal index
     address[] public approvers;
 
     modifier onlyDAO() {
-        if (msg.sender != dao) revert SANCT_NotDAO();
+        _checkDAO();
         _;
     }
 
+    function _checkDAO() internal view {
+        if (msg.sender != dao) revert SANCT_NotDAO();
+    }
+
     modifier onlyApprover() {
-        require(isApprover[msg.sender] || msg.sender == dao, "not approver");
+        _checkApprover();
         _;
+    }
+
+    function _checkApprover() internal view {
+        require(isApprover[msg.sender] || msg.sender == dao, "not approver");
     }
 
     constructor(address _dao, address _ledger) {
         require(_dao != address(0), "zero dao");
         dao = _dao;
-        ledger = IProofLedger_Sanctum(_ledger);
+        ledger = IProofLedger(_ledger);
         
         // DAO is initial approver
         isApprover[_dao] = true;
+        approverIndex[_dao] = 0; // M-4 Fix: Track index
         approvers.push(_dao);
         
         emit DAOSet(_dao);
@@ -137,7 +118,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     }
 
     function setLedger(address _ledger) external onlyDAO {
-        ledger = IProofLedger_Sanctum(_ledger);
+        ledger = IProofLedger(_ledger);
         emit LedgerSet(_ledger);
         _log("sanctum_ledger_set");
     }
@@ -153,6 +134,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(_approver != address(0), "zero");
         require(!isApprover[_approver], "already approver");
         isApprover[_approver] = true;
+        approverIndex[_approver] = approvers.length; // M-4 Fix: Track index before push
         approvers.push(_approver);
         _log("sanctum_approver_added");
     }
@@ -161,14 +143,18 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(isApprover[_approver], "not approver");
         isApprover[_approver] = false;
         
-        // Remove from array (inefficient, but fine for small lists)
-        for (uint256 i = 0; i < approvers.length; i++) {
-            if (approvers[i] == _approver) {
-                approvers[i] = approvers[approvers.length - 1];
-                approvers.pop();
-                break;
-            }
+        // M-4 Fix: O(1) swap-and-pop with index tracking
+        uint256 idx = approverIndex[_approver];
+        uint256 lastIdx = approvers.length - 1;
+        
+        if (idx != lastIdx) {
+            address lastApprover = approvers[lastIdx];
+            approvers[idx] = lastApprover;
+            approverIndex[lastApprover] = idx;
         }
+        approvers.pop();
+        delete approverIndex[_approver];
+        
         _log("sanctum_approver_removed");
     }
 
@@ -217,14 +203,13 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /**
      * Receive VFIDE or stablecoins into Sanctum
      * Can be called by fee routers, donation campaigns, or direct transfers
+     * H-4 Fix: Use SafeERC20 for non-standard tokens like USDT
      */
     function deposit(address token, uint256 amount, string calldata note) external nonReentrant {
         require(token != address(0) && amount > 0, "invalid deposit");
         
-        require(
-            IERC20_Sanctum(token).transferFrom(msg.sender, address(this), amount),
-            "transfer failed"
-        );
+        // H-4 Fix: Use safeTransferFrom for compatibility with USDT and other non-standard tokens
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         
         emit Deposit(msg.sender, token, amount, note);
         _logEv(msg.sender, "sanctum_deposit", amount, note);
@@ -259,7 +244,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(token != address(0) && amount > 0, "invalid proposal");
         
         // Check balance
-        uint256 balance = IERC20_Sanctum(token).balanceOf(address(this));
+        uint256 balance = IERC20(token).balanceOf(address(this));
         if (balance < amount) revert SANCT_InsufficientBalance();
         
         proposalId = ++disbursementCount;
@@ -307,17 +292,14 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(d.approvalCount >= approvalsRequired, "insufficient approvals");
         
         // Check balance again
-        uint256 balance = IERC20_Sanctum(d.token).balanceOf(address(this));
+        uint256 balance = IERC20(d.token).balanceOf(address(this));
         if (balance < d.amount) revert SANCT_InsufficientBalance();
         
         d.executed = true;
         d.executedAt = uint64(block.timestamp);
         
         // Execute transfer
-        require(
-            IERC20_Sanctum(d.token).transfer(d.charity, d.amount),
-            "transfer failed"
-        );
+        IERC20(d.token).safeTransfer(d.charity, d.amount);
         
         emit DisbursementExecuted(proposalId, d.charity, d.token, d.amount);
         _logEv(d.charity, "disbursement_executed", d.amount, d.campaign);
@@ -371,7 +353,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     }
 
     function getBalance(address token) external view returns (uint256) {
-        return IERC20_Sanctum(token).balanceOf(address(this));
+        return IERC20(token).balanceOf(address(this));
     }
 
     function getCharityInfo(address charity) external view returns (
@@ -398,24 +380,79 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         }
     }
 
-    // ─────────────────────────── Emergency recovery (DAO only)
+    // ─────────────────────────── Emergency recovery (DAO only, with timelock)
+
+    struct EmergencyRecoveryRequest {
+        address token;
+        address to;
+        uint256 amount;
+        string reason;
+        uint256 requestedAt;
+        bool executed;
+        bool cancelled;
+    }
+
+    uint256 public emergencyRecoveryCount;
+    mapping(uint256 => EmergencyRecoveryRequest) public emergencyRecoveries;
+    uint256 public constant EMERGENCY_TIMELOCK = 2 days;
+
+    event EmergencyRecoveryRequested(uint256 indexed id, address token, address to, uint256 amount, string reason);
+    event EmergencyRecoveryCancelled(uint256 indexed id, string reason);
+    event EmergencyRecoveryExecuted(uint256 indexed id, address token, address to, uint256 amount);
 
     /**
-     * Emergency token recovery (only if funds are stuck)
-     * Requires DAO approval and full transparency
+     * Request emergency token recovery (only if funds are stuck)
+     * Requires DAO approval and timelock for transparency
      */
-    function emergencyRecover(
+    function requestEmergencyRecovery(
         address token,
         address to,
         uint256 amount,
         string calldata reason
-    ) external onlyDAO {
-        require(to != address(0), "zero");
-        require(
-            IERC20_Sanctum(token).transfer(to, amount),
-            "transfer failed"
-        );
+    ) external onlyDAO returns (uint256 id) {
+        require(to != address(0), "zero to");
+        require(amount > 0, "zero amount");
         
-        _logEv(to, "emergency_recovery", amount, reason);
+        id = ++emergencyRecoveryCount;
+        emergencyRecoveries[id] = EmergencyRecoveryRequest({
+            token: token,
+            to: to,
+            amount: amount,
+            reason: reason,
+            requestedAt: block.timestamp,
+            executed: false,
+            cancelled: false
+        });
+        
+        emit EmergencyRecoveryRequested(id, token, to, amount, reason);
+    }
+
+    /**
+     * Cancel an emergency recovery request
+     */
+    function cancelEmergencyRecovery(uint256 id, string calldata reason) external onlyDAO {
+        EmergencyRecoveryRequest storage req = emergencyRecoveries[id];
+        require(!req.executed, "already executed");
+        require(!req.cancelled, "already cancelled");
+        
+        req.cancelled = true;
+        emit EmergencyRecoveryCancelled(id, reason);
+    }
+
+    /**
+     * Execute emergency recovery after timelock
+     */
+    function executeEmergencyRecovery(uint256 id) external onlyDAO nonReentrant {
+        EmergencyRecoveryRequest storage req = emergencyRecoveries[id];
+        require(!req.executed, "already executed");
+        require(!req.cancelled, "cancelled");
+        require(block.timestamp >= req.requestedAt + EMERGENCY_TIMELOCK, "timelock not passed");
+        
+        req.executed = true;
+        
+        IERC20(req.token).safeTransfer(req.to, req.amount);
+        
+        _logEv(req.to, "emergency_recovery", req.amount, req.reason);
+        emit EmergencyRecoveryExecuted(id, req.token, req.to, req.amount);
     }
 }

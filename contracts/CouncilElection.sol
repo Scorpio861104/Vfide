@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-interface ISeer_GOV { function getScore(address) external view returns (uint16); function minForGovernance() external view returns (uint16); }
-interface IVaultHub_GOV { function vaultOf(address owner) external view returns (address); }
-interface IProofLedger_GOV2 { function logSystemEvent(address who, string calldata action, address by) external; }
+import "./SharedInterfaces.sol";
 
 error CE_NotDAO();
 error CE_Zero();
@@ -21,19 +19,19 @@ contract CouncilElection {
     event CouncilSet(address[] members, uint64 termEnd);
 
     address public dao;
-    ISeer_GOV public seer;
-    IVaultHub_GOV public vaultHub;
-    IProofLedger_GOV2 public ledger; // optional
+    ISeer public seer;
+    IVaultHub public vaultHub;
+    IProofLedger public ledger; // optional
 
     mapping(address => bool) public isCandidate;
     mapping(address => bool) public isCouncil;
+    address[] public currentCouncil;
     
     // Term limit tracking to prevent entrenchment
     mapping(address => uint8) public consecutiveTermsServed;
     mapping(address => uint64) public lastTermEndDate;
     uint8 public maxConsecutiveTerms = 1; // Max 1 year continuous service before mandatory break
     uint64 public cooldownPeriod = 365 days; // Must wait 1 year before re-eligibility
-    uint16 public minCouncilScoreStrict = 700; // High trust threshold for council (700 = high trust)
 
     uint8  public councilSize = 12;
     uint16 public minCouncilScore;       // default from Seer
@@ -41,76 +39,133 @@ contract CouncilElection {
     uint64 public refreshInterval = 14 days;
     uint64 public termEnd;
 
-    modifier onlyDAO() { if (msg.sender != dao) revert CE_NotDAO(); _; }
+    modifier onlyDAO() {
+        _checkDAO();
+        _;
+    }
+
+    function _checkDAO() internal view {
+        if (msg.sender != dao) revert CE_NotDAO();
+    }
 
     constructor(address _dao, address _seer, address _hub, address _ledger) {
         if (_dao == address(0) || _seer == address(0) || _hub == address(0)) revert CE_Zero();
-        dao=_dao; seer=ISeer_GOV(_seer); vaultHub=IVaultHub_GOV(_hub); ledger=IProofLedger_GOV2(_ledger);
-        minCouncilScore = seer.minForGovernance();
+        dao=_dao; seer=ISeer(_seer); vaultHub=IVaultHub(_hub); ledger=IProofLedger(_ledger);
+        minCouncilScore = 7000; // Council requires ProofScore ≥7000 (70%, blueprint requirement, 0-10000 scale)
         emit ModulesSet(_dao,_seer,_hub,_ledger);
     }
 
     function setModules(address _dao, address _seer, address _hub, address _ledger) external onlyDAO {
         if (_dao == address(0) || _seer == address(0) || _hub == address(0)) revert CE_Zero();
-        dao=_dao; seer=ISeer_GOV(_seer); vaultHub=IVaultHub_GOV(_hub); ledger=IProofLedger_GOV2(_ledger);
+        dao=_dao; seer=ISeer(_seer); vaultHub=IVaultHub(_hub); ledger=IProofLedger(_ledger);
         emit ModulesSet(_dao,_seer,_hub,_ledger); _log("ce_modules_set");
     }
 
     function setParams(uint8 _size, uint16 _minScore, uint64 _term, uint64 _refresh) external onlyDAO {
         if (_size == 0) revert CE_BadSize();
+        // M-11 Fix: Validate minimum score is reasonable (0-10000 scale for 10x precision)
+        require(_minScore >= 5600 && _minScore <= 10000, "CE: invalid min score");
+        require(_term >= 30 days, "CE: term too short");
         councilSize=_size; minCouncilScore=_minScore; termSeconds=_term; refreshInterval=_refresh;
         emit ParamsSet(_size,_minScore,_term,_refresh); _log("ce_params_set");
     }
 
-    function setTermLimits(uint8 _maxConsecutive, uint64 _cooldown, uint16 _minScoreStrict) external onlyDAO {
+    function setTermLimits(uint8 _maxConsecutive, uint64 _cooldown) external onlyDAO {
         require(_maxConsecutive > 0 && _maxConsecutive <= 10, "CE: invalid max terms");
         require(_cooldown >= 90 days, "CE: cooldown too short");
-        require(_minScoreStrict >= 500, "CE: score too low");
         maxConsecutiveTerms = _maxConsecutive;
         cooldownPeriod = _cooldown;
-        minCouncilScoreStrict = _minScoreStrict;
         emit TermLimitsSet(_maxConsecutive, _cooldown);
         _log("ce_term_limits_set");
     }
 
     function register() external {
         if (!_eligible(msg.sender)) revert CE_NotEligible();
-        isCandidate[msg.sender]=true; emit CandidateRegistered(msg.sender); _log("ce_register");
+        isCandidate[msg.sender]=true;
+        
+        // Track in candidate list if not already there
+        if (!inCandidateList[msg.sender]) {
+            candidateList.push(msg.sender);
+            inCandidateList[msg.sender] = true;
+        }
+        
+        emit CandidateRegistered(msg.sender); _log("ce_register");
     }
 
-    function unregister() external { isCandidate[msg.sender]=false; emit CandidateUnregistered(msg.sender); _log("ce_unregister"); }
+    function unregister() external {
+        isCandidate[msg.sender] = false;
+        
+        // H-8 Fix: Remove from candidateList to prevent unbounded growth
+        if (inCandidateList[msg.sender]) {
+            _removeFromCandidateList(msg.sender);
+            inCandidateList[msg.sender] = false;
+        }
+        
+        emit CandidateUnregistered(msg.sender);
+        _log("ce_unregister");
+    }
+    
+    /// @dev H-8 Fix: Internal helper to remove from candidateList array
+    function _removeFromCandidateList(address candidate) internal {
+        uint256 len = candidateList.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (candidateList[i] == candidate) {
+                candidateList[i] = candidateList[len - 1];
+                candidateList.pop();
+                break;
+            }
+        }
+    }
 
     function setCouncil(address[] calldata members) external onlyDAO {
         if (members.length==0 || members.length>councilSize) revert CE_ArrayMismatch();
         
+        // Clear old council state
+        // L-1 Fix: Already caching length for gas optimization
+        uint256 councilLength = currentCouncil.length;
+        for (uint256 i = 0; i < councilLength; ++i) {
+            isCouncil[currentCouncil[i]] = false;
+        }
+        delete currentCouncil;
+
         uint64 newTermEnd = uint64(block.timestamp) + termSeconds;
         
-        // Enforce eligibility and term limits per member
-        for (uint256 i=0; i<members.length; i++) {
+        uint256 membersLength = members.length;
+        for (uint256 i=0; i<membersLength; ++i) {
             address member = members[i];
             if (!_eligible(member)) revert CE_NotEligible();
             
-            // Check term limits to prevent entrenchment
-            if (!_canServe(member)) revert CE_TermLimitReached();
+            // L-11 Fix: Check for duplicate members
+            for (uint256 j = 0; j < i; ++j) {
+                require(members[j] != member, "CE: duplicate member");
+            }
             
-            // Track consecutive terms
-            if (isCouncil[member]) {
-                // Already serving, increment consecutive count
+            // H-11 Fix: Enforce term limit properly
+            // Check if consecutive (heuristic: last term ended recently)
+            bool isConsecutive = lastTermEndDate[member] > 0 && lastTermEndDate[member] >= block.timestamp - refreshInterval;
+            
+            if (isConsecutive) {
+                // H-11 Fix: Check BEFORE incrementing to prevent bypass
+                if (consecutiveTermsServed[member] >= maxConsecutiveTerms) revert CE_TermLimitReached();
                 consecutiveTermsServed[member]++;
             } else {
-                // New or returning member
-                if (lastTermEndDate[member] > 0 && block.timestamp >= lastTermEndDate[member] + cooldownPeriod) {
-                    // Cooldown completed, reset counter
-                    consecutiveTermsServed[member] = 1;
-                } else if (consecutiveTermsServed[member] == 0) {
-                    // First time ever
+                // Check cooldown
+                if (lastTermEndDate[member] > 0 && block.timestamp < lastTermEndDate[member] + cooldownPeriod) {
+                    // Still in cooldown?
+                    if (consecutiveTermsServed[member] >= maxConsecutiveTerms) revert CE_TermLimitReached();
+                    // If not maxed out, they can serve (gap year not required if not maxed)
+                } else {
+                    // Cooldown passed or first time
                     consecutiveTermsServed[member] = 1;
                 }
-                // If they're within cooldown, consecutiveTermsServed stays at previous value
             }
+            
+            // H-11 Fix: Additional safety check
+            if (consecutiveTermsServed[member] > maxConsecutiveTerms) revert CE_TermLimitReached();
             
             lastTermEndDate[member] = newTermEnd;
             isCouncil[member] = true;
+            currentCouncil.push(member);
         }
 
         termEnd = newTermEnd;
@@ -119,42 +174,71 @@ contract CouncilElection {
     }
 
     /// Called periodically off-chain or by DAO keepers to remove members who fell below score.
+    /// M-2 Fix: Also updates currentCouncil array for consistency
     function refreshCouncil(address[] calldata current) external onlyDAO {
-        for (uint256 i=0;i<current.length;i++){
+        uint256 length = current.length;
+        for (uint256 i=0;i<length;++i){
             address m=current[i];
-            if (isCouncil[m] && !_eligible(m)) { isCouncil[m]=false; }
+            if (isCouncil[m] && !_eligible(m)) { 
+                isCouncil[m]=false;
+                // M-2 Fix: Remove from currentCouncil array
+                _removeFromCouncilArray(m);
+            }
         }
         _log("ce_refresh");
     }
+    
+    /// @dev Internal helper to remove member from currentCouncil array
+    function _removeFromCouncilArray(address member) internal {
+        uint256 councilLength = currentCouncil.length;
+        for (uint256 i = 0; i < councilLength; ++i) {
+            if (currentCouncil[i] == member) {
+                currentCouncil[i] = currentCouncil[councilLength - 1];
+                currentCouncil.pop();
+                break;
+            }
+        }
+    }
 
-    /// Remove council member for breaking VFIDE laws or falling below ProofScore 700
+    /// Remove council member for breaking VFIDE laws or falling below ProofScore 7000 (70%)
     /// Can be called immediately without waiting for refresh
     function removeCouncilMember(address member, string calldata reason) external onlyDAO {
         require(isCouncil[member], "CE: not council member");
-
-        // Delegate high trust threshold check to Seer
-        uint16 score = seer.getScore(member);
-        require(score < minCouncilScoreStrict, "CE: member still eligible");
-
+        
+        // DAO can remove anyone for any reason
         isCouncil[member] = false;
-
+        
+        // Remove from currentCouncil array using helper
+        _removeFromCouncilArray(member);
+        
         // Mark their term as ended early (prevents immediate re-election)
         lastTermEndDate[member] = uint64(block.timestamp);
-
+        
         emit CandidateUnregistered(member);
         _log("ce_member_removed");
-
+        
         // Log reason to ProofLedger
         if (address(ledger) != address(0)) {
             try ledger.logSystemEvent(member, reason, msg.sender) {} catch {}
         }
     }
 
+// ─────────────────────────── Helpers for Salary/External
+
+    function getCouncilMember(uint256 index) external view returns (address) {
+        if (index >= currentCouncil.length) return address(0);
+        return currentCouncil[index];
+    }
+
+    function getActualCouncilSize() external view returns (uint256) {
+        return currentCouncil.length;
+    }
+
     function _eligible(address a) internal view returns (bool) {
-        if (a == address(0)) return false;
-        if (vaultHub.vaultOf(a) == address(0)) return false;
-        // Delegate eligibility check to Seer
-        return seer.getScore(a) >= minCouncilScoreStrict;
+        if (a==address(0)) return false;
+        if (vaultHub.vaultOf(a)==address(0)) return false;
+        // Council members must maintain high trust threshold
+        return seer.getScore(a) >= minCouncilScore;
     }
 
     /// Check if member can serve based on term limits (prevents entrenchment)
@@ -183,6 +267,87 @@ contract CouncilElection {
         eligible = _eligible(member) && _canServe(member);
         termsServed = consecutiveTermsServed[member];
         cooldownEnds = lastTermEndDate[member] + cooldownPeriod;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                        CANDIDATE & ELECTION VIEWS
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // Track all candidates who have ever registered
+    address[] private candidateList;
+    mapping(address => bool) private inCandidateList;
+    
+    /**
+     * @notice Get all registered candidates
+     * @return candidates Array of active candidate addresses
+     */
+    function getCandidates() external view returns (address[] memory candidates) {
+        // Count active candidates
+        uint256 count = 0;
+        for (uint256 i = 0; i < candidateList.length; i++) {
+            if (isCandidate[candidateList[i]]) count++;
+        }
+        
+        // Collect active candidates
+        candidates = new address[](count);
+        uint256 idx = 0;
+        for (uint256 i = 0; i < candidateList.length; i++) {
+            if (isCandidate[candidateList[i]]) {
+                candidates[idx++] = candidateList[i];
+            }
+        }
+    }
+    
+    /**
+     * @notice Get comprehensive election status
+     */
+    function getElectionStatus() external view returns (
+        uint256 currentCouncilSize,
+        uint256 maxCouncilSize,
+        uint64 termEndTime,
+        uint256 daysRemaining,
+        uint256 candidateCount,
+        uint256 eligibleCandidateCount
+    ) {
+        currentCouncilSize = currentCouncil.length;
+        maxCouncilSize = councilSize;
+        termEndTime = termEnd;
+        daysRemaining = termEnd > block.timestamp ? (termEnd - block.timestamp) / 1 days : 0;
+        
+        // Count all candidates and eligible ones
+        for (uint256 i = 0; i < candidateList.length; i++) {
+            address c = candidateList[i];
+            if (isCandidate[c]) {
+                candidateCount++;
+                if (_eligible(c) && _canServe(c)) {
+                    eligibleCandidateCount++;
+                }
+            }
+        }
+    }
+    
+    /**
+     * @notice Get current council members
+     */
+    function getCouncilMembers() external view returns (address[] memory) {
+        return currentCouncil;
+    }
+    
+    /**
+     * @notice Check if user is eligible to register as candidate
+     */
+    function canRegister(address user) external view returns (
+        bool eligible,
+        bool hasVault,
+        uint16 currentScore,
+        uint16 requiredScore,
+        bool canServe
+    ) {
+        hasVault = vaultHub.vaultOf(user) != address(0);
+        currentScore = seer.getScore(user);
+        requiredScore = minCouncilScore;
+        canServe = _canServe(user);
+        eligible = hasVault && currentScore >= requiredScore && canServe;
     }
 
     function _log(string memory action) internal {

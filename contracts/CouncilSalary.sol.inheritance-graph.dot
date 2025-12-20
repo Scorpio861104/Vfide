@@ -1,0 +1,8 @@
+digraph "" {
+c332_CouncilSalary[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>CouncilSalary</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    distributeSalary()</TD></TR><TR><TD align="left">    voteToRemove(address)</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    election<font color="blue" POINT-SIZE="10"> (ICouncilElection)</font></TD></TR><TR><TD align="left">    seer<font color="blue" POINT-SIZE="10"> (ISeer)</font></TD></TR><TR><TD align="left">    token<font color="blue" POINT-SIZE="10"> (IERC20)</font></TD></TR><TR><TD align="left">    lastPayTime</TD></TR><TR><TD align="left">    payInterval</TD></TR><TR><TD align="left">    minScoreToPay</TD></TR><TR><TD align="left">    hasVotedToRemove</TD></TR><TR><TD align="left">    removalVotes</TD></TR><TR><TD align="left">    isBlacklisted</TD></TR></TABLE> >];
+
+c810_Ownable[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>Ownable</B></TD></TR><TR><TD align="left"><I>Public Functions:</I></TD></TR><TR><TD align="left">    transferOwnership(address)</TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    onlyOwner()</TD></TR><TR><TD align="left"><I>Public Variables:</I></TD></TR><TR><TD align="left">    owner</TD></TR></TABLE> >];
+
+c833_ReentrancyGuard[shape="box"label=< <TABLE border="0"><TR><TD align="center"><B>ReentrancyGuard</B></TD></TR><TR><TD align="left"><I>Modifiers:</I></TD></TR><TR><TD align="left">    nonReentrant()</TD></TR><TR><TD align="left"><I>Private Variables:</I></TD></TR><TR><TD align="left">    _status</TD></TR></TABLE> >];
+
+}

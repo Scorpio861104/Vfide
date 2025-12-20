@@ -1,5 +1,64 @@
+# Dependencies
 node_modules/
+lib/
+
+# Build artifacts
 cache/
 artifacts/
+out/
+broadcast/
+crytic-export/
+
+# Coverage
 coverage/
+coverage.json
+.gas-snapshot
+
+# Environment
 .env
+.venv/
+slither_env/
+
+# IDE
+.vscode/
+.idea/
+
+# Test outputs
+*.log
+logs/
+test_*.txt
+*_output*.txt
+build_*.txt
+coverage*.txt
+
+# Security tool outputs
+slither*.txt
+slither*.json
+mythril*.txt
+surya*.txt
+echidna*.txt
+medusa*.txt
+medusa-corpus/
+medusa.json
+
+# Misc outputs
+*.txt
+!remappings.txt
+forge-*.txt
+hardhat-*.txt
+compile-*.txt
+security-*.txt
+debug_*.txt
+audit_*.txt
+zksync*.txt
+tool-*.txt
+test_results.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Archive (internal development docs)
+docs-internal/
+docs-archive/
+archive/

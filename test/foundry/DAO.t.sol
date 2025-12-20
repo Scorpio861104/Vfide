@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
-import "../../contracts-prod/DAO.sol";
+import "../../contracts/DAO.sol";
 
 contract DAOFuzzTest is Test {
     DAO dao;
@@ -31,9 +31,8 @@ contract DAOFuzzTest is Test {
         assertTrue(dao.votingPeriod() < 365 days);
     }
     
-    function testFuzz_quorumBounded(uint256) public view {
-        assertTrue(dao.quorum() >= 0);
-        assertTrue(dao.quorum() <= 100);
+    function testFuzz_minVotesBounded(uint256) public view {
+        assertTrue(dao.minVotesRequired() >= 0);
     }
     
     function testFuzz_proposalCountStartsZero(uint256) public view {
@@ -46,34 +45,24 @@ contract DAOFuzzTest is Test {
         assertEq(address(dao.vaultHub()), vaultHub);
     }
     
-    function testFuzz_paramsValidRange(uint16 period, uint8 q) public {
+    function testFuzz_paramsValidRange(uint16 period, uint256 minVotes) public {
         vm.assume(period >= 1 hours && period < 365 days);  // DAO clamps to min 1 hour
-        vm.assume(q <= 100);
+        vm.assume(minVotes > 0 && minVotes < 1_000_000);
         
         vm.prank(admin);
-        dao.setParams(period, q);
+        dao.setParams(period, minVotes);
         
         assertEq(dao.votingPeriod(), period, "Voting period should match");
-        assertEq(dao.quorum(), q, "Quorum should match");
+        assertEq(dao.minVotesRequired(), minVotes, "Min votes should match");
     }
     
-    function testFuzz_cannotSetInvalidQuorum(uint8 q) public {
-        vm.assume(q > 100);
-        
-        vm.prank(admin);
-        dao.setParams(7 days, q);
-        
-        // DAO clamps quorum to 100, doesn't revert
-        assertEq(dao.quorum(), 100, "Quorum should be clamped to 100");
-    }
-    
-    function testFuzz_onlyAdminCanSetParams(address randomCaller, uint16 period, uint8 q) public {
+    function testFuzz_onlyAdminCanSetParams(address randomCaller, uint16 period, uint256 minVotes) public {
         vm.assume(randomCaller != admin);
         vm.assume(period > 0 && period < 365 days);
-        vm.assume(q <= 100);
+        vm.assume(minVotes > 0);
         
         vm.prank(randomCaller);
         vm.expectRevert();
-        dao.setParams(period, q);
+        dao.setParams(period, minVotes);
     }
 }

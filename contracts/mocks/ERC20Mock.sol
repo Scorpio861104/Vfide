@@ -48,7 +48,7 @@ contract ERC20Mock {
         return true;
     }
 
-    function decimals() external view returns (uint8) {
+    function decimals() external view virtual returns (uint8) {
         return _decimals;
     }
 }

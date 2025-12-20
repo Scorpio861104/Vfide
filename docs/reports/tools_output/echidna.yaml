@@ -1,0 +1,29 @@
+# Echidna Configuration for VFIDE Project
+# Property-based fuzzing configuration
+
+# Test execution
+testLimit: 100000
+testMode: assertion
+shrinkLimit: 5000
+timeout: 3600
+
+# Coverage
+coverage: true
+corpusDir: echidna/corpus
+
+# Optimization
+deployer: "0x30000"
+sender: ["0x10000", "0x20000", "0x30000"]
+multi-abi: true
+
+# Network
+# rpcUrl: http://localhost:8545
+# rpcBlock: 0
+
+# Filters
+filterBlacklist: true
+filterFunctions: ["echidna_*"]
+
+# Output
+format: text
+quiet: false

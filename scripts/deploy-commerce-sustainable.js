@@ -106,6 +106,16 @@ async function main() {
     console.log("");
 
     // ========================================================================
+    // 3b. Configure MerchantRegistry Reporter
+    // ========================================================================
+    console.log("3b. Configuring MerchantRegistry Reporter...");
+    // The Escrow contract needs to be a reporter to log refunds/disputes
+    tx = await registry.setReporter(escrowAddress, true);
+    await tx.wait();
+    console.log("   ✅ Escrow contract set as Reporter in Registry");
+    console.log("");
+
+    // ========================================================================
     // 4. Set systemExempt on VFIDEToken (CRITICAL for zero-fee commerce)
     // ========================================================================
     console.log("4. Configuring systemExempt on VFIDEToken...");

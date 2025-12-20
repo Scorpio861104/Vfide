@@ -4,8 +4,15 @@ pragma solidity 0.8.30;
 import "../VFIDEToken.sol";
 
 contract TestVFIDEHarness is VFIDEToken {
-    constructor(address devReserveVestingVault, address _vaultHub, address _ledger, address _treasurySink)
-        VFIDEToken(devReserveVestingVault, _vaultHub, _ledger, _treasurySink)
+    constructor(
+        address devReserveVestingVault,
+        address presaleContract,
+        address treasury,
+        address vaultHub,
+        address ledger,
+        address treasurySink
+    )
+        VFIDEToken(devReserveVestingVault, presaleContract, treasury, vaultHub, ledger, treasurySink)
     {}
 
     // expose _mint for testing purposes

@@ -2,12 +2,12 @@
 pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
-import "../../contracts-prod/VFIDECommerce.sol";
-import "../../contracts-prod/mocks/ERC20Mock.sol";
-import "../../contracts-prod/mocks/VaultHubMock.sol";
-import "../../contracts-prod/mocks/SecurityHubMock.sol";
-import "../../contracts-prod/mocks/LedgerMock.sol";
-import "../../contracts-prod/mocks/SeerMock.sol";
+import "../../contracts/VFIDECommerce.sol";
+import "../../contracts/mocks/ERC20Mock.sol";
+import "../../contracts/mocks/VaultHubMock.sol";
+import "../../contracts/mocks/SecurityHubMock.sol";
+import "../../contracts/mocks/LedgerMock.sol";
+import "../../contracts/mocks/SeerMock.sol";
 
 contract VFIDECommerceTest is Test {
     MerchantRegistry public merchantRegistry;
@@ -27,11 +27,11 @@ contract VFIDECommerceTest is Test {
         token = new ERC20Mock("Mock Token", "MOCK");
         vaultHub = new VaultHubMock();
         securityHub = new SecurityHubMock();
-        ledger = new LedgerMock();
+        ledger = new LedgerMock(false);
         seer = new SeerMock();
         
         // Set minimum score for merchants
-        seer.setMinForMerchant(100);
+        seer.setMin(100);
         seer.setScore(MERCHANT, 500);
         
         // Deploy contracts
@@ -50,7 +50,7 @@ contract VFIDECommerceTest is Test {
             address(vaultHub),
             address(merchantRegistry),
             address(securityHub),
-            address(ledger)
+            address(seer)
         );
         
         // Setup vaults
@@ -115,11 +115,21 @@ contract VFIDECommerceTest is Test {
         vm.prank(BUYER);
         uint256 id = escrow.open(MERCHANT, amount, bytes32(0));
         
-        (,,,,,CommerceEscrow.State state,) = escrow.escrows(id);
+        CommerceEscrow.State state;
+        (,,,,,state,) = escrow.escrows(id);
         assertEq(uint8(state), uint8(CommerceEscrow.State.OPEN), "Should be OPEN");
         
         // Fund escrow
-        token.mint(address(escrow), amount);
+        // Mint to buyer vault (mock vault address)
+        address buyerVault = vaultHub.vaultOf(BUYER);
+        token.mint(buyerVault, amount);
+        
+        // Approve escrow to spend from buyer vault
+        vm.prank(buyerVault);
+        token.approve(address(escrow), amount);
+        
+        // Call fund
+        vm.prank(BUYER);
         escrow.markFunded(id);
         
         (,,,,,state,) = escrow.escrows(id);
@@ -137,7 +147,12 @@ contract VFIDECommerceTest is Test {
         vm.prank(BUYER);
         uint256 id = escrow.open(MERCHANT, amount, bytes32(0));
         
-        token.mint(address(escrow), amount);
+        // Fund escrow
+        address buyerVault = vaultHub.vaultOf(BUYER);
+        token.mint(buyerVault, amount);
+        vm.prank(buyerVault);
+        token.approve(address(escrow), amount);
+        vm.prank(BUYER);
         escrow.markFunded(id);
         
         // Release
@@ -162,11 +177,16 @@ contract VFIDECommerceTest is Test {
         vm.prank(BUYER);
         uint256 id = escrow.open(MERCHANT, amount, bytes32(0));
         
-        token.mint(address(escrow), amount);
+        // Fund escrow
+        address buyerVault = vaultHub.vaultOf(BUYER);
+        token.mint(buyerVault, amount);
+        vm.prank(buyerVault);
+        token.approve(address(escrow), amount);
+        vm.prank(BUYER);
         escrow.markFunded(id);
         
         // Refund
-        address buyerVault = vaultHub.vaultOf(BUYER);
+        // address buyerVault = vaultHub.vaultOf(BUYER); // Already defined above
         uint256 balBefore = token.balanceOf(buyerVault);
         
         vm.prank(MERCHANT);
@@ -187,7 +207,12 @@ contract VFIDECommerceTest is Test {
         vm.prank(BUYER);
         uint256 id = escrow.open(MERCHANT, amount, bytes32(0));
         
-        token.mint(address(escrow), amount);
+        // Fund escrow
+        address buyerVault = vaultHub.vaultOf(BUYER);
+        token.mint(buyerVault, amount);
+        vm.prank(buyerVault);
+        token.approve(address(escrow), amount);
+        vm.prank(BUYER);
         escrow.markFunded(id);
         
         // Dispute
@@ -209,7 +234,12 @@ contract VFIDECommerceTest is Test {
         vm.prank(BUYER);
         uint256 id = escrow.open(MERCHANT, amount, bytes32(0));
         
-        token.mint(address(escrow), amount);
+        // Fund escrow
+        address buyerVault = vaultHub.vaultOf(BUYER);
+        token.mint(buyerVault, amount);
+        vm.prank(buyerVault);
+        token.approve(address(escrow), amount);
+        vm.prank(BUYER);
         escrow.markFunded(id);
         
         vm.prank(BUYER);
@@ -254,4 +284,17 @@ contract VFIDECommerceTest is Test {
             }
         }
     }
+    
+    // ============ NEW FEATURE TESTS ============
+    
+    // NOTE: The following features are not implemented in the current CommerceEscrow:
+    // - Cancel functionality
+    // - Auto-release after delivery window
+    // - Partial resolution
+    // - Dispute window expiry
+    // - Custom delivery windows
+    // - Payment channels
+    //
+    // Current escrow states: NONE -> OPEN -> FUNDED -> RELEASED/REFUNDED/DISPUTED -> RESOLVED
+    // Future iterations may add these features.
 }

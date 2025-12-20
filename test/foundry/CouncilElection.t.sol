@@ -2,10 +2,10 @@
 pragma solidity 0.8.30;
 
 import "forge-std/Test.sol";
-import "../../contracts-prod/CouncilElection.sol";
-import "../../contracts-prod/mocks/SeerMock.sol";
-import "../../contracts-prod/mocks/VaultHubMock.sol";
-import "../../contracts-prod/mocks/LedgerMock.sol";
+import "../../contracts/CouncilElection.sol";
+import "../../contracts/mocks/SeerMock.sol";
+import "../../contracts/mocks/VaultHubMock.sol";
+import "../../contracts/mocks/LedgerMock.sol";
 
 contract CouncilElectionTest is Test {
     CouncilElection public election;
@@ -20,9 +20,9 @@ contract CouncilElectionTest is Test {
     function setUp() public {
         seer = new SeerMock();
         vaultHub = new VaultHubMock();
-        ledger = new LedgerMock();
+        ledger = new LedgerMock(false);
         
-        seer.setMinForGovernance(100);
+        seer.setMin(100);
         
         election = new CouncilElection(DAO, address(seer), address(vaultHub), address(ledger));
     }
@@ -33,9 +33,10 @@ contract CouncilElectionTest is Test {
         vaultHub.ensureVault(USER1); // User needs a vault to be eligible
         
         uint16 minScore = election.minCouncilScore();
+        uint16 effectiveScore = score == 0 ? 500 : score;
         
         vm.prank(USER1);
-        if (score < minScore) {
+        if (effectiveScore < minScore) {
             vm.expectRevert(CE_NotEligible.selector);
         }
         
@@ -47,15 +48,16 @@ contract CouncilElectionTest is Test {
         vm.assume(size > 0 && size <= 50);
         
         vm.prank(DAO);
-        election.setParams(size, 100, 180 days, 14 days);
+        election.setParams(size, 5600, 180 days, 14 days); // minScore must be >= 5600
         
         assertEq(election.councilSize(), size, "Council size not set");
         
         // Try to set council with more members than size
         address[] memory tooMany = new address[](size + 1);
         for (uint256 i = 0; i < size + 1; i++) {
+            // forge-lint: disable-next-line(unsafe-typecast)
             tooMany[i] = address(uint160(100 + i));
-            seer.setScore(tooMany[i], 150);
+            seer.setScore(tooMany[i], 7000); // Must be >= minCouncilScore (5600)
         }
         
         vm.prank(DAO);
@@ -65,8 +67,9 @@ contract CouncilElectionTest is Test {
     
     /// @notice Fuzz test: Min score requirement is enforced
     function testFuzz_MinScoreEnforced(uint16 minScore, uint16 userScore) public {
-        vm.assume(minScore > 0 && minScore < 1000);
-        vm.assume(userScore < 1000);
+        // minScore must be in valid range (5600-10000) per contract requirement
+        vm.assume(minScore >= 5600 && minScore <= 10000);
+        vm.assume(userScore <= 10000);
         
         vm.prank(DAO);
         election.setParams(12, minScore, 180 days, 14 days);
@@ -74,9 +77,11 @@ contract CouncilElectionTest is Test {
         seer.setScore(USER1, userScore);
         vaultHub.ensureVault(USER1); // User needs a vault to be eligible
         
+        uint16 effectiveScore = userScore == 0 ? 500 : userScore;
+        
         vm.prank(USER1);
         
-        if (userScore < minScore) {
+        if (effectiveScore < minScore) {
             vm.expectRevert(CE_NotEligible.selector);
         }
         
@@ -85,15 +90,16 @@ contract CouncilElectionTest is Test {
     
     /// @notice Fuzz test: Term duration is set correctly
     function testFuzz_TermDuration(uint64 termSeconds) public {
-        vm.assume(termSeconds > 0 && termSeconds < 365 days * 2);
+        // Term must be >= 30 days per contract requirement
+        vm.assume(termSeconds >= 30 days && termSeconds < 365 days * 2);
         
         vm.prank(DAO);
-        election.setParams(12, 100, termSeconds, 14 days);
+        election.setParams(12, 5600, termSeconds, 14 days); // minScore must be >= 5600
         
-        // Setup eligible members
+        // Setup eligible members with scores >= new minCouncilScore (5600)
         address[] memory members = new address[](1);
         members[0] = USER1;
-        seer.setScore(USER1, 150);
+        seer.setScore(USER1, 7000); // Must be >= minCouncilScore
         vaultHub.ensureVault(USER1);
         
         vm.prank(DAO);
@@ -105,7 +111,8 @@ contract CouncilElectionTest is Test {
     
     /// @notice Fuzz test: Candidates can unregister
     function testFuzz_CandidateUnregister(uint16 score) public {
-        vm.assume(score >= 100);
+        // Default minCouncilScore is 7000, so need >= 7000 to be eligible
+        vm.assume(score >= 7000 && score <= 10000);
         
         seer.setScore(USER1, score);
         vaultHub.ensureVault(USER1);
@@ -126,8 +133,9 @@ contract CouncilElectionTest is Test {
         
         address[] memory members = new address[](numMembers);
         for (uint256 i = 0; i < numMembers; i++) {
+            // forge-lint: disable-next-line(unsafe-typecast)
             members[i] = address(uint160(100 + i));
-            seer.setScore(members[i], 150);
+            seer.setScore(members[i], 7500); // Must be >= 7000 (minCouncilScore)
             vaultHub.ensureVault(members[i]);
         }
         
@@ -142,10 +150,11 @@ contract CouncilElectionTest is Test {
     
     /// @notice Fuzz test: Refresh removes ineligible members
     function testFuzz_RefreshRemovesIneligible(uint16 newScore) public {
-        vm.assume(newScore < 100); // Below threshold
+        // Default minCouncilScore is 7000, below threshold means < 7000
+        vm.assume(newScore >= 1 && newScore < 7000); // Below threshold, but > 0 (which maps to 5000)
         
-        // Add member with good score
-        seer.setScore(USER1, 150);
+        // Add member with good score (>= 7000)
+        seer.setScore(USER1, 7500);
         vaultHub.ensureVault(USER1);
         
         address[] memory members = new address[](1);
@@ -193,8 +202,9 @@ contract CouncilElectionTest is Test {
         vm.assume(numCandidates > 0 && numCandidates <= 50);
         
         for (uint256 i = 0; i < numCandidates; i++) {
+            // forge-lint: disable-next-line(unsafe-typecast)
             address candidate = address(uint160(100 + i));
-            seer.setScore(candidate, 150);
+            seer.setScore(candidate, 7500); // Must be >= minCouncilScore (7000)
             vaultHub.ensureVault(candidate);
             
             vm.prank(candidate);
@@ -209,7 +219,7 @@ contract CouncilElectionTest is Test {
         vm.assume(refreshInterval > 0 && refreshInterval < 365 days);
         
         vm.prank(DAO);
-        election.setParams(12, 100, 180 days, refreshInterval);
+        election.setParams(12, 5600, 180 days, refreshInterval); // minScore must be >= 5600
         
         assertEq(election.refreshInterval(), refreshInterval, "Refresh interval not set");
     }
