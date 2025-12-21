@@ -1,212 +1,175 @@
-# VFIDE — Trust-Based Commerce Protocol
+# VFIDE — The Future of Trust-Based Commerce
 
 <p align="center">
   <img src="marketing/logo-placeholder.png" alt="VFIDE Logo" width="200"/>
 </p>
 
 <p align="center">
-  <strong>Proof-of-Trust Commerce for Web3</strong>
+  <strong>🛡️ Where Your Reputation Becomes Your Greatest Asset</strong>
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#documentation">Documentation</a> •
-  <a href="#security">Security</a>
+  <a href="https://vfide.vercel.app">Launch App</a> •
+  <a href="#how-it-works">How It Works</a> •
+  <a href="#why-vfide">Why VFIDE</a> •
+  <a href="#token">Token</a> •
+  <a href="WHITEPAPER.md">Whitepaper</a>
 </p>
 
 ---
 
-## Overview
+## 🌟 What is VFIDE?
 
-VFIDE is a trust-based commerce protocol built on zkSync Era. Unlike traditional crypto projects that rely on anonymous transactions, VFIDE introduces **ProofScore** — a reputation system that rewards honest behavior and enables trustworthy commerce.
+VFIDE is revolutionizing commerce by making **trust the currency of the future**. Built on zkSync Era, VFIDE creates a world where honest behavior is rewarded, scammers are excluded, and everyone benefits from a more trustworthy marketplace.
 
-**Core Philosophy:** *Trust is earned through actions, not purchased with wealth.*
+> *"In a world of anonymous transactions, VFIDE proves that you can be trusted."*
 
-## Features
+## 🎯 How It Works
 
-### 🎯 ProofScore System
-- Dynamic reputation score (0-10,000) calculated from on-chain behavior
-- Higher scores unlock benefits: lower fees, faster settlements, governance power
-- Decay mechanism ensures continuous positive behavior
-- Badge system for achievements and milestones
+### Your ProofScore™
 
-### 🛒 Commerce & Escrow
-- Trustless merchant-to-customer transactions
-- Score-based escrow with adjustable release windows
-- Dispute resolution with DAO mediation
-- Multi-currency support (VFIDE + stablecoins)
+Every VFIDE user has a **ProofScore** — a dynamic reputation score from 0 to 10,000 that reflects your on-chain behavior:
 
-### 🗳️ Governance
-- Score-weighted voting (more trust = more influence)
-- Council elections with term limits
-- Timelocked treasury operations
-- Governance fatigue prevention
+| Score Range | Trust Level | Benefits |
+|-------------|-------------|----------|
+| 800+ | **Verified** | Access to marketplace |
+| 600+ | **Trusted** | Become a merchant |
+| 500+ | **Guardian** | Earn by protecting others |
+| 700+ | **Voter** | Participate in governance |
 
-### 🔐 Security
-- User-controlled vaults with guardian recovery
-- Emergency controls and circuit breakers
-- Multi-sig treasury operations
-- Comprehensive audit coverage
+**Your score increases when you:**
+- ✅ Complete successful transactions
+- ✅ Hold and stake VFIDE tokens
+- ✅ Participate in governance
+- ✅ Help others as a Guardian or Mentor
 
-## Architecture
+**Your score decreases from:**
+- ❌ Failed transactions or disputes
+- ❌ Inactivity
+- ❌ Community reports
+
+## 💡 Why VFIDE?
+
+### For Buyers
+- **Protected Purchases** — Escrow holds funds until you receive your goods
+- **Trust Indicators** — See merchant reputation before you buy
+- **Dispute Resolution** — Community-backed mediation if issues arise
+- **Fee Discounts** — Higher scores mean lower transaction fees
+
+### For Merchants
+- **Lower Fees** — As low as 0.5% for highly trusted merchants (vs 3-5% traditional)
+- **Faster Settlements** — Build trust, get paid faster
+- **No Chargebacks** — Blockchain-based proof of delivery
+- **Global Reach** — Accept payments from anywhere
+
+### For Investors
+- **Deflationary Token** — 35% of all fees are burned forever
+- **Staking Rewards** — Earn while helping secure the network
+- **Governance Rights** — Shape the future of the protocol
+- **Real Utility** — Token is required for all platform activity
+
+## 🪙 VFIDE Token
+
+| Metric | Value |
+|--------|-------|
+| **Total Supply** | 1,000,000,000 VFIDE |
+| **Burn Rate** | 35% of all transaction fees |
+| **Chain** | zkSync Era |
+| **Standard** | ERC-20 |
+
+### Token Utility
+- 💳 **Payments** — Primary currency for all transactions
+- 🔒 **Staking** — Lock tokens to boost your ProofScore
+- 🗳️ **Governance** — Vote on protocol upgrades and treasury
+- ��️ **Guardian Bonds** — Stake to become a vault guardian
+
+### Fee Distribution
+Every transaction fee is split:
+- **35%** → Burned (reduces supply forever)
+- **25%** → Sanctum Vault (community treasury)
+- **20%** → Merchant Rebates (rewards good merchants)
+- **10%** → Guardians (protectors earn rewards)
+- **10%** → Protocol Development
+
+## 🏛️ Ecosystem
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     VFIDE ECOSYSTEM                         │
+│                                                             │
+│   👤 USERS          🏪 MERCHANTS        🛡️ GUARDIANS        │
+│   • Personal Vault  • Accept Payments   • Protect Vaults   │
+│   • ProofScore      • Lower Fees        • Earn Rewards     │
+│   • Staking         • Fast Settlement   • Recovery Help    │
+│                                                             │
 ├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │  VFIDEToken │  │    Seer     │  │  VaultHub   │         │
-│  │  (ERC-20)   │  │ (ProofScore)│  │  (Wallets)  │         │
-│  └─────────────┘  └─────────────┘  └─────────────┘         │
-│         │                │                │                 │
-│  ┌──────┴────────────────┴────────────────┴──────┐         │
-│  │              ProofScoreBurnRouter             │         │
-│  │         (Fee Distribution & Burns)            │         │
-│  └───────────────────────────────────────────────┘         │
-│         │                │                │                 │
-│  ┌──────┴──────┐  ┌──────┴──────┐  ┌──────┴──────┐         │
-│  │  Commerce   │  │     DAO     │  │   Vaults    │         │
-│  │   Escrow    │  │  Governance │  │  (Treasury) │         │
-│  └─────────────┘  └─────────────┘  └─────────────┘         │
+│                                                             │
+│   🛒 COMMERCE       🗳️ GOVERNANCE       💰 TREASURY         │
+│   • Escrow System   • DAO Voting        • Fee Collection   │
+│   • Dispute Res.    • Council Elections • Fund Allocation  │
+│   • Multi-Currency  • Proposals         • Token Burns      │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Getting Started
+## 🚀 Get Started
 
-### Prerequisites
-- Node.js 18+
-- Git
-- Foundry (for contract development)
+1. **Connect Wallet** → Visit [vfide.vercel.app](https://vfide.vercel.app)
+2. **Create Vault** → Set up your secure personal vault
+3. **Build Trust** → Complete actions to increase your ProofScore
+4. **Participate** → Buy, sell, stake, or become a Guardian
 
-### Installation
+## 📊 Trust Tiers & Benefits
 
-```bash
-# Clone the repository
-git clone https://github.com/Scorpio861104/Vfide.git
-cd Vfide
+| Tier | Score | Transaction Fee | Governance | Special Access |
+|------|-------|-----------------|------------|----------------|
+| Bronze | 0-399 | 2.5% | ❌ | Basic features |
+| Silver | 400-599 | 2.0% | ❌ | Marketplace access |
+| Gold | 600-799 | 1.5% | ✅ | Merchant eligibility |
+| Platinum | 800-899 | 1.0% | ✅ | Priority support |
+| Diamond | 900+ | 0.5% | ✅ | Council eligibility |
 
-# Install dependencies
-npm install
+## 🔐 Security First
 
-# Install Foundry dependencies
-forge install
-```
+- **Non-Custodial** — You control your keys, always
+- **Guardian Recovery** — Trusted contacts help you recover access
+- **Audited Contracts** — Comprehensive security testing
+- **Emergency Controls** — Protocol-level circuit breakers
+- **zkSync Native** — Inherits Ethereum security
 
-### Build
+## 🗓️ Roadmap
 
-```bash
-# Compile contracts
-forge build
+- [x] **Q4 2024** — Core contracts deployed to testnet
+- [x] **Q1 2025** — Frontend launch & community beta
+- [ ] **Q2 2025** — Mainnet launch on zkSync Era
+- [ ] **Q3 2025** — Mobile app & merchant onboarding
+- [ ] **Q4 2025** — Cross-chain expansion
 
-# Run tests
-forge test
+## 🔗 Links
 
-# Run with verbose output
-forge test -vvv
-```
+| Platform | Link |
+|----------|------|
+| 🌐 **Website** | [vfide.vercel.app](https://vfide.vercel.app) |
+| 📖 **Whitepaper** | [Read Here](WHITEPAPER.md) |
+| 🐦 **Twitter** | [@vfide_official](https://twitter.com/vfide_official) |
+| 💬 **Discord** | [Join Community](https://discord.gg/vfide) |
+| 📧 **Contact** | hello@vfide.io |
 
-### Development
+## 📄 Documentation
 
-```bash
-# Start local development node
-npx hardhat node
-
-# Deploy to local network
-npx hardhat run scripts/deploy.js --network localhost
-```
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [WHITEPAPER.md](WHITEPAPER.md) | Full technical whitepaper |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture details |
-| [CONTRACTS.md](CONTRACTS.md) | Smart contract documentation |
-| [ECONOMICS.md](ECONOMICS.md) | Tokenomics and fee structure |
-| [USER-GUIDE.md](USER-GUIDE.md) | End-user documentation |
-| [DEVELOPER-GUIDE.md](DEVELOPER-GUIDE.md) | Developer integration guide |
-| [SECURITY.md](SECURITY.md) | Security model and practices |
-
-## Smart Contracts
-
-### Core Contracts
-| Contract | Description |
-|----------|-------------|
-| `VFIDEToken` | ERC-20 token with burn mechanics |
-| `Seer` | ProofScore calculation engine |
-| `VaultHub` | User vault management |
-| `ProofScoreBurnRouter` | Fee distribution and burns |
-
-### Commerce Contracts
-| Contract | Description |
-|----------|-------------|
-| `VFIDECommerce` | Escrow and settlement |
-| `MerchantPortal` | Merchant registration and payments |
-| `EscrowManager` | Dispute resolution |
-
-### Governance Contracts
-| Contract | Description |
-|----------|-------------|
-| `DAO` | Proposal and voting |
-| `DAOTimelock` | Execution delays |
-| `CouncilElection` | Council management |
-
-## Security
-
-VFIDE takes security seriously:
-
-- ✅ **Comprehensive testing**: 90%+ code coverage
-- ✅ **Fuzz testing**: Foundry invariant tests
-- ✅ **Static analysis**: Slither, Mythril
-- ✅ **Reentrancy protection**: ReentrancyGuard on all state-changing functions
-- ✅ **Access control**: Role-based permissions
-- ✅ **Timelocks**: All sensitive operations have delays
-
-### Reporting Vulnerabilities
-
-Please report security vulnerabilities to: security@vfide.io
-
-See [SECURITY.md](SECURITY.md) for our full security policy.
-
-## Deployment
-
-### zkSync Era (Mainnet)
-```bash
-# Set environment variables
-cp .env.example .env
-# Edit .env with your private key
-
-# Deploy to zkSync Era
-npm run deploy:zksync
-```
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
-
-## Contributing
-
-We welcome contributions! Please see our contributing guidelines before submitting PRs.
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Links
-
-- 🌐 Website: [vfide.io](https://vfide.io)
-- 📖 Docs: [docs.vfide.io](https://docs.vfide.io)
-- 🐦 Twitter: [@vfide_official](https://twitter.com/vfide_official)
-- 💬 Discord: [discord.gg/vfide](https://discord.gg/vfide)
+- [Whitepaper](WHITEPAPER.md) — Full technical details
+- [Economics](ECONOMICS.md) — Tokenomics deep dive
+- [User Guide](USER-GUIDE.md) — How to use the platform
 
 ---
 
 <p align="center">
-  Built with ❤️ for the future of trust-based commerce
+  <strong>VFIDE — Trust Rewarded. Commerce Revolutionized.</strong>
+</p>
+
+<p align="center">
+  Built with ❤️ for the future of decentralized commerce
+</p>
+
+<p align="center">
+  <sub>© 2025 VFIDE Protocol. All rights reserved.</sub>
 </p>
