@@ -1,0 +1,94 @@
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+/**
+ * Merge Tailwind CSS classes
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+/**
+ * Format a blockchain address for display
+ */
+export function formatAddress(address: string, chars = 4): string {
+  if (!address) return ''
+  return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`
+}
+
+/**
+ * Format a large number with commas
+ */
+export function formatNumber(num: number | bigint): string {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+/**
+ * Format token amount from wei to display value
+ */
+export function formatTokenAmount(
+  amount: bigint | undefined,
+  decimals = 18,
+  displayDecimals = 2
+): string {
+  if (!amount) return '0'
+  const value = Number(amount) / Math.pow(10, decimals)
+  return value.toFixed(displayDecimals)
+}
+
+/**
+ * Parse display value to wei
+ */
+export function parseTokenAmount(amount: string, decimals = 18): bigint {
+  const [whole, fraction = ''] = amount.split('.')
+  const paddedFraction = fraction.padEnd(decimals, '0').slice(0, decimals)
+  return BigInt(whole + paddedFraction)
+}
+
+/**
+ * Format USD amount
+ */
+export function formatUSD(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount)
+}
+
+/**
+ * Get ProofScore tier color
+ */
+export function getScoreTierColor(score: number): string {
+  if (score >= 900) return '#50C878' // VERIFIED - Green
+  if (score >= 700) return '#00F0FF' // TRUSTED - Cyan
+  if (score >= 400) return '#FFA500' // ESTABLISHED - Orange
+  if (score >= 200) return '#FFD700' // PROBATIONARY - Gold
+  return '#A0A0A5' // UNRANKED - Grey
+}
+
+/**
+ * Truncate text with ellipsis
+ */
+export function truncate(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength) + '...'
+}
+
+/**
+ * Calculate time until a future date
+ */
+export function timeUntil(futureDate: Date): string {
+  const now = new Date()
+  const diff = futureDate.getTime() - now.getTime()
+  
+  if (diff < 0) return 'Expired'
+  
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  
+  if (days > 0) return `${days} day${days > 1 ? 's' : ''}`
+  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`
+  
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+  return `${minutes} min${minutes > 1 ? 's' : ''}`
+}

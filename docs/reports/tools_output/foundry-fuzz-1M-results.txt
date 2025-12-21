@@ -1,0 +1,13 @@
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+Compiler run failed:
+Error (7920): Identifier not found or not unique.
+ --> test/foundry/VaultInfrastructure.t.sol:9:5:
+  |
+9 |     VaultInfrastructure.Vault vaultImpl;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Error: Compilation failed

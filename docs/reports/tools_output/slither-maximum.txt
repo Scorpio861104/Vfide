@@ -1,0 +1,1016 @@
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/ProofScoreBurnRouter.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+Compilation warnings/errors on contracts/ProofScoreBurnRouter.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/ProofScoreBurnRouter.sol:109:9:
+    |
+109 |         address to,
+    |         ^^^^^^^^^^
+
+
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/Seer.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/VFIDESecurity.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/DAOTimelock.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/SystemHandover.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/GovernanceHooks.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+Compilation warnings/errors on contracts/GovernanceHooks.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:31:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                               ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:43:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                           ^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:59:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                                           ^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:25:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                         ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:37:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                     ^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:52:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                                    ^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:24:26:
+   |
+24 |     function onFinalized(uint256 id, bool passed) external {
+   |                          ^^^^^^^^^^
+
+
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/VFIDEToken.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/MerchantPortal.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/Vault.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+Compilation warnings/errors on contracts/Vault.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/Vault.sol:159:26:
+    |
+159 |     function verifyProof(bytes memory _proof) internal pure returns (bool) {
+    |                          ^^^^^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/Vault.sol:194:32:
+    |
+194 |     function verifyDAOApproval(bytes memory _daoApproval) internal pure returns (bool) {
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/VFIDEStaking.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+Compilation warnings/errors on contracts/VFIDEStaking.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEStaking.sol:371:9:
+    |
+371 |         address vault,
+    |         ^^^^^^^^^^^^^
+
+Warning: Function state mutability can be restricted to pure
+   --> contracts/VFIDEStaking.sol:400:5:
+    |
+400 |     function _getVaultOwner(address vault) internal view returns (address) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/VFIDETrust.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/VFIDEPresale.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/DevReserveVestingVault.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/VFIDECommerce.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+Compilation warnings/errors on contracts/VFIDECommerce.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDECommerce.sol:211:34:
+    |
+211 |     function dispute(uint256 id, string calldata reason) external {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^
+
+
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/EmergencyControl.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/DAO.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/CouncilElection.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/SanctumVault.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/VaultInfrastructure.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/ProofLedger.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+'forge config --json' running
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/VFIDEFinance.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+Compilation warnings/errors on contracts/VFIDEFinance.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:190:87:
+    |
+190 |  ... s token, bool forceDecimalsReturn, uint8 forcedVal, uint256 amount, address to) exter ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:216:84:
+    |
+216 |  ... s(address token, bool forceReturn, uint8 forcedVal, uint256 amount, address to, bool  ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:281:67:
+    |
+281 |  ... ed_and_tokenNonZero(address token, address to, uint256 amount) external view ret ...
+    |                                         ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:281:79:
+    |
+281 |  ... NonZero(address token, address to, uint256 amount) external view returns (bool allow ...
+    |                                         ^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:316:107:
+    |
+316 |  ... ress to, bool forceDecimalsReturn, uint8 forcedVal, bool forceDepositInsuff, bool for ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:493:38:
+    |
+493 |     function TEST_if_send_zero_guard(address token, address to, uint256 amount) external view returns (bool) {
+    |                                      ^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:516:40:
+    |
+516 |     function TEST_if_to_or_amount_zero(address token, address to, uint256 amount) external pure returns (bool) {
+    |                                        ^^^^^^^^^^^^^
+
+Warning: Function state mutability can be restricted to pure
+   --> contracts/VFIDEFinance.sol:298:5:
+    |
+298 |     function TEST_if_treasury_force_flags(bool depositInsuff, bool sendInsuff) external view returns (bool, bool) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: Function state mutability can be restricted to pure
+   --> contracts/VFIDEFinance.sol:493:5:
+    |
+493 |     function TEST_if_send_zero_guard(address token, address to, uint256 amount) external view returns (bool) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+ProofScoreBurnRouter.previewFees(address,uint256) (contracts/ProofScoreBurnRouter.sol#157-167) ignores return value by (burnAmount,sanctumAmount,None,None) = this.computeFees(user,address(0),amount) (contracts/ProofScoreBurnRouter.sol#165)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+ProofScoreBurnRouter.constructor(address,address,address)._sanctumSink (contracts/ProofScoreBurnRouter.sol#56) lacks a zero-check on :
+		- sanctumSink = _sanctumSink (contracts/ProofScoreBurnRouter.sol#59)
+ProofScoreBurnRouter.constructor(address,address,address)._burnSink (contracts/ProofScoreBurnRouter.sol#56) lacks a zero-check on :
+		- burnSink = _burnSink (contracts/ProofScoreBurnRouter.sol#60)
+ProofScoreBurnRouter.setModules(address,address,address)._sanctumSink (contracts/ProofScoreBurnRouter.sol#66) lacks a zero-check on :
+		- sanctumSink = _sanctumSink (contracts/ProofScoreBurnRouter.sol#69)
+ProofScoreBurnRouter.setModules(address,address,address)._burnSink (contracts/ProofScoreBurnRouter.sol#66) lacks a zero-check on :
+		- burnSink = _burnSink (contracts/ProofScoreBurnRouter.sol#70)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Seer.adjustScoreWithCooldown(address,uint16,bool,string) (contracts/Seer.sol#152-155):
+	External calls:
+	- adjustScore(user,delta,increase,reason) (contracts/Seer.sol#153)
+		- ledger.logEvent(who,action,amount,note) (contracts/Seer.sol#242)
+	State variables written after the call(s):
+	- lastScoreAdjustment[user] = uint64(block.timestamp) (contracts/Seer.sol#154)
+	Seer.lastScoreAdjustment (contracts/Seer.sol#69) can be used in cross function reentrancies:
+	- Seer.adjustScoreWithCooldown(address,uint16,bool,string) (contracts/Seer.sol#152-155)
+	- Seer.cooldownCheck(address) (contracts/Seer.sol#77-80)
+	- Seer.lastScoreAdjustment (contracts/Seer.sol#69)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Seer.setModules(address,address,address,address)._dao (contracts/Seer.sol#91) lacks a zero-check on :
+		- dao = _dao (contracts/Seer.sol#92)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+PanicGuard.isQuarantined(address) (contracts/VFIDESecurity.sol#280-283) uses timestamp for comparisons
+	Dangerous comparisons:
+	- untilTs != 0 && untilTs > block.timestamp (contracts/VFIDESecurity.sol#282)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Reentrancy in DAOTimelock.execute(bytes32) (contracts/DAOTimelock.sol#48-64):
+	External calls:
+	- (ok,r) = op.target.call{value: op.value}(op.data) (contracts/DAOTimelock.sol#60)
+	Event emitted after the call(s):
+	- Executed(id) (contracts/DAOTimelock.sol#62)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DAOTimelock.execute(bytes32) (contracts/DAOTimelock.sol#48-64) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= op.eta + 21600,risk delay) (contracts/DAOTimelock.sol#54)
+	- require(bool,string)(block.timestamp >= op.eta,too early) (contracts/DAOTimelock.sol#56)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Reentrancy in SystemHandover.executeHandover(address) (contracts/SystemHandover.sol#72-79):
+	External calls:
+	- dao.setAdmin(newAdmin) (contracts/SystemHandover.sol#75)
+	- timelock.setAdmin(address(dao)) (contracts/SystemHandover.sol#76)
+	Event emitted after the call(s):
+	- Executed(address(dao),address(timelock),newAdmin,extensionsUsed) (contracts/SystemHandover.sol#77)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+SystemHandover.executeHandover(address) (contracts/SystemHandover.sol#72-79) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < handoverAt (contracts/SystemHandover.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+VFIDEToken.setPresale(address)._presale (contracts/VFIDEToken.sol#258) lacks a zero-check on :
+		- presale = _presale (contracts/VFIDEToken.sol#259)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+MerchantPortal.processPayment(address,address,uint256,string) (contracts/MerchantPortal.sol#267-330) uses arbitrary from in transferFrom: require(bool,string)(IERC20_Merchant(token).transferFrom(customerVault,feeSink,fee),fee transfer failed) (contracts/MerchantPortal.sol#306-309)
+MerchantPortal.processPayment(address,address,uint256,string) (contracts/MerchantPortal.sol#267-330) uses arbitrary from in transferFrom: require(bool,string)(IERC20_Merchant(token).transferFrom(customerVault,merchantVault,netAmount),transfer failed) (contracts/MerchantPortal.sol#299-302)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+Reentrancy in MerchantPortal.processPayment(address,address,uint256,string) (contracts/MerchantPortal.sol#267-330):
+	External calls:
+	- merchantVault = vaultHub.ensureVault(msg.sender) (contracts/MerchantPortal.sol#292)
+	- require(bool,string)(IERC20_Merchant(token).transferFrom(customerVault,merchantVault,netAmount),transfer failed) (contracts/MerchantPortal.sol#299-302)
+	- require(bool,string)(IERC20_Merchant(token).transferFrom(customerVault,feeSink,fee),fee transfer failed) (contracts/MerchantPortal.sol#306-309)
+	State variables written after the call(s):
+	- merchant.totalVolume += amount (contracts/MerchantPortal.sol#313)
+	MerchantPortal.merchants (contracts/MerchantPortal.sol#122) can be used in cross function reentrancies:
+	- MerchantPortal.getMerchantInfo(address) (contracts/MerchantPortal.sol#439-458)
+	- MerchantPortal.merchants (contracts/MerchantPortal.sol#122)
+	- MerchantPortal.registerMerchant(string,string) (contracts/MerchantPortal.sol#207-236)
+	- MerchantPortal.reinstateMerchant(address) (contracts/MerchantPortal.sol#251-256)
+	- MerchantPortal.suspendMerchant(address,string) (contracts/MerchantPortal.sol#241-246)
+	- merchant.txCount += 1 (contracts/MerchantPortal.sol#314)
+	MerchantPortal.merchants (contracts/MerchantPortal.sol#122) can be used in cross function reentrancies:
+	- MerchantPortal.getMerchantInfo(address) (contracts/MerchantPortal.sol#439-458)
+	- MerchantPortal.merchants (contracts/MerchantPortal.sol#122)
+	- MerchantPortal.registerMerchant(string,string) (contracts/MerchantPortal.sol#207-236)
+	- MerchantPortal.reinstateMerchant(address) (contracts/MerchantPortal.sol#251-256)
+	- MerchantPortal.suspendMerchant(address,string) (contracts/MerchantPortal.sol#241-246)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+MerchantPortal.constructor(address,address,address,address,address,address)._feeSink (contracts/MerchantPortal.sol#144) lacks a zero-check on :
+		- feeSink = _feeSink (contracts/MerchantPortal.sol#152)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in MerchantPortal._processPaymentInternal(address,address,address,uint256,string) (contracts/MerchantPortal.sol#347-405):
+	External calls:
+	- merchantVault = vaultHub.ensureVault(merchant) (contracts/MerchantPortal.sol#366)
+	- require(bool,string)(IERC20_Merchant(token).transferFrom(customerVault,merchantVault,netAmount),transfer failed) (contracts/MerchantPortal.sol#373-376)
+	- require(bool,string)(IERC20_Merchant(token).transferFrom(customerVault,feeSink,fee),fee transfer failed) (contracts/MerchantPortal.sol#380-383)
+	State variables written after the call(s):
+	- m.totalVolume += amount (contracts/MerchantPortal.sol#388)
+	- m.txCount += 1 (contracts/MerchantPortal.sol#389)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+MerchantPortal.registerMerchant(string,string) (contracts/MerchantPortal.sol#207-236) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! merchants[msg.sender].registered,already registered) (contracts/MerchantPortal.sol#211)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Contract locking ether found:
+	Contract Vault (contracts/Vault.sol#7-211) has payable functions:
+	 - Vault.initiateRecovery(address) (contracts/Vault.sol#64-74)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+
+Vault.setRecoveryFee(uint256) (contracts/Vault.sol#199-201) should emit an event for: 
+	- recoveryFee = _fee (contracts/Vault.sol#200) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Vault.constructor(address,address[])._linkedWallet (contracts/Vault.sol#54) lacks a zero-check on :
+		- linkedWallet = _linkedWallet (contracts/Vault.sol#56)
+Vault.initiateRecovery(address)._newWallet (contracts/Vault.sol#64) lacks a zero-check on :
+		- pendingWallet = _newWallet (contracts/Vault.sol#67)
+Vault.setNextOfKin(address)._nextOfKin (contracts/Vault.sol#126) lacks a zero-check on :
+		- nextOfKin = _nextOfKin (contracts/Vault.sol#127)
+Vault.emergencyRecovery(address)._newWallet (contracts/Vault.sol#143) lacks a zero-check on :
+		- linkedWallet = _newWallet (contracts/Vault.sol#145)
+Vault.multiLayeredRecovery(address,bytes)._newWallet (contracts/Vault.sol#188) lacks a zero-check on :
+		- linkedWallet = _newWallet (contracts/Vault.sol#190)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Vault.completeRecovery() (contracts/Vault.sol#88-95) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp <= recoveryDeadline,Recovery deadline passed) (contracts/Vault.sol#89)
+Vault.claimAsNextOfKinWithVerification(bytes) (contracts/Vault.sol#150-157) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp > lastActivity + inactivityPeriod,Inactivity period not met) (contracts/Vault.sol#151)
+Vault.rotateGuardian(address,address) (contracts/Vault.sol#169-185) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= lastGuardianRotation[_oldGuardian] + guardianRotationCooldown,Cooldown not met) (contracts/Vault.sol#172)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+VFIDEStaking._calculateRewards(address,address,uint256,uint256) (contracts/VFIDEStaking.sol#369-398) performs a multiplication on the result of a division:
+	- baseReward = (stakedAmount * baseRewardRate * timeElapsed) / (31536000 * 10000) (contracts/VFIDEStaking.sol#378)
+	- penalty = (baseReward * lowTrustPenalty) / 10000 (contracts/VFIDEStaking.sol#392)
+VFIDEStaking._calculateRewards(address,address,uint256,uint256) (contracts/VFIDEStaking.sol#369-398) performs a multiplication on the result of a division:
+	- baseReward = (stakedAmount * baseRewardRate * timeElapsed) / (31536000 * 10000) (contracts/VFIDEStaking.sol#378)
+	- bonus = (baseReward * highTrustBonus) / 10000 (contracts/VFIDEStaking.sol#388)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+VFIDEStaking._calculateRewards(address,address,uint256,uint256) (contracts/VFIDEStaking.sol#369-398) uses a dangerous strict equality:
+	- stakedAmount == 0 || timeElapsed == 0 (contracts/VFIDEStaking.sol#375)
+VFIDEStaking._updateRewards(address) (contracts/VFIDEStaking.sol#354-367) uses a dangerous strict equality:
+	- timeElapsed == 0 (contracts/VFIDEStaking.sol#359)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in VFIDEStaking.stake(uint256,uint64) (contracts/VFIDEStaking.sol#177-218):
+	External calls:
+	- require(bool,string)(vfide.transferFrom(vault,address(this),amount),transfer failed) (contracts/VFIDEStaking.sol#202)
+	State variables written after the call(s):
+	- stake_.stakedAt = uint64(block.timestamp) (contracts/VFIDEStaking.sol#207)
+	VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106) can be used in cross function reentrancies:
+	- VFIDEStaking.getStakeInfo(address) (contracts/VFIDEStaking.sol#330-350)
+	- VFIDEStaking.pendingRewards(address) (contracts/VFIDEStaking.sol#316-328)
+	- VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106)
+	- stake_.lastRewardCalc = uint64(block.timestamp) (contracts/VFIDEStaking.sol#208)
+	VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106) can be used in cross function reentrancies:
+	- VFIDEStaking.getStakeInfo(address) (contracts/VFIDEStaking.sol#330-350)
+	- VFIDEStaking.pendingRewards(address) (contracts/VFIDEStaking.sol#316-328)
+	- VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106)
+	- stake_.initialScore = score (contracts/VFIDEStaking.sol#209)
+	VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106) can be used in cross function reentrancies:
+	- VFIDEStaking.getStakeInfo(address) (contracts/VFIDEStaking.sol#330-350)
+	- VFIDEStaking.pendingRewards(address) (contracts/VFIDEStaking.sol#316-328)
+	- VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106)
+	- stake_.amount += amount (contracts/VFIDEStaking.sol#212)
+	VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106) can be used in cross function reentrancies:
+	- VFIDEStaking.getStakeInfo(address) (contracts/VFIDEStaking.sol#330-350)
+	- VFIDEStaking.pendingRewards(address) (contracts/VFIDEStaking.sol#316-328)
+	- VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106)
+	- stake_.lockUntil = uint64(block.timestamp) + lockDuration (contracts/VFIDEStaking.sol#213)
+	VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106) can be used in cross function reentrancies:
+	- VFIDEStaking.getStakeInfo(address) (contracts/VFIDEStaking.sol#330-350)
+	- VFIDEStaking.pendingRewards(address) (contracts/VFIDEStaking.sol#316-328)
+	- VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106)
+Reentrancy in VFIDEStaking.unstake(uint256) (contracts/VFIDEStaking.sol#223-261):
+	External calls:
+	- require(bool,string)(vfide.transfer(vault,totalReturn),transfer failed) (contracts/VFIDEStaking.sol#252)
+	State variables written after the call(s):
+	- delete stakes[vault] (contracts/VFIDEStaking.sol#256)
+	VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106) can be used in cross function reentrancies:
+	- VFIDEStaking.getStakeInfo(address) (contracts/VFIDEStaking.sol#330-350)
+	- VFIDEStaking.pendingRewards(address) (contracts/VFIDEStaking.sol#316-328)
+	- VFIDEStaking.stakes (contracts/VFIDEStaking.sol#106)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+VFIDEStaking._updateRewards(address).owner (contracts/VFIDEStaking.sol#362) shadows:
+	- Ownable.owner (contracts/VFIDEStaking.sol#51) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in VFIDEStaking.stake(uint256,uint64) (contracts/VFIDEStaking.sol#177-218):
+	External calls:
+	- require(bool,string)(vfide.transferFrom(vault,address(this),amount),transfer failed) (contracts/VFIDEStaking.sol#202)
+	State variables written after the call(s):
+	- totalStaked += amount (contracts/VFIDEStaking.sol#214)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+VFIDEStaking.unstake(uint256) (contracts/VFIDEStaking.sol#223-261) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < stake_.lockUntil (contracts/VFIDEStaking.sol#239)
+VFIDEStaking._updateRewards(address) (contracts/VFIDEStaking.sol#354-367) uses timestamp for comparisons
+	Dangerous comparisons:
+	- timeElapsed == 0 (contracts/VFIDEStaking.sol#359)
+VFIDEStaking._calculateRewards(address,address,uint256,uint256) (contracts/VFIDEStaking.sol#369-398) uses timestamp for comparisons
+	Dangerous comparisons:
+	- stakedAmount == 0 || timeElapsed == 0 (contracts/VFIDEStaking.sol#375)
+	- baseReward > penalty (contracts/VFIDEStaking.sol#393)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+ProofLedger.setDAO(address) (contracts/VFIDETrust.sol#43-46) should emit an event for: 
+	- dao = _dao (contracts/VFIDETrust.sol#45) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+ProofScoreBurnRouterPlus.constructor(address,address,address)._treasury (contracts/VFIDETrust.sol#205) lacks a zero-check on :
+		- treasury = _treasury (contracts/VFIDETrust.sol#209)
+ProofScoreBurnRouterPlus.setModules(address,address)._treasury (contracts/VFIDETrust.sol#212) lacks a zero-check on :
+		- treasury = _treasury (contracts/VFIDETrust.sol#215)
+ProofScoreBurnRouterPlus.setPolicy(uint16,uint16,uint16,uint16,uint16,address)._treasury (contracts/VFIDETrust.sol#225) lacks a zero-check on :
+		- treasury = _treasury (contracts/VFIDETrust.sol#233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in VFIDEPresale.buy(address,uint8,uint256,address) (contracts/VFIDEPresale.sol#275-358):
+	External calls:
+	- vault = vaultHub.ensureVault(msg.sender) (contracts/VFIDEPresale.sol#285)
+	- require(bool,string)(IERC20Like(stable).transferFrom(msg.sender,treas,payAmt),transferFrom failed) (contracts/VFIDEPresale.sol#323)
+	- vfide.mintPresale(vault,vfideOut + buyerBonus) (contracts/VFIDEPresale.sol#326)
+	- refVault = vaultHub.ensureVault(referrer) (contracts/VFIDEPresale.sol#331)
+	- vfide.mintPresale(refVault,refBonus) (contracts/VFIDEPresale.sol#334)
+	State variables written after the call(s):
+	- referralData[referrer].level1Bonus += refBonus (contracts/VFIDEPresale.sol#337)
+	VFIDEPresale.referralData (contracts/VFIDEPresale.sol#146) can be used in cross function reentrancies:
+	- VFIDEPresale.buy(address,uint8,uint256,address) (contracts/VFIDEPresale.sol#275-358)
+	- VFIDEPresale.getReferralStats(address) (contracts/VFIDEPresale.sol#253-261)
+	- VFIDEPresale.referralData (contracts/VFIDEPresale.sol#146)
+	- referralData[referrer].totalReferrals ++ (contracts/VFIDEPresale.sol#338)
+	VFIDEPresale.referralData (contracts/VFIDEPresale.sol#146) can be used in cross function reentrancies:
+	- VFIDEPresale.buy(address,uint8,uint256,address) (contracts/VFIDEPresale.sol#275-358)
+	- VFIDEPresale.getReferralStats(address) (contracts/VFIDEPresale.sol#253-261)
+	- VFIDEPresale.referralData (contracts/VFIDEPresale.sol#146)
+	- referralData[secondLevelRef].level2Bonus += level2Bonus (contracts/VFIDEPresale.sol#344)
+	VFIDEPresale.referralData (contracts/VFIDEPresale.sol#146) can be used in cross function reentrancies:
+	- VFIDEPresale.buy(address,uint8,uint256,address) (contracts/VFIDEPresale.sol#275-358)
+	- VFIDEPresale.getReferralStats(address) (contracts/VFIDEPresale.sol#253-261)
+	- VFIDEPresale.referralData (contracts/VFIDEPresale.sol#146)
+	- referralData[msg.sender].level1Bonus += buyerBonus (contracts/VFIDEPresale.sol#354)
+	VFIDEPresale.referralData (contracts/VFIDEPresale.sol#146) can be used in cross function reentrancies:
+	- VFIDEPresale.buy(address,uint8,uint256,address) (contracts/VFIDEPresale.sol#275-358)
+	- VFIDEPresale.getReferralStats(address) (contracts/VFIDEPresale.sol#253-261)
+	- VFIDEPresale.referralData (contracts/VFIDEPresale.sol#146)
+Reentrancy in VFIDEPresale.buy(address,uint8,uint256,address) (contracts/VFIDEPresale.sol#275-358):
+	External calls:
+	- vault = vaultHub.ensureVault(msg.sender) (contracts/VFIDEPresale.sol#285)
+	- require(bool,string)(IERC20Like(stable).transferFrom(msg.sender,treas,payAmt),transferFrom failed) (contracts/VFIDEPresale.sol#323)
+	- vfide.mintPresale(vault,vfideOut + buyerBonus) (contracts/VFIDEPresale.sol#326)
+	- refVault = vaultHub.ensureVault(referrer) (contracts/VFIDEPresale.sol#331)
+	State variables written after the call(s):
+	- purchasedByVault[vault] -= refBonus (contracts/VFIDEPresale.sol#348)
+	VFIDEPresale.purchasedByVault (contracts/VFIDEPresale.sol#134) can be used in cross function reentrancies:
+	- VFIDEPresale.buy(address,uint8,uint256,address) (contracts/VFIDEPresale.sol#275-358)
+	- VFIDEPresale.purchasedByVault (contracts/VFIDEPresale.sol#134)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+VFIDEPresale.setRateLimiting(bool,uint256,uint256) (contracts/VFIDEPresale.sol#228-233) should emit an event for: 
+	- maxPurchasesPerWindow = maxPurchases (contracts/VFIDEPresale.sol#230) 
+	- rateLimitWindow = window (contracts/VFIDEPresale.sol#231) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in VFIDEPresale.buy(address,uint8,uint256,address) (contracts/VFIDEPresale.sol#275-358):
+	External calls:
+	- vault = vaultHub.ensureVault(msg.sender) (contracts/VFIDEPresale.sol#285)
+	State variables written after the call(s):
+	- purchasedByVault[vault] = prior + totalMint (contracts/VFIDEPresale.sol#313)
+	- referralData[msg.sender].referrer = referrer (contracts/VFIDEPresale.sol#293)
+	- referralsByAddress[referrer].push(msg.sender) (contracts/VFIDEPresale.sol#294)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in VFIDEPresale.buy(address,uint8,uint256,address) (contracts/VFIDEPresale.sol#275-358):
+	External calls:
+	- vault = vaultHub.ensureVault(msg.sender) (contracts/VFIDEPresale.sol#285)
+	- require(bool,string)(IERC20Like(stable).transferFrom(msg.sender,treas,payAmt),transferFrom failed) (contracts/VFIDEPresale.sol#323)
+	- vfide.mintPresale(vault,vfideOut + buyerBonus) (contracts/VFIDEPresale.sol#326)
+	- refVault = vaultHub.ensureVault(referrer) (contracts/VFIDEPresale.sol#331)
+	- vfide.mintPresale(refVault,refBonus) (contracts/VFIDEPresale.sol#334)
+	Event emitted after the call(s):
+	- Purchase(msg.sender,vault,stable,tier,vfideOut,buyerBonus,refBonus,payAmt,referrer) (contracts/VFIDEPresale.sol#356)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+VFIDEPresale.launchPresale(uint256) (contracts/VFIDEPresale.sol#212-218) uses timestamp for comparisons
+	Dangerous comparisons:
+	- presaleStartTime != 0 (contracts/VFIDEPresale.sol#213)
+VFIDEPresale.launchNow() (contracts/VFIDEPresale.sol#220-225) uses timestamp for comparisons
+	Dangerous comparisons:
+	- presaleStartTime != 0 (contracts/VFIDEPresale.sol#221)
+VFIDEPresale._checkRateLimit(address) (contracts/VFIDEPresale.sol#235-250) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= limit.windowStart + rateLimitWindow (contracts/VFIDEPresale.sol#241)
+	- require(bool,string)(limit.purchaseCount < maxPurchasesPerWindow,rate limit exceeded) (contracts/VFIDEPresale.sol#247)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+DevReserveVestingVault.claim() (contracts/DevReserveVestingVault.sol#146-168) uses a dangerous strict equality:
+	- amount == 0 (contracts/DevReserveVestingVault.sol#159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+DevReserveVestingVault.constructor(address,address,address,address,address,address,uint256)._securityHub (contracts/DevReserveVestingVault.sol#91) lacks a zero-check on :
+		- SECURITY_HUB = _securityHub (contracts/DevReserveVestingVault.sol#100)
+DevReserveVestingVault.constructor(address,address,address,address,address,address,uint256)._ledger (contracts/DevReserveVestingVault.sol#92) lacks a zero-check on :
+		- LEDGER = _ledger (contracts/DevReserveVestingVault.sol#101)
+DevReserveVestingVault.constructor(address,address,address,address,address,address,uint256)._presale (contracts/DevReserveVestingVault.sol#93) lacks a zero-check on :
+		- PRESALE = _presale (contracts/DevReserveVestingVault.sol#102)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in DevReserveVestingVault.claim() (contracts/DevReserveVestingVault.sol#146-168):
+	External calls:
+	- _syncStart() (contracts/DevReserveVestingVault.sol#150)
+		- IProofLedger_DV(LEDGER).logSystemEvent(address(this),action,msg.sender) (contracts/DevReserveVestingVault.sol#240)
+	- vault = beneficiaryVault() (contracts/DevReserveVestingVault.sol#152)
+		- IVaultHub_DV(VAULT_HUB).ensureVault(BENEFICIARY) (contracts/DevReserveVestingVault.sol#128)
+	State variables written after the call(s):
+	- totalClaimed += amount (contracts/DevReserveVestingVault.sol#161)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+DevReserveVestingVault.vested() (contracts/DevReserveVestingVault.sol#113-119) uses timestamp for comparisons
+	Dangerous comparisons:
+	- s == 0 || block.timestamp < c (contracts/DevReserveVestingVault.sol#115)
+	- block.timestamp >= e (contracts/DevReserveVestingVault.sol#116)
+DevReserveVestingVault.claimable() (contracts/DevReserveVestingVault.sol#121-125) uses timestamp for comparisons
+	Dangerous comparisons:
+	- v <= totalClaimed (contracts/DevReserveVestingVault.sol#123)
+DevReserveVestingVault.claim() (contracts/DevReserveVestingVault.sol#146-168) uses timestamp for comparisons
+	Dangerous comparisons:
+	- amount == 0 (contracts/DevReserveVestingVault.sol#159)
+	- require(bool,string)(ok,transfer failed) (contracts/DevReserveVestingVault.sol#164)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Reentrancy in MerchantRegistry.addMerchant(bytes32) (contracts/VFIDECommerce.sol#90-108):
+	External calls:
+	- ledger.logSystemEvent(msg.sender,MerchantAdded,msg.sender) (contracts/VFIDECommerce.sol#106)
+	Event emitted after the call(s):
+	- MerchantAdded(msg.sender,v,metaHash) (contracts/VFIDECommerce.sol#107)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+EmergencyControl._enforceCooldown() (contracts/EmergencyControl.sol#210-213) uses a dangerous strict equality:
+	- lastToggleTs == 0 (contracts/EmergencyControl.sol#211)
+EmergencyControl.timeSinceLastToggle() (contracts/EmergencyControl.sol#194-197) uses a dangerous strict equality:
+	- lastToggleTs == 0 (contracts/EmergencyControl.sol#195)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190):
+	External calls:
+	- _logEv(msg.sender,ec_vote_halt,approvalsHalt,reason) (contracts/EmergencyControl.sol#166)
+		- ledger.logEvent(who,action,amount,note) (contracts/EmergencyControl.sol#219)
+	- breaker.toggle(true,reason) (contracts/EmergencyControl.sol#169)
+	State variables written after the call(s):
+	- lastToggleTs = uint64(block.timestamp) (contracts/EmergencyControl.sol#170)
+	EmergencyControl.lastToggleTs (contracts/EmergencyControl.sol#53) can be used in cross function reentrancies:
+	- EmergencyControl._enforceCooldown() (contracts/EmergencyControl.sol#210-213)
+	- EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190)
+	- EmergencyControl.daoToggle(bool,string) (contracts/EmergencyControl.sol#149-155)
+	- EmergencyControl.lastToggleTs (contracts/EmergencyControl.sol#53)
+	- EmergencyControl.timeSinceLastToggle() (contracts/EmergencyControl.sol#194-197)
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190):
+	External calls:
+	- _logEv(msg.sender,ec_vote_halt,approvalsHalt,reason) (contracts/EmergencyControl.sol#166)
+		- ledger.logEvent(who,action,amount,note) (contracts/EmergencyControl.sol#219)
+	- breaker.toggle(true,reason) (contracts/EmergencyControl.sol#169)
+	- _log(ec_trigger_halt) (contracts/EmergencyControl.sol#172)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts/EmergencyControl.sol#216)
+	State variables written after the call(s):
+	- _resetVotes() (contracts/EmergencyControl.sol#173)
+		- approvalsHalt = 0 (contracts/EmergencyControl.sol#203)
+	EmergencyControl.approvalsHalt (contracts/EmergencyControl.sol#63) can be used in cross function reentrancies:
+	- EmergencyControl._resetVotes() (contracts/EmergencyControl.sol#201-208)
+	- EmergencyControl.approvalsHalt (contracts/EmergencyControl.sol#63)
+	- EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190)
+	- EmergencyControl.resetCommittee(uint8,address[]) (contracts/EmergencyControl.sol#94-120)
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190):
+	External calls:
+	- _logEv(msg.sender,ec_vote_unhalt,approvalsUnhalt,reason) (contracts/EmergencyControl.sol#180)
+		- ledger.logEvent(who,action,amount,note) (contracts/EmergencyControl.sol#219)
+	- breaker.toggle(false,reason) (contracts/EmergencyControl.sol#183)
+	State variables written after the call(s):
+	- lastToggleTs = uint64(block.timestamp) (contracts/EmergencyControl.sol#184)
+	EmergencyControl.lastToggleTs (contracts/EmergencyControl.sol#53) can be used in cross function reentrancies:
+	- EmergencyControl._enforceCooldown() (contracts/EmergencyControl.sol#210-213)
+	- EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190)
+	- EmergencyControl.daoToggle(bool,string) (contracts/EmergencyControl.sol#149-155)
+	- EmergencyControl.lastToggleTs (contracts/EmergencyControl.sol#53)
+	- EmergencyControl.timeSinceLastToggle() (contracts/EmergencyControl.sol#194-197)
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190):
+	External calls:
+	- _logEv(msg.sender,ec_vote_unhalt,approvalsUnhalt,reason) (contracts/EmergencyControl.sol#180)
+		- ledger.logEvent(who,action,amount,note) (contracts/EmergencyControl.sol#219)
+	- breaker.toggle(false,reason) (contracts/EmergencyControl.sol#183)
+	- _log(ec_trigger_unhalt) (contracts/EmergencyControl.sol#186)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts/EmergencyControl.sol#216)
+	State variables written after the call(s):
+	- _resetVotes() (contracts/EmergencyControl.sol#187)
+		- approvalsUnhalt = 0 (contracts/EmergencyControl.sol#204)
+	EmergencyControl.approvalsUnhalt (contracts/EmergencyControl.sol#64) can be used in cross function reentrancies:
+	- EmergencyControl._resetVotes() (contracts/EmergencyControl.sol#201-208)
+	- EmergencyControl.approvalsUnhalt (contracts/EmergencyControl.sol#64)
+	- EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190)
+	- EmergencyControl.resetCommittee(uint8,address[]) (contracts/EmergencyControl.sol#94-120)
+Reentrancy in EmergencyControl.daoToggle(bool,string) (contracts/EmergencyControl.sol#149-155):
+	External calls:
+	- breaker.toggle(halt,reason) (contracts/EmergencyControl.sol#151)
+	State variables written after the call(s):
+	- lastToggleTs = uint64(block.timestamp) (contracts/EmergencyControl.sol#152)
+	EmergencyControl.lastToggleTs (contracts/EmergencyControl.sol#53) can be used in cross function reentrancies:
+	- EmergencyControl._enforceCooldown() (contracts/EmergencyControl.sol#210-213)
+	- EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190)
+	- EmergencyControl.daoToggle(bool,string) (contracts/EmergencyControl.sol#149-155)
+	- EmergencyControl.lastToggleTs (contracts/EmergencyControl.sol#53)
+	- EmergencyControl.timeSinceLastToggle() (contracts/EmergencyControl.sol#194-197)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190):
+	External calls:
+	- _logEv(msg.sender,ec_vote_halt,approvalsHalt,reason) (contracts/EmergencyControl.sol#166)
+		- ledger.logEvent(who,action,amount,note) (contracts/EmergencyControl.sol#219)
+	- breaker.toggle(true,reason) (contracts/EmergencyControl.sol#169)
+	- _log(ec_trigger_halt) (contracts/EmergencyControl.sol#172)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts/EmergencyControl.sol#216)
+	State variables written after the call(s):
+	- _resetVotes() (contracts/EmergencyControl.sol#173)
+		- approvalsUnhalt = 0 (contracts/EmergencyControl.sol#204)
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190):
+	External calls:
+	- _logEv(msg.sender,ec_vote_unhalt,approvalsUnhalt,reason) (contracts/EmergencyControl.sol#180)
+		- ledger.logEvent(who,action,amount,note) (contracts/EmergencyControl.sol#219)
+	- breaker.toggle(false,reason) (contracts/EmergencyControl.sol#183)
+	- _log(ec_trigger_unhalt) (contracts/EmergencyControl.sol#186)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts/EmergencyControl.sol#216)
+	State variables written after the call(s):
+	- _resetVotes() (contracts/EmergencyControl.sol#187)
+		- approvalsHalt = 0 (contracts/EmergencyControl.sol#203)
+Reentrancy in EmergencyControl.removeMember(address) (contracts/EmergencyControl.sol#131-139):
+	External calls:
+	- _log(ec_member_remove) (contracts/EmergencyControl.sol#135)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts/EmergencyControl.sol#216)
+	State variables written after the call(s):
+	- threshold = memberCount (contracts/EmergencyControl.sol#137)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190):
+	External calls:
+	- _logEv(msg.sender,ec_vote_halt,approvalsHalt,reason) (contracts/EmergencyControl.sol#166)
+		- ledger.logEvent(who,action,amount,note) (contracts/EmergencyControl.sol#219)
+	- breaker.toggle(true,reason) (contracts/EmergencyControl.sol#169)
+	Event emitted after the call(s):
+	- CommitteeTriggered(true,reason) (contracts/EmergencyControl.sol#171)
+Reentrancy in EmergencyControl.committeeVote(bool,string) (contracts/EmergencyControl.sol#158-190):
+	External calls:
+	- _logEv(msg.sender,ec_vote_unhalt,approvalsUnhalt,reason) (contracts/EmergencyControl.sol#180)
+		- ledger.logEvent(who,action,amount,note) (contracts/EmergencyControl.sol#219)
+	- breaker.toggle(false,reason) (contracts/EmergencyControl.sol#183)
+	Event emitted after the call(s):
+	- CommitteeTriggered(false,reason) (contracts/EmergencyControl.sol#185)
+Reentrancy in EmergencyControl.daoToggle(bool,string) (contracts/EmergencyControl.sol#149-155):
+	External calls:
+	- breaker.toggle(halt,reason) (contracts/EmergencyControl.sol#151)
+	Event emitted after the call(s):
+	- DAOToggled(halt,reason) (contracts/EmergencyControl.sol#153)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+EmergencyControl.timeSinceLastToggle() (contracts/EmergencyControl.sol#194-197) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastToggleTs == 0 (contracts/EmergencyControl.sol#195)
+EmergencyControl._enforceCooldown() (contracts/EmergencyControl.sol#210-213) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastToggleTs == 0 (contracts/EmergencyControl.sol#211)
+	- uint64(block.timestamp) < lastToggleTs + minCooldown (contracts/EmergencyControl.sol#212)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+DAO.withdrawProposal(uint256) (contracts/DAO.sol#140-146) deletes DAO.Proposal (contracts/DAO.sol#42-56) which contains a mapping:
+	-delete proposals[id] (contracts/DAO.sol#144)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deletion-on-mapping-containing-a-structure
+
+Reentrancy in DAO.finalize(uint256) (contracts/DAO.sol#117-132):
+	External calls:
+	- hooks.onFinalized(id,passed) (contracts/DAO.sol#126)
+	- tlId = timelock.queueTx(p.target,p.value,p.data) (contracts/DAO.sol#128)
+	State variables written after the call(s):
+	- p.queued = true (contracts/DAO.sol#129)
+	DAO.proposals (contracts/DAO.sol#58) can be used in cross function reentrancies:
+	- DAO.finalize(uint256) (contracts/DAO.sol#117-132)
+	- DAO.markExecuted(uint256) (contracts/DAO.sol#134-138)
+	- DAO.proposals (contracts/DAO.sol#58)
+	- DAO.propose(DAO.ProposalType,address,uint256,bytes,string) (contracts/DAO.sol#87-94)
+	- DAO.vote(uint256,bool) (contracts/DAO.sol#102-115)
+	- DAO.withdrawProposal(uint256) (contracts/DAO.sol#140-146)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in DAO.finalize(uint256) (contracts/DAO.sol#117-132):
+	External calls:
+	- hooks.onFinalized(id,passed) (contracts/DAO.sol#126)
+	- tlId = timelock.queueTx(p.target,p.value,p.data) (contracts/DAO.sol#128)
+	Event emitted after the call(s):
+	- Queued(id,tlId) (contracts/DAO.sol#129)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DAO.vote(uint256,bool) (contracts/DAO.sol#102-115) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= p.end (contracts/DAO.sol#106)
+DAO.finalize(uint256) (contracts/DAO.sol#117-132) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= p.end,early) (contracts/DAO.sol#120)
+	- require(bool,string)(! p.executed && ! p.queued,done) (contracts/DAO.sol#121)
+DAO.markExecuted(uint256) (contracts/DAO.sol#134-138) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(p.queued && ! p.executed,bad) (contracts/DAO.sol#136)
+DAO.withdrawProposal(uint256) (contracts/DAO.sol#140-146) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(p.proposer == msg.sender,Not proposer) (contracts/DAO.sol#142)
+	- require(bool,string)(block.timestamp < p.start,Voting started) (contracts/DAO.sol#143)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+CouncilElection._eligible(address) (contracts/CouncilElection.sol#153-158) has external calls inside a loop: vaultHub.vaultOf(a) == address(0) (contracts/CouncilElection.sol#155)
+	Calls stack containing the loop:
+		CouncilElection.setCouncil(address[])
+CouncilElection._eligible(address) (contracts/CouncilElection.sol#153-158) has external calls inside a loop: seer.getScore(a) >= minCouncilScoreStrict (contracts/CouncilElection.sol#157)
+	Calls stack containing the loop:
+		CouncilElection.setCouncil(address[])
+CouncilElection._eligible(address) (contracts/CouncilElection.sol#153-158) has external calls inside a loop: vaultHub.vaultOf(a) == address(0) (contracts/CouncilElection.sol#155)
+	Calls stack containing the loop:
+		CouncilElection.refreshCouncil(address[])
+CouncilElection._eligible(address) (contracts/CouncilElection.sol#153-158) has external calls inside a loop: seer.getScore(a) >= minCouncilScoreStrict (contracts/CouncilElection.sol#157)
+	Calls stack containing the loop:
+		CouncilElection.refreshCouncil(address[])
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+CouncilElection.setCouncil(address[]) (contracts/CouncilElection.sol#83-119) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastTermEndDate[member] > 0 && block.timestamp >= lastTermEndDate[member] + cooldownPeriod (contracts/CouncilElection.sol#102)
+CouncilElection._canServe(address) (contracts/CouncilElection.sol#161-179) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= lastTermEndDate[a] + cooldownPeriod (contracts/CouncilElection.sol#174)
+CouncilElection.canServeNextTerm(address) (contracts/CouncilElection.sol#182-186) uses timestamp for comparisons
+	Dangerous comparisons:
+	- eligible = _eligible(member) && _canServe(member) (contracts/CouncilElection.sol#183)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Contract locking ether found:
+	Contract SanctumVault (contracts/SanctumVault.sol#58-421) has payable functions:
+	 - SanctumVault.receive() (contracts/SanctumVault.sol#236-239)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+
+SanctumVault.approveCharity(address,string,string) (contracts/SanctumVault.sol#177-196) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(! charities[charity].approved,already approved) (contracts/SanctumVault.sol#183)
+SanctumVault.removeCharity(address,string) (contracts/SanctumVault.sol#198-205) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(charities[charity].approved,not approved) (contracts/SanctumVault.sol#199)
+SanctumVault.approveDisbursement(uint256) (contracts/SanctumVault.sol#286-298) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(d.proposedAt != 0,not found) (contracts/SanctumVault.sol#288)
+	- require(bool,string)(! d.executed && ! d.rejected,already finalized) (contracts/SanctumVault.sol#289)
+SanctumVault.executeDisbursement(uint256) (contracts/SanctumVault.sol#303-324) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(d.proposedAt != 0,not found) (contracts/SanctumVault.sol#305)
+	- require(bool,string)(! d.executed && ! d.rejected,already finalized) (contracts/SanctumVault.sol#306)
+	- require(bool,string)(d.approvalCount >= approvalsRequired,insufficient approvals) (contracts/SanctumVault.sol#307)
+	- require(bool,string)(IERC20_Sanctum(d.token).transfer(d.charity,d.amount),transfer failed) (contracts/SanctumVault.sol#317-320)
+SanctumVault.rejectDisbursement(uint256,string) (contracts/SanctumVault.sol#329-338) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(d.proposedAt != 0,not found) (contracts/SanctumVault.sol#331)
+	- require(bool,string)(! d.executed && ! d.rejected,already finalized) (contracts/SanctumVault.sol#332)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Reentrancy in UserVault.transferVFIDE(address,uint256) (contracts/VaultInfrastructure.sol#201-225):
+	External calls:
+	- _logEv(toVault,large_transfer_attempt,amount,) (contracts/VaultInfrastructure.sol#214)
+		- ledger.logEvent(who,action,amount,note) (contracts/VaultInfrastructure.sol#241)
+	- ok = IERC20_VI(vfideToken).transfer(toVault,amount) (contracts/VaultInfrastructure.sol#217)
+	State variables written after the call(s):
+	- lastWithdrawalTime = block.timestamp (contracts/VaultInfrastructure.sol#220)
+	UserVault.lastWithdrawalTime (contracts/VaultInfrastructure.sol#73) can be used in cross function reentrancies:
+	- UserVault.lastWithdrawalTime (contracts/VaultInfrastructure.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+UserVault.__forceSetOwner(address).newOwner (contracts/VaultInfrastructure.sol#130) lacks a zero-check on :
+		- owner = newOwner (contracts/VaultInfrastructure.sol#132)
+VaultInfrastructure.constructor(address,address,address,address)._vfideToken (contracts/VaultInfrastructure.sol#268) lacks a zero-check on :
+		- vfideToken = _vfideToken (contracts/VaultInfrastructure.sol#269)
+VaultInfrastructure.constructor(address,address,address,address)._dao (contracts/VaultInfrastructure.sol#268) lacks a zero-check on :
+		- dao = _dao (contracts/VaultInfrastructure.sol#272)
+VaultInfrastructure.setModules(address,address,address,address)._vfideToken (contracts/VaultInfrastructure.sol#277) lacks a zero-check on :
+		- vfideToken = _vfideToken (contracts/VaultInfrastructure.sol#278)
+VaultInfrastructure.setModules(address,address,address,address)._dao (contracts/VaultInfrastructure.sol#277) lacks a zero-check on :
+		- dao = _dao (contracts/VaultInfrastructure.sol#281)
+VaultInfrastructure.setVFIDE(address)._vfide (contracts/VaultInfrastructure.sol#286) lacks a zero-check on :
+		- vfideToken = _vfide (contracts/VaultInfrastructure.sol#287)
+VaultInfrastructure.setDAO(address)._dao (contracts/VaultInfrastructure.sol#292) lacks a zero-check on :
+		- dao = _dao (contracts/VaultInfrastructure.sol#293)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in UserVault.__forceSetOwner(address) (contracts/VaultInfrastructure.sol#130-135):
+	External calls:
+	- _logSys(vault_force_owner) (contracts/VaultInfrastructure.sol#133)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts/VaultInfrastructure.sol#238)
+	Event emitted after the call(s):
+	- OwnerSet(newOwner) (contracts/VaultInfrastructure.sol#134)
+Reentrancy in UserVault.approveVFIDE(address,uint256) (contracts/VaultInfrastructure.sol#227-234):
+	External calls:
+	- ok = IERC20_VI(vfideToken).approve(spender,amount) (contracts/VaultInfrastructure.sol#229)
+	- _logEv(spender,vault_approve,amount,) (contracts/VaultInfrastructure.sol#231)
+		- ledger.logEvent(who,action,amount,note) (contracts/VaultInfrastructure.sol#241)
+	Event emitted after the call(s):
+	- VaultApprove(spender,amount) (contracts/VaultInfrastructure.sol#232)
+Reentrancy in UserVault.finalizeRecovery() (contracts/VaultInfrastructure.sol#186-198):
+	External calls:
+	- _logSys(recovery_finalized) (contracts/VaultInfrastructure.sol#196)
+		- ledger.logSystemEvent(address(this),action,msg.sender) (contracts/VaultInfrastructure.sol#238)
+	Event emitted after the call(s):
+	- RecoveryFinalized(owner) (contracts/VaultInfrastructure.sol#197)
+Reentrancy in VaultInfrastructure.forceRecover(address,address) (contracts/VaultInfrastructure.sol#337-351):
+	External calls:
+	- UserVault(vault).__forceSetOwner(newOwner) (contracts/VaultInfrastructure.sol#348)
+	Event emitted after the call(s):
+	- ForcedRecovery(vault,newOwner) (contracts/VaultInfrastructure.sol#349)
+Reentrancy in UserVault.guardianApproveRecovery() (contracts/VaultInfrastructure.sol#176-184):
+	External calls:
+	- _logEv(msg.sender,recovery_approval,_recovery.approvals,) (contracts/VaultInfrastructure.sol#182)
+		- ledger.logEvent(who,action,amount,note) (contracts/VaultInfrastructure.sol#241)
+	Event emitted after the call(s):
+	- RecoveryApproved(msg.sender,_recovery.proposedOwner,_recovery.approvals) (contracts/VaultInfrastructure.sol#183)
+Reentrancy in UserVault.requestRecovery(address) (contracts/VaultInfrastructure.sol#164-174):
+	External calls:
+	- _logEv(proposedOwner,recovery_requested,0,) (contracts/VaultInfrastructure.sol#172)
+		- ledger.logEvent(who,action,amount,note) (contracts/VaultInfrastructure.sol#241)
+	Event emitted after the call(s):
+	- RecoveryRequested(proposedOwner) (contracts/VaultInfrastructure.sol#173)
+Reentrancy in UserVault.setGuardian(address,bool) (contracts/VaultInfrastructure.sol#138-143):
+	External calls:
+	- _logEv(g,guardian_add,0,) (contracts/VaultInfrastructure.sol#141)
+		- ledger.logEvent(who,action,amount,note) (contracts/VaultInfrastructure.sol#241)
+	- _logEv(g,guardian_remove,0,) (contracts/VaultInfrastructure.sol#141)
+		- ledger.logEvent(who,action,amount,note) (contracts/VaultInfrastructure.sol#241)
+	Event emitted after the call(s):
+	- GuardianSet(g,active) (contracts/VaultInfrastructure.sol#142)
+Reentrancy in UserVault.setNextOfKin(address) (contracts/VaultInfrastructure.sol#145-150):
+	External calls:
+	- _logEv(kin,next_of_kin_set,0,) (contracts/VaultInfrastructure.sol#148)
+		- ledger.logEvent(who,action,amount,note) (contracts/VaultInfrastructure.sol#241)
+	Event emitted after the call(s):
+	- NextOfKinSet(kin) (contracts/VaultInfrastructure.sol#149)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+UserVault.transferVFIDE(address,uint256) (contracts/VaultInfrastructure.sol#201-225) uses timestamp for comparisons
+	Dangerous comparisons:
+	- withdrawalCooldown > 0 && lastWithdrawalTime > 0 (contracts/VaultInfrastructure.sol#205)
+	- require(bool,string)(block.timestamp >= lastWithdrawalTime + withdrawalCooldown,UV:cooldown-active) (contracts/VaultInfrastructure.sol#206)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+StablecoinRegistry.TEST_exec_decimals_branches(address,bool,uint8).token (contracts/VFIDEFinance.sol#122) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#127)
+StablecoinRegistry.TEST_exercise_decimals_try(address).token (contracts/VFIDEFinance.sol#142) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#148)
+StablecoinRegistry.TEST_if_staticcall_ok(address).token (contracts/VFIDEFinance.sol#168) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#169)
+StablecoinRegistry.TEST_cover_decimals_and_deposit(address,bool,uint8,uint256,address).token (contracts/VFIDEFinance.sol#190) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#202)
+StablecoinRegistry.TEST_exec_decimals_and_tx_ifvariants(address,bool,uint8,uint256,address,bool,bool).token (contracts/VFIDEFinance.sol#216) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#223)
+StablecoinRegistry.TEST_if_token_staticcall_dec_ok(address).token (contracts/VFIDEFinance.sol#271) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#272)
+StablecoinRegistry.TEST_if_staticcall_returns_short(address).token (contracts/VFIDEFinance.sol#292) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#293)
+StablecoinRegistry.TEST_cover_more_finance(address,uint256,address,bool,uint8,bool,bool).token (contracts/VFIDEFinance.sol#316) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#321)
+StablecoinRegistry.TEST_cover_finance_more2(address,uint256,address,bool,bool,bool).token (contracts/VFIDEFinance.sol#346) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#350)
+StablecoinRegistry.TEST_exec_decimals_for_token(address,bool,uint8).token (contracts/VFIDEFinance.sol#388) lacks a zero-check on :
+		- (ok,d) = token.staticcall(abi.encodeWithSignature(decimals())) (contracts/VFIDEFinance.sol#392)
+EcoTreasuryVault.constructor(address,address,address,address)._vfide (contracts/VFIDEFinance.sol#425) lacks a zero-check on :
+		- vfideToken = _vfide (contracts/VFIDEFinance.sol#427)
+EcoTreasuryVault.setModules(address,address,address,address)._vfide (contracts/VFIDEFinance.sol#431) lacks a zero-check on :
+		- vfideToken = _vfide (contracts/VFIDEFinance.sol#433)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in EcoTreasuryVault.depositStable(address,uint256) (contracts/VFIDEFinance.sol#443-450):
+	External calls:
+	- ! IERC20_FI(token).transferFrom(msg.sender,address(this),amount) (contracts/VFIDEFinance.sol#446)
+	Event emitted after the call(s):
+	- ReceivedStable(token,amount,msg.sender) (contracts/VFIDEFinance.sol#448)
+Reentrancy in EcoTreasuryVault.send(address,address,uint256,string) (contracts/VFIDEFinance.sol#452-463):
+	External calls:
+	- ! IERC20_FI(token).transfer(to,amount) (contracts/VFIDEFinance.sol#458)
+	Event emitted after the call(s):
+	- Sent(token,to,amount,reason) (contracts/VFIDEFinance.sol#461)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+contracts/ analyzed (112 contracts with 75 detectors), 127 result(s) found

@@ -1,0 +1,78 @@
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+Compiling 4 files with Solc 0.8.30
+Solc 0.8.30 finished in 4.93s
+Compiler run successful!
+
+Ran 8 tests for test/foundry/EmergencyControl.t.sol:EmergencyControlFuzzTest
+[PASS] testFuzz_approvalsStartZero(uint256) (runs: 100000, μ: 9256, ~: 9256)
+[FAIL: `vm.assume` rejected too many inputs (65536 allowed)] testFuzz_daoCanSetCooldown(uint64) (runs: 88504, μ: 24189, ~: 24191)
+[PASS] testFuzz_daoIsSet(address) (runs: 100000, μ: 9792, ~: 9792)
+[PASS] testFuzz_lastToggleTsInitiallyZero(uint256) (runs: 100000, μ: 7813, ~: 7813)
+[PASS] testFuzz_memberCountStartsZero(address) (runs: 100000, μ: 7898, ~: 7898)
+[PASS] testFuzz_minCooldownInitialized(address) (runs: 100000, μ: 8303, ~: 8303)
+[PASS] testFuzz_onlyDaoCanSetCooldown(address,uint64) (runs: 100000, μ: 14386, ~: 14387)
+[PASS] testFuzz_thresholdBounded(uint8) (runs: 100000, μ: 8829, ~: 8829)
+Suite result: FAILED. 7 passed; 1 failed; 0 skipped; finished in 9.83s (18.39s CPU time)
+
+Ran 1 test for test/foundry/VFIDETokenSimple.t.sol:VFIDETokenSimpleTest
+[FAIL: EvmError: Revert] setUp() (gas: 0)
+Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 295.60µs (0.00ns CPU time)
+
+Ran 9 tests for test/foundry/Seer.t.sol:SeerFuzzTest
+[FAIL: `vm.assume` rejected too many inputs (65536 allowed)] testFuzz_daoCanAdjustScore(address,uint16) (runs: 44548, μ: 53414, ~: 53426)
+[FAIL: `vm.assume` rejected too many inputs (65536 allowed)] testFuzz_daoCanFlag(address,uint8) (runs: 20823, μ: 51598, ~: 51598)
+[FAIL: `vm.assume` rejected too many inputs (65536 allowed)] testFuzz_daoCanSetPolicy(uint16,uint16,uint16) (runs: 13759, μ: 28730, ~: 28730)
+[PASS] testFuzz_daoIsSet(address) (runs: 100000, μ: 9760, ~: 9760)
+[FAIL: assertion failed: 500 != 0; counterexample: calldata=0x6fe89bb1000000000000000000000000add827ae9b1e475e56a0bf12ff03547c16f044b5 args=[0xAdD827aE9b1E475E56A0bF12ff03547c16f044B5]] testFuzz_defaultScoreIsZero(address) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_governanceMinIsBasePlus100(address) (runs: 100000, μ: 7891, ~: 7891)
+[PASS] testFuzz_onlyDaoCanAdjustScore(address,address,uint16) (runs: 100000, μ: 15348, ~: 15349)
+[PASS] testFuzz_onlyDaoCanFlag(address,address) (runs: 100000, μ: 14986, ~: 14987)
+[PASS] testFuzz_onlyDaoCanSetPolicy(address,uint16,uint16,uint16) (runs: 100000, μ: 14253, ~: 14254)
+Suite result: FAILED. 5 passed; 4 failed; 0 skipped; finished in 21.37s (21.37s CPU time)
+
+Ran 8 tests for test/foundry/VaultInfrastructure.t.sol:VaultInfrastructureFuzzTest
+[PASS] testFuzz_cannotCreateVaultForZeroAddress(uint256) (runs: 100000, μ: 8801, ~: 8801)
+[PASS] testFuzz_daoIsSet(address) (runs: 100000, μ: 9852, ~: 9852)
+[PASS] testFuzz_ensureVaultCreatesUniqueVaults(address,address) (runs: 100000, μ: 2172933, ~: 2172933)
+[PASS] testFuzz_ensureVaultIsIdempotent(address) (runs: 100000, μ: 1097020, ~: 1097020)
+[PASS] testFuzz_onlyOwnerCanSetVFIDE(address,address) (runs: 100000, μ: 13529, ~: 13529)
+[PASS] testFuzz_securityHubIsSet(address) (runs: 100000, μ: 10352, ~: 10352)
+[PASS] testFuzz_vaultOfReturnsCorrectVault(address) (runs: 100000, μ: 1094927, ~: 1094927)
+[PASS] testFuzz_vfideTokenIsSet(address) (runs: 100000, μ: 10419, ~: 10419)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 26.84s (64.33s CPU time)
+
+Ran 8 tests for test/foundry/DAO.t.sol:DAOFuzzTest
+[PASS] testFuzz_adminIsSet(address) (runs: 100000, μ: 10471, ~: 10471)
+[FAIL: next call did not revert as expected; counterexample: calldata=0xab72df9e00000000000000000000000000000000000000000000000000000000000000fd args=[253]] testFuzz_cannotSetInvalidQuorum(uint8) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_modulesAreSet(address) (runs: 100000, μ: 20121, ~: 20121)
+[PASS] testFuzz_onlyAdminCanSetParams(address,uint16,uint8) (runs: 100000, μ: 15648, ~: 15649)
+[FAIL: assertion failed: 3600 != 131; counterexample: calldata=0x917d808200000000000000000000000000000000000000000000000000000000000000830000000000000000000000000000000000000000000000000000000000000029 args=[131, 41]] testFuzz_paramsValidRange(uint16,uint8) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_proposalCountStartsZero(uint256) (runs: 100000, μ: 7955, ~: 7955)
+[PASS] testFuzz_quorumBounded(uint256) (runs: 100000, μ: 8456, ~: 8456)
+[PASS] testFuzz_votingPeriodBounded(uint256) (runs: 100000, μ: 8481, ~: 8481)
+Suite result: FAILED. 6 passed; 2 failed; 0 skipped; finished in 36.91s (16.22s CPU time)
+
+Ran 5 test suites in 36.91s (94.96s CPU time): 26 tests passed, 8 failed, 0 skipped (34 total tests)
+
+Failing tests:
+Encountered 2 failing tests in test/foundry/DAO.t.sol:DAOFuzzTest
+[FAIL: next call did not revert as expected; counterexample: calldata=0xab72df9e00000000000000000000000000000000000000000000000000000000000000fd args=[253]] testFuzz_cannotSetInvalidQuorum(uint8) (runs: 0, μ: 0, ~: 0)
+[FAIL: assertion failed: 3600 != 131; counterexample: calldata=0x917d808200000000000000000000000000000000000000000000000000000000000000830000000000000000000000000000000000000000000000000000000000000029 args=[131, 41]] testFuzz_paramsValidRange(uint16,uint8) (runs: 0, μ: 0, ~: 0)
+
+Encountered 1 failing test in test/foundry/EmergencyControl.t.sol:EmergencyControlFuzzTest
+[FAIL: `vm.assume` rejected too many inputs (65536 allowed)] testFuzz_daoCanSetCooldown(uint64) (runs: 88504, μ: 24189, ~: 24191)
+
+Encountered 4 failing tests in test/foundry/Seer.t.sol:SeerFuzzTest
+[FAIL: `vm.assume` rejected too many inputs (65536 allowed)] testFuzz_daoCanAdjustScore(address,uint16) (runs: 44548, μ: 53414, ~: 53426)
+[FAIL: `vm.assume` rejected too many inputs (65536 allowed)] testFuzz_daoCanFlag(address,uint8) (runs: 20823, μ: 51598, ~: 51598)
+[FAIL: `vm.assume` rejected too many inputs (65536 allowed)] testFuzz_daoCanSetPolicy(uint16,uint16,uint16) (runs: 13759, μ: 28730, ~: 28730)
+[FAIL: assertion failed: 500 != 0; counterexample: calldata=0x6fe89bb1000000000000000000000000add827ae9b1e475e56a0bf12ff03547c16f044b5 args=[0xAdD827aE9b1E475E56A0bF12ff03547c16f044B5]] testFuzz_defaultScoreIsZero(address) (runs: 0, μ: 0, ~: 0)
+
+Encountered 1 failing test in test/foundry/VFIDETokenSimple.t.sol:VFIDETokenSimpleTest
+[FAIL: EvmError: Revert] setUp() (gas: 0)
+
+Encountered a total of 8 failing tests, 26 tests succeeded

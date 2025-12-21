@@ -1,0 +1,2373 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+
+  Commerce Complete Coverage
+    MerchantRegistry Additional TEST Helpers
+      - TEST_if_vaultAndScore
+      - TEST_if_vaultAndScore - no vault
+      - TEST_cover_additional_branches - all variants
+      - TEST_cover_additional_branches - with forces
+      - TEST_force_eval_360_and_neighbors
+      - TEST_force_eval_360_and_neighbors - with thresholds
+      - TEST_line365_condexpr_variant2
+      - TEST_line365_condexpr_variant2 - with force
+      - TEST_line367_condexpr_variant2
+      - TEST_line367_condexpr_variant2 - with forces
+      - TEST_line374_condexpr_variant
+      - TEST_line374_condexpr_variant - force left
+      - TEST_force_eval_367_variants
+      - TEST_force_eval_367_variants - with forces
+      - TEST_force_eval_369_370_combo
+      - TEST_force_eval_369_370_combo - zero amount
+      - TEST_dup_constructor_or_local
+      - TEST_dup_constructor_or_local2
+      - TEST_dup_constructor_or_msgsender_variant
+      - TEST_trick_constructor_or_line87 - with zero
+      - TEST_trick_constructor_or_line87 - with address
+      - TEST_line87_txorigin_variant
+      - TEST_line87_ledger_security_variant - with zero
+      - TEST_line87_ledger_security_variant - with address
+      - TEST_line118_msgsender_false_arm
+      - TEST_line130_msgsender_vaultZero_false - no force
+      - TEST_line130_msgsender_vaultZero_false - with force
+    MerchantRegistry Combined Branch Coverage
+      - should cover all merchant status branches
+      - should cover all vault presence branches
+      - should cover all score threshold branches
+      - should cover refund threshold branches
+      - should cover dispute threshold branches
+      - should cover all force flag combinations
+    MerchantRegistry Line-Specific Branch Coverage
+      - should cover line 365 condexpr - all combinations
+      - should cover line 367 condexpr - all combinations
+      - should cover line 374 condexpr - all combinations
+      - should cover line 367 variants - all combinations
+      - should cover lines 369-370 combo - all combinations
+    MerchantRegistry Constructor and Line 87 Coverage
+      - should cover constructor OR chain variants
+      - should cover line 87 with zero addresses
+      - should cover line 87 with valid addresses
+    MerchantRegistry Lines 118 and 130 Coverage
+      - should cover line 118 merchant status check
+      - should cover line 130 vault zero check - both branches
+    MerchantRegistry Dense 360-375 Hotspot Coverage
+      - should cover 360 neighbors - all merchant states
+      - should cover 360 neighbors with vault presence
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 1/3)
+    Basic TEST toggle functions
+      - TEST_setOnlyDAOOff
+      - TEST_setForceAlreadyMerchant
+      - TEST_setForceNoVault
+      - TEST_setForceLowScore
+      - TEST_setForceZeroSenderRefund
+      - TEST_setForceZeroSenderDispute
+    Eval functions - Part 1
+      - TEST_eval_addMerchant_flags
+      - TEST_eval_addMerchant_subexpr
+      - TEST_eval_noteRefund_forceFlag
+      - TEST_eval_noteDispute_forceFlag
+      - TEST_exercise_addMerchant_checks
+      - TEST_exercise_noteFlags
+      - TEST_exec_addMerchant_branches
+      - TEST_cover_addMerchant_variants
+    Conditional TEST functions
+      - TEST_if_alreadyMerchant_left
+      - TEST_if_forceAlready_right
+      - TEST_if_noVault_left
+      - TEST_if_forceNoVault_right
+      - TEST_if_lowScore_left
+      - TEST_if_forceLowScore_right
+      - TEST_exec_addMerchant_ifvariants
+    Status check functions
+      - TEST_if_merchant_status_none
+      - TEST_if_vaultHub_vaultOf_isZero
+      - TEST_if_seer_getScore_lt_min
+      - TEST_if_refund_threshold_reached
+      - TEST_if_dispute_threshold_reached
+    Force variants
+      - TEST_if_vaultOf_isZero_or_force
+      - TEST_if_seer_score_below_min_or_force
+      - TEST_if_alreadyMerchant_or_force
+      - TEST_if_onlyDAO_off_flag
+    Vault and score checks
+      - TEST_if_vaultAndScore
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 2/3)
+    Additional coverage functions - Part 1
+      - TEST_cover_additional_branches
+      - TEST_force_eval_360_and_neighbors
+      - TEST_line365_condexpr_variant2
+      - TEST_line367_condexpr_variant2
+      - TEST_line374_condexpr_variant
+      - TEST_force_eval_367_variants
+      - TEST_force_eval_369_370_combo
+    Constructor and local variants
+      - TEST_dup_constructor_or_local
+      - TEST_dup_constructor_or_local2
+      - TEST_dup_constructor_or_msgsender_variant
+      - TEST_trick_constructor_or_line87
+      - TEST_line87_txorigin_variant
+      - TEST_line87_ledger_security_variant
+    Specific line coverage
+      - TEST_line118_msgsender_false_arm
+      - TEST_line130_msgsender_vaultZero_false
+      - TEST_line250_condexpr_alt
+      - TEST_force_eval_line87_msgsender
+      - TEST_force_eval_addMerchant_msgsender_variants
+      - TEST_line118_already_or_force
+      - TEST_line130_vaultZero_or_force
+      - TEST_line238_refunds_threshold
+      - TEST_line250_condexpr_variant
+      - TEST_line291_sender_zero_or_force_refund
+      - TEST_line305_seer_lt_or_force
+    Additional IF variants
+      - TEST_if_addMerchant_or_force
+      - TEST_if_vaultOf_or_force2
+      - TEST_if_seer_lt_min_or_force2
+      - TEST_cover_addMerchant_near118_130
+    Execution functions with state changes
+      - TEST_exec_addMerchant_msgsender_full
+      - TEST_exec_note_guards_and_restore
+    More conditional checks
+      - TEST_if_msgsender_alreadyMerchant
+      - TEST_if_constructor_zero_check
+      - TEST_exec_addMerchant_msgsender_ifvariants
+      - TEST_line130_msgsender_vaultZero_or_force
+    Coverage region tests
+      - TEST_cover_250_300_region
+      - TEST_cover_mass_250_410
+    All force flag combinations
+      - should test all 64 combinations of 6 boolean flags
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 3/3)
+    Escrow eval functions
+      - TEST_eval_open_checks
+      - TEST_if_securityCheck_addr
+      - TEST_if_escrow_state_eq
+      - TEST_if_escrow_buyerVault_zero
+      - TEST_if_escrow_sellerVault_zero
+      - TEST_exec_open_ifvariants
+    Access check functions
+      - TEST_eval_access_checks
+      - TEST_if_buyerVault_zero
+      - TEST_if_release_allowed
+      - TEST_if_refund_allowed
+      - TEST_exec_access_ifvariants
+      - TEST_cover_escrow_more
+    Hotspot functions
+      - TEST_hotspot_300s
+      - TEST_hotspot_330s
+      - TEST_hotspot_360s
+      - TEST_hotspot_490s
+      - TEST_cover_post360s
+    Message sender specific checks
+      - TEST_if_msgsender_release_allowed
+      - TEST_if_msgsender_refund_allowed
+      - TEST_if_msgsender_dispute_allowed
+      - TEST_if_notFunded
+      - TEST_if_resolve_buyerWins_branch
+      - TEST_force_eval_release_refund_resolve
+    Line-specific conditional expressions
+      - TEST_line435_condexpr_variants
+      - TEST_line447_condexpr_variants
+      - TEST_line456_condexpr_variants
+      - TEST_line466_condexpr_variants
+      - TEST_line503_506_combo
+    Duplicate and extended variants
+      - TEST_dup_line435_with_locals
+      - TEST_line435_msgsender_include
+      - TEST_line447_many_ors
+      - TEST_line503_extended_variants
+      - TEST_line644_combo
+      - TEST_line371_alt
+    Comprehensive variant combinations
+      - should test all hotspot functions with different parameters
+      - should test all line-specific expressions in sequence
+      - should test all extended variants
+    Massive permutation testing
+      - should test all boolean flag permutations for open_ifvariants
+      - should test all score thresholds
+      - should test multiple amounts
+      - should test all refund/dispute counts
+    Final comprehensive coverage
+      - should exercise every TEST function at least once
+
+  VFIDECommerce: Push to 95% Coverage
+    MerchantRegistry TEST Helpers - Branch Coverage
+      - should exercise TEST_setOnlyDAOOff
+      - should exercise TEST_setForceAlreadyMerchant
+      - should exercise TEST_setForceNoVault
+      - should exercise TEST_setForceLowScore
+      - should exercise TEST_setForceZeroSenderRefund
+      - should exercise TEST_setForceZeroSenderDispute
+    MerchantRegistry TEST Helpers - Conditional Branches
+      - should exercise TEST_if_alreadyMerchant_left - true
+      - should exercise TEST_if_alreadyMerchant_left - false
+      - should exercise TEST_if_forceAlready_right - true
+      - should exercise TEST_if_forceAlready_right - false
+      - should exercise TEST_if_noVault_left - true
+      - should exercise TEST_if_noVault_left - false
+      - should exercise TEST_if_forceNoVault_right - true
+      - should exercise TEST_if_forceNoVault_right - false
+      - should exercise TEST_if_lowScore_left - true
+      - should exercise TEST_if_lowScore_left - false
+      - should exercise TEST_if_forceLowScore_right - true
+      - should exercise TEST_if_forceLowScore_right - false
+    MerchantRegistry TEST Helpers - Complex Variants
+      - should exercise TEST_exec_addMerchant_ifvariants - all false
+      - should exercise TEST_exec_addMerchant_ifvariants - forceA true
+      - should exercise TEST_exec_addMerchant_ifvariants - forceB true
+      - should exercise TEST_exec_addMerchant_ifvariants - forceC true
+      - should exercise TEST_exec_addMerchant_ifvariants - all forces true
+    MerchantRegistry TEST Helpers - Status Checks
+      - should exercise TEST_if_merchant_status_none - true
+      - should exercise TEST_if_merchant_status_none - false
+      - should exercise TEST_if_vaultHub_vaultOf_isZero - true
+      - should exercise TEST_if_vaultHub_vaultOf_isZero - false
+    MerchantRegistry TEST Helpers - addMerchant Variants
+      - should exercise TEST_cover_addMerchant_variants - not merchant
+      - should exercise TEST_cover_addMerchant_variants - is merchant
+      - should exercise TEST_cover_addMerchant_variants - force already
+      - should exercise TEST_cover_addMerchant_variants - no vault left
+      - should exercise TEST_cover_addMerchant_variants - has vault left
+      - should exercise TEST_cover_addMerchant_variants - force no vault
+      - should exercise TEST_cover_addMerchant_variants - low score left
+      - should exercise TEST_cover_addMerchant_variants - good score left
+      - should exercise TEST_cover_addMerchant_variants - force low score
+    MerchantRegistry TEST Helpers - Additional Eval Functions
+      - should exercise TEST_eval_addMerchant_flags
+      - should exercise TEST_eval_addMerchant_subexpr
+      - should exercise TEST_eval_noteRefund_forceFlag
+      - should exercise TEST_eval_noteDispute_forceFlag
+      - should exercise TEST_exercise_addMerchant_checks
+      - should exercise TEST_exercise_noteFlags
+      - should exercise TEST_exec_addMerchant_branches
+
+  VFIDECommerce Ecosystem Test
+    1) "before each" hook for "should allow a merchant to register successfully"
+
+  CommerceEdge
+    ✔ should handle commerce escrow operations
+
+  CouncilElection Contract Tests
+    Deployment
+      2) "before each" hook for "should set DAO correctly"
+
+  DAO Contract Tests
+    Deployment and Setup
+      ✔ should set admin correctly
+      ✔ should set default voting period
+      ✔ should set default quorum
+      ✔ should allow admin to set modules
+      ✔ should revert if non-admin tries to set admin
+    Proposal Creation
+      3) should create a proposal
+      4) should revert if proposer not eligible
+      5) should revert if proposer has no vault
+      6) should allow zero target address
+    Voting
+      7) "before each" hook for "should allow eligible voter to vote"
+    Finalization
+      8) "before each" hook for "should finalize passed proposal"
+    Parameter Updates
+      ✔ should allow admin to update voting period
+      ✔ should revert if non-admin tries to update params
+
+  DAOTimelock Contract Tests
+    Deployment
+      ✔ should set admin correctly
+      ✔ should set default delay to 48 hours
+      ✔ should revert if deploying with zero admin
+    Admin Functions
+      ✔ should allow admin to update admin
+      ✔ should revert if non-admin tries to set admin
+      ✔ should revert if setting admin to zero
+      ✔ should allow admin to update delay
+      ✔ should allow admin to set ledger
+      ✔ should allow admin to set panic guard
+    Queue Transaction
+      ✔ should queue a transaction
+      ✔ should revert if non-admin tries to queue
+      ✔ should revert if queuing same transaction twice
+      ✔ should calculate correct ETA
+    Cancel Transaction
+      ✔ should cancel a queued transaction
+      ✔ should revert if non-admin tries to cancel
+      ✔ should revert if cancelling non-existent transaction
+    Execute Transaction
+      ✔ should execute after delay
+      ✔ should revert if executed too early
+      ✔ should revert if executing non-existent transaction
+    Edge Cases
+      ✔ should handle zero value transactions
+      ✔ should handle empty data
+      ✔ should handle different delays
+
+  EmergencyControl Contract Tests
+    Deployment
+      9) "before each" hook for "should set DAO correctly"
+
+  StablecoinRegistry and EcoTreasuryVault
+    ✔ DAO can whitelist asset and treasury accepts deposits
+    ✔ non-DAO cannot add asset
+
+  GovernanceHooks
+    Deployment
+      ✔ should deploy with correct ledger
+      ✔ should deploy with correct seer
+      10) should emit ModulesSet on deployment
+      ✔ should deploy with zero address ledger (optional)
+      ✔ should deploy with zero address seer (optional)
+      ✔ should deploy with both zero addresses
+    setModules
+      ✔ should update ledger address (52ms)
+      ✔ should update seer address
+      ✔ should update both addresses
+      ✔ should emit ModulesSet
+      ✔ should allow setting zero addresses
+      ✔ should allow anyone to call setModules
+    onProposalQueued
+      ✔ should execute without reverting
+      11) should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal IDs
+      ✔ should handle zero value proposals
+      ✔ should handle zero target address
+    onVoteCast
+      ✔ should execute without reverting for support vote
+      ✔ should execute without reverting for against vote
+      12) should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple voters
+      ✔ should handle zero address voter
+    onFinalized
+      ✔ should execute for passed proposal
+      ✔ should execute for failed proposal
+      13) should log system event when ledger is set (passed)
+      14) should log system event when ledger is set (failed)
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal finalizations
+    Hook Integration Flow
+      ✔ should execute complete governance flow
+      ✔ should handle multiple proposals simultaneously
+      ✔ should work with ledger logging disabled
+    Edge Cases
+      ✔ should handle ledger reverts gracefully
+      ✔ should allow rapid successive calls
+      ✔ should handle very large proposal IDs
+      15) should allow module updates mid-flow
+
+  Interface Compliance Tests
+    IVFIDEToken Interface
+      16) "before each" hook for "Should implement all IVFIDEToken interface functions"
+
+  ProofLedger
+    Deployment
+      ✔ should deploy with correct DAO
+      17) should revert on zero address DAO
+    setDAO
+      ✔ should allow DAO to update DAO address
+      18) should emit DAOSet event
+      19) should revert if non-DAO tries to update
+      20) should revert on zero address
+      ✔ should allow DAO to be set to itself
+      ✔ should allow chained DAO updates
+    logEvent
+      21) should emit Log event with all parameters
+      ✔ should allow anyone to log events
+      22) should handle zero amount
+      23) should handle empty strings
+      24) should handle very large amounts
+      25) should handle long action strings
+      26) should handle long note strings
+      ✔ should log multiple events in sequence
+      27) should preserve msg.sender in 'by' field
+      28) should use current block timestamp
+    logSystemEvent
+      29) should emit LogSystem event with all parameters
+      ✔ should allow anyone to log system events
+      30) should handle empty action string
+      31) should handle zero addresses
+      32) should handle long action strings
+      ✔ should log multiple system events
+      33) should use current block timestamp
+    Mixed Logging
+      ✔ should support both log types simultaneously
+      ✔ should handle high-frequency logging
+      34) should maintain independent event streams
+    Access Control
+      35) should allow only DAO to change DAO
+      ✔ should allow anyone to log events
+      ✔ should allow anyone to log system events
+    Edge Cases
+      ✔ should handle DAO transferring to self
+      ✔ should handle rapid DAO transfers
+      36) should handle maximum uint256 amount in logs
+      37) should handle special characters in strings
+      ✔ should not revert on consecutive identical logs
+
+  ProofScoreBurnRouter
+    Deployment
+      38) "before each" hook for "should deploy with correct seer"
+
+  Seer Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      39) should set default base score to 500
+      40) should set default min score to 100
+      41) should set default max score to 1000
+      ✔ should revert if deploying with zero DAO
+    Module Configuration
+      42) should allow DAO to set modules
+      43) should revert if non-DAO tries to set modules
+      44) should revert if setting DAO to zero
+    Policy Configuration
+      45) should allow DAO to set policy
+      46) should revert if non-DAO tries to set policy
+    Score Management
+      47) should initialize user with base score
+      48) should allow DAO to set score directly
+      49) should revert if non-DAO tries to set score
+      50) should get score correctly
+      ✔ should return base score for uninitialized user
+    Governance Checks
+      51) should check if user meets min score for governance
+      52) should fail if user below min score
+      53) should return minForGovernance value
+    Commerce Checks
+      54) should check if user meets min score for commerce
+      55) should fail if user below min score
+      56) should return minForCommerce value
+    Flagging System
+      57) should allow DAO to flag user
+      58) should revert if non-DAO tries to flag
+      59) should allow DAO to unflag user
+      60) should check if user is flagged
+    Score Adjustments
+      61) "before each" hook for "should increase score"
+    Batch Operations
+      62) should initialize multiple users
+      63) should handle multiple score updates
+    Edge Cases
+      64) should handle zero score setting
+      65) should handle score updates for same user multiple times
+      66) should track last update timestamp
+
+  SystemHandover
+    Deployment
+      67) "before each" hook for "should deploy with correct devMultisig"
+
+  VFIDEToken basic flows
+    ✔ pre-mints dev reserve to vesting vault
+    ✔ allows owner to disable vaultOnly and set presale, presale mints within cap
+    ✔ transfers update balances
+
+  VFIDECommerce.branch.more
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.branches
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.constructor.branch
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.coverage.microbatch
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.coverage
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.extra.focused
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.focused
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.microbatch1
+    ✔ should test merchant operations - batch 1
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch2
+    ✔ should test merchant operations - batch 2
+    ✔ should test escrow opening
+
+  VFIDECommerce micro-batch 3 (mocks & reentrancy)
+    ✔ release succeeds with GasDrainer token (covers gas-heavy transfer path)
+    ✔ Reentering token: transfer triggers reentrant release and original tx reverts leaving state unchanged
+    ✔ Reentering token: normal transfer (no reenter target) succeeds
+
+  VFIDECommerce.microbatch3
+    ✔ should test merchant operations - batch 3
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch4
+    ✔ should test merchant operations - batch 4
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch5
+    ✔ should test merchant operations - batch 5
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch6
+    ✔ should test merchant operations - batch 6
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch7
+    ✔ should test merchant operations - batch 7
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch8
+    ✔ should test merchant operations - batch 8
+    ✔ should test escrow opening
+
+  VFIDECommerce additional coverage tests
+    ✔ open reverts when merchant is suspended
+    ✔ release with failing token.transfer leaves state unchanged (ERC20FailTransfer)
+    ✔ refund with failing token.transfer leaves state unchanged (ERC20FailTransfer)
+    ✔ resolve reverts on transfer failure and state remains DISPUTED
+
+  VFIDECommerce reentrancy resilience
+    ✔ attempted reentrancy via token.transfer should not break state (release remains safe)
+
+  VFIDECommerce security fuzz - malicious token behaviors
+    ✔ GasDrainer token: release succeeds even when token consumes more gas
+    ✔ ERC20ReturnFalse: release/refund/resolve revert when token returns false
+    ✔ combination randomized small sequences (open->fund->action) don't corrupt state (42ms)
+
+  VFIDECommerce security & boundary tests
+    ✔ open reverts with COM_SecLocked when buyer or merchant vault locked
+    ✔ release/refund revert with COM_SecLocked when vault locked
+    ✔ failed transfer leaves escrow state unchanged
+    ✔ open with very large amount reverts or handles safely (boundary test)
+
+  VFIDEStaking
+    Deployment & Initialization
+      68) "before each" hook for "Should set correct modules"
+
+  VFIDEToken.batch1
+    69) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch10
+    70) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch11
+    71) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch12
+    72) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch13
+    73) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch14
+    74) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch15
+    75) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch16
+    76) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch17
+    77) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch18
+    78) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch19
+    79) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch2
+    80) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch20
+    81) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch21
+    82) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch22
+    83) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch23
+    84) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch24
+    85) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch25
+    86) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch3
+    87) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch4
+    88) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch5
+    89) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch6
+    90) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch7
+    91) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch8
+    92) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch9
+    93) "before each" hook for "should have correct token metadata"
+
+  VFIDETrust - Seer (ProofScore)
+    Deployment
+      ✔ should deploy with correct DAO
+      ✔ should deploy with correct ledger
+      ✔ should deploy with correct vaultHub
+      ✔ should set default thresholds
+      ✔ should set score constants
+      ✔ should revert on zero DAO
+      ✔ should allow zero ledger (optional)
+      ✔ should allow zero vaultHub (optional)
+    getScore
+      ✔ should return 500 (NEUTRAL) for uninitialized users
+      ✔ should return set score for initialized users
+      ✔ should return 500 (NEUTRAL) if explicitly set to 0
+      ✔ should return 1000 if set to maximum
+      ✔ should handle multiple users independently
+    setScore
+      ✔ should allow DAO to set score
+      ✔ should emit ScoreSet event
+      ✔ should emit event with old score
+      ✔ should revert if non-DAO tries to set
+      ✔ should revert on zero address
+      ✔ should revert on score > MAX_SCORE
+      ✔ should allow setting score to 0 (returns NEUTRAL)
+      ✔ should allow setting score to 1000
+      ✔ should overwrite previous scores
+    reward
+      ✔ should increase score
+      ✔ should emit ScoreSet event
+      ✔ should cap at MAX_SCORE
+      ✔ should handle reward from uninitialized (500)
+      ✔ should revert if non-DAO tries
+      ✔ should handle zero delta
+      ✔ should handle very large delta
+    punish
+      ✔ should decrease score
+      ✔ should emit ScoreSet event
+      ✔ should floor at MIN_SCORE (0, displayed as NEUTRAL)
+      ✔ should handle punish from uninitialized (500)
+      ✔ should revert if non-DAO tries
+      ✔ should handle zero delta
+      ✔ should handle very large delta
+    setThresholds
+      ✔ should allow DAO to update thresholds
+      ✔ should emit ThresholdsSet event
+      ✔ should revert if low > high
+      ✔ should revert if high > MAX_SCORE
+      ✔ should revert if non-DAO tries
+      ✔ should allow low = high
+      ✔ should allow high = MAX_SCORE
+      ✔ should allow low = MIN_SCORE (0)
+    setModules
+      ✔ should allow DAO to update modules
+      ✔ should emit LedgerSet event
+      ✔ should emit HubSet event
+      ✔ should revert on zero ledger
+      ✔ should revert on zero vaultHub
+      ✔ should revert if non-DAO tries
+    Complex Score Management
+      ✔ should handle multiple reward/punish cycles
+      ✔ should handle score changes for multiple users
+      ✔ should maintain independent scores
+    Edge Cases
+      ✔ should handle score at boundaries
+      ✔ should handle alternating rewards and punishments
+      ✔ should handle setting same score multiple times
+
+  VaultInfrastructure - VaultHub
+    Deployment
+      ✔ should deploy successfully
+      ✔ should set owner correctly
+    ensureVault
+      94) should create vault for new user
+      95) should return existing vault on second call
+      96) should create different vaults for different users
+      97) should use deterministic CREATE2
+    vaultOf
+      ✔ should return zero for users without vault
+      98) should return vault address after creation
+    ownerOf
+      99) should return zero for non-vault addresses
+      100) should return owner after vault creation
+    Module Management
+      101) should allow owner to set modules
+      102) should revert if non-owner tries to set modules
+      103) should emit ModulesSet event
+    Edge Cases
+      104) should handle multiple vault creations
+      105) should maintain registry bidirectional mapping
+
+  VaultInfrastructure - UserVault
+    Guardian Management
+      ✔ should allow owner to add guardians
+      ✔ should allow owner to remove guardians
+      ✔ should set next of kin
+    Recovery Process
+      ✔ should allow guardian-approved recovery
+      ✔ should enforce threshold for recovery
+    Transfer Functions
+      ✔ should allow owner to transfer tokens
+      ✔ should enforce security lock
+    Emergency Functions
+      ✔ should handle panic mode
+      ✔ should respect security hub
+
+  VaultInfrastructure - Integration
+    ✔ should test complete vault lifecycle
+    ✔ should test security integration
+    ✔ should test logging integration
+
+  allowance.comprehensive.batch1
+    106) "before each" hook for "should approve and check allowance - batch 1"
+
+  allowance.comprehensive.batch10
+    107) "before each" hook for "should approve and check allowance - batch 10"
+
+  allowance.comprehensive.batch11
+    108) "before each" hook for "should approve and check allowance - batch 11"
+
+  allowance.comprehensive.batch12
+    109) "before each" hook for "should approve and check allowance - batch 12"
+
+  allowance.comprehensive.batch13
+    110) "before each" hook for "should approve and check allowance - batch 13"
+
+  allowance.comprehensive.batch14
+    111) "before each" hook for "should approve and check allowance - batch 14"
+
+  allowance.comprehensive.batch15
+    112) "before each" hook for "should approve and check allowance - batch 15"
+
+  allowance.comprehensive.batch16
+    113) "before each" hook for "should approve and check allowance - batch 16"
+
+  allowance.comprehensive.batch17
+    114) "before each" hook for "should approve and check allowance - batch 17"
+
+  allowance.comprehensive.batch18
+    115) "before each" hook for "should approve and check allowance - batch 18"
+
+  allowance.comprehensive.batch19
+    116) "before each" hook for "should approve and check allowance - batch 19"
+
+  allowance.comprehensive.batch2
+    117) "before each" hook for "should approve and check allowance - batch 2"
+
+  allowance.comprehensive.batch20
+    118) "before each" hook for "should approve and check allowance - batch 20"
+
+  allowance.comprehensive.batch21
+    119) "before each" hook for "should approve and check allowance - batch 21"
+
+  allowance.comprehensive.batch22
+    120) "before each" hook for "should approve and check allowance - batch 22"
+
+  allowance.comprehensive.batch23
+    121) "before each" hook for "should approve and check allowance - batch 23"
+
+  allowance.comprehensive.batch24
+    122) "before each" hook for "should approve and check allowance - batch 24"
+
+  allowance.comprehensive.batch25
+    123) "before each" hook for "should approve and check allowance - batch 25"
+
+  allowance.comprehensive.batch26
+    124) "before each" hook for "should approve and check allowance - batch 26"
+
+  allowance.comprehensive.batch27
+    125) "before each" hook for "should approve and check allowance - batch 27"
+
+  allowance.comprehensive.batch28
+    126) "before each" hook for "should approve and check allowance - batch 28"
+
+  allowance.comprehensive.batch29
+    127) "before each" hook for "should approve and check allowance - batch 29"
+
+  allowance.comprehensive.batch3
+    128) "before each" hook for "should approve and check allowance - batch 3"
+
+  allowance.comprehensive.batch30
+    129) "before each" hook for "should approve and check allowance - batch 30"
+
+  allowance.comprehensive.batch4
+    130) "before each" hook for "should approve and check allowance - batch 4"
+
+  allowance.comprehensive.batch5
+    131) "before each" hook for "should approve and check allowance - batch 5"
+
+  allowance.comprehensive.batch6
+    132) "before each" hook for "should approve and check allowance - batch 6"
+
+  allowance.comprehensive.batch7
+    133) "before each" hook for "should approve and check allowance - batch 7"
+
+  allowance.comprehensive.batch8
+    134) "before each" hook for "should approve and check allowance - batch 8"
+
+  allowance.comprehensive.batch9
+    135) "before each" hook for "should approve and check allowance - batch 9"
+
+  boundaries.comprehensive.batch1
+    136) "before each" hook for "should handle maximum uint256 approval - batch 1"
+
+  boundaries.comprehensive.batch10
+    137) "before each" hook for "should handle maximum uint256 approval - batch 10"
+
+  boundaries.comprehensive.batch11
+    138) "before each" hook for "should handle maximum uint256 approval - batch 11"
+
+  boundaries.comprehensive.batch12
+    139) "before each" hook for "should handle maximum uint256 approval - batch 12"
+
+  boundaries.comprehensive.batch13
+    140) "before each" hook for "should handle maximum uint256 approval - batch 13"
+
+  boundaries.comprehensive.batch14
+    141) "before each" hook for "should handle maximum uint256 approval - batch 14"
+
+  boundaries.comprehensive.batch15
+    142) "before each" hook for "should handle maximum uint256 approval - batch 15"
+
+  boundaries.comprehensive.batch16
+    143) "before each" hook for "should handle maximum uint256 approval - batch 16"
+
+  boundaries.comprehensive.batch17
+    144) "before each" hook for "should handle maximum uint256 approval - batch 17"
+
+  boundaries.comprehensive.batch18
+    145) "before each" hook for "should handle maximum uint256 approval - batch 18"
+
+  boundaries.comprehensive.batch19
+    146) "before each" hook for "should handle maximum uint256 approval - batch 19"
+
+  boundaries.comprehensive.batch2
+    147) "before each" hook for "should handle maximum uint256 approval - batch 2"
+
+  boundaries.comprehensive.batch20
+    148) "before each" hook for "should handle maximum uint256 approval - batch 20"
+
+  boundaries.comprehensive.batch21
+    149) "before each" hook for "should handle maximum uint256 approval - batch 21"
+
+  boundaries.comprehensive.batch22
+    150) "before each" hook for "should handle maximum uint256 approval - batch 22"
+
+  boundaries.comprehensive.batch23
+    151) "before each" hook for "should handle maximum uint256 approval - batch 23"
+
+  boundaries.comprehensive.batch24
+    152) "before each" hook for "should handle maximum uint256 approval - batch 24"
+
+  boundaries.comprehensive.batch25
+    153) "before each" hook for "should handle maximum uint256 approval - batch 25"
+
+  boundaries.comprehensive.batch26
+    154) "before each" hook for "should handle maximum uint256 approval - batch 26"
+
+  boundaries.comprehensive.batch27
+    155) "before each" hook for "should handle maximum uint256 approval - batch 27"
+
+  boundaries.comprehensive.batch28
+    156) "before each" hook for "should handle maximum uint256 approval - batch 28"
+
+  boundaries.comprehensive.batch29
+    157) "before each" hook for "should handle maximum uint256 approval - batch 29"
+
+  boundaries.comprehensive.batch3
+    158) "before each" hook for "should handle maximum uint256 approval - batch 3"
+
+  boundaries.comprehensive.batch30
+    159) "before each" hook for "should handle maximum uint256 approval - batch 30"
+
+  boundaries.comprehensive.batch31
+    160) "before each" hook for "should handle maximum uint256 approval - batch 31"
+
+  boundaries.comprehensive.batch32
+    161) "before each" hook for "should handle maximum uint256 approval - batch 32"
+
+  boundaries.comprehensive.batch33
+    162) "before each" hook for "should handle maximum uint256 approval - batch 33"
+
+  boundaries.comprehensive.batch34
+    163) "before each" hook for "should handle maximum uint256 approval - batch 34"
+
+  boundaries.comprehensive.batch35
+    164) "before each" hook for "should handle maximum uint256 approval - batch 35"
+
+  boundaries.comprehensive.batch36
+    165) "before each" hook for "should handle maximum uint256 approval - batch 36"
+
+  boundaries.comprehensive.batch37
+    166) "before each" hook for "should handle maximum uint256 approval - batch 37"
+
+  boundaries.comprehensive.batch38
+    167) "before each" hook for "should handle maximum uint256 approval - batch 38"
+
+  boundaries.comprehensive.batch39
+    168) "before each" hook for "should handle maximum uint256 approval - batch 39"
+
+  boundaries.comprehensive.batch4
+    169) "before each" hook for "should handle maximum uint256 approval - batch 4"
+
+  boundaries.comprehensive.batch40
+    170) "before each" hook for "should handle maximum uint256 approval - batch 40"
+
+  boundaries.comprehensive.batch5
+    171) "before each" hook for "should handle maximum uint256 approval - batch 5"
+
+  boundaries.comprehensive.batch6
+    172) "before each" hook for "should handle maximum uint256 approval - batch 6"
+
+  boundaries.comprehensive.batch7
+    173) "before each" hook for "should handle maximum uint256 approval - batch 7"
+
+  boundaries.comprehensive.batch8
+    174) "before each" hook for "should handle maximum uint256 approval - batch 8"
+
+  boundaries.comprehensive.batch9
+    175) "before each" hook for "should handle maximum uint256 approval - batch 9"
+
+  boundary.tests.batch1
+    176) "before each" hook for "should handle zero address checks - batch 1"
+
+  boundary.tests.batch10
+    177) "before each" hook for "should handle zero address checks - batch 10"
+
+  boundary.tests.batch11
+    178) "before each" hook for "should handle zero address checks - batch 11"
+
+  boundary.tests.batch12
+    179) "before each" hook for "should handle zero address checks - batch 12"
+
+  boundary.tests.batch13
+    180) "before each" hook for "should handle zero address checks - batch 13"
+
+  boundary.tests.batch14
+    181) "before each" hook for "should handle zero address checks - batch 14"
+
+  boundary.tests.batch15
+    182) "before each" hook for "should handle zero address checks - batch 15"
+
+  boundary.tests.batch16
+    183) "before each" hook for "should handle zero address checks - batch 16"
+
+  boundary.tests.batch17
+    184) "before each" hook for "should handle zero address checks - batch 17"
+
+  boundary.tests.batch18
+    185) "before each" hook for "should handle zero address checks - batch 18"
+
+  boundary.tests.batch19
+    186) "before each" hook for "should handle zero address checks - batch 19"
+
+  boundary.tests.batch2
+    187) "before each" hook for "should handle zero address checks - batch 2"
+
+  boundary.tests.batch20
+    188) "before each" hook for "should handle zero address checks - batch 20"
+
+  boundary.tests.batch21
+    189) "before each" hook for "should handle zero address checks - batch 21"
+
+  boundary.tests.batch22
+    190) "before each" hook for "should handle zero address checks - batch 22"
+
+  boundary.tests.batch23
+    191) "before each" hook for "should handle zero address checks - batch 23"
+
+  boundary.tests.batch24
+    192) "before each" hook for "should handle zero address checks - batch 24"
+
+  boundary.tests.batch25
+    193) "before each" hook for "should handle zero address checks - batch 25"
+
+  boundary.tests.batch26
+    194) "before each" hook for "should handle zero address checks - batch 26"
+
+  boundary.tests.batch27
+    195) "before each" hook for "should handle zero address checks - batch 27"
+
+  boundary.tests.batch28
+    196) "before each" hook for "should handle zero address checks - batch 28"
+
+  boundary.tests.batch29
+    197) "before each" hook for "should handle zero address checks - batch 29"
+
+  boundary.tests.batch3
+    198) "before each" hook for "should handle zero address checks - batch 3"
+
+  boundary.tests.batch30
+    199) "before each" hook for "should handle zero address checks - batch 30"
+
+  boundary.tests.batch4
+    200) "before each" hook for "should handle zero address checks - batch 4"
+
+  boundary.tests.batch5
+    201) "before each" hook for "should handle zero address checks - batch 5"
+
+  boundary.tests.batch6
+    202) "before each" hook for "should handle zero address checks - batch 6"
+
+  boundary.tests.batch7
+    203) "before each" hook for "should handle zero address checks - batch 7"
+
+  boundary.tests.batch8
+    204) "before each" hook for "should handle zero address checks - batch 8"
+
+  boundary.tests.batch9
+    205) "before each" hook for "should handle zero address checks - batch 9"
+
+  burnrouter.batch1
+    206) "before each" hook for "should initialize with correct seer - batch 1"
+
+  burnrouter.batch10
+    207) "before each" hook for "should initialize with correct seer - batch 10"
+
+  burnrouter.batch11
+    208) "before each" hook for "should initialize with correct seer - batch 11"
+
+  burnrouter.batch12
+    209) "before each" hook for "should initialize with correct seer - batch 12"
+
+  burnrouter.batch13
+    210) "before each" hook for "should initialize with correct seer - batch 13"
+
+  burnrouter.batch14
+    211) "before each" hook for "should initialize with correct seer - batch 14"
+
+  burnrouter.batch15
+    212) "before each" hook for "should initialize with correct seer - batch 15"
+
+  burnrouter.batch16
+    213) "before each" hook for "should initialize with correct seer - batch 16"
+
+  burnrouter.batch17
+    214) "before each" hook for "should initialize with correct seer - batch 17"
+
+  burnrouter.batch18
+    215) "before each" hook for "should initialize with correct seer - batch 18"
+
+  burnrouter.batch19
+    216) "before each" hook for "should initialize with correct seer - batch 19"
+
+  burnrouter.batch2
+    217) "before each" hook for "should initialize with correct seer - batch 2"
+
+  burnrouter.batch20
+    218) "before each" hook for "should initialize with correct seer - batch 20"
+
+  burnrouter.batch3
+    219) "before each" hook for "should initialize with correct seer - batch 3"
+
+  burnrouter.batch4
+    220) "before each" hook for "should initialize with correct seer - batch 4"
+
+  burnrouter.batch5
+    221) "before each" hook for "should initialize with correct seer - batch 5"
+
+  burnrouter.batch6
+    222) "before each" hook for "should initialize with correct seer - batch 6"
+
+  burnrouter.batch7
+    223) "before each" hook for "should initialize with correct seer - batch 7"
+
+  burnrouter.batch8
+    224) "before each" hook for "should initialize with correct seer - batch 8"
+
+  burnrouter.batch9
+    225) "before each" hook for "should initialize with correct seer - batch 9"
+
+  burnrouter.operations.batch1
+    226) "before each" hook for "should preview fees for user - batch 1"
+
+  burnrouter.operations.batch10
+    227) "before each" hook for "should preview fees for user - batch 10"
+
+  burnrouter.operations.batch11
+    228) "before each" hook for "should preview fees for user - batch 11"
+
+  burnrouter.operations.batch12
+    229) "before each" hook for "should preview fees for user - batch 12"
+
+  burnrouter.operations.batch13
+    230) "before each" hook for "should preview fees for user - batch 13"
+
+  burnrouter.operations.batch14
+    231) "before each" hook for "should preview fees for user - batch 14"
+
+  burnrouter.operations.batch15
+    232) "before each" hook for "should preview fees for user - batch 15"
+
+  burnrouter.operations.batch16
+    233) "before each" hook for "should preview fees for user - batch 16"
+
+  burnrouter.operations.batch17
+    234) "before each" hook for "should preview fees for user - batch 17"
+
+  burnrouter.operations.batch18
+    235) "before each" hook for "should preview fees for user - batch 18"
+
+  burnrouter.operations.batch19
+    236) "before each" hook for "should preview fees for user - batch 19"
+
+  burnrouter.operations.batch2
+    237) "before each" hook for "should preview fees for user - batch 2"
+
+  burnrouter.operations.batch20
+    238) "before each" hook for "should preview fees for user - batch 20"
+
+  burnrouter.operations.batch3
+    239) "before each" hook for "should preview fees for user - batch 3"
+
+  burnrouter.operations.batch4
+    240) "before each" hook for "should preview fees for user - batch 4"
+
+  burnrouter.operations.batch5
+    241) "before each" hook for "should preview fees for user - batch 5"
+
+  burnrouter.operations.batch6
+    242) "before each" hook for "should preview fees for user - batch 6"
+
+  burnrouter.operations.batch7
+    243) "before each" hook for "should preview fees for user - batch 7"
+
+  burnrouter.operations.batch8
+    244) "before each" hook for "should preview fees for user - batch 8"
+
+  burnrouter.operations.batch9
+    245) "before each" hook for "should preview fees for user - batch 9"
+
+  concurrent.batch1
+    246) "before each" hook for "should handle parallel transfers - batch 1"
+
+  concurrent.batch10
+    247) "before each" hook for "should handle parallel transfers - batch 10"
+
+  concurrent.batch11
+    248) "before each" hook for "should handle parallel transfers - batch 11"
+
+  concurrent.batch12
+    249) "before each" hook for "should handle parallel transfers - batch 12"
+
+  concurrent.batch13
+    250) "before each" hook for "should handle parallel transfers - batch 13"
+
+  concurrent.batch14
+    251) "before each" hook for "should handle parallel transfers - batch 14"
+
+  concurrent.batch15
+    252) "before each" hook for "should handle parallel transfers - batch 15"
+
+  concurrent.batch16
+    253) "before each" hook for "should handle parallel transfers - batch 16"
+
+  concurrent.batch17
+    254) "before each" hook for "should handle parallel transfers - batch 17"
+
+  concurrent.batch18
+    255) "before each" hook for "should handle parallel transfers - batch 18"
+
+  concurrent.batch19
+    256) "before each" hook for "should handle parallel transfers - batch 19"
+
+  concurrent.batch2
+    257) "before each" hook for "should handle parallel transfers - batch 2"
+
+  concurrent.batch20
+    258) "before each" hook for "should handle parallel transfers - batch 20"
+
+  concurrent.batch21
+    259) "before each" hook for "should handle parallel transfers - batch 21"
+
+  concurrent.batch22
+    260) "before each" hook for "should handle parallel transfers - batch 22"
+
+  concurrent.batch23
+    261) "before each" hook for "should handle parallel transfers - batch 23"
+
+  concurrent.batch24
+    262) "before each" hook for "should handle parallel transfers - batch 24"
+
+  concurrent.batch25
+    263) "before each" hook for "should handle parallel transfers - batch 25"
+
+  concurrent.batch3
+    264) "before each" hook for "should handle parallel transfers - batch 3"
+
+  concurrent.batch4
+    265) "before each" hook for "should handle parallel transfers - batch 4"
+
+  concurrent.batch5
+    266) "before each" hook for "should handle parallel transfers - batch 5"
+
+  concurrent.batch6
+    267) "before each" hook for "should handle parallel transfers - batch 6"
+
+  concurrent.batch7
+    268) "before each" hook for "should handle parallel transfers - batch 7"
+
+  concurrent.batch8
+    269) "before each" hook for "should handle parallel transfers - batch 8"
+
+  concurrent.batch9
+    270) "before each" hook for "should handle parallel transfers - batch 9"
+
+  contract.interactions.batch1
+    271) "before each" hook for "should integrate token and registry - batch 1"
+
+  contract.interactions.batch10
+    272) "before each" hook for "should integrate token and registry - batch 10"
+
+  contract.interactions.batch11
+    273) "before each" hook for "should integrate token and registry - batch 11"
+
+  contract.interactions.batch12
+    274) "before each" hook for "should integrate token and registry - batch 12"
+
+  contract.interactions.batch13
+    275) "before each" hook for "should integrate token and registry - batch 13"
+
+  contract.interactions.batch14
+    276) "before each" hook for "should integrate token and registry - batch 14"
+
+  contract.interactions.batch15
+    277) "before each" hook for "should integrate token and registry - batch 15"
+
+  contract.interactions.batch16
+    278) "before each" hook for "should integrate token and registry - batch 16"
+
+  contract.interactions.batch17
+    279) "before each" hook for "should integrate token and registry - batch 17"
+
+  contract.interactions.batch18
+    280) "before each" hook for "should integrate token and registry - batch 18"
+
+  contract.interactions.batch19
+    281) "before each" hook for "should integrate token and registry - batch 19"
+
+  contract.interactions.batch2
+    282) "before each" hook for "should integrate token and registry - batch 2"
+
+  contract.interactions.batch20
+    283) "before each" hook for "should integrate token and registry - batch 20"
+
+  contract.interactions.batch3
+    284) "before each" hook for "should integrate token and registry - batch 3"
+
+  contract.interactions.batch4
+    285) "before each" hook for "should integrate token and registry - batch 4"
+
+  contract.interactions.batch5
+    286) "before each" hook for "should integrate token and registry - batch 5"
+
+  contract.interactions.batch6
+    287) "before each" hook for "should integrate token and registry - batch 6"
+
+  contract.interactions.batch7
+    288) "before each" hook for "should integrate token and registry - batch 7"
+
+  contract.interactions.batch8
+    289) "before each" hook for "should integrate token and registry - batch 8"
+
+  contract.interactions.batch9
+    290) "before each" hook for "should integrate token and registry - batch 9"
+
+  coverage.finish.commerce.addMerchant.118_130.micro
+    291) "before each" hook for "should test merchant registration functionality"
+
+  coverage.finish.commerce.addMerchant.118_130.sequence
+    292) "before each" hook for "should test merchant registration functionality"
+
+  coverage.finish.commerce.addMerchant.118_130.targeted
+    293) "before each" hook for "should test merchant registration functionality"
+
+  coverage.finish.commerce.addMerchant.250_410.narrow
+    294) "before each" hook for "should test merchant registration functionality"
+
+  coverage.finish.commerce.addMerchant.250_410
+    295) "before each" hook for "should test merchant registration functionality"
+
+  coverage.finish.commerce.addMerchant.bruteforce
+    296) "before each" hook for "should handle various merchant registration scenarios"
+
+  coverage.finish.commerce.addMerchant.bruteforce2
+    297) "before each" hook for "should handle edge cases in merchant registration"
+
+  coverage.finish.commerce.addMerchant.'$file'
+    298) "before each" hook for "should test merchant registration"
+
+  coverage.finish.commerce.addMerchant.'$file'
+    299) "before each" hook for "should test merchant registration"
+
+  coverage.finish.commerce.addMerchant.'$file'
+    300) "before each" hook for "should test merchant registration"
+
+  coverage.finish.commerce.addMerchant.forceLeft
+    301) "before each" hook for "should test merchant registration with valid setup"
+
+  coverage.finish.commerce.addMerchant.forceRight
+    302) "before each" hook for "should reject merchants without vault or with low score"
+
+  coverage.finish.commerce.addMerchant.narrow
+    303) "before each" hook for "should successfully register a merchant with valid credentials"
+
+  coverage.finish.commerce.addMerchant.narrow2
+    304) "before each" hook for "registers one signer and uses a no-vault signer to flip left/right msg.sender arms"
+
+  coverage.finish.commerce.addMerchant.narrow3
+    305) "before each" hook for "should revert when trying to add an existing merchant"
+
+  coverage.finish.commerce.addMerchant.narrow4
+    306) "before each" hook for "should correctly identify an existing merchant"
+
+  coverage.finish.commerce.addMerchant.orderings
+    307) "before each" hook for "should allow a user with a vault and score to become a merchant"
+
+  coverage.finish.commerce.addMerchant.pinpoint
+    308) "before each" hook for "should successfully add a valid merchant"
+
+  coverage.finish.commerce.addMerchant
+    309) "before each" hook for "should allow a valid user to become a merchant"
+
+  coverage.finish.commerce.exec.addMerchant
+    310) "before each" hook for "should successfully register a valid merchant"
+
+  coverage.finish.commerce.stateful
+    ✔ should handle the full lifecycle of a merchant and multiple escrows
+
+  dao.governance.batch$i
+    311) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    312) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    313) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    314) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    315) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    316) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    317) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    318) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    319) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    320) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    321) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    322) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    323) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    324) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    325) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    326) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    327) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    328) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    329) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    330) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    331) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    332) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    333) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    334) "before each" hook for "should create proposal successfully"
+
+  dao.governance.batch$i
+    335) "before each" hook for "should create proposal successfully"
+
+  Differential: EVM vs zkSync (skeleton)
+    - VFIDEToken basic attributes are consistent
+
+  escrow.simple.batch1
+    ✔ should reject zero amount - batch 1
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch10
+    ✔ should reject zero amount - batch 10
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch11
+    ✔ should reject zero amount - batch 11
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch12
+    ✔ should reject zero amount - batch 12
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch13
+    ✔ should reject zero amount - batch 13
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch14
+    ✔ should reject zero amount - batch 14
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch15
+    ✔ should reject zero amount - batch 15
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch16
+    ✔ should reject zero amount - batch 16
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch17
+    ✔ should reject zero amount - batch 17
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch18
+    ✔ should reject zero amount - batch 18
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch19
+    ✔ should reject zero amount - batch 19
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch2
+    ✔ should reject zero amount - batch 2
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch20
+    ✔ should reject zero amount - batch 20
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch3
+    ✔ should reject zero amount - batch 3
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch4
+    ✔ should reject zero amount - batch 4
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch5
+    ✔ should reject zero amount - batch 5
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch6
+    ✔ should reject zero amount - batch 6
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch7
+    ✔ should reject zero amount - batch 7
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch8
+    ✔ should reject zero amount - batch 8
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch9
+    ✔ should reject zero amount - batch 9
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.states.batch1
+    ✔ should initialize in OPEN state - batch 1
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch10
+    ✔ should initialize in OPEN state - batch 10
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch11
+    ✔ should initialize in OPEN state - batch 11
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch12
+    ✔ should initialize in OPEN state - batch 12
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch13
+    ✔ should initialize in OPEN state - batch 13
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch14
+    ✔ should initialize in OPEN state - batch 14
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch15
+    ✔ should initialize in OPEN state - batch 15
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch16
+    ✔ should initialize in OPEN state - batch 16
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch17
+    ✔ should initialize in OPEN state - batch 17
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch18
+    ✔ should initialize in OPEN state - batch 18
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch19
+    ✔ should initialize in OPEN state - batch 19
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch2
+    ✔ should initialize in OPEN state - batch 2
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch20
+    ✔ should initialize in OPEN state - batch 20
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch21
+    ✔ should initialize in OPEN state - batch 21
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch22
+    ✔ should initialize in OPEN state - batch 22
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch23
+    ✔ should initialize in OPEN state - batch 23
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch24
+    ✔ should initialize in OPEN state - batch 24
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch25
+    ✔ should initialize in OPEN state - batch 25
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch3
+    ✔ should initialize in OPEN state - batch 3
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch4
+    ✔ should initialize in OPEN state - batch 4
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch5
+    ✔ should initialize in OPEN state - batch 5
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch6
+    ✔ should initialize in OPEN state - batch 6
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch7
+    ✔ should initialize in OPEN state - batch 7
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch8
+    ✔ should initialize in OPEN state - batch 8
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch9
+    ✔ should initialize in OPEN state - batch 9
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.workflows.batch1
+    ✔ should complete full escrow lifecycle - batch 1
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch10
+    ✔ should complete full escrow lifecycle - batch 10
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch11
+    ✔ should complete full escrow lifecycle - batch 11
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch12
+    ✔ should complete full escrow lifecycle - batch 12
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch13
+    ✔ should complete full escrow lifecycle - batch 13
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch14
+    ✔ should complete full escrow lifecycle - batch 14
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch15
+    ✔ should complete full escrow lifecycle - batch 15
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch16
+    ✔ should complete full escrow lifecycle - batch 16
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch17
+    ✔ should complete full escrow lifecycle - batch 17
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch18
+    ✔ should complete full escrow lifecycle - batch 18
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch19
+    ✔ should complete full escrow lifecycle - batch 19
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch2
+    ✔ should complete full escrow lifecycle - batch 2
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch20
+    ✔ should complete full escrow lifecycle - batch 20
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch21
+    ✔ should complete full escrow lifecycle - batch 21
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch22
+    ✔ should complete full escrow lifecycle - batch 22
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch23
+    ✔ should complete full escrow lifecycle - batch 23
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch24
+    ✔ should complete full escrow lifecycle - batch 24
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch25
+    ✔ should complete full escrow lifecycle - batch 25
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch3
+    ✔ should complete full escrow lifecycle - batch 3
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch4
+    ✔ should complete full escrow lifecycle - batch 4
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch5
+    ✔ should complete full escrow lifecycle - batch 5
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch6
+    ✔ should complete full escrow lifecycle - batch 6
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch7
+    ✔ should complete full escrow lifecycle - batch 7
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch8
+    ✔ should complete full escrow lifecycle - batch 8
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch9
+    ✔ should complete full escrow lifecycle - batch 9
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  Deterministic fuzz: Finance / Token / Commerce (sanity)
+    ✔ runs a deterministic sequence of randomized actions without crashing (269ms)
+
+  gas.efficiency.batch1
+    336) "before each" hook for "should execute transfer efficiently - batch 1"
+
+  gas.efficiency.batch10
+    337) "before each" hook for "should execute transfer efficiently - batch 10"
+
+  gas.efficiency.batch11
+    338) "before each" hook for "should execute transfer efficiently - batch 11"
+
+  gas.efficiency.batch12
+    339) "before each" hook for "should execute transfer efficiently - batch 12"
+
+  gas.efficiency.batch13
+    340) "before each" hook for "should execute transfer efficiently - batch 13"
+
+  gas.efficiency.batch14
+    341) "before each" hook for "should execute transfer efficiently - batch 14"
+
+  gas.efficiency.batch15
+    342) "before each" hook for "should execute transfer efficiently - batch 15"
+
+  gas.efficiency.batch16
+    343) "before each" hook for "should execute transfer efficiently - batch 16"
+
+  gas.efficiency.batch17
+    344) "before each" hook for "should execute transfer efficiently - batch 17"
+
+  gas.efficiency.batch18
+    345) "before each" hook for "should execute transfer efficiently - batch 18"
+
+  gas.efficiency.batch19
+    346) "before each" hook for "should execute transfer efficiently - batch 19"
+
+  gas.efficiency.batch2
+    347) "before each" hook for "should execute transfer efficiently - batch 2"
+
+  gas.efficiency.batch20
+    348) "before each" hook for "should execute transfer efficiently - batch 20"
+
+  gas.efficiency.batch3
+    349) "before each" hook for "should execute transfer efficiently - batch 3"
+
+  gas.efficiency.batch4
+    350) "before each" hook for "should execute transfer efficiently - batch 4"
+
+  gas.efficiency.batch5
+    351) "before each" hook for "should execute transfer efficiently - batch 5"
+
+  gas.efficiency.batch6
+    352) "before each" hook for "should execute transfer efficiently - batch 6"
+
+  gas.efficiency.batch7
+    353) "before each" hook for "should execute transfer efficiently - batch 7"
+
+  gas.efficiency.batch8
+    354) "before each" hook for "should execute transfer efficiently - batch 8"
+
+  gas.efficiency.batch9
+    355) "before each" hook for "should execute transfer efficiently - batch 9"
+
+  merchant.edgecases.batch1
+    356) "before each" hook for "should register with exact minimum score - batch 1"
+
+  merchant.edgecases.batch10
+    357) "before each" hook for "should register with exact minimum score - batch 10"
+
+  merchant.edgecases.batch11
+    358) "before each" hook for "should register with exact minimum score - batch 11"
+
+  merchant.edgecases.batch12
+    359) "before each" hook for "should register with exact minimum score - batch 12"
+
+  merchant.edgecases.batch13
+    360) "before each" hook for "should register with exact minimum score - batch 13"
+
+  merchant.edgecases.batch14
+    361) "before each" hook for "should register with exact minimum score - batch 14"
+
+  merchant.edgecases.batch15
+    362) "before each" hook for "should register with exact minimum score - batch 15"
+
+  merchant.edgecases.batch16
+    363) "before each" hook for "should register with exact minimum score - batch 16"
+
+  merchant.edgecases.batch17
+    364) "before each" hook for "should register with exact minimum score - batch 17"
+
+  merchant.edgecases.batch18
+    365) "before each" hook for "should register with exact minimum score - batch 18"
+
+  merchant.edgecases.batch19
+    366) "before each" hook for "should register with exact minimum score - batch 19"
+
+  merchant.edgecases.batch2
+    367) "before each" hook for "should register with exact minimum score - batch 2"
+
+  merchant.edgecases.batch20
+    368) "before each" hook for "should register with exact minimum score - batch 20"
+
+  merchant.edgecases.batch21
+    369) "before each" hook for "should register with exact minimum score - batch 21"
+
+  merchant.edgecases.batch22
+    370) "before each" hook for "should register with exact minimum score - batch 22"
+
+  merchant.edgecases.batch23
+    371) "before each" hook for "should register with exact minimum score - batch 23"
+
+  merchant.edgecases.batch24
+    372) "before each" hook for "should register with exact minimum score - batch 24"
+
+  merchant.edgecases.batch25
+    373) "before each" hook for "should register with exact minimum score - batch 25"
+
+  merchant.edgecases.batch3
+    374) "before each" hook for "should register with exact minimum score - batch 3"
+
+  merchant.edgecases.batch4
+    375) "before each" hook for "should register with exact minimum score - batch 4"
+
+  merchant.edgecases.batch5
+    376) "before each" hook for "should register with exact minimum score - batch 5"
+
+  merchant.edgecases.batch6
+    377) "before each" hook for "should register with exact minimum score - batch 6"
+
+  merchant.edgecases.batch7
+    378) "before each" hook for "should register with exact minimum score - batch 7"
+
+  merchant.edgecases.batch8
+    379) "before each" hook for "should register with exact minimum score - batch 8"
+
+  merchant.edgecases.batch9
+    380) "before each" hook for "should register with exact minimum score - batch 9"
+
+  merchant.lifecycle.batch1
+    381) "before each" hook for "should track merchant metadata - batch 1"
+
+  merchant.lifecycle.batch10
+    382) "before each" hook for "should track merchant metadata - batch 10"
+
+  merchant.lifecycle.batch11
+    383) "before each" hook for "should track merchant metadata - batch 11"
+
+  merchant.lifecycle.batch12
+    384) "before each" hook for "should track merchant metadata - batch 12"
+
+  merchant.lifecycle.batch13
+    385) "before each" hook for "should track merchant metadata - batch 13"
+
+  merchant.lifecycle.batch14
+    386) "before each" hook for "should track merchant metadata - batch 14"
+
+  merchant.lifecycle.batch15
+    387) "before each" hook for "should track merchant metadata - batch 15"
+
+  merchant.lifecycle.batch2
+    388) "before each" hook for "should track merchant metadata - batch 2"
+
+  merchant.lifecycle.batch3
+    389) "before each" hook for "should track merchant metadata - batch 3"
+
+  merchant.lifecycle.batch4
+    390) "before each" hook for "should track merchant metadata - batch 4"
+
+  merchant.lifecycle.batch5
+    391) "before each" hook for "should track merchant metadata - batch 5"
+
+  merchant.lifecycle.batch6
+    392) "before each" hook for "should track merchant metadata - batch 6"
+
+  merchant.lifecycle.batch7
+    393) "before each" hook for "should track merchant metadata - batch 7"
+
+  merchant.lifecycle.batch8
+    394) "before each" hook for "should track merchant metadata - batch 8"
+
+  merchant.lifecycle.batch9
+    395) "before each" hook for "should track merchant metadata - batch 9"
+
+  policy.config.batch1
+    396) "before each" hook for "should update policy settings - batch 1"
+
+  policy.config.batch10
+    397) "before each" hook for "should update policy settings - batch 10"
+
+  policy.config.batch11
+    398) "before each" hook for "should update policy settings - batch 11"
+
+  policy.config.batch12
+    399) "before each" hook for "should update policy settings - batch 12"
+
+  policy.config.batch13
+    400) "before each" hook for "should update policy settings - batch 13"
+
+  policy.config.batch14
+    401) "before each" hook for "should update policy settings - batch 14"
+
+  policy.config.batch15
+    402) "before each" hook for "should update policy settings - batch 15"
+
+  policy.config.batch16
+    403) "before each" hook for "should update policy settings - batch 16"
+
+  policy.config.batch17
+    404) "before each" hook for "should update policy settings - batch 17"
+
+  policy.config.batch18
+    405) "before each" hook for "should update policy settings - batch 18"
+
+  policy.config.batch19
+    406) "before each" hook for "should update policy settings - batch 19"
+
+  policy.config.batch2
+    407) "before each" hook for "should update policy settings - batch 2"
+
+  policy.config.batch20
+    408) "before each" hook for "should update policy settings - batch 20"
+
+  policy.config.batch3
+    409) "before each" hook for "should update policy settings - batch 3"
+
+  policy.config.batch4
+    410) "before each" hook for "should update policy settings - batch 4"
+
+  policy.config.batch5
+    411) "before each" hook for "should update policy settings - batch 5"
+
+  policy.config.batch6
+    412) "before each" hook for "should update policy settings - batch 6"
+
+  policy.config.batch7
+    413) "before each" hook for "should update policy settings - batch 7"
+
+  policy.config.batch8
+    414) "before each" hook for "should update policy settings - batch 8"
+
+  policy.config.batch9
+    415) "before each" hook for "should update policy settings - batch 9"
+
+  registry.operations.batch1
+    416) "before each" hook for "should track merchant registration - batch 1"
+
+  registry.operations.batch10
+    417) "before each" hook for "should track merchant registration - batch 10"
+
+  registry.operations.batch11
+    418) "before each" hook for "should track merchant registration - batch 11"
+
+  registry.operations.batch12
+    419) "before each" hook for "should track merchant registration - batch 12"
+
+  registry.operations.batch13
+    420) "before each" hook for "should track merchant registration - batch 13"
+
+  registry.operations.batch14
+    421) "before each" hook for "should track merchant registration - batch 14"
+
+  registry.operations.batch15
+    422) "before each" hook for "should track merchant registration - batch 15"
+
+  registry.operations.batch16
+    423) "before each" hook for "should track merchant registration - batch 16"
+
+  registry.operations.batch17
+    424) "before each" hook for "should track merchant registration - batch 17"
+
+  registry.operations.batch18
+    425) "before each" hook for "should track merchant registration - batch 18"
+
+  registry.operations.batch19
+    426) "before each" hook for "should track merchant registration - batch 19"
+
+  registry.operations.batch2
+    427) "before each" hook for "should track merchant registration - batch 2"
+
+  registry.operations.batch20
+    428) "before each" hook for "should track merchant registration - batch 20"
+
+  registry.operations.batch3
+    429) "before each" hook for "should track merchant registration - batch 3"
+
+  registry.operations.batch4
+    430) "before each" hook for "should track merchant registration - batch 4"
+
+  registry.operations.batch5
+    431) "before each" hook for "should track merchant registration - batch 5"
+
+  registry.operations.batch6
+    432) "before each" hook for "should track merchant registration - batch 6"
+
+  registry.operations.batch7
+    433) "before each" hook for "should track merchant registration - batch 7"
+
+  registry.operations.batch8
+    434) "before each" hook for "should track merchant registration - batch 8"
+
+  registry.operations.batch9
+    435) "before each" hook for "should track merchant registration - batch 9"
+
+  registry.policy.batch1
+    436) "before each" hook for "should enforce policy thresholds - batch 1"
+
+  registry.policy.batch10
+    437) "before each" hook for "should enforce policy thresholds - batch 10"
+
+  registry.policy.batch11
+    438) "before each" hook for "should enforce policy thresholds - batch 11"
+
+  registry.policy.batch12
+    439) "before each" hook for "should enforce policy thresholds - batch 12"
+
+  registry.policy.batch13
+    440) "before each" hook for "should enforce policy thresholds - batch 13"
+
+  registry.policy.batch14
+    441) "before each" hook for "should enforce policy thresholds - batch 14"
+
+  registry.policy.batch15
+    442) "before each" hook for "should enforce policy thresholds - batch 15"
+
+  registry.policy.batch16
+    443) "before each" hook for "should enforce auto-suspend on refunds - batch 16"
+
+  registry.policy.batch17
+    444) "before each" hook for "should enforce auto-suspend on refunds - batch 17"
+
+  registry.policy.batch18
+    445) "before each" hook for "should enforce auto-suspend on refunds - batch 18"
+
+  registry.policy.batch19
+    446) "before each" hook for "should enforce auto-suspend on refunds - batch 19"
+
+  registry.policy.batch2
+    447) "before each" hook for "should enforce policy thresholds - batch 2"
+
+  registry.policy.batch20
+    448) "before each" hook for "should enforce auto-suspend on refunds - batch 20"
+
+  registry.policy.batch21
+    449) "before each" hook for "should enforce auto-suspend on refunds - batch 21"
+
+  registry.policy.batch22
+    450) "before each" hook for "should enforce auto-suspend on refunds - batch 22"
+
+  registry.policy.batch23
+    451) "before each" hook for "should enforce auto-suspend on refunds - batch 23"
+
+  registry.policy.batch24
+    452) "before each" hook for "should enforce auto-suspend on refunds - batch 24"
+
+  registry.policy.batch25
+    453) "before each" hook for "should enforce auto-suspend on refunds - batch 25"
+
+  registry.policy.batch3
+    454) "before each" hook for "should enforce policy thresholds - batch 3"
+
+  registry.policy.batch4
+    455) "before each" hook for "should enforce policy thresholds - batch 4"
+
+  registry.policy.batch5
+    456) "before each" hook for "should enforce policy thresholds - batch 5"
+
+  registry.policy.batch6
+    457) "before each" hook for "should enforce policy thresholds - batch 6"
+
+  registry.policy.batch7
+    458) "before each" hook for "should enforce policy thresholds - batch 7"
+
+  registry.policy.batch8
+    459) "before each" hook for "should enforce policy thresholds - batch 8"
+
+  registry.policy.batch9
+    460) "before each" hook for "should enforce policy thresholds - batch 9"
+
+  score.boundaries.batch1
+    461) "before each" hook for "should set and retrieve scores - batch 1"
+
+  score.boundaries.batch10
+    462) "before each" hook for "should set and retrieve scores - batch 10"
+
+  score.boundaries.batch11
+    463) "before each" hook for "should set and retrieve scores - batch 11"
+
+  score.boundaries.batch12
+    464) "before each" hook for "should set and retrieve scores - batch 12"
+
+  score.boundaries.batch13
+    465) "before each" hook for "should set and retrieve scores - batch 13"
+
+  score.boundaries.batch14
+    466) "before each" hook for "should set and retrieve scores - batch 14"
+
+  score.boundaries.batch15
+    467) "before each" hook for "should set and retrieve scores - batch 15"
+
+  score.boundaries.batch16
+    468) "before each" hook for "should set and retrieve scores - batch 16"
+
+  score.boundaries.batch17
+    469) "before each" hook for "should set and retrieve scores - batch 17"
+
+  score.boundaries.batch18
+    470) "before each" hook for "should set and retrieve scores - batch 18"
+
+  score.boundaries.batch19
+    471) "before each" hook for "should set and retrieve scores - batch 19"
+
+  score.boundaries.batch2
+    472) "before each" hook for "should set and retrieve scores - batch 2"
+
+  score.boundaries.batch20
+    473) "before each" hook for "should set and retrieve scores - batch 20"
+
+  score.boundaries.batch21
+    474) "before each" hook for "should set and retrieve scores - batch 21"
+
+  score.boundaries.batch22
+    475) "before each" hook for "should set and retrieve scores - batch 22"
+
+  score.boundaries.batch23
+    476) "before each" hook for "should set and retrieve scores - batch 23"
+
+  score.boundaries.batch24
+    477) "before each" hook for "should set and retrieve scores - batch 24"
+
+  score.boundaries.batch25
+    478) "before each" hook for "should set and retrieve scores - batch 25"
+
+  score.boundaries.batch26
+    479) "before each" hook for "should set and retrieve scores - batch 26"
+
+  score.boundaries.batch27
+    480) "before each" hook for "should set and retrieve scores - batch 27"
+
+  score.boundaries.batch28
+    481) "before each" hook for "should set and retrieve scores - batch 28"
+
+  score.boundaries.batch29
+    482) "before each" hook for "should set and retrieve scores - batch 29"
+
+  score.boundaries.batch3
+    483) "before each" hook for "should set and retrieve scores - batch 3"
+
+  score.boundaries.batch30
+    484) "before each" hook for "should set and retrieve scores - batch 30"
+
+  score.boundaries.batch31
+    485) "before each" hook for "should set and retrieve scores - batch 31"
+
+  score.boundaries.batch32
+    486) "before each" hook for "should set and retrieve scores - batch 32"
+
+  score.boundaries.batch33
+    487) "before each" hook for "should set and retrieve scores - batch 33"
+
+  score.boundaries.batch34
+    488) "before each" hook for "should set and retrieve scores - batch 34"
+
+  score.boundaries.batch35
+    489) "before each" hook for "should set and retrieve scores - batch 35"
+
+  score.boundaries.batch36
+    490) "before each" hook for "should set and retrieve scores - batch 36"
+
+  score.boundaries.batch37
+    491) "before each" hook for "should set and retrieve scores - batch 37"
+
+  score.boundaries.batch38
+    492) "before each" hook for "should set and retrieve scores - batch 38"
+
+  score.boundaries.batch39
+    493) "before each" hook for "should set and retrieve scores - batch 39"
+
+  score.boundaries.batch4
+    494) "before each" hook for "should set and retrieve scores - batch 4"
+
+  score.boundaries.batch40
+    495) "before each" hook for "should set and retrieve scores - batch 40"
+
+  score.boundaries.batch5
+    496) "before each" hook for "should set and retrieve scores - batch 5"
+
+  score.boundaries.batch6
+    497) "before each" hook for "should set and retrieve scores - batch 6"
+
+  score.boundaries.batch7
+    498) "before each" hook for "should set and retrieve scores - batch 7"
+
+  score.boundaries.batch8
+    499) "before each" hook for "should set and retrieve scores - batch 8"
+
+  score.boundaries.batch9
+    500) "before each" hook for "should set and retrieve scores - batch 9"
+
+  security.comprehensive.batch1
+    ✔ should add guardians to vault - batch 1
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch10
+    ✔ should add guardians to vault - batch 10
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch11
+    ✔ should add guardians to vault - batch 11
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch12
+    ✔ should add guardians to vault - batch 12
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch13
+    ✔ should add guardians to vault - batch 13
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch14
+    ✔ should add guardians to vault - batch 14
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch15
+    ✔ should add guardians to vault - batch 15
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch16
+    ✔ should add guardians to vault - batch 16
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch17
+    ✔ should add guardians to vault - batch 17
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch18
+    ✔ should add guardians to vault - batch 18
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status
+
+  security.comprehensive.batch19
+    ✔ should add guardians to vault - batch 19
+    ✔ should prevent duplicate guardians
+    ✔ should remove guardians
+    ✔ should check SecurityHub lock status

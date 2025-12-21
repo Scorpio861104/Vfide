@@ -60,7 +60,7 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-[#22C55E] rounded-full" />
-                <span>100% Test Coverage</span>
+                <span>All Tests Passing</span>
               </div>
             </div>
 

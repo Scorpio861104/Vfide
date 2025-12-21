@@ -1,0 +1,5 @@
+Warning: unused option: multi-abi
+[2025-11-23 16:26:22.65] Compiling `contracts/VFIDEToken.sol`... Done! (9.78615839s)
+Analyzing contract: /src/contracts/VFIDEToken.sol:VFIDEToken
+[2025-11-23 16:26:32.52] Running slither on `contracts/VFIDEToken.sol`... Done! (1.979664544s)
+echidna: Constructor arguments are required: [("devReserveVestingVault",address),("_vaultHub",address),("_ledger",address),("_treasurySink",address)]

@@ -1,0 +1,17 @@
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+Warning: `--ir-minimum` enables `viaIR` with minimum optimization, which can result in inaccurate source mappings.
+Only use this flag as a workaround if you are experiencing "stack too deep" errors.
+Note that `viaIR` is production ready since Solidity 0.8.13 and above.
+See more: https://github.com/foundry-rs/foundry/issues/3357
+Compiling 131 files with Solc 0.8.30
+Solc 0.8.30 finished in 323.53ms
+Error: Compiler run failed:
+Error (7576): Undeclared identifier. "setVaultHub" is not (or not yet) visible at this point.
+   --> contracts/VFIDEToken.sol:207:9:
+    |
+207 |         setVaultHub(factory);
+    |         ^^^^^^^^^^^

@@ -63,7 +63,7 @@ export function BadgeNFTMinter({ badgeId, onSuccess }: BadgeNFTMinterProps) {
           
           {txHash && (
             <a
-              href={`https://polygonscan.com/tx/${txHash}`}
+              href={`https://explorer.zksync.io/tx/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 text-sm text-primary hover:underline"

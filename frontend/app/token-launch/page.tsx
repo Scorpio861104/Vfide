@@ -854,7 +854,7 @@ export default function TokenLaunchPage() {
                 <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-6">
                   <h3 className="text-xl font-bold text-[#00F0FF] mb-3">Smart Contract</h3>
                   <ul className="space-y-2 text-sm text-[#A0A0A5]">
-                    <li>• Audited by professional firms</li>
+                    <li>• Third-party audit planned pre-mainnet</li>
                     <li>• Open source and verifiable</li>
                     <li>• Non-upgradeable core logic</li>
                     <li>• Community governance controls</li>

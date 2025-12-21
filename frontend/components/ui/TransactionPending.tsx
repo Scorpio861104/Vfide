@@ -18,7 +18,8 @@ interface TransactionPendingProps {
 const EXPLORER_URLS: Record<number, string> = {
   1: 'https://etherscan.io',
   11155111: 'https://sepolia.etherscan.io',
-  137: 'https://polygonscan.com',
+  324: 'https://explorer.zksync.io',
+  300: 'https://sepolia.explorer.zksync.io',
   42161: 'https://arbiscan.io',
 };
 

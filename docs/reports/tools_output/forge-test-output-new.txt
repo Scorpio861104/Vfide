@@ -1,0 +1,8 @@
+Compiling 136 files with Solc 0.8.30
+Solc 0.8.30 finished in 689.63ms
+Error: Compiler run failed:
+Error (6675): Member "expectRevert" not unique after argument-dependent lookup in contract Vm.
+   --> test/foundry/MerchantPortal.t.sol:134:9:
+    |
+134 |         vm.expectRevert("zero");
+    |         ^^^^^^^^^^^^^^^

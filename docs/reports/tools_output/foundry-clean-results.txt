@@ -1,0 +1,13 @@
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+Compiler run failed:
+Error (7576): Undeclared identifier.
+  --> test/foundry/VFIDEToken.t.sol:73:27:
+   |
+73 |         token.mint(alice, amount);
+   |                           ^^^^^^
+
+Error: Compilation failed

@@ -1,0 +1,529 @@
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+Compiling 131 files with Solc 0.8.30
+Solc 0.8.30 finished in 58.96s
+Compiler run successful with warnings:
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/ProofScoreBurnRouter.sol:62:40:
+   |
+62 |     function adjustScore(address user, uint16 delta, bool increase) external {
+   |                                        ^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/ProofScoreBurnRouter.sol:62:54:
+   |
+62 |     function adjustScore(address user, uint16 delta, bool increase) external {
+   |                                                      ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts-prod/VFIDECommerce.sol:290:34:
+    |
+290 |     function dispute(uint256 id, string calldata reason) external {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (2072): Unused local variable.
+  --> contracts-prod/mocks/VFIDEPresaleMock.sol:67:13:
+   |
+67 |             uint256 refBonus = (vfideAmount * refBps) / 10000;
+   |             ^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:31:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                               ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:43:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                           ^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:59:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                                           ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:25:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                         ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:37:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                     ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:52:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                                    ^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:24:26:
+   |
+24 |     function onFinalized(uint256 id, bool passed) external {
+   |                          ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/ProofScoreBurnRouter.sol:109:9:
+    |
+109 |         address to,
+    |         ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDECommerce.sol:211:34:
+    |
+211 |     function dispute(uint256 id, string calldata reason) external {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:190:87:
+    |
+190 |  ... s token, bool forceDecimalsReturn, uint8 forcedVal, uint256 amount, address to) exter ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:216:84:
+    |
+216 |  ... s(address token, bool forceReturn, uint8 forcedVal, uint256 amount, address to, bool  ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:281:67:
+    |
+281 |  ... ed_and_tokenNonZero(address token, address to, uint256 amount) external view ret ...
+    |                                         ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:281:79:
+    |
+281 |  ... NonZero(address token, address to, uint256 amount) external view returns (bool allow ...
+    |                                         ^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:316:107:
+    |
+316 |  ... ress to, bool forceDecimalsReturn, uint8 forcedVal, bool forceDepositInsuff, bool for ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:493:38:
+    |
+493 |     function TEST_if_send_zero_guard(address token, address to, uint256 amount) external view returns (bool) {
+    |                                      ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:516:40:
+    |
+516 |     function TEST_if_to_or_amount_zero(address token, address to, uint256 amount) external pure returns (bool) {
+    |                                        ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEStaking.sol:371:9:
+    |
+371 |         address vault,
+    |         ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/Vault.sol:159:26:
+    |
+159 |     function verifyProof(bytes memory _proof) internal pure returns (bool) {
+    |                          ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/Vault.sol:194:32:
+    |
+194 |     function verifyDAOApproval(bytes memory _daoApproval) internal pure returns (bool) {
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (2072): Unused local variable.
+   --> test/foundry/DevReserveVestingVault.t.sol:299:9:
+    |
+299 |         uint256 claimableBefore = vault.claimable();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:31:42:
+   |
+31 |     function testFuzz_totalSupplyBounded(uint256 randomValue) public view {
+   |                                          ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:36:41:
+   |
+36 |     function testFuzz_devReserveCorrect(uint256 randomValue) public view {
+   |                                         ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:41:45:
+   |
+41 |     function testFuzz_presaleCapNotExceeded(uint256 randomValue) public view {
+   |                                             ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:46:42:
+   |
+46 |     function testFuzz_constantsImmutable(uint256 randomValue) public view {
+   |                                          ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:53:37:
+   |
+53 |     function testFuzz_nameAndSymbol(uint256 randomValue) public view {
+   |                                     ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:60:35:
+   |
+60 |     function testFuzz_ownerExists(uint256 randomValue) public view {
+   |                                   ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:65:38:
+   |
+65 |     function testFuzz_vaultOnlyState(uint256 randomValue) public view {
+   |                                      ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:71:41:
+   |
+71 |     function testFuzz_policyLockedState(uint256 randomValue) public view {
+   |                                         ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:77:35:
+   |
+77 |     function testFuzz_vaultHubSet(uint256 randomValue) public view {
+   |                                   ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:83:39:
+   |
+83 |     function testFuzz_treasurySinkSet(uint256 randomValue) public view {
+   |                                       ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:89:44:
+   |
+89 |     function testFuzz_presaleInitiallyZero(uint256 randomValue) public view {
+   |                                            ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:95:45:
+   |
+95 |     function testFuzz_totalSupplyConsistent(uint256 randomValue) public view {
+   |                                             ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> test/foundry/VFIDETokenSimple.t.sol:102:59:
+    |
+102 |     function testFuzz_allowanceZeroSpender(address owner, uint256 randomValue) public view {
+    |                                                           ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> test/foundry/VFIDETokenSimple.t.sol:109:44:
+    |
+109 |     function testFuzz_presaleMintedBounded(uint256 randomValue) public view {
+    |                                            ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> test/foundry/VFIDETokenSimple.t.sol:116:46:
+    |
+116 |     function testFuzz_totalSupplyNonNegative(uint256 randomValue) public view {
+    |                                              ^^^^^^^^^^^^^^^^^^^
+
+Warning (2018): Function state mutability can be restricted to view
+  --> contracts-prod/mocks/VFIDEFinanceMocks.sol:44:5:
+   |
+44 |     function setSymbolHint(address token, string calldata) external {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to pure
+   --> contracts/VFIDEFinance.sol:298:5:
+    |
+298 |     function TEST_if_treasury_force_flags(bool depositInsuff, bool sendInsuff) external view returns (bool, bool) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to pure
+   --> contracts/VFIDEFinance.sol:493:5:
+    |
+493 |     function TEST_if_send_zero_guard(address token, address to, uint256 amount) external view returns (bool) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to pure
+   --> contracts/VFIDEStaking.sol:400:5:
+    |
+400 |     function _getVaultOwner(address vault) internal view returns (address) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to view
+  --> test/foundry/Trust.t.sol:18:5:
+   |
+18 |     function testNeutralScoreUninitialized() public {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to view
+  --> test/foundry/VFIDEFinance.t.sol:77:5:
+   |
+77 |     function testFuzz_DecimalsTracked() public {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to pure
+  --> test/foundry/zk/VFIDETokenFuzz.t.sol:11:5:
+   |
+11 |     function vaultOf(address a) external view returns (address) { return a; }
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (2018): Function state mutability can be restricted to view
+  --> test/foundry/zk/VFIDETokenFuzz.t.sol:58:5:
+   |
+58 |     function invariant_TotalSupplyCap() public {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Ran 1 test for test/foundry/AuditFixes.t.sol:AuditFixesTest
+[FAIL: StdCheats deployCode(string,bytes): Deployment failed.] setUp() (gas: 0)
+Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 487.07µs (0.00ns CPU time)
+
+Ran 1 test for test/foundry/Finance.t.sol:FinanceSmoke
+[PASS] testNeutralAddAssetWithBypass() (gas: 530558)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 425.52µs (142.25µs CPU time)
+
+Ran 9 tests for test/foundry/Seer.t.sol:SeerFuzzTest
+[PASS] testFuzz_daoCanAdjustScore(address,uint16) (runs: 256, μ: 53503, ~: 53514)
+[PASS] testFuzz_daoCanFlag(address,uint8) (runs: 256, μ: 51620, ~: 51620)
+[PASS] testFuzz_daoCanSetPolicy(uint16,uint16,uint16) (runs: 256, μ: 28820, ~: 28820)
+[PASS] testFuzz_daoIsSet(address) (runs: 256, μ: 9760, ~: 9760)
+[PASS] testFuzz_defaultScoreIsZero(address) (runs: 256, μ: 13555, ~: 13555)
+[PASS] testFuzz_governanceMinIsBasePlus100(address) (runs: 256, μ: 7891, ~: 7891)
+[PASS] testFuzz_onlyDaoCanAdjustScore(address,address,uint16) (runs: 256, μ: 15349, ~: 15349)
+[PASS] testFuzz_onlyDaoCanFlag(address,address) (runs: 256, μ: 14987, ~: 14987)
+[PASS] testFuzz_onlyDaoCanSetPolicy(address,uint16,uint16,uint16) (runs: 256, μ: 14275, ~: 14275)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 128.14ms (127.87ms CPU time)
+
+Ran 1 test for test/foundry/Trust.t.sol:TrustSmoke
+[PASS] testNeutralScoreUninitialized() (gas: 11532)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 280.56µs (34.39µs CPU time)
+
+Ran 11 tests for test/foundry/CouncilElection.t.sol:CouncilElectionTest
+[PASS] testFuzz_CandidateUnregister(uint16) (runs: 256, μ: 101888, ~: 101888)
+[PASS] testFuzz_CannotSetEmptyCouncil() (gas: 11818)
+[PASS] testFuzz_CouncilMembersSet(uint8) (runs: 256, μ: 347604, ~: 267538)
+[PASS] testFuzz_CouncilSizeLimits(uint8) (runs: 256, μ: 405903, ~: 276602)
+[PASS] testFuzz_MinScoreEnforced(uint16,uint16) (runs: 256, μ: 105243, ~: 96301)
+[PASS] testFuzz_MultipleCandidates(uint8) (runs: 256, μ: 1026021, ~: 560768)
+[PASS] testFuzz_OnlyDAOCanSetCouncil(address) (runs: 256, μ: 40327, ~: 40327)
+[PASS] testFuzz_OnlyEligibleCanRegister(uint16) (runs: 256, μ: 96825, ~: 110437)
+[PASS] testFuzz_RefreshInterval(uint64) (runs: 256, μ: 33479, ~: 33479)
+[PASS] testFuzz_RefreshRemovesIneligible(uint16) (runs: 256, μ: 110412, ~: 112747)
+[PASS] testFuzz_TermDuration(uint64) (runs: 256, μ: 129674, ~: 129674)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 745.12ms (744.74ms CPU time)
+
+Ran 8 tests for test/foundry/DAO.t.sol:DAOFuzzTest
+[PASS] testFuzz_adminIsSet(address) (runs: 256, μ: 10471, ~: 10471)
+[PASS] testFuzz_cannotSetInvalidQuorum(uint8) (runs: 256, μ: 21316, ~: 21316)
+[PASS] testFuzz_modulesAreSet(address) (runs: 256, μ: 20121, ~: 20121)
+[PASS] testFuzz_onlyAdminCanSetParams(address,uint16,uint8) (runs: 256, μ: 15649, ~: 15649)
+[PASS] testFuzz_paramsValidRange(uint16,uint8) (runs: 256, μ: 22896, ~: 22896)
+[PASS] testFuzz_proposalCountStartsZero(uint256) (runs: 256, μ: 7955, ~: 7955)
+[PASS] testFuzz_quorumBounded(uint256) (runs: 256, μ: 8456, ~: 8456)
+[PASS] testFuzz_votingPeriodBounded(uint256) (runs: 256, μ: 8481, ~: 8481)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 85.34ms (84.98ms CPU time)
+
+Ran 9 tests for test/foundry/VFIDECommerce.t.sol:VFIDECommerceTest
+[PASS] testFuzz_CannotOpenZeroAmount() (gas: 101535)
+[PASS] testFuzz_DAOCanResolveDispute(uint256,bool) (runs: 256, μ: 327332, ~: 327321)
+[PASS] testFuzz_DisputeChangesState(uint256) (runs: 256, μ: 314510, ~: 314510)
+[PASS] testFuzz_EscrowRequiresMerchant(uint256) (runs: 256, μ: 288998, ~: 288998)
+[PASS] testFuzz_EscrowStateTransitions(uint256) (runs: 256, μ: 312754, ~: 312754)
+[PASS] testFuzz_MerchantMinScore(uint16) (runs: 256, μ: 97471, ~: 76007)
+[PASS] testFuzz_MultipleEscrows(uint8,uint256) (runs: 256, μ: 691043, ~: 594477)
+[PASS] testFuzz_RefundSendsToBuyer(uint256) (runs: 256, μ: 323078, ~: 323078)
+[PASS] testFuzz_ReleaseSendsToMerchant(uint256) (runs: 256, μ: 320995, ~: 320995)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 867.07ms (866.45ms CPU time)
+
+Ran 10 tests for test/foundry/VFIDEFinance.t.sol:VFIDEFinanceTest
+[PASS] testFuzz_CanRemoveAssets() (gas: 15965)
+[PASS] testFuzz_CannotAddAssetTwice() (gas: 515170)
+[PASS] testFuzz_CannotRemoveNonWhitelisted() (gas: 470632)
+[PASS] testFuzz_CannotUpdateNonWhitelisted() (gas: 470851)
+[PASS] testFuzz_DAOCanSend(uint256) (runs: 256, μ: 36811, ~: 36811)
+[PASS] testFuzz_DecimalsTracked() (gas: 10031)
+[PASS] testFuzz_MultipleDeposits(uint8) (runs: 256, μ: 38820, ~: 37441)
+[PASS] testFuzz_OnlyDAOCanAddAssets(address) (runs: 256, μ: 469413, ~: 469413)
+[PASS] testFuzz_SymbolHintUpdate() (gas: 15700)
+[PASS] testFuzz_TreasuryDeposit(uint256) (runs: 256, μ: 84527, ~: 84527)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 165.55ms (165.19ms CPU time)
+
+Ran 11 tests for test/foundry/ProofScoreBurnRouter.t.sol:ProofScoreBurnRouterTest
+[PASS] testFuzz_AdjustScoreEmits(uint16,uint16,bool) (runs: 256, μ: 41377, ~: 44928)
+[PASS] testFuzz_BurnAmountConsistency(uint256,uint16) (runs: 256, μ: 68981, ~: 73710)
+[PASS] testFuzz_BurnRateMonotonic(uint16,uint16,uint256) (runs: 256, μ: 75299, ~: 75946)
+[PASS] testFuzz_BurnRateNeverExceedsMax(uint16,uint256) (runs: 256, μ: 58451, ~: 63566)
+[PASS] testFuzz_BurnRateWithScore(uint16) (runs: 256, μ: 58860, ~: 62027)
+[PASS] testFuzz_HighScoreMinimumBurn(uint16,uint256) (runs: 256, μ: 62320, ~: 64399)
+[PASS] testFuzz_LowScoreMaximumBurn(uint16,uint256) (runs: 256, μ: 57911, ~: 64286)
+[PASS] testFuzz_MidRangeScoreBurn(uint16,uint256) (runs: 256, μ: 64355, ~: 65530)
+[PASS] testFuzz_MultipleRoutes(uint8,uint256) (runs: 256, μ: 139242, ~: 125125)
+[PASS] testFuzz_RouteZeroAmount(uint16) (runs: 256, μ: 43527, ~: 46597)
+[PASS] testFuzz_SanctumRate(uint256) (runs: 256, μ: 61970, ~: 61970)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 1.28s (1.28s CPU time)
+
+Ran 8 tests for test/foundry/EmergencyControl.t.sol:EmergencyControlFuzzTest
+[PASS] testFuzz_approvalsStartZero(uint256) (runs: 256, μ: 9256, ~: 9256)
+[PASS] testFuzz_daoCanSetCooldown(uint64) (runs: 256, μ: 24191, ~: 24191)
+[PASS] testFuzz_daoIsSet(address) (runs: 256, μ: 9792, ~: 9792)
+[PASS] testFuzz_lastToggleTsInitiallyZero(uint256) (runs: 256, μ: 7813, ~: 7813)
+[PASS] testFuzz_memberCountStartsZero(address) (runs: 256, μ: 7898, ~: 7898)
+[PASS] testFuzz_minCooldownInitialized(address) (runs: 256, μ: 8303, ~: 8303)
+[PASS] testFuzz_onlyDaoCanSetCooldown(address,uint64) (runs: 256, μ: 14387, ~: 14387)
+[PASS] testFuzz_thresholdBounded(uint8) (runs: 256, μ: 8829, ~: 8829)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 114.35ms (114.05ms CPU time)
+
+Ran 8 tests for test/foundry/VFIDEPresale.t.sol:VFIDEPresaleTest
+[PASS] testFuzz_CannotPurchaseDisabledTier(uint8,uint256) (runs: 256, μ: 17911, ~: 17911)
+[PASS] testFuzz_CannotPurchaseWhenInactive(uint256) (runs: 256, μ: 42236, ~: 42236)
+[FAIL: Bought mapping doesn't accumulate correctly: 0 != 9777547242; counterexample: calldata=0xe1398b4a00000000000000000000000000000000000000000000000000000000000000090000000000000000000000000000000000000000000000000000000040c10f1a args=[9, 1086394138 [1.086e9]]] testFuzz_MultiplePurchasesAccumulate(uint8,uint256) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_PriceChangesDontAffectHistory(uint32) (runs: 256, μ: 74470, ~: 74470)
+[PASS] testFuzz_PurchaseRespectsCap(uint256) (runs: 256, μ: 47373, ~: 47681)
+[FAIL: Buyer bonus incorrect: 0 !~= 1107081153721 (max delta: 1.0000000000000000%, real delta: 100.0000000000000000%); counterexample: calldata=0x60a3e74b000000000000000000000000000000000000000000000000000000ff35d72b04 args=[1096119954180 [1.096e12]]] testFuzz_ReferralBonusCalculation(uint256) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_TierEnableDisable(uint8,bool) (runs: 256, μ: 58605, ~: 44398)
+[PASS] testFuzz_TierPricingConsistency(uint8,uint256) (runs: 256, μ: 49535, ~: 50010)
+Suite result: FAILED. 6 passed; 2 failed; 0 skipped; finished in 492.17ms (491.73ms CPU time)
+
+Ran 11 tests for test/foundry/DAOTimelock.t.sol:DAOTimelockTest
+[PASS] testFuzz_AdminTransfer(address) (runs: 256, μ: 114513, ~: 114513)
+[PASS] testFuzz_CanCancelQueued(uint256) (runs: 256, μ: 102414, ~: 102665)
+[PASS] testFuzz_CanExecuteAfterDelay(uint64) (runs: 256, μ: 118376, ~: 118376)
+[PASS] testFuzz_CannotExecuteEarly(uint64) (runs: 256, μ: 111147, ~: 111147)
+[PASS] testFuzz_CannotExecuteTwice(uint256) (runs: 256, μ: 121362, ~: 121362)
+[PASS] testFuzz_CannotQueueTwice(uint256) (runs: 256, μ: 121033, ~: 121733)
+[PASS] testFuzz_DelayUpdate(uint64) (runs: 256, μ: 29599, ~: 29599)
+[PASS] testFuzz_GlobalRiskAddsDelay(uint64) (runs: 256, μ: 148401, ~: 148401)
+[PASS] testFuzz_MultipleTransactions(uint8) (runs: 256, μ: 1983302, ~: 1024459)
+[PASS] testFuzz_OnlyAdminCanQueue(address) (runs: 256, μ: 12495, ~: 12495)
+[PASS] testFuzz_QueueDelayEnforced(uint64) (runs: 256, μ: 113651, ~: 113651)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 1.03s (1.03s CPU time)
+
+Ran 8 tests for test/foundry/VaultInfrastructure.t.sol:VaultInfrastructureFuzzTest
+[PASS] testFuzz_cannotCreateVaultForZeroAddress(uint256) (runs: 256, μ: 8801, ~: 8801)
+[PASS] testFuzz_daoIsSet(address) (runs: 256, μ: 9852, ~: 9852)
+[PASS] testFuzz_ensureVaultCreatesUniqueVaults(address,address) (runs: 256, μ: 2172933, ~: 2172933)
+[PASS] testFuzz_ensureVaultIsIdempotent(address) (runs: 256, μ: 1097020, ~: 1097020)
+[PASS] testFuzz_onlyOwnerCanSetVFIDE(address,address) (runs: 256, μ: 13529, ~: 13529)
+[PASS] testFuzz_securityHubIsSet(address) (runs: 256, μ: 10352, ~: 10352)
+[PASS] testFuzz_vaultOfReturnsCorrectVault(address) (runs: 256, μ: 1094927, ~: 1094927)
+[PASS] testFuzz_vfideTokenIsSet(address) (runs: 256, μ: 10419, ~: 10419)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 113.28ms (209.76ms CPU time)
+
+Ran 12 tests for test/foundry/DevReserveVestingVault.t.sol:DevReserveVestingVaultTest
+[PASS] testFuzz_CannotExceedAllocation(uint256) (runs: 256, μ: 154035, ~: 154035)
+[PASS] testFuzz_ClaimableNeverDecreases(uint32,uint32) (runs: 256, μ: 26811, ~: 26774)
+[PASS] testFuzz_CliffStrictlyEnforced(uint32) (runs: 256, μ: 96607, ~: 96607)
+[PASS] testFuzz_CliffStrictlyEnforced(uint32,uint32) (runs: 256, μ: 28770, ~: 28770)
+[PASS] testFuzz_FullVestingAfterPeriod(uint32) (runs: 256, μ: 153571, ~: 153571)
+[PASS] testFuzz_LinearVestingAfterCliff(uint32) (runs: 256, μ: 158532, ~: 158532)
+[PASS] testFuzz_LockedVaultPreventsClaims(uint32) (runs: 256, μ: 117825, ~: 117825)
+[FAIL: Total claimed doesn't match received: 23333333333333333333333333 != 23333332904663923182441701; counterexample: calldata=0x2afb77790000000000000000000000000000000000000000000000000000000000000002 args=[2]] testFuzz_MultipleClaimsAccumulate(uint8) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_OnlyBeneficiaryCanPause(address,bool) (runs: 256, μ: 10318, ~: 10318)
+[PASS] testFuzz_PausingStopsClaims(uint32) (runs: 256, μ: 175822, ~: 175822)
+[PASS] testFuzz_RemainingAllocation(uint32) (runs: 256, μ: 155354, ~: 155354)
+[PASS] testFuzz_StartSyncIdempotent(uint8) (runs: 256, μ: 17436, ~: 16500)
+Suite result: FAILED. 11 passed; 1 failed; 0 skipped; finished in 2.02s (2.42s CPU time)
+
+Ran 15 tests for test/foundry/VFIDETokenSimple.t.sol:VFIDETokenSimpleTest
+[PASS] testFuzz_allowanceZeroSpender(address,uint256) (runs: 256, μ: 12098, ~: 12098)
+[PASS] testFuzz_constantsImmutable(uint256) (runs: 256, μ: 7681, ~: 7681)
+[PASS] testFuzz_devReserveCorrect(uint256) (runs: 256, μ: 9232, ~: 9232)
+[PASS] testFuzz_nameAndSymbol(uint256) (runs: 256, μ: 13164, ~: 13164)
+[PASS] testFuzz_ownerExists(uint256) (runs: 256, μ: 8182, ~: 8182)
+[PASS] testFuzz_policyLockedState(uint256) (runs: 256, μ: 8230, ~: 8230)
+[PASS] testFuzz_presaleCapNotExceeded(uint256) (runs: 256, μ: 8946, ~: 8946)
+[PASS] testFuzz_presaleInitiallyZero(uint256) (runs: 256, μ: 8868, ~: 8868)
+[PASS] testFuzz_presaleMintedBounded(uint256) (runs: 256, μ: 9120, ~: 9120)
+[PASS] testFuzz_totalSupplyBounded(uint256) (runs: 256, μ: 8701, ~: 8701)
+[PASS] testFuzz_totalSupplyConsistent(uint256) (runs: 256, μ: 8848, ~: 8848)
+[PASS] testFuzz_totalSupplyNonNegative(uint256) (runs: 256, μ: 7705, ~: 7705)
+[PASS] testFuzz_treasurySinkSet(uint256) (runs: 256, μ: 10254, ~: 10254)
+[PASS] testFuzz_vaultHubSet(uint256) (runs: 256, μ: 10369, ~: 10369)
+[PASS] testFuzz_vaultOnlyState(uint256) (runs: 256, μ: 7599, ~: 7599)
+Suite result: ok. 15 passed; 0 failed; 0 skipped; finished in 154.51ms (163.30ms CPU time)
+
+Ran 2 tests for test/foundry/zk/VFIDETokenFuzz.t.sol:VFIDETokenFuzz
+[PASS] invariant_TotalSupplyCap() (runs: 256, calls: 128000, reverts: 84915)
+
+╭------------+----------------------------------------+-------+---------+----------╮
+| Contract   | Selector                               | Calls | Reverts | Discards |
++==================================================================================+
+| VFIDEToken | TEST_setForcePolicyLockedRequireRouter | 6263  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | TEST_setForceSecurityStaticcallFail    | 5997  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | TEST_setForceVaultHubZero              | 6139  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | approve                                | 6210  | 5       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | decreaseAllowance                      | 6237  | 6151    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | increaseAllowance                      | 5812  | 6       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | lockPolicy                             | 6088  | 6088    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | mintPresale                            | 5962  | 5962    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setBurnRouter                          | 6235  | 6235    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setLedger                              | 6072  | 6072    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setPresale                             | 6011  | 6011    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setSecurityHub                         | 6041  | 6041    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setSystemExempt                        | 6170  | 6169    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setTreasurySink                        | 6057  | 6056    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setVaultHub                            | 6130  | 6129    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setVaultOnly                           | 5991  | 5988    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | transfer                               | 6055  | 5991    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | transferFrom                           | 6087  | 6020    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | transferOwnership                      | 5994  | 5991    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| LedgerStub | logEvent                               | 6203  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| LedgerStub | logSystemEvent                         | 6246  | 0       | 0        |
+╰------------+----------------------------------------+-------+---------+----------╯
+
+[FAIL: EvmError: Revert; counterexample: calldata=0xc33e44de0000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000128600000000000000000000000000000000000000000000000000000000000015ea args=[0x0000000000000000000000000000000000001610, 0x0000000000000000000000000000000000001286, 5610]] testFuzz_TransferInvariant(address,address,uint256) (runs: 0, μ: 0, ~: 0)
+Suite result: FAILED. 1 passed; 1 failed; 0 skipped; finished in 4.62s (4.62s CPU time)
+
+Ran 16 test suites in 6.28s (11.82s CPU time): 120 tests passed, 5 failed, 0 skipped (125 total tests)
+
+Failing tests:
+Encountered 1 failing test in test/foundry/AuditFixes.t.sol:AuditFixesTest
+[FAIL: StdCheats deployCode(string,bytes): Deployment failed.] setUp() (gas: 0)
+
+Encountered 1 failing test in test/foundry/DevReserveVestingVault.t.sol:DevReserveVestingVaultTest
+[FAIL: Total claimed doesn't match received: 23333333333333333333333333 != 23333332904663923182441701; counterexample: calldata=0x2afb77790000000000000000000000000000000000000000000000000000000000000002 args=[2]] testFuzz_MultipleClaimsAccumulate(uint8) (runs: 0, μ: 0, ~: 0)
+
+Encountered 2 failing tests in test/foundry/VFIDEPresale.t.sol:VFIDEPresaleTest
+[FAIL: Bought mapping doesn't accumulate correctly: 0 != 9777547242; counterexample: calldata=0xe1398b4a00000000000000000000000000000000000000000000000000000000000000090000000000000000000000000000000000000000000000000000000040c10f1a args=[9, 1086394138 [1.086e9]]] testFuzz_MultiplePurchasesAccumulate(uint8,uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: Buyer bonus incorrect: 0 !~= 1107081153721 (max delta: 1.0000000000000000%, real delta: 100.0000000000000000%); counterexample: calldata=0x60a3e74b000000000000000000000000000000000000000000000000000000ff35d72b04 args=[1096119954180 [1.096e12]]] testFuzz_ReferralBonusCalculation(uint256) (runs: 0, μ: 0, ~: 0)
+
+Encountered 1 failing test in test/foundry/zk/VFIDETokenFuzz.t.sol:VFIDETokenFuzz
+[FAIL: EvmError: Revert; counterexample: calldata=0xc33e44de0000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000128600000000000000000000000000000000000000000000000000000000000015ea args=[0x0000000000000000000000000000000000001610, 0x0000000000000000000000000000000000001286, 5610]] testFuzz_TransferInvariant(address,address,uint256) (runs: 0, μ: 0, ~: 0)
+
+Encountered a total of 5 failing tests, 120 tests succeeded
+tests succeeded

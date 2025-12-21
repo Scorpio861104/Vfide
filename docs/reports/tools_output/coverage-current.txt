@@ -1,0 +1,1746 @@
+
+Version
+=======
+> solidity-coverage: v0.8.6
+
+Instrumenting for coverage...
+=============================
+
+> mocks/BurnRouterMock.sol
+> mocks/ERC20FailTransfer.sol
+> mocks/ERC20Mock.sol
+> mocks/ERC20ReturnFalse.sol
+> mocks/GasDrainerERC20.sol
+> mocks/LedgerMock.sol
+> mocks/MerchantRegistryMock.sol
+> mocks/ReenteringERC20.sol
+> mocks/ReenterTargetMock.sol
+> mocks/ReverterEscrow.sol
+> mocks/RevertingDecimals.sol
+> mocks/SecurityHubMock.sol
+> mocks/SeerMock.sol
+> mocks/TestVFIDEHarness.sol
+> mocks/VaultHubMock.sol
+> mocks/VestingVault.sol
+> VFIDECommerce.sol
+> VFIDEFinance.sol
+> VFIDEToken.sol
+
+Compilation:
+============
+
+Compiled 19 Solidity files successfully (evm target: paris).
+
+Network Info
+============
+> HardhatEVM: v2.27.0
+> network:    hardhat
+
+
+
+  Commerce: MerchantRegistry + CommerceEscrow
+    1) "before each" hook for "merchant can register and buyer can open/fund/release an escrow"
+
+  Commerce negative paths and auto-suspend
+    2) "before each" hook for "open reverts for zero amount and unregistered merchant and locked vaults"
+
+  CouncilElection Contract Tests
+    Deployment
+      3) "before each" hook for "should set DAO correctly"
+
+  DAO Contract Tests
+    Deployment and Setup
+      4) "before each" hook for "should set admin correctly"
+
+  DAOTimelock Contract Tests
+    Deployment
+      5) "before each" hook for "should set admin correctly"
+
+  DevReserveVestingVault
+    Deployment
+      6) "before each" hook for "should deploy with correct VFIDE"
+
+  EmergencyControl Contract Tests
+    Deployment
+      7) "before each" hook for "should set DAO correctly"
+
+  StablecoinRegistry and EcoTreasuryVault
+    ✔ DAO can whitelist asset and treasury accepts deposits
+    ✔ non-DAO cannot add asset
+
+  StablecoinRegistry and EcoTreasuryVault extra flows
+    8) "before each" hook for "DAO can remove asset and set symbol hint"
+
+  GovernanceHooks
+    Deployment
+      9) "before each" hook for "should deploy with correct ledger"
+
+  Interface Compliance Tests
+    IVFIDEToken Interface
+      10) Should implement all IVFIDEToken interface functions
+    IDAO Interface
+      11) Should verify DAO interface structure
+    ISeer Interface
+      12) Should verify Seer reputation interface
+    IProofLedger Interface
+      13) Should verify ProofLedger interface functions
+    IVaultHub Interface
+      14) Should verify VaultHub interface compliance
+    ISecurityHub Interface
+      15) Should verify SecurityHub emergency interface
+    ICouncilElection Interface
+      16) Should verify CouncilElection interface functions
+    IEmergencyControl Interface
+      17) Should verify EmergencyControl interface
+    IDAOTimelock Interface
+      18) Should verify Timelock interface compliance
+    ICommerceEscrow Interface
+      19) Should verify Commerce escrow interface
+    IMerchantRegistry Interface
+      20) Should verify MerchantRegistry interface
+    IReviewRegistry Interface
+      21) Should verify ReviewRegistry interface compliance
+    IGovernanceHooks Interface
+      22) Should verify GovernanceHooks callback interface
+    IProofScoreBurnRouter Interface
+      23) Should verify ProofScoreBurnRouter interface
+    ISystemHandover Interface
+      24) Should verify SystemHandover interface functions
+    IVFIDEPresale Interface
+      25) Should verify Presale interface compliance
+    IUserVault Interface
+      26) Should verify UserVault interface functions
+    IVaultFactory Interface
+      27) Should verify VaultFactory creation interface
+    IStablecoinRegistry Interface
+      28) Should verify StablecoinRegistry interface
+    IDevReserveVestingVault Interface
+      29) Should verify DevReserveVestingVault interface
+    IEcoTreasuryVault Interface
+      30) Should verify EcoTreasuryVault interface compliance
+    ISanctumFund Interface
+      31) Should verify SanctumFund interface functions
+    IGuardianLock Interface
+      32) Should verify GuardianLock security interface
+    IGuardianRegistry Interface
+      33) Should verify GuardianRegistry interface
+    IPanicGuard Interface
+      34) Should verify PanicGuard emergency interface
+    IEmergencyBreaker Interface
+      35) Should verify EmergencyBreaker circuit breaker interface
+    IERC20Minimal Interface
+      36) Should verify ERC20 minimal interface compliance
+    Cross-Interface Integration
+      37) Should verify interfaces work together
+      38) Should verify DAO and Timelock interface integration
+      39) Should verify Seer and Ledger interface integration
+
+  ProofLedger
+    Deployment
+      40) "before each" hook for "should deploy with correct DAO"
+
+  ProofScoreBurnRouter
+    Deployment
+      41) "before each" hook for "should deploy with correct seer"
+
+  Seer Contract Tests
+    Deployment
+      42) "before each" hook for "should set DAO correctly"
+
+  SystemHandover
+    Deployment
+      43) "before each" hook for "should deploy with correct devMultisig"
+
+  VFIDEToken basic flows
+    44) "before each" hook for "pre-mints dev reserve to vesting vault"
+
+  VFIDEToken edge cases and fee routing
+    45) "before each" hook for "presale cap is enforced"
+
+  VFIDEToken additional behaviors
+    46) "before each" hook for "approve/increase/decrease allowance and transferFrom"
+
+  VFIDECommerce extra branch coverage
+    ✔ open reverts when amount == 0 (COM_BadAmount) (47ms)
+    ✔ open reverts when merchant status is NONE / SUSPENDED / DELISTED (205ms)
+    ✔ resolve onlyDAO and buyerWins / sellerWins success paths (175ms)
+
+  VFIDECommerce targeted branch tests
+    ✔ MerchantRegistry: addMerchant TEST toggles and constructor zeros (83ms)
+    ✔ MerchantRegistry: TEST force zero-sender refund/dispute revert COM_Zero (59ms)
+    ✔ CommerceEscrow: resolve buyerWins true branch is exercised (145ms)
+
+  VFIDECommerce constructor/resolve branch sweeps
+    ✔ MerchantRegistry constructor reverts for each zero param (COM_Zero) (73ms)
+    ✔ CommerceEscrow constructor reverts for each zero param (COM_Zero) (190ms)
+    ✔ resolve buyerWins true/false arms explicitly exercised (170ms)
+
+  VFIDECommerce coverage-focused tests
+    ✔ addMerchant rejects when no vault or low score then succeeds when set
+    ✔ _noteRefund auto-suspends after threshold and _noteDispute similarly (62ms)
+    ✔ escrow open/money flow: open, markFunded (insufficient), fund, release/refund/dispute/resolve paths (149ms)
+    ✔ constructor reverts with zero addresses for MerchantRegistry and CommerceEscrow (67ms)
+    ✔ addMerchant rejects duplicate and _noteRefund/_noteDispute reject unknown merchant (47ms)
+    ✔ open rejects zero amount, suspended merchant, and missing buyer vault (100ms)
+    ✔ markFunded/release/refund/resolve negative paths (bad state, transfer failures, onlyDAO) (419ms)
+
+  VFIDECommerce extra focused tests (TEST_* toggles)
+    ✔ TEST_forceAlreadyMerchant forces addMerchant to revert
+    ✔ TEST_forceNoVault forces addMerchant to revert
+    ✔ TEST_forceLowScore forces addMerchant to revert
+    ✔ TEST_setForceZeroSenderRefund triggers COM_Zero branch in _noteRefund
+    ✔ TEST_setForceZeroSenderDispute triggers COM_Zero branch in _noteDispute
+    ✔ auto-suspend triggers via repeated refunds/disputes (coverage of counter branches) (39ms)
+
+  VFIDECommerce focused branch tests
+    ✔ addMerchant: TEST_forceAlreadyMerchant triggers COM_AlreadyMerchant
+    ✔ addMerchant: TEST_forceNoVault triggers COM_NotAllowed
+    ✔ addMerchant: TEST_forceLowScore triggers COM_NotAllowed
+    ✔ _noteRefund/_noteDispute: TEST zero-sender branches
+    ✔ open/markFunded: buyer missing vault and not-funded branches (57ms)
+    ✔ release/refund/resolve: transfer failure paths using ERC20FailTransfer (143ms)
+
+  VFIDECommerce micro-batch 1 (focused)
+    ✔ addMerchant reverts when merchant has no vault
+    ✔ addMerchant reverts when seer score is below min
+    ✔ addMerchant reverts on duplicate registration
+    ✔ _noteRefund reverts when called for zero address (COM_Zero branch)
+    ✔ open reverts when buyer has no vault (missing buyer vault branch)
+
+  VFIDECommerce micro-batch 2 (TEST toggles & zero-sender)
+    ✔ TEST_setForceAlreadyMerchant flips already-merchant branch
+    ✔ TEST_setForceNoVault flips no-vault branch even when vault exists
+    ✔ TEST_setForceLowScore flips low-score branch regardless of score
+    ✔ TEST zero-sender refund/dispute toggles hit COM_Zero branches
+    ✔ open path: buyer vault present and merchant active succeeds
+
+  VFIDECommerce micro-batch 3 (mocks & reentrancy)
+    ✔ release succeeds with GasDrainer token (covers gas-heavy transfer path) (640ms)
+    ✔ Reentering token: transfer triggers reentrant release and original tx reverts leaving state unchanged (135ms)
+    ✔ Reentering token: normal transfer (no reenter target) succeeds (123ms)
+
+  VFIDECommerce micro-batch 4 (DAO paths & resolve permutations)
+    ✔ DAO can release an escrow (not buyer) and state becomes RELEASED (38ms)
+    ✔ DAO can refund an escrow (not merchant) and state becomes REFUNDED and merchant _noteRefund called (43ms)
+    ✔ DAO resolve buyerWins=true transfers to buyer and state RESOLVED (43ms)
+    ✔ DAO resolve buyerWins=false transfers to seller and state RESOLVED (42ms)
+    ✔ non-DAO cannot call resolve (onlyDAO enforcement) (38ms)
+
+  VFIDECommerce micro-batch 5 (cond-expr permutations & disputes)
+    ✔ addMerchant succeeds when score == min (boundary)
+    ✔ addMerchant reverts when score == min-1 (boundary)
+    ✔ combined TEST toggles: forceNoVault with v==0 and forceAlreadyMerchant when appropriate
+    ✔ _noteDispute auto-suspends merchant after threshold
+
+  VFIDECommerce micro-batch 6 (permute small branches)
+    ✔ _noteRefund increments but does not suspend when below threshold
+    ✔ _noteDispute increments but does not suspend when below threshold
+    ✔ addMerchant with both TEST_forceNoVault and TEST_forceLowScore true reverts (OR branches)
+    ✔ release reverts when called by stranger (NotAllowed branch) (48ms)
+
+  VFIDECommerce micro-batch 7 (state/negative branches)
+    ✔ release reverts when escrow is not FUNDED (BadState)
+    ✔ refund reverts when escrow is not FUNDED or DISPUTED (BadState)
+    ✔ dispute reverts when escrow is not FUNDED (BadState)
+    ✔ markFunded reverts when contract balance is insufficient (NotFunded)
+
+  VFIDECommerce micro-batch 8 (remaining conditionals & transfer-fail)
+    ✔ adding merchant twice reverts (AlreadyMerchant)
+    ✔ _noteRefund/_noteDispute on non-merchant reverts (NotMerchant)
+    ✔ auto-suspend via refunds reaches threshold and sets SUSPENDED (40ms)
+    ✔ open reverts when merchant is SUSPENDED (40ms)
+    ✔ release/refund/resolve revert when transfer returns false (transfer-fail token) (67ms)
+
+  VFIDECommerce additional coverage tests
+    ✔ open reverts when merchant is suspended (43ms)
+    ✔ release with failing token.transfer leaves state unchanged (ERC20FailTransfer)
+    ✔ refund with failing token.transfer leaves state unchanged (ERC20FailTransfer)
+    ✔ resolve reverts on transfer failure and state remains DISPUTED (46ms)
+
+  VFIDECommerce reentrancy resilience
+    ✔ attempted reentrancy via token.transfer should not break state (release remains safe) (71ms)
+
+  VFIDECommerce security fuzz - malicious token behaviors
+    ✔ GasDrainer token: release succeeds even when token consumes more gas (686ms)
+    ✔ ERC20ReturnFalse: release/refund/resolve revert when token returns false (94ms)
+    ✔ combination randomized small sequences (open->fund->action) don't corrupt state (250ms)
+
+  VFIDECommerce security & boundary tests
+    ✔ open reverts with COM_SecLocked when buyer or merchant vault locked (68ms)
+    ✔ release/refund revert with COM_SecLocked when vault locked (64ms)
+    ✔ failed transfer leaves escrow state unchanged (57ms)
+    ✔ open with very large amount reverts or handles safely (boundary test) (42ms)
+
+  VFIDEFinance targeted branch tests
+    ✔ StablecoinRegistry constructor and TEST_setForceDecimals & decimals fallback (41ms)
+    ✔ EcoTreasuryVault: depositStable guards and TEST force insufficient (69ms)
+    ✔ EcoTreasuryVault: send guards, not-whitelisted, transfer fail and TEST force send insufficient (80ms)
+    ✔ onlyDAO toggle for EcoTreasury setModules
+
+  VFIDEFinance coverage-focused tests
+    ✔ setDAO and setLedger by DAO and addAsset fallback decimals path (41ms)
+    ✔ removeAsset reverts when not whitelisted and depositStable edge cases
+    ✔ treasury send rejects zero token address and non-whitelisted tokens
+    ✔ noteVFIDE emits ReceivedVFIDE
+    ✔ setModules, depositStable success and send success with logging (64ms)
+    ✔ depositStable and send detect FI_Insufficient when token returns false (53ms)
+
+  VFIDEFinance extra focused tests
+    ✔ addAsset then adding again reverts with FI_AlreadyWhitelisted
+    ✔ TEST_setForceDecimals overrides decimals stored
+    ✔ removeAsset reverts when not whitelisted and setSymbolHint reverts
+    ✔ depositStable reverts when transferFrom returns false or TEST forced
+    ✔ send reverts for zero token and non-whitelisted and TEST forced insufficient (38ms)
+
+  VFIDEFinance focused branch tests
+    ✔ _decimalsOrTry: staticcall failure returns fallback 18 (reverting contract)
+    ✔ _decimalsOrTry: EOA (no decimals) falls back to 18
+    ✔ onlyDAO TEST toggle allows non-dao calls
+    ✔ depositStable respects TEST_setForceDepositInsufficient (40ms)
+    ✔ send respects TEST_setForceSendInsufficient (40ms)
+
+  VFIDEFinance microbatch1 tests
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0xe082678eCF749982e33Ea6839852a8cd989aEDE2
+deploying token2
+deployed token2 0x984f797d26d3da2E9b9f8Ae4eeFEACC60fCAA90C
+    ✔ addAsset uses token.decimals and falling back when decimals() reverts
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0x909B91a21d0F86709C4eec651E82A4eFB028C330
+deploying token2
+deployed token2 0xA45e2E9F6FEE59EdFa2586c6eF7ecee1F9caC51c
+    ✔ TEST_setForceDecimals forces a chosen decimals value
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0x30da3b78B86e8842cB1386F199D4D6e7ae8Fca58
+deploying token2
+deployed token2 0xF153B9A9e7C294875776a579AC91422d5fFdA9fE
+    ✔ addAsset rejects zero address and duplicate adds
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0xD9d572665156732D1B61f3Bc3cfb08A5c20b2b2E
+deploying token2
+deployed token2 0xb7779646a29d3510076DFDd7e60C203fa7093a29
+    ✔ removeAsset and setSymbolHint guarded by onlyDAO and token must be whitelisted
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0x5bF8D07D696c2bde7478aaeE57F3e6475203EeD9
+deploying token2
+deployed token2 0x4Af9f320fE64C09a59572B6F687B308278367D61
+    ✔ depositStable rejects non-whitelisted and transfer failures (62ms)
+MB1 beforeEach start 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+got ERC20Mock factory
+deployed token 0x88197a5f983300d2a96a6D554248266f7144A6Ae
+deploying token2
+deployed token2 0xF3E7016C78eBeDa662D311b0ADe57Bd27b2022A6
+    ✔ send rejects zero-target, non-whitelisted and can send when whitelisted (59ms)
+
+  VFIDEFinance micro-batch 2 (vfide token path & onlyDAO toggle)
+    ✔ send allows vfideToken even if not whitelisted
+    ✔ onlyDAO toggle for treasury.setModules allows non-dao when TEST flag set
+
+  VFIDEFinance micro-batch 3 (admin guards & send/deposit edge cases)
+    ✔ setDAO rejects zero address and setLedger onlyDAO behavior
+    ✔ add/remove/setSymbolHint guards and duplicate add
+    ✔ depositStable/send edge cases: zero amount, token==zero, non-whitelist
+
+  VFIDEFinance micro-batch 4 (decimals permutations & transfer-fail)
+    ✔ _decimalsOrTry: contract that reverts falls back to 18
+    ✔ _decimalsOrTry: TEST_setForceDecimals overrides return value
+    ✔ depositStable reverts when token.transferFrom returns false (ERC20FailTransfer)
+    ✔ depositStable respects TEST_setForceDepositInsufficient independent of token behavior
+
+  VFIDEFinance more focused tests
+    ✔ addAsset -> setSymbolHint -> removeAsset success path (47ms)
+    ✔ onlyDAO modifier blocks non-dao and TEST_setOnlyDAOOff allows it
+    ✔ depositStable success and TEST forced insufficient path (49ms)
+    ✔ send success path by DAO and TEST forced send insufficient (45ms)
+
+  VFIDEFinance targeted branch tests
+    ✔ onlyDAO modifier rejects non-dao calls and allows dao when set
+    ✔ _decimalsOrTry: force decimals via TEST helper and via staticcall fallback
+    ✔ depositStable detects FI_Insufficient when transferFrom returns false
+    ✔ send covers not-whitelisted, not-allowed, and FI_Insufficient paths
+
+  VFIDEPresale
+    Deployment
+      47) "before each" hook for "should deploy with correct vfide"
+
+  VFIDESecurity - GuardianRegistry
+    Deployment
+      48) "before each" hook for "should deploy with correct DAO"
+
+  VFIDESecurity - SecurityHub
+    Deployment
+      49) "before each" hook for "should deploy with correct components"
+
+  VFIDESecurity - GuardianLock
+    ✔ should test M-of-N guardian voting
+
+  VFIDESecurity - PanicGuard
+    ✔ should test automatic quarantine
+
+  VFIDESecurity - EmergencyBreaker
+    ✔ should test global halt mechanism
+
+  VFIDEToken branch-combination tests
+    50) "before each" hook for "cover some fee/router and vault/security helper branches"
+
+  VFIDEToken coverage-focused tests
+    51) "before each" hook for "owner admin paths: set modules and ledger"
+
+  VFIDEToken exhaustive branch tests
+    52) "before each" hook for "hard burn (burnAmt>0, burnSink=0) decreases totalSupply and emits Transfer to zero"
+
+  VFIDEToken extra focused tests
+    53) "before each" hook for "_isVault returns true/false and TEST flag forces false"
+
+  VFIDEToken focused branch tests
+    54) "before each" hook for "_isVault respects vaultHub and TEST_force_vaultHub_zero"
+
+  VFIDEToken micro-batch 1 (vault, lock, policy, presale)
+    55) "before each" hook for "_isVault returns true when vault hub maps owner->self and false when TEST_force_vaultHub_zero set"
+
+  VFIDEToken microbatch 10 — presale & policy guards
+    56) "before each" hook for "mintPresale exceeding PRESALE_SUPPLY_CAP reverts with VF_CAP"
+
+  VFIDEToken microbatch 11 — security locks & TEST toggles
+    57) "before each" hook for "securityHub locked -> transfers revert with VF_LOCKED"
+
+  VFIDEToken microbatch 12 — matrix sweep for fee/exception permutations
+    58) "before each" hook for "scenario 0: no fees"
+
+  VFIDEToken microbatch 13 — policy/vault/presale/security/approve edges
+    59) "before each" hook for "transfer 0 emits Transfer and returns (short-circuit)"
+
+  VFIDEToken microbatch 14 — _isVault and vaultHub edge cases
+    60) "before each" hook for "v==a && v!=0 -> _isVault true"
+
+  VFIDEToken microbatch 15 — policy/router/treasury/fee matrix
+    61) "before each" hook for "matrix 0: router present, no fees"
+
+  VFIDEToken microbatch 16 — exhaustive sink/fee/treasury permutations
+    62) "before each" hook for "case 0: sanctum Z -> treasury"
+
+  VFIDEToken microbatch 17 — remaining cond-exprs, vaultOnly=false and TEST toggles
+    63) "before each" hook for "both fees non-zero, sanctumSink==Z -> treasury when set, burn soft to charlie"
+
+  VFIDEToken microbatch 18 — final cond-expr/sink/vault/policy permutations
+    64) "before each" hook for "both fees non-zero with mixed sinks (sanctum Z -> treasury, burnSink non-zero) across transfer and transferFrom"
+
+  VFIDEToken microbatch19 - fee & sink permutations
+    65) "before each" hook for "applies both burn and sanctum amounts when both sinks present (transfer)"
+
+  VFIDEToken micro-batch 2 (burn router fees & systemExempt)
+    66) "before each" hook for "applies burn and sanctum amounts, using treasurySink fallback"
+
+  VFIDEToken microbatch20 - leftover fee/vault/policy permutations
+    67) "before each" hook for "hard burn when burnSink == zero and sanctum routes to treasury"
+
+  VFIDEToken microbatch21 - combinatorial fee/sink permutations
+    68) "before each" hook for "combo: both non-zero sinks non-zero"
+
+  VFIDEToken microbatch22 - broad permutation sweep
+    69) "before each" hook for "sweeps many permutations without throwing (collects results)"
+
+  VFIDEToken microbatch-23 — burn sink and sanctum fallback
+    70) "before each" hook for "hard burn when burnSink == address(0) reduces totalSupply and leaves recipient with net"
+
+  VFIDEToken microbatch-24 — presale + vaultOnly combos
+    71) "before each" hook for "reverts when vaultOnly is true and presale target is not a vault"
+
+  VFIDEToken microbatch-25 — security staticcall failures and policy-lock router requirement
+    72) "before each" hook for "reverts transfers when security hub marks vault as locked"
+
+  VFIDEToken microbatch-26 — transferFrom and allowance flows
+    73) "before each" hook for "reverts when allowance is insufficient for transferFrom"
+
+  VFIDEToken microbatch-27 — small edge cases (zero-transfer, allowance underflow, approve zero)
+    74) "before each" hook for "emits Transfer and returns early for zero-amount transfer"
+
+  VFIDEToken microbatch-28 — router/policy, systemExempt permutations, sanctum fallback, TEST helpers
+    75) "before each" hook for "lockPolicy requires router (policyLocked path) — transfer reverts when no router"
+
+  VFIDEToken microbatch-29 — admin policy lock guards & presale branches
+    76) "before each" hook for "setVaultOnly(false) reverts after policy locked (VF_POLICY_LOCKED)"
+
+  VFIDEToken microbatch 3 — soft-burn sinks & vaultOnly/policy toggles
+    77) "before each" hook for "applies soft-burn and sends sanctum portion to sanctumSink when configured"
+
+  VFIDEToken microbatch-30 — fee/exception permutations and transferFrom variants
+    78) "before each" hook for "fromExempt only: fees bypassed when sender exempt"
+
+  VFIDEToken microbatch-31 — policy branches, securityHub absence, VF_CAP via harness
+    79) "before each" hook for "setVaultOnly(true) succeeds after policy locked (no revert path)"
+
+  VFIDEToken microbatch-32 — owner guards, vaultOnly toggles and presale unset
+    80) "before each" hook for "owner can disable vaultOnly when policy not locked"
+
+  VFIDEToken microbatch-33 — both-fees non-zero and router-required explicit
+    81) "before each" hook for "both burnAmt and sanctumAmt non-zero with non-zero sinks credits both sinks and emits FeeApplied"
+
+  VFIDEToken microbatch-34 — policy-locked setters + fee permutations + TEST view
+    82) "before each" hook for "setBurnRouter(0) and setTreasurySink(0) revert once policyLocked (custom error)"
+
+  VFIDEToken microbatch-35 — zero/zero-address and policyLocked+router present paths
+    83) "before each" hook for "zero-amount transfer emits Transfer(from,to,0) and returns"
+
+  VFIDEToken microbatch-36 — harness expose transfer and vaultOnly enable under policyLocked
+    84) "before each" hook for "_transfer reverts when from==address(0) (VF_ZERO) via harness call"
+
+  VFIDEToken microbatch-37 — systemExempt toggles, presale event, TEST router-pass path
+    85) "before each" hook for "setSystemExempt true then false emits events and updates mapping"
+
+  VFIDEToken microbatch-38 — explicit coverage for setVaultOnly, setPresale and TEST router permutations
+    86) "before each" hook for "setVaultOnly: before lock can disable; after lock enabling is allowed and disabling reverts"
+
+  VFIDEToken microbatch-39 — final permutations for setVaultOnly, setPresale and router-required arms
+    87) "before each" hook for "setVaultOnly explicit toggles and double-calls exercise both arms"
+
+  VFIDEToken microbatch 4 — router-required, hard-burn, security lock, vaultOnly toggle
+    88) "before each" hook for "hard burn path: burnSink==address(0) decreases totalSupply"
+
+  VFIDEToken microbatch-40 — admin-only reverts (non-owner calls)
+    89) "before each" hook for "non-owner cannot call setVaultOnly"
+
+  VFIDEToken microbatch-41 — transferFrom with policyLocked + router present/absent
+    90) "before each" hook for "transferFrom succeeds when policyLocked and burnRouter present"
+
+  VFIDEToken microbatch 5 — burn/sanctum permutations & vaultOnly rejections
+    91) "before each" hook for "sanctum fallback: when sanctumSink==0, token sends sanctumAmt to treasurySink"
+
+  VFIDEToken microbatch 6 — fee permutations & systemExempt combos
+    92) "before each" hook for "burn+sanctum both non-zero with sanctumSink != recipient routes correctly"
+
+  VFIDEToken microbatch 7 — presale & policy guards
+    93) "before each" hook for "presale target must be a vault when vaultOnly is active"
+
+  VFIDEToken microbatch 8 — transfer cond-expr & router-required branches
+    94) "before each" hook for "transfer 0 amount is a no-op (emits Transfer 0) and balances unchanged"
+
+  VFIDEToken microbatch 9 — burn-router permutations & systemExempt combos
+    95) "before each" hook for "burn+sanctum both non-zero with sanctumSink != recipient routes correctly (soft-burn to burnSink)"
+
+  VFIDEToken negative owner & policy tests
+    96) "before each" hook for "onlyOwner modifier rejects non-owner calls"
+
+  VFIDEToken permutation engine to flip branches
+    97) "before each" hook for "exercise to/from locked vault branches and mixed systemExempt combos"
+
+  VFIDEToken permutations (router/burn/sanctum/systemExempt/policyLocked)
+    98) "before each" hook for "hard burn with fees applied and policyUnlocked decreases totalSupply"
+
+  VFIDEToken TEST-ONLY helper coverage
+    99) "before each" hook for "TEST helpers: force router requirement and vault/staticcall checks"
+
+  VFIDETrust - Seer (ProofScore)
+    Deployment
+      100) "before each" hook for "should deploy with correct DAO"
+
+  VaultInfrastructure - VaultHub
+    Deployment
+      101) "before each" hook for "should deploy successfully"
+
+  VaultInfrastructure - UserVault
+    Guardian Management
+      ✔ should allow owner to add guardians
+      ✔ should allow owner to remove guardians
+      ✔ should set next of kin
+    Recovery Process
+      ✔ should allow guardian-approved recovery
+      ✔ should enforce threshold for recovery
+    Transfer Functions
+      ✔ should allow owner to transfer tokens
+      ✔ should enforce security lock
+    Emergency Functions
+      ✔ should handle panic mode
+      ✔ should respect security hub
+
+  VaultInfrastructure - Integration
+    ✔ should test complete vault lifecycle
+    ✔ should test security integration
+    ✔ should test logging integration
+
+  Coverage: addMerchant and Additional Functions
+    102) "before all" hook in "Coverage: addMerchant and Additional Functions"
+
+  both-bruteforce3: combined permutations using many helpers and toggles
+    103) sweeps many helpers in MR + Vault to flip stubborn arms
+
+  Coverage Bruteforce: More TEST Functions
+    104) "before all" hook in "Coverage Bruteforce: More TEST Functions"
+
+  VFIDECommerce - Exhaustive TEST Coverage
+    Force Flag Setters
+      105) "before each" hook for "should set all force flags on MerchantRegistry"
+
+  VFIDECommerce - Production Paths via TEST Helpers
+    Lines 87, 118, 130: Constructor/Initialization Conditionals
+      106) "before each" hook for "should cover line 87 constructor validation via TEST helpers"
+
+  VFIDECommerce - Systematic TEST Helper Coverage Part 1 (lines 295-560)
+    Lines 295-365: Using existing TEST helpers
+      107) "before each" hook for "should cover line 295-309 via TEST_exec_addMerchant_branches"
+
+  VFIDECommerce - Systematic TEST Helper Coverage Part 2 (lines 560-1000)
+    Line 644: Multiple TEST helper variants
+      108) "before each" hook for "should cover line 644 combo variants"
+
+  VFIDECommerce - Systematic TEST Helper Coverage Part 3 (remaining functions)
+    Line 1060 and related variants
+      109) "before each" hook for "should cover TEST_line1060_condexpr_alt"
+
+  coverage.escrow.bruteforce: exercise escrow hotspots
+    110) runs permutations of helpers and tries production flows safely
+
+  Final Push: All Remaining TEST Functions Part 1
+    111) "before all" hook in "Final Push: All Remaining TEST Functions Part 1"
+
+  Final Push: All Remaining TEST Functions Part 2
+    112) "before all" hook in "Final Push: All Remaining TEST Functions Part 2"
+
+  Final Coverage Push: All Remaining Variants
+    113) "before all" hook in "Final Coverage Push: All Remaining Variants"
+
+  VFIDEFinance: Exhaustive Coverage to 100%
+    114) "before all" hook in "VFIDEFinance: Exhaustive Coverage to 100%"
+
+  Finance Remaining 20 Branches
+    115) "before all" hook in "Finance Remaining 20 Branches"
+
+  big helpers: deterministic helpers for commerce + finance
+    116) calls commerce msg.sender helpers and toggles to flip branch arms
+    117) calls finance helpers to deterministically hit decimals/send branch arms
+
+  bruteforce: commerce + finance permutation sweep
+    118) runs a compact set of ordered permutations for both subsystems
+
+  sequence: commerce addMerchant ordered-call sweep (118/130)
+    119) runs ordered helper + production call sequences to hit missing branch indexes
+
+  coverage.finish.commerce.250_410.narrow
+    ✔ calls mass/region/hotspot helpers with permutations to flip escrow-region arms (188ms)
+
+  coverage.finish.commerce.250_410 - focused escrow cluster
+    120) exercises many TEST helpers across 250-410 region to flip branch arms
+
+  micro: addMerchant line 118/130 deterministic sweep
+    121) exhaustively calls production addMerchant with force flags and msg.sender variants
+
+  coverage.finish.commerce.addMerchant.targeted - flip msg.sender/vault arms (118/130)
+    122) registers a merchant and exercises msg.sender-specific helpers to flip both arms
+
+  bruteforce: addMerchant permutations to flip stubborn arms
+    123) permutations of toggles, helpers and production calls to flip remaining branch nodes
+
+  bruteforce2: commerce addMerchant deep permutations for lines ~118/130 and escrow cluster
+    124) exhaustively calls TEST helpers and production addMerchant in many orders to hit missing index arms
+
+  coverage.finish.commerce.addMerchant.combine
+    ✔ executes both true and false arms for addMerchant lines ~118 and ~130 (explicit + msg.sender) (106ms)
+
+  coverage.finish.commerce.addMerchant.exhaustive - exhaust permutations for lines 118/130
+    125) calls addMerchant-related pinpoint helpers with all signer/force permutations
+
+  coverage.finish.commerce.addMerchant.extra2 - exhaustive addMerchant permutations
+    126) runs many permutations of addMerchant TEST helpers to flip left/right/msg.sender arms
+
+  coverage.finish.commerce.addMerchant.forceLeft - force alreadyMerchant arm
+    127) forces alreadyMerchant and calls narrow helpers to hit left arms
+
+  coverage.finish.commerce.addMerchant.forceRight - force noVault/lowScore arm
+    128) forces noVault/lowScore and calls narrow helpers to hit right arms
+
+  coverage.finish.commerce.addMerchant.narrow - target lines 118/130
+    129) targets addMerchant left/right and msg.sender vaultZero arms
+
+  coverage.finish.commerce.addMerchant.narrow3
+    ✔ targets addMerchant lines ~118 and ~130 including msg.sender variants and force flags (88ms)
+
+  coverage.finish.commerce.addMerchant.narrow4
+    ✔ registers one signer and uses a no-vault signer to flip left/right msg.sender arms (77ms)
+
+  micro-orderings: addMerchant ordered sequences to hit index-specific arms
+    130) runs a few ordered sequences that previously left index=0 uncovered
+
+  coverage.finish.commerce.addMerchant.pinpoint - call exact line helpers
+    131) exercises pinpoint helpers TEST_line118_*/TEST_line130_* and msg.sender variants
+
+  coverage.finish.commerce.addMerchant - focused addMerchant helpers
+    132) exercises addMerchant conditional arms via TEST helpers and msg.sender variants
+
+  coverage.finish.commerce.exec.addMerchant - call addMerchant to exercise production branches
+    133) calls addMerchant with registered, no-vault and low-score signers to exercise real branches
+
+  coverage.finish.commerce.stateful - stateful escrow and merchant flows
+    134) creates merchant, opens/funds/resolve/refund/dispute/resolve flows and triggers refund/dispute thresholds
+
+  coverage: targeted extra arms
+    ✔ mocks: transferFrom allowance revert arms (GasDrainer & Reentering) (46ms)
+    ✔ CommerceEscrow: refund/dispute caller permutations exercise NotAllowed and success paths (196ms)
+    ✔ Finance: onlyDAO and NotWhitelisted arms (43ms)
+
+  coverage.finish.extra10 - final pinpoint sweep
+    135) MerchantRegistry extra helpers
+    136) StablecoinRegistry extra helpers
+
+  coverage.finish.extra11 - escrow & treasury pinpoint helpers
+    137) Escrow helpers and securityCheck
+    138) Treasury helpers
+
+  coverage.finish.extra12 - pinpoint helper sweep (Commerce)
+    139) MerchantRegistry pinpoint helpers and permutations
+    140) Escrow pinpoint helpers exercise open/access arms
+
+  coverage.finish.extra13 - additional Commerce pinpoint helpers
+    141) covers extra MerchantRegistry combined branches
+
+  coverage.finish.extra14 - Finance pinpoint helpers
+    142) covers composite finance helper with permutations
+
+  coverage.finish.extra15 - stateful Commerce flows to flip branches
+    143) creates merchant, triggers refund/dispute thresholds and escrow flows
+
+  coverage.finish.extra16 - broad permutations to flip remaining arms
+    144) sweeps many TEST helpers in Commerce and Finance
+
+  coverage.finish.extra17 - pinpoint helpers for remaining Commerce arms
+    145) exercises newly added TEST helpers in MerchantRegistry and CommerceEscrow
+
+  coverage.finish.extra18 - targeted helpers to flip Commerce remaining arms
+    146) calls pinpoint helpers with permutations to flip branch arms
+
+  coverage.finish.extra19 - hotspot helpers for Commerce (300-410, 490-610)
+    147) exercises hotspot helpers with permutations
+
+  coverage.finish.extra2 - targeted branch hits
+    ✔ MerchantRegistry: exercise addMerchant subexprs and force flags (95ms)
+    ✔ Finance: decimals helper and deposit/send insufficient paths (117ms)
+
+  coverage.finish.extra20 - sweep all TEST helpers to flip remaining arms
+    148) sweeps MR and CE TEST helpers broadly
+
+  coverage.finish.extra21 - Finance sweep to flip remaining arms
+    149) exercises StablecoinRegistry and EcoTreasuryVault TEST helpers
+
+  coverage.finish.extra22 - finance hotspot helper sweep
+    150) calls TEST_cover_finance_more2 with permutations to flip branches
+
+  coverage.finish.extra23 - Commerce pinpoint near lines 118/130
+    151) exercises TEST_cover_addMerchant_near118_130 and toggles flags
+
+  coverage.finish.extra24 - Commerce region 250-300 helper
+    152) calls TEST_cover_250_300_region with permutations to flip arms
+
+  coverage.finish.extra25 - flip addMerchant and 250-300 region arms
+    153) flips alreadyMerchant and vault/noVault arms and exercises 250-300 region
+
+  coverage.finish.extra26 - msg.sender addMerchant helpers (line 118/130)
+    154) calls msg.sender-based helpers to flip the exact addMerchant arms
+
+  coverage.finish.extra27 - msg.sender vault helper (line 130)
+    155) uses msg.sender vault helper to flip vaultZero arms
+
+  coverage.finish.extra28 - mass 250-410 region tester
+    156) calls TEST_cover_mass_250_410 with permutations to flip many arms
+
+  coverage.finish.extra29 - addMerchant permutations
+    157) exercises addMerchant conditional arms via TEST helpers
+
+  coverage.finish.extra3 - final targeted branch hits
+    ✔ MerchantRegistry: hit addMerchant already/noVault/lowScore arms (96ms)
+    ✔ MerchantRegistry: noteDispute zero-flag and CommerceEscrow access NotAllowed arms (162ms)
+    ✔ Finance: ledger revert try/catch and send zero/to checks (66ms)
+
+  coverage.finish.extra30 - escrow release/refund/dispute permutations
+    158) opens/funds escrows and exercises allowed and not-allowed arms
+
+  coverage.finish.extra31 - pinpoint addMerchant msg.sender arms
+    159) toggles TEST flags and calls msg.sender helpers to flip arms
+
+  coverage.finish.extra32 - mass coverage 250-410 region
+    160) calls mass and region helpers with permutations to flip arms
+
+  coverage.finish.extra33 - extended permutations for 300-410 hotspots
+    161) exercises many hotspot helpers with permutations
+
+  coverage.finish.extra34 - broad sweep of TEST helpers
+    162) calls a broad set of TEST helpers to flip remaining arms
+
+  coverage.finish.extra4 - TEST-only helpers exercise
+    ✔ Commerce: use TEST_exercise_addMerchant_checks to flip arms (99ms)
+    ✔ Finance: use TEST_exercise_decimals_try and TEST_exercise_deposit_send_checks (56ms)
+
+  coverage.finish.extra5 - target remaining branch arms
+    ✔ Commerce: hit addMerchant and noteRefund/noteDispute arms (144ms)
+    ✔ Finance: exercise decimals fallback and deposit/send failure arms (105ms)
+    ✔ Call new contracts-min TEST_cover helpers to exercise remaining arms (213ms)
+
+  coverage.finish.extra6 - exercise explicit if/else helpers permutations
+    ✔ Commerce: call TEST_exec_addMerchant_ifvariants with permutations (85ms)
+    ✔ CommerceEscrow: exercise TEST_exec_open_ifvariants and access masks (161ms)
+    ✔ Finance: call TEST_exec_decimals_and_tx_ifvariants permutations (62ms)
+
+  coverage.finish.extra7 - extra permutations and signer variations
+    ✔ MerchantRegistry: toggle flags and call if-helpers with different signers (88ms)
+    ✔ CommerceEscrow: call access helpers from different callers to flip arms (157ms)
+    ✔ Finance: flip whitelist and zero-amount arms for StablecoinRegistry and EcoTreasury (82ms)
+
+  coverage.finish.extra8 - broader sweep for remaining arms
+    ✔ MerchantRegistry/Commerce: sweep permutations and signer-varied calls (91ms)
+    ✔ CommerceEscrow: force buyerVault zero and access masks with different ids (171ms)
+    ✔ Finance: additional permutations on decimals/send/deposit helpers (58ms)
+
+  coverage.finish.extra9 - pinpoint helpers to flip last arms
+    163) MerchantRegistry pinpoint helpers
+    164) Finance pinpoint helpers
+
+  bruteforce: finance send/decimals permutations to flip stubborn arms (~399)
+    165) runs many ordered combinations of send/mint/toggles/helpers to hit missing branch nodes
+
+  coverage.finish.finance.399.exhaustive - exhaustive permutations to flip finance arms
+    166) runs permutations over decimals/staticcall, whitelist, zero-amount and token-zero checks
+
+  micro: finance line ~399 deterministic sweep
+    167) calls EcoTreasuryVault.send and StablecoinRegistry helpers in ordered permutations to flip specific arms
+
+  coverage.finish.finance.399.narrow - decimals and deposit/send guard branches
+    168) exercises decimals staticcall success/fail and deposit/send checks
+
+  micro-orderings: finance ordered sequences to target index-specific arms (~399)
+    169) runs a few ordered sequences of send/mint/toggles to exercise send branches
+
+  sequence: finance send/decimals ordered-call sweep (~399)
+    170) runs ordered sequences of decimals helpers and send() permutations to hit missing branch indexes
+
+  coverage.finish.finance.399 - focused finance hotspot
+    171) exercises finance branches including decimals staticcall fallback and send/deposit guards
+
+  coverage.finish.finance.send.exec - call EcoTreasuryVault.send to execute branches
+    172) executes send() with token zero, zero amount, not-whitelisted and success paths
+
+  Commerce Bruteforce: Lines 664, 871, 964 Exhaustive
+    173) "before all" hook in "Commerce Bruteforce: Lines 664, 871, 964 Exhaustive"
+
+  coverage: finish remaining branch arms
+    ✔ MerchantRegistry: _noteRefund and _noteDispute hit COM_Zero via TEST toggles (65ms)
+    ✔ StablecoinRegistry & EcoTreasury: exercise TEST decimal and insufficient flags (61ms)
+    ✔ mocks: exercise TEST_checkAllowance branches and MerchantRegistry addMerchant TEST toggles (117ms)
+    ✔ StablecoinRegistry: ledger revert path is caught (try/catch) to exercise both arms (40ms)
+    ✔ invoke TEST helpers to exercise conditional sub-expressions (225ms)
+    ✔ mocks: transferFrom success and failure arms for GasDrainer and Reentering (709ms)
+    ✔ finance: onlyDAO gates for StablecoinRegistry and EcoTreasury (DAO vs non-DAO) (57ms)
+
+  helpers-focused: commerce deterministic helpers
+    174) calls TEST_exec_addMerchant_msgsender_full and note guards with permutations
+
+  helpers-focused: finance deterministic helpers
+    175) calls TEST_exec_send_variants and decimals wrapper with permutations
+
+  coverage.pinpoint.next: flip specific Commerce branch arms
+    176) toggles TEST flags, calls msg.sender variants and mass helpers
+
+  coverage.pinpoint.top: targeted helpers for top missing arms
+    177) targets commerce addMerchant arms and finance send/decimals arms
+
+  coverage.pinpoint.top2: target more top canonical misses
+    178) calls new pinpoint helpers and toggles flags
+
+  Coverage: Production Flow - Targeted Branch Tests
+    179) "before all" hook in "Coverage: Production Flow - Targeted Branch Tests"
+
+  Commerce: Push to 100% Coverage - Final Push
+    Line 87: removeMerchant branch
+      180) "before each" hook for "should hit line 87 when removing active merchant"
+
+  Push to 100%: Missing Branch Coverage
+    181) "before all" hook in "Push to 100%: Missing Branch Coverage"
+
+  coverage.target.min - exercise contracts-min helpers
+    182) MerchantRegistry (contracts-min): flip subexpr arms via TEST_exercise_addMerchant_checks
+    183) StablecoinRegistry (contracts-min): exercise decimals and deposit/send checks
+
+  Coverage: Uncovered Branches Test
+    MerchantRegistry - onlyDAO modifier (line 87)
+      184) "before each" hook for "should cover both arms of onlyDAO modifier"
+
+  Coverage: Additional Uncovered Branches - Part 2
+    185) covers remaining Commerce and Finance branches systematically
+
+  Coverage: CommerceEscrow Uncovered Branches
+    186) covers dense branch clusters in lines 435-664 and beyond
+
+  Coverage: VFIDEFinance Uncovered Branches
+    187) covers remaining Finance contract branches systematically
+
+  TEST-ONLY forced-branch coverage helpers
+    ✔ MerchantRegistry: force AlreadyMerchant and zero-sender branches (63ms)
+    ✔ StablecoinRegistry: force decimals fallback/override path (40ms)
+    ✔ EcoTreasuryVault: force deposit/send insufficient errors (72ms)
+    188) VFIDEToken: check forced vault/staticcall/router branches
+    ✔ mocks: exercise ERC20Mock failure branches and LedgerMock paths
+
+  Deterministic fuzz: Finance / Token / Commerce (sanity)
+    ✔ runs a deterministic sequence of randomized actions without crashing (1009ms)
+
+  Mocks coverage: LedgerMock and ReenteringERC20
+    ✔ LedgerMock: exercises emit and revert branches via StablecoinRegistry calls
+    ✔ LedgerMock: exercises logEvent path (addAsset) both emit and revert branches (51ms)
+    ✔ LedgerMock: direct calls exercise both logSystemEvent/logEvent branches
+    ✔ ReenteringERC20: covers balance guard and reentry path
+    ✔ ReverterEscrow: covers release/refund emit and revert paths
+    ✔ BurnRouterMock: set and computeFees paths
+    ✔ ReenteringERC20: transferFrom allowance branches (allowance/underflow and success)
+    ✔ GasDrainerERC20: transfer and transferFrom paths (balance guard and success) (1216ms)
+    ✔ GasDrainerERC20: explicit allowance-revert branch (zero allowance and small value)
+    ✔ GasDrainerERC20: TEST_checkAllowance covers both branches (false then true)
+    ✔ ReenteringERC20: explicit allowance-revert branch (zero allowance)
+    ✔ ReenteringERC20: TEST_checkAllowance covers both branches (false then true)
+    ✔ MerchantRegistryMock: setMerchant and info cover status branches
+
+  Extra mock branch coverage
+    ✔ GasDrainer: extra TEST_checkAllowance edge cases and transferFrom reverts/succeeds (540ms)
+    ✔ ReenteringERC20: transfer with default (no reenter target) and with reenter target
+
+  Uncovered mocks coverage
+    ✔ ReenterTargetMock emits Released
+    ✔ ReverterEscrow emits and reverts correctly
+    ✔ RevertingDecimals fallback reverts on plain call
+    ✔ SecurityHubMock and SeerMock basic behaviors
+    ✔ VaultHubMock vaultOf and TestVFIDEHarness TEST helpers (45ms)
+    ✔ LedgerMock logEvent and logSystemEvent revert paths
+
+
+  194 passing (25s)
+  188 failing
+
+  1) Commerce: MerchantRegistry + CommerceEscrow
+       "before each" hook for "merchant can register and buyer can open/fund/release an escrow":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Commerce.test.js:30:20)
+
+  2) Commerce negative paths and auto-suspend
+       "before each" hook for "open reverts for zero amount and unregistered merchant and locked vaults":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/CommerceEdge.test.js:29:20)
+
+  3) CouncilElection Contract Tests
+       "before each" hook for "should set DAO correctly":
+     HardhatError: HH700: Artifact for contract "CouncilElection" not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/CouncilElection.test.js:22:21)
+
+  4) DAO Contract Tests
+       "before each" hook for "should set admin correctly":
+     HardhatError: HH700: Artifact for contract "DAOTimelock" not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/DAO.test.js:14:22)
+
+  5) DAOTimelock Contract Tests
+       "before each" hook for "should set admin correctly":
+     HardhatError: HH700: Artifact for contract "DAOTimelock" not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/DAOTimelock.test.js:16:22)
+
+  6) DevReserveVestingVault
+       "before each" hook for "should deploy with correct VFIDE":
+     HardhatError: HH700: Artifact for contract "
+      contract VFIDEMock {
+        mapping(address => uint256) public balanceOf;
+        function mint(address to, uint256 amount) external {
+          balanceOf[to] += amount;
+        }
+        function transfer(address to, uint256 value) external returns (bool) {
+          balanceOf[msg.sender] -= value;
+          balanceOf[to] += value;
+          return true;
+        }
+      }
+    " not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/DevReserveVestingVault.test.js:12:23)
+
+  7) EmergencyControl Contract Tests
+       "before each" hook for "should set DAO correctly":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/SecurityHubMock.sol:SecurityHubMock" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/EmergencyControl.test.js:17:25)
+
+  8) StablecoinRegistry and EcoTreasuryVault extra flows
+       "before each" hook for "DAO can remove asset and set symbol hint":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/FinanceMore.test.js:23:26)
+
+  9) GovernanceHooks
+       "before each" hook for "should deploy with correct ledger":
+     HardhatError: HH700: Artifact for contract "contracts/ProofLedger.sol:ProofLedger" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/GovernanceHooks.test.js:12:24)
+
+  10) Interface Compliance Tests
+       IVFIDEToken Interface
+         Should implement all IVFIDEToken interface functions:
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/Interfaces.test.js:14:33)
+
+  11) Interface Compliance Tests
+       IDAO Interface
+         Should verify DAO interface structure:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockDAO.sol:MockDAO" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:29:23)
+
+  12) Interface Compliance Tests
+       ISeer Interface
+         Should verify Seer reputation interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockSeer.sol:MockSeer" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:41:24)
+
+  13) Interface Compliance Tests
+       IProofLedger Interface
+         Should verify ProofLedger interface functions:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockProofLedger.sol:MockProofLedger" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:53:26)
+
+  14) Interface Compliance Tests
+       IVaultHub Interface
+         Should verify VaultHub interface compliance:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockVaultHub.sol:MockVaultHub" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:64:28)
+
+  15) Interface Compliance Tests
+       ISecurityHub Interface
+         Should verify SecurityHub emergency interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockSecurityHub.sol:MockSecurityHub" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:74:31)
+
+  16) Interface Compliance Tests
+       ICouncilElection Interface
+         Should verify CouncilElection interface functions:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockCouncilElection.sol:MockCouncilElection" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:85:27)
+
+  17) Interface Compliance Tests
+       IEmergencyControl Interface
+         Should verify EmergencyControl interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockEmergencyControl.sol:MockEmergencyControl" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:97:29)
+
+  18) Interface Compliance Tests
+       IDAOTimelock Interface
+         Should verify Timelock interface compliance:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockDAOTimelock.sol:MockDAOTimelock" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:109:28)
+
+  19) Interface Compliance Tests
+       ICommerceEscrow Interface
+         Should verify Commerce escrow interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockCommerce.sol:MockCommerce" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:121:28)
+
+  20) Interface Compliance Tests
+       IMerchantRegistry Interface
+         Should verify MerchantRegistry interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockCommerce.sol:MockCommerce" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:132:28)
+
+  21) Interface Compliance Tests
+       IReviewRegistry Interface
+         Should verify ReviewRegistry interface compliance:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockCommerce.sol:MockCommerce" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:143:28)
+
+  22) Interface Compliance Tests
+       IGovernanceHooks Interface
+         Should verify GovernanceHooks callback interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockGovernanceHooks.sol:MockGovernanceHooks" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:152:25)
+
+  23) Interface Compliance Tests
+       IProofScoreBurnRouter Interface
+         Should verify ProofScoreBurnRouter interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockProofScoreBurnRouter.sol:MockProofScoreBurnRouter" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:163:26)
+
+  24) Interface Compliance Tests
+       ISystemHandover Interface
+         Should verify SystemHandover interface functions:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockSystemHandover.sol:MockSystemHandover" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:172:28)
+
+  25) Interface Compliance Tests
+       IVFIDEPresale Interface
+         Should verify Presale interface compliance:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockPresale.sol:MockPresale" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:183:27)
+
+  26) Interface Compliance Tests
+       IUserVault Interface
+         Should verify UserVault interface functions:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockUserVault.sol:MockUserVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:194:25)
+
+  27) Interface Compliance Tests
+       IVaultFactory Interface
+         Should verify VaultFactory creation interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockVaultFactory.sol:MockVaultFactory" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:205:27)
+
+  28) Interface Compliance Tests
+       IStablecoinRegistry Interface
+         Should verify StablecoinRegistry interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockStablecoinRegistry.sol:MockStablecoinRegistry" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:214:28)
+
+  29) Interface Compliance Tests
+       IDevReserveVestingVault Interface
+         Should verify DevReserveVestingVault interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockDevReserveVestingVault.sol:MockDevReserveVestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:225:27)
+
+  30) Interface Compliance Tests
+       IEcoTreasuryVault Interface
+         Should verify EcoTreasuryVault interface compliance:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockEcoTreasuryVault.sol:MockEcoTreasuryVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:235:28)
+
+  31) Interface Compliance Tests
+       ISanctumFund Interface
+         Should verify SanctumFund interface functions:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockSanctumFund.sol:MockSanctumFund" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:245:27)
+
+  32) Interface Compliance Tests
+       IGuardianLock Interface
+         Should verify GuardianLock security interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockGuardianLock.sol:MockGuardianLock" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:255:28)
+
+  33) Interface Compliance Tests
+       IGuardianRegistry Interface
+         Should verify GuardianRegistry interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockGuardianRegistry.sol:MockGuardianRegistry" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:266:28)
+
+  34) Interface Compliance Tests
+       IPanicGuard Interface
+         Should verify PanicGuard emergency interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockPanicGuard.sol:MockPanicGuard" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:277:25)
+
+  35) Interface Compliance Tests
+       IEmergencyBreaker Interface
+         Should verify EmergencyBreaker circuit breaker interface:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockSecurityHub.sol:MockSecurityHub" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:287:27)
+
+  36) Interface Compliance Tests
+       IERC20Minimal Interface
+         Should verify ERC20 minimal interface compliance:
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/Interfaces.test.js:299:33)
+
+  37) Interface Compliance Tests
+       Cross-Interface Integration
+         Should verify interfaces work together:
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/Interfaces.test.js:315:33)
+
+  38) Interface Compliance Tests
+       Cross-Interface Integration
+         Should verify DAO and Timelock interface integration:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockDAO.sol:MockDAO" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:327:23)
+
+  39) Interface Compliance Tests
+       Cross-Interface Integration
+         Should verify Seer and Ledger interface integration:
+     HardhatError: HH700: Artifact for contract "contracts/mocks/MockSeer.sol:MockSeer" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:340:24)
+
+  40) ProofLedger
+       "before each" hook for "should deploy with correct DAO":
+     HardhatError: HH700: Artifact for contract "contracts/ProofLedger.sol:ProofLedger" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/ProofLedger.test.js:11:25)
+
+  41) ProofScoreBurnRouter
+       "before each" hook for "should deploy with correct seer":
+     HardhatError: HH700: Artifact for contract "
+      contract SeerMock {
+        mapping(address => uint16) public scores;
+        function getScore(address user) external view returns (uint16) {
+          uint16 s = scores[user];
+          return s == 0 ? 500 : s;
+        }
+        function setScore(address user, uint16 score) external {
+          scores[user] = score;
+        }
+      }
+    " not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/ProofScoreBurnRouter.test.js:12:22)
+
+  42) Seer Contract Tests
+       "before each" hook for "should set DAO correctly":
+     HardhatError: HH700: Artifact for contract "Seer" not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Seer.test.js:17:18)
+
+  43) SystemHandover
+       "before each" hook for "should deploy with correct devMultisig":
+     HardhatError: HH700: Artifact for contract "
+      contract DAOMock {
+        event AdminSet(address admin);
+        function setAdmin(address _admin) external {
+          emit AdminSet(_admin);
+        }
+      }
+    " not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/SystemHandover.test.js:12:21)
+
+  44) VFIDEToken basic flows
+       "before each" hook for "pre-mints dev reserve to vesting vault":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Token.test.js:15:20)
+
+  45) VFIDEToken edge cases and fee routing
+       "before each" hook for "presale cap is enforced":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/TokenEdge.test.js:15:20)
+
+  46) VFIDEToken additional behaviors
+       "before each" hook for "approve/increase/decrease allowance and transferFrom":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/TokenMore.test.js:15:20)
+
+  47) VFIDEPresale
+       "before each" hook for "should deploy with correct vfide":
+     HardhatError: HH700: Artifact for contract "
+      contract VFIDEMock {
+        uint256 public presaleMinted;
+        uint256 public constant PRESALE_SUPPLY_CAP = 75_000_000e18;
+        event MintPresale(address to, uint256 amount);
+        function mintPresale(address to, uint256 amount) external {
+          presaleMinted += amount;
+          emit MintPresale(to, amount);
+        }
+      }
+    " not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEPresale.test.js:13:23)
+
+  48) VFIDESecurity - GuardianRegistry
+       "before each" hook for "should deploy with correct DAO":
+     HardhatError: HH700: Artifact for contract "contracts/VFIDESecurity.sol:GuardianRegistry" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDESecurity.test.js:11:30)
+
+  49) VFIDESecurity - SecurityHub
+       "before each" hook for "should deploy with correct components":
+     HardhatError: HH700: Artifact for contract "
+      contract MockLock {
+        mapping(address => bool) public locked;
+        function setLocked(address vault, bool _locked) external {
+          locked[vault] = _locked;
+        }
+        function isLocked(address vault) external view returns (bool) {
+          return locked[vault];
+        }
+      }
+    " not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDESecurity.test.js:138:22)
+
+  50) VFIDEToken branch-combination tests
+       "before each" hook for "cover some fee/router and vault/security helper branches":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.branches.test.js:14:15)
+
+  51) VFIDEToken coverage-focused tests
+       "before each" hook for "owner admin paths: set modules and ledger":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.coverage.test.js:16:20)
+
+  52) VFIDEToken exhaustive branch tests
+       "before each" hook for "hard burn (burnAmt>0, burnSink=0) decreases totalSupply and emits Transfer to zero":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.exhaustive.test.js:11:21)
+
+  53) VFIDEToken extra focused tests
+       "before each" hook for "_isVault returns true/false and TEST flag forces false":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.extra.test.js:14:20)
+
+  54) VFIDEToken focused branch tests
+       "before each" hook for "_isVault respects vaultHub and TEST_force_vaultHub_zero":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.focused.test.js:15:15)
+
+  55) VFIDEToken micro-batch 1 (vault, lock, policy, presale)
+       "before each" hook for "_isVault returns true when vault hub maps owner->self and false when TEST_force_vaultHub_zero set":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch1.test.js:14:15)
+
+  56) VFIDEToken microbatch 10 — presale & policy guards
+       "before each" hook for "mintPresale exceeding PRESALE_SUPPLY_CAP reverts with VF_CAP":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch10.test.js:11:15)
+
+  57) VFIDEToken microbatch 11 — security locks & TEST toggles
+       "before each" hook for "securityHub locked -> transfers revert with VF_LOCKED":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch11.test.js:11:15)
+
+  58) VFIDEToken microbatch 12 — matrix sweep for fee/exception permutations
+       "before each" hook for "scenario 0: no fees":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch12.test.js:11:15)
+
+  59) VFIDEToken microbatch 13 — policy/vault/presale/security/approve edges
+       "before each" hook for "transfer 0 emits Transfer and returns (short-circuit)":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch13.test.js:11:13)
+
+  60) VFIDEToken microbatch 14 — _isVault and vaultHub edge cases
+       "before each" hook for "v==a && v!=0 -> _isVault true":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch14.test.js:11:13)
+
+  61) VFIDEToken microbatch 15 — policy/router/treasury/fee matrix
+       "before each" hook for "matrix 0: router present, no fees":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch15.test.js:12:15)
+
+  62) VFIDEToken microbatch 16 — exhaustive sink/fee/treasury permutations
+       "before each" hook for "case 0: sanctum Z -> treasury":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch16.test.js:11:15)
+
+  63) VFIDEToken microbatch 17 — remaining cond-exprs, vaultOnly=false and TEST toggles
+       "before each" hook for "both fees non-zero, sanctumSink==Z -> treasury when set, burn soft to charlie":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch17.test.js:11:15)
+
+  64) VFIDEToken microbatch 18 — final cond-expr/sink/vault/policy permutations
+       "before each" hook for "both fees non-zero with mixed sinks (sanctum Z -> treasury, burnSink non-zero) across transfer and transferFrom":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch18.test.js:11:15)
+
+  65) VFIDEToken microbatch19 - fee & sink permutations
+       "before each" hook for "applies both burn and sanctum amounts when both sinks present (transfer)":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch19.test.js:15:20)
+
+  66) VFIDEToken micro-batch 2 (burn router fees & systemExempt)
+       "before each" hook for "applies burn and sanctum amounts, using treasurySink fallback":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch2.test.js:14:15)
+
+  67) VFIDEToken microbatch20 - leftover fee/vault/policy permutations
+       "before each" hook for "hard burn when burnSink == zero and sanctum routes to treasury":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch20.test.js:11:15)
+
+  68) VFIDEToken microbatch21 - combinatorial fee/sink permutations
+       "before each" hook for "combo: both non-zero sinks non-zero":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch21.test.js:11:15)
+
+  69) VFIDEToken microbatch22 - broad permutation sweep
+       "before each" hook for "sweeps many permutations without throwing (collects results)":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch22.test.js:11:15)
+
+  70) VFIDEToken microbatch-23 — burn sink and sanctum fallback
+       "before each" hook for "hard burn when burnSink == address(0) reduces totalSupply and leaves recipient with net":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch23.test.js:12:20)
+
+  71) VFIDEToken microbatch-24 — presale + vaultOnly combos
+       "before each" hook for "reverts when vaultOnly is true and presale target is not a vault":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch24.test.js:12:20)
+
+  72) VFIDEToken microbatch-25 — security staticcall failures and policy-lock router requirement
+       "before each" hook for "reverts transfers when security hub marks vault as locked":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch25.test.js:11:20)
+
+  73) VFIDEToken microbatch-26 — transferFrom and allowance flows
+       "before each" hook for "reverts when allowance is insufficient for transferFrom":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch26.test.js:11:20)
+
+  74) VFIDEToken microbatch-27 — small edge cases (zero-transfer, allowance underflow, approve zero)
+       "before each" hook for "emits Transfer and returns early for zero-amount transfer":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch27.test.js:11:20)
+
+  75) VFIDEToken microbatch-28 — router/policy, systemExempt permutations, sanctum fallback, TEST helpers
+       "before each" hook for "lockPolicy requires router (policyLocked path) — transfer reverts when no router":
+     HardhatError: HH700: Artifact for contract "contracts/mocks/VestingVault.sol:VestingVault" not found. 
+      at Artifacts._handleWrongArtifactForFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:697:11)
+      at Artifacts._getValidArtifactPathFromFullyQualifiedName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:646:21)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:513:16)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/VFIDEToken.microbatch28.test.js:11:20)
+
+Error in plugin solidity-coverage: ❌ 188 test(s) failed under coverage.
+HardhatPluginError: ❌ 188 test(s) failed under coverage.
+    at SimpleTaskDefinition.action (/workspaces/Vfide/node_modules/solidity-coverage/plugins/hardhat.plugin.js:275:30)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Environment._runTaskDefinition (/workspaces/Vfide/node_modules/hardhat/src/internal/core/runtime-environment.ts:351:14)
+    at Environment.run (/workspaces/Vfide/node_modules/hardhat/src/internal/core/runtime-environment.ts:184:14)
+    at main (/workspaces/Vfide/node_modules/hardhat/src/internal/cli/cli.ts:325:7)

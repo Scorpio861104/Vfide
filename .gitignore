@@ -4,3 +4,5 @@ artifacts/
 coverage/
 .env
 compile-contracts.js
+.vercel
+.env*.local

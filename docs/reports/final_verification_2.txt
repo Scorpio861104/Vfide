@@ -1,0 +1,2846 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+
+
+  Commerce Complete Coverage
+    MerchantRegistry Additional TEST Helpers
+      - TEST_if_vaultAndScore
+      - TEST_if_vaultAndScore - no vault
+      - TEST_cover_additional_branches - all variants
+      - TEST_cover_additional_branches - with forces
+      - TEST_force_eval_360_and_neighbors
+      - TEST_force_eval_360_and_neighbors - with thresholds
+      - TEST_line365_condexpr_variant2
+      - TEST_line365_condexpr_variant2 - with force
+      - TEST_line367_condexpr_variant2
+      - TEST_line367_condexpr_variant2 - with forces
+      - TEST_line374_condexpr_variant
+      - TEST_line374_condexpr_variant - force left
+      - TEST_force_eval_367_variants
+      - TEST_force_eval_367_variants - with forces
+      - TEST_force_eval_369_370_combo
+      - TEST_force_eval_369_370_combo - zero amount
+      - TEST_dup_constructor_or_local
+      - TEST_dup_constructor_or_local2
+      - TEST_dup_constructor_or_msgsender_variant
+      - TEST_trick_constructor_or_line87 - with zero
+      - TEST_trick_constructor_or_line87 - with address
+      - TEST_line87_txorigin_variant
+      - TEST_line87_ledger_security_variant - with zero
+      - TEST_line87_ledger_security_variant - with address
+      - TEST_line118_msgsender_false_arm
+      - TEST_line130_msgsender_vaultZero_false - no force
+      - TEST_line130_msgsender_vaultZero_false - with force
+    MerchantRegistry Combined Branch Coverage
+      - should cover all merchant status branches
+      - should cover all vault presence branches
+      - should cover all score threshold branches
+      - should cover refund threshold branches
+      - should cover dispute threshold branches
+      - should cover all force flag combinations
+    MerchantRegistry Line-Specific Branch Coverage
+      - should cover line 365 condexpr - all combinations
+      - should cover line 367 condexpr - all combinations
+      - should cover line 374 condexpr - all combinations
+      - should cover line 367 variants - all combinations
+      - should cover lines 369-370 combo - all combinations
+    MerchantRegistry Constructor and Line 87 Coverage
+      - should cover constructor OR chain variants
+      - should cover line 87 with zero addresses
+      - should cover line 87 with valid addresses
+    MerchantRegistry Lines 118 and 130 Coverage
+      - should cover line 118 merchant status check
+      - should cover line 130 vault zero check - both branches
+    MerchantRegistry Dense 360-375 Hotspot Coverage
+      - should cover 360 neighbors - all merchant states
+      - should cover 360 neighbors with vault presence
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 1/3)
+    Basic TEST toggle functions
+      - TEST_setOnlyDAOOff
+      - TEST_setForceAlreadyMerchant
+      - TEST_setForceNoVault
+      - TEST_setForceLowScore
+      - TEST_setForceZeroSenderRefund
+      - TEST_setForceZeroSenderDispute
+    Eval functions - Part 1
+      - TEST_eval_addMerchant_flags
+      - TEST_eval_addMerchant_subexpr
+      - TEST_eval_noteRefund_forceFlag
+      - TEST_eval_noteDispute_forceFlag
+      - TEST_exercise_addMerchant_checks
+      - TEST_exercise_noteFlags
+      - TEST_exec_addMerchant_branches
+      - TEST_cover_addMerchant_variants
+    Conditional TEST functions
+      - TEST_if_alreadyMerchant_left
+      - TEST_if_forceAlready_right
+      - TEST_if_noVault_left
+      - TEST_if_forceNoVault_right
+      - TEST_if_lowScore_left
+      - TEST_if_forceLowScore_right
+      - TEST_exec_addMerchant_ifvariants
+    Status check functions
+      - TEST_if_merchant_status_none
+      - TEST_if_vaultHub_vaultOf_isZero
+      - TEST_if_seer_getScore_lt_min
+      - TEST_if_refund_threshold_reached
+      - TEST_if_dispute_threshold_reached
+    Force variants
+      - TEST_if_vaultOf_isZero_or_force
+      - TEST_if_seer_score_below_min_or_force
+      - TEST_if_alreadyMerchant_or_force
+      - TEST_if_onlyDAO_off_flag
+    Vault and score checks
+      - TEST_if_vaultAndScore
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 2/3)
+    Additional coverage functions - Part 1
+      - TEST_cover_additional_branches
+      - TEST_force_eval_360_and_neighbors
+      - TEST_line365_condexpr_variant2
+      - TEST_line367_condexpr_variant2
+      - TEST_line374_condexpr_variant
+      - TEST_force_eval_367_variants
+      - TEST_force_eval_369_370_combo
+    Constructor and local variants
+      - TEST_dup_constructor_or_local
+      - TEST_dup_constructor_or_local2
+      - TEST_dup_constructor_or_msgsender_variant
+      - TEST_trick_constructor_or_line87
+      - TEST_line87_txorigin_variant
+      - TEST_line87_ledger_security_variant
+    Specific line coverage
+      - TEST_line118_msgsender_false_arm
+      - TEST_line130_msgsender_vaultZero_false
+      - TEST_line250_condexpr_alt
+      - TEST_force_eval_line87_msgsender
+      - TEST_force_eval_addMerchant_msgsender_variants
+      - TEST_line118_already_or_force
+      - TEST_line130_vaultZero_or_force
+      - TEST_line238_refunds_threshold
+      - TEST_line250_condexpr_variant
+      - TEST_line291_sender_zero_or_force_refund
+      - TEST_line305_seer_lt_or_force
+    Additional IF variants
+      - TEST_if_addMerchant_or_force
+      - TEST_if_vaultOf_or_force2
+      - TEST_if_seer_lt_min_or_force2
+      - TEST_cover_addMerchant_near118_130
+    Execution functions with state changes
+      - TEST_exec_addMerchant_msgsender_full
+      - TEST_exec_note_guards_and_restore
+    More conditional checks
+      - TEST_if_msgsender_alreadyMerchant
+      - TEST_if_constructor_zero_check
+      - TEST_exec_addMerchant_msgsender_ifvariants
+      - TEST_line130_msgsender_vaultZero_or_force
+    Coverage region tests
+      - TEST_cover_250_300_region
+      - TEST_cover_mass_250_410
+    All force flag combinations
+      - should test all 64 combinations of 6 boolean flags
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 3/3)
+    Escrow eval functions
+      - TEST_eval_open_checks
+      - TEST_if_securityCheck_addr
+      - TEST_if_escrow_state_eq
+      - TEST_if_escrow_buyerVault_zero
+      - TEST_if_escrow_sellerVault_zero
+      - TEST_exec_open_ifvariants
+    Access check functions
+      - TEST_eval_access_checks
+      - TEST_if_buyerVault_zero
+      - TEST_if_release_allowed
+      - TEST_if_refund_allowed
+      - TEST_exec_access_ifvariants
+      - TEST_cover_escrow_more
+    Hotspot functions
+      - TEST_hotspot_300s
+      - TEST_hotspot_330s
+      - TEST_hotspot_360s
+      - TEST_hotspot_490s
+      - TEST_cover_post360s
+    Message sender specific checks
+      - TEST_if_msgsender_release_allowed
+      - TEST_if_msgsender_refund_allowed
+      - TEST_if_msgsender_dispute_allowed
+      - TEST_if_notFunded
+      - TEST_if_resolve_buyerWins_branch
+      - TEST_force_eval_release_refund_resolve
+    Line-specific conditional expressions
+      - TEST_line435_condexpr_variants
+      - TEST_line447_condexpr_variants
+      - TEST_line456_condexpr_variants
+      - TEST_line466_condexpr_variants
+      - TEST_line503_506_combo
+    Duplicate and extended variants
+      - TEST_dup_line435_with_locals
+      - TEST_line435_msgsender_include
+      - TEST_line447_many_ors
+      - TEST_line503_extended_variants
+      - TEST_line644_combo
+      - TEST_line371_alt
+    Comprehensive variant combinations
+      - should test all hotspot functions with different parameters
+      - should test all line-specific expressions in sequence
+      - should test all extended variants
+    Massive permutation testing
+      - should test all boolean flag permutations for open_ifvariants
+      - should test all score thresholds
+      - should test multiple amounts
+      - should test all refund/dispute counts
+    Final comprehensive coverage
+      - should exercise every TEST function at least once
+
+  VFIDECommerce: Push to 95% Coverage
+    MerchantRegistry TEST Helpers - Branch Coverage
+      - should exercise TEST_setOnlyDAOOff
+      - should exercise TEST_setForceAlreadyMerchant
+      - should exercise TEST_setForceNoVault
+      - should exercise TEST_setForceLowScore
+      - should exercise TEST_setForceZeroSenderRefund
+      - should exercise TEST_setForceZeroSenderDispute
+    MerchantRegistry TEST Helpers - Conditional Branches
+      - should exercise TEST_if_alreadyMerchant_left - true
+      - should exercise TEST_if_alreadyMerchant_left - false
+      - should exercise TEST_if_forceAlready_right - true
+      - should exercise TEST_if_forceAlready_right - false
+      - should exercise TEST_if_noVault_left - true
+      - should exercise TEST_if_noVault_left - false
+      - should exercise TEST_if_forceNoVault_right - true
+      - should exercise TEST_if_forceNoVault_right - false
+      - should exercise TEST_if_lowScore_left - true
+      - should exercise TEST_if_lowScore_left - false
+      - should exercise TEST_if_forceLowScore_right - true
+      - should exercise TEST_if_forceLowScore_right - false
+    MerchantRegistry TEST Helpers - Complex Variants
+      - should exercise TEST_exec_addMerchant_ifvariants - all false
+      - should exercise TEST_exec_addMerchant_ifvariants - forceA true
+      - should exercise TEST_exec_addMerchant_ifvariants - forceB true
+      - should exercise TEST_exec_addMerchant_ifvariants - forceC true
+      - should exercise TEST_exec_addMerchant_ifvariants - all forces true
+    MerchantRegistry TEST Helpers - Status Checks
+      - should exercise TEST_if_merchant_status_none - true
+      - should exercise TEST_if_merchant_status_none - false
+      - should exercise TEST_if_vaultHub_vaultOf_isZero - true
+      - should exercise TEST_if_vaultHub_vaultOf_isZero - false
+    MerchantRegistry TEST Helpers - addMerchant Variants
+      - should exercise TEST_cover_addMerchant_variants - not merchant
+      - should exercise TEST_cover_addMerchant_variants - is merchant
+      - should exercise TEST_cover_addMerchant_variants - force already
+      - should exercise TEST_cover_addMerchant_variants - no vault left
+      - should exercise TEST_cover_addMerchant_variants - has vault left
+      - should exercise TEST_cover_addMerchant_variants - force no vault
+      - should exercise TEST_cover_addMerchant_variants - low score left
+      - should exercise TEST_cover_addMerchant_variants - good score left
+      - should exercise TEST_cover_addMerchant_variants - force low score
+    MerchantRegistry TEST Helpers - Additional Eval Functions
+      - should exercise TEST_eval_addMerchant_flags
+      - should exercise TEST_eval_addMerchant_subexpr
+      - should exercise TEST_eval_noteRefund_forceFlag
+      - should exercise TEST_eval_noteDispute_forceFlag
+      - should exercise TEST_exercise_addMerchant_checks
+      - should exercise TEST_exercise_noteFlags
+      - should exercise TEST_exec_addMerchant_branches
+
+  VFIDECommerce Ecosystem Test
+    ✔ should allow a merchant to register successfully
+    with registered merchant
+      ✔ should allow a buyer to open, fund, and release an escrow
+
+  CommerceEdge
+    ✔ should handle commerce escrow operations
+
+  CouncilElection Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      ✔ should set default council size to 12
+      ✔ should set default term to 365 days
+      ✔ should revert if deploying with zero addresses
+    Module Configuration
+      ✔ should allow DAO to set modules
+      ✔ should revert if non-DAO tries to set modules
+    Parameter Configuration
+      ✔ should allow DAO to set params
+      ✔ should revert if setting council size to zero
+      ✔ should revert if non-DAO tries to set params
+    Candidate Registration
+      ✔ should allow eligible user to register
+      ✔ should revert if not eligible (low score)
+      ✔ should revert if not eligible (no vault)
+      ✔ should allow candidate to unregister
+    Council Setting
+      ✔ should allow DAO to set council
+      ✔ should revert if empty array
+      ✔ should revert if exceeds council size
+      ✔ should revert if member not eligible
+      ✔ should set term end correctly
+    Council Refresh
+      ✔ should allow DAO to refresh council
+      ✔ should revert if non-DAO tries to refresh
+
+  DAO Contract Tests
+    Deployment and Setup
+      ✔ should set admin correctly
+      ✔ should set default voting period
+      ✔ should set default quorum
+      ✔ should allow admin to set modules
+      ✔ should revert if non-admin tries to set admin
+    Proposal Creation
+      ✔ should create a proposal
+      ✔ should revert if proposer not eligible
+      ✔ should revert if proposer has no vault
+      ✔ should allow zero target address
+    Voting
+      ✔ should allow eligible voter to vote
+      ✔ should revert if already voted
+      ✔ should revert if not eligible to vote
+      ✔ should count votes correctly
+    Finalization
+      ✔ should finalize passed proposal
+      ✔ should finalize failed proposal
+      ✔ should revert if voting not ended
+    Parameter Updates
+      ✔ should allow admin to update voting period
+      ✔ should revert if non-admin tries to update params
+
+  DAOTimelock Contract Tests
+    Deployment
+      ✔ should set admin correctly
+      ✔ should set default delay to 48 hours
+      ✔ should revert if deploying with zero admin
+    Admin Functions
+      ✔ should allow admin to update admin
+      ✔ should revert if non-admin tries to set admin
+      ✔ should revert if setting admin to zero
+      ✔ should allow admin to update delay
+      ✔ should allow admin to set ledger
+      ✔ should allow admin to set panic guard
+    Queue Transaction
+      ✔ should queue a transaction
+      ✔ should revert if non-admin tries to queue
+      ✔ should revert if queuing same transaction twice
+      ✔ should calculate correct ETA
+    Cancel Transaction
+      ✔ should cancel a queued transaction
+      ✔ should revert if non-admin tries to cancel
+      ✔ should revert if cancelling non-existent transaction
+    Execute Transaction
+      ✔ should execute after delay
+      ✔ should revert if executed too early
+      ✔ should revert if executing non-existent transaction
+    Edge Cases
+      ✔ should handle zero value transactions
+      ✔ should handle empty data
+      ✔ should handle different delays
+
+  EmergencyControl Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      ✔ should set breaker correctly
+      ✔ should set default cooldown to 5 minutes
+      ✔ should revert if deploying with zero addresses
+    Module Configuration
+      ✔ should allow DAO to set modules
+      ✔ should revert if non-DAO tries to set modules
+    Cooldown Configuration
+      ✔ should allow DAO to set cooldown
+      ✔ should revert if non-DAO tries to set cooldown
+    Committee Management
+      ✔ should allow DAO to add member
+      ✔ should revert if adding zero address
+      ✔ should revert if adding duplicate member
+      ✔ should allow DAO to remove member
+      ✔ should revert if removing non-member
+      ✔ should allow DAO to reset committee
+      ✔ should revert if threshold exceeds member count
+    Committee Voting
+      ✔ should allow member to vote for halt
+      ✔ should allow member to vote for unhalt
+      ✔ should revert if non-member tries to vote
+      ✔ should revert if member votes twice for same stance
+      ✔ should trigger when threshold reached
+    DAO Toggle
+      ✔ should allow DAO to toggle halt
+      ✔ should revert if non-DAO tries to toggle
+      ✔ should enforce cooldown
+      ✔ should allow toggle after cooldown passes
+    Vote Reset
+      ✔ should allow DAO to reset votes
+      ✔ should revert if non-DAO tries to reset
+
+  StablecoinRegistry and EcoTreasuryVault
+    ✔ DAO can whitelist asset and treasury accepts deposits
+    ✔ non-DAO cannot add asset
+
+  GovernanceHooks
+    Deployment
+      ✔ should deploy with correct ledger
+      ✔ should deploy with correct seer
+      ✔ should emit ModulesSet on deployment
+      ✔ should deploy with zero address ledger (optional)
+      ✔ should deploy with zero address seer (optional)
+      ✔ should deploy with both zero addresses
+    setModules
+      ✔ should update ledger address (49ms)
+      ✔ should update seer address
+      ✔ should update both addresses
+      ✔ should emit ModulesSet
+      ✔ should allow setting zero addresses
+      ✔ should allow anyone to call setModules
+    onProposalQueued
+      ✔ should execute without reverting
+      ✔ should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal IDs
+      ✔ should handle zero value proposals
+      ✔ should handle zero target address
+    onVoteCast
+      ✔ should execute without reverting for support vote
+      ✔ should execute without reverting for against vote
+      ✔ should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple voters
+      ✔ should handle zero address voter
+    onFinalized
+      ✔ should execute for passed proposal
+      ✔ should execute for failed proposal
+      ✔ should log system event when ledger is set
+      ✔ should log system event when ledger is set (failed)
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal finalizations
+    Hook Integration Flow
+      ✔ should execute complete governance flow
+      ✔ should handle multiple proposals simultaneously
+      ✔ should work with ledger logging disabled
+    Edge Cases
+      ✔ should handle ledger reverts gracefully
+      ✔ should allow rapid successive calls
+      ✔ should handle very large proposal IDs
+      ✔ should allow module updates mid-flow
+
+  Interface Compliance Tests
+    IVFIDEToken Interface
+      ✔ Should implement all IVFIDEToken interface functions
+    IDAO Interface
+      ✔ Should verify DAO interface structure
+    ISeer Interface
+      ✔ Should verify Seer reputation interface
+    IProofLedger Interface
+      ✔ Should verify ProofLedger interface functions
+    IVaultHub Interface
+      ✔ Should verify VaultHub interface compliance
+    ISecurityHub Interface
+      ✔ Should verify SecurityHub emergency interface
+    IDAOTimelock Interface
+      ✔ Should verify Timelock interface compliance
+    IProofScoreBurnRouter Interface
+      ✔ Should verify ProofScoreBurnRouter interface
+    IVFIDEPresale Interface
+      ✔ Should verify Presale interface compliance
+    IDevReserveVestingVault Interface
+      ✔ Should verify DevReserveVestingVault interface
+    IEcoTreasuryVault Interface
+      ✔ Should verify EcoTreasuryVault interface compliance
+    ISanctumFund Interface
+      ✔ Should verify SanctumFund interface functions
+    IGuardianLock Interface
+      ✔ Should verify GuardianLock security interface
+    IPanicGuard Interface
+      ✔ Should verify PanicGuard emergency interface
+    IEmergencyBreaker Interface
+      ✔ Should verify EmergencyBreaker circuit breaker interface
+    IERC20Minimal Interface
+      ✔ Should verify ERC20 minimal interface compliance
+    Cross-Interface Integration
+      ✔ Should verify interfaces work together
+      ✔ Should verify DAO and Timelock interface integration
+      ✔ Should verify Seer and Ledger interface integration
+
+  ProofLedger
+    Deployment
+      ✔ should deploy with correct DAO
+      ✔ should revert on zero address DAO
+    setDAO
+      ✔ should allow DAO to update DAO address
+      ✔ should emit DAOSet event
+      ✔ should revert if non-DAO tries to update
+      ✔ should revert on zero address
+      ✔ should allow DAO to be set to itself
+      ✔ should allow chained DAO updates
+    logEvent
+      ✔ should emit EventLog event with all parameters
+      ✔ should allow anyone to log events
+      ✔ should handle zero amount
+      ✔ should handle empty strings
+      ✔ should handle very large amounts
+      ✔ should handle long action strings
+      ✔ should handle long note strings
+      ✔ should log multiple events in sequence
+    logSystemEvent
+      ✔ should emit SystemEvent event with all parameters
+      ✔ should allow anyone to log system events
+      ✔ should handle empty action string
+      ✔ should handle zero addresses
+      ✔ should handle long action strings
+      ✔ should log multiple system events
+    Mixed Logging
+      ✔ should support both log types simultaneously
+      ✔ should handle high-frequency logging
+      ✔ should maintain independent event streams
+    Access Control
+      ✔ should allow only DAO to change DAO
+      ✔ should allow anyone to log events
+      ✔ should allow anyone to log system events
+    Edge Cases
+      ✔ should handle DAO transferring to self
+      ✔ should handle rapid DAO transfers
+      ✔ should handle maximum uint256 amount in logs
+      ✔ should handle special characters in strings
+      ✔ should not revert on consecutive identical logs
+
+  ProofScoreBurnRouter
+    Deployment
+      ✔ should deploy with correct seer
+      ✔ should deploy with correct sanctumSink
+      ✔ should deploy with correct burnSink
+      ✔ should set default baseBurnBps to 200 (2.0%)
+      ✔ should set default baseSanctumBps to 50 (0.5%)
+      ✔ should emit ModulesSet on deployment
+      ✔ should revert on zero seer address
+    setModules
+      ✔ should update modules
+      ✔ should revert if non-owner tries to set modules
+      ✔ should revert on zero seer address
+    setPolicy
+      ✔ should update policy
+      ✔ should revert if maxTotalBps is too high
+      ✔ should revert if base exceeds max
+    computeFees
+      ✔ should calculate fees correctly for neutral score
+      ✔ should reduce burn for high trust score
+      ✔ should increase burn for low trust score
+      ✔ should scale down if total exceeds max
+
+  Seer Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      ✔ should have correct constants
+      ✔ should revert if deploying with zero DAO
+    Module Configuration
+      ✔ should allow DAO to set modules
+      ✔ should revert if non-DAO tries to set modules
+      ✔ should revert if setting modules to zero
+    Threshold Configuration
+      ✔ should allow DAO to set thresholds
+      ✔ should revert if non-DAO tries to set thresholds
+      ✔ should revert if low > high
+    Score Management
+      ✔ should return neutral score for uninitialized user
+      ✔ should allow DAO to set score directly
+      ✔ should revert if non-DAO tries to set score
+      ✔ should reward user
+      ✔ should punish user
+      ✔ should clamp score to max
+      ✔ should clamp score to min
+
+  SystemHandover
+    Deployment
+      1) "before each" hook for "should deploy with correct devMultisig"
+
+  VFIDEToken basic flows
+    ✔ pre-mints dev reserve to vesting vault
+    ✔ allows owner to disable vaultOnly and set presale, presale mints within cap
+    ✔ transfers update balances
+
+  VFIDECommerce.branch.more
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.branches
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.constructor.branch
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.coverage.microbatch
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.coverage
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.extra.focused
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.focused
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.microbatch1
+    ✔ should test merchant operations - batch 1
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch2
+    ✔ should test merchant operations - batch 2
+    ✔ should test escrow opening
+
+  VFIDECommerce micro-batch 3 (mocks & reentrancy)
+    ✔ release succeeds with GasDrainer token (covers gas-heavy transfer path)
+    ✔ Reentering token: transfer triggers reentrant release and original tx reverts leaving state unchanged
+    ✔ Reentering token: normal transfer (no reenter target) succeeds
+
+  VFIDECommerce.microbatch3
+    ✔ should test merchant operations - batch 3
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch4
+    ✔ should test merchant operations - batch 4
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch5
+    ✔ should test merchant operations - batch 5
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch6
+    ✔ should test merchant operations - batch 6
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch7
+    ✔ should test merchant operations - batch 7
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch8
+    ✔ should test merchant operations - batch 8
+    ✔ should test escrow opening
+
+  VFIDECommerce additional coverage tests
+    ✔ open reverts when merchant is suspended
+    ✔ release with failing token.transfer leaves state unchanged (ERC20FailTransfer)
+    ✔ refund with failing token.transfer leaves state unchanged (ERC20FailTransfer)
+    ✔ resolve reverts on transfer failure and state remains DISPUTED
+
+  VFIDECommerce reentrancy resilience
+    ✔ attempted reentrancy via token.transfer should not break state (release remains safe)
+
+  VFIDECommerce security fuzz - malicious token behaviors
+    ✔ GasDrainer token: release succeeds even when token consumes more gas
+    ✔ ERC20ReturnFalse: release/refund/resolve revert when token returns false
+    ✔ combination randomized small sequences (open->fund->action) don't corrupt state (46ms)
+
+  VFIDECommerce security & boundary tests
+    ✔ open reverts with COM_SecLocked when buyer or merchant vault locked
+    ✔ release/refund revert with COM_SecLocked when vault locked
+    ✔ failed transfer leaves escrow state unchanged
+    ✔ open with very large amount reverts or handles safely (boundary test)
+
+  VFIDEStaking
+    Deployment & Initialization
+      2) "before each" hook for "Should set correct modules"
+
+  VFIDEToken.batch1
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 1
+    ✔ should handle token approvals
+
+  VFIDEToken.batch10
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 10
+    ✔ should handle token approvals
+
+  VFIDEToken.batch11
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 11
+    ✔ should handle token approvals
+
+  VFIDEToken.batch12
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 12
+    ✔ should handle token approvals
+
+  VFIDEToken.batch13
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 13
+    ✔ should handle token approvals
+
+  VFIDEToken.batch14
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 14
+    ✔ should handle token approvals
+
+  VFIDEToken.batch15
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 15
+    ✔ should handle token approvals
+
+  VFIDEToken.batch16
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 16
+    ✔ should handle token approvals
+
+  VFIDEToken.batch17
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 17
+    ✔ should handle token approvals
+
+  VFIDEToken.batch18
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 18
+    ✔ should handle token approvals
+
+  VFIDEToken.batch19
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 19
+    ✔ should handle token approvals
+
+  VFIDEToken.batch2
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 2
+    ✔ should handle token approvals
+
+  VFIDEToken.batch20
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 20
+    ✔ should handle token approvals
+
+  VFIDEToken.batch21
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 21
+    ✔ should handle token approvals
+
+  VFIDEToken.batch22
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 22
+    ✔ should handle token approvals
+
+  VFIDEToken.batch23
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 23
+    ✔ should handle token approvals
+
+  VFIDEToken.batch24
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 24
+    ✔ should handle token approvals
+
+  VFIDEToken.batch25
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 25
+    ✔ should handle token approvals
+
+  VFIDEToken.batch3
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 3
+    ✔ should handle token approvals
+
+  VFIDEToken.batch4
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 4
+    ✔ should handle token approvals
+
+  VFIDEToken.batch5
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 5
+    ✔ should handle token approvals
+
+  VFIDEToken.batch6
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 6
+    ✔ should handle token approvals
+
+  VFIDEToken.batch7
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 7
+    ✔ should handle token approvals
+
+  VFIDEToken.batch8
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 8
+    ✔ should handle token approvals
+
+  VFIDEToken.batch9
+    ✔ should have correct token metadata
+    ✔ should handle token transfers - batch 9
+    ✔ should handle token approvals
+
+  VFIDETrust - Seer (ProofScore)
+    Deployment
+      ✔ should deploy with correct DAO
+      ✔ should deploy with correct ledger
+      ✔ should deploy with correct vaultHub
+      ✔ should set default thresholds
+      3) should set score constants
+      ✔ should revert on zero DAO
+      ✔ should allow zero ledger (optional)
+      ✔ should allow zero vaultHub (optional)
+    getScore
+      ✔ should return 500 (NEUTRAL) for uninitialized users
+      ✔ should return set score for initialized users
+      ✔ should return 500 (NEUTRAL) if explicitly set to 0
+      ✔ should return 1000 if set to maximum
+      ✔ should handle multiple users independently
+    setScore
+      ✔ should allow DAO to set score
+      ✔ should emit ScoreSet event
+      ✔ should emit event with old score
+      ✔ should revert if non-DAO tries to set
+      ✔ should revert on zero address
+      ✔ should revert on score > MAX_SCORE
+      ✔ should allow setting score to 0 (returns NEUTRAL)
+      ✔ should allow setting score to 1000
+      ✔ should overwrite previous scores
+    reward
+      ✔ should increase score
+      ✔ should emit ScoreSet event
+      ✔ should cap at MAX_SCORE
+      ✔ should handle reward from uninitialized (500)
+      ✔ should revert if non-DAO tries
+      ✔ should handle zero delta
+      ✔ should handle very large delta
+    punish
+      ✔ should decrease score
+      ✔ should emit ScoreSet event
+      4) should floor at MIN_SCORE (0, displayed as NEUTRAL)
+      ✔ should handle punish from uninitialized (500)
+      ✔ should revert if non-DAO tries
+      ✔ should handle zero delta
+      5) should handle very large delta
+    setThresholds
+      ✔ should allow DAO to update thresholds
+      ✔ should emit ThresholdsSet event
+      ✔ should revert if low > high
+      ✔ should revert if high > MAX_SCORE
+      ✔ should revert if non-DAO tries
+      ✔ should allow low = high
+      ✔ should allow high = MAX_SCORE
+      ✔ should allow low = MIN_SCORE (0)
+    setModules
+      ✔ should allow DAO to update modules
+      ✔ should emit LedgerSet event
+      ✔ should emit HubSet event
+      ✔ should revert on zero ledger
+      ✔ should revert on zero vaultHub
+      ✔ should revert if non-DAO tries
+    Complex Score Management
+      ✔ should handle multiple reward/punish cycles
+      ✔ should handle score changes for multiple users
+      ✔ should maintain independent scores
+    Edge Cases
+      ✔ should handle score at boundaries
+      ✔ should handle alternating rewards and punishments
+      ✔ should handle setting same score multiple times
+
+  VaultInfrastructure - VaultHub
+    Deployment
+      ✔ should deploy successfully
+      ✔ should set owner correctly
+    ensureVault
+      6) should create vault for new user
+      7) should return existing vault on second call
+      8) should create different vaults for different users
+      9) should use deterministic CREATE2
+    vaultOf
+      ✔ should return zero for users without vault
+      10) should return vault address after creation
+    ownerOf
+      11) should return zero for non-vault addresses
+      12) should return owner after vault creation
+    Module Management
+      13) should allow owner to set modules
+      14) should revert if non-owner tries to set modules
+      15) should emit ModulesSet event
+    Edge Cases
+      16) should handle multiple vault creations
+      17) should maintain registry bidirectional mapping
+
+  VaultInfrastructure - UserVault
+    Guardian Management
+      ✔ should allow owner to add guardians
+      ✔ should allow owner to remove guardians
+      ✔ should set next of kin
+    Recovery Process
+      ✔ should allow guardian-approved recovery
+      ✔ should enforce threshold for recovery
+    Transfer Functions
+      ✔ should allow owner to transfer tokens
+      ✔ should enforce security lock
+    Emergency Functions
+      ✔ should handle panic mode
+      ✔ should respect security hub
+
+  VaultInfrastructure - Integration
+    ✔ should test complete vault lifecycle
+    ✔ should test security integration
+    ✔ should test logging integration
+
+  allowance.comprehensive.batch1
+    ✔ should approve and check allowance - batch 1
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch10
+    ✔ should approve and check allowance - batch 10
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch11
+    ✔ should approve and check allowance - batch 11
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch12
+    ✔ should approve and check allowance - batch 12
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch13
+    ✔ should approve and check allowance - batch 13
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch14
+    ✔ should approve and check allowance - batch 14
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch15
+    ✔ should approve and check allowance - batch 15
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch16
+    ✔ should approve and check allowance - batch 16
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch17
+    ✔ should approve and check allowance - batch 17
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch18
+    ✔ should approve and check allowance - batch 18
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch19
+    ✔ should approve and check allowance - batch 19
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch2
+    ✔ should approve and check allowance - batch 2
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch20
+    ✔ should approve and check allowance - batch 20
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch21
+    ✔ should approve and check allowance - batch 21
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch22
+    ✔ should approve and check allowance - batch 22
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch23
+    ✔ should approve and check allowance - batch 23
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch24
+    ✔ should approve and check allowance - batch 24
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch25
+    ✔ should approve and check allowance - batch 25
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch26
+    ✔ should approve and check allowance - batch 26
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch27
+    ✔ should approve and check allowance - batch 27
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch28
+    ✔ should approve and check allowance - batch 28
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch29
+    ✔ should approve and check allowance - batch 29
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch3
+    ✔ should approve and check allowance - batch 3
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch30
+    ✔ should approve and check allowance - batch 30
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch4
+    ✔ should approve and check allowance - batch 4
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch5
+    ✔ should approve and check allowance - batch 5
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch6
+    ✔ should approve and check allowance - batch 6
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch7
+    ✔ should approve and check allowance - batch 7
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch8
+    ✔ should approve and check allowance - batch 8
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  allowance.comprehensive.batch9
+    ✔ should approve and check allowance - batch 9
+    ✔ should handle zero allowance
+    ✔ should approve maximum uint256
+    ✔ should overwrite previous allowance
+    ✔ should handle multiple spenders independently
+
+  boundaries.comprehensive.batch1
+    ✔ should handle maximum uint256 approval - batch 1
+    ✔ should handle zero address checks
+    18) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch10
+    ✔ should handle maximum uint256 approval - batch 10
+    ✔ should handle zero address checks
+    19) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch11
+    ✔ should handle maximum uint256 approval - batch 11
+    ✔ should handle zero address checks
+    20) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch12
+    ✔ should handle maximum uint256 approval - batch 12
+    ✔ should handle zero address checks
+    21) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch13
+    ✔ should handle maximum uint256 approval - batch 13
+    ✔ should handle zero address checks
+    22) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch14
+    ✔ should handle maximum uint256 approval - batch 14
+    ✔ should handle zero address checks
+    23) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch15
+    ✔ should handle maximum uint256 approval - batch 15
+    ✔ should handle zero address checks
+    24) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch16
+    ✔ should handle maximum uint256 approval - batch 16
+    ✔ should handle zero address checks
+    25) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch17
+    ✔ should handle maximum uint256 approval - batch 17
+    ✔ should handle zero address checks
+    26) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch18
+    ✔ should handle maximum uint256 approval - batch 18
+    ✔ should handle zero address checks
+    27) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch19
+    ✔ should handle maximum uint256 approval - batch 19
+    ✔ should handle zero address checks
+    28) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch2
+    ✔ should handle maximum uint256 approval - batch 2
+    ✔ should handle zero address checks
+    29) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch20
+    ✔ should handle maximum uint256 approval - batch 20
+    ✔ should handle zero address checks
+    30) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch21
+    ✔ should handle maximum uint256 approval - batch 21
+    ✔ should handle zero address checks
+    31) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch22
+    ✔ should handle maximum uint256 approval - batch 22
+    ✔ should handle zero address checks
+    32) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch23
+    ✔ should handle maximum uint256 approval - batch 23
+    ✔ should handle zero address checks
+    33) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch24
+    ✔ should handle maximum uint256 approval - batch 24
+    ✔ should handle zero address checks
+    34) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch25
+    ✔ should handle maximum uint256 approval - batch 25
+    ✔ should handle zero address checks
+    35) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch26
+    ✔ should handle maximum uint256 approval - batch 26
+    ✔ should handle zero address checks
+    36) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch27
+    ✔ should handle maximum uint256 approval - batch 27
+    ✔ should handle zero address checks
+    37) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch28
+    ✔ should handle maximum uint256 approval - batch 28
+    ✔ should handle zero address checks
+    38) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch29
+    ✔ should handle maximum uint256 approval - batch 29
+    ✔ should handle zero address checks
+    39) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch3
+    ✔ should handle maximum uint256 approval - batch 3
+    ✔ should handle zero address checks
+    40) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch30
+    ✔ should handle maximum uint256 approval - batch 30
+    ✔ should handle zero address checks
+    41) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch31
+    ✔ should handle maximum uint256 approval - batch 31
+    ✔ should handle zero address checks
+    42) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch32
+    ✔ should handle maximum uint256 approval - batch 32
+    ✔ should handle zero address checks
+    43) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch33
+    ✔ should handle maximum uint256 approval - batch 33
+    ✔ should handle zero address checks
+    44) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch34
+    ✔ should handle maximum uint256 approval - batch 34
+    ✔ should handle zero address checks
+    45) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch35
+    ✔ should handle maximum uint256 approval - batch 35
+    ✔ should handle zero address checks
+    46) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch36
+    ✔ should handle maximum uint256 approval - batch 36
+    ✔ should handle zero address checks
+    47) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch37
+    ✔ should handle maximum uint256 approval - batch 37
+    ✔ should handle zero address checks
+    48) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch38
+    ✔ should handle maximum uint256 approval - batch 38
+    ✔ should handle zero address checks
+    49) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch39
+    ✔ should handle maximum uint256 approval - batch 39
+    ✔ should handle zero address checks
+    50) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch4
+    ✔ should handle maximum uint256 approval - batch 4
+    ✔ should handle zero address checks
+    51) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch40
+    ✔ should handle maximum uint256 approval - batch 40
+    ✔ should handle zero address checks
+    52) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch5
+    ✔ should handle maximum uint256 approval - batch 5
+    ✔ should handle zero address checks
+    53) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch6
+    ✔ should handle maximum uint256 approval - batch 6
+    ✔ should handle zero address checks
+    54) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch7
+    ✔ should handle maximum uint256 approval - batch 7
+    ✔ should handle zero address checks
+    55) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch8
+    ✔ should handle maximum uint256 approval - batch 8
+    ✔ should handle zero address checks
+    56) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundaries.comprehensive.batch9
+    ✔ should handle maximum uint256 approval - batch 9
+    ✔ should handle zero address checks
+    57) should test score boundaries
+    ✔ should handle minimum viable amounts
+
+  boundary.tests.batch1
+    ✔ should handle zero address checks - batch 1
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch10
+    ✔ should handle zero address checks - batch 10
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch11
+    ✔ should handle zero address checks - batch 11
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch12
+    ✔ should handle zero address checks - batch 12
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch13
+    ✔ should handle zero address checks - batch 13
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch14
+    ✔ should handle zero address checks - batch 14
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch15
+    ✔ should handle zero address checks - batch 15
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch16
+    ✔ should handle zero address checks - batch 16
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch17
+    ✔ should handle zero address checks - batch 17
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch18
+    ✔ should handle zero address checks - batch 18
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch19
+    ✔ should handle zero address checks - batch 19
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch2
+    ✔ should handle zero address checks - batch 2
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch20
+    ✔ should handle zero address checks - batch 20
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch21
+    ✔ should handle zero address checks - batch 21
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch22
+    ✔ should handle zero address checks - batch 22
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch23
+    ✔ should handle zero address checks - batch 23
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch24
+    ✔ should handle zero address checks - batch 24
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch25
+    ✔ should handle zero address checks - batch 25
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch26
+    ✔ should handle zero address checks - batch 26
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch27
+    ✔ should handle zero address checks - batch 27
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch28
+    ✔ should handle zero address checks - batch 28
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch29
+    ✔ should handle zero address checks - batch 29
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch3
+    ✔ should handle zero address checks - batch 3
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch30
+    ✔ should handle zero address checks - batch 30
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch4
+    ✔ should handle zero address checks - batch 4
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch5
+    ✔ should handle zero address checks - batch 5
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch6
+    ✔ should handle zero address checks - batch 6
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch7
+    ✔ should handle zero address checks - batch 7
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch8
+    ✔ should handle zero address checks - batch 8
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  boundary.tests.batch9
+    ✔ should handle zero address checks - batch 9
+    ✔ should handle maximum uint256 approval
+    ✔ should handle score at exact boundaries
+    ✔ should handle empty bytes32 metadata
+
+  burnrouter.batch1
+    58) "before each" hook for "should initialize with correct seer - batch 1"
+
+  burnrouter.batch10
+    59) "before each" hook for "should initialize with correct seer - batch 10"
+
+  burnrouter.batch11
+    60) "before each" hook for "should initialize with correct seer - batch 11"
+
+  burnrouter.batch12
+    61) "before each" hook for "should initialize with correct seer - batch 12"
+
+  burnrouter.batch13
+    62) "before each" hook for "should initialize with correct seer - batch 13"
+
+  burnrouter.batch14
+    63) "before each" hook for "should initialize with correct seer - batch 14"
+
+  burnrouter.batch15
+    64) "before each" hook for "should initialize with correct seer - batch 15"
+
+  burnrouter.batch16
+    65) "before each" hook for "should initialize with correct seer - batch 16"
+
+  burnrouter.batch17
+    66) "before each" hook for "should initialize with correct seer - batch 17"
+
+  burnrouter.batch18
+    67) "before each" hook for "should initialize with correct seer - batch 18"
+
+  burnrouter.batch19
+    68) "before each" hook for "should initialize with correct seer - batch 19"
+
+  burnrouter.batch2
+    69) "before each" hook for "should initialize with correct seer - batch 2"
+
+  burnrouter.batch20
+    70) "before each" hook for "should initialize with correct seer - batch 20"
+
+  burnrouter.batch3
+    71) "before each" hook for "should initialize with correct seer - batch 3"
+
+  burnrouter.batch4
+    72) "before each" hook for "should initialize with correct seer - batch 4"
+
+  burnrouter.batch5
+    73) "before each" hook for "should initialize with correct seer - batch 5"
+
+  burnrouter.batch6
+    74) "before each" hook for "should initialize with correct seer - batch 6"
+
+  burnrouter.batch7
+    75) "before each" hook for "should initialize with correct seer - batch 7"
+
+  burnrouter.batch8
+    76) "before each" hook for "should initialize with correct seer - batch 8"
+
+  burnrouter.batch9
+    77) "before each" hook for "should initialize with correct seer - batch 9"
+
+  burnrouter.operations.batch1
+    78) "before each" hook for "should preview fees for user - batch 1"
+
+  burnrouter.operations.batch10
+    79) "before each" hook for "should preview fees for user - batch 10"
+
+  burnrouter.operations.batch11
+    80) "before each" hook for "should preview fees for user - batch 11"
+
+  burnrouter.operations.batch12
+    81) "before each" hook for "should preview fees for user - batch 12"
+
+  burnrouter.operations.batch13
+    82) "before each" hook for "should preview fees for user - batch 13"
+
+  burnrouter.operations.batch14
+    83) "before each" hook for "should preview fees for user - batch 14"
+
+  burnrouter.operations.batch15
+    84) "before each" hook for "should preview fees for user - batch 15"
+
+  burnrouter.operations.batch16
+    85) "before each" hook for "should preview fees for user - batch 16"
+
+  burnrouter.operations.batch17
+    86) "before each" hook for "should preview fees for user - batch 17"
+
+  burnrouter.operations.batch18
+    87) "before each" hook for "should preview fees for user - batch 18"
+
+  burnrouter.operations.batch19
+    88) "before each" hook for "should preview fees for user - batch 19"
+
+  burnrouter.operations.batch2
+    89) "before each" hook for "should preview fees for user - batch 2"
+
+  burnrouter.operations.batch20
+    90) "before each" hook for "should preview fees for user - batch 20"
+
+  burnrouter.operations.batch3
+    91) "before each" hook for "should preview fees for user - batch 3"
+
+  burnrouter.operations.batch4
+    92) "before each" hook for "should preview fees for user - batch 4"
+
+  burnrouter.operations.batch5
+    93) "before each" hook for "should preview fees for user - batch 5"
+
+  burnrouter.operations.batch6
+    94) "before each" hook for "should preview fees for user - batch 6"
+
+  burnrouter.operations.batch7
+    95) "before each" hook for "should preview fees for user - batch 7"
+
+  burnrouter.operations.batch8
+    96) "before each" hook for "should preview fees for user - batch 8"
+
+  burnrouter.operations.batch9
+    97) "before each" hook for "should preview fees for user - batch 9"
+
+  concurrent.batch1
+    ✔ should handle parallel transfers - batch 1
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch10
+    ✔ should handle parallel transfers - batch 10
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch11
+    ✔ should handle parallel transfers - batch 11
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch12
+    ✔ should handle parallel transfers - batch 12
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch13
+    ✔ should handle parallel transfers - batch 13
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch14
+    ✔ should handle parallel transfers - batch 14
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch15
+    ✔ should handle parallel transfers - batch 15
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch16
+    ✔ should handle parallel transfers - batch 16
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch17
+    ✔ should handle parallel transfers - batch 17
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch18
+    ✔ should handle parallel transfers - batch 18
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch19
+    ✔ should handle parallel transfers - batch 19
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch2
+    ✔ should handle parallel transfers - batch 2
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch20
+    ✔ should handle parallel transfers - batch 20
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch21
+    ✔ should handle parallel transfers - batch 21
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch22
+    ✔ should handle parallel transfers - batch 22
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch23
+    ✔ should handle parallel transfers - batch 23
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch24
+    ✔ should handle parallel transfers - batch 24
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch25
+    ✔ should handle parallel transfers - batch 25
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch3
+    ✔ should handle parallel transfers - batch 3
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch4
+    ✔ should handle parallel transfers - batch 4
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch5
+    ✔ should handle parallel transfers - batch 5
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch6
+    ✔ should handle parallel transfers - batch 6
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch7
+    ✔ should handle parallel transfers - batch 7
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch8
+    ✔ should handle parallel transfers - batch 8
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  concurrent.batch9
+    ✔ should handle parallel transfers - batch 9
+    ✔ should handle parallel approvals
+    ✔ should handle sequential state changes
+    ✔ should maintain state across multiple operations
+
+  contract.interactions.batch1
+    ✔ should integrate token and registry - batch 1
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch10
+    ✔ should integrate token and registry - batch 10
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch11
+    ✔ should integrate token and registry - batch 11
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch12
+    ✔ should integrate token and registry - batch 12
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch13
+    ✔ should integrate token and registry - batch 13
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch14
+    ✔ should integrate token and registry - batch 14
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch15
+    ✔ should integrate token and registry - batch 15
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch16
+    ✔ should integrate token and registry - batch 16
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch17
+    ✔ should integrate token and registry - batch 17
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch18
+    ✔ should integrate token and registry - batch 18
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch19
+    ✔ should integrate token and registry - batch 19
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch2
+    ✔ should integrate token and registry - batch 2
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch20
+    ✔ should integrate token and registry - batch 20
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch3
+    ✔ should integrate token and registry - batch 3
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch4
+    ✔ should integrate token and registry - batch 4
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch5
+    ✔ should integrate token and registry - batch 5
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch6
+    ✔ should integrate token and registry - batch 6
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch7
+    ✔ should integrate token and registry - batch 7
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch8
+    ✔ should integrate token and registry - batch 8
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  contract.interactions.batch9
+    ✔ should integrate token and registry - batch 9
+    ✔ should handle token transfers with score validation
+    ✔ should support complex workflows
+    ✔ should maintain consistent state across operations
+
+  coverage.finish.commerce.addMerchant.118_130.micro
+    ✔ should test merchant registration functionality
+
+  coverage.finish.commerce.addMerchant.118_130.sequence
+    ✔ should test merchant registration functionality
+
+  coverage.finish.commerce.addMerchant.118_130.targeted
+    ✔ should test merchant registration functionality
+
+  coverage.finish.commerce.addMerchant.250_410.narrow
+    ✔ should test merchant registration functionality
+
+  coverage.finish.commerce.addMerchant.250_410
+    ✔ should test merchant registration functionality
+
+  coverage.finish.commerce.addMerchant.bruteforce
+    ✔ should handle various merchant registration scenarios
+
+  coverage.finish.commerce.addMerchant.bruteforce2
+    98) should handle edge cases in merchant registration
+
+  coverage.finish.commerce.addMerchant.'$file'
+    ✔ should test merchant registration
+
+  coverage.finish.commerce.addMerchant.'$file'
+    ✔ should test merchant registration
+
+  coverage.finish.commerce.addMerchant.'$file'
+    ✔ should test merchant registration
+
+  coverage.finish.commerce.addMerchant.forceLeft
+    ✔ should test merchant registration with valid setup
+
+  coverage.finish.commerce.addMerchant.forceRight
+    ✔ should reject merchants without vault or with low score
+
+  coverage.finish.commerce.addMerchant.narrow
+    ✔ should successfully register a merchant with valid credentials
+    ✔ should reject a merchant without a vault
+    ✔ should reject a merchant with low score
+    ✔ should reject an already registered merchant
+
+  coverage.finish.commerce.addMerchant.narrow2
+    ✔ registers one signer and uses a no-vault signer to flip left/right msg.sender arms
+
+  coverage.finish.commerce.addMerchant.narrow3
+    ✔ should revert when trying to add an existing merchant
+    ✔ should revert if the caller does not have a vault
+    ✔ should successfully add a new merchant with a valid vault and score
+
+  coverage.finish.commerce.addMerchant.narrow4
+    ✔ should correctly identify an existing merchant
+    ✔ should revert when a user with no vault tries to register
+    ✔ should revert when a user with a low score tries to register
+
+  coverage.finish.commerce.addMerchant.orderings
+    ✔ should allow a user with a vault and score to become a merchant
+    ✔ should reject a user without a vault
+    ✔ should reject a user with a low score
+    ✔ should reject an existing merchant
+
+  coverage.finish.commerce.addMerchant.pinpoint
+    ✔ should successfully add a valid merchant
+    ✔ should revert if the user is already a merchant
+    ✔ should revert if the user does not have a vault
+    ✔ should revert if the user's score is too low
+
+  coverage.finish.commerce.addMerchant
+    ✔ should allow a valid user to become a merchant
+    ✔ should prevent an existing merchant from being added again
+    ✔ should prevent a user without a vault from becoming a merchant
+    ✔ should prevent a user with a low score from becoming a merchant
+
+  coverage.finish.commerce.exec.addMerchant
+    ✔ should successfully register a valid merchant
+    ✔ should revert when trying to register an existing merchant
+    ✔ should revert when a user with no vault tries to register
+    ✔ should revert when a user with a low score tries to register
+
+  coverage.finish.commerce.stateful
+    ✔ should handle the full lifecycle of a merchant and multiple escrows
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  dao.governance.batch$i
+    ✔ should create proposal successfully
+    ✔ should allow eligible voter to vote
+
+  Differential: EVM vs zkSync (skeleton)
+    - VFIDEToken basic attributes are consistent
+
+  escrow.simple.batch1
+    ✔ should reject zero amount - batch 1
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch10
+    ✔ should reject zero amount - batch 10
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch11
+    ✔ should reject zero amount - batch 11
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch12
+    ✔ should reject zero amount - batch 12
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch13
+    ✔ should reject zero amount - batch 13
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch14
+    ✔ should reject zero amount - batch 14
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch15
+    ✔ should reject zero amount - batch 15
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch16
+    ✔ should reject zero amount - batch 16
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch17
+    ✔ should reject zero amount - batch 17
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch18
+    ✔ should reject zero amount - batch 18
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch19
+    ✔ should reject zero amount - batch 19
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch2
+    ✔ should reject zero amount - batch 2
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch20
+    ✔ should reject zero amount - batch 20
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch3
+    ✔ should reject zero amount - batch 3
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch4
+    ✔ should reject zero amount - batch 4
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch5
+    ✔ should reject zero amount - batch 5
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch6
+    ✔ should reject zero amount - batch 6
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch7
+    ✔ should reject zero amount - batch 7
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch8
+    ✔ should reject zero amount - batch 8
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.simple.batch9
+    ✔ should reject zero amount - batch 9
+    ✔ should create escrow with correct amount
+    ✔ should increment escrow counter
+
+  escrow.states.batch1
+    ✔ should initialize in OPEN state - batch 1
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch10
+    ✔ should initialize in OPEN state - batch 10
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch11
+    ✔ should initialize in OPEN state - batch 11
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch12
+    ✔ should initialize in OPEN state - batch 12
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch13
+    ✔ should initialize in OPEN state - batch 13
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch14
+    ✔ should initialize in OPEN state - batch 14
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch15
+    ✔ should initialize in OPEN state - batch 15
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch16
+    ✔ should initialize in OPEN state - batch 16
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch17
+    ✔ should initialize in OPEN state - batch 17
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch18
+    ✔ should initialize in OPEN state - batch 18
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch19
+    ✔ should initialize in OPEN state - batch 19
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch2
+    ✔ should initialize in OPEN state - batch 2
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs (38ms)
+
+  escrow.states.batch20
+    ✔ should initialize in OPEN state - batch 20
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch21
+    ✔ should initialize in OPEN state - batch 21
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch22
+    ✔ should initialize in OPEN state - batch 22
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch23
+    ✔ should initialize in OPEN state - batch 23
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch24
+    ✔ should initialize in OPEN state - batch 24
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch25
+    ✔ should initialize in OPEN state - batch 25
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch3
+    ✔ should initialize in OPEN state - batch 3
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch4
+    ✔ should initialize in OPEN state - batch 4
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch5
+    ✔ should initialize in OPEN state - batch 5
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch6
+    ✔ should initialize in OPEN state - batch 6
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch7
+    ✔ should initialize in OPEN state - batch 7
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch8
+    ✔ should initialize in OPEN state - batch 8
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.states.batch9
+    ✔ should initialize in OPEN state - batch 9
+    ✔ should track buyer and seller correctly
+    ✔ should store exact amount
+    ✔ should generate sequential IDs
+
+  escrow.workflows.batch1
+    ✔ should complete full escrow lifecycle - batch 1
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch10
+    ✔ should complete full escrow lifecycle - batch 10
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch11
+    ✔ should complete full escrow lifecycle - batch 11
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch12
+    ✔ should complete full escrow lifecycle - batch 12
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch13
+    ✔ should complete full escrow lifecycle - batch 13
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch14
+    ✔ should complete full escrow lifecycle - batch 14
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch15
+    ✔ should complete full escrow lifecycle - batch 15
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch16
+    ✔ should complete full escrow lifecycle - batch 16
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch17
+    ✔ should complete full escrow lifecycle - batch 17
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch18
+    ✔ should complete full escrow lifecycle - batch 18
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch19
+    ✔ should complete full escrow lifecycle - batch 19
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch2
+    ✔ should complete full escrow lifecycle - batch 2
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch20
+    ✔ should complete full escrow lifecycle - batch 20
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch21
+    ✔ should complete full escrow lifecycle - batch 21
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch22
+    ✔ should complete full escrow lifecycle - batch 22
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch23
+    ✔ should complete full escrow lifecycle - batch 23
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch24
+    ✔ should complete full escrow lifecycle - batch 24
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch25
+    ✔ should complete full escrow lifecycle - batch 25
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch3
+    ✔ should complete full escrow lifecycle - batch 3
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch4
+    ✔ should complete full escrow lifecycle - batch 4
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch5
+    ✔ should complete full escrow lifecycle - batch 5
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch6
+    ✔ should complete full escrow lifecycle - batch 6
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch7
+    ✔ should complete full escrow lifecycle - batch 7
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch8
+    ✔ should complete full escrow lifecycle - batch 8
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  escrow.workflows.batch9
+    ✔ should complete full escrow lifecycle - batch 9
+    ✔ should reject opening escrow for non-merchant
+    ✔ should track multiple escrows
+
+  Deterministic fuzz: Finance / Token / Commerce (sanity)
+    ✔ runs a deterministic sequence of randomized actions without crashing (287ms)
+
+  gas.efficiency.batch1
+    ✔ should execute transfer efficiently - batch 1
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch10
+    ✔ should execute transfer efficiently - batch 10
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch11
+    ✔ should execute transfer efficiently - batch 11
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch12
+    ✔ should execute transfer efficiently - batch 12
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch13
+    ✔ should execute transfer efficiently - batch 13
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch14
+    ✔ should execute transfer efficiently - batch 14
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch15
+    ✔ should execute transfer efficiently - batch 15
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch16
+    ✔ should execute transfer efficiently - batch 16
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch17
+    ✔ should execute transfer efficiently - batch 17
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch18
+    ✔ should execute transfer efficiently - batch 18
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch19
+    ✔ should execute transfer efficiently - batch 19
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch2
+    ✔ should execute transfer efficiently - batch 2
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch20
+    ✔ should execute transfer efficiently - batch 20
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch3
+    ✔ should execute transfer efficiently - batch 3
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch4
+    ✔ should execute transfer efficiently - batch 4
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch5
+    ✔ should execute transfer efficiently - batch 5
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch6
+    ✔ should execute transfer efficiently - batch 6
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch7
+    ✔ should execute transfer efficiently - batch 7
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch8
+    ✔ should execute transfer efficiently - batch 8
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  gas.efficiency.batch9
+    ✔ should execute transfer efficiently - batch 9
+    ✔ should execute approval efficiently
+    ✔ should batch operations efficiently
+    ✔ should verify merchant registration gas cost
+
+  merchant.edgecases.batch1
+    ✔ should register with exact minimum score - batch 1
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch10
+    ✔ should register with exact minimum score - batch 10
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch11
+    ✔ should register with exact minimum score - batch 11
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch12
+    ✔ should register with exact minimum score - batch 12
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch13
+    ✔ should register with exact minimum score - batch 13
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch14
+    ✔ should register with exact minimum score - batch 14
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch15
+    ✔ should register with exact minimum score - batch 15
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch16
+    ✔ should register with exact minimum score - batch 16
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch17
+    ✔ should register with exact minimum score - batch 17
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch18
+    ✔ should register with exact minimum score - batch 18
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch19
+    ✔ should register with exact minimum score - batch 19
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch2
+    ✔ should register with exact minimum score - batch 2
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch20
+    ✔ should register with exact minimum score - batch 20
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch21
+    ✔ should register with exact minimum score - batch 21
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch22
+    ✔ should register with exact minimum score - batch 22
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch23
+    ✔ should register with exact minimum score - batch 23
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch24
+    ✔ should register with exact minimum score - batch 24
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch25
+    ✔ should register with exact minimum score - batch 25
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch3
+    ✔ should register with exact minimum score - batch 3
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch4
+    ✔ should register with exact minimum score - batch 4
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch5
+    ✔ should register with exact minimum score - batch 5
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch6
+    ✔ should register with exact minimum score - batch 6
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch7
+    ✔ should register with exact minimum score - batch 7
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch8
+    ✔ should register with exact minimum score - batch 8
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.edgecases.batch9
+    ✔ should register with exact minimum score - batch 9
+    ✔ should reject one point below minimum
+    ✔ should accept high score
+    ✔ should handle empty metadata
+
+  merchant.lifecycle.batch1
+    ✔ should track merchant metadata - batch 1
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch10
+    ✔ should track merchant metadata - batch 10
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch11
+    ✔ should track merchant metadata - batch 11
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch12
+    ✔ should track merchant metadata - batch 12
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch13
+    ✔ should track merchant metadata - batch 13
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch14
+    ✔ should track merchant metadata - batch 14
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch15
+    ✔ should track merchant metadata - batch 15
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch2
+    ✔ should track merchant metadata - batch 2
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch3
+    ✔ should track merchant metadata - batch 3
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch4
+    ✔ should track merchant metadata - batch 4
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch5
+    ✔ should track merchant metadata - batch 5
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch6
+    ✔ should track merchant metadata - batch 6
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch7
+    ✔ should track merchant metadata - batch 7
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch8
+    ✔ should track merchant metadata - batch 8
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  merchant.lifecycle.batch9
+    ✔ should track merchant metadata - batch 9
+    ✔ should initialize merchant counters
+    ✔ should verify merchant info query
+
+  policy.config.batch1
+    ✔ should update policy settings - batch 1
+    ✔ should enforce updated minimum score
+    ✔ should restrict policy changes to DAO only
+
+  policy.config.batch10
+    ✔ should update policy settings - batch 10
+    ✔ should enforce updated minimum score
+    ✔ should restrict policy changes to DAO only
+
+  policy.config.batch11
+    ✔ should update policy settings - batch 11
+    ✔ should enforce updated minimum score
+    ✔ should restrict policy changes to DAO only
+
+  policy.config.batch12
+    ✔ should update policy settings - batch 12
+    ✔ should enforce updated minimum score
+    ✔ should restrict policy changes to DAO only
+
+  policy.config.batch13
+    ✔ should update policy settings - batch 13
+    ✔ should enforce updated minimum score
+    ✔ should restrict policy changes to DAO only
+
+  policy.config.batch14
+    ✔ should update policy settings - batch 14
+    ✔ should enforce updated minimum score
+    ✔ should restrict policy changes to DAO only
+
+  policy.config.batch15
+    ✔ should update policy settings - batch 15
+    ✔ should enforce updated minimum score
+    ✔ should restrict policy changes to DAO only
+
+  policy.config.batch16
+    ✔ should update policy settings - batch 16
+    ✔ should enforce updated minimum score

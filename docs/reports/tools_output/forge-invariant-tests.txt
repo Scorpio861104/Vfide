@@ -1,0 +1,59 @@
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+No files changed, compilation skipped
+
+Ran 1 test for test/foundry/zk/VFIDETokenFuzz.t.sol:VFIDETokenFuzz
+[PASS] invariant_TotalSupplyCap() (runs: 256, calls: 128000, reverts: 85270)
+
+╭------------+----------------------------------------+-------+---------+----------╮
+| Contract   | Selector                               | Calls | Reverts | Discards |
++==================================================================================+
+| VFIDEToken | TEST_setForcePolicyLockedRequireRouter | 5998  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | TEST_setForceSecurityStaticcallFail    | 6084  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | TEST_setForceVaultHubZero              | 6048  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | approve                                | 6074  | 4       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | decreaseAllowance                      | 6090  | 6017    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | increaseAllowance                      | 6162  | 3       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | lockPolicy                             | 6127  | 6120    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | mintPresale                            | 6140  | 6140    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setBurnRouter                          | 6164  | 6161    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setLedger                              | 6167  | 6167    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setPresale                             | 6242  | 6237    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setSecurityHub                         | 6077  | 6073    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setSystemExempt                        | 6092  | 6089    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setTreasurySink                        | 6101  | 6097    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setVaultHub                            | 6020  | 6017    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setVaultOnly                           | 6067  | 6061    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | transfer                               | 6167  | 6086    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | transferFrom                           | 6107  | 6038    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | transferOwnership                      | 5965  | 5960    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| LedgerStub | logEvent                               | 6018  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| LedgerStub | logSystemEvent                         | 6090  | 0       | 0        |
+╰------------+----------------------------------------+-------+---------+----------╯
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 4.73s (4.73s CPU time)
+
+Ran 1 test suite in 4.73s (4.73s CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)

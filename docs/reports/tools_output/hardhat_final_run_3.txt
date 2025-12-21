@@ -1,0 +1,999 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+
+
+  Commerce Complete Coverage
+    MerchantRegistry Additional TEST Helpers
+      - TEST_if_vaultAndScore
+      - TEST_if_vaultAndScore - no vault
+      - TEST_cover_additional_branches - all variants
+      - TEST_cover_additional_branches - with forces
+      - TEST_force_eval_360_and_neighbors
+      - TEST_force_eval_360_and_neighbors - with thresholds
+      - TEST_line365_condexpr_variant2
+      - TEST_line365_condexpr_variant2 - with force
+      - TEST_line367_condexpr_variant2
+      - TEST_line367_condexpr_variant2 - with forces
+      - TEST_line374_condexpr_variant
+      - TEST_line374_condexpr_variant - force left
+      - TEST_force_eval_367_variants
+      - TEST_force_eval_367_variants - with forces
+      - TEST_force_eval_369_370_combo
+      - TEST_force_eval_369_370_combo - zero amount
+      - TEST_dup_constructor_or_local
+      - TEST_dup_constructor_or_local2
+      - TEST_dup_constructor_or_msgsender_variant
+      - TEST_trick_constructor_or_line87 - with zero
+      - TEST_trick_constructor_or_line87 - with address
+      - TEST_line87_txorigin_variant
+      - TEST_line87_ledger_security_variant - with zero
+      - TEST_line87_ledger_security_variant - with address
+      - TEST_line118_msgsender_false_arm
+      - TEST_line130_msgsender_vaultZero_false - no force
+      - TEST_line130_msgsender_vaultZero_false - with force
+    MerchantRegistry Combined Branch Coverage
+      - should cover all merchant status branches
+      - should cover all vault presence branches
+      - should cover all score threshold branches
+      - should cover refund threshold branches
+      - should cover dispute threshold branches
+      - should cover all force flag combinations
+    MerchantRegistry Line-Specific Branch Coverage
+      - should cover line 365 condexpr - all combinations
+      - should cover line 367 condexpr - all combinations
+      - should cover line 374 condexpr - all combinations
+      - should cover line 367 variants - all combinations
+      - should cover lines 369-370 combo - all combinations
+    MerchantRegistry Constructor and Line 87 Coverage
+      - should cover constructor OR chain variants
+      - should cover line 87 with zero addresses
+      - should cover line 87 with valid addresses
+    MerchantRegistry Lines 118 and 130 Coverage
+      - should cover line 118 merchant status check
+      - should cover line 130 vault zero check - both branches
+    MerchantRegistry Dense 360-375 Hotspot Coverage
+      - should cover 360 neighbors - all merchant states
+      - should cover 360 neighbors with vault presence
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 1/3)
+    Basic TEST toggle functions
+      - TEST_setOnlyDAOOff
+      - TEST_setForceAlreadyMerchant
+      - TEST_setForceNoVault
+      - TEST_setForceLowScore
+      - TEST_setForceZeroSenderRefund
+      - TEST_setForceZeroSenderDispute
+    Eval functions - Part 1
+      - TEST_eval_addMerchant_flags
+      - TEST_eval_addMerchant_subexpr
+      - TEST_eval_noteRefund_forceFlag
+      - TEST_eval_noteDispute_forceFlag
+      - TEST_exercise_addMerchant_checks
+      - TEST_exercise_noteFlags
+      - TEST_exec_addMerchant_branches
+      - TEST_cover_addMerchant_variants
+    Conditional TEST functions
+      - TEST_if_alreadyMerchant_left
+      - TEST_if_forceAlready_right
+      - TEST_if_noVault_left
+      - TEST_if_forceNoVault_right
+      - TEST_if_lowScore_left
+      - TEST_if_forceLowScore_right
+      - TEST_exec_addMerchant_ifvariants
+    Status check functions
+      - TEST_if_merchant_status_none
+      - TEST_if_vaultHub_vaultOf_isZero
+      - TEST_if_seer_getScore_lt_min
+      - TEST_if_refund_threshold_reached
+      - TEST_if_dispute_threshold_reached
+    Force variants
+      - TEST_if_vaultOf_isZero_or_force
+      - TEST_if_seer_score_below_min_or_force
+      - TEST_if_alreadyMerchant_or_force
+      - TEST_if_onlyDAO_off_flag
+    Vault and score checks
+      - TEST_if_vaultAndScore
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 2/3)
+    Additional coverage functions - Part 1
+      - TEST_cover_additional_branches
+      - TEST_force_eval_360_and_neighbors
+      - TEST_line365_condexpr_variant2
+      - TEST_line367_condexpr_variant2
+      - TEST_line374_condexpr_variant
+      - TEST_force_eval_367_variants
+      - TEST_force_eval_369_370_combo
+    Constructor and local variants
+      - TEST_dup_constructor_or_local
+      - TEST_dup_constructor_or_local2
+      - TEST_dup_constructor_or_msgsender_variant
+      - TEST_trick_constructor_or_line87
+      - TEST_line87_txorigin_variant
+      - TEST_line87_ledger_security_variant
+    Specific line coverage
+      - TEST_line118_msgsender_false_arm
+      - TEST_line130_msgsender_vaultZero_false
+      - TEST_line250_condexpr_alt
+      - TEST_force_eval_line87_msgsender
+      - TEST_force_eval_addMerchant_msgsender_variants
+      - TEST_line118_already_or_force
+      - TEST_line130_vaultZero_or_force
+      - TEST_line238_refunds_threshold
+      - TEST_line250_condexpr_variant
+      - TEST_line291_sender_zero_or_force_refund
+      - TEST_line305_seer_lt_or_force
+    Additional IF variants
+      - TEST_if_addMerchant_or_force
+      - TEST_if_vaultOf_or_force2
+      - TEST_if_seer_lt_min_or_force2
+      - TEST_cover_addMerchant_near118_130
+    Execution functions with state changes
+      - TEST_exec_addMerchant_msgsender_full
+      - TEST_exec_note_guards_and_restore
+    More conditional checks
+      - TEST_if_msgsender_alreadyMerchant
+      - TEST_if_constructor_zero_check
+      - TEST_exec_addMerchant_msgsender_ifvariants
+      - TEST_line130_msgsender_vaultZero_or_force
+    Coverage region tests
+      - TEST_cover_250_300_region
+      - TEST_cover_mass_250_410
+    All force flag combinations
+      - should test all 64 combinations of 6 boolean flags
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 3/3)
+    Escrow eval functions
+      - TEST_eval_open_checks
+      - TEST_if_securityCheck_addr
+      - TEST_if_escrow_state_eq
+      - TEST_if_escrow_buyerVault_zero
+      - TEST_if_escrow_sellerVault_zero
+      - TEST_exec_open_ifvariants
+    Access check functions
+      - TEST_eval_access_checks
+      - TEST_if_buyerVault_zero
+      - TEST_if_release_allowed
+      - TEST_if_refund_allowed
+      - TEST_exec_access_ifvariants
+      - TEST_cover_escrow_more
+    Hotspot functions
+      - TEST_hotspot_300s
+      - TEST_hotspot_330s
+      - TEST_hotspot_360s
+      - TEST_hotspot_490s
+      - TEST_cover_post360s
+    Message sender specific checks
+      - TEST_if_msgsender_release_allowed
+      - TEST_if_msgsender_refund_allowed
+      - TEST_if_msgsender_dispute_allowed
+      - TEST_if_notFunded
+      - TEST_if_resolve_buyerWins_branch
+      - TEST_force_eval_release_refund_resolve
+    Line-specific conditional expressions
+      - TEST_line435_condexpr_variants
+      - TEST_line447_condexpr_variants
+      - TEST_line456_condexpr_variants
+      - TEST_line466_condexpr_variants
+      - TEST_line503_506_combo
+    Duplicate and extended variants
+      - TEST_dup_line435_with_locals
+      - TEST_line435_msgsender_include
+      - TEST_line447_many_ors
+      - TEST_line503_extended_variants
+      - TEST_line644_combo
+      - TEST_line371_alt
+    Comprehensive variant combinations
+      - should test all hotspot functions with different parameters
+      - should test all line-specific expressions in sequence
+      - should test all extended variants
+    Massive permutation testing
+      - should test all boolean flag permutations for open_ifvariants
+      - should test all score thresholds
+      - should test multiple amounts
+      - should test all refund/dispute counts
+    Final comprehensive coverage
+      - should exercise every TEST function at least once
+
+  VFIDECommerce: Push to 95% Coverage
+    MerchantRegistry TEST Helpers - Branch Coverage
+      - should exercise TEST_setOnlyDAOOff
+      - should exercise TEST_setForceAlreadyMerchant
+      - should exercise TEST_setForceNoVault
+      - should exercise TEST_setForceLowScore
+      - should exercise TEST_setForceZeroSenderRefund
+      - should exercise TEST_setForceZeroSenderDispute
+    MerchantRegistry TEST Helpers - Conditional Branches
+      - should exercise TEST_if_alreadyMerchant_left - true
+      - should exercise TEST_if_alreadyMerchant_left - false
+      - should exercise TEST_if_forceAlready_right - true
+      - should exercise TEST_if_forceAlready_right - false
+      - should exercise TEST_if_noVault_left - true
+      - should exercise TEST_if_noVault_left - false
+      - should exercise TEST_if_forceNoVault_right - true
+      - should exercise TEST_if_forceNoVault_right - false
+      - should exercise TEST_if_lowScore_left - true
+      - should exercise TEST_if_lowScore_left - false
+      - should exercise TEST_if_forceLowScore_right - true
+      - should exercise TEST_if_forceLowScore_right - false
+    MerchantRegistry TEST Helpers - Complex Variants
+      - should exercise TEST_exec_addMerchant_ifvariants - all false
+      - should exercise TEST_exec_addMerchant_ifvariants - forceA true
+      - should exercise TEST_exec_addMerchant_ifvariants - forceB true
+      - should exercise TEST_exec_addMerchant_ifvariants - forceC true
+      - should exercise TEST_exec_addMerchant_ifvariants - all forces true
+    MerchantRegistry TEST Helpers - Status Checks
+      - should exercise TEST_if_merchant_status_none - true
+      - should exercise TEST_if_merchant_status_none - false
+      - should exercise TEST_if_vaultHub_vaultOf_isZero - true
+      - should exercise TEST_if_vaultHub_vaultOf_isZero - false
+    MerchantRegistry TEST Helpers - addMerchant Variants
+      - should exercise TEST_cover_addMerchant_variants - not merchant
+      - should exercise TEST_cover_addMerchant_variants - is merchant
+      - should exercise TEST_cover_addMerchant_variants - force already
+      - should exercise TEST_cover_addMerchant_variants - no vault left
+      - should exercise TEST_cover_addMerchant_variants - has vault left
+      - should exercise TEST_cover_addMerchant_variants - force no vault
+      - should exercise TEST_cover_addMerchant_variants - low score left
+      - should exercise TEST_cover_addMerchant_variants - good score left
+      - should exercise TEST_cover_addMerchant_variants - force low score
+    MerchantRegistry TEST Helpers - Additional Eval Functions
+      - should exercise TEST_eval_addMerchant_flags
+      - should exercise TEST_eval_addMerchant_subexpr
+      - should exercise TEST_eval_noteRefund_forceFlag
+      - should exercise TEST_eval_noteDispute_forceFlag
+      - should exercise TEST_exercise_addMerchant_checks
+      - should exercise TEST_exercise_noteFlags
+      - should exercise TEST_exec_addMerchant_branches
+
+  VFIDECommerce Ecosystem Test
+    1) "before each" hook for "should allow a merchant to register successfully"
+
+  CommerceEdge
+    ✔ should handle commerce escrow operations
+
+  CouncilElection Contract Tests
+    Deployment
+      2) "before each" hook for "should set DAO correctly"
+
+  DAO Contract Tests
+    Deployment and Setup
+      ✔ should set admin correctly
+      ✔ should set default voting period
+      ✔ should set default quorum
+      ✔ should allow admin to set modules
+      ✔ should revert if non-admin tries to set admin
+    Proposal Creation
+      3) should create a proposal
+      4) should revert if proposer not eligible
+      5) should revert if proposer has no vault
+      6) should allow zero target address
+    Voting
+      7) "before each" hook for "should allow eligible voter to vote"
+    Finalization
+      8) "before each" hook for "should finalize passed proposal"
+    Parameter Updates
+      ✔ should allow admin to update voting period
+      ✔ should revert if non-admin tries to update params
+
+  DAOTimelock Contract Tests
+    Deployment
+      ✔ should set admin correctly
+      ✔ should set default delay to 48 hours
+      ✔ should revert if deploying with zero admin
+    Admin Functions
+      ✔ should allow admin to update admin
+      ✔ should revert if non-admin tries to set admin
+      ✔ should revert if setting admin to zero
+      ✔ should allow admin to update delay
+      ✔ should allow admin to set ledger
+      ✔ should allow admin to set panic guard
+    Queue Transaction
+      ✔ should queue a transaction
+      ✔ should revert if non-admin tries to queue
+      ✔ should revert if queuing same transaction twice
+      ✔ should calculate correct ETA
+    Cancel Transaction
+      ✔ should cancel a queued transaction
+      ✔ should revert if non-admin tries to cancel
+      ✔ should revert if cancelling non-existent transaction
+    Execute Transaction
+      ✔ should execute after delay
+      ✔ should revert if executed too early
+      ✔ should revert if executing non-existent transaction
+    Edge Cases
+      ✔ should handle zero value transactions
+      ✔ should handle empty data
+      ✔ should handle different delays
+
+  EmergencyControl Contract Tests
+    Deployment
+      9) "before each" hook for "should set DAO correctly"
+
+  StablecoinRegistry and EcoTreasuryVault
+    ✔ DAO can whitelist asset and treasury accepts deposits
+    ✔ non-DAO cannot add asset
+
+  GovernanceHooks
+    Deployment
+      ✔ should deploy with correct ledger
+      ✔ should deploy with correct seer
+      10) should emit ModulesSet on deployment
+      ✔ should deploy with zero address ledger (optional)
+      ✔ should deploy with zero address seer (optional)
+      ✔ should deploy with both zero addresses
+    setModules
+      ✔ should update ledger address (44ms)
+      ✔ should update seer address
+      ✔ should update both addresses
+      ✔ should emit ModulesSet
+      ✔ should allow setting zero addresses
+      ✔ should allow anyone to call setModules
+    onProposalQueued
+      ✔ should execute without reverting
+      11) should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal IDs
+      ✔ should handle zero value proposals
+      ✔ should handle zero target address
+    onVoteCast
+      ✔ should execute without reverting for support vote
+      ✔ should execute without reverting for against vote
+      12) should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple voters
+      ✔ should handle zero address voter
+    onFinalized
+      ✔ should execute for passed proposal
+      ✔ should execute for failed proposal
+      13) should log system event when ledger is set (passed)
+      14) should log system event when ledger is set (failed)
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal finalizations
+    Hook Integration Flow
+      ✔ should execute complete governance flow
+      ✔ should handle multiple proposals simultaneously
+      ✔ should work with ledger logging disabled
+    Edge Cases
+      ✔ should handle ledger reverts gracefully
+      ✔ should allow rapid successive calls
+      ✔ should handle very large proposal IDs
+      15) should allow module updates mid-flow
+
+  Interface Compliance Tests
+    IVFIDEToken Interface
+      16) "before each" hook for "Should implement all IVFIDEToken interface functions"
+
+  ProofLedger
+    Deployment
+      ✔ should deploy with correct DAO
+      17) should revert on zero address DAO
+    setDAO
+      ✔ should allow DAO to update DAO address
+      18) should emit DAOSet event
+      19) should revert if non-DAO tries to update
+      20) should revert on zero address
+      ✔ should allow DAO to be set to itself
+      ✔ should allow chained DAO updates
+    logEvent
+      21) should emit Log event with all parameters
+      ✔ should allow anyone to log events
+      22) should handle zero amount
+      23) should handle empty strings
+      24) should handle very large amounts
+      25) should handle long action strings
+      26) should handle long note strings
+      ✔ should log multiple events in sequence
+      27) should preserve msg.sender in 'by' field
+      28) should use current block timestamp
+    logSystemEvent
+      29) should emit LogSystem event with all parameters
+      ✔ should allow anyone to log system events
+      30) should handle empty action string
+      31) should handle zero addresses
+      32) should handle long action strings
+      ✔ should log multiple system events
+      33) should use current block timestamp
+    Mixed Logging
+      ✔ should support both log types simultaneously
+      ✔ should handle high-frequency logging
+      34) should maintain independent event streams
+    Access Control
+      35) should allow only DAO to change DAO
+      ✔ should allow anyone to log events
+      ✔ should allow anyone to log system events
+    Edge Cases
+      ✔ should handle DAO transferring to self
+      ✔ should handle rapid DAO transfers
+      36) should handle maximum uint256 amount in logs
+      37) should handle special characters in strings
+      ✔ should not revert on consecutive identical logs
+
+  ProofScoreBurnRouter
+    Deployment
+      38) "before each" hook for "should deploy with correct seer"
+
+  Seer Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      39) should set default base score to 500
+      40) should set default min score to 100
+      41) should set default max score to 1000
+      ✔ should revert if deploying with zero DAO
+    Module Configuration
+      42) should allow DAO to set modules
+      43) should revert if non-DAO tries to set modules
+      44) should revert if setting DAO to zero
+    Policy Configuration
+      45) should allow DAO to set policy
+      46) should revert if non-DAO tries to set policy
+    Score Management
+      47) should initialize user with base score
+      48) should allow DAO to set score directly
+      49) should revert if non-DAO tries to set score
+      50) should get score correctly
+      ✔ should return base score for uninitialized user
+    Governance Checks
+      51) should check if user meets min score for governance
+      52) should fail if user below min score
+      53) should return minForGovernance value
+    Commerce Checks
+      54) should check if user meets min score for commerce
+      55) should fail if user below min score
+      56) should return minForCommerce value
+    Flagging System
+      57) should allow DAO to flag user
+      58) should revert if non-DAO tries to flag
+      59) should allow DAO to unflag user
+      60) should check if user is flagged
+    Score Adjustments
+      61) "before each" hook for "should increase score"
+    Batch Operations
+      62) should initialize multiple users
+      63) should handle multiple score updates
+    Edge Cases
+      64) should handle zero score setting
+      65) should handle score updates for same user multiple times
+      66) should track last update timestamp
+
+  SystemHandover
+    Deployment
+      67) "before each" hook for "should deploy with correct devMultisig"
+
+  VFIDEToken basic flows
+    ✔ pre-mints dev reserve to vesting vault
+    ✔ allows owner to disable vaultOnly and set presale, presale mints within cap
+    ✔ transfers update balances
+
+  VFIDECommerce.branch.more
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.branches
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.constructor.branch
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.coverage.microbatch
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.coverage
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.extra.focused
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.focused
+    ✔ should initialize commerce with correct parameters
+    ✔ should handle merchant registration
+
+  VFIDECommerce.microbatch1
+    ✔ should test merchant operations - batch 1
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch2
+    ✔ should test merchant operations - batch 2
+    ✔ should test escrow opening
+
+  VFIDECommerce micro-batch 3 (mocks & reentrancy)
+    ✔ release succeeds with GasDrainer token (covers gas-heavy transfer path)
+    ✔ Reentering token: transfer triggers reentrant release and original tx reverts leaving state unchanged
+    ✔ Reentering token: normal transfer (no reenter target) succeeds
+
+  VFIDECommerce.microbatch3
+    ✔ should test merchant operations - batch 3
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch4
+    ✔ should test merchant operations - batch 4
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch5
+    ✔ should test merchant operations - batch 5
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch6
+    ✔ should test merchant operations - batch 6
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch7
+    ✔ should test merchant operations - batch 7
+    ✔ should test escrow opening
+
+  VFIDECommerce.microbatch8
+    ✔ should test merchant operations - batch 8
+    ✔ should test escrow opening
+
+  VFIDECommerce additional coverage tests
+    ✔ open reverts when merchant is suspended
+    ✔ release with failing token.transfer leaves state unchanged (ERC20FailTransfer)
+    ✔ refund with failing token.transfer leaves state unchanged (ERC20FailTransfer)
+    ✔ resolve reverts on transfer failure and state remains DISPUTED
+
+  VFIDECommerce reentrancy resilience
+    ✔ attempted reentrancy via token.transfer should not break state (release remains safe)
+
+  VFIDECommerce security fuzz - malicious token behaviors
+    ✔ GasDrainer token: release succeeds even when token consumes more gas
+    ✔ ERC20ReturnFalse: release/refund/resolve revert when token returns false
+    ✔ combination randomized small sequences (open->fund->action) don't corrupt state (48ms)
+
+  VFIDECommerce security & boundary tests
+    ✔ open reverts with COM_SecLocked when buyer or merchant vault locked
+    ✔ release/refund revert with COM_SecLocked when vault locked
+    ✔ failed transfer leaves escrow state unchanged
+    ✔ open with very large amount reverts or handles safely (boundary test)
+
+  VFIDEStaking
+    Deployment & Initialization
+      68) "before each" hook for "Should set correct modules"
+
+  VFIDEToken.batch1
+    69) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch10
+    70) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch11
+    71) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch12
+    72) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch13
+    73) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch14
+    74) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch15
+    75) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch16
+    76) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch17
+    77) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch18
+    78) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch19
+    79) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch2
+    80) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch20
+    81) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch21
+    82) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch22
+    83) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch23
+    84) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch24
+    85) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch25
+    86) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch3
+    87) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch4
+    88) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch5
+    89) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch6
+    90) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch7
+    91) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch8
+    92) "before each" hook for "should have correct token metadata"
+
+  VFIDEToken.batch9
+    93) "before each" hook for "should have correct token metadata"
+
+  VFIDETrust - Seer (ProofScore)
+    Deployment
+      ✔ should deploy with correct DAO
+      ✔ should deploy with correct ledger
+      ✔ should deploy with correct vaultHub
+      ✔ should set default thresholds
+      ✔ should set score constants
+      ✔ should revert on zero DAO
+      ✔ should allow zero ledger (optional)
+      ✔ should allow zero vaultHub (optional)
+    getScore
+      ✔ should return 500 (NEUTRAL) for uninitialized users
+      ✔ should return set score for initialized users
+      ✔ should return 500 (NEUTRAL) if explicitly set to 0
+      ✔ should return 1000 if set to maximum
+      ✔ should handle multiple users independently
+    setScore
+      ✔ should allow DAO to set score
+      ✔ should emit ScoreSet event
+      ✔ should emit event with old score
+      ✔ should revert if non-DAO tries to set
+      ✔ should revert on zero address
+      ✔ should revert on score > MAX_SCORE
+      ✔ should allow setting score to 0 (returns NEUTRAL)
+      ✔ should allow setting score to 1000
+      ✔ should overwrite previous scores
+    reward
+      ✔ should increase score
+      ✔ should emit ScoreSet event
+      ✔ should cap at MAX_SCORE
+      ✔ should handle reward from uninitialized (500)
+      ✔ should revert if non-DAO tries
+      ✔ should handle zero delta
+      ✔ should handle very large delta
+    punish
+      ✔ should decrease score
+      ✔ should emit ScoreSet event
+      ✔ should floor at MIN_SCORE (0, displayed as NEUTRAL)
+      ✔ should handle punish from uninitialized (500)
+      ✔ should revert if non-DAO tries
+      ✔ should handle zero delta
+      ✔ should handle very large delta
+    setThresholds
+      ✔ should allow DAO to update thresholds
+      ✔ should emit ThresholdsSet event
+      ✔ should revert if low > high
+      ✔ should revert if high > MAX_SCORE
+      ✔ should revert if non-DAO tries
+      ✔ should allow low = high
+      ✔ should allow high = MAX_SCORE
+      ✔ should allow low = MIN_SCORE (0)
+    setModules
+      ✔ should allow DAO to update modules
+      ✔ should emit LedgerSet event
+      ✔ should emit HubSet event
+      ✔ should revert on zero ledger
+      ✔ should revert on zero vaultHub
+      ✔ should revert if non-DAO tries
+    Complex Score Management
+      ✔ should handle multiple reward/punish cycles
+      ✔ should handle score changes for multiple users
+      ✔ should maintain independent scores
+    Edge Cases
+      ✔ should handle score at boundaries
+      ✔ should handle alternating rewards and punishments
+      ✔ should handle setting same score multiple times
+
+  VaultInfrastructure - VaultHub
+    Deployment
+      ✔ should deploy successfully
+      ✔ should set owner correctly
+    ensureVault
+      94) should create vault for new user
+      95) should return existing vault on second call
+      96) should create different vaults for different users
+      97) should use deterministic CREATE2
+    vaultOf
+      ✔ should return zero for users without vault
+      98) should return vault address after creation
+    ownerOf
+      99) should return zero for non-vault addresses
+      100) should return owner after vault creation
+    Module Management
+      101) should allow owner to set modules
+      102) should revert if non-owner tries to set modules
+      103) should emit ModulesSet event
+    Edge Cases
+      104) should handle multiple vault creations
+      105) should maintain registry bidirectional mapping
+
+  VaultInfrastructure - UserVault
+    Guardian Management
+      ✔ should allow owner to add guardians
+      ✔ should allow owner to remove guardians
+      ✔ should set next of kin
+    Recovery Process
+      ✔ should allow guardian-approved recovery
+      ✔ should enforce threshold for recovery
+    Transfer Functions
+      ✔ should allow owner to transfer tokens
+      ✔ should enforce security lock
+    Emergency Functions
+      ✔ should handle panic mode
+      ✔ should respect security hub
+
+  VaultInfrastructure - Integration
+    ✔ should test complete vault lifecycle
+    ✔ should test security integration
+    ✔ should test logging integration
+
+  allowance.comprehensive.batch1
+    106) "before each" hook for "should approve and check allowance - batch 1"
+
+  allowance.comprehensive.batch10
+    107) "before each" hook for "should approve and check allowance - batch 10"
+
+  allowance.comprehensive.batch11
+    108) "before each" hook for "should approve and check allowance - batch 11"
+
+  allowance.comprehensive.batch12
+    109) "before each" hook for "should approve and check allowance - batch 12"
+
+  allowance.comprehensive.batch13
+    110) "before each" hook for "should approve and check allowance - batch 13"
+
+  allowance.comprehensive.batch14
+    111) "before each" hook for "should approve and check allowance - batch 14"
+
+  allowance.comprehensive.batch15
+    112) "before each" hook for "should approve and check allowance - batch 15"
+
+  allowance.comprehensive.batch16
+    113) "before each" hook for "should approve and check allowance - batch 16"
+
+  allowance.comprehensive.batch17
+    114) "before each" hook for "should approve and check allowance - batch 17"
+
+  allowance.comprehensive.batch18
+    115) "before each" hook for "should approve and check allowance - batch 18"
+
+  allowance.comprehensive.batch19
+    116) "before each" hook for "should approve and check allowance - batch 19"
+
+  allowance.comprehensive.batch2
+    117) "before each" hook for "should approve and check allowance - batch 2"
+
+  allowance.comprehensive.batch20
+    118) "before each" hook for "should approve and check allowance - batch 20"
+
+  allowance.comprehensive.batch21
+    119) "before each" hook for "should approve and check allowance - batch 21"
+
+  allowance.comprehensive.batch22
+    120) "before each" hook for "should approve and check allowance - batch 22"
+
+  allowance.comprehensive.batch23
+    121) "before each" hook for "should approve and check allowance - batch 23"
+
+  allowance.comprehensive.batch24
+    122) "before each" hook for "should approve and check allowance - batch 24"
+
+  allowance.comprehensive.batch25
+    123) "before each" hook for "should approve and check allowance - batch 25"
+
+  allowance.comprehensive.batch26
+    124) "before each" hook for "should approve and check allowance - batch 26"
+
+  allowance.comprehensive.batch27
+    125) "before each" hook for "should approve and check allowance - batch 27"
+
+  allowance.comprehensive.batch28
+    126) "before each" hook for "should approve and check allowance - batch 28"
+
+  allowance.comprehensive.batch29
+    127) "before each" hook for "should approve and check allowance - batch 29"
+
+  allowance.comprehensive.batch3
+    128) "before each" hook for "should approve and check allowance - batch 3"
+
+  allowance.comprehensive.batch30
+    129) "before each" hook for "should approve and check allowance - batch 30"
+
+  allowance.comprehensive.batch4
+    130) "before each" hook for "should approve and check allowance - batch 4"
+
+  allowance.comprehensive.batch5
+    131) "before each" hook for "should approve and check allowance - batch 5"
+
+  allowance.comprehensive.batch6
+    132) "before each" hook for "should approve and check allowance - batch 6"
+
+  allowance.comprehensive.batch7
+    133) "before each" hook for "should approve and check allowance - batch 7"
+
+  allowance.comprehensive.batch8
+    134) "before each" hook for "should approve and check allowance - batch 8"
+
+  allowance.comprehensive.batch9
+    135) "before each" hook for "should approve and check allowance - batch 9"
+
+  Commerce Complete Coverage
+    MerchantRegistry Additional TEST Helpers
+      136) TEST_if_vaultAndScore
+      137) TEST_if_vaultAndScore - no vault
+      138) TEST_cover_additional_branches - all variants
+      139) TEST_cover_additional_branches - with forces
+      140) TEST_force_eval_360_and_neighbors
+      141) TEST_force_eval_360_and_neighbors - with thresholds
+      142) TEST_line365_condexpr_variant2
+      143) TEST_line365_condexpr_variant2 - with force
+      144) TEST_line367_condexpr_variant2
+      145) TEST_line367_condexpr_variant2 - with forces
+      146) TEST_line374_condexpr_variant
+      147) TEST_line374_condexpr_variant - force left
+      148) TEST_force_eval_367_variants
+      149) TEST_force_eval_367_variants - with forces
+      150) TEST_force_eval_369_370_combo
+      151) TEST_force_eval_369_370_combo - zero amount
+      152) TEST_dup_constructor_or_local
+      153) TEST_dup_constructor_or_local2
+      154) TEST_dup_constructor_or_msgsender_variant
+      155) TEST_trick_constructor_or_line87 - with zero
+      156) TEST_trick_constructor_or_line87 - with address
+      157) TEST_line87_txorigin_variant
+      158) TEST_line87_ledger_security_variant - with zero
+      159) TEST_line87_ledger_security_variant - with address
+      160) TEST_line118_msgsender_false_arm
+      161) TEST_line130_msgsender_vaultZero_false - no force
+      162) TEST_line130_msgsender_vaultZero_false - with force
+    MerchantRegistry Combined Branch Coverage
+      163) should cover all merchant status branches
+      164) should cover all vault presence branches
+      165) should cover all score threshold branches
+      166) should cover refund threshold branches
+      167) should cover dispute threshold branches
+      168) should cover all force flag combinations
+    MerchantRegistry Line-Specific Branch Coverage
+      169) should cover line 365 condexpr - all combinations
+      170) should cover line 367 condexpr - all combinations
+      171) should cover line 374 condexpr - all combinations
+      172) should cover line 367 variants - all combinations
+      173) should cover lines 369-370 combo - all combinations
+    MerchantRegistry Constructor and Line 87 Coverage
+      174) should cover constructor OR chain variants
+      175) should cover line 87 with zero addresses
+      176) should cover line 87 with valid addresses
+    MerchantRegistry Lines 118 and 130 Coverage
+      177) should cover line 118 merchant status check
+      178) should cover line 130 vault zero check - both branches
+    MerchantRegistry Dense 360-375 Hotspot Coverage
+      179) should cover 360 neighbors - all merchant states
+      180) should cover 360 neighbors with vault presence
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 1/3)
+    Basic TEST toggle functions
+      181) TEST_setOnlyDAOOff
+      182) TEST_setForceAlreadyMerchant
+      183) TEST_setForceNoVault
+      184) TEST_setForceLowScore
+      185) TEST_setForceZeroSenderRefund
+      186) TEST_setForceZeroSenderDispute
+    Eval functions - Part 1
+      187) TEST_eval_addMerchant_flags
+      188) TEST_eval_addMerchant_subexpr
+      189) TEST_eval_noteRefund_forceFlag
+      190) TEST_eval_noteDispute_forceFlag
+      191) TEST_exercise_addMerchant_checks
+      192) TEST_exercise_noteFlags
+      193) TEST_exec_addMerchant_branches
+      194) TEST_cover_addMerchant_variants
+    Conditional TEST functions
+      195) TEST_if_alreadyMerchant_left
+      196) TEST_if_forceAlready_right
+      197) TEST_if_noVault_left
+      198) TEST_if_forceNoVault_right
+      199) TEST_if_lowScore_left
+      200) TEST_if_forceLowScore_right
+      201) TEST_exec_addMerchant_ifvariants
+    Status check functions
+      202) TEST_if_merchant_status_none
+      203) TEST_if_vaultHub_vaultOf_isZero
+      204) TEST_if_seer_getScore_lt_min
+      205) TEST_if_refund_threshold_reached
+      206) TEST_if_dispute_threshold_reached
+    Force variants
+      207) TEST_if_vaultOf_isZero_or_force
+      208) TEST_if_seer_score_below_min_or_force
+      209) TEST_if_alreadyMerchant_or_force
+      210) TEST_if_onlyDAO_off_flag
+    Vault and score checks
+      211) TEST_if_vaultAndScore
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 2/3)
+    Additional coverage functions - Part 1
+      212) TEST_cover_additional_branches
+      213) TEST_force_eval_360_and_neighbors
+      214) TEST_line365_condexpr_variant2
+      215) TEST_line367_condexpr_variant2
+      216) TEST_line374_condexpr_variant
+      217) TEST_force_eval_367_variants
+      218) TEST_force_eval_369_370_combo
+    Constructor and local variants
+      219) TEST_dup_constructor_or_local
+      220) TEST_dup_constructor_or_local2
+      221) TEST_dup_constructor_or_msgsender_variant
+      222) TEST_trick_constructor_or_line87
+      223) TEST_line87_txorigin_variant
+      224) TEST_line87_ledger_security_variant
+    Specific line coverage
+      225) TEST_line118_msgsender_false_arm
+      226) TEST_line130_msgsender_vaultZero_false
+      227) TEST_line250_condexpr_alt
+      228) TEST_force_eval_line87_msgsender
+      229) TEST_force_eval_addMerchant_msgsender_variants
+      230) TEST_line118_already_or_force
+      231) TEST_line130_vaultZero_or_force
+      232) TEST_line238_refunds_threshold
+      233) TEST_line250_condexpr_variant
+      234) TEST_line291_sender_zero_or_force_refund
+      235) TEST_line305_seer_lt_or_force
+    Additional IF variants
+      236) TEST_if_addMerchant_or_force
+      237) TEST_if_vaultOf_or_force2
+      238) TEST_if_seer_lt_min_or_force2
+      239) TEST_cover_addMerchant_near118_130
+    Execution functions with state changes
+      240) TEST_exec_addMerchant_msgsender_full
+      241) TEST_exec_note_guards_and_restore
+    More conditional checks
+      242) TEST_if_msgsender_alreadyMerchant
+      243) TEST_if_constructor_zero_check
+      244) TEST_exec_addMerchant_msgsender_ifvariants
+      245) TEST_line130_msgsender_vaultZero_or_force
+    Coverage region tests
+      246) TEST_cover_250_300_region
+      247) TEST_cover_mass_250_410
+    All force flag combinations
+      248) should test all 64 combinations of 6 boolean flags
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 3/3)
+    Escrow eval functions
+      249) TEST_eval_open_checks
+      250) TEST_if_securityCheck_addr
+      251) TEST_if_escrow_state_eq
+      252) TEST_if_escrow_buyerVault_zero
+      253) TEST_if_escrow_sellerVault_zero
+      254) TEST_exec_open_ifvariants
+    Access check functions
+      255) TEST_eval_access_checks
+      256) TEST_if_buyerVault_zero
+      257) TEST_if_release_allowed
+      258) TEST_if_refund_allowed
+      259) TEST_exec_access_ifvariants
+      260) TEST_cover_escrow_more
+    Hotspot functions
+      261) TEST_hotspot_300s
+      262) TEST_hotspot_330s
+      263) TEST_hotspot_360s
+      264) TEST_hotspot_490s
+      265) TEST_cover_post360s
+    Message sender specific checks
+      266) TEST_if_msgsender_release_allowed
+      267) TEST_if_msgsender_refund_allowed
+      268) TEST_if_msgsender_dispute_allowed
+      269) TEST_if_notFunded
+      270) TEST_if_resolve_buyerWins_branch
+      271) TEST_force_eval_release_refund_resolve
+    Line-specific conditional expressions
+      272) TEST_line435_condexpr_variants
+      273) TEST_line447_condexpr_variants

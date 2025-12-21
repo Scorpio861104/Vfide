@@ -1,0 +1,201 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+
+  Interface Compliance Tests
+    IVFIDEToken Interface
+      ✔ Should implement all IVFIDEToken interface functions
+    IDAO Interface
+      ✔ Should verify DAO interface structure
+    ISeer Interface
+      ✔ Should verify Seer reputation interface
+    IProofLedger Interface
+      ✔ Should verify ProofLedger interface functions
+    IVaultHub Interface
+      ✔ Should verify VaultHub interface compliance
+    ISecurityHub Interface
+      ✔ Should verify SecurityHub emergency interface
+    IDAOTimelock Interface
+      ✔ Should verify Timelock interface compliance
+    IProofScoreBurnRouter Interface
+      ✔ Should verify ProofScoreBurnRouter interface
+    IVFIDEPresale Interface
+      ✔ Should verify Presale interface compliance
+    IDevReserveVestingVault Interface
+      1) Should verify DevReserveVestingVault interface
+    IEcoTreasuryVault Interface
+      ✔ Should verify EcoTreasuryVault interface compliance
+    ISanctumFund Interface
+      ✔ Should verify SanctumFund interface functions
+    IGuardianLock Interface
+      ✔ Should verify GuardianLock security interface
+    IPanicGuard Interface
+      ✔ Should verify PanicGuard emergency interface
+    IEmergencyBreaker Interface
+      ✔ Should verify EmergencyBreaker circuit breaker interface
+    IERC20Minimal Interface
+      ✔ Should verify ERC20 minimal interface compliance
+    Cross-Interface Integration
+      ✔ Should verify interfaces work together
+      ✔ Should verify DAO and Timelock interface integration
+      ✔ Should verify Seer and Ledger interface integration
+
+  GovernanceHooks
+    Deployment
+      ✔ should deploy with correct ledger
+      ✔ should deploy with correct seer
+      ✔ should emit ModulesSet on deployment
+      ✔ should deploy with zero address ledger (optional)
+      ✔ should deploy with zero address seer (optional)
+      ✔ should deploy with both zero addresses
+    setModules
+      ✔ should update ledger address (46ms)
+      ✔ should update seer address
+      ✔ should update both addresses
+      ✔ should emit ModulesSet
+      ✔ should allow setting zero addresses
+      ✔ should allow anyone to call setModules
+    onProposalQueued
+      ✔ should execute without reverting
+      ✔ should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal IDs
+      ✔ should handle zero value proposals
+      ✔ should handle zero target address
+    onVoteCast
+      ✔ should execute without reverting for support vote
+      ✔ should execute without reverting for against vote
+      ✔ should log system event when ledger is set
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple voters
+      ✔ should handle zero address voter
+    onFinalized
+      ✔ should execute for passed proposal
+      ✔ should execute for failed proposal
+      ✔ should log system event when ledger is set
+      ✔ should log system event when ledger is set (failed)
+      ✔ should not revert when ledger is zero address
+      ✔ should handle multiple proposal finalizations
+    Hook Integration Flow
+      ✔ should execute complete governance flow
+      ✔ should handle multiple proposals simultaneously
+      ✔ should work with ledger logging disabled
+    Edge Cases
+      ✔ should handle ledger reverts gracefully
+      ✔ should allow rapid successive calls
+      ✔ should handle very large proposal IDs
+      ✔ should allow module updates mid-flow
+
+  VFIDECommerce Ecosystem Test
+    ✔ should allow a merchant to register successfully
+    with registered merchant
+      ✔ should allow a buyer to open, fund, and release an escrow
+
+  EmergencyControl Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      ✔ should set breaker correctly
+      ✔ should set default cooldown to 5 minutes
+      ✔ should revert if deploying with zero addresses
+    Module Configuration
+      ✔ should allow DAO to set modules
+      ✔ should revert if non-DAO tries to set modules
+    Cooldown Configuration
+      ✔ should allow DAO to set cooldown
+      ✔ should revert if non-DAO tries to set cooldown
+    Committee Management
+      ✔ should allow DAO to add member
+      ✔ should revert if adding zero address
+      ✔ should revert if adding duplicate member
+      ✔ should allow DAO to remove member
+      ✔ should revert if removing non-member
+      ✔ should allow DAO to reset committee
+      ✔ should revert if threshold exceeds member count
+    Committee Voting
+      ✔ should allow member to vote for halt
+      ✔ should allow member to vote for unhalt
+      ✔ should revert if non-member tries to vote
+      ✔ should revert if member votes twice for same stance
+      2) should trigger when threshold reached
+    DAO Toggle
+      3) should allow DAO to toggle halt
+      ✔ should revert if non-DAO tries to toggle
+      4) should enforce cooldown
+      5) should allow toggle after cooldown passes
+    Vote Reset
+      6) should allow DAO to reset votes
+      7) should revert if non-DAO tries to reset
+
+
+  77 passing (2s)
+  7 failing
+
+  1) Interface Compliance Tests
+       IDevReserveVestingVault Interface
+         Should verify DevReserveVestingVault interface:
+     AssertionError: expected undefined to exist
+      at Context.<anonymous> (test/Interfaces.test.js:132:34)
+
+  2) EmergencyControl Contract Tests
+       Committee Voting
+         should trigger when threshold reached:
+     Error: Transaction reverted without a reason string
+    at EmergencyControl.committeeVote (contracts/EmergencyControl.sol:161)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+    at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at Proxy.committeeVote (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at waitForPendingTransaction (node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/emit.ts:28:17)
+    at Context.<anonymous> (test/EmergencyControl.test.js:183:7)
+  
+
+  3) EmergencyControl Contract Tests
+       DAO Toggle
+         should allow DAO to toggle halt:
+     Error: Transaction reverted without a reason string
+    at EmergencyControl.daoToggle (contracts/EmergencyControl.sol:151)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+    at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at Proxy.daoToggle (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at waitForPendingTransaction (node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/emit.ts:28:17)
+    at Context.<anonymous> (test/EmergencyControl.test.js:191:7)
+  
+
+  4) EmergencyControl Contract Tests
+       DAO Toggle
+         should enforce cooldown:
+     Error: Transaction reverted without a reason string
+    at EmergencyControl.daoToggle (contracts/EmergencyControl.sol:151)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+    at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at Proxy.daoToggle (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at Context.<anonymous> (test/EmergencyControl.test.js:203:7)
+  
+
+  5) EmergencyControl Contract Tests
+       DAO Toggle
+         should allow toggle after cooldown passes:
+     Error: Transaction reverted without a reason string
+    at EmergencyControl.daoToggle (contracts/EmergencyControl.sol:151)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+    at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at Proxy.daoToggle (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at Context.<anonymous> (test/EmergencyControl.test.js:211:7)
+  
+
+  6) EmergencyControl Contract Tests
+       Vote Reset
+         should allow DAO to reset votes:
+     TypeError: emergency.connect(...).resetVotes is not a function
+      at Context.<anonymous> (test/EmergencyControl.test.js:229:36)
+
+  7) EmergencyControl Contract Tests
+       Vote Reset
+         should revert if non-DAO tries to reset:
+     TypeError: emergency.connect(...).resetVotes is not a function
+      at Context.<anonymous> (test/EmergencyControl.test.js:237:34)
+
+
+

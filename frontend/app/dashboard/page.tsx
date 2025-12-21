@@ -78,7 +78,7 @@ export default function DashboardPage() {
                     <button onClick={copyAddress} className="p-1 hover:bg-[#2A2A2F] rounded">
                       {copiedAddress ? <CheckCircle2 className="text-[#50C878]" size={14} /> : <Copy className="text-[#A0A0A5]" size={14} />}
                     </button>
-                    <a href={`https://polygonscan.com/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-[#2A2A2F] rounded">
+                    <a href={`https://explorer.zksync.io/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-[#2A2A2F] rounded">
                       <ExternalLink className="text-[#A0A0A5]" size={14} />
                     </a>
                   </div>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                   <Activity className="text-[#00F0FF]" size={18} />
                 </div>
                 <div className="text-xl font-bold text-[#50C878]">Active</div>
-                <div className="text-[#A0A0A5] text-xs">Last tx: 2h ago</div>
+                <div className="text-[#A0A0A5] text-xs">Connected</div>
               </div>
             </div>
           </div>
@@ -234,7 +234,7 @@ function WalletTab() {
                 </div>
                 <div className="text-right">
                   <div className="text-[#A0A0A5] text-xs">{tx.timestamp}</div>
-                  <a href={`https://polygonscan.com/tx/${tx.txHash}`} className="text-[#00F0FF] text-xs hover:underline">View →</a>
+                  <a href={`https://explorer.zksync.io/tx/${tx.txHash}`} className="text-[#00F0FF] text-xs hover:underline">View →</a>
                 </div>
               </div>
             ))}

@@ -1,0 +1,1166 @@
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+Compiling 131 files with Solc 0.8.30
+Solc 0.8.30 finished in 47.30s
+Compiler run successful with warnings:
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/ProofScoreBurnRouter.sol:62:40:
+   |
+62 |     function adjustScore(address user, uint16 delta, bool increase) external {
+   |                                        ^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/ProofScoreBurnRouter.sol:62:54:
+   |
+62 |     function adjustScore(address user, uint16 delta, bool increase) external {
+   |                                                      ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts-prod/VFIDECommerce.sol:290:34:
+    |
+290 |     function dispute(uint256 id, string calldata reason) external {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts-prod/mocks/VFIDEPresaleMock.sol:49:62:
+   |
+49 |     function buy(address stable, uint256 amount, uint8 tier, address referrer) external {
+   |                                                              ^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:31:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                               ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:43:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                           ^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:59:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                                           ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:25:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                         ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:37:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                     ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:52:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                                    ^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:24:26:
+   |
+24 |     function onFinalized(uint256 id, bool passed) external {
+   |                          ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/ProofScoreBurnRouter.sol:109:9:
+    |
+109 |         address to,
+    |         ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDECommerce.sol:211:34:
+    |
+211 |     function dispute(uint256 id, string calldata reason) external {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:190:87:
+    |
+190 |  ... s token, bool forceDecimalsReturn, uint8 forcedVal, uint256 amount, address to) exter ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:216:84:
+    |
+216 |  ... s(address token, bool forceReturn, uint8 forcedVal, uint256 amount, address to, bool  ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:281:67:
+    |
+281 |  ... ed_and_tokenNonZero(address token, address to, uint256 amount) external view ret ...
+    |                                         ^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:281:79:
+    |
+281 |  ... NonZero(address token, address to, uint256 amount) external view returns (bool allow ...
+    |                                         ^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:316:107:
+    |
+316 |  ... ress to, bool forceDecimalsReturn, uint8 forcedVal, bool forceDepositInsuff, bool for ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:493:38:
+    |
+493 |     function TEST_if_send_zero_guard(address token, address to, uint256 amount) external view returns (bool) {
+    |                                      ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEFinance.sol:516:40:
+    |
+516 |     function TEST_if_to_or_amount_zero(address token, address to, uint256 amount) external pure returns (bool) {
+    |                                        ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/VFIDEStaking.sol:371:9:
+    |
+371 |         address vault,
+    |         ^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/Vault.sol:159:26:
+    |
+159 |     function verifyProof(bytes memory _proof) internal pure returns (bool) {
+    |                          ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> contracts/Vault.sol:194:32:
+    |
+194 |     function verifyDAOApproval(bytes memory _daoApproval) internal pure returns (bool) {
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (2072): Unused local variable.
+   --> test/foundry/DevReserveVestingVault.t.sol:290:9:
+    |
+290 |         uint256 claimableBefore = vault.claimable();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:31:42:
+   |
+31 |     function testFuzz_totalSupplyBounded(uint256 randomValue) public view {
+   |                                          ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:36:41:
+   |
+36 |     function testFuzz_devReserveCorrect(uint256 randomValue) public view {
+   |                                         ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:41:45:
+   |
+41 |     function testFuzz_presaleCapNotExceeded(uint256 randomValue) public view {
+   |                                             ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:46:42:
+   |
+46 |     function testFuzz_constantsImmutable(uint256 randomValue) public view {
+   |                                          ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:53:37:
+   |
+53 |     function testFuzz_nameAndSymbol(uint256 randomValue) public view {
+   |                                     ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:60:35:
+   |
+60 |     function testFuzz_ownerExists(uint256 randomValue) public view {
+   |                                   ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:65:38:
+   |
+65 |     function testFuzz_vaultOnlyState(uint256 randomValue) public view {
+   |                                      ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:71:41:
+   |
+71 |     function testFuzz_policyLockedState(uint256 randomValue) public view {
+   |                                         ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:77:35:
+   |
+77 |     function testFuzz_vaultHubSet(uint256 randomValue) public view {
+   |                                   ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:83:39:
+   |
+83 |     function testFuzz_treasurySinkSet(uint256 randomValue) public view {
+   |                                       ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:89:44:
+   |
+89 |     function testFuzz_presaleInitiallyZero(uint256 randomValue) public view {
+   |                                            ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> test/foundry/VFIDETokenSimple.t.sol:95:45:
+   |
+95 |     function testFuzz_totalSupplyConsistent(uint256 randomValue) public view {
+   |                                             ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> test/foundry/VFIDETokenSimple.t.sol:102:59:
+    |
+102 |     function testFuzz_allowanceZeroSpender(address owner, uint256 randomValue) public view {
+    |                                                           ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> test/foundry/VFIDETokenSimple.t.sol:109:44:
+    |
+109 |     function testFuzz_presaleMintedBounded(uint256 randomValue) public view {
+    |                                            ^^^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> test/foundry/VFIDETokenSimple.t.sol:116:46:
+    |
+116 |     function testFuzz_totalSupplyNonNegative(uint256 randomValue) public view {
+    |                                              ^^^^^^^^^^^^^^^^^^^
+
+Warning (2018): Function state mutability can be restricted to view
+  --> contracts-prod/mocks/VFIDEFinanceMocks.sol:44:5:
+   |
+44 |     function setSymbolHint(address token, string calldata) external {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to pure
+   --> contracts/VFIDEFinance.sol:298:5:
+    |
+298 |     function TEST_if_treasury_force_flags(bool depositInsuff, bool sendInsuff) external view returns (bool, bool) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to pure
+   --> contracts/VFIDEFinance.sol:493:5:
+    |
+493 |     function TEST_if_send_zero_guard(address token, address to, uint256 amount) external view returns (bool) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to pure
+   --> contracts/VFIDEStaking.sol:400:5:
+    |
+400 |     function _getVaultOwner(address vault) internal view returns (address) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to view
+  --> test/foundry/Trust.t.sol:18:5:
+   |
+18 |     function testNeutralScoreUninitialized() public {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to view
+  --> test/foundry/VFIDEFinance.t.sol:77:5:
+   |
+77 |     function testFuzz_DecimalsTracked() public {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2018): Function state mutability can be restricted to pure
+  --> test/foundry/zk/VFIDETokenFuzz.t.sol:11:5:
+   |
+11 |     function vaultOf(address a) external view returns (address) { return a; }
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning (2018): Function state mutability can be restricted to view
+  --> test/foundry/zk/VFIDETokenFuzz.t.sol:58:5:
+   |
+58 |     function invariant_TotalSupplyCap() public {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Ran 1 test for test/foundry/Finance.t.sol:FinanceSmoke
+[FAIL: FI_Zero()] testNeutralAddAssetWithBypass() (gas: 1056978928)
+Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 3.77ms (331.17µs CPU time)
+
+Ran 1 test for test/foundry/AuditFixes.t.sol:AuditFixesTest
+[FAIL: vm.getCode: multiple matching artifacts found] setUp() (gas: 0)
+Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 6.79ms (0.00ns CPU time)
+
+Ran 9 tests for test/foundry/Seer.t.sol:SeerFuzzTest
+[PASS] testFuzz_daoCanAdjustScore(address,uint16) (runs: 256, μ: 86183, ~: 86230)
+[PASS] testFuzz_daoCanFlag(address,uint8) (runs: 256, μ: 75664, ~: 75684)
+[PASS] testFuzz_daoCanSetPolicy(uint16,uint16,uint16) (runs: 256, μ: 56321, ~: 56328)
+[PASS] testFuzz_daoIsSet(address) (runs: 256, μ: 9760, ~: 9760)
+[PASS] testFuzz_defaultScoreIsZero(address) (runs: 256, μ: 13555, ~: 13555)
+[PASS] testFuzz_governanceMinIsBasePlus100(address) (runs: 256, μ: 7891, ~: 7891)
+[PASS] testFuzz_onlyDaoCanAdjustScore(address,address,uint16) (runs: 256, μ: 37443, ~: 37517)
+[PASS] testFuzz_onlyDaoCanFlag(address,address) (runs: 256, μ: 36930, ~: 37015)
+[PASS] testFuzz_onlyDaoCanSetPolicy(address,uint16,uint16,uint16) (runs: 256, μ: 35779, ~: 35783)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 383.83ms (377.93ms CPU time)
+
+Ran 1 test for test/foundry/Trust.t.sol:TrustSmoke
+[PASS] testNeutralScoreUninitialized() (gas: 11532)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 374.97µs (44.91µs CPU time)
+
+Ran 11 tests for test/foundry/CouncilElection.t.sol:CouncilElectionTest
+[PASS] testFuzz_CandidateUnregister(uint16) (runs: 256, μ: 225675, ~: 225676)
+[PASS] testFuzz_CannotSetEmptyCouncil() (gas: 33150)
+[PASS] testFuzz_CouncilMembersSet(uint8) (runs: 256, μ: 568381, ~: 439946)
+[PASS] testFuzz_CouncilSizeLimits(uint8) (runs: 256, μ: 801506, ~: 454828)
+[PASS] testFuzz_MinScoreEnforced(uint16,uint16) (runs: 256, μ: 204732, ~: 192573)
+[PASS] testFuzz_MultipleCandidates(uint8) (runs: 256, μ: 2336682, ~: 1097595)
+[PASS] testFuzz_OnlyDAOCanSetCouncil(address) (runs: 256, μ: 83155, ~: 83155)
+[PASS] testFuzz_OnlyEligibleCanRegister(uint16) (runs: 256, μ: 172512, ~: 187061)
+[PASS] testFuzz_RefreshInterval(uint64) (runs: 256, μ: 57126, ~: 57127)
+[PASS] testFuzz_RefreshRemovesIneligible(uint16) (runs: 256, μ: 282866, ~: 285007)
+[PASS] testFuzz_TermDuration(uint64) (runs: 256, μ: 239653, ~: 239654)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 1.36s (1.36s CPU time)
+
+Ran 8 tests for test/foundry/DAO.t.sol:DAOFuzzTest
+[PASS] testFuzz_adminIsSet(address) (runs: 256, μ: 10471, ~: 10471)
+[PASS] testFuzz_cannotSetInvalidQuorum(uint8) (runs: 256, μ: 44684, ~: 44684)
+[PASS] testFuzz_modulesAreSet(address) (runs: 256, μ: 20121, ~: 20121)
+[PASS] testFuzz_onlyAdminCanSetParams(address,uint16,uint8) (runs: 256, μ: 36997, ~: 36993)
+[PASS] testFuzz_paramsValidRange(uint16,uint8) (runs: 256, μ: 48250, ~: 48252)
+[PASS] testFuzz_proposalCountStartsZero(uint256) (runs: 256, μ: 7955, ~: 7955)
+[PASS] testFuzz_quorumBounded(uint256) (runs: 256, μ: 10456, ~: 10456)
+[PASS] testFuzz_votingPeriodBounded(uint256) (runs: 256, μ: 10481, ~: 10481)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 213.58ms (213.15ms CPU time)
+
+Ran 9 tests for test/foundry/VFIDECommerce.t.sol:VFIDECommerceTest
+[PASS] testFuzz_CannotOpenZeroAmount() (gas: 144199)
+[PASS] testFuzz_DAOCanResolveDispute(uint256,bool) (runs: 256, μ: 546313, ~: 546317)
+[PASS] testFuzz_DisputeChangesState(uint256) (runs: 256, μ: 478274, ~: 478250)
+[PASS] testFuzz_EscrowRequiresMerchant(uint256) (runs: 256, μ: 342708, ~: 342698)
+[PASS] testFuzz_EscrowStateTransitions(uint256) (runs: 256, μ: 450558, ~: 450530)
+[PASS] testFuzz_MerchantMinScore(uint16) (runs: 256, μ: 176252, ~: 155435)
+[PASS] testFuzz_MultipleEscrows(uint8,uint256) (runs: 256, μ: 872478, ~: 734979)
+[PASS] testFuzz_RefundSendsToBuyer(uint256) (runs: 256, μ: 513426, ~: 513426)
+[PASS] testFuzz_ReleaseSendsToMerchant(uint256) (runs: 256, μ: 500046, ~: 500043)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 1.41s (1.41s CPU time)
+
+Ran 11 tests for test/foundry/ProofScoreBurnRouter.t.sol:ProofScoreBurnRouterTest
+[PASS] testFuzz_AdjustScoreEmits(uint16,uint16,bool) (runs: 256, μ: 89246, ~: 92256)
+[PASS] testFuzz_BurnAmountConsistency(uint256,uint16) (runs: 256, μ: 153320, ~: 159790)
+[PASS] testFuzz_BurnRateMonotonic(uint16,uint16,uint256) (runs: 256, μ: 187082, ~: 188218)
+[PASS] testFuzz_BurnRateNeverExceedsMax(uint16,uint256) (runs: 256, μ: 110873, ~: 114790)
+[PASS] testFuzz_BurnRateWithScore(uint16) (runs: 256, μ: 105691, ~: 109287)
+[PASS] testFuzz_HighScoreMinimumBurn(uint16,uint256) (runs: 256, μ: 115810, ~: 118111)
+[PASS] testFuzz_LowScoreMaximumBurn(uint16,uint256) (runs: 256, μ: 111703, ~: 117986)
+[PASS] testFuzz_MidRangeScoreBurn(uint16,uint256) (runs: 256, μ: 118923, ~: 120742)
+[PASS] testFuzz_MultipleRoutes(uint8,uint256) (runs: 256, μ: 416987, ~: 315419)
+[PASS] testFuzz_RouteZeroAmount(uint16) (runs: 256, μ: 91012, ~: 93773)
+[PASS] testFuzz_SanctumRate(uint256) (runs: 256, μ: 111197, ~: 111182)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 1.92s (1.92s CPU time)
+
+Ran 10 tests for test/foundry/VFIDEFinance.t.sol:VFIDEFinanceTest
+[PASS] testFuzz_CanRemoveAssets() (gas: 40597)
+[PASS] testFuzz_CannotAddAssetTwice() (gas: 659612)
+[PASS] testFuzz_CannotRemoveNonWhitelisted() (gas: 588754)
+[PASS] testFuzz_CannotUpdateNonWhitelisted() (gas: 589489)
+[PASS] testFuzz_DAOCanSend(uint256) (runs: 256, μ: 87579, ~: 87579)
+[PASS] testFuzz_DecimalsTracked() (gas: 10031)
+[PASS] testFuzz_MultipleDeposits(uint8) (runs: 256, μ: 134737, ~: 113937)
+[PASS] testFuzz_OnlyDAOCanAddAssets(address) (runs: 256, μ: 587979, ~: 587979)
+[PASS] testFuzz_SymbolHintUpdate() (gas: 37636)
+[PASS] testFuzz_TreasuryDeposit(uint256) (runs: 256, μ: 129719, ~: 129695)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 342.80ms (342.32ms CPU time)
+
+Ran 9 tests for test/foundry/VFIDEPresale.t.sol:VFIDEPresaleTest
+[PASS] testFuzz_CannotPurchaseWhenInactive(uint256) (runs: 256, μ: 104419, ~: 104416)
+[FAIL: next call did not revert as expected; counterexample: calldata=0xeab9ddad0000000000000000000000000000000000000000000000000000000000000184 args=[388]] testFuzz_CannotPurchaseWithLockedVault(uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: Total purchases don't accumulate correctly: 0 < 3; counterexample: calldata=0xe1398b4a00000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000001 args=[3, 1]] testFuzz_MultiplePurchasesAccumulate(uint8,uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: next call did not revert as expected; counterexample: calldata=0xefd5d04700000000000000000000000029c74c48a32cdf0c6f348769bcb576bc55fdec0e0000000000000000000000000000000000000000000000000000000000d0a2bd args=[0x29c74C48A32cDF0C6F348769BCb576bc55FDEC0E, 13673149 [1.367e7]]] testFuzz_OnlyWhitelistedStablecoins(address,uint256) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_PriceChangesDontAffectHistory(uint32) (runs: 256, μ: 125707, ~: 125707)
+[FAIL: next call did not revert as expected; counterexample: calldata=0xed8f2a1c000000000000000000000000000000000000000000000000000002d27466905d args=[3102919266397 [3.102e12]]] testFuzz_PurchaseRespectsCap(uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: Buyer bonus incorrect: 0 !~= 1 (max delta: 1.0000000000000000%, real delta: 100.0000000000000000%); counterexample: calldata=0x60a3e74b0000000000000000000000000000000000000000000000000000000000000001 args=[1]] testFuzz_ReferralBonusCalculation(uint256) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_TierEnableDisable(uint8,bool) (runs: 256, μ: 123659, ~: 139544)
+[FAIL: Received less than expected: 0 < 648133333333333333; counterexample: calldata=0xd7a6bc7700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004bf4 args=[0, 19444 [1.944e4]]] testFuzz_TierPricingConsistency(uint8,uint256) (runs: 0, μ: 0, ~: 0)
+Suite result: FAILED. 3 passed; 6 failed; 0 skipped; finished in 177.04ms (176.48ms CPU time)
+
+Ran 8 tests for test/foundry/EmergencyControl.t.sol:EmergencyControlFuzzTest
+[PASS] testFuzz_approvalsStartZero(uint256) (runs: 256, μ: 11256, ~: 11256)
+[PASS] testFuzz_daoCanSetCooldown(uint64) (runs: 256, μ: 47405, ~: 47407)
+[PASS] testFuzz_daoIsSet(address) (runs: 256, μ: 9792, ~: 9792)
+[PASS] testFuzz_lastToggleTsInitiallyZero(uint256) (runs: 256, μ: 7813, ~: 7813)
+[PASS] testFuzz_memberCountStartsZero(address) (runs: 256, μ: 7898, ~: 7898)
+[PASS] testFuzz_minCooldownInitialized(address) (runs: 256, μ: 8303, ~: 8303)
+[PASS] testFuzz_onlyDaoCanSetCooldown(address,uint64) (runs: 256, μ: 35624, ~: 35615)
+[PASS] testFuzz_thresholdBounded(uint8) (runs: 256, μ: 10829, ~: 10829)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 117.62ms (117.31ms CPU time)
+
+Ran 15 tests for test/foundry/VFIDETokenSimple.t.sol:VFIDETokenSimpleTest
+[PASS] testFuzz_allowanceZeroSpender(address,uint256) (runs: 256, μ: 12098, ~: 12098)
+[PASS] testFuzz_constantsImmutable(uint256) (runs: 256, μ: 7681, ~: 7681)
+[PASS] testFuzz_devReserveCorrect(uint256) (runs: 256, μ: 9232, ~: 9232)
+[PASS] testFuzz_nameAndSymbol(uint256) (runs: 256, μ: 15664, ~: 15664)
+[PASS] testFuzz_ownerExists(uint256) (runs: 256, μ: 8182, ~: 8182)
+[PASS] testFuzz_policyLockedState(uint256) (runs: 256, μ: 8230, ~: 8230)
+[PASS] testFuzz_presaleCapNotExceeded(uint256) (runs: 256, μ: 8946, ~: 8946)
+[PASS] testFuzz_presaleInitiallyZero(uint256) (runs: 256, μ: 8868, ~: 8868)
+[PASS] testFuzz_presaleMintedBounded(uint256) (runs: 256, μ: 9120, ~: 9120)
+[PASS] testFuzz_totalSupplyBounded(uint256) (runs: 256, μ: 8701, ~: 8701)
+[PASS] testFuzz_totalSupplyConsistent(uint256) (runs: 256, μ: 10848, ~: 10848)
+[PASS] testFuzz_totalSupplyNonNegative(uint256) (runs: 256, μ: 7705, ~: 7705)
+[PASS] testFuzz_treasurySinkSet(uint256) (runs: 256, μ: 10254, ~: 10254)
+[PASS] testFuzz_vaultHubSet(uint256) (runs: 256, μ: 10369, ~: 10369)
+[PASS] testFuzz_vaultOnlyState(uint256) (runs: 256, μ: 7599, ~: 7599)
+Suite result: ok. 15 passed; 0 failed; 0 skipped; finished in 206.12ms (205.72ms CPU time)
+
+Ran 12 tests for test/foundry/DevReserveVestingVault.t.sol:DevReserveVestingVaultTest
+[PASS] testFuzz_CannotClaimDuringCliff(uint32) (runs: 256, μ: 116840, ~: 116840)
+[PASS] testFuzz_CannotExceedAllocation(uint256) (runs: 256, μ: 180684, ~: 180144)
+[PASS] testFuzz_ClaimableNeverDecreases(uint32,uint32) (runs: 256, μ: 46806, ~: 46774)
+[FAIL: Nothing claimable after cliff: 0 <= 0; counterexample: calldata=0xe77003ff0000000000000000000000000000000000000000000000000000000000000e29000000000000000000000000000000000000000000000000000000000076a700 args=[3625, 7776000 [7.776e6]]] testFuzz_CliffStrictlyEnforced(uint32,uint32) (runs: 133, μ: 53270, ~: 53270)
+[PASS] testFuzz_FullVestingAfterPeriod(uint32) (runs: 256, μ: 193035, ~: 193035)
+[PASS] testFuzz_LinearVestingAfterCliff(uint32) (runs: 256, μ: 192271, ~: 192271)
+[PASS] testFuzz_LockedVaultPreventsClaims(uint32) (runs: 256, μ: 192665, ~: 192665)
+[FAIL: Total claimed doesn't match received: 34166666237997256515775034 != 32500000000000000000000000; counterexample: calldata=0x2afb7779000000000000000000000000000000000000000000000000000000000000000f args=[15]] testFuzz_MultipleClaimsAccumulate(uint8) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_OnlyBeneficiaryCanPause(address,bool) (runs: 256, μ: 31515, ~: 31510)
+[PASS] testFuzz_PausingStopsClaims(uint32) (runs: 256, μ: 287646, ~: 287646)
+[PASS] testFuzz_RemainingAllocation(uint32) (runs: 256, μ: 190618, ~: 190618)
+[PASS] testFuzz_StartSyncIdempotent(uint8) (runs: 256, μ: 27143, ~: 25000)
+Suite result: FAILED. 10 passed; 2 failed; 0 skipped; finished in 2.88s (2.88s CPU time)
+
+Ran 8 tests for test/foundry/VaultInfrastructure.t.sol:VaultInfrastructureFuzzTest
+[PASS] testFuzz_cannotCreateVaultForZeroAddress(uint256) (runs: 256, μ: 29993, ~: 29993)
+[PASS] testFuzz_daoIsSet(address) (runs: 256, μ: 9852, ~: 9852)
+[PASS] testFuzz_ensureVaultCreatesUniqueVaults(address,address) (runs: 256, μ: 2224149, ~: 2224297)
+[PASS] testFuzz_ensureVaultIsIdempotent(address) (runs: 256, μ: 1165079, ~: 1165316)
+[PASS] testFuzz_onlyOwnerCanSetVFIDE(address,address) (runs: 256, μ: 38878, ~: 38961)
+[PASS] testFuzz_securityHubIsSet(address) (runs: 256, μ: 10352, ~: 10352)
+[PASS] testFuzz_vaultOfReturnsCorrectVault(address) (runs: 256, μ: 1118269, ~: 1118359)
+[PASS] testFuzz_vfideTokenIsSet(address) (runs: 256, μ: 10419, ~: 10419)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 259.18ms (391.81ms CPU time)
+
+Ran 11 tests for test/foundry/DAOTimelock.t.sol:DAOTimelockTest
+[PASS] testFuzz_AdminTransfer(address) (runs: 256, μ: 196432, ~: 196521)
+[PASS] testFuzz_CanCancelQueued(uint256) (runs: 256, μ: 211462, ~: 211623)
+[PASS] testFuzz_CanExecuteAfterDelay(uint64) (runs: 256, μ: 185540, ~: 185540)
+[PASS] testFuzz_CannotExecuteEarly(uint64) (runs: 256, μ: 160511, ~: 160511)
+[PASS] testFuzz_CannotExecuteTwice(uint256) (runs: 256, μ: 212102, ~: 212102)
+[PASS] testFuzz_CannotQueueTwice(uint256) (runs: 256, μ: 168908, ~: 169357)
+[PASS] testFuzz_DelayUpdate(uint64) (runs: 256, μ: 52814, ~: 52815)
+[PASS] testFuzz_GlobalRiskAddsDelay(uint64) (runs: 256, μ: 269345, ~: 269345)
+[PASS] testFuzz_MultipleTransactions(uint8) (runs: 256, μ: 2524823, ~: 1315515)
+[PASS] testFuzz_OnlyAdminCanQueue(address) (runs: 256, μ: 34283, ~: 34283)
+[PASS] testFuzz_QueueDelayEnforced(uint64) (runs: 256, μ: 173154, ~: 173155)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 1.32s (1.58s CPU time)
+
+Ran 2 tests for test/foundry/zk/VFIDETokenFuzz.t.sol:VFIDETokenFuzz
+[PASS] invariant_TotalSupplyCap() (runs: 256, calls: 128000, reverts: 84897)
+
+╭------------+----------------------------------------+-------+---------+----------╮
+| Contract   | Selector                               | Calls | Reverts | Discards |
++==================================================================================+
+| VFIDEToken | TEST_setForcePolicyLockedRequireRouter | 6090  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | TEST_setForceSecurityStaticcallFail    | 6131  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | TEST_setForceVaultHubZero              | 6122  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | approve                                | 6066  | 6       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | decreaseAllowance                      | 5958  | 5870    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | increaseAllowance                      | 6119  | 6       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | lockPolicy                             | 6170  | 6165    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | mintPresale                            | 6048  | 6048    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setBurnRouter                          | 6226  | 6219    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setLedger                              | 6160  | 6160    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setPresale                             | 5997  | 5993    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setSecurityHub                         | 6047  | 6044    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setSystemExempt                        | 6099  | 6093    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setTreasurySink                        | 6031  | 6025    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setVaultHub                            | 6126  | 6122    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | setVaultOnly                           | 6025  | 6017    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | transfer                               | 6073  | 6008    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | transferFrom                           | 6043  | 5987    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| VFIDEToken | transferOwnership                      | 6142  | 6134    | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| LedgerStub | logEvent                               | 6186  | 0       | 0        |
+|------------+----------------------------------------+-------+---------+----------|
+| LedgerStub | logSystemEvent                         | 6141  | 0       | 0        |
+╰------------+----------------------------------------+-------+---------+----------╯
+
+[FAIL: EvmError: Revert; counterexample: calldata=0xc33e44de0000000000000000000000005be1c3b9e5f05930c53c3a683b03d6fd21ceea070000000000000000000000007423bc4c7460958e0264be0f8ea67b510fb950dafffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe args=[0x5be1C3B9e5F05930c53c3a683b03d6Fd21CeEA07, 0x7423BC4C7460958E0264Be0f8Ea67b510Fb950dA, 115792089237316195423570985008687907853269984665640564039457584007913129639934 [1.157e77]]] testFuzz_TransferInvariant(address,address,uint256) (runs: 0, μ: 0, ~: 0)
+Suite result: FAILED. 1 passed; 1 failed; 0 skipped; finished in 5.43s (5.43s CPU time)
+
+╭--------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-min/VFIDEToken.sol:VFIDEToken Contract |                 |       |        |       |         |
++=======================================================================================================+
+| Deployment Cost                                  | Deployment Size |       |        |       |         |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 1885128                                          | 8903            |       |        |       |         |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                  |                 |       |        |       |         |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                    | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| MAX_SUPPLY                                       | 378             | 378   | 378    | 378   | 1       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| TEST_setForcePolicyLockedRequireRouter           | 3212            | 5867  | 6012   | 23112 | 6120    |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| TEST_setForceSecurityStaticcallFail              | 2723            | 5283  | 5523   | 22623 | 6155    |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| TEST_setForceVaultHubZero                        | 2992            | 5532  | 2992   | 22892 | 6137    |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| approve                                          | 4584            | 24244 | 24484  | 24484 | 6076    |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| decreaseAllowance                                | 5454            | 5454  | 5454   | 5454  | 88      |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| increaseAllowance                                | 4963            | 24587 | 24863  | 24863 | 6140    |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| lockPolicy                                       | 36978           | 36978 | 36978  | 36978 | 5       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| mintPresale                                      | 36415           | 36415 | 36415  | 36415 | 1       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setBurnRouter                                    | 36965           | 36965 | 36965  | 36965 | 7       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setPresale                                       | 77421           | 78147 | 78329  | 78329 | 5       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setSecurityHub                                   | 54233           | 54233 | 54233  | 54233 | 3       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setSystemExempt                                  | 34893           | 41626 | 35109  | 54985 | 6       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setTreasurySink                                  | 39671           | 39671 | 39671  | 39671 | 6       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setVaultHub                                      | 36833           | 36833 | 36833  | 36833 | 4       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setVaultOnly                                     | 34758           | 36164 | 36164  | 37571 | 8       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| totalSupply                                      | 2349            | 2349  | 2349   | 2349  | 1       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transfer                                         | 2955            | 2955  | 2955   | 2955  | 65      |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transferFrom                                     | 6984            | 6984  | 6984   | 6984  | 56      |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transferOwnership                                | 7816            | 7816  | 7816   | 7816  | 8       |
+╰--------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-------------------------------------------------------------+-----------------+-------+--------+--------+---------╮
+| contracts-prod/CouncilElection.sol:CouncilElection Contract |                 |       |        |        |         |
++===================================================================================================================+
+| Deployment Cost                                             | Deployment Size |       |        |        |         |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| 833087                                                      | 3756            |       |        |        |         |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+|                                                             |                 |       |        |        |         |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| Function Name                                               | Min             | Avg   | Median | Max    | # Calls |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| councilSize                                                 | 2364            | 2364  | 2364   | 2364   | 256     |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| isCandidate                                                 | 2674            | 2674  | 2674   | 2674   | 3788    |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| isCouncil                                                   | 2586            | 2586  | 2586   | 2586   | 1548    |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| minCouncilScore                                             | 2458            | 2458  | 2458   | 2458   | 256     |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| refreshCouncil                                              | 55167           | 55167 | 55167  | 55167  | 256     |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| refreshInterval                                             | 2558            | 2558  | 2558   | 2558   | 256     |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| register                                                    | 38585           | 72728 | 74825  | 74825  | 4044    |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| setCouncil                                                  | 24158           | 78013 | 82567  | 406805 | 1281    |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| setParams                                                   | 41573           | 44367 | 44373  | 44397  | 1024    |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| termEnd                                                     | 2514            | 2514  | 2514   | 2514   | 256     |
+|-------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| unregister                                                  | 35875           | 35875 | 35875  | 35875  | 256     |
+╰-------------------------------------------------------------+-----------------+-------+--------+--------+---------╯
+
+╭-------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/DAO.sol:DAO Contract |                 |       |        |       |         |
++==========================================================================================+
+| Deployment Cost                     | Deployment Size |       |        |       |         |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| 1339860                             | 6004            |       |        |       |         |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+|                                     |                 |       |        |       |         |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                       | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| admin                               | 2632            | 2632  | 2632   | 2632  | 256     |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| proposalCount                       | 2572            | 2572  | 2572   | 2572  | 256     |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| quorum                              | 2342            | 2342  | 2342   | 2342  | 1024    |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| seer                                | 2376            | 2376  | 2376   | 2376  | 256     |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| setParams                           | 23920           | 28247 | 30389  | 30418 | 768     |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| timelock                            | 2574            | 2574  | 2574   | 2574  | 256     |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| vaultHub                            | 2420            | 2420  | 2420   | 2420  | 256     |
+|-------------------------------------+-----------------+-------+--------+-------+---------|
+| votingPeriod                        | 2307            | 2307  | 2307   | 2307  | 768     |
+╰-------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| contracts-prod/DAOTimelock.sol:DAOTimelock Contract |                 |        |        |        |         |
++============================================================================================================+
+| Deployment Cost                                     | Deployment Size |        |        |        |         |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 907580                                              | 4096            |        |        |        |         |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                     |                 |        |        |        |         |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                       | Min             | Avg    | Median | Max    | # Calls |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| admin                                               | 2518            | 2518   | 2518   | 2518   | 256     |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| cancel                                              | 44513           | 46734  | 46753  | 46753  | 256     |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| delay                                               | 2323            | 2323   | 2323   | 2323   | 1536    |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| execute                                             | 24141           | 39871  | 31743  | 55810  | 1792    |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| queue                                               | 9425            | 13532  | 13841  | 13841  | 3661    |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| queueTx                                             | 24505           | 135729 | 175609 | 175609 | 6221    |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setAdmin                                            | 40601           | 40740  | 40829  | 40829  | 256     |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setDelay                                            | 40652           | 40663  | 40664  | 40688  | 512     |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setLedger                                           | 57940           | 57940  | 57940  | 57940  | 11      |
+|-----------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setPanicGuard                                       | 60061           | 60061  | 60061  | 60061  | 11      |
+╰-----------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| contracts-prod/DevReserveVestingVault.sol:DevReserveVestingVault Contract |                 |        |        |        |         |
++==================================================================================================================================+
+| Deployment Cost                                                           | Deployment Size |        |        |        |         |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 938784                                                                    | 4915            |        |        |        |         |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                                           |                 |        |        |        |         |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                                             | Min             | Avg    | Median | Max    | # Calls |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| CLIFF                                                                     | 425             | 425    | 425    | 425    | 1670    |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| VESTING                                                                   | 153             | 153    | 153    | 153    | 1537    |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| claim                                                                     | 28523           | 125284 | 155497 | 160439 | 2062    |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| claimable                                                                 | 5097            | 9345   | 10654  | 10888  | 2075    |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| pauseClaims                                                               | 21603           | 36999  | 33740  | 55651  | 768     |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| startTimestamp                                                            | 2656            | 2656   | 2656   | 2656   | 1443    |
+|---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| totalClaimed                                                              | 2572            | 2572   | 2572   | 2572   | 769     |
+╰---------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭---------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/EmergencyControl.sol:EmergencyControl Contract |                 |       |        |       |         |
++====================================================================================================================+
+| Deployment Cost                                               | Deployment Size |       |        |       |         |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 1274123                                                       | 5744            |       |        |       |         |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                               |                 |       |        |       |         |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                 | Min             | Avg   | Median | Max   | # Calls |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| approvalsHalt                                                 | 2567            | 2567  | 2567   | 2567  | 256     |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| approvalsUnhalt                                               | 2683            | 2683  | 2683   | 2683  | 256     |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| dao                                                           | 2383            | 2383  | 2383   | 2383  | 256     |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| lastToggleTs                                                  | 2356            | 2356  | 2356   | 2356  | 256     |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| memberCount                                                   | 2322            | 2322  | 2322   | 2322  | 512     |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| minCooldown                                                   | 2673            | 2673  | 2673   | 2673  | 512     |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setCooldown                                                   | 23680           | 28458 | 28472  | 33217 | 512     |
+|---------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| threshold                                                     | 2394            | 2394  | 2394   | 2394  | 256     |
+╰---------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/ProofScoreBurnRouter.sol:ProofScoreBurnRouter Contract |                 |       |        |       |         |
++============================================================================================================================+
+| Deployment Cost                                                       | Deployment Size |       |        |       |         |
+|-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 547580                                                                | 2360            |       |        |       |         |
+|-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                       |                 |       |        |       |         |
+|-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                         | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| adjustScore                                                           | 33750           | 33809 | 33787  | 34010 | 256     |
+|-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| baseBurnRate                                                          | 2469            | 2469  | 2469   | 2469  | 512     |
+|-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| maxBurnRate                                                           | 2452            | 2452  | 2452   | 2452  | 768     |
+|-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| route                                                                 | 35745           | 48957 | 50797  | 50893 | 4622    |
+|-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| sanctumRate                                                           | 2265            | 2265  | 2265   | 2265  | 1536    |
+╰-----------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭---------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/Seer.sol:Seer Contract |                 |       |        |       |         |
++============================================================================================+
+| Deployment Cost                       | Deployment Size |       |        |       |         |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| 915503                                | 4028            |       |        |       |         |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+|                                       |                 |       |        |       |         |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                         | Min             | Avg   | Median | Max   | # Calls |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| adjustScore                           | 24654           | 42810 | 42723  | 60883 | 512     |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| baseScore                             | 2584            | 2584  | 2584   | 2584  | 256     |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| dao                                   | 2351            | 2351  | 2351   | 2351  | 256     |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| flag                                  | 24413           | 42464 | 42403  | 60393 | 512     |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| getScore                              | 2801            | 4211  | 4917   | 4917  | 768     |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| maxScore                              | 2496            | 2496  | 2496   | 2496  | 256     |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| minForGovernance                      | 2426            | 2426  | 2426   | 2426  | 256     |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| minScore                              | 2265            | 2265  | 2265   | 2265  | 256     |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| profiles                              | 2754            | 2754  | 2754   | 2754  | 256     |
+|---------------------------------------+-----------------+-------+--------+-------+---------|
+| setPolicy                             | 24011           | 30083 | 30064  | 36130 | 512     |
+╰---------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭----------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| contracts-prod/VFIDECommerce.sol:CommerceEscrow Contract |                 |        |        |        |         |
++=================================================================================================================+
+| Deployment Cost                                          | Deployment Size |        |        |        |         |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 877424                                                   | 3837            |        |        |        |         |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                          |                 |        |        |        |         |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                            | Min             | Avg    | Median | Max    | # Calls |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| dispute                                                  | 44651           | 44735  | 44735  | 44819  | 512     |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| escrows                                                  | 15180           | 15180  | 15180  | 15180  | 768     |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| markFunded                                               | 36497           | 36497  | 36497  | 36497  | 1280    |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| open                                                     | 21955           | 202877 | 200149 | 220061 | 2474    |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| refund                                                   | 76319           | 76319  | 76319  | 76319  | 256     |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| release                                                  | 63178           | 63178  | 63178  | 63178  | 256     |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| resolve                                                  | 63375           | 63375  | 63375  | 63375  | 256     |
+╰----------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| contracts-prod/VFIDECommerce.sol:MerchantRegistry Contract |                 |        |        |        |         |
++===================================================================================================================+
+| Deployment Cost                                            | Deployment Size |        |        |        |         |
+|------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 720947                                                     | 3162            |        |        |        |         |
+|------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                            |                 |        |        |        |         |
+|------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                              | Min             | Avg    | Median | Max    | # Calls |
+|------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| addMerchant                                                | 40879           | 102405 | 107759 | 107759 | 2049    |
+|------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| info                                                       | 7279            | 7279   | 7279   | 7279   | 2473    |
+|------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| minScore                                                   | 2306            | 2306   | 2306   | 2306   | 256     |
+╰------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭-------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/VFIDEFinance.sol:StablecoinRegistry Contract |                 |       |        |       |         |
++==================================================================================================================+
+| Deployment Cost                                             | Deployment Size |       |        |       |         |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 819013                                                      | 3585            |       |        |       |         |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                             |                 |       |        |       |         |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                               | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| addAsset                                                    | 24308           | 24308 | 24308  | 24308 | 1       |
+╰-------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭---------------------------------------------------+-----------------+------+--------+------+---------╮
+| contracts-prod/VFIDEToken.sol:VFIDEToken Contract |                 |      |        |      |         |
++======================================================================================================+
+| Deployment Cost                                   | Deployment Size |      |        |      |         |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| 1857326                                           | 9002            |      |        |      |         |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+|                                                   |                 |      |        |      |         |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| Function Name                                     | Min             | Avg  | Median | Max  | # Calls |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| DEV_RESERVE_SUPPLY                                | 711             | 711  | 711    | 711  | 512     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| MAX_SUPPLY                                        | 378             | 378  | 378    | 378  | 768     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| PRESALE_SUPPLY_CAP                                | 444             | 444  | 444    | 444  | 512     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| allowance                                         | 3318            | 3318 | 3318   | 3318 | 256     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| decimals                                          | 334             | 334  | 334    | 334  | 256     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| name                                              | 483             | 483  | 483    | 483  | 256     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| owner                                             | 2791            | 2791 | 2791   | 2791 | 256     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| policyLocked                                      | 2722            | 2722 | 2722   | 2722 | 256     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| presale                                           | 3119            | 3119 | 3119   | 3119 | 256     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| presaleMinted                                     | 2682            | 2682 | 2682   | 2682 | 512     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| symbol                                            | 989             | 989  | 989    | 989  | 256     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| totalSupply                                       | 2371            | 2371 | 2371   | 2371 | 1280    |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| treasurySink                                      | 2772            | 2772 | 2772   | 2772 | 256     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| vaultHub                                          | 2684            | 2684 | 2684   | 2684 | 256     |
+|---------------------------------------------------+-----------------+------+--------+------+---------|
+| vaultOnly                                         | 2271            | 2271 | 2271   | 2271 | 256     |
+╰---------------------------------------------------+-----------------+------+--------+------+---------╯
+
+╭---------------------------------------------+-----------------+------+--------+------+---------╮
+| contracts-prod/VFIDETrust.sol:Seer Contract |                 |      |        |      |         |
++================================================================================================+
+| Deployment Cost                             | Deployment Size |      |        |      |         |
+|---------------------------------------------+-----------------+------+--------+------+---------|
+| 1141671                                     | 5202            |      |        |      |         |
+|---------------------------------------------+-----------------+------+--------+------+---------|
+|                                             |                 |      |        |      |         |
+|---------------------------------------------+-----------------+------+--------+------+---------|
+| Function Name                               | Min             | Avg  | Median | Max  | # Calls |
+|---------------------------------------------+-----------------+------+--------+------+---------|
+| NEUTRAL                                     | 521             | 521  | 521    | 521  | 1       |
+|---------------------------------------------+-----------------+------+--------+------+---------|
+| getScore                                    | 2931            | 2931 | 2931   | 2931 | 1       |
+╰---------------------------------------------+-----------------+------+--------+------+---------╯
+
+╭---------------------------------------------------------------------+-----------------+--------+---------+---------+---------╮
+| contracts-prod/VaultInfrastructure.sol:VaultInfrastructure Contract |                 |        |         |         |         |
++==============================================================================================================================+
+| Deployment Cost                                                     | Deployment Size |        |         |         |         |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+| 2126046                                                             | 9601            |        |         |         |         |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+|                                                                     |                 |        |         |         |         |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+| Function Name                                                       | Min             | Avg    | Median  | Max     | # Calls |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+| dao                                                                 | 2372            | 2372   | 2372    | 2372    | 256     |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+| ensureVault                                                         | 21747           | 642439 | 1106610 | 1106826 | 1792    |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+| owner                                                               | 2459            | 2459   | 2459    | 2459    | 256     |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+| securityHub                                                         | 2504            | 2504   | 2504    | 2504    | 256     |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+| setVFIDE                                                            | 23683           | 23828  | 23911   | 23911   | 256     |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+| vaultOf                                                             | 2428            | 2428   | 2428    | 2428    | 256     |
+|---------------------------------------------------------------------+-----------------+--------+---------+---------+---------|
+| vfideToken                                                          | 2526            | 2526   | 2526    | 2526    | 256     |
+╰---------------------------------------------------------------------+-----------------+--------+---------+---------+---------╯
+
+╭-------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/ERC20Mock.sol:ERC20Mock Contract |                 |       |        |       |         |
++============================================================================================================+
+| Deployment Cost                                       | Deployment Size |       |        |       |         |
+|-------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 520679                                                | 2885            |       |        |       |         |
+|-------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                       |                 |       |        |       |         |
+|-------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                         | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| approve                                               | 46249           | 46249 | 46249  | 46249 | 773     |
+|-------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| balanceOf                                             | 2530            | 2530  | 2530   | 2530  | 2852    |
+|-------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| mint                                                  | 50992           | 54173 | 51088  | 68200 | 1566    |
+╰-------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/PanicGuardMock.sol:PanicGuardMock Contract |                 |       |        |       |         |
++======================================================================================================================+
+| Deployment Cost                                                 | Deployment Size |       |        |       |         |
+|-----------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 131955                                                          | 390             |       |        |       |         |
+|-----------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                 |                 |       |        |       |         |
+|-----------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                   | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| globalRisk                                                      | 2312            | 2312  | 2312   | 2312  | 1280    |
+|-----------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setGlobalRisk                                                   | 43525           | 43525 | 43525  | 43525 | 256     |
+╰-----------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/PresaleMock.sol:PresaleMock Contract |                 |       |        |       |         |
++================================================================================================================+
+| Deployment Cost                                           | Deployment Size |       |        |       |         |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 94699                                                     | 215             |       |        |       |         |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                           |                 |       |        |       |         |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                             | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| presaleStartTime                                          | 2307            | 2307  | 2307   | 2307  | 3989    |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setPresaleStartTime                                       | 43459           | 43459 | 43459  | 43459 | 12      |
+╰-----------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/SecurityHubMock.sol:SecurityHubMock Contract |                 |       |        |       |         |
++========================================================================================================================+
+| Deployment Cost                                                   | Deployment Size |       |        |       |         |
+|-------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 124795                                                            | 357             |       |        |       |         |
+|-------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                   |                 |       |        |       |         |
+|-------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                     | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| isLocked                                                          | 2409            | 2409  | 2409   | 2409  | 1806    |
+|-------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setLocked                                                         | 43810           | 44049 | 44050  | 44050 | 257     |
+╰-------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/SeerMock.sol:SeerMock Contract |                 |       |        |       |         |
++==========================================================================================================+
+| Deployment Cost                                     | Deployment Size |       |        |       |         |
+|-----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 199658                                              | 619             |       |        |       |         |
+|-----------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                     |                 |       |        |       |         |
+|-----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                       | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getScore                                            | 2587            | 2587  | 2587   | 2587  | 12775   |
+|-----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| minForGovernance                                    | 2334            | 2334  | 2334   | 2334  | 11      |
+|-----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| minForMerchant                                      | 2457            | 2457  | 2457   | 2457  | 9       |
+|-----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setMinForGovernance                                 | 26590           | 26590 | 26590  | 26590 | 11      |
+|-----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setMinForMerchant                                   | 26568           | 26568 | 26568  | 26568 | 9       |
+|-----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setScore                                            | 21932           | 42661 | 43844  | 43868 | 13459   |
+╰-----------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/StablecoinRegistryPresaleMock.sol:StablecoinRegistryPresaleMock Contract |                 |       |        |       |         |
++====================================================================================================================================================+
+| Deployment Cost                                                                               | Deployment Size |       |        |       |         |
+|-----------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 170992                                                                                        | 485             |       |        |       |         |
+|-----------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                               |                 |       |        |       |         |
+|-----------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                                 | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setAllowed                                                                                    | 24108           | 24108 | 24108  | 24108 | 1       |
+╰-----------------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/VFIDEFinanceMocks.sol:EcoTreasuryVaultMock Contract |                 |       |        |       |         |
++===============================================================================================================================+
+| Deployment Cost                                                          | Deployment Size |       |        |       |         |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 196111                                                                   | 717             |       |        |       |         |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                          |                 |       |        |       |         |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                            | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| balanceOf                                                                | 2472            | 2472  | 2472   | 2472  | 768     |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| depositStable                                                            | 26976           | 35904 | 44016  | 44124 | 1471    |
+|--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| send                                                                     | 27875           | 27910 | 27911  | 27923 | 256     |
+╰--------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/VFIDEFinanceMocks.sol:StablecoinRegistryMock Contract |                 |       |        |       |         |
++=================================================================================================================================+
+| Deployment Cost                                                            | Deployment Size |       |        |       |         |
+|----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 257070                                                                     | 1000            |       |        |       |         |
+|----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                            |                 |       |        |       |         |
+|----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                              | Min             | Avg   | Median | Max   | # Calls |
+|----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| addAsset                                                                   | 24450           | 27824 | 24450  | 69021 | 278     |
+|----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| isWhitelisted                                                              | 2409            | 2409  | 2409   | 2409  | 2       |
+|----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| removeAsset                                                                | 24309           | 25179 | 25179  | 26049 | 2       |
+|----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setSymbolHint                                                              | 26723           | 26739 | 26739  | 26755 | 2       |
+|----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| tokenDecimals                                                              | 2522            | 2522  | 2522   | 2522  | 1       |
+╰----------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭---------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/VFIDEPresaleMock.sol:VFIDEPresaleMock Contract |                 |       |        |       |         |
++==========================================================================================================================+
+| Deployment Cost                                                     | Deployment Size |       |        |       |         |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 421351                                                              | 1370            |       |        |       |         |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                     |                 |       |        |       |         |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                       | Min             | Avg   | Median | Max   | # Calls |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| bought                                                              | 2516            | 2516  | 2516   | 2516  | 512     |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| buy                                                                 | 24526           | 39487 | 53322  | 53358 | 776     |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| maxPerAddress                                                       | 2344            | 2344  | 2344   | 2344  | 4       |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| referralBps                                                         | 215             | 215   | 215    | 215   | 1       |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setActive                                                           | 21789           | 21789 | 21789  | 21789 | 256     |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setTierEnabled                                                      | 22095           | 23141 | 24107  | 24119 | 257     |
+|---------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| tierPrices                                                          | 321             | 321   | 321    | 321   | 4       |
+╰---------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| contracts-prod/mocks/VaultHubMock.sol:VaultHubMock Contract |                 |       |        |       |         |
++==================================================================================================================+
+| Deployment Cost                                             | Deployment Size |       |        |       |         |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 181608                                                      | 619             |       |        |       |         |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                             |                 |       |        |       |         |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                               | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| ensureVault                                                 | 44307           | 44307 | 44307  | 44307 | 5848    |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setVault                                                    | 43864           | 43886 | 43888  | 43888 | 274     |
+|-------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| vaultOf                                                     | 2423            | 2423  | 2423   | 2423  | 11152   |
+╰-------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭---------------------------------------------------------------------------+-----------------+------+--------+------+---------╮
+| contracts-prod/mocks/VaultHubPresaleMock.sol:VaultHubPresaleMock Contract |                 |      |        |      |         |
++==============================================================================================================================+
+| Deployment Cost                                                           | Deployment Size |      |        |      |         |
+|---------------------------------------------------------------------------+-----------------+------+--------+------+---------|
+| 140759                                                                    | 430             |      |        |      |         |
+|---------------------------------------------------------------------------+-----------------+------+--------+------+---------|
+|                                                                           |                 |      |        |      |         |
+|---------------------------------------------------------------------------+-----------------+------+--------+------+---------|
+| Function Name                                                             | Min             | Avg  | Median | Max  | # Calls |
+|---------------------------------------------------------------------------+-----------------+------+--------+------+---------|
+| vaultOf                                                                   | 2387            | 2387 | 2387   | 2387 | 9       |
+╰---------------------------------------------------------------------------+-----------------+------+--------+------+---------╯
+
+╭----------------------------------------------------------+-----------------+-----+--------+-------+---------╮
+| test/foundry/zk/VFIDETokenFuzz.t.sol:LedgerStub Contract |                 |     |        |       |         |
++=============================================================================================================+
+| Deployment Cost                                          | Deployment Size |     |        |       |         |
+|----------------------------------------------------------+-----------------+-----+--------+-------+---------|
+| 130345                                                   | 383             |     |        |       |         |
+|----------------------------------------------------------+-----------------+-----+--------+-------+---------|
+|                                                          |                 |     |        |       |         |
+|----------------------------------------------------------+-----------------+-----+--------+-------+---------|
+| Function Name                                            | Min             | Avg | Median | Max   | # Calls |
+|----------------------------------------------------------+-----------------+-----+--------+-------+---------|
+| logEvent                                                 | 543             | 564 | 543    | 22899 | 6221    |
+|----------------------------------------------------------+-----------------+-----+--------+-------+---------|
+| logSystemEvent                                           | 464             | 597 | 464    | 22876 | 6204    |
+╰----------------------------------------------------------+-----------------+-----+--------+-------+---------╯
+
+╭------------------------------------------------------------+-----------------+-----+--------+-----+---------╮
+| test/foundry/zk/VFIDETokenFuzz.t.sol:VaultHubStub Contract |                 |     |        |     |         |
++=============================================================================================================+
+| Deployment Cost                                            | Deployment Size |     |        |     |         |
+|------------------------------------------------------------+-----------------+-----+--------+-----+---------|
+| 82833                                                      | 160             |     |        |     |         |
+|------------------------------------------------------------+-----------------+-----+--------+-----+---------|
+|                                                            |                 |     |        |     |         |
+|------------------------------------------------------------+-----------------+-----+--------+-----+---------|
+| Function Name                                              | Min             | Avg | Median | Max | # Calls |
+|------------------------------------------------------------+-----------------+-----+--------+-----+---------|
+| isVault                                                    | 81              | 81  | 81     | 81  | 1       |
+╰------------------------------------------------------------+-----------------+-----+--------+-----+---------╯
+
+
+Ran 16 test suites in 7.89s (16.04s CPU time): 115 tests passed, 11 failed, 0 skipped (126 total tests)
+
+Failing tests:
+Encountered 1 failing test in test/foundry/AuditFixes.t.sol:AuditFixesTest
+[FAIL: vm.getCode: multiple matching artifacts found] setUp() (gas: 0)
+
+Encountered 2 failing tests in test/foundry/DevReserveVestingVault.t.sol:DevReserveVestingVaultTest
+[FAIL: Nothing claimable after cliff: 0 <= 0; counterexample: calldata=0xe77003ff0000000000000000000000000000000000000000000000000000000000000e29000000000000000000000000000000000000000000000000000000000076a700 args=[3625, 7776000 [7.776e6]]] testFuzz_CliffStrictlyEnforced(uint32,uint32) (runs: 133, μ: 53270, ~: 53270)
+[FAIL: Total claimed doesn't match received: 34166666237997256515775034 != 32500000000000000000000000; counterexample: calldata=0x2afb7779000000000000000000000000000000000000000000000000000000000000000f args=[15]] testFuzz_MultipleClaimsAccumulate(uint8) (runs: 0, μ: 0, ~: 0)
+
+Encountered 1 failing test in test/foundry/Finance.t.sol:FinanceSmoke
+[FAIL: FI_Zero()] testNeutralAddAssetWithBypass() (gas: 1056978928)
+
+Encountered 6 failing tests in test/foundry/VFIDEPresale.t.sol:VFIDEPresaleTest
+[FAIL: next call did not revert as expected; counterexample: calldata=0xeab9ddad0000000000000000000000000000000000000000000000000000000000000184 args=[388]] testFuzz_CannotPurchaseWithLockedVault(uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: Total purchases don't accumulate correctly: 0 < 3; counterexample: calldata=0xe1398b4a00000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000001 args=[3, 1]] testFuzz_MultiplePurchasesAccumulate(uint8,uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: next call did not revert as expected; counterexample: calldata=0xefd5d04700000000000000000000000029c74c48a32cdf0c6f348769bcb576bc55fdec0e0000000000000000000000000000000000000000000000000000000000d0a2bd args=[0x29c74C48A32cDF0C6F348769BCb576bc55FDEC0E, 13673149 [1.367e7]]] testFuzz_OnlyWhitelistedStablecoins(address,uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: next call did not revert as expected; counterexample: calldata=0xed8f2a1c000000000000000000000000000000000000000000000000000002d27466905d args=[3102919266397 [3.102e12]]] testFuzz_PurchaseRespectsCap(uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: Buyer bonus incorrect: 0 !~= 1 (max delta: 1.0000000000000000%, real delta: 100.0000000000000000%); counterexample: calldata=0x60a3e74b0000000000000000000000000000000000000000000000000000000000000001 args=[1]] testFuzz_ReferralBonusCalculation(uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: Received less than expected: 0 < 648133333333333333; counterexample: calldata=0xd7a6bc7700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004bf4 args=[0, 19444 [1.944e4]]] testFuzz_TierPricingConsistency(uint8,uint256) (runs: 0, μ: 0, ~: 0)
+
+Encountered 1 failing test in test/foundry/zk/VFIDETokenFuzz.t.sol:VFIDETokenFuzz
+[FAIL: EvmError: Revert; counterexample: calldata=0xc33e44de0000000000000000000000005be1c3b9e5f05930c53c3a683b03d6fd21ceea070000000000000000000000007423bc4c7460958e0264be0f8ea67b510fb950dafffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe args=[0x5be1C3B9e5F05930c53c3a683b03d6Fd21CeEA07, 0x7423BC4C7460958E0264Be0f8Ea67b510Fb950dA, 115792089237316195423570985008687907853269984665640564039457584007913129639934 [1.157e77]]] testFuzz_TransferInvariant(address,address,uint256) (runs: 0, μ: 0, ~: 0)
+
+Encountered a total of 11 failing tests, 115 tests succeeded

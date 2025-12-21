@@ -1,0 +1,441 @@
+nohup: ignoring input
+No files changed, compilation skipped
+
+Ran 1 test for test/foundry/AuditFixes.t.sol:AuditFixesTest
+[FAIL: EvmError: Revert] setUp() (gas: 0)
+Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 1.00ms (0.00ns CPU time)
+
+Ran 8 tests for test/foundry/EmergencyControl.t.sol:EmergencyControlFuzzTest
+[PASS] testFuzz_approvalsStartZero(uint256) (runs: 256, μ: 9256, ~: 9256)
+[PASS] testFuzz_daoCanSetCooldown(uint64) (runs: 256, μ: 24191, ~: 24191)
+[PASS] testFuzz_daoIsSet(address) (runs: 256, μ: 9792, ~: 9792)
+[PASS] testFuzz_lastToggleTsInitiallyZero(uint256) (runs: 256, μ: 7813, ~: 7813)
+[PASS] testFuzz_memberCountStartsZero(address) (runs: 256, μ: 7898, ~: 7898)
+[PASS] testFuzz_minCooldownInitialized(address) (runs: 256, μ: 8303, ~: 8303)
+[PASS] testFuzz_onlyDaoCanSetCooldown(address,uint64) (runs: 256, μ: 14387, ~: 14387)
+[PASS] testFuzz_thresholdBounded(uint8) (runs: 256, μ: 8829, ~: 8829)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 49.24ms (48.84ms CPU time)
+
+Ran 1 test for test/foundry/Finance.t.sol:FinanceSmoke
+[PASS] testNeutralAddAssetWithBypass() (gas: 530558)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 372.44µs (124.66µs CPU time)
+
+Ran 19 tests for test/foundry/GovernanceHooks.t.sol:GovernanceHooksTest
+[PASS] testFuzz_OnFinalized(uint256,bool) (runs: 256, μ: 36685, ~: 36685)
+[PASS] testFuzz_OnProposalQueued(uint256,address,uint256) (runs: 256, μ: 37061, ~: 37061)
+[PASS] testFuzz_OnVoteCast(uint256,address,bool) (runs: 256, μ: 39932, ~: 39932)
+[PASS] test_CompleteProposalLifecycle() (gas: 49930)
+[PASS] test_Deployment() (gas: 14950)
+[PASS] test_DeploymentWithZeroModules() (gas: 214824)
+[PASS] test_MultipleProposalsSimultaneous() (gas: 53408)
+[PASS] test_OnFinalized() (gas: 36744)
+[PASS] test_OnFinalizedFailed() (gas: 36313)
+[PASS] test_OnFinalizedPassed() (gas: 36876)
+[PASS] test_OnFinalizedWithoutLedger() (gas: 13398)
+[PASS] test_OnProposalQueued() (gas: 38822)
+[PASS] test_OnProposalQueuedMultiple() (gas: 47558)
+[PASS] test_OnProposalQueuedWithoutLedger() (gas: 15034)
+[PASS] test_OnVoteCast() (gas: 38822)
+[PASS] test_OnVoteCastSupport() (gas: 43245)
+[PASS] test_OnVoteCastWithoutLedger() (gas: 15628)
+[PASS] test_SetModules() (gas: 185224)
+[PASS] test_SetModulesToZero() (gas: 10728)
+Suite result: ok. 19 passed; 0 failed; 0 skipped; finished in 29.53ms (29.32ms CPU time)
+
+Ran 8 tests for test/foundry/DAO.t.sol:DAOFuzzTest
+[PASS] testFuzz_adminIsSet(address) (runs: 256, μ: 10471, ~: 10471)
+[PASS] testFuzz_cannotSetInvalidQuorum(uint8) (runs: 256, μ: 21316, ~: 21316)
+[PASS] testFuzz_modulesAreSet(address) (runs: 256, μ: 20121, ~: 20121)
+[PASS] testFuzz_onlyAdminCanSetParams(address,uint16,uint8) (runs: 256, μ: 15649, ~: 15649)
+[PASS] testFuzz_paramsValidRange(uint16,uint8) (runs: 256, μ: 22896, ~: 22896)
+[PASS] testFuzz_proposalCountStartsZero(uint256) (runs: 256, μ: 7955, ~: 7955)
+[PASS] testFuzz_quorumBounded(uint256) (runs: 256, μ: 8456, ~: 8456)
+[PASS] testFuzz_votingPeriodBounded(uint256) (runs: 256, μ: 8481, ~: 8481)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 92.10ms (91.81ms CPU time)
+
+Ran 46 tests for test/foundry/SanctumVault.t.sol:SanctumVaultTest
+[PASS] testFuzz_DepositAmount(uint96) (runs: 256, μ: 77322, ~: 77322)
+[PASS] testFuzz_DisbursementAmount(uint96,uint96) (runs: 256, μ: 542155, ~: 542155)
+[PASS] testFuzz_MultipleApprovers(uint8) (runs: 256, μ: 236700, ~: 171909)
+[PASS] test_AddApprover() (gas: 71937)
+[PASS] test_ApproveCharity() (gas: 170746)
+[PASS] test_ApproveDisbursement() (gas: 471900)
+[PASS] test_ApproveMultipleCharities() (gas: 407520)
+[PASS] test_Deployment() (gas: 21986)
+[PASS] test_DepositMultipleTimes() (gas: 91842)
+[PASS] test_DepositStablecoin() (gas: 63782)
+[PASS] test_DepositVFIDE() (gas: 79935)
+[PASS] test_ExecuteDisbursement() (gas: 544089)
+[PASS] test_GetDisbursementDetails() (gas: 443716)
+[PASS] test_GetVaultBalances() (gas: 122578)
+[PASS] test_InitialApprovers() (gas: 24322)
+[PASS] test_ProposeDisbursement() (gas: 441276)
+[PASS] test_ReceiveNativeToken() (gas: 27155)
+[PASS] test_RejectDisbursement() (gas: 444447)
+[PASS] test_RemoveApprover() (gas: 38591)
+[PASS] test_RemoveCharity() (gas: 154064)
+[PASS] test_RevertAddApproverAlreadyApprover() (gas: 19470)
+[PASS] test_RevertAddApproverZeroAddress() (gas: 14513)
+[PASS] test_RevertApproveAlreadyApproved() (gas: 472919)
+[PASS] test_RevertApproveCharityAlreadyApproved() (gas: 164768)
+[PASS] test_RevertApproveCharityFromNonDAO() (gas: 17592)
+[PASS] test_RevertApproveCharityZeroAddress() (gas: 15804)
+[PASS] test_RevertApproveOwnProposal() (gas: 440879)
+[PASS] test_RevertDeploymentWithZeroDAO() (gas: 108701)
+[PASS] test_RevertDepositZeroAddress() (gas: 17897)
+[PASS] test_RevertDepositZeroAmount() (gas: 20107)
+[PASS] test_RevertExecuteAlreadyExecuted() (gas: 545026)
+[PASS] test_RevertExecuteInsufficientBalance() (gas: 233290)
+[PASS] test_RevertExecuteWithoutEnoughApprovals() (gas: 446073)
+[PASS] test_RevertProposeFromNonApprover() (gas: 170991)
+[PASS] test_RevertProposeToUnapprovedCharity() (gas: 86737)
+[PASS] test_RevertProposeZeroAmount() (gas: 170363)
+[PASS] test_RevertRejectAlreadyExecuted() (gas: 542001)
+[PASS] test_RevertRemoveApproverNotApprover() (gas: 18519)
+[PASS] test_RevertRemoveCharityNotApproved() (gas: 19686)
+[PASS] test_RevertSetApprovalsRequiredTooHigh() (gas: 16939)
+[PASS] test_RevertSetApprovalsRequiredZero() (gas: 15231)
+[PASS] test_RevertSetDAOFromNonDAO() (gas: 15196)
+[PASS] test_RevertSetDAOToZero() (gas: 14246)
+[PASS] test_SetApprovalsRequired() (gas: 29795)
+[PASS] test_SetDAO() (gas: 25075)
+[PASS] test_SetLedger() (gas: 126520)
+Suite result: ok. 46 passed; 0 failed; 0 skipped; finished in 201.26ms (199.81ms CPU time)
+
+Ran 41 tests for test/foundry/MerchantPortal.t.sol:MerchantPortalTest
+[PASS] testFuzz_ProcessPaymentAmount(uint96) (runs: 256, μ: 330576, ~: 334761)
+[PASS] testFuzz_ProtocolFee(uint16) (runs: 256, μ: 25715, ~: 26383)
+[PASS] testFuzz_RegisterMerchantWithValidScore(uint16) (runs: 256, μ: 268493, ~: 268493)
+[PASS] test_Deployment() (gas: 39976)
+[PASS] test_GetMerchantInfo() (gas: 178215)
+[PASS] test_GetMerchantVolumeAndTransactions() (gas: 413635)
+[PASS] test_ProcessMultiplePayments() (gas: 367857)
+[PASS] test_ProcessPayment() (gas: 344277)
+[PASS] test_ProcessPaymentWithDifferentFees() (gas: 349149)
+[PASS] test_ProcessPaymentWithStablecoin() (gas: 318354)
+[PASS] test_ProcessPaymentWithZeroFee() (gas: 311536)
+[PASS] test_RegisterMerchant() (gas: 181556)
+[PASS] test_RegisterMerchantWithMinimumScore() (gas: 267407)
+[PASS] test_RegisterMultipleMerchants() (gas: 311477)
+[PASS] test_ReinstateMerchant() (gas: 192918)
+[PASS] test_RemoveAcceptedToken() (gas: 23429)
+[PASS] test_RevertDeploymentWithZeroDAO() (gas: 119657)
+[PASS] test_RevertDeploymentWithZeroVaultHub() (gas: 120815)
+[PASS] test_RevertProcessPaymentCustomerNoVault() (gas: 192482)
+[PASS] test_RevertProcessPaymentCustomerVaultLocked() (gas: 227119)
+[PASS] test_RevertProcessPaymentNotMerchant() (gas: 24525)
+[PASS] test_RevertProcessPaymentSuspendedMerchant() (gas: 195040)
+[PASS] test_RevertProcessPaymentTokenNotAccepted() (gas: 185074)
+[PASS] test_RevertProcessPaymentZeroAmount() (gas: 183762)
+[PASS] test_RevertProcessPaymentZeroCustomer() (gas: 181686)
+[PASS] test_RevertProcessPaymentZeroToken() (gas: 181894)
+[PASS] test_RevertRegisterMerchantAlreadyRegistered() (gas: 174340)
+[PASS] test_RevertRegisterMerchantLowTrustScore() (gas: 46169)
+[PASS] test_RevertReinstateMerchantNotRegistered() (gas: 17958)
+[PASS] test_RevertSetFeeSinkZero() (gas: 15652)
+[PASS] test_RevertSetMinMerchantScoreInvalid() (gas: 14540)
+[PASS] test_RevertSetModulesFromNonDAO() (gas: 23803)
+[PASS] test_RevertSetProtocolFeeTooHigh() (gas: 14619)
+[PASS] test_RevertSuspendMerchantFromNonDAO() (gas: 177798)
+[PASS] test_RevertSuspendMerchantNotRegistered() (gas: 18323)
+[PASS] test_SetAcceptedToken() (gas: 44060)
+[PASS] test_SetFeeSink() (gas: 26472)
+[PASS] test_SetMinMerchantScore() (gas: 27571)
+[PASS] test_SetModules() (gas: 360450)
+[PASS] test_SetProtocolFee() (gas: 27294)
+[PASS] test_SuspendMerchant() (gas: 189096)
+Suite result: ok. 41 passed; 0 failed; 0 skipped; finished in 191.19ms (189.99ms CPU time)
+
+Ran 9 tests for test/foundry/Seer.t.sol:SeerFuzzTest
+[PASS] testFuzz_daoCanAdjustScore(address,uint16) (runs: 256, μ: 53502, ~: 53514)
+[PASS] testFuzz_daoCanFlag(address,uint8) (runs: 256, μ: 51620, ~: 51620)
+[PASS] testFuzz_daoCanSetPolicy(uint16,uint16,uint16) (runs: 256, μ: 28820, ~: 28820)
+[PASS] testFuzz_daoIsSet(address) (runs: 256, μ: 9760, ~: 9760)
+[PASS] testFuzz_defaultScoreIsZero(address) (runs: 256, μ: 13555, ~: 13555)
+[PASS] testFuzz_governanceMinIsBasePlus100(address) (runs: 256, μ: 7891, ~: 7891)
+[PASS] testFuzz_onlyDaoCanAdjustScore(address,address,uint16) (runs: 256, μ: 15349, ~: 15349)
+[PASS] testFuzz_onlyDaoCanFlag(address,address) (runs: 256, μ: 14987, ~: 14987)
+[PASS] testFuzz_onlyDaoCanSetPolicy(address,uint16,uint16,uint16) (runs: 256, μ: 14275, ~: 14275)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 120.66ms (120.38ms CPU time)
+
+Ran 28 tests for test/foundry/SystemHandover.t.sol:SystemHandoverTest
+[PASS] testFuzz_ExtendOnceThreshold(uint16) (runs: 256, μ: 63305, ~: 63413)
+[PASS] testFuzz_SetParamsDelay(uint64) (runs: 256, μ: 28433, ~: 28434)
+[PASS] testFuzz_SetParamsScore(uint16) (runs: 256, μ: 28458, ~: 28458)
+[PASS] test_ArmFromPresale() (gas: 56168)
+[PASS] test_ArmFromPresaleIdempotent() (gas: 51993)
+[PASS] test_CompleteHandoverLifecycle() (gas: 134457)
+[PASS] test_Deployment() (gas: 36281)
+[PASS] test_ExecuteHandover() (gas: 128068)
+[PASS] test_ExecuteHandoverAfterExtension() (gas: 130497)
+[PASS] test_ExecuteHandoverDefaultAdmin() (gas: 123486)
+[PASS] test_ExtendOnceIfNeeded() (gas: 62428)
+[PASS] test_ExtendOnceNotNeededHighScore() (gas: 60973)
+[PASS] test_MultipleExtensionAttempts() (gas: 61712)
+[PASS] test_RevertArmFromPresaleNotStarted() (gas: 18934)
+[PASS] test_RevertDeploymentZeroDAO() (gas: 68158)
+[PASS] test_RevertDeploymentZeroDevMultisig() (gas: 68406)
+[PASS] test_RevertDeploymentZeroSeer() (gas: 68740)
+[PASS] test_RevertDeploymentZeroTimelock() (gas: 68658)
+[PASS] test_RevertExecuteHandoverFromNonDev() (gas: 61385)
+[PASS] test_RevertExecuteHandoverTooEarly() (gas: 60979)
+[PASS] test_RevertExtendOnceExceededMaxExtensions() (gas: 61904)
+[PASS] test_RevertExtendOnceFromNonDev() (gas: 58451)
+[PASS] test_RevertSetLedgerFromNonDev() (gas: 90324)
+[PASS] test_RevertSetParamsFromNonDev() (gas: 13612)
+[PASS] test_SetLedger() (gas: 98819)
+[PASS] test_SetParams() (gas: 32850)
+[PASS] test_SetParamsMinimumDelay() (gas: 28138)
+[PASS] test_SetParamsUpdatesHandoverAt() (gas: 62781)
+Suite result: ok. 28 passed; 0 failed; 0 skipped; finished in 55.77ms (55.35ms CPU time)
+
+Ran 1 test for test/foundry/Trust.t.sol:TrustSmoke
+[PASS] testNeutralScoreUninitialized() (gas: 11532)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 318.73µs (29.41µs CPU time)
+
+Ran 11 tests for test/foundry/CouncilElection.t.sol:CouncilElectionTest
+[PASS] testFuzz_CandidateUnregister(uint16) (runs: 256, μ: 101888, ~: 101888)
+[PASS] testFuzz_CannotSetEmptyCouncil() (gas: 11818)
+[PASS] testFuzz_CouncilMembersSet(uint8) (runs: 256, μ: 357142, ~: 267538)
+[PASS] testFuzz_CouncilSizeLimits(uint8) (runs: 256, μ: 392797, ~: 253033)
+[PASS] testFuzz_MinScoreEnforced(uint16,uint16) (runs: 256, μ: 105025, ~: 96301)
+[PASS] testFuzz_MultipleCandidates(uint8) (runs: 256, μ: 985175, ~: 519923)
+[PASS] testFuzz_OnlyDAOCanSetCouncil(address) (runs: 256, μ: 40327, ~: 40327)
+[PASS] testFuzz_OnlyEligibleCanRegister(uint16) (runs: 256, μ: 99507, ~: 110437)
+[PASS] testFuzz_RefreshInterval(uint64) (runs: 256, μ: 33479, ~: 33479)
+[PASS] testFuzz_RefreshRemovesIneligible(uint16) (runs: 256, μ: 110582, ~: 112747)
+[PASS] testFuzz_TermDuration(uint64) (runs: 256, μ: 129674, ~: 129674)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 554.67ms (554.33ms CPU time)
+
+Ran 10 tests for test/foundry/VFIDEFinance.t.sol:VFIDEFinanceTest
+[PASS] testFuzz_CanRemoveAssets() (gas: 15965)
+[PASS] testFuzz_CannotAddAssetTwice() (gas: 515170)
+[PASS] testFuzz_CannotRemoveNonWhitelisted() (gas: 470632)
+[PASS] testFuzz_CannotUpdateNonWhitelisted() (gas: 470851)
+[PASS] testFuzz_DAOCanSend(uint256) (runs: 256, μ: 36811, ~: 36811)
+[PASS] testFuzz_DecimalsTracked() (gas: 10031)
+[PASS] testFuzz_MultipleDeposits(uint8) (runs: 256, μ: 38582, ~: 37441)
+[PASS] testFuzz_OnlyDAOCanAddAssets(address) (runs: 256, μ: 469413, ~: 469413)
+[PASS] testFuzz_SymbolHintUpdate() (gas: 15700)
+[PASS] testFuzz_TreasuryDeposit(uint256) (runs: 256, μ: 84527, ~: 84527)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 165.06ms (163.96ms CPU time)
+
+Ran 11 tests for test/foundry/DAOTimelock.t.sol:DAOTimelockTest
+[PASS] testFuzz_AdminTransfer(address) (runs: 256, μ: 114513, ~: 114513)
+[PASS] testFuzz_CanCancelQueued(uint256) (runs: 256, μ: 102041, ~: 102665)
+[PASS] testFuzz_CanExecuteAfterDelay(uint64) (runs: 256, μ: 118376, ~: 118376)
+[PASS] testFuzz_CannotExecuteEarly(uint64) (runs: 256, μ: 111147, ~: 111147)
+[PASS] testFuzz_CannotExecuteTwice(uint256) (runs: 256, μ: 121362, ~: 121362)
+[PASS] testFuzz_CannotQueueTwice(uint256) (runs: 256, μ: 121033, ~: 121733)
+[PASS] testFuzz_DelayUpdate(uint64) (runs: 256, μ: 29599, ~: 29599)
+[PASS] testFuzz_GlobalRiskAddsDelay(uint64) (runs: 256, μ: 148401, ~: 148401)
+[PASS] testFuzz_MultipleTransactions(uint8) (runs: 256, μ: 2101832, ~: 1323398)
+[PASS] testFuzz_OnlyAdminCanQueue(address) (runs: 256, μ: 12495, ~: 12495)
+[PASS] testFuzz_QueueDelayEnforced(uint64) (runs: 256, μ: 113651, ~: 113651)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 909.83ms (909.47ms CPU time)
+
+Ran 9 tests for test/foundry/VFIDECommerce.t.sol:VFIDECommerceTest
+[PASS] testFuzz_CannotOpenZeroAmount() (gas: 101535)
+[PASS] testFuzz_DAOCanResolveDispute(uint256,bool) (runs: 256, μ: 327333, ~: 327345)
+[PASS] testFuzz_DisputeChangesState(uint256) (runs: 256, μ: 314510, ~: 314510)
+[PASS] testFuzz_EscrowRequiresMerchant(uint256) (runs: 256, μ: 288998, ~: 288998)
+[PASS] testFuzz_EscrowStateTransitions(uint256) (runs: 256, μ: 312754, ~: 312754)
+[PASS] testFuzz_MerchantMinScore(uint16) (runs: 256, μ: 92364, ~: 76007)
+[PASS] testFuzz_MultipleEscrows(uint8,uint256) (runs: 256, μ: 657908, ~: 594477)
+[PASS] testFuzz_RefundSendsToBuyer(uint256) (runs: 256, μ: 323078, ~: 323078)
+[PASS] testFuzz_ReleaseSendsToMerchant(uint256) (runs: 256, μ: 320995, ~: 320995)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 904.56ms (903.99ms CPU time)
+Warning: Replayed invariant failure from "/workspaces/Vfide/cache/invariant/failures/VFIDETokenFuzz/invariant_TotalSupplyCap" file. Run `forge clean` or remove file to ignore failure and to continue invariant test campaign.
+
+Ran 2 tests for test/foundry/zk/VFIDETokenFuzz.t.sol:VFIDETokenFuzz
+[FAIL: invariant_TotalSupplyCap persisted failure revert]
+	[Sequence] (original: 1, shrunk: 1)
+		sender=0x000000000000003B30Bab63a2fB7b7363CAfB7B6 addr=[contracts-min/VFIDEToken.sol:VFIDEToken]0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9 calldata=setBurnRouter(address) args=[0x7C3D6D9F92Ad0869dED8E4Cb40410Bffd3b385d0]
+ invariant_TotalSupplyCap() (runs: 1, calls: 1, reverts: 1)
+[FAIL: EvmError: Revert; counterexample: calldata=0xc33e44de000000000000000000000000000000000000000000000000000000000000148100000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000268 args=[0x0000000000000000000000000000000000001481, 0x0000000000000000000000000000000000000080, 616]] testFuzz_TransferInvariant(address,address,uint256) (runs: 0, μ: 0, ~: 0)
+Suite result: FAILED. 0 passed; 2 failed; 0 skipped; finished in 2.49ms (1.86ms CPU time)
+
+Ran 15 tests for test/foundry/VFIDETokenSimple.t.sol:VFIDETokenSimpleTest
+[PASS] testFuzz_allowanceZeroSpender(address,uint256) (runs: 256, μ: 12098, ~: 12098)
+[PASS] testFuzz_constantsImmutable(uint256) (runs: 256, μ: 7681, ~: 7681)
+[PASS] testFuzz_devReserveCorrect(uint256) (runs: 256, μ: 9232, ~: 9232)
+[PASS] testFuzz_nameAndSymbol(uint256) (runs: 256, μ: 13164, ~: 13164)
+[PASS] testFuzz_ownerExists(uint256) (runs: 256, μ: 8182, ~: 8182)
+[PASS] testFuzz_policyLockedState(uint256) (runs: 256, μ: 8230, ~: 8230)
+[PASS] testFuzz_presaleCapNotExceeded(uint256) (runs: 256, μ: 8946, ~: 8946)
+[PASS] testFuzz_presaleInitiallyZero(uint256) (runs: 256, μ: 8868, ~: 8868)
+[PASS] testFuzz_presaleMintedBounded(uint256) (runs: 256, μ: 9120, ~: 9120)
+[PASS] testFuzz_totalSupplyBounded(uint256) (runs: 256, μ: 8701, ~: 8701)
+[PASS] testFuzz_totalSupplyConsistent(uint256) (runs: 256, μ: 8848, ~: 8848)
+[PASS] testFuzz_totalSupplyNonNegative(uint256) (runs: 256, μ: 7705, ~: 7705)
+[PASS] testFuzz_treasurySinkSet(uint256) (runs: 256, μ: 10254, ~: 10254)
+[PASS] testFuzz_vaultHubSet(uint256) (runs: 256, μ: 10369, ~: 10369)
+[PASS] testFuzz_vaultOnlyState(uint256) (runs: 256, μ: 7599, ~: 7599)
+Suite result: ok. 15 passed; 0 failed; 0 skipped; finished in 121.97ms (121.63ms CPU time)
+
+Ran 11 tests for test/foundry/ProofScoreBurnRouter.t.sol:ProofScoreBurnRouterTest
+[PASS] testFuzz_AdjustScoreEmits(uint16,uint16,bool) (runs: 256, μ: 41379, ~: 44928)
+[PASS] testFuzz_BurnAmountConsistency(uint256,uint16) (runs: 256, μ: 67842, ~: 73710)
+[PASS] testFuzz_BurnRateMonotonic(uint16,uint16,uint256) (runs: 256, μ: 75454, ~: 75946)
+[PASS] testFuzz_BurnRateNeverExceedsMax(uint16,uint256) (runs: 256, μ: 59648, ~: 63566)
+[PASS] testFuzz_BurnRateWithScore(uint16) (runs: 256, μ: 59342, ~: 62027)
+[PASS] testFuzz_HighScoreMinimumBurn(uint16,uint256) (runs: 256, μ: 62493, ~: 64399)
+[PASS] testFuzz_LowScoreMaximumBurn(uint16,uint256) (runs: 256, μ: 57869, ~: 64286)
+[PASS] testFuzz_MidRangeScoreBurn(uint16,uint256) (runs: 256, μ: 64143, ~: 65530)
+[PASS] testFuzz_MultipleRoutes(uint8,uint256) (runs: 256, μ: 144698, ~: 125125)
+[PASS] testFuzz_RouteZeroAmount(uint16) (runs: 256, μ: 43528, ~: 46597)
+[PASS] testFuzz_SanctumRate(uint256) (runs: 256, μ: 61970, ~: 61970)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 1.17s (1.17s CPU time)
+
+Ran 8 tests for test/foundry/VaultInfrastructure.t.sol:VaultInfrastructureFuzzTest
+[PASS] testFuzz_cannotCreateVaultForZeroAddress(uint256) (runs: 256, μ: 8801, ~: 8801)
+[PASS] testFuzz_daoIsSet(address) (runs: 256, μ: 9852, ~: 9852)
+[PASS] testFuzz_ensureVaultCreatesUniqueVaults(address,address) (runs: 256, μ: 2172933, ~: 2172933)
+[PASS] testFuzz_ensureVaultIsIdempotent(address) (runs: 256, μ: 1097020, ~: 1097020)
+[PASS] testFuzz_onlyOwnerCanSetVFIDE(address,address) (runs: 256, μ: 13529, ~: 13529)
+[PASS] testFuzz_securityHubIsSet(address) (runs: 256, μ: 10352, ~: 10352)
+[PASS] testFuzz_vaultOfReturnsCorrectVault(address) (runs: 256, μ: 1094927, ~: 1094927)
+[PASS] testFuzz_vfideTokenIsSet(address) (runs: 256, μ: 10419, ~: 10419)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 218.04ms (217.66ms CPU time)
+
+Ran 53 tests for test/foundry/VFIDEStaking.t.sol:VFIDEStakingTest
+[PASS] testFuzz_MultipleStakers(uint8) (runs: 256, μ: 826441, ~: 758628)
+[PASS] testFuzz_Stake(uint256,uint64) (runs: 256, μ: 182484, ~: 182560)
+[PASS] test_CannotStakeMoreThanVaultBalance() (gas: 64434)
+[PASS] test_ClaimRewards() (gas: 209775)
+[PASS] test_ClaimRewards_EmitsEvent() (gas: 201502)
+[PASS] test_ClaimRewards_NoOpIfZeroRewards() (gas: 182908)
+[PASS] test_ClaimRewards_RevertIfNoStake() (gas: 34365)
+[PASS] test_Deployment() (gas: 36271)
+[PASS] test_EmergencyWithdraw() (gas: 160734)
+[PASS] test_EmergencyWithdraw_EmitsEvent() (gas: 153595)
+[PASS] test_EmergencyWithdraw_ForfeitsRewards() (gas: 164038)
+[PASS] test_EmergencyWithdraw_RevertIfNoStake() (gas: 27090)
+[PASS] test_FundRewards() (gas: 57537)
+[PASS] test_GetStakeInfo() (gas: 179193)
+[PASS] test_GetStakeInfo_NoStake() (gas: 31519)
+[PASS] test_InitialParameters() (gas: 21486)
+[PASS] test_MultipleStakers() (gas: 396006)
+[PASS] test_MultipleStakers_IndependentRewards() (gas: 294939)
+[PASS] test_MultipleStakers_IndependentUnstaking() (gas: 271766)
+[PASS] test_PendingRewards() (gas: 192149)
+[PASS] test_PendingRewards_NoStake() (gas: 20915)
+[PASS] test_RewardsAccrueCorrectlyAcrossMultipleStakes() (gas: 232990)
+[PASS] test_RewardsCalculation_BaseRate() (gas: 183789)
+[PASS] test_RewardsCalculation_HighTrustBonus() (gas: 210803)
+[PASS] test_RewardsCalculation_LowTrustPenalty() (gas: 209401)
+[PASS] test_RewardsPool() (gas: 15509)
+[PASS] test_RewardsPoolBalance() (gas: 16125)
+[PASS] test_SetLockDurations() (gas: 21400)
+[PASS] test_SetLockDurations_RevertIfInvalid() (gas: 20991)
+[PASS] test_SetModules() (gas: 27310)
+[PASS] test_SetModules_OnlyOwner() (gas: 18523)
+[PASS] test_SetModules_RevertIfZeroAddress() (gas: 14588)
+[PASS] test_SetRewardRates() (gas: 34319)
+[PASS] test_SetRewardRates_RevertIfTooHigh() (gas: 20334)
+[PASS] test_Stake() (gas: 183442)
+[PASS] test_StakeAfterFullUnstake() (gas: 260160)
+[PASS] test_Stake_EmitsEvent() (gas: 176553)
+[PASS] test_Stake_MultipleStakes() (gas: 227866)
+[PASS] test_Stake_RevertIfLockDurationTooLong() (gas: 34525)
+[PASS] test_Stake_RevertIfLockDurationTooShort() (gas: 35660)
+[PASS] test_Stake_RevertIfNoVault() (gas: 23100)
+[PASS] test_Stake_RevertIfVaultLocked() (gas: 57545)
+[PASS] test_Stake_RevertIfZeroAmount() (gas: 17049)
+[PASS] test_Stake_UpdatesLockUntil() (gas: 232041)
+[PASS] test_Unstake() (gas: 186199)
+[PASS] test_Unstake_EmitsEvent() (gas: 180204)
+[PASS] test_Unstake_PartialUnstake() (gas: 203592)
+[PASS] test_Unstake_RevertIfInsufficientBalance() (gas: 179796)
+[PASS] test_Unstake_RevertIfNoStake() (gas: 34331)
+[PASS] test_Unstake_RevertIfStillLocked() (gas: 179235)
+[PASS] test_Unstake_RevertIfVaultLocked() (gas: 204677)
+[PASS] test_Unstake_RevertIfZeroAmount() (gas: 16515)
+[PASS] test_ZeroRewardsIfNoTimePassed() (gas: 176613)
+Suite result: ok. 53 passed; 0 failed; 0 skipped; finished in 199.94ms (207.11ms CPU time)
+
+Ran 8 tests for test/foundry/VFIDEPresale.t.sol:VFIDEPresaleTest
+[PASS] testFuzz_CannotPurchaseDisabledTier(uint8,uint256) (runs: 256, μ: 17911, ~: 17911)
+[PASS] testFuzz_CannotPurchaseWhenInactive(uint256) (runs: 256, μ: 42236, ~: 42236)
+[PASS] testFuzz_MultiplePurchasesAccumulate(uint8,uint256) (runs: 256, μ: 64732, ~: 60967)
+[PASS] testFuzz_PriceChangesDontAffectHistory(uint32) (runs: 256, μ: 74465, ~: 74465)
+[PASS] testFuzz_PurchaseRespectsCap(uint256) (runs: 256, μ: 47219, ~: 47681)
+[PASS] testFuzz_ReferralBonusCalculation(uint256) (runs: 256, μ: 50821, ~: 50821)
+[PASS] testFuzz_TierEnableDisable(uint8,bool) (runs: 256, μ: 57355, ~: 44398)
+[PASS] testFuzz_TierPricingConsistency(uint8,uint256) (runs: 256, μ: 49668, ~: 50010)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 941.56ms (941.10ms CPU time)
+
+Ran 12 tests for test/foundry/DevReserveVestingVault.t.sol:DevReserveVestingVaultTest
+[PASS] testFuzz_CannotExceedAllocation(uint256) (runs: 256, μ: 154035, ~: 154035)
+[PASS] testFuzz_ClaimableNeverDecreases(uint32,uint32) (runs: 256, μ: 26812, ~: 26774)
+[PASS] testFuzz_CliffStrictlyEnforced(uint32) (runs: 256, μ: 96720, ~: 96720)
+[PASS] testFuzz_CliffStrictlyEnforced(uint32,uint32) (runs: 256, μ: 28831, ~: 28831)
+[PASS] testFuzz_FullVestingAfterPeriod(uint32) (runs: 256, μ: 153571, ~: 153571)
+[PASS] testFuzz_LinearVestingAfterCliff(uint32) (runs: 256, μ: 158532, ~: 158532)
+[PASS] testFuzz_LockedVaultPreventsClaims(uint32) (runs: 256, μ: 117825, ~: 117825)
+[PASS] testFuzz_MultipleClaimsAccumulate(uint8) (runs: 256, μ: 295918, ~: 267428)
+[PASS] testFuzz_OnlyBeneficiaryCanPause(address,bool) (runs: 256, μ: 10318, ~: 10318)
+[PASS] testFuzz_PausingStopsClaims(uint32) (runs: 256, μ: 175822, ~: 175822)
+[PASS] testFuzz_RemainingAllocation(uint32) (runs: 256, μ: 155354, ~: 155354)
+[PASS] testFuzz_StartSyncIdempotent(uint8) (runs: 256, μ: 17151, ~: 16455)
+Suite result: ok. 12 passed; 0 failed; 0 skipped; finished in 996.36ms (1.91s CPU time)
+
+╭-----------------------------+--------+--------+---------╮
+| Test Suite                  | Passed | Failed | Skipped |
++=========================================================+
+| AuditFixesTest              | 0      | 1      | 0       |
+|-----------------------------+--------+--------+---------|
+| CouncilElectionTest         | 11     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| DAOFuzzTest                 | 8      | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| DAOTimelockTest             | 11     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| DevReserveVestingVaultTest  | 12     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| EmergencyControlFuzzTest    | 8      | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| FinanceSmoke                | 1      | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| GovernanceHooksTest         | 19     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| MerchantPortalTest          | 41     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| ProofScoreBurnRouterTest    | 11     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| SanctumVaultTest            | 46     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| SeerFuzzTest                | 9      | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| SystemHandoverTest          | 28     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| TrustSmoke                  | 1      | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| VFIDECommerceTest           | 9      | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| VFIDEFinanceTest            | 10     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| VFIDEPresaleTest            | 8      | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| VFIDEStakingTest            | 53     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| VFIDETokenSimpleTest        | 15     | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| VaultInfrastructureFuzzTest | 8      | 0      | 0       |
+|-----------------------------+--------+--------+---------|
+| VFIDETokenFuzz              | 0      | 2      | 0       |
+╰-----------------------------+--------+--------+---------╯
+
+
+Failing tests:
+Encountered 1 failing test in test/foundry/AuditFixes.t.sol:AuditFixesTest
+[FAIL: EvmError: Revert] setUp() (gas: 0)
+
+Encountered 2 failing tests in test/foundry/zk/VFIDETokenFuzz.t.sol:VFIDETokenFuzz
+[FAIL: invariant_TotalSupplyCap persisted failure revert]
+	[Sequence] (original: 1, shrunk: 1)
+		sender=0x000000000000003B30Bab63a2fB7b7363CAfB7B6 addr=[contracts-min/VFIDEToken.sol:VFIDEToken]0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9 calldata=setBurnRouter(address) args=[0x7C3D6D9F92Ad0869dED8E4Cb40410Bffd3b385d0]
+ invariant_TotalSupplyCap() (runs: 1, calls: 1, reverts: 1)
+[FAIL: EvmError: Revert; counterexample: calldata=0xc33e44de000000000000000000000000000000000000000000000000000000000000148100000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000268 args=[0x0000000000000000000000000000000000001481, 0x0000000000000000000000000000000000000080, 616]] testFuzz_TransferInvariant(address,address,uint256) (runs: 0, μ: 0, ~: 0)
+
+Encountered a total of 3 failing tests, 309 tests succeeded

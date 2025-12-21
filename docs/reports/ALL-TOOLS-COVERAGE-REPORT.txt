@@ -1,0 +1,62 @@
+# COMPREHENSIVE TESTING COVERAGE REPORT
+# Generated: $(date)
+# All Testing Tools Execution Status
+
+## 1. HARDHAT TESTS
+  2785 passing (3m)
+  438 failing
+
+## 2. FOUNDRY TESTS
+Encountered a total of 11 failing tests, 115 tests succeeded
+
+## 3. SLITHER ANALYSIS
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 --version' running
+'/home/codespace/.solc-select/artifacts/solc-0.8.30/solc-0.8.30 forge-std/=lib/forge-std/src/ @openzeppelin/=node_modules/@openzeppelin/ contracts-prod/=contracts-prod/ eth-gas-reporter/=node_modules/eth-gas-reporter/ hardhat-deploy/=node_modules/hardhat-deploy/ hardhat/=node_modules/hardhat/ contracts/GovernanceHooks.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize --optimize-runs 200 --via-ir --evm-version cancun --allow-paths .,/workspaces/Vfide/contracts' running
+Compilation warnings/errors on contracts/GovernanceHooks.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:31:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                               ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:43:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                           ^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:16:59:
+   |
+16 |     function onProposalQueued(uint256 id, address target, uint256 value) external {
+   |                                                           ^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:25:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                         ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:37:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                     ^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:20:52:
+   |
+20 |     function onVoteCast(uint256 id, address voter, bool support) external {
+   |                                                    ^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  --> contracts/GovernanceHooks.sol:24:26:
+   |
+24 |     function onFinalized(uint256 id, bool passed) external {
+   |                          ^^^^^^^^^^
+
+

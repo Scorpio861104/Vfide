@@ -1,0 +1,49 @@
+Warning: Found unknown `fuzz_max_test_rejects` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `fuzz_runs` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_depth` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_fail_on_revert` config for profile `default` defined in foundry.toml.
+Warning: Found unknown `invariant_runs` config for profile `default` defined in foundry.toml.
+Compiler run failed:
+Error (7576): Undeclared identifier.
+  --> test/foundry/VFIDEToken.t.sol:52:23:
+   |
+52 |         token.approve(spender, amount);
+   |                       ^^^^^^^
+
+Error (7576): Undeclared identifier.
+  --> test/foundry/VFIDEToken.t.sol:52:32:
+   |
+52 |         token.approve(spender, amount);
+   |                                ^^^^^^
+
+Error (7576): Undeclared identifier.
+  --> test/foundry/VFIDEToken.t.sol:54:41:
+   |
+54 |         assertEq(token.allowance(alice, spender), amount);
+   |                                         ^^^^^^^
+
+Error (7576): Undeclared identifier.
+  --> test/foundry/VFIDEToken.t.sol:54:51:
+   |
+54 |         assertEq(token.allowance(alice, spender), amount);
+   |                                                   ^^^^^^
+
+Error (7576): Undeclared identifier.
+  --> test/foundry/VFIDEToken.t.sol:56:18:
+   |
+56 |         vm.prank(spender);
+   |                  ^^^^^^^
+
+Error (7576): Undeclared identifier.
+  --> test/foundry/VFIDEToken.t.sol:57:40:
+   |
+57 |         token.transferFrom(alice, bob, amount);
+   |                                        ^^^^^^
+
+Error (7576): Undeclared identifier.
+  --> test/foundry/VFIDEToken.t.sol:59:53:
+   |
+59 |         assertEq(token.balanceOf(bob), 1000000e18 + amount);
+   |                                                     ^^^^^^
+
+Error: Compilation failed
