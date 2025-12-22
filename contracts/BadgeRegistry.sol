@@ -20,6 +20,9 @@ library BadgeRegistry {
     /// @notice First 1,000 users to reach 800+ ProofScore (+50 points, permanent)
     bytes32 public constant FOUNDING_MEMBER = keccak256("FOUNDING_MEMBER");
     
+    /// @notice Participated in testnet testing before mainnet (+25 points, permanent)
+    bytes32 public constant EARLY_TESTER = keccak256("EARLY_TESTER");
+    
     // ============ ACTIVITY & PARTICIPATION ============
     // Engagement recognition
     
@@ -121,6 +124,7 @@ library BadgeRegistry {
         if (badge == PIONEER) return "Pioneer";
         if (badge == GENESIS_PRESALE) return "Genesis Presale";
         if (badge == FOUNDING_MEMBER) return "Founding Member";
+        if (badge == EARLY_TESTER) return "Early Tester";
         if (badge == ACTIVE_TRADER) return "Active Trader";
         if (badge == GOVERNANCE_VOTER) return "Governance Voter";
         if (badge == POWER_USER) return "Power User";
@@ -157,6 +161,7 @@ library BadgeRegistry {
         return badge == PIONEER
             || badge == GENESIS_PRESALE
             || badge == FOUNDING_MEMBER
+            || badge == EARLY_TESTER
             || badge == ACTIVE_TRADER
             || badge == GOVERNANCE_VOTER
             || badge == POWER_USER
@@ -190,7 +195,7 @@ library BadgeRegistry {
      */
     function getCategory(bytes32 badge) public pure returns (string memory) {
         // Pioneer & Foundation
-        if (badge == PIONEER || badge == GENESIS_PRESALE || badge == FOUNDING_MEMBER) {
+        if (badge == PIONEER || badge == GENESIS_PRESALE || badge == FOUNDING_MEMBER || badge == EARLY_TESTER) {
             return "Pioneer & Foundation";
         }
         
@@ -243,6 +248,7 @@ library BadgeRegistry {
             badge == PIONEER ||
             badge == GENESIS_PRESALE ||
             badge == FOUNDING_MEMBER ||
+            badge == EARLY_TESTER ||
             badge == TRUSTED_ENDORSER ||
             badge == COMMUNITY_BUILDER ||
             badge == PEACEMAKER ||
@@ -268,6 +274,7 @@ library BadgeRegistry {
         if (badge == PIONEER) return 30;
         if (badge == GENESIS_PRESALE) return 40;
         if (badge == FOUNDING_MEMBER) return 50;
+        if (badge == EARLY_TESTER) return 25;
         if (badge == ACTIVE_TRADER) return 20;
         if (badge == GOVERNANCE_VOTER) return 25;
         if (badge == POWER_USER) return 40;
