@@ -26,7 +26,8 @@ describe('MerchantPortal Continuous Trust', function () {
     const Seer = await ethers.getContractFactory("Seer");
     seer = await Seer.deploy(dao.address, await ledger.getAddress(), await vaultHub.getAddress());
     await seer.waitForDeployment();
-    await seer.setModules(await ledger.getAddress(), await vaultHub.getAddress(), await token.getAddress());
+    // setModules takes 2 args: (ledger, vaultHub) - already set in constructor
+    // await seer.setModules(await ledger.getAddress(), await vaultHub.getAddress());
 
     // Deploy MerchantPortal
     const Portal = await ethers.getContractFactory("MerchantPortal");
@@ -41,18 +42,19 @@ describe('MerchantPortal Continuous Trust', function () {
     await portal.waitForDeployment();
 
     // Setup:
-    // 1. Set min merchant score to 600
-    await seer.setThresholds(350, 700, 540, 600);
+    // 1. Set min merchant score to 6000 on 0-10000 scale
+    await seer.setThresholds(3500, 7000, 5400, 6000);
     
-    // 2. Give merchant a score of 700 (via manual override for simplicity)
-    await seer.setScore(merchant.address, 700, "Initial Trust");
+    // 2. Give merchant a score of 7000 (via manual override for simplicity) on 0-10000 scale
+    await seer.setScore(merchant.address, 7000, "Initial Trust");
     
     // 3. Register merchant
     await portal.connect(merchant).registerMerchant("Test Shop", "Retail");
     
     // 4. Setup customer vault and tokens
-    await vaultHub.setVault(customer.address, await vaultHub.ensureVault(customer.address));
-    await token.transfer(await vaultHub.vaultOf(customer.address), ethers.parseEther("1000"));
+    // Note: ensureVault is not a view function, need to setVault directly
+    await vaultHub.setVault(customer.address, customer.address);
+    await token.transfer(customer.address, ethers.parseEther("1000"));
     
     // 5. Approve portal
     // Note: In real system, vault approves portal. Here we mock it or assume approval logic in mock vault.

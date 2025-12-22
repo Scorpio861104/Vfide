@@ -19,7 +19,7 @@ contract GuardianLockMock {
     function setLocked(bool) external {}
 }
 
-contract PanicGuardMock {
+contract PanicGuardInterfaceMock {
     function isQuarantined(address) external view returns (bool) { return false; }
 }
 

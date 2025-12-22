@@ -20,11 +20,11 @@ describe("Governance Incentives (Council Salary)", function () {
     const VaultHubMock = await ethers.getContractFactory("VaultHubMock");
     vaultHub = await VaultHubMock.deploy();
     
-    // Setup Vaults & Scores
+    // Setup Vaults & Scores (scale is 0-10000, minCouncilScore is 7000)
     const members = [member1, member2, member3, badActor];
     for (const m of members) {
         await vaultHub.setVault(m.address, m.address);
-        await seer.setScore(m.address, 800); // High score initially
+        await seer.setScore(m.address, 8000); // High score on 0-10000 scale (>7000 required)
     }
 
     // 3. Deploy Election
@@ -58,8 +58,8 @@ describe("Governance Incentives (Council Salary)", function () {
   });
 
   it("should skip members with low score", async function () {
-    // Bad Actor score drops
-    await seer.setScore(badActor.address, 500); // Below 700
+    // Bad Actor score drops (on 0-10000 scale, below 7000 is not eligible)
+    await seer.setScore(badActor.address, 5000); // Below 7000
 
     // Fast forward
     await ethers.provider.send("evm_increaseTime", [120 * 24 * 3600 + 1]);

@@ -53,8 +53,8 @@ describe('DevReserveVestingVault Contract Tests', function () {
   it('should sync start time from presale upon first valid claim', async function () {
     await presale.launch();
     const start = await presale.presaleStartTime();
-    // Move past cliff to allow claim
-    await ethers.provider.send('evm_setNextBlockTimestamp', [Number(start) + 90 * 24 * 60 * 60 + 1]);
+    // Move past cliff (60 days) to allow claim
+    await ethers.provider.send('evm_setNextBlockTimestamp', [Number(start) + 60 * 24 * 60 * 60 + 1]);
     await ethers.provider.send('evm_mine');
 
     await vault.connect(beneficiary).claim(); // This triggers sync and claim
@@ -63,9 +63,9 @@ describe('DevReserveVestingVault Contract Tests', function () {
 
   it('should respect cliff', async function () {
     await presale.launch();
-    // Move time to just before cliff
+    // Move time to just before cliff (60 days)
     const start = await presale.presaleStartTime();
-    await ethers.provider.send('evm_setNextBlockTimestamp', [Number(start) + 89 * 24 * 60 * 60]);
+    await ethers.provider.send('evm_setNextBlockTimestamp', [Number(start) + 59 * 24 * 60 * 60]);
     await ethers.provider.send('evm_mine');
 
     // Claim should yield 0 (or revert with NothingToClaim if strict)
@@ -76,8 +76,8 @@ describe('DevReserveVestingVault Contract Tests', function () {
   it('should allow claim after cliff', async function () {
     await presale.launch();
     const start = await presale.presaleStartTime();
-    // Move to cliff + 1 second
-    await ethers.provider.send('evm_setNextBlockTimestamp', [Number(start) + 90 * 24 * 60 * 60 + 1]);
+    // Move to cliff (60 days) + 1 second
+    await ethers.provider.send('evm_setNextBlockTimestamp', [Number(start) + 60 * 24 * 60 * 60 + 1]);
     await ethers.provider.send('evm_mine');
 
     await expect(vault.connect(beneficiary).claim()).to.emit(vault, 'Claimed');

@@ -128,6 +128,10 @@ describe('DAO Contract Tests', function () {
       const receipt = await tx.wait();
       const event = receipt.logs.find(log => log.fragment?.name === 'ProposalCreated');
       proposalId = event.args[0];
+      
+      // Fast forward past voting delay (1 day) to allow voting
+      await ethers.provider.send('evm_increaseTime', [24 * 60 * 60 + 1]);
+      await ethers.provider.send('evm_mine');
     });
 
     it('should allow eligible voter to vote', async function () {
@@ -175,6 +179,10 @@ describe('DAO Contract Tests', function () {
       const receipt = await tx.wait();
       const event = receipt.logs.find(log => log.fragment?.name === 'ProposalCreated');
       proposalId = event.args[0];
+      
+      // Fast forward past voting delay (1 day) to allow voting
+      await ethers.provider.send('evm_increaseTime', [24 * 60 * 60 + 1]);
+      await ethers.provider.send('evm_mine');
     });
 
     it('should finalize passed proposal', async function () {

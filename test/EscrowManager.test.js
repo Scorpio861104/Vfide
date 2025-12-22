@@ -27,8 +27,8 @@ describe("EscrowManager (Consumer Protection)", function () {
   });
 
   it("should create an escrow with dynamic release time", async function () {
-    // Set Merchant Score to 850 (High Trust) -> 3 days lock
-    await seer.setScore(merchant.address, 850);
+    // Set Merchant Score to 8500 (High Trust on 0-10000 scale, >= 8000) -> 3 days lock
+    await seer.setScore(merchant.address, 8500);
 
     await escrowManager.connect(buyer).createEscrow(
       merchant.address,
@@ -61,8 +61,8 @@ describe("EscrowManager (Consumer Protection)", function () {
   });
 
   it("should allow merchant to claim after timeout", async function () {
-    // Low trust merchant -> 14 days
-    await seer.setScore(merchant.address, 400);
+    // Low trust merchant (score 4000 < 6000) -> 14 days on 0-10000 scale
+    await seer.setScore(merchant.address, 4000);
 
     await escrowManager.connect(buyer).createEscrow(
       merchant.address,

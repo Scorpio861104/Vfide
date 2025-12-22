@@ -28,8 +28,9 @@ describe('CouncilElection Contract Tests', function () {
     await council.waitForDeployment();
 
     await seer.setMin(100);
-    await seer.setScore(candidate1.address, 750);
-    await seer.setScore(candidate2.address, 760);
+    // On 0-10000 scale, minCouncilScore is 7000, so candidates need >=7000
+    await seer.setScore(candidate1.address, 7500);
+    await seer.setScore(candidate2.address, 7600);
     await vaultHub.setVault(candidate1.address, candidate1.address);
     await vaultHub.setVault(candidate2.address, candidate2.address);
   });
@@ -74,20 +75,21 @@ describe('CouncilElection Contract Tests', function () {
 
   describe('Parameter Configuration', function () {
     it('should allow DAO to set params', async function () {
-      await expect(council.connect(dao).setParams(15, 200, 90 * 24 * 60 * 60, 7 * 24 * 60 * 60))
+      // minScore must be >= 5600 on 0-10000 scale
+      await expect(council.connect(dao).setParams(15, 7000, 90 * 24 * 60 * 60, 7 * 24 * 60 * 60))
         .to.emit(council, 'ParamsSet')
-        .withArgs(15, 200, 90 * 24 * 60 * 60, 7 * 24 * 60 * 60);
+        .withArgs(15, 7000, 90 * 24 * 60 * 60, 7 * 24 * 60 * 60);
     });
 
     it('should revert if setting council size to zero', async function () {
       await expect(
-        council.connect(dao).setParams(0, 200, 90 * 24 * 60 * 60, 7 * 24 * 60 * 60)
+        council.connect(dao).setParams(0, 7000, 90 * 24 * 60 * 60, 7 * 24 * 60 * 60)
       ).to.be.revertedWithCustomError(council, 'CE_BadSize');
     });
 
     it('should revert if non-DAO tries to set params', async function () {
       await expect(
-        council.connect(user1).setParams(15, 200, 90 * 24 * 60 * 60, 7 * 24 * 60 * 60)
+        council.connect(user1).setParams(15, 7000, 90 * 24 * 60 * 60, 7 * 24 * 60 * 60)
       ).to.be.revertedWithCustomError(council, 'CE_NotDAO');
     });
   });

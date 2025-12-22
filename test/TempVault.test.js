@@ -28,6 +28,6 @@ describe('TempVault Contract Tests', function () {
   it('should revert if non-owner tries to withdraw', async function () {
     await expect(
       vault.connect(user).withdraw(await token.getAddress(), user.address, 100)
-    ).to.be.revertedWith('not owner');
+    ).to.be.revertedWithCustomError(vault, 'TV_NotOwner');
   });
 });
