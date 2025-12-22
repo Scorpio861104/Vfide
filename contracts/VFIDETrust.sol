@@ -428,6 +428,9 @@ contract Seer {
         if (_checkActiveBadge(subject, keccak256("FOUNDING_MEMBER"))) {
             bonus += 50;
         }
+        if (_checkActiveBadge(subject, keccak256("EARLY_TESTER"))) {
+            bonus += 25;
+        }
         
         // Activity badges (renewable)
         if (_checkActiveBadge(subject, keccak256("ACTIVE_TRADER"))) {
