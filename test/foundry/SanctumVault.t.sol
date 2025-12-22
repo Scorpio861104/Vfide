@@ -59,7 +59,7 @@ contract SanctumVaultTest is Test {
         
         // Deploy SanctumVault
         vm.prank(dao);
-        vault = new SanctumVault(dao, address(ledger));
+        vault = new SanctumVault(dao, address(ledger), address(0));
         
         // Fund donor and approve vault
         require(token.transfer(donor, DEPOSIT_AMOUNT * 10), "transfer failed");
@@ -98,7 +98,7 @@ contract SanctumVaultTest is Test {
     
     function test_RevertDeploymentWithZeroDAO() public {
         vm.expectRevert(bytes("zero dao"));
-        new SanctumVault(address(0), address(ledger));
+        new SanctumVault(address(0), address(ledger), address(0));
     }
     
     // ============================================

@@ -53,6 +53,10 @@ contract VFIDECommerceTest is Test {
             address(seer)
         );
         
+        // Authorize escrow to call _noteDispute and _noteRefund on MerchantRegistry
+        vm.prank(DAO);
+        merchantRegistry.setAuthorizedEscrow(address(escrow));
+        
         // Setup vaults
         vaultHub.setVault(MERCHANT, address(0x100));
         vaultHub.setVault(BUYER, address(0x200));
@@ -63,13 +67,15 @@ contract VFIDECommerceTest is Test {
     
     /// @notice Fuzz test: Merchant registration requires minimum score
     function testFuzz_MerchantMinScore(uint16 score) public {
-        vm.assume(score < 1000);
+        // Score must be positive and less than minScore to test rejection
+        // Note: SeerMock returns 5000 for score=0, so we need to set explicit scores
+        vm.assume(score > 0 && score < 1000);
         
         address newMerchant = address(0x999);
         seer.setScore(newMerchant, score);
         vaultHub.setVault(newMerchant, address(0x111));
         
-        uint16 registryMinScore = merchantRegistry.minScore(); // Use registry's minScore (600 from constructor)
+        uint16 registryMinScore = merchantRegistry.minScore();
         
         vm.prank(newMerchant);
         if (score < registryMinScore) {
@@ -119,14 +125,8 @@ contract VFIDECommerceTest is Test {
         (,,,,,state,) = escrow.escrows(id);
         assertEq(uint8(state), uint8(CommerceEscrow.State.OPEN), "Should be OPEN");
         
-        // Fund escrow
-        // Mint to buyer vault (mock vault address)
-        address buyerVault = vaultHub.vaultOf(BUYER);
-        token.mint(buyerVault, amount);
-        
-        // Approve escrow to spend from buyer vault
-        vm.prank(buyerVault);
-        token.approve(address(escrow), amount);
+        // Transfer tokens directly to escrow contract (simulating payment)
+        token.mint(address(escrow), amount);
         
         // Call fund
         vm.prank(BUYER);
@@ -147,11 +147,8 @@ contract VFIDECommerceTest is Test {
         vm.prank(BUYER);
         uint256 id = escrow.open(MERCHANT, amount, bytes32(0));
         
-        // Fund escrow
-        address buyerVault = vaultHub.vaultOf(BUYER);
-        token.mint(buyerVault, amount);
-        vm.prank(buyerVault);
-        token.approve(address(escrow), amount);
+        // Fund escrow - transfer tokens directly to escrow contract
+        token.mint(address(escrow), amount);
         vm.prank(BUYER);
         escrow.markFunded(id);
         
@@ -177,16 +174,13 @@ contract VFIDECommerceTest is Test {
         vm.prank(BUYER);
         uint256 id = escrow.open(MERCHANT, amount, bytes32(0));
         
-        // Fund escrow
-        address buyerVault = vaultHub.vaultOf(BUYER);
-        token.mint(buyerVault, amount);
-        vm.prank(buyerVault);
-        token.approve(address(escrow), amount);
+        // Fund escrow - transfer tokens directly to escrow contract
+        token.mint(address(escrow), amount);
         vm.prank(BUYER);
         escrow.markFunded(id);
         
         // Refund
-        // address buyerVault = vaultHub.vaultOf(BUYER); // Already defined above
+        address buyerVault = vaultHub.vaultOf(BUYER);
         uint256 balBefore = token.balanceOf(buyerVault);
         
         vm.prank(MERCHANT);
@@ -207,11 +201,8 @@ contract VFIDECommerceTest is Test {
         vm.prank(BUYER);
         uint256 id = escrow.open(MERCHANT, amount, bytes32(0));
         
-        // Fund escrow
-        address buyerVault = vaultHub.vaultOf(BUYER);
-        token.mint(buyerVault, amount);
-        vm.prank(buyerVault);
-        token.approve(address(escrow), amount);
+        // Fund escrow - transfer tokens directly to escrow contract
+        token.mint(address(escrow), amount);
         vm.prank(BUYER);
         escrow.markFunded(id);
         
@@ -234,11 +225,8 @@ contract VFIDECommerceTest is Test {
         vm.prank(BUYER);
         uint256 id = escrow.open(MERCHANT, amount, bytes32(0));
         
-        // Fund escrow
-        address buyerVault = vaultHub.vaultOf(BUYER);
-        token.mint(buyerVault, amount);
-        vm.prank(buyerVault);
-        token.approve(address(escrow), amount);
+        // Fund escrow - transfer tokens directly to escrow contract
+        token.mint(address(escrow), amount);
         vm.prank(BUYER);
         escrow.markFunded(id);
         

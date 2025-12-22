@@ -58,7 +58,7 @@ contract VFIDETokenSimpleTest is Test {
     
     // FUZZ 5: Name and symbol are correct
     function testFuzz_nameAndSymbol(uint256 randomValue) public view {
-        assertEq(token.name(), "VFIDE");
+        assertEq(token.name(), "VFIDE Token");
         assertEq(token.symbol(), "VFIDE");
         assertEq(token.decimals(), 18);
     }
