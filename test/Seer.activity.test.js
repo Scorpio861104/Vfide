@@ -18,7 +18,8 @@ describe('Seer Activity & Decay', function () {
 
     // Mock Token
     const Token = await ethers.getContractFactory('ERC20Mock');
-    token = await Token.deploy("VFIDE", "VFIDE", dao.address, 1000000);
+    token = await Token.deploy("VFIDE", "VFIDE");
+    await token.mint(dao.address, ethers.parseEther("1000000"));
 
     // Deploy Seer
     const Seer = await ethers.getContractFactory("Seer");

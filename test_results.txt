@@ -1,0 +1,1627 @@
+[dotenv@17.2.3] injecting env (1) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+  Commerce Complete Coverage
+    MerchantRegistry Additional TEST Helpers
+      - TEST_if_vaultAndScore
+      - TEST_if_vaultAndScore - no vault
+      - TEST_cover_additional_branches - all variants
+      - TEST_cover_additional_branches - with forces
+      - TEST_force_eval_360_and_neighbors
+      - TEST_force_eval_360_and_neighbors - with thresholds
+      - TEST_line365_condexpr_variant2
+      - TEST_line365_condexpr_variant2 - with force
+      - TEST_line367_condexpr_variant2
+      - TEST_line367_condexpr_variant2 - with forces
+      - TEST_line374_condexpr_variant
+      - TEST_line374_condexpr_variant - force left
+      - TEST_force_eval_367_variants
+      - TEST_force_eval_367_variants - with forces
+      - TEST_force_eval_369_370_combo
+      - TEST_force_eval_369_370_combo - zero amount
+      - TEST_dup_constructor_or_local
+      - TEST_dup_constructor_or_local2
+      - TEST_dup_constructor_or_msgsender_variant
+      - TEST_trick_constructor_or_line87 - with zero
+      - TEST_trick_constructor_or_line87 - with address
+      - TEST_line87_txorigin_variant
+      - TEST_line87_ledger_security_variant - with zero
+      - TEST_line87_ledger_security_variant - with address
+      - TEST_line118_msgsender_false_arm
+      - TEST_line130_msgsender_vaultZero_false - no force
+      - TEST_line130_msgsender_vaultZero_false - with force
+    MerchantRegistry Combined Branch Coverage
+      - should cover all merchant status branches
+      - should cover all vault presence branches
+      - should cover all score threshold branches
+      - should cover refund threshold branches
+      - should cover dispute threshold branches
+      - should cover all force flag combinations
+    MerchantRegistry Line-Specific Branch Coverage
+      - should cover line 365 condexpr - all combinations
+      - should cover line 367 condexpr - all combinations
+      - should cover line 374 condexpr - all combinations
+      - should cover line 367 variants - all combinations
+      - should cover lines 369-370 combo - all combinations
+    MerchantRegistry Constructor and Line 87 Coverage
+      - should cover constructor OR chain variants
+      - should cover line 87 with zero addresses
+      - should cover line 87 with valid addresses
+    MerchantRegistry Lines 118 and 130 Coverage
+      - should cover line 118 merchant status check
+      - should cover line 130 vault zero check - both branches
+    MerchantRegistry Dense 360-375 Hotspot Coverage
+      - should cover 360 neighbors - all merchant states
+      - should cover 360 neighbors with vault presence
+
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 1/3)
+    Basic TEST toggle functions
+      - TEST_setOnlyDAOOff
+      - TEST_setForceAlreadyMerchant
+      - TEST_setForceNoVault
+      - TEST_setForceLowScore
+      - TEST_setForceZeroSenderRefund
+      - TEST_setForceZeroSenderDispute
+    Eval functions - Part 1
+      - TEST_eval_addMerchant_flags
+      - TEST_eval_addMerchant_subexpr
+      - TEST_evalreportRefund_forceFlag
+      - TEST_evalreportDispute_forceFlag
+      - TEST_exercise_addMerchant_checks
+      - TEST_exercise_noteFlags
+      - TEST_exec_addMerchant_branches
+      - TEST_cover_addMerchant_variants
+    Conditional TEST functions
+      - TEST_if_alreadyMerchant_left
+      - TEST_if_forceAlready_right
+      - TEST_if_noVault_left
+      - TEST_if_forceNoVault_right
+      - TEST_if_lowScore_left
+      - TEST_if_forceLowScore_right
+      - TEST_exec_addMerchant_ifvariants
+    Status check functions
+      - TEST_if_merchant_status_none
+      - TEST_if_vaultHub_vaultOf_isZero
+      - TEST_if_seer_getScore_lt_min
+      - TEST_if_refund_threshold_reached
+      - TEST_if_dispute_threshold_reached
+    Force variants
+      - TEST_if_vaultOf_isZero_or_force
+      - TEST_if_seer_score_below_min_or_force
+      - TEST_if_alreadyMerchant_or_force
+      - TEST_if_onlyDAO_off_flag
+    Vault and score checks
+      - TEST_if_vaultAndScore
+
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 2/3)
+    Additional coverage functions - Part 1
+      - TEST_cover_additional_branches
+      - TEST_force_eval_360_and_neighbors
+      - TEST_line365_condexpr_variant2
+      - TEST_line367_condexpr_variant2
+      - TEST_line374_condexpr_variant
+      - TEST_force_eval_367_variants
+      - TEST_force_eval_369_370_combo
+    Constructor and local variants
+      - TEST_dup_constructor_or_local
+      - TEST_dup_constructor_or_local2
+      - TEST_dup_constructor_or_msgsender_variant
+      - TEST_trick_constructor_or_line87
+      - TEST_line87_txorigin_variant
+      - TEST_line87_ledger_security_variant
+    Specific line coverage
+      - TEST_line118_msgsender_false_arm
+      - TEST_line130_msgsender_vaultZero_false
+      - TEST_line250_condexpr_alt
+      - TEST_force_eval_line87_msgsender
+      - TEST_force_eval_addMerchant_msgsender_variants
+      - TEST_line118_already_or_force
+      - TEST_line130_vaultZero_or_force
+      - TEST_line238_refunds_threshold
+      - TEST_line250_condexpr_variant
+      - TEST_line291_sender_zero_or_force_refund
+      - TEST_line305_seer_lt_or_force
+    Additional IF variants
+      - TEST_if_addMerchant_or_force
+      - TEST_if_vaultOf_or_force2
+      - TEST_if_seer_lt_min_or_force2
+      - TEST_cover_addMerchant_near118_130
+    Execution functions with state changes
+      - TEST_exec_addMerchant_msgsender_full
+      - TEST_exec_note_guards_and_restore
+    More conditional checks
+      - TEST_if_msgsender_alreadyMerchant
+      - TEST_if_constructor_zero_check
+      - TEST_exec_addMerchant_msgsender_ifvariants
+      - TEST_line130_msgsender_vaultZero_or_force
+    Coverage region tests
+      - TEST_cover_250_300_region
+      - TEST_cover_mass_250_410
+    All force flag combinations
+      - should test all 64 combinations of 6 boolean flags
+
+
+  VFIDECommerce - Exhaustive TEST Coverage (Part 3/3)
+    Escrow eval functions
+      - TEST_eval_open_checks
+      - TEST_if_securityCheck_addr
+      - TEST_if_escrow_state_eq
+      - TEST_if_escrow_buyerVault_zero
+      - TEST_if_escrow_sellerVault_zero
+      - TEST_exec_open_ifvariants
+    Access check functions
+      - TEST_eval_access_checks
+      - TEST_if_buyerVault_zero
+      - TEST_if_release_allowed
+      - TEST_if_refund_allowed
+      - TEST_exec_access_ifvariants
+      - TEST_cover_escrow_more
+    Hotspot functions
+      - TEST_hotspot_300s
+      - TEST_hotspot_330s
+      - TEST_hotspot_360s
+      - TEST_hotspot_490s
+      - TEST_cover_post360s
+    Message sender specific checks
+      - TEST_if_msgsender_release_allowed
+      - TEST_if_msgsender_refund_allowed
+      - TEST_if_msgsender_dispute_allowed
+      - TEST_if_notFunded
+      - TEST_if_resolve_buyerWins_branch
+      - TEST_force_eval_release_refund_resolve
+    Line-specific conditional expressions
+      - TEST_line435_condexpr_variants
+      - TEST_line447_condexpr_variants
+      - TEST_line456_condexpr_variants
+      - TEST_line466_condexpr_variants
+      - TEST_line503_506_combo
+    Duplicate and extended variants
+      - TEST_dup_line435_with_locals
+      - TEST_line435_msgsender_include
+      - TEST_line447_many_ors
+      - TEST_line503_extended_variants
+      - TEST_line644_combo
+      - TEST_line371_alt
+    Comprehensive variant combinations
+      - should test all hotspot functions with different parameters
+      - should test all line-specific expressions in sequence
+      - should test all extended variants
+    Massive permutation testing
+      - should test all boolean flag permutations for open_ifvariants
+      - should test all score thresholds
+      - should test multiple amounts
+      - should test all refund/dispute counts
+    Final comprehensive coverage
+      - should exercise every TEST function at least once
+
+
+  VFIDECommerce: Push to 95% Coverage
+    MerchantRegistry TEST Helpers - Branch Coverage
+      - should exercise TEST_setOnlyDAOOff
+      - should exercise TEST_setForceAlreadyMerchant
+      - should exercise TEST_setForceNoVault
+      - should exercise TEST_setForceLowScore
+      - should exercise TEST_setForceZeroSenderRefund
+      - should exercise TEST_setForceZeroSenderDispute
+    MerchantRegistry TEST Helpers - Conditional Branches
+      - should exercise TEST_if_alreadyMerchant_left - true
+      - should exercise TEST_if_alreadyMerchant_left - false
+      - should exercise TEST_if_forceAlready_right - true
+      - should exercise TEST_if_forceAlready_right - false
+      - should exercise TEST_if_noVault_left - true
+      - should exercise TEST_if_noVault_left - false
+      - should exercise TEST_if_forceNoVault_right - true
+      - should exercise TEST_if_forceNoVault_right - false
+      - should exercise TEST_if_lowScore_left - true
+      - should exercise TEST_if_lowScore_left - false
+      - should exercise TEST_if_forceLowScore_right - true
+      - should exercise TEST_if_forceLowScore_right - false
+    MerchantRegistry TEST Helpers - Complex Variants
+      - should exercise TEST_exec_addMerchant_ifvariants - all false
+      - should exercise TEST_exec_addMerchant_ifvariants - forceA true
+      - should exercise TEST_exec_addMerchant_ifvariants - forceB true
+      - should exercise TEST_exec_addMerchant_ifvariants - forceC true
+      - should exercise TEST_exec_addMerchant_ifvariants - all forces true
+    MerchantRegistry TEST Helpers - Status Checks
+      - should exercise TEST_if_merchant_status_none - true
+      - should exercise TEST_if_merchant_status_none - false
+      - should exercise TEST_if_vaultHub_vaultOf_isZero - true
+      - should exercise TEST_if_vaultHub_vaultOf_isZero - false
+    MerchantRegistry TEST Helpers - addMerchant Variants
+      - should exercise TEST_cover_addMerchant_variants - not merchant
+      - should exercise TEST_cover_addMerchant_variants - is merchant
+      - should exercise TEST_cover_addMerchant_variants - force already
+      - should exercise TEST_cover_addMerchant_variants - no vault left
+      - should exercise TEST_cover_addMerchant_variants - has vault left
+      - should exercise TEST_cover_addMerchant_variants - force no vault
+      - should exercise TEST_cover_addMerchant_variants - low score left
+      - should exercise TEST_cover_addMerchant_variants - good score left
+      - should exercise TEST_cover_addMerchant_variants - force low score
+    MerchantRegistry TEST Helpers - Additional Eval Functions
+      - should exercise TEST_eval_addMerchant_flags
+      - should exercise TEST_eval_addMerchant_subexpr
+      - should exercise TEST_evalreportRefund_forceFlag
+      - should exercise TEST_evalreportDispute_forceFlag
+      - should exercise TEST_exercise_addMerchant_checks
+      - should exercise TEST_exercise_noteFlags
+      - should exercise TEST_exec_addMerchant_branches
+
+
+  Advanced Features: Anti-King, Anti-Whale, Anti-Scam
+    1) "before all" hook in "Advanced Features: Anti-King, Anti-Whale, Anti-Scam"
+
+
+  CommerceEdge
+    2) "before each" hook for "should handle commerce escrow operations"
+
+
+  Business Suite (Corporate Finance)
+    PayrollManager (Streaming Salaries)
+      3) "before each" hook for "should create a stream and allow withdrawal"
+    RevenueSplitter (Treasury)
+      ✔ should split revenue correctly
+
+
+  Commerce Features (Amazon Killer)
+    SubscriptionManager
+      4) "before each" hook for "should create a subscription"
+
+
+  VFIDECommerce Ecosystem Test
+    ✔ should allow a merchant to register successfully
+    with registered merchant
+      ✔ should allow a buyer to open, fund, and release an escrow
+
+
+  CouncilElection Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      ✔ should set default council size to 12
+      ✔ should set default term to 365 days
+      ✔ should revert if deploying with zero addresses
+    Module Configuration
+      ✔ should allow DAO to set modules
+      ✔ should revert if non-DAO tries to set modules
+    Parameter Configuration
+      5) should allow DAO to set params
+      ✔ should revert if setting council size to zero
+      ✔ should revert if non-DAO tries to set params
+    Candidate Registration
+      6) should allow eligible user to register
+      ✔ should revert if not eligible (low score)
+      ✔ should revert if not eligible (no vault)
+      7) should allow candidate to unregister
+    Council Setting
+      8) "before each" hook for "should allow DAO to set council"
+    Council Refresh
+      9) "before each" hook for "should allow DAO to refresh council"
+
+
+  DAOTimelock Contract Tests
+    Deployment
+      ✔ should set admin correctly
+      ✔ should set default delay to 48 hours
+      ✔ should revert if deploying with zero admin
+    Admin Functions
+      ✔ should allow admin to update admin
+      ✔ should revert if non-admin tries to set admin
+      ✔ should revert if setting admin to zero
+      ✔ should allow admin to update delay
+      ✔ should allow admin to set ledger
+      ✔ should allow admin to set panic guard
+    Queue Transaction
+      ✔ should queue a transaction
+      ✔ should revert if non-admin tries to queue
+      ✔ should revert if queuing same transaction twice
+      ✔ should calculate correct ETA
+    Cancel Transaction
+      ✔ should cancel a queued transaction
+      ✔ should revert if non-admin tries to cancel
+      ✔ should revert if cancelling non-existent transaction
+    Execute Transaction
+      ✔ should execute after delay
+      ✔ should revert if executed too early
+      ✔ should revert if executing non-existent transaction
+    Edge Cases
+      ✔ should handle zero value transactions
+      ✔ should handle empty data
+      ✔ should handle different delays
+
+
+  Ecosystem Vault & Splitter Integration
+    10) "before each" hook for "should route combined DAO+Eco fees to the Splitter"
+
+
+  DevReserveVestingVault Contract Tests
+    ✔ should deploy correctly
+    ✔ should revert claim if not started
+    ✔ should sync start time from presale upon first valid claim
+    11) should respect cliff
+    ✔ should allow claim after cliff
+    ✔ should allow beneficiary to pause
+    ✔ should revert if non-beneficiary tries to pause
+
+
+  VFIDE Enterprise Gateway (Amazon Integration)
+    12) "before all" hook for "should allow user to create an order (Lock Funds)"
+
+
+  StablecoinRegistry and EcoTreasuryVault
+    13) "before each" hook for "DAO can whitelist asset and treasury accepts deposits"
+
+
+  DAO Contract Tests
+    Deployment and Setup
+      ✔ should set admin correctly
+      ✔ should set default voting period
+      ✔ should set default quorum
+      ✔ should allow admin to set modules
+      ✔ should revert if non-admin tries to set admin
+    Proposal Creation
+      ✔ should create a proposal
+      ✔ should revert if proposer not eligible
+      ✔ should revert if proposer has no vault
+      ✔ should allow zero target address
+    Voting
+      14) should allow eligible voter to vote
+      15) should revert if already voted
+      16) should revert if not eligible to vote
+      17) should count votes correctly
+    Finalization
+      18) should finalize passed proposal
+      19) should finalize failed proposal
+      ✔ should revert if voting not ended
+    Parameter Updates
+      ✔ should allow admin to update voting period
+      ✔ should revert if non-admin tries to update params
+
+
+  GovernanceHooks
+    Deployment
+      20) "before each" hook for "should deploy with correct ledger"
+
+
+  Governance Incentives (Council Salary)
+    21) "before each" hook for "should distribute salary to eligible members"
+
+
+  Incentives System: Rebates & Duty
+    22) "before all" hook for "Should pay rebate to High Trust merchant"
+
+
+  Merchant Portal Integration (Payout Override)
+    23) "before each" hook for "should redirect payment to RevenueSplitter when payout address is set"
+
+
+  MerchantPortal Continuous Trust
+    24) "before each" hook for "should allow payment when score is high"
+
+
+  Interface Compliance Tests
+    IVFIDEToken Interface
+      ✔ Should implement all IVFIDEToken interface functions
+    IDAO Interface
+      ✔ Should verify DAO interface structure
+    ISeer Interface
+      ✔ Should verify Seer reputation interface
+    IProofLedger Interface
+      ✔ Should verify ProofLedger interface functions
+    IVaultHub Interface
+      ✔ Should verify VaultHub interface compliance
+    ISecurityHub Interface
+      ✔ Should verify SecurityHub emergency interface
+    IDAOTimelock Interface
+      ✔ Should verify Timelock interface compliance
+    IProofScoreBurnRouter Interface
+      ✔ Should verify ProofScoreBurnRouter interface
+    IDevReserveVestingVault Interface
+      ✔ Should verify DevReserveVestingVault interface
+    IEcoTreasuryVault Interface
+      ✔ Should verify EcoTreasuryVault interface compliance
+    ISanctumFund Interface
+      ✔ Should verify SanctumFund interface functions
+    IGuardianLock Interface
+      ✔ Should verify GuardianLock security interface
+    IPanicGuard Interface
+      25) Should verify PanicGuard emergency interface
+    IEmergencyBreaker Interface
+      ✔ Should verify EmergencyBreaker circuit breaker interface
+    IERC20Minimal Interface
+      ✔ Should verify ERC20 minimal interface compliance
+    Cross-Interface Integration
+      ✔ Should verify interfaces work together
+      ✔ Should verify DAO and Timelock interface integration
+      ✔ Should verify Seer and Ledger interface integration
+
+
+  EmergencyControl Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      ✔ should set breaker correctly
+      ✔ should set default cooldown to 5 minutes
+      ✔ should revert if deploying with zero addresses
+    Module Configuration
+      ✔ should allow DAO to set modules
+      ✔ should revert if non-DAO tries to set modules
+    Cooldown Configuration
+      ✔ should allow DAO to set cooldown
+      ✔ should revert if non-DAO tries to set cooldown
+    Committee Management
+      ✔ should allow DAO to add member
+      ✔ should revert if adding zero address
+      ✔ should revert if adding duplicate member
+      ✔ should allow DAO to remove member
+      ✔ should revert if removing non-member
+      ✔ should allow DAO to reset committee
+      ✔ should revert if threshold exceeds member count
+    Committee Voting
+      ✔ should allow member to vote for halt
+      ✔ should allow member to vote for unhalt
+      ✔ should revert if non-member tries to vote
+      ✔ should revert if member votes twice for same stance
+      ✔ should trigger when threshold reached
+    DAO Toggle
+      ✔ should allow DAO to toggle halt
+      ✔ should revert if non-DAO tries to toggle
+      ✔ should enforce cooldown
+      ✔ should allow toggle after cooldown passes
+    Vote Reset
+      ✔ should allow DAO to reset votes
+      ✔ should revert if non-DAO tries to reset
+
+
+  ProofScoreBurnRouterPlus DAO Cap
+    26) "before each" hook for "should allocate exactly 5% of total fee to DAO sink"
+
+
+  SanctumVault Contract Tests
+    Deployment
+      27) "before each" hook for "should set DAO correctly"
+
+
+  Seer Activity & Decay
+    28) "before each" hook for "should increase score when activity is logged"
+
+
+  Seer Automated Scoring
+    29) "before each" hook for "should return NEUTRAL (500) for user with no vault and no tokens"
+
+
+  Seer Perfect Features (Badges & Endorsements)
+    Badges
+      30) "before each" hook for "should allow DAO to set badge weights"
+
+
+  ProofLedger
+    Deployment
+      ✔ should deploy with correct DAO
+      ✔ should revert on zero address DAO
+    setDAO
+      ✔ should allow DAO to update DAO address
+      ✔ should emit DAOSet event
+      ✔ should revert if non-DAO tries to update
+      ✔ should revert on zero address
+      ✔ should allow DAO to be set to itself
+      ✔ should allow chained DAO updates
+    logEvent
+      ✔ should emit EventLog event with all parameters
+      ✔ should allow anyone to log events
+      ✔ should handle zero amount
+      ✔ should handle empty strings
+      ✔ should handle very large amounts
+      ✔ should handle long action strings
+      ✔ should handle long note strings
+      ✔ should log multiple events in sequence
+    logSystemEvent
+      ✔ should emit SystemEvent event with all parameters
+      ✔ should allow anyone to log system events
+      ✔ should handle empty action string
+      ✔ should handle zero addresses
+      ✔ should handle long action strings
+      ✔ should log multiple system events
+    Mixed Logging
+      ✔ should support both log types simultaneously
+      ✔ should handle high-frequency logging (46ms)
+      ✔ should maintain independent event streams
+    Access Control
+      ✔ should allow only DAO to change DAO
+      ✔ should allow anyone to log events
+      ✔ should allow anyone to log system events
+    Edge Cases
+      ✔ should handle DAO transferring to self
+      ✔ should handle rapid DAO transfers
+      ✔ should handle maximum uint256 amount in logs
+      ✔ should handle special characters in strings
+      ✔ should not revert on consecutive identical logs
+
+
+  Seer Audit: Is it Perfect?
+    31) "before all" hook for "IMPERFECTION: Flash-Endorsement Attack"
+
+
+  Seer Contract Tests
+    Deployment
+      ✔ should set DAO correctly
+      32) should have correct constants
+      ✔ should revert if deploying with zero DAO
+    Module Configuration
+      33) should allow DAO to set modules
+      34) should revert if non-DAO tries to set modules
+      35) should revert if setting modules to zero
+    Threshold Configuration
+      ✔ should allow DAO to set thresholds
+      ✔ should revert if non-DAO tries to set thresholds
+      ✔ should revert if low > high
+    Score Management
+      36) should return neutral score for uninitialized user
+      37) should allow DAO to set score directly
+      ✔ should revert if non-DAO tries to set score
+      38) should reward user
+      39) should punish user
+      40) should clamp score to max
+      41) should clamp score to min
+
+
+  Complete System Integration Test
+    System Initialization
+      42) "before each" hook for "should have correct total supply with dev reserve"
+
+
+  ProofScoreBurnRouter
+    Deployment
+      ✔ should deploy with correct seer
+      ✔ should deploy with correct sanctumSink
+      ✔ should deploy with correct burnSink
+      ✔ should deploy with correct ecosystemSink
+      43) should set default baseBurnBps to 200 (2.0%)
+      44) should set default baseSanctumBps to 50 (0.5%)
+      45) should set default baseEcosystemBps to 50 (0.5%)
+      ✔ should emit ModulesSet on deployment
+      ✔ should revert on zero seer address
+    setModules
+      ✔ should update modules (42ms)
+      46) should revert if non-owner tries to set modules
+      ✔ should revert on zero seer address
+    setPolicy
+      47) should update policy
+      48) should revert if maxTotalBps is too high
+      49) should revert if base exceeds max
+    computeFees
+      50) should calculate fees correctly for neutral score
+      51) should reduce burn for high trust score
+      52) should increase burn for low trust score
+      53) should scale down if total exceeds max
+
+
+  TempVault Contract Tests
+    ✔ should set owner correctly
+    ✔ should allow owner to withdraw
+    54) should revert if non-owner tries to withdraw
+
+
+  VFIDEToken basic flows
+    ✔ pre-mints full supply correctly distributed
+    ✔ transfers update balances with vaultOnly disabled
+    ✔ allows transfers when vaultHub not set (vaultOnly skipped)
+
+
+  VFIDECommerce.branch.more
+    55) "before each" hook for "should initialize commerce with correct parameters"
+
+
+  VFIDECommerce.constructor.branch
+    56) "before each" hook for "should initialize commerce with correct parameters"
+
+
+  VFIDECommerce.branches
+    57) "before each" hook for "should initialize commerce with correct parameters"
+
+
+  VFIDECommerce.coverage.microbatch
+    58) "before each" hook for "should initialize commerce with correct parameters"
+
+
+  VFIDECommerce.coverage
+    59) "before each" hook for "should initialize commerce with correct parameters"
+
+
+  VFIDECommerce.extra.focused
+    60) "before each" hook for "should initialize commerce with correct parameters"
+
+
+  VFIDECommerce.focused
+    61) "before each" hook for "should initialize commerce with correct parameters"
+
+
+  VFIDECommerce.microbatch1
+    62) "before each" hook for "should test merchant operations - batch 1"
+
+
+  VFIDECommerce.microbatch2
+    63) "before each" hook for "should test merchant operations - batch 2"
+
+
+  VFIDECommerce.microbatch3
+    64) "before each" hook for "should test merchant operations - batch 3"
+
+
+  VFIDECommerce.microbatch4
+    65) "before each" hook for "should test merchant operations - batch 4"
+
+
+  VFIDECommerce.microbatch5
+    66) "before each" hook for "should test merchant operations - batch 5"
+
+
+  VFIDECommerce micro-batch 3 (mocks & reentrancy)
+    ✔ release succeeds with GasDrainer token (covers gas-heavy transfer path)
+    ✔ Reentering token: transfer triggers reentrant release and original tx reverts leaving state unchanged
+    ✔ Reentering token: normal transfer (no reenter target) succeeds
+
+
+  VFIDECommerce.microbatch7
+    67) "before each" hook for "should test merchant operations - batch 7"
+
+
+  VFIDECommerce.microbatch6
+    68) "before each" hook for "should test merchant operations - batch 6"
+
+
+  VFIDECommerce additional coverage tests
+    69) "before each" hook for "open reverts when merchant is suspended"
+
+
+  VFIDECommerce.microbatch8
+    70) "before each" hook for "should test merchant operations - batch 8"
+
+
+  VFIDECommerce reentrancy resilience
+    ✔ attempted reentrancy via token.transfer should not break state (release remains safe)
+
+
+  VFIDECommerce security fuzz - malicious token behaviors
+    ✔ GasDrainer token: release succeeds even when token consumes more gas
+    ✔ ERC20ReturnFalse: release/refund/resolve revert when token returns false
+    ✔ combination randomized small sequences (open->fund->action) don't corrupt state (59ms)
+
+
+  VFIDECommerce security & boundary tests
+    ✔ open reverts with COM_SecLocked when buyer or merchant vault locked
+    ✔ release/refund revert with COM_SecLocked when vault locked
+    ✔ failed transfer leaves escrow state unchanged
+    ✔ open with very large amount reverts or handles safely (boundary test)
+
+
+  VFIDEFinance
+    StablecoinRegistry
+      71) "before each" hook for "Should allow DAO to add asset"
+
+
+  VFIDECommerce
+    MerchantRegistry
+      ✔ Should allow adding a merchant with valid score and vault
+      72) Should revert if score is too low
+      73) Should auto-suspend on too many refunds
+    CommerceEscrow
+      ✔ Should open escrow
+      74) Should fund escrow
+      75) Should release escrow
+
+
+  Verification: Automated Justice & Economics
+    76) "before all" hook in "Verification: Automated Justice & Economics"
+
+
+  Differential: EVM vs zkSync (skeleton)
+    - VFIDEToken basic attributes are consistent
+
+
+  SecurityHub Lock Smoke
+    ✔ reflects locked state preventing score-related action (simulated) (50ms)
+
+
+  Simple Smoke Test
+    ✔ should verify basic setup
+
+
+  Smoke Tests - Core Functionality
+    ✔ Should deploy VFIDEToken successfully
+    ✔ Should have initial total supply (200M)
+    ✔ Should allow transfers
+
+  Smoke Tests - Commerce
+    ✔ Should deploy MerchantRegistry successfully
+    ✔ Should allow merchant registration with proper setup
+
+
+  VaultInfrastructure - VaultHub
+    Deployment
+      ✔ should deploy successfully
+      ✔ should set owner correctly
+    ensureVault
+      ✔ should create vault for new user
+      ✔ should return existing vault on second call
+      ✔ should create different vaults for different users
+      ✔ should use deterministic CREATE2
+    vaultOf
+      ✔ should return zero for users without vault
+      ✔ should return vault address after creation
+    ownerOf
+      ✔ should return zero for non-vault addresses
+      ✔ should return owner after vault creation
+    Module Management
+      ✔ should allow owner to set modules (47ms)
+      ✔ should revert if non-owner tries to set modules (48ms)
+      ✔ should emit ModulesSet event
+    Edge Cases
+      ✔ should handle multiple vault creations
+      ✔ should maintain registry bidirectional mapping
+
+  VaultInfrastructure - UserVault
+    Guardian Management
+      ✔ should allow owner to add guardians
+      ✔ should allow owner to remove guardians
+      ✔ should set next of kin
+    Recovery Process
+      ✔ should allow guardian-approved recovery
+      ✔ should enforce threshold for recovery
+    Transfer Functions
+      ✔ should allow owner to transfer tokens
+      ✔ should enforce security lock
+    Emergency Functions
+      ✔ should handle panic mode
+      ✔ should respect security hub
+
+  VaultInfrastructure - Integration
+    ✔ should test complete vault lifecycle
+    ✔ should test security integration
+    ✔ should test logging integration
+
+
+  Trust Smoke: Seer Neutral Score
+    ✔ returns neutral score for uninitialized address (47ms)
+
+
+  VFIDEToken zkSync deployment
+    ✔ compiles artifacts
+    - deploys on zkSync or skips gracefully
+
+
+  MerchantRegistry Deployment Test
+    ✔ Should deploy MerchantRegistry (95ms)
+
+
+  zkSync Smoke: ProofLedger + Seer deployability
+    ✔ deploys core modules under standard config
+
+
+  SystemHandover
+    Deployment
+      ✔ should deploy with correct devMultisig
+      ✔ should deploy with correct DAO
+      ✔ should deploy with correct timelock
+      ✔ should deploy with correct seer
+      ✔ should deploy with correct ledger
+      ✔ should set minAvgCouncilScore from seer
+      ✔ should set default monthsDelay to 180 days
+      ✔ should set default maxExtensions to 1
+      ✔ should set extensionSpan to 60 days
+      ✔ should revert on zero dev address
+      ✔ should revert on zero dao address
+      ✔ should revert on zero timelock address
+      ✔ should revert on zero seer address
+      ✔ should allow zero ledger address (optional)
+    armFromPresale
+      ✔ should arm handover after presale starts
+      ✔ should calculate handoverAt correctly
+      ✔ should emit Armed event
+      ✔ should be idempotent (can call multiple times)
+      ✔ should revert if presale not started
+      ✔ should allow anyone to arm
+      ✔ should log to ledger
+    setParams
+      ✔ should allow dev to update monthsDelay
+      ✔ should allow dev to update minAvgCouncilScore
+      ✔ should allow dev to update maxExtensions
+      ✔ should allow dev to update extensionSpan
+      ✔ should enforce minimum monthsDelay of 90 days
+      ✔ should update handoverAt if already armed
+      ✔ should emit ParamsSet event
+      ✔ should revert if non-dev tries to set params
+      ✔ should log to ledger
+    extendOnceIfNeeded
+      ✔ should extend if network score is below threshold
+      ✔ should add extensionSpan to handoverAt
+      ✔ should increment extensionsUsed
+      ✔ should not extend if network score is at threshold
+      ✔ should not extend if network score is above threshold
+      ✔ should revert if max extensions reached
+      ✔ should revert if non-dev tries to extend
+      ✔ should log to ledger when extended
+      ✔ should allow extension with maxExtensions = 2
+    executeHandover
+      ✔ should execute handover after deadline
+      ✔ should call dao.setAdmin
+      ✔ should call timelock.setAdmin with DAO address
+      ✔ should emit Executed event
+      ✔ should use DAO address if newAdmin is zero
+      ✔ should revert if executed too early
+      ✔ should revert if non-dev tries to execute
+      ✔ should include extensionsUsed in event
+      ✔ should log to ledger
+    setLedger
+      ✔ should allow dev to update ledger (73ms)
+      ✔ should emit LedgerSet event
+      ✔ should allow setting to zero address
+      ✔ should revert if non-dev tries to set ledger
+    Complete Handover Flow
+      ✔ should execute full handover lifecycle
+
+
+  77) Uncaught error outside test suite
+
+  252 passing (8s)
+  200 pending
+  77 failing
+
+  1) Advanced Features: Anti-King, Anti-Whale, Anti-Scam
+       "before all" hook in "Advanced Features: Anti-King, Anti-Whale, Anti-Scam":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/AdvancedFeatures.test.js:45:35)
+
+  2) CommerceEdge
+       "before each" hook for "should handle commerce escrow operations":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/CommerceEdge.test.js:10:61)
+
+  3) Business Suite (Corporate Finance)
+       PayrollManager (Streaming Salaries)
+         "before each" hook for "should create a stream and allow withdrawal":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/BusinessSuite.test.js:23:45)
+
+  4) Commerce Features (Amazon Killer)
+       "before each" hook for "should create a subscription":
+     HardhatError: HH700: Artifact for contract "MerchantRebateVault" not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/CommerceFeatures.test.js:33:40)
+
+  5) CouncilElection Contract Tests
+       Parameter Configuration
+         should allow DAO to set params:
+     Error: VM Exception while processing transaction: reverted with reason string 'CE: invalid min score'
+      at CouncilElection.setParams (contracts/CouncilElection.sol:64)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.setParams (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at waitForPendingTransaction (node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/emit.ts:28:17)
+      at Context.<anonymous> (test/CouncilElection.test.js:77:7)
+
+  6) CouncilElection Contract Tests
+       Candidate Registration
+         should allow eligible user to register:
+     Error: VM Exception while processing transaction: reverted with custom error 'CE_NotEligible()'
+      at CouncilElection.register (contracts/CouncilElection.sol:83)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.register (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at waitForPendingTransaction (node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/emit.ts:28:17)
+      at Context.<anonymous> (test/CouncilElection.test.js:97:7)
+
+  7) CouncilElection Contract Tests
+       Candidate Registration
+         should allow candidate to unregister:
+     Error: VM Exception while processing transaction: reverted with custom error 'CE_NotEligible()'
+      at CouncilElection.register (contracts/CouncilElection.sol:83)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.register (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at Context.<anonymous> (test/CouncilElection.test.js:121:7)
+
+  8) CouncilElection Contract Tests
+       Council Setting
+         "before each" hook for "should allow DAO to set council":
+     Error: VM Exception while processing transaction: reverted with custom error 'CE_NotEligible()'
+      at CouncilElection.register (contracts/CouncilElection.sol:83)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.register (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at Context.<anonymous> (test/CouncilElection.test.js:133:7)
+
+  9) CouncilElection Contract Tests
+       Council Refresh
+         "before each" hook for "should allow DAO to refresh council":
+     Error: VM Exception while processing transaction: reverted with custom error 'CE_NotEligible()'
+      at CouncilElection.setCouncil (contracts/CouncilElection.sol:136)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.setCouncil (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at Context.<anonymous> (test/CouncilElection.test.js:181:7)
+
+  10) Ecosystem Vault & Splitter Integration
+       "before each" hook for "should route combined DAO+Eco fees to the Splitter":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/EcosystemVault.test.js:39:27)
+
+  11) DevReserveVestingVault Contract Tests
+       should respect cliff:
+     AssertionError: Expected transaction to be reverted with custom error 'DV_NothingToClaim', but it didn't revert
+      at Context.<anonymous> (test/DevReserveVestingVault.test.js:73:5)
+
+  12) VFIDE Enterprise Gateway (Amazon Integration)
+       "before all" hook for "should allow user to create an order (Lock Funds)":
+     TypeError: seer.setAuth is not a function
+      at Context.<anonymous> (test/EnterpriseGateway.test.js:42:16)
+
+  13) StablecoinRegistry and EcoTreasuryVault
+       "before each" hook for "DAO can whitelist asset and treasury accepts deposits":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/Finance.test.js:14:39)
+
+  14) DAO Contract Tests
+       Voting
+         should allow eligible voter to vote:
+     Error: VM Exception while processing transaction: reverted with custom error 'DAO_VoteNotStarted()'
+      at DAO.vote (contracts/DAO.sol:136)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.vote (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at waitForPendingTransaction (node_modules/@nomicfoundation/hardhat-chai-matchers/src/internal/emit.ts:28:17)
+      at Context.<anonymous> (test/DAO.test.js:134:7)
+
+  15) DAO Contract Tests
+       Voting
+         should revert if already voted:
+     Error: VM Exception while processing transaction: reverted with custom error 'DAO_VoteNotStarted()'
+      at DAO.vote (contracts/DAO.sol:136)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.vote (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at Context.<anonymous> (test/DAO.test.js:140:7)
+
+  16) DAO Contract Tests
+       Voting
+         should revert if not eligible to vote:
+     AssertionError: Expected transaction to be reverted with custom error 'DAO_NotEligible', but it reverted with custom error 'DAO_VoteNotStarted'
+      at Context.<anonymous> (test/DAO.test.js:150:7)
+
+  17) DAO Contract Tests
+       Voting
+         should count votes correctly:
+     Error: VM Exception while processing transaction: reverted with custom error 'DAO_VoteNotStarted()'
+      at DAO.vote (contracts/DAO.sol:136)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.vote (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at Context.<anonymous> (test/DAO.test.js:156:7)
+
+  18) DAO Contract Tests
+       Finalization
+         should finalize passed proposal:
+     Error: VM Exception while processing transaction: reverted with custom error 'DAO_VoteNotStarted()'
+      at DAO.vote (contracts/DAO.sol:136)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.vote (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at Context.<anonymous> (test/DAO.test.js:181:7)
+
+  19) DAO Contract Tests
+       Finalization
+         should finalize failed proposal:
+     Error: VM Exception while processing transaction: reverted with custom error 'DAO_VoteNotStarted()'
+      at DAO.vote (contracts/DAO.sol:136)
+      at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:434:41)
+      at HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+      at send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+      at Proxy.vote (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+      at Context.<anonymous> (test/DAO.test.js:194:7)
+
+  20) GovernanceHooks
+       "before each" hook for "should deploy with correct ledger":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/GovernanceHooks.test.js:21:35)
+
+  21) Governance Incentives (Council Salary)
+       "before each" hook for "should distribute salary to eligible members":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/GovernanceIncentives.test.js:36:34)
+
+  22) Incentives System: Rebates & Duty
+       "before all" hook for "Should pay rebate to High Trust merchant":
+     HardhatError: HH700: Artifact for contract "MerchantRebateVault" not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Incentives.test.js:43:33)
+
+  23) Merchant Portal Integration (Payout Override)
+       "before each" hook for "should redirect payment to RevenueSplitter when payout address is set":
+     HardhatError: HH700: Artifact for contract "MerchantRebateVault" not found. 
+      at Artifacts._handleWrongArtifactForContractName (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:721:11)
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:852:19)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/MerchantIntegration.test.js:32:40)
+
+  24) MerchantPortal Continuous Trust
+       "before each" hook for "should allow payment when score is high":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/MerchantPortal.trust.test.js:22:25)
+
+  25) Interface Compliance Tests
+       IPanicGuard Interface
+         Should verify PanicGuard emergency interface:
+     HardhatError: HH701: There are multiple artifacts for contract "PanicGuardMock", please use a fully qualified name.
+
+Please replace PanicGuardMock for one of these options wherever you are trying to read its artifact:
+
+contracts/mocks/InterfaceMocks.sol:PanicGuardMock
+contracts/mocks/PanicGuardMock.sol:PanicGuardMock
+
+      at Artifacts._getArtifactPathFromFiles (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:860:13)
+      at Artifacts._getArtifactPath (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:516:21)
+      at Artifacts.readArtifact (/workspaces/Vfide/node_modules/hardhat/src/internal/artifacts.ts:71:26)
+      at getContractFactory (/workspaces/Vfide/node_modules/@nomicfoundation/hardhat-ethers/src/internal/helpers.ts:120:22)
+      at Context.<anonymous> (/workspaces/Vfide/test/Interfaces.test.js:167:25)
+
+  26) ProofScoreBurnRouterPlus DAO Cap
+       "before each" hook for "should allocate exactly 5% of total fee to DAO sink":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x90F79bf6EB2c4f870365E785982E1f101E93b906", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/Router.daoCap.test.js:17:27)
+
+  27) SanctumVault Contract Tests
+       "before each" hook for "should set DAO correctly":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/SanctumVault.test.js:19:25)
+
+  28) Seer Activity & Decay
+       "before each" hook for "should increase score when activity is logged":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/Seer.activity.test.js:21:25)
+
+  29) Seer Automated Scoring
+       "before each" hook for "should return NEUTRAL (500) for user with no vault and no tokens":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/Seer.automated.test.js:22:25)
+
+  30) Seer Perfect Features (Badges & Endorsements)
+       "before each" hook for "should allow DAO to set badge weights":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/Seer.perfect.test.js:24:25)
+
+  31) Seer Audit: Is it Perfect?
+       "before all" hook for "IMPERFECTION: Flash-Endorsement Attack":
+     Error: no matching fragment (operation="fragment", info={ "args": [ "0xd30bF3219A0416602bE8D482E0396eF332b0494E", "0x06b3244b086cecC40F1e5A826f736Ded68068a0F", "0x00CAC06Dd0BB4103f8b62D280fE9BCEE8f26fD59" ], "key": "setModules" }, code=UNSUPPORTED_OPERATION, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:698:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at getFragment (node_modules/ethers/src.ts/contract/contract.ts:270:15)
+      at Proxy.setModules (node_modules/ethers/src.ts/contract/contract.ts:350:26)
+      at Context.<anonymous> (test/SeerAudit.test.js:30:16)
+
+  32) Seer Contract Tests
+       Deployment
+         should have correct constants:
+
+      AssertionError: expected 5000 to equal 500.
+      + expected - actual
+
+      -5000
+      +500
+      
+      at Context.<anonymous> (test/Seer.test.js:33:39)
+
+  33) Seer Contract Tests
+       Module Configuration
+         should allow DAO to set modules:
+     Error: no matching fragment (operation="fragment", info={ "args": [ "0x1343248Cbd4e291C6979e70a138f4c774e902561", "0x22a9B82A6c3D2BFB68F324B2e8367f346Dd6f32a", "0x0000000000000000000000000000000000000000" ], "key": "setModules" }, code=UNSUPPORTED_OPERATION, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:698:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at getFragment (node_modules/ethers/src.ts/contract/contract.ts:270:15)
+      at Proxy.setModules (node_modules/ethers/src.ts/contract/contract.ts:350:26)
+      at Context.<anonymous> (test/Seer.test.js:50:38)
+
+  34) Seer Contract Tests
+       Module Configuration
+         should revert if non-DAO tries to set modules:
+     Error: no matching fragment (operation="fragment", info={ "args": [ "0x547382C0D1b23f707918D3c83A77317B71Aa8470", "0x7C8BaafA542c57fF9B2B90612bf8aB9E86e22C09", "0x0000000000000000000000000000000000000000" ], "key": "setModules" }, code=UNSUPPORTED_OPERATION, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:698:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at getFragment (node_modules/ethers/src.ts/contract/contract.ts:270:15)
+      at Proxy.setModules (node_modules/ethers/src.ts/contract/contract.ts:350:26)
+      at Context.<anonymous> (test/Seer.test.js:62:29)
+
+  35) Seer Contract Tests
+       Module Configuration
+         should revert if setting modules to zero:
+     Error: no matching fragment (operation="fragment", info={ "args": [ "0x0000000000000000000000000000000000000000", "0x79E8AB29Ff79805025c9462a2f2F12e9A496f81d", "0x0000000000000000000000000000000000000000" ], "key": "setModules" }, code=UNSUPPORTED_OPERATION, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:698:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at getFragment (node_modules/ethers/src.ts/contract/contract.ts:270:15)
+      at Proxy.setModules (node_modules/ethers/src.ts/contract/contract.ts:350:26)
+      at Context.<anonymous> (test/Seer.test.js:68:27)
+
+  36) Seer Contract Tests
+       Score Management
+         should return neutral score for uninitialized user:
+
+      AssertionError: expected 5000 to equal 500.
+      + expected - actual
+
+      -5000
+      +500
+      
+      at Context.<anonymous> (test/Seer.test.js:101:53)
+
+  37) Seer Contract Tests
+       Score Management
+         should allow DAO to set score directly:
+
+      AssertionError: Error in "ScoreSet" event: Error in the 2nd argument assertion: expected 5000 to equal 500.
+      + expected - actual
+
+      -5000
+      +500
+      
+      at Context.<anonymous> (test/Seer.test.js:105:7)
+
+  38) Seer Contract Tests
+       Score Management
+         should reward user:
+
+      AssertionError: Error in "ScoreSet" event: Error in the 2nd argument assertion: expected 5000 to equal 500.
+      + expected - actual
+
+      -5000
+      +500
+      
+      at Context.<anonymous> (test/Seer.test.js:120:7)
+
+  39) Seer Contract Tests
+       Score Management
+         should punish user:
+
+      AssertionError: Error in "ScoreSet" event: Error in the 2nd argument assertion: expected 5000 to equal 500.
+      + expected - actual
+
+      -5000
+      +500
+      
+      at Context.<anonymous> (test/Seer.test.js:129:7)
+
+  40) Seer Contract Tests
+       Score Management
+         should clamp score to max:
+
+      AssertionError: expected 1040 to equal 1000.
+      + expected - actual
+
+      -1040
+      +1000
+      
+      at Context.<anonymous> (test/Seer.test.js:139:53)
+
+  41) Seer Contract Tests
+       Score Management
+         should clamp score to min:
+
+      AssertionError: expected 10 to equal 1.
+      + expected - actual
+
+      -10
+      +1
+      
+      at Context.<anonymous> (test/Seer.test.js:145:53)
+
+  42) Complete System Integration Test
+       "before each" hook for "should have correct total supply with dev reserve":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/SystemIntegration.test.js:57:30)
+
+  43) ProofScoreBurnRouter
+       Deployment
+         should set default baseBurnBps to 200 (2.0%):
+
+      AssertionError: expected 150 to equal 200.
+      + expected - actual
+
+      -150
+      +200
+      
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:59:45)
+
+  44) ProofScoreBurnRouter
+       Deployment
+         should set default baseSanctumBps to 50 (0.5%):
+
+      AssertionError: expected 5 to equal 50.
+      + expected - actual
+
+      -5
+      +50
+      
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:63:48)
+
+  45) ProofScoreBurnRouter
+       Deployment
+         should set default baseEcosystemBps to 50 (0.5%):
+
+      AssertionError: expected 20 to equal 50.
+      + expected - actual
+
+      -20
+      +50
+      
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:67:50)
+
+  46) ProofScoreBurnRouter
+       setModules
+         should revert if non-owner tries to set modules:
+     AssertionError: Expected transaction to be reverted with reason 'not owner', but it reverted with reason 'OWN: not owner'
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:118:7)
+
+  47) ProofScoreBurnRouter
+       setPolicy
+         should update policy:
+     TypeError: router.setPolicy is not a function
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:139:27)
+      at processImmediate (node:internal/timers:485:21)
+
+  48) ProofScoreBurnRouter
+       setPolicy
+         should revert if maxTotalBps is too high:
+     TypeError: router.setPolicy is not a function
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:153:27)
+      at processImmediate (node:internal/timers:485:21)
+
+  49) ProofScoreBurnRouter
+       setPolicy
+         should revert if base exceeds max:
+     TypeError: router.setPolicy is not a function
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:158:27)
+      at processImmediate (node:internal/timers:485:21)
+
+  50) ProofScoreBurnRouter
+       computeFees
+         should calculate fees correctly for neutral score:
+
+      AssertionError: expected 3270000000000000000 to equal 2000000000000000000.
+      + expected - actual
+
+      -3270000000000000000
+      +2000000000000000000
+      
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:173:34)
+
+  51) ProofScoreBurnRouter
+       computeFees
+         should reduce burn for high trust score:
+
+      AssertionError: expected 4280000000000000000 to equal 1500000000000000000.
+      + expected - actual
+
+      -4280000000000000000
+      +1500000000000000000
+      
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:192:34)
+
+  52) ProofScoreBurnRouter
+       computeFees
+         should increase burn for low trust score:
+
+      AssertionError: expected 4280000000000000000 to equal 3500000000000000000.
+      + expected - actual
+
+      -4280000000000000000
+      +3500000000000000000
+      
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:208:34)
+
+  53) ProofScoreBurnRouter
+       computeFees
+         should scale down if total exceeds max:
+     TypeError: router.setPolicy is not a function
+      at Context.<anonymous> (test/ProofScoreBurnRouter.test.js:216:20)
+      at processImmediate (node:internal/timers:485:21)
+
+  54) TempVault Contract Tests
+       should revert if non-owner tries to withdraw:
+     AssertionError: Expected transaction to be reverted with reason 'not owner', but it reverted with a custom error
+      at Context.<anonymous> (test/TempVault.test.js:29:5)
+
+  55) VFIDECommerce.branch.more
+       "before each" hook for "should initialize commerce with correct parameters":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.branch.more.test.js:10:61)
+
+  56) VFIDECommerce.constructor.branch
+       "before each" hook for "should initialize commerce with correct parameters":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.constructor.branch.test.js:10:61)
+
+  57) VFIDECommerce.branches
+       "before each" hook for "should initialize commerce with correct parameters":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.branches.test.js:10:61)
+
+  58) VFIDECommerce.coverage.microbatch
+       "before each" hook for "should initialize commerce with correct parameters":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.coverage.microbatch.test.js:10:61)
+
+  59) VFIDECommerce.coverage
+       "before each" hook for "should initialize commerce with correct parameters":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.coverage.test.js:10:61)
+
+  60) VFIDECommerce.extra.focused
+       "before each" hook for "should initialize commerce with correct parameters":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.extra.focused.test.js:10:61)
+
+  61) VFIDECommerce.focused
+       "before each" hook for "should initialize commerce with correct parameters":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.focused.test.js:10:61)
+
+  62) VFIDECommerce.microbatch1
+       "before each" hook for "should test merchant operations - batch 1":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.microbatch1.test.js:10:61)
+
+  63) VFIDECommerce.microbatch2
+       "before each" hook for "should test merchant operations - batch 2":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.microbatch2.test.js:10:61)
+
+  64) VFIDECommerce.microbatch3
+       "before each" hook for "should test merchant operations - batch 3":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.microbatch3.test.js:10:61)
+
+  65) VFIDECommerce.microbatch4
+       "before each" hook for "should test merchant operations - batch 4":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.microbatch4.test.js:10:61)
+
+  66) VFIDECommerce.microbatch5
+       "before each" hook for "should test merchant operations - batch 5":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.microbatch5.test.js:10:61)
+
+  67) VFIDECommerce.microbatch7
+       "before each" hook for "should test merchant operations - batch 7":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.microbatch7.test.js:10:61)
+
+  68) VFIDECommerce.microbatch6
+       "before each" hook for "should test merchant operations - batch 6":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.microbatch6.test.js:10:61)
+
+  69) VFIDECommerce additional coverage tests
+       "before each" hook for "open reverts when merchant is suspended":
+     TypeError: registry.connect(...).setReporter is not a function
+      at Context.<anonymous> (test/VFIDECommerce.more.coverage.test.js:43:35)
+
+  70) VFIDECommerce.microbatch8
+       "before each" hook for "should test merchant operations - batch 8":
+     TypeError: invalid overrides parameter (argument="overrides", value="0x0000000000000000000000000000000000000000", code=INVALID_ARGUMENT, version=6.16.0)
+      at makeError (node_modules/ethers/src.ts/utils/errors.ts:691:21)
+      at assert (node_modules/ethers/src.ts/utils/errors.ts:719:25)
+      at assertArgument (node_modules/ethers/src.ts/utils/errors.ts:731:5)
+      at copyOverrides (node_modules/ethers/src.ts/contract/contract.ts:146:19)
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:83:44)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at deployCommerce (test/helpers.js:123:41)
+      at Context.<anonymous> (test/VFIDECommerce.microbatch8.test.js:10:61)
+
+  71) VFIDEFinance
+       "before each" hook for "Should allow DAO to add asset":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/VFIDEFinance.test.js:16:45)
+
+  72) VFIDECommerce
+       MerchantRegistry
+         Should revert if score is too low:
+     TypeError: registry.connect(...).setPolicy is not a function
+      at Context.<anonymous> (test/VFIDECommerce.test.js:69:41)
+      at processImmediate (node:internal/timers:485:21)
+
+  73) VFIDECommerce
+       MerchantRegistry
+         Should auto-suspend on too many refunds:
+     TypeError: registry.connect(...).setReporter is not a function
+      at Context.<anonymous> (test/VFIDECommerce.test.js:86:41)
+
+  74) VFIDECommerce
+       CommerceEscrow
+         Should fund escrow:
+     TypeError: escrow.connect(...).fund is not a function
+      at Context.<anonymous> (test/VFIDECommerce.test.js:150:46)
+
+  75) VFIDECommerce
+       CommerceEscrow
+         Should release escrow:
+     TypeError: escrow.connect(...).fund is not a function
+      at Context.<anonymous> (test/VFIDECommerce.test.js:165:39)
+
+  76) Verification: Automated Justice & Economics
+       "before all" hook in "Verification: Automated Justice & Economics":
+     Error: incorrect number of arguments to constructor
+      at ContractFactory.getDeployTransaction (node_modules/ethers/src.ts/contract/factory.ts:87:19)
+      at ContractFactory.deploy (node_modules/ethers/src.ts/contract/factory.ts:105:31)
+      at Context.<anonymous> (test/Verification.test.js:29:47)
+
+  77) Uncaught error outside test suite:
+     Uncaught TypeError: Do not know how to serialize a BigInt
+      at stringify (<anonymous>)
+      at writeChannelMessage (node:internal/child_process/serialization:164:20)
+      at process.target._send (node:internal/child_process:851:17)
+      at process.target.send (node:internal/child_process:751:19)
+      at Object.worker.send (node_modules/workerpool/src/worker.js:63:15)
+      at /workspaces/Vfide/node_modules/workerpool/src/worker.js:170:24
+
+
+

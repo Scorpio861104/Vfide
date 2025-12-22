@@ -35,8 +35,9 @@ describe('Ecosystem Vault & Splitter Integration', function () {
     );
 
     // Deploy Router with Splitter as the "DAO Sink" (ecosystemSink)
-    const Router = await ethers.getContractFactory('ProofScoreBurnRouterPlus');
-    router = await Router.deploy(dao.address, await seer.getAddress(), treasury.address, await splitter.getAddress(), ecoVault.address);
+    // ProofScoreBurnRouter constructor: seer, sanctumSink, burnSink, ecosystemSink
+    const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
+    router = await Router.deploy(await seer.getAddress(), treasury.address, treasury.address, splitter.target);
   });
 
   it('should route combined DAO+Eco fees to the Splitter', async function () {

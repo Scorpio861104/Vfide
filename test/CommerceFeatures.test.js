@@ -52,7 +52,8 @@ describe("Commerce Features (Amazon Killer)", function () {
 
     // 3. Deploy SubscriptionManager
     const SubscriptionManager = await ethers.getContractFactory("SubscriptionManager");
-    subscriptionManager = await SubscriptionManager.deploy(vaultHub.target);
+    // Constructor: vaultHub, dao, seer
+    subscriptionManager = await SubscriptionManager.deploy(vaultHub.target, owner.address, seer.target);
 
     // 4. Setup
     // Mint tokens

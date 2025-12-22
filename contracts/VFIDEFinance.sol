@@ -163,11 +163,11 @@ contract EcoTreasuryVault {
 }
 
 /**
- * @title StablecoinRegistry
+ * @title StablecoinRegistryLegacy
  * @notice DEPRECATED - Kept for test compatibility only
  * @dev VFIDE ecosystem is now VFIDE-only. This contract is not used in production.
  */
-contract StablecoinRegistry {
+contract StablecoinRegistryLegacy {
     event DAOSet(address dao);
     event LedgerSet(address ledger);
     event AssetAdded(address indexed token, uint8 decimals, string symbolHint);

@@ -16,9 +16,9 @@ describe("GovernanceHooks", function () {
     const SeerMock = await ethers.getContractFactory("SeerMock");
     seer = await SeerMock.deploy();
 
-    // Deploy GovernanceHooks (needs ledger, seer)
+    // Deploy GovernanceHooks (needs ledger, seer, dao)
     const GovernanceHooks = await ethers.getContractFactory("GovernanceHooks");
-    hooks = await GovernanceHooks.deploy(ledger.target, seer.target);
+    hooks = await GovernanceHooks.deploy(ledger.target, seer.target, dao.address);
   });
 
   describe("Deployment", function () {
@@ -32,7 +32,7 @@ describe("GovernanceHooks", function () {
 
     it("should emit ModulesSet on deployment", async function () {
       const GovernanceHooks = await ethers.getContractFactory("GovernanceHooks");
-      const contract = await GovernanceHooks.deploy(await ledger.getAddress(), await seer.getAddress());
+      const contract = await GovernanceHooks.deploy(await ledger.getAddress(), await seer.getAddress(), dao.address);
       await expect(contract.deploymentTransaction())
         .to.emit(contract, "ModulesSet")
         .withArgs(await ledger.getAddress(), await seer.getAddress());
@@ -40,19 +40,19 @@ describe("GovernanceHooks", function () {
 
     it("should deploy with zero address ledger (optional)", async function () {
       const GovernanceHooks = await ethers.getContractFactory("GovernanceHooks");
-      const h = await GovernanceHooks.deploy(ethers.ZeroAddress, await seer.getAddress());
+      const h = await GovernanceHooks.deploy(ethers.ZeroAddress, await seer.getAddress(), dao.address);
       expect(await h.ledger()).to.equal(ethers.ZeroAddress);
     });
 
     it("should deploy with zero address seer (optional)", async function () {
       const GovernanceHooks = await ethers.getContractFactory("GovernanceHooks");
-      const h = await GovernanceHooks.deploy(ledger.target, ethers.ZeroAddress);
+      const h = await GovernanceHooks.deploy(ledger.target, ethers.ZeroAddress, dao.address);
       expect(await h.seer()).to.equal(ethers.ZeroAddress);
     });
 
     it("should deploy with both zero addresses", async function () {
       const GovernanceHooks = await ethers.getContractFactory("GovernanceHooks");
-      const h = await GovernanceHooks.deploy(ethers.ZeroAddress, ethers.ZeroAddress);
+      const h = await GovernanceHooks.deploy(ethers.ZeroAddress, ethers.ZeroAddress, dao.address);
       expect(await h.ledger()).to.equal(ethers.ZeroAddress);
       expect(await h.seer()).to.equal(ethers.ZeroAddress);
     });

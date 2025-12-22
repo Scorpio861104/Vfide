@@ -18,9 +18,16 @@ describe("Business Suite (Corporate Finance)", function () {
   });
 
   describe("PayrollManager (Streaming Salaries)", function () {
+    let seer;
+    
     beforeEach(async function () {
+      // Deploy SeerMock for ProofScore rewards
+      const SeerMock = await ethers.getContractFactory("SeerMock");
+      seer = await SeerMock.deploy();
+      
       const PayrollManager = await ethers.getContractFactory("PayrollManager");
-      payrollManager = await PayrollManager.deploy();
+      // Constructor: dao, seer
+      payrollManager = await PayrollManager.deploy(owner.address, seer.target);
     });
 
     it("should create a stream and allow withdrawal", async function () {

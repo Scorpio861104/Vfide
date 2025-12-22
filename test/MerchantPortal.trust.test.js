@@ -19,7 +19,8 @@ describe('MerchantPortal Continuous Trust', function () {
 
     // Mock Token
     const Token = await ethers.getContractFactory('ERC20Mock');
-    token = await Token.deploy("VFIDE", "VFIDE", dao.address, 1000000); // 1M tokens
+    token = await Token.deploy("VFIDE", "VFIDE");
+    await token.mint(dao.address, ethers.parseEther("1000000")); // 1M tokens
 
     // Deploy Seer
     const Seer = await ethers.getContractFactory("Seer");

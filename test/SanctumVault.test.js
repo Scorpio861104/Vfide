@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 
 describe('SanctumVault Contract Tests', function () {
   let vault, dao, charity, approver, user;
-  let token, ledger;
+  let token, ledger, seer;
 
   beforeEach(async function () {
     [dao, charity, approver, user] = await ethers.getSigners();
@@ -11,12 +11,16 @@ describe('SanctumVault Contract Tests', function () {
     const Ledger = await ethers.getContractFactory('LedgerMock');
     ledger = await Ledger.deploy(false);
 
+    const SeerMock = await ethers.getContractFactory('SeerMock');
+    seer = await SeerMock.deploy();
+
     const Token = await ethers.getContractFactory('ERC20Mock');
     token = await Token.deploy('Test', 'TST');
     await token.mint(dao.address, ethers.parseEther('1000'));
 
     const Vault = await ethers.getContractFactory('SanctumVault');
-    vault = await Vault.deploy(dao.address, await ledger.getAddress());
+    // Constructor: dao, ledger, seer
+    vault = await Vault.deploy(dao.address, await ledger.getAddress(), await seer.getAddress());
 
     // Fund vault
     await token.transfer(await vault.getAddress(), ethers.parseEther('100'));

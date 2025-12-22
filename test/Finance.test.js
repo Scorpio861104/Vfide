@@ -11,7 +11,8 @@ describe("StablecoinRegistry and EcoTreasuryVault", function () {
     [owner, dao, other] = await ethers.getSigners();
 
     StablecoinRegistry = await ethers.getContractFactory("StablecoinRegistry");
-    stable = await StablecoinRegistry.deploy(dao.address, ethers.ZeroAddress);
+    // Constructor takes no arguments
+    stable = await StablecoinRegistry.deploy();
     await stable.waitForDeployment();
 
     // Deploy a mock stablecoin

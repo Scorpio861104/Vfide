@@ -57,7 +57,8 @@ async function deployContracts(owner, dao, user1, user2, merchant1, merchant2) {
     // Deploy Escrow
     const CommerceEscrow = await ethers.getContractFactory("CommerceEscrow");
     // Manual deployment for CommerceEscrow to avoid invalid overrides error
-    const escrowTx = await CommerceEscrow.getDeployTransaction(dao.address, token.target, vaultHub.target, registry.target, security.target, seer.target, ethers.ZeroAddress);
+    // Constructor: dao, token, hub, merchants, sec, ledger
+    const escrowTx = await CommerceEscrow.getDeployTransaction(dao.address, token.target, vaultHub.target, registry.target, security.target, ledger.target);
     const escrowResponse = await owner.sendTransaction(escrowTx);
     const escrowReceipt = await escrowResponse.wait();
     const escrow = CommerceEscrow.attach(escrowReceipt.contractAddress);
@@ -120,7 +121,8 @@ async function deployCommerce(owner, dao) {
     await registry.waitForDeployment();
 
     const CommerceEscrow = await ethers.getContractFactory("CommerceEscrow");
-    const escrow = await CommerceEscrow.deploy(dao.address, token.target, vault.target, registry.target, security.target, seer.target, ethers.ZeroAddress);
+    // Constructor: dao, token, hub, merchants, sec, ledger
+    const escrow = await CommerceEscrow.deploy(dao.address, token.target, vault.target, registry.target, security.target, ledger.target);
     await escrow.waitForDeployment();
 
     await token.connect(owner).setVaultOnly(false);

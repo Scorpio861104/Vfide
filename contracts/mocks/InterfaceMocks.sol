@@ -11,7 +11,7 @@ contract TimelockMock {
     function setAdmin(address admin) external { emit AdminSet(admin); }
 }
 
-contract SanctumMock {
+contract SanctumMockSimple {
     function disburse(address, uint256) external {}
 }
 

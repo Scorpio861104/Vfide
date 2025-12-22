@@ -33,7 +33,7 @@ describe("Governance Incentives (Council Salary)", function () {
 
     // 4. Deploy Salary
     const CouncilSalary = await ethers.getContractFactory("CouncilSalary");
-    salary = await CouncilSalary.deploy(election.target, seer.target, vfide.target);
+    salary = await CouncilSalary.deploy(election.target, seer.target, vfide.target, owner.address);
 
     // 5. Setup Council
     // We need to set the council in Election
