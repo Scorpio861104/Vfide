@@ -18,6 +18,11 @@ pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
 
+// Seer interface for ProofScore
+interface ISeer_Sanct {
+    function reward(address subject, uint16 delta, string calldata reason) external;
+}
+
 error SANCT_NotDAO();
 error SANCT_Zero();
 error SANCT_NotApproved();
@@ -42,6 +47,10 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// DAO control (can be DAO contract or multisig)
     address public dao;
     IProofLedger public ledger;
+    ISeer_Sanct public seer;
+    
+    // ProofScore rewards for charitable actions
+    uint16 public constant DONATION_REWARD = 10;  // +1.0 per donation
 
     /// Charity registry
     struct CharityInfo {
@@ -94,10 +103,11 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(isApprover[msg.sender] || msg.sender == dao, "not approver");
     }
 
-    constructor(address _dao, address _ledger) {
+    constructor(address _dao, address _ledger, address _seer) {
         require(_dao != address(0), "zero dao");
         dao = _dao;
         ledger = IProofLedger(_ledger);
+        if (_seer != address(0)) seer = ISeer_Sanct(_seer);
         
         // DAO is initial approver
         isApprover[_dao] = true;
@@ -121,6 +131,10 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         ledger = IProofLedger(_ledger);
         emit LedgerSet(_ledger);
         _log("sanctum_ledger_set");
+    }
+    
+    function setSeer(address _seer) external onlyDAO {
+        seer = ISeer_Sanct(_seer);
     }
 
     function setApprovalsRequired(uint8 _required) external onlyDAO {
@@ -210,6 +224,11 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         
         // H-4 Fix: Use safeTransferFrom for compatibility with USDT and other non-standard tokens
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        
+        // Reward donor with ProofScore boost
+        if (address(seer) != address(0)) {
+            try seer.reward(msg.sender, DONATION_REWARD, "charity_donation") {} catch {}
+        }
         
         emit Deposit(msg.sender, token, amount, note);
         _logEv(msg.sender, "sanctum_deposit", amount, note);

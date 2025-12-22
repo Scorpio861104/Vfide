@@ -20,6 +20,11 @@ import "./SharedInterfaces.sol";
 
 using SafeERC20 for IERC20;
 
+// Seer interface for ProofScore
+interface ISeer_SM {
+    function reward(address subject, uint16 delta, string calldata reason) external;
+}
+
 error SM_NotSubscriber();
 error SM_NotMerchant();
 error SM_NotAuthorized();
@@ -72,16 +77,29 @@ contract SubscriptionManager is ReentrancyGuard {
     address public dao;
     
     IVaultHub public vaultHub;
+    
+    // ProofScore integration
+    ISeer_SM public seer;
+    uint16 public constant SUBSCRIPTION_PAYER_REWARD = 2;    // +0.2 per payment
+    uint16 public constant SUBSCRIPTION_MERCHANT_REWARD = 3; // +0.3 per payment
 
     modifier onlyDAO() {
         require(msg.sender == dao, "SM: not DAO");
         _;
     }
 
-    constructor(address _vaultHub, address _dao) {
+    constructor(address _vaultHub, address _dao, address _seer) {
         require(_vaultHub != address(0), "SM: zero vaultHub");
         vaultHub = IVaultHub(_vaultHub);
         dao = _dao;
+        if (_seer != address(0)) seer = ISeer_SM(_seer);
+    }
+    
+    /**
+     * @notice Set Seer address (only DAO can change)
+     */
+    function setSeer(address _seer) external onlyDAO {
+        seer = ISeer_SM(_seer);
     }
     
     /**
@@ -253,6 +271,12 @@ contract SubscriptionManager is ReentrancyGuard {
 
         // Execute Transfer (using SafeERC20 for non-standard tokens)
         IERC20(sub.token).safeTransferFrom(userVault, merchantVault, sub.amount);
+        
+        // Reward ProofScore for successful subscription payment
+        if (address(seer) != address(0)) {
+            try seer.reward(sub.subscriber, SUBSCRIPTION_PAYER_REWARD, "subscription_payment") {} catch {}
+            try seer.reward(sub.merchant, SUBSCRIPTION_MERCHANT_REWARD, "subscription_received") {} catch {}
+        }
 
         emit PaymentProcessed(subId, block.timestamp);
     }

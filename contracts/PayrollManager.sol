@@ -20,6 +20,11 @@ interface IERC20_Pay {
     function balanceOf(address account) external view returns (uint256);
 }
 
+// Seer interface for ProofScore
+interface ISeer_PM {
+    function reward(address subject, uint16 delta, string calldata reason) external;
+}
+
 error PM_NotPayer();
 error PM_NotPayee();
 error PM_NotAuthorized();
@@ -64,6 +69,11 @@ contract PayrollManager is ReentrancyGuard {
     // NEW: DAO for emergency controls
     address public dao;
     
+    // ProofScore integration
+    ISeer_PM public seer;
+    uint16 public constant PAYROLL_CREATE_REWARD = 5;     // +0.5 for creating stream
+    uint16 public constant PAYROLL_WITHDRAW_REWARD = 1;   // +0.1 per withdrawal
+    
     // NEW: Track streams by payer and payee
     mapping(address => uint256[]) private payerStreams;
     mapping(address => uint256[]) private payeeStreams;
@@ -73,13 +83,18 @@ contract PayrollManager is ReentrancyGuard {
         _;
     }
     
-    constructor(address _dao) {
+    constructor(address _dao, address _seer) {
         dao = _dao;
+        if (_seer != address(0)) seer = ISeer_PM(_seer);
     }
     
     function setDAO(address _dao) external onlyDAO {
         require(_dao != address(0), "PM: zero DAO");
         dao = _dao;
+    }
+    
+    function setSeer(address _seer) external onlyDAO {
+        seer = ISeer_PM(_seer);
     }
     
     /**
@@ -125,6 +140,11 @@ contract PayrollManager is ReentrancyGuard {
         // Track streams for both parties
         payerStreams[msg.sender].push(id);
         payeeStreams[payee].push(id);
+        
+        // Reward payer for creating payroll stream
+        if (address(seer) != address(0)) {
+            try seer.reward(msg.sender, PAYROLL_CREATE_REWARD, "payroll_created") {} catch {}
+        }
 
         emit StreamCreated(id, msg.sender, payee, rate);
         return id;
@@ -266,6 +286,12 @@ contract PayrollManager is ReentrancyGuard {
         }
 
         _safeTransferPay(s.token, s.payee, amount);
+        
+        // Reward payee for successful withdrawal
+        if (address(seer) != address(0)) {
+            try seer.reward(s.payee, PAYROLL_WITHDRAW_REWARD, "payroll_received") {} catch {}
+        }
+        
         emit Withdraw(streamId, s.payee, amount);
     }
     
