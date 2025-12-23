@@ -6,13 +6,13 @@ import "./SharedInterfaces.sol";
 /**
  * EcosystemVault — Growth Incentive Treasury (Percentage-Based)
  * ----------------------------------------------------------
- * Receives the "Ecosystem Fee" (0.2%) from ProofScoreBurnRouter.
+ * Receives 50% of all transfer fees from ProofScoreBurnRouter.
  * 
  * Three equal buckets (33.3% each), distributed as PERCENTAGES not fixed amounts:
  * 
  * 1. COUNCIL REWARDS (33.3%)
  *    - Split evenly between active council members (1-12)
- *    - Distributed monthly
+ *    - Distributed every 120 days via CouncilSalary contract
  *    - Each member gets: councilPool / activeMembers
  * 
  * 2. MERCHANT BONUS (33.3%)

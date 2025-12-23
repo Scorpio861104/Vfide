@@ -406,15 +406,15 @@ contract ProofScoreBurnRouter is Ownable {
         uint16 scoreFrom = getTimeWeightedScore(from);
         
         // Calculate TOTAL fee using continuous linear curve
-        // Score ≤200: max fee (5%), Score ≥9000: min fee (0.25%)
-        // Score 200-9000: linear interpolation
+        // Score ≤4000: max fee (5%), Score ≥8000: min fee (0.25%)
+        // Score 4000-8000: linear interpolation
         uint256 totalBps = _calculateLinearFee(scoreFrom);
         
-        // Split total fee proportionally: burn gets lion's share, sanctum & ecosystem are fixed ratios
-        // Ratio: ~85.7% burn, ~2.9% sanctum, ~11.4% ecosystem (based on original 150:5:20 ratio)
-        uint256 burnBps = (totalBps * 150) / 175;      // ~85.7% of total
-        uint256 sanctumBps = (totalBps * 5) / 175;     // ~2.9% of total  
-        uint256 ecosystemBps = totalBps - burnBps - sanctumBps; // remainder (~11.4%)
+        // Split total fee: 40% burn, 10% sanctum, 50% ecosystem
+        // Sustainable split to fund: council salaries, staking, headhunter, competitions, merchant rebates
+        uint256 burnBps = (totalBps * 40) / 100;       // 40% of total (deflationary)
+        uint256 sanctumBps = (totalBps * 10) / 100;    // 10% of total (charity)
+        uint256 ecosystemBps = totalBps - burnBps - sanctumBps; // 50% remainder (operations)
         
         // Ensure ecosystem always gets minimum (sustainability)
         if (ecosystemBps < ecosystemMinBps) {
@@ -552,9 +552,9 @@ contract ProofScoreBurnRouter is Ownable {
         // Calculate total fee using linear curve
         uint256 totalBps = _calculateLinearFee(score);
         
-        // Split proportionally (based on original 150:5:20 ratio)
-        burnBps = uint16((totalBps * 150) / 175);
-        sanctumBps = uint16((totalBps * 5) / 175);
+        // Split: 40% burn, 10% sanctum, 50% ecosystem
+        burnBps = uint16((totalBps * 40) / 100);
+        sanctumBps = uint16((totalBps * 10) / 100);
         ecosystemBps = uint16(totalBps - burnBps - sanctumBps);
     }
 
