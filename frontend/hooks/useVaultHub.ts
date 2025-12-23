@@ -16,6 +16,16 @@ const VAULT_HUB_ADDRESS = process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS as `0x${stri
 // Expected chain ID for the vault operations
 const EXPECTED_CHAIN_ID = zkSyncSepoliaTestnet.id; // 300
 
+// Debug logging for production issues
+if (typeof window !== 'undefined') {
+  console.log('[VaultHub Debug]', {
+    VAULT_HUB_ADDRESS,
+    hasAddress: !!VAULT_HUB_ADDRESS,
+    addressLength: VAULT_HUB_ADDRESS?.length,
+    EXPECTED_CHAIN_ID,
+  });
+}
+
 // Helper to parse contract errors into user-friendly messages
 function parseContractError(error: unknown): string {
   if (error instanceof Error) {
