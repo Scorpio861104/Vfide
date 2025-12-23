@@ -1,7 +1,7 @@
 "use client";
 
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
-import { sepolia, mainnet } from 'wagmi/chains';
+import { sepolia, mainnet, zkSyncSepoliaTestnet } from 'wagmi/chains';
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -13,10 +13,14 @@ export function NetworkWarning() {
   const chainId = useChainId();
   const { switchChain, isPending } = useSwitchChain();
 
-  // Get expected chain from env - default to Sepolia for testnet
+  // Get expected chain from env - default to zkSync Sepolia for testnet (chain ID 300)
   const envChainId = process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID;
-  const expectedChainId = envChainId === '1' ? mainnet.id : sepolia.id;
-  const expectedChain = expectedChainId === mainnet.id ? mainnet : sepolia;
+  const expectedChainId = envChainId === '1' ? mainnet.id : 
+                          envChainId === '300' ? zkSyncSepoliaTestnet.id : 
+                          zkSyncSepoliaTestnet.id; // Default to zkSync Sepolia
+  const expectedChain = expectedChainId === mainnet.id ? mainnet : 
+                        expectedChainId === zkSyncSepoliaTestnet.id ? zkSyncSepoliaTestnet :
+                        zkSyncSepoliaTestnet;
   
   // Show warning if connected but on wrong chain
   const showWarning = isConnected && chainId !== expectedChainId;

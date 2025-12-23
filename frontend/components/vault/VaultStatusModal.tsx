@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useSwitchChain } from 'wagmi';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/toast';
 
 export function VaultStatusModal() {
   const { address, isConnected } = useAccount();
-  const { vaultAddress, hasVault, isLoadingVault, isCreatingVault, createVault } = useVaultHub();
+  const { vaultAddress, hasVault, isLoadingVault, isCreatingVault, createVault, isContractConfigured, isOnCorrectChain, expectedChainId } = useVaultHub();
+  const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
   const [showModal, setShowModal] = useState(false);
   const hasCheckedRef = useRef(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -167,9 +168,29 @@ export function VaultStatusModal() {
 
               {/* Action Buttons */}
               <div className="space-y-3">
+                {!isOnCorrectChain ? (
+                  <div className="bg-[#FF4444]/10 border border-[#FF4444] rounded-lg p-4 mb-2">
+                    <p className="text-[#FF4444] text-sm mb-3">
+                      ⚠️ Please switch to zkSync Sepolia network to continue.
+                    </p>
+                    <button
+                      onClick={() => switchChain({ chainId: expectedChainId })}
+                      disabled={isSwitchingChain}
+                      className="w-full py-2 bg-[#FF4444] text-white font-bold rounded-lg hover:bg-[#FF6666] transition-colors disabled:opacity-50"
+                    >
+                      {isSwitchingChain ? 'Switching...' : 'Switch to zkSync Sepolia'}
+                    </button>
+                  </div>
+                ) : isContractConfigured === false ? (
+                  <div className="bg-[#FFA500]/10 border border-[#FFA500] rounded-lg p-4 mb-2">
+                    <p className="text-[#FFA500] text-sm">
+                      ⚠️ Vault system is being configured on this network. Please try again in a few minutes.
+                    </p>
+                  </div>
+                ) : null}
                 <button
                   onClick={handleCreateVault}
-                  disabled={isCreatingVault || isCreating}
+                  disabled={isCreatingVault || isCreating || isContractConfigured === false || !isOnCorrectChain}
                   className="w-full py-4 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isCreatingVault || isCreating ? (

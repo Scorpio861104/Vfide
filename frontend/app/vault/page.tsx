@@ -141,8 +141,9 @@ const { address } = useAccount();
                         await createVault();
                         showToast("Vault created successfully!", "success");
                       } catch (error) {
-                        console.error(error);
-                        showToast("Failed to create vault", "error");
+                        console.error('Vault creation error:', error);
+                        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                        showToast(errorMessage, "error");
                       }
                     }}
                     disabled={isCreatingVault}

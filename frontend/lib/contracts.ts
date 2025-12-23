@@ -41,10 +41,14 @@ export const MERCHANT_PORTAL_ABI = [
 ] as const
 
 export const VAULT_HUB_ABI = [
-  'function getVault(address user) view returns (address)',
-  'function createVault()',
-  'function depositToVault(uint256 amount)',
-  'function withdrawFromVault(uint256 amount)',
+  'function vaultOf(address owner) view returns (address)',
+  'function ownerOfVault(address vault) view returns (address)',
+  'function ensureVault(address owner) returns (address)',
+  'function predictVault(address owner) view returns (address)',
+  'function isVault(address a) view returns (bool)',
+  'function getVaultInfo(address vault) view returns (address owner, uint256 createdAt, bool isLocked, bool exists)',
+  'function checkVaultStatus(address addr) view returns (bool hasVault, address vaultAddress, bool isVaultContract)',
+  'function totalVaults() view returns (uint256)',
 ] as const
 
 export const BADGE_NFT_ABI = [
