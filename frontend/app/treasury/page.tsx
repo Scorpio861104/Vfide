@@ -113,19 +113,19 @@ function OverviewTab() {
         <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Fee Distribution Breakdown</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4 bg-[#1A1A1D] rounded-lg">
-            <div className="text-4xl font-bold text-orange-400 mb-2">~86%</div>
+            <div className="text-4xl font-bold text-orange-400 mb-2">40%</div>
             <div className="text-[#F5F3E8] font-bold">Burn</div>
             <div className="text-xs text-[#A0A0A5]">Deflationary mechanism</div>
           </div>
           <div className="text-center p-4 bg-[#1A1A1D] rounded-lg">
-            <div className="text-4xl font-bold text-pink-400 mb-2">~3%</div>
+            <div className="text-4xl font-bold text-pink-400 mb-2">10%</div>
             <div className="text-[#F5F3E8] font-bold">Sanctum</div>
             <div className="text-xs text-[#A0A0A5]">Charity fund</div>
           </div>
           <div className="text-center p-4 bg-[#1A1A1D] rounded-lg">
-            <div className="text-4xl font-bold text-cyan-400 mb-2">~11%</div>
+            <div className="text-4xl font-bold text-cyan-400 mb-2">50%</div>
             <div className="text-[#F5F3E8] font-bold">Ecosystem</div>
-            <div className="text-xs text-[#A0A0A5]">Council, merchants, incentives</div>
+            <div className="text-xs text-[#A0A0A5]">Council, staking, incentives</div>
           </div>
         </div>
       </div>
@@ -426,8 +426,8 @@ function VestingTab() {
     claimable: '3,333,333 VFIDE',
     vestingStart: 'June 1, 2025',
     vestingEnd: 'June 1, 2028',
-    cliffEnd: 'December 1, 2025',
-    monthlyUnlock: '1,388,889 VFIDE',
+    cliffEnd: 'August 1, 2025',
+    biMonthlyUnlock: '2,777,777 VFIDE',
   };
 
   return (
@@ -438,7 +438,7 @@ function VestingTab() {
           <Clock className="w-12 h-12 text-purple-400" />
           <div>
             <h2 className="text-2xl font-bold text-[#F5F3E8]">Dev Reserve Vesting</h2>
-            <p className="text-[#A0A0A5]">50M VFIDE locked with 6-month cliff, 36-month linear vesting</p>
+            <p className="text-[#A0A0A5]">50M VFIDE locked with 60-day cliff, 36-month linear vesting (bi-monthly unlocks)</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -483,7 +483,7 @@ function VestingTab() {
             <AlertCircle className="text-yellow-400" size={24} />
             <div>
               <div className="text-[#F5F3E8] font-bold">Linear Vesting</div>
-              <div className="text-sm text-[#A0A0A5]">{vestingSchedule.monthlyUnlock}/month</div>
+              <div className="text-sm text-[#A0A0A5]">{vestingSchedule.biMonthlyUnlock}/bi-monthly</div>
             </div>
           </div>
           <div className="flex items-center gap-4">
