@@ -3,6 +3,20 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+// Type for EIP-1193 provider (window.ethereum)
+interface EIP1193Provider {
+  isMetaMask?: boolean;
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on?: (event: string, callback: (...args: unknown[]) => void) => void;
+}
+
+// Extend window type
+declare global {
+  interface Window {
+    ethereum?: EIP1193Provider;
+  }
+}
+
 export default function TestnetPage() {
   const [step, setStep] = useState(1)
   const [walletAddress, setWalletAddress] = useState('')
@@ -24,11 +38,11 @@ export default function TestnetPage() {
     if (typeof window !== 'undefined') {
       setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
       // Detect if we're inside MetaMask's in-app browser
-      const ethereum = (window as any).ethereum
+      const ethereum = window.ethereum
       const isMetaMask = ethereum?.isMetaMask
       const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
       // MetaMask mobile browser has ethereum injected immediately + mobile user agent
-      setIsInMetaMaskBrowser(isMetaMask && isMobileDevice && ethereum)
+      setIsInMetaMaskBrowser(!!isMetaMask && isMobileDevice && !!ethereum)
     }
   }, [])
 
@@ -39,7 +53,7 @@ export default function TestnetPage() {
       await new Promise(resolve => setTimeout(resolve, 500))
       
       if (typeof window !== 'undefined') {
-        const ethereum = (window as any).ethereum
+        const ethereum = window.ethereum
         const hasEthereum = !!ethereum
         setHasWallet(hasEthereum)
         
@@ -86,10 +100,10 @@ export default function TestnetPage() {
 
   const updateBalance = async (address: string) => {
     try {
-      const balance = await (window as any).ethereum.request({
+      const balance = await window.ethereum?.request({
         method: 'eth_getBalance',
         params: [address, 'latest']
-      })
+      }) as string
       const ethBal = parseInt(balance, 16) / 1e18
       setEthBalance(ethBal.toFixed(4))
       return ethBal
@@ -121,7 +135,7 @@ export default function TestnetPage() {
     setLoading(true)
     setError('')
     try {
-      const ethereum = (window as any).ethereum
+      const ethereum = window.ethereum
       if (!ethereum) {
         setError('No wallet found. Please install MetaMask.')
         setHasWallet(false)
@@ -151,12 +165,13 @@ export default function TestnetPage() {
           setStep(3) // Need to switch network
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Connect error:', err)
-      if (err.code === 4001) {
+      const error = err as { code?: number; message?: string }
+      if (error.code === 4001) {
         setError('You rejected the connection. Please try again and click "Connect".')
       } else {
-        setError(err.message || 'Failed to connect. Please try again.')
+        setError(error.message || 'Failed to connect. Please try again.')
       }
     } finally {
       setLoading(false)
@@ -167,14 +182,16 @@ export default function TestnetPage() {
     setLoading(true)
     setError('')
     try {
-      const ethereum = (window as any).ethereum
+      const ethereum = window.ethereum
+      if (!ethereum) throw new Error('No wallet found')
       try {
         await ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: `0x${ZKSYNC_SEPOLIA_CHAIN_ID.toString(16)}` }]
         })
-      } catch (switchError: any) {
-        if (switchError.code === 4902 || switchError.code === -32603) {
+      } catch (switchError: unknown) {
+        const error = switchError as { code?: number }
+        if (error.code === 4902 || error.code === -32603) {
           await ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [{
@@ -196,12 +213,13 @@ export default function TestnetPage() {
       } else {
         setStep(4)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Switch network error:', err)
-      if (err.code === 4001) {
+      const error = err as { code?: number; message?: string }
+      if (error.code === 4001) {
         setError('You rejected the network switch. Please try again.')
       } else {
-        setError(err.message || 'Failed to switch network. Please try manually.')
+        setError(error.message || 'Failed to switch network. Please try manually.')
       }
     } finally {
       setLoading(false)
@@ -210,7 +228,7 @@ export default function TestnetPage() {
 
   const handleAddToken = async () => {
     try {
-      await (window as any).ethereum.request({
+      await window.ethereum?.request({
         method: 'wallet_watchAsset',
         params: {
           type: 'ERC20',

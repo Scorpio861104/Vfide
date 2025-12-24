@@ -22,9 +22,13 @@ const SANCTUM_VAULT_ABI = [
   { name: 'nextProposalId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// TODO: Replace with actual deployed addresses
+// SanctumVault not deployed on zkSync Sepolia testnet yet
+// Contract addresses will be populated after mainnet deployment
 const SANCTUM_VAULT_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const VFIDE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as const;
+
+// Check if contracts are deployed
+const IS_SANCTUM_DEPLOYED = SANCTUM_VAULT_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 type TabType = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history';
 
@@ -38,19 +42,21 @@ export default function SanctumPage() {
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  // Read vault balance
+  // Read vault balance (only if deployed)
   const { data: vaultBalance } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
     abi: SANCTUM_VAULT_ABI,
     functionName: 'getBalance',
     args: [VFIDE_TOKEN_ADDRESS],
+    query: { enabled: IS_SANCTUM_DEPLOYED },
   });
 
-  // Read charity count
+  // Read charity count (only if deployed)
   const { data: charityCount } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
     abi: SANCTUM_VAULT_ABI,
     functionName: 'getCharityCount',
+    query: { enabled: IS_SANCTUM_DEPLOYED },
   });
 
   // Read next proposal ID (to know how many exist)
@@ -58,10 +64,12 @@ export default function SanctumPage() {
     address: SANCTUM_VAULT_ADDRESS,
     abi: SANCTUM_VAULT_ABI,
     functionName: 'nextProposalId',
+    query: { enabled: IS_SANCTUM_DEPLOYED },
   });
 
   // Handlers
   const handleDonate = () => {
+    if (!IS_SANCTUM_DEPLOYED) return;
     if (!donateAmount || parseFloat(donateAmount) <= 0) return;
     writeContract({
       address: SANCTUM_VAULT_ADDRESS,

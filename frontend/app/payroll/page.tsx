@@ -41,9 +41,13 @@ const PAYROLL_MANAGER_ABI = [
   { name: 'estimateEndTime', type: 'function', stateMutability: 'view', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// TODO: Replace with actual deployed address
+// PayrollManager not deployed on zkSync Sepolia testnet yet
+// Contract addresses will be populated after mainnet deployment
 const PAYROLL_MANAGER_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const VFIDE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as const;
+
+// Check if PayrollManager is deployed
+const IS_PAYROLL_DEPLOYED = PAYROLL_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 // Stream data type (from contract)
 interface StreamData {
