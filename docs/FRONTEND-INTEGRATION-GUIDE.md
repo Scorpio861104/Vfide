@@ -83,7 +83,7 @@ import { TransactionNotification } from '@/components/TransactionNotification'
 - ✅ Interactive amount slider
 - ✅ Animated fee bars
 - ✅ Annual savings projection
-- ✅ ProofScore-based fee calculation (1.5-4.5%)
+- ✅ ProofScore-based fee calculation (0.25-5%)
 - ✅ Improvement suggestions
 
 ### 4. LiveSystemStats 📊

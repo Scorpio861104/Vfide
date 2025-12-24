@@ -178,9 +178,9 @@
 - Analogy: "Payments are free, token transfers fund the ecosystem"
 - Key concepts:
   - Payment processing: 0% for everyone (only network gas)
-  - VFIDE token transfers: 2-4.5% ProofScore-based fee
-  - Fee breakdown: 2% burn (deflationary) + 0.5% charity + 0.5% ecosystem
-  - High-trust discount: 2.5% total. Low-trust penalty: 4.5% total
+  - VFIDE token transfers: 0.25-5% ProofScore-based fee
+  - Fee split: 40% burn (deflationary) + 10% charity + 50% ecosystem
+  - High-trust (80%+): 0.25% total. Low-trust (40%-): 5% total
   - Why this model works: Free payments drive adoption, token fees create value
 - Interactive: Fee calculator showing ProofScore impact
 

@@ -1,0 +1,56 @@
+No files changed, compilation skipped
+Warning: Detected artifacts built from source files that no longer exist. Run `forge clean` to make sure builds are in sync with project files.
+ - /workspaces/Vfide/contracts/mocks/BadgeNFTMock.sol
+ - /workspaces/Vfide/test/foundry/RevenueSplitter.t.sol
+ - /workspaces/Vfide/test/foundry/EscrowManager.t.sol
+ - /workspaces/Vfide/test/foundry/BadgeManager.t.sol
+Warning: EIP-3855 is not supported in one or more of the RPCs used.
+Unsupported Chain IDs: 300.
+Contracts deployed with a Solidity version equal or higher than 0.8.20 might not work properly.
+For more information, please see https://eips.ethereum.org/EIPS/eip-3855
+Script ran successfully.
+
+== Logs ==
+  ProofLedger deployed at: 0xd256462c479489fD674Df7DF80d13CB8E80face0
+  SecurityHub deployed at: 0x977e54d9f5668703F9f3416c8AE8Ce8597637840
+  Seer deployed at: 0x90b672C009F0F16201E7bE2c6696d1c375d28422
+  StablecoinRegistry deployed at: 0x0Ca218c43619D7Ad0054944eB00F4591d8B109d8
+  computeCreateAddress is deprecated. Please use vm.computeCreateAddress instead.
+  computeCreateAddress is deprecated. Please use vm.computeCreateAddress instead.
+  computeCreateAddress is deprecated. Please use vm.computeCreateAddress instead.
+  computeCreateAddress is deprecated. Please use vm.computeCreateAddress instead.
+  computeCreateAddress is deprecated. Please use vm.computeCreateAddress instead.
+  computeCreateAddress is deprecated. Please use vm.computeCreateAddress instead.
+  Pre-computed Presale: 0x89aefb047B6CB2bB302FE2734DDa452985eF1658
+  Pre-computed DevVault: 0x50b1AA7dbDD8E06c9C5dDD164d2d1f30119001Ce
+  Pre-computed Token: 0xf57992ab9F8887650C2a220A34fe86ebD00c02f5
+  Pre-computed Hub: 0x090014f269f642656394E2FEaB038b92387B4db3
+  VFIDEPresale deployed at: 0x89aefb047B6CB2bB302FE2734DDa452985eF1658
+  DevReserveVestingVault deployed at: 0x50b1AA7dbDD8E06c9C5dDD164d2d1f30119001Ce
+  VFIDEToken deployed at: 0xf57992ab9F8887650C2a220A34fe86ebD00c02f5
+  VaultInfrastructure deployed at: 0x090014f269f642656394E2FEaB038b92387B4db3
+  DAO deployed at: 0xbbeB488A63Bed08939314a8a293DF9b634B3b4CD
+  
+  === DEPLOYMENT COMPLETE ===
+  VFIDEToken: 0xf57992ab9F8887650C2a220A34fe86ebD00c02f5
+  VFIDEPresale: 0x89aefb047B6CB2bB302FE2734DDa452985eF1658
+  VaultInfrastructure: 0x090014f269f642656394E2FEaB038b92387B4db3
+  DAO: 0xbbeB488A63Bed08939314a8a293DF9b634B3b4CD
+  DAOTimelock: 0x3e679dfc533371Be29B696E9d4011C5723B1e56e
+  StablecoinRegistry: 0x0Ca218c43619D7Ad0054944eB00F4591d8B109d8
+  ProofLedger: 0xd256462c479489fD674Df7DF80d13CB8E80face0
+  SecurityHub: 0x977e54d9f5668703F9f3416c8AE8Ce8597637840
+  Seer: 0x90b672C009F0F16201E7bE2c6696d1c375d28422
+  MerchantRegistry: 0x8C6D5494094b4Af02Ac0eda10295FFf01A971f1a
+  CommerceEscrow: 0x1508fa7D70A88F3c5E89d3a82f668cD92Fa902B5
+  DevReserveVestingVault: 0x50b1AA7dbDD8E06c9C5dDD164d2d1f30119001Ce
+  
+  === POST-DEPLOYMENT STEPS ===
+  1. Add stablecoins to registry:
+     registry.addStablecoin(USDC_ADDRESS, 6, 'USDC')
+     registry.addStablecoin(USDT_ADDRESS, 6, 'USDT')
+     registry.addStablecoin(DAI_ADDRESS, 18, 'DAI')
+  2. Enable presale tiers: presale.setTierEnabled(0, true)
+  3. Transfer ownership to multisig/DAO
+Error: `Unknown10` is above the contract size limit (29000 > 24576).
+Error: IO error: not a terminal

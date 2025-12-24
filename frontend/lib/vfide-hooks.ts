@@ -133,14 +133,14 @@ export function useProofScore(userAddress?: `0x${string}`) {
     scoreNum >= 5000 ? 'Neutral' :
     scoreNum >= 3500 ? 'Low Trust' : 'Risky'
   
-  // Total fees = burn + sanctum (0.05%) + ecosystem (0.2%)
-  // Contract: base 1.5% burn ± adjustments + 0.25% = 0.5% to 5% total
+  // Total fees based on ProofScore (linear interpolation in contract)
+  // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
   const burnFee = 
-    scoreNum >= 8000 ? 0.5 :  // Elite: 0.25% burn + 0.25% other = 0.5% total
-    scoreNum >= 7000 ? 1.25 :  // High Trust: 1% burn + 0.25% other = 1.25% total  
-    scoreNum >= 5000 ? 1.75 : // Neutral: 1.5% burn + 0.25% other = 1.75% total
-    scoreNum >= 3500 ? 4.25 :  // Low Trust: ~4% burn + 0.25% other = 4.25% total
-    5.0                      // Risky: 4.75% burn + 0.25% other = 5% total
+    scoreNum >= 8000 ? 0.25 :  // Elite: 0.25% total (contract minimum)
+    scoreNum >= 7000 ? 1.0 :   // High Trust: ~1% (interpolated)
+    scoreNum >= 5000 ? 2.0 :   // Neutral: ~2% (interpolated)
+    scoreNum >= 4000 ? 3.5 :   // Low Trust: ~3.5% (interpolated)
+    5.0                        // Risky (≤4000): 5% max (contract maximum)
   
   const color = 
     scoreNum >= 8000 ? '#00FF88' : // Elite green

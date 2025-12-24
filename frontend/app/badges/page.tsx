@@ -42,9 +42,9 @@ const SEER_ABI = [
   { name: 'score', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// TODO: Replace with actual deployed addresses
-const BADGE_NFT_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const SEER_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+// Contract addresses from environment (BadgeNFT not deployed yet)
+const BADGE_NFT_ADDRESS = (process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const SEER_ADDRESS = (process.env.NEXT_PUBLIC_SEER_ADDRESS || '0xD22944d47bAD4Bd5fF1A366393c4bdbc9250fd8E') as `0x${string}`;
 
 // Category icons
 const categoryIcons: Record<string, React.ReactNode> = {

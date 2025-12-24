@@ -53,10 +53,10 @@ const PROMOTIONAL_TREASURY_ABI = [
   { name: 'isPromotionActive', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'bool' }] },
 ] as const;
 
-// TODO: Replace with actual deployed addresses
-const LIQUIDITY_INCENTIVES_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const DUTY_DISTRIBUTOR_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const PROMOTIONAL_TREASURY_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+// Contract addresses (these contracts not deployed to testnet yet)
+const LIQUIDITY_INCENTIVES_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+const DUTY_DISTRIBUTOR_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+const PROMOTIONAL_TREASURY_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
 
 type TabId = 'overview' | 'duty' | 'promotional' | 'liquidity' | 'referral'
 

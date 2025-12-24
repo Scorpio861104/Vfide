@@ -103,10 +103,10 @@ Total Score = Base (500)
    - Encourages ongoing participation
 
 5. **Dynamic Fees**
-   - ProofScore affects burn rates:
-     - High Trust (700+): 1.5% total burn
-     - Neutral (500): 3% burn
-     - Low Trust (<350): 4.5% burn + penalty
+   - ProofScore affects fee rates:
+     - High Trust (80%+): 0.25% total fee
+     - Neutral (60%): ~2.63% fee
+     - Low Trust (≤40%): 5% fee
 
 ---
 
@@ -144,43 +144,45 @@ Total Score = Base (500)
 
 ---
 
-### GROUP 4: GUARDIAN NODES & STAKING
-**Purpose**: Buy/sell guardian nodes, earn rewards, stake VFIDE  
-**Contracts**: `GuardianNodeSale`, `GuardianStaking`
+### GROUP 4: PRESALE & TOKEN DISTRIBUTION
+**Purpose**: Token presale with tiered pricing and bonuses  
+**Contracts**: `VFIDEPresale`
 
-#### Node Tiers:
-1. **Sentinel Node** ($0.03/VFIDE)
-   - 180-day lock period
-   - 1x voting power
-   - Cheapest entry
+#### Presale Tiers:
+1. **Founding Tier** ($0.03/VFIDE)
+   - 180-day mandatory lock
+   - 10% immediate unlock
+   - Best value (10M cap)
 
-2. **Guardian Node** ($0.05/VFIDE)
-   - 90-day lock period
-   - 2x voting power
-   - Balanced option
+2. **Oath Tier** ($0.05/VFIDE)
+   - 90-day mandatory lock
+   - 20% immediate unlock
+   - Balanced option (10M cap)
 
-3. **Validator Node** ($0.07/VFIDE)
-   - 30-day lock period
-   - 5x voting power
-   - Premium tier
+3. **Public Tier** ($0.07/VFIDE)
+   - Optional lock (bonus for locking)
+   - 100% immediate unlock (no lock)
+   - Flexibility (15M cap)
+
+**Note:** Voting power is based on ProofScore (earned through behavior), not tier.
 
 #### Features:
-1. **Purchase Nodes**
-   - Pay with USDC/USDT/DAI
+1. **Purchase Tokens**
+   - Pay with USDC/USDT/DAI or ETH
    - Receive VFIDE instantly in vault
-   - Referral system: 1% buyer bonus + 2% referrer bonus + 1% second-level
-   - Per-address cap: 50,000 VFIDE (anti-whale)
+   - Referral system: +2% buyer bonus + +3% referrer bonus
+   - Per-address cap: 500,000 VFIDE (anti-whale)
 
-2. **Node Rewards**
-   - Minted from 75M reward pool (not pre-minted)
-   - Staking yields (TBD: DAO sets rate)
-   - Governance voting power multiplier
+2. **Lock Bonuses (Public tier only)**
+   - 180-day lock: +30% bonus tokens
+   - 90-day lock: +15% bonus tokens
+   - No lock: 0% bonus
 
-3. **Marketplace**
-   - View all node tiers + pricing
-   - Your owned nodes
-   - Total network nodes
-   - Staking APY calculator
+3. **Presale Dashboard**
+   - View all tiers + pricing
+   - Your purchase history
+   - Total sold vs cap
+   - Referral tracking
 
 ---
 
@@ -193,14 +195,16 @@ Total Score = Base (500)
    - Types: Generic, Financial, Protocol Change, Security
    - Voting period: 3 days (DAO-configurable)
    - Quorum: 5,000 vote-points minimum
-   - Score-weighted voting (700 ProofScore = 700 votes)
+   - Score-weighted voting (7000 ProofScore = 7000 votes)
    - Governance fatigue: -5% voting power per vote, recovers 5% per day
 
 2. **Council**
-   - 7 elected members (yearly elections)
-   - Handles urgent decisions
-   - Salary paid from DAO treasury
-   - Can veto emergency proposals
+   - 12 elected members
+   - 1-year terms (365 days)
+   - Max 1 consecutive term (mandatory 1-year break before re-election)
+   - Min ProofScore: 7000 (70%)
+   - Salary paid every 4 months (120 days)
+   - Can be voted out by other council members
 
 3. **Timelock**
    - All approved proposals wait 48 hours
@@ -235,11 +239,10 @@ Total Score = Base (500)
    - Monthly burn rate tracking
    - Treasury balance projections
 
-4. **Revenue Splits**
+4. **Fee Split** (40/10/50)
    - 40% Burn (deflationary)
-   - 30% Sanctum (charity/impact)
-   - 25% Ecosystem (merchant rebates)
-   - 5% DAO operations
+   - 10% Sanctum (charity/impact)
+   - 50% Ecosystem (council, staking, incentives)
 
 5. **Stablecoin Registry**
    - Whitelist approved stablecoins (USDC, USDT, DAI)

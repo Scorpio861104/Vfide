@@ -21,9 +21,9 @@ const SUBSCRIPTION_MANAGER_ABI = [
   { name: 'canProcess', type: 'function', stateMutability: 'view', inputs: [{ name: 'subId', type: 'uint256' }], outputs: [{ name: 'processable', type: 'bool' }, { name: 'reason', type: 'string' }] },
 ] as const;
 
-// TODO: Replace with actual deployed address
-const SUBSCRIPTION_MANAGER_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const VFIDE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+// Contract addresses (SubscriptionManager not deployed yet)
+const SUBSCRIPTION_MANAGER_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
 
 interface Subscription {
   id: number;

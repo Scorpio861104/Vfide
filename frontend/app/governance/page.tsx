@@ -21,8 +21,8 @@ const DAO_ABI = [
   { name: 'getVoterStats', type: 'function', stateMutability: 'view', inputs: [{ name: 'voter', type: 'address' }], outputs: [{ name: 'totalVotes', type: 'uint256' }, { name: 'forVotes', type: 'uint256' }, { name: 'againstVotes', type: 'uint256' }, { name: 'lastVoteTime', type: 'uint256' }] },
 ] as const;
 
-// TODO: Replace with actual deployed address
-const DAO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+// Contract address from environment
+const DAO_ADDRESS = (process.env.NEXT_PUBLIC_DAO_ADDRESS || '0xB75b08C5e42da4242e218C25B6A6B05d7BeF0728') as `0x${string}`;
 
 type TabType = 'overview' | 'proposals' | 'create' | 'council' | 'suggestions' | 'discussions' | 'members' | 'history' | 'stats';
 
@@ -2120,16 +2120,24 @@ function CouncilTab() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [candidateStatement, setCandidateStatement] = useState('');
 
-  const requiredScoreToRun = 200; // Minimum ProofScore to run for council
+  const requiredScoreToRun = 7000; // Minimum ProofScore to run for council (70% on 0-10000 scale)
   const canRun = (score || 0) >= requiredScoreToRun;
 
   // Mock council data - in production, read from CouncilElection contract
+  // Council has 12 seats, 365-day terms, 7000 min ProofScore to run
   const councilMembers = [
-    { address: '0x1a2b...3c4d', name: 'CryptoSage', score: 850, term: 'Term 3', votes: 45200, status: 'active' },
-    { address: '0x5e6f...7g8h', name: 'VaultMaster', score: 780, term: 'Term 3', votes: 38500, status: 'active' },
-    { address: '0x9i0j...1k2l', name: 'DeFiWhale', score: 720, term: 'Term 3', votes: 32100, status: 'active' },
-    { address: '0xmnop...qrst', name: 'TokenNinja', score: 695, term: 'Term 3', votes: 28900, status: 'active' },
-    { address: '0xuvwx...yz12', name: 'ChainGuard', score: 650, term: 'Term 3', votes: 25400, status: 'active' },
+    { address: '0x1a2b...3c4d', name: 'CryptoSage', score: 8500, term: 'Term 1', votes: 45200, status: 'active' },
+    { address: '0x5e6f...7g8h', name: 'VaultMaster', score: 8200, term: 'Term 1', votes: 38500, status: 'active' },
+    { address: '0x9i0j...1k2l', name: 'DeFiWhale', score: 8100, term: 'Term 1', votes: 32100, status: 'active' },
+    { address: '0xmnop...qrst', name: 'TokenNinja', score: 7950, term: 'Term 1', votes: 28900, status: 'active' },
+    { address: '0xuvwx...yz12', name: 'ChainGuard', score: 7800, term: 'Term 1', votes: 25400, status: 'active' },
+    { address: '0x3456...7890', name: 'TrustBuilder', score: 7750, term: 'Term 1', votes: 23100, status: 'active' },
+    { address: '0xabcd...ef01', name: 'ProofKeeper', score: 7680, term: 'Term 1', votes: 21800, status: 'active' },
+    { address: '0x2345...6789', name: 'ScoreMaxer', score: 7550, term: 'Term 1', votes: 19500, status: 'active' },
+    { address: '0xbcde...f012', name: 'VaultSentry', score: 7420, term: 'Term 1', votes: 18200, status: 'active' },
+    { address: '0xcdef...0123', name: 'TrustWarden', score: 7350, term: 'Term 1', votes: 17100, status: 'active' },
+    { address: '0xdef0...1234', name: 'ChainSage', score: 7280, term: 'Term 1', votes: 15800, status: 'active' },
+    { address: '0xef01...2345', name: 'ProofMaster', score: 7150, term: 'Term 1', votes: 14500, status: 'active' },
   ];
 
   const candidates = [
@@ -2143,7 +2151,7 @@ function CouncilTab() {
     daysLeft: 12,
     nextElection: 'Jan 15, 2026',
     totalCandidates: candidates.length,
-    currentTerm: 3,
+    currentTerm: 1,
   };
 
   const handleRegister = async () => {

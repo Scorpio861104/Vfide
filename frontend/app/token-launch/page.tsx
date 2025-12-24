@@ -135,10 +135,11 @@ const ERC20_ABI = [
   }
 ] as const;
 
-// TODO: Replace with actual deployed addresses
-const PRESALE_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const USDC_ADDRESS = '0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4' as const; // zkSync USDC
-const USDT_ADDRESS = '0x493257fD37EDB34451f62EDf8D2a0C418852bA4C' as const; // zkSync USDT
+// Contract addresses from environment
+const PRESALE_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '0x338926cd13aAA99da8e846732e8010b16d1369ea') as `0x${string}`;
+// Note: These are zkSync Sepolia testnet mock stablecoins - no real USDC/USDT on testnet
+const USDC_ADDRESS = '0x0000000000000000000000000000000000000000' as const; // Not available on testnet
+const USDT_ADDRESS = '0x0000000000000000000000000000000000000000' as const; // Not available on testnet
 
 // Tier mapping: 0 = Founding, 1 = Oath, 2 = Public
 const TIER_MAP = { founding: 0, oath: 1, public: 2 } as const;
@@ -529,16 +530,16 @@ export default function TokenLaunchPage() {
                       type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      placeholder="Enter amount (max 1,500,000)"
+                      placeholder="Enter amount (max 500,000)"
                       min="0"
-                      max="1500000"
+                      max="500000"
                       step="1"
                       aria-label="VFIDE token amount"
                       aria-describedby="amount-hint"
                       className="w-full px-4 py-3 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
                     />
                     <p id="amount-hint" className="text-xs text-[#A0A0A5] mt-2">
-                      Maximum 1,500,000 VFIDE per address (including referral bonuses)
+                      Maximum 500,000 VFIDE per address (including referral bonuses)
                     </p>
                   </div>
 

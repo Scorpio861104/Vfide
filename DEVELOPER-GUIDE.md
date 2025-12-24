@@ -150,7 +150,7 @@ vfideToken.transfer(userVault, amount); // Works!
 ### 2. ProofScore System
 
 ProofScore is an on-chain reputation score (0-10000, 10x precision) that affects:
-- **Transfer fees:** 2-4.5% burn based on score
+- **Transfer fees:** 0.25%-5% based on score (high trust pays less)
 - **Governance power:** Voting weight = score (not tokens)
 - **Access privileges:** Minimum scores for actions
 
@@ -166,14 +166,14 @@ ProofScore = Fixed Score (manual)
 
 ### 3. Fee Model
 
-**Transfer Fees (2-4.5%):**
+**Transfer Fees (0.25%-5%):**
 - Applied on VFIDE token transfers (vault-to-vault)
-- Dynamic based on sender's ProofScore
-- Split: ~66% burn (deflationary) + ~17% Sanctum (charity) + ~17% Ecosystem (merchant fund)
+- Dynamic based on sender's ProofScore (≥8000 = 0.25%, ≤4000 = 5%)
+- Split: 40% burn (deflationary) + 10% Sanctum (charity) + 50% Ecosystem (council, staking, incentives)
 
 **Payment Fees (0%):**
 - Merchant payments via MerchantPortal have 0% protocol fee
-- Only transfer fees apply (standard 2-4.5%)
+- Only transfer fees apply (0.25%-5% based on ProofScore)
 - Merchants save 2-3% vs credit cards
 
 ### 4. Commitment Periods
@@ -183,10 +183,10 @@ NOT lockups - tokens remain usable during commitment:
 - ✅ Vote in governance
 - ✅ Use in commerce
 
-Early exit penalties if transferring before period ends:
-- Sentinel (30 days): 10% penalty
-- Guardian (180 days): 15% penalty
-- Validator (365 days): 20% penalty
+Commitment tiers:
+- Founding ($0.03): 180-day mandatory lock, 10% immediate unlock
+- Oath ($0.05): 90-day mandatory lock, 20% immediate unlock
+- Public ($0.07): Optional lock, 100% immediate (bonus for locking)
 
 ---
 

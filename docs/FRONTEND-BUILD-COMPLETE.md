@@ -164,12 +164,12 @@ Score = Base (100)
 - Proposal Types: Parameter Changes, Treasury Allocations, Protocol Upgrades
 
 **Governance Mechanics**:
-- Voting Power: Based on ProofScore (0-1000)
+- Voting Power: Based on ProofScore (0-10000 scale)
 - Voting Period: 3 days per proposal
 - Quorum: 5,000 vote-points required
 - Timelock: 48h delay on approved proposals
 - Governance Fatigue: -5% per vote, recovers 5%/day
-- Council: 7 elected members for fast-track proposals
+- Council: 12 elected members (1-year terms, salary every 4 months)
 
 **Sample Proposals**:
 1. Reduce Merchant Fee to 0.20% (68% FOR, ends in 2 days)
@@ -187,11 +187,10 @@ Score = Base (100)
 - Monthly Revenue: $184K (+12% vs last month)
 - VFIDE Price: $0.50 (+3.2% 24h)
 
-**Revenue Distribution**:
-- 40% Burn: $73.6K/month (permanent supply reduction)
-- 30% Sanctum: $55.2K/month (charity/impact fund)
-- 25% Ecosystem: $46.0K/month (merchant rebates)
-- 5% DAO: $9.2K/month (governance fund)
+**Fee Distribution** (40/10/50 split):
+- 40% Burn: Permanent supply reduction (deflationary)
+- 10% Sanctum: Charity/impact fund
+- 50% Ecosystem: Council, staking, incentives, growth
 
 **Vault Balances**:
 - Sanctum Vault: $720K

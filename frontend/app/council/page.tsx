@@ -43,9 +43,9 @@ const COUNCIL_SALARY_ABI = [
   { name: 'lastClaim', type: 'function', stateMutability: 'view', inputs: [{ name: 'member', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// TODO: Replace with actual deployed addresses
-const COUNCIL_ELECTION_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const COUNCIL_SALARY_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+// Contract addresses (CouncilElection and CouncilSalary not deployed to testnet yet)
+const COUNCIL_ELECTION_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+const COUNCIL_SALARY_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
 
 type TabType = 'overview' | 'members' | 'salary' | 'voting';
 
@@ -203,20 +203,20 @@ function OverviewTab() {
       {/* Council Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-[#00F0FF]">7</div>
+          <div className="text-3xl font-bold text-[#00F0FF]">12</div>
           <div className="text-sm text-[#A0A0A5]">Council Seats</div>
         </div>
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-green-400">6</div>
+          <div className="text-3xl font-bold text-green-400">--</div>
           <div className="text-sm text-[#A0A0A5]">Active Members</div>
         </div>
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-yellow-400">90</div>
+          <div className="text-3xl font-bold text-yellow-400">365</div>
           <div className="text-sm text-[#A0A0A5]">Days Term Length</div>
         </div>
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-purple-400">50K</div>
-          <div className="text-sm text-[#A0A0A5]">VFIDE/Month Salary</div>
+          <div className="text-3xl font-bold text-purple-400">120d</div>
+          <div className="text-sm text-[#A0A0A5]">Pay Interval</div>
         </div>
       </div>
 
@@ -415,11 +415,11 @@ function MembersTab() {
           </div>
           <div className="flex items-center justify-between mb-3">
             <span className="text-[#A0A0A5]">Members Passing</span>
-            <span className="text-green-400">6 / 6</span>
+            <span className="text-green-400">12 / 12</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-[#A0A0A5]">Minimum Required Score</span>
-            <span className="text-[#00F0FF]">70</span>
+            <span className="text-[#00F0FF]">7000 (70%)</span>
           </div>
         </div>
       </div>
@@ -428,10 +428,9 @@ function MembersTab() {
 }
 
 function SalaryTab({ isConnected }: { isConnected: boolean }) {
+  // Salary is NOT fixed - funded by ecosystem fees, distributed every 120 days
   const salaryHistory = [
-    { period: 'December 2025', amount: '50,000 VFIDE', recipients: 6, status: 'distributed' },
-    { period: 'November 2025', amount: '50,000 VFIDE', recipients: 7, status: 'distributed' },
-    { period: 'October 2025', amount: '50,000 VFIDE', recipients: 7, status: 'distributed' },
+    { period: 'Period 1 (Days 1-120)', amount: 'Variable (fees collected)', recipients: 12, status: 'pending' },
   ];
 
   return (
@@ -442,21 +441,21 @@ function SalaryTab({ isConnected }: { isConnected: boolean }) {
           <DollarSign className="w-12 h-12 text-green-400" />
           <div>
             <h2 className="text-2xl font-bold text-[#F5F3E8]">Council Salary System</h2>
-            <p className="text-[#A0A0A5]">Monthly compensation for active council members</p>
+            <p className="text-[#A0A0A5]">Fee-funded compensation for eligible council members</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-green-400">50,000</div>
-            <div className="text-sm text-[#A0A0A5]">VFIDE/Member/Month</div>
+            <div className="text-3xl font-bold text-green-400">Variable</div>
+            <div className="text-sm text-[#A0A0A5]">Funded by ecosystem fees</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-[#F5F3E8]">300,000</div>
-            <div className="text-sm text-[#A0A0A5]">Total Monthly Payout</div>
+            <div className="text-3xl font-bold text-[#F5F3E8]">120 Days</div>
+            <div className="text-sm text-[#A0A0A5]">Distribution Interval</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-cyan-400">1st</div>
-            <div className="text-sm text-[#A0A0A5]">Distribution Day</div>
+            <div className="text-3xl font-bold text-cyan-400">Equal</div>
+            <div className="text-sm text-[#A0A0A5]">Split among eligible</div>
           </div>
         </div>
       </div>
@@ -534,8 +533,8 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
           </div>
         </div>
         <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-4">
-          <p className="text-yellow-400 text-sm font-bold">Vote Threshold: 5/7</p>
-          <p className="text-[#A0A0A5] text-sm">At least 5 council members must vote for removal</p>
+          <p className="text-yellow-400 text-sm font-bold">Vote Threshold: &gt;50% (7/12)</p>
+          <p className="text-[#A0A0A5] text-sm">At least 7 council members must vote for removal</p>
         </div>
       </div>
 

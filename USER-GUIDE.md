@@ -35,12 +35,14 @@ Your vault is a smart contract that holds your VFIDE tokens safely.
 ### 3. **Acquire VFIDE Tokens**
 1. Go to **"Token Launch"** page
 2. Choose your commitment tier:
-   - **Sentinel (30 days):** 1.0x voting power
-   - **Guardian (180 days):** 2.0x voting power
-   - **Validator (365 days):** 5.0x voting power
-3. Enter amount to purchase
-4. **Read and check ALL 10 legal acknowledgments** (required)
+   - **Founding ($0.03):** 180-day lock, 10% immediate unlock
+   - **Oath ($0.05):** 90-day lock, 20% immediate unlock
+   - **Public ($0.07):** Optional lock (bonus for locking), 100% immediate
+3. Enter amount to purchase (max 500K VFIDE)
+4. **Read and check ALL legal acknowledgments** (required)
 5. Confirm purchase
+
+**Note:** Voting power is based on ProofScore (earned through behavior), not tier.
 
 **Commitment periods** are anti-dump mechanisms, not lockups. You can still use tokens for payments, governance, and commerce during commitment.
 
@@ -134,13 +136,13 @@ If you lose access to your wallet:
 4. Add note/order ID (optional)
 5. Confirm transaction
 
-**Important:** Merchant payments have **0% protocol fee**. Only VFIDE token transfer fees apply (2-4.5% burn).
+**Important:** Merchant payments have **0% protocol fee**. Only VFIDE token transfer fees apply (0.25%-5%, based on your ProofScore).
 
 **Payment Flow:**
 ```
 Your Vault → Merchant Vault
 Fee: 0% protocol fee
-Transfer Fee: 2-4.5% (deflationary burn, varies by ProofScore)
+Transfer Fee: 0.25%-5% (mostly burn, varies by ProofScore)
 Speed: 2-3 seconds (zkSync)
 Cost: ~$0.02 gas
 ```
@@ -279,16 +281,16 @@ If system shows "Panic Mode":
 **A:** If you set up guardians, they can recover your vault to a new address after majority approval + 30-day delay. If you set next-of-kin without guardians, they recover instantly.
 
 ### **Q: Why do I pay transfer fees but merchants don't?**
-**A:** VFIDE transfer fees (2-4.5%) are deflationary burns that reduce supply. Merchant payment processing is 0% to compete with credit cards (2-3% fees). Two different operations.
+**A:** VFIDE transfer fees (0.25-5% based on ProofScore) are deflationary burns that reduce supply. Merchant payment processing is 0% to compete with credit cards (2-3% fees). Two different operations.
 
 ### **Q: How do I increase my ProofScore?**
 **A:** Complete transactions, get endorsed by high-score users, participate in governance, stay active, and avoid disputes.
 
 ### **Q: Can I sell my VFIDE?**
-**A:** Yes, but commitment periods have early exit penalties:
-- Sentinel (30 days): 10% penalty
-- Guardian (180 days): 15% penalty
-- Validator (365 days): 20% penalty
+**A:** Yes, but commitment periods have restrictions:
+- Founding tier (180-day lock): Only 10% unlocked immediately
+- Oath tier (90-day lock): Only 20% unlocked immediately
+- Public tier (no lock): 100% unlocked immediately
 
 After commitment period ends, transfer freely.
 
@@ -384,7 +386,7 @@ After commitment period ends, transfer freely.
 
 **Commitment Period:** Time-based anti-dump mechanism (NOT a lockup)
 
-**Burn Fee:** Deflationary transfer fee (2-4.5%) that reduces supply
+**Burn Fee:** Deflationary transfer fee (0.25%-5%) that reduces supply
 
 **DAO:** Decentralized Autonomous Organization (community governance)
 

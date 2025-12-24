@@ -317,28 +317,28 @@ Fees scale **linearly** based on ProofScore (0-10000 scale):
 
 | Trust Level | ProofScore | **Total Fee** | Approximate Split |
 |-------------|------------|---------------|-------------------|
-| **Elite** | ≥ 9000 | **0.25%** | ~0.21% burn, ~0.01% sanctum, ~0.03% ecosystem |
-| **Standard** | 4500-9000 | **~2.5%** | ~2.1% burn, ~0.07% sanctum, ~0.33% ecosystem |
-| **Low Trust** | ≤ 200 | **5.00%** | ~4.3% burn, ~0.14% sanctum, ~0.56% ecosystem |
+| **Elite** | ≥ 8000 (80%) | **0.25%** | 0.10% burn, 0.025% sanctum, 0.125% ecosystem |
+| **Standard** | 5000-8000 | **~2.5%** | 1.0% burn, 0.25% sanctum, 1.25% ecosystem |
+| **Low Trust** | ≤ 4000 (40%) | **5.00%** | 2.0% burn, 0.50% sanctum, 2.50% ecosystem |
 
-**Fee Formula**: Linear interpolation between 0.25% (score ≥9000) and 5% (score ≤200).
-Example: Score 5000 → fee = 5% - ((5000-200) × 4.75%) / 8800 ≈ 2.41%
+**Fee Formula**: Linear interpolation between 0.25% (score ≥8000) and 5% (score ≤4000).
+Example: Score 6000 → fee = 5% - ((6000-4000) × 4.75%) / 4000 ≈ 2.63%
 
-**Fee Split Ratio**: ~85.7% burn (deflationary), ~2.9% sanctum (charity), ~11.4% ecosystem (growth)
+**Fee Split Ratio**: 40% burn (deflationary), 10% sanctum (charity), 50% ecosystem (staking, council, incentives)
 
 #### 5.4.3 Fee Calculation Example
 
 ```
-Alice (ProofScore 9200 - Elite) sends 10,000 VFIDE:
-├── Total Fee: 0.25% (score ≥9000)
-├── Burn: ~21 VFIDE (~0.21%)
-├── Sanctum: ~1 VFIDE (~0.01%)
-├── Ecosystem: ~3 VFIDE (~0.03%)
+Alice (ProofScore 8500 - Elite / 85%) sends 10,000 VFIDE:
+├── Total Fee: 0.25% (score ≥8000)
+├── Burn: 10 VFIDE (40% of fee)
+├── Sanctum: 2.5 VFIDE (10% of fee)
+├── Ecosystem: 12.5 VFIDE (50% of fee)
 ├── Total Fees: 25 VFIDE (0.25%)
 └── Received: 9,975 VFIDE
 
-Bob (ProofScore 150 - Low Trust) sends 10,000 VFIDE:
-├── Total Fee: 5.00% (score ≤200)
+Bob (ProofScore 3500 - Low Trust / 35%) sends 10,000 VFIDE:
+├── Total Fee: 5.00% (score ≤4000)
 ├── Burn: ~429 VFIDE (~4.29%)
 ├── Sanctum: ~14 VFIDE (~0.14%)
 ├── Ecosystem: ~57 VFIDE (~0.57%)
@@ -1154,6 +1154,32 @@ If minimum goal (25%) is not met:
 2. Buyers can claim full refund (stablecoins or ETH)
 3. No tokens are distributed
 4. Presale considered failed
+
+### 11.9 Presale Proceeds Allocation
+
+All funds raised during the presale are allocated transparently:
+
+| Allocation | Percentage | Use | Accountability |
+|------------|------------|-----|----------------|
+| **Liquidity Pool** | **50%** | DEX liquidity pairing | Locked on-chain, verifiable |
+| **Security Audit** | **15%** | Third-party smart contract audit | Report published publicly |
+| **Founder Reimbursement** | **15%** | Pre-launch development costs | Disclosed upfront |
+| **Operations & Maintenance** | **10%** | Hosting, domains, infrastructure | Ongoing transparency |
+| **Marketing & Growth** | **10%** | Community building, partnerships | General updates |
+
+#### Transparency Commitments
+
+**Liquidity Pool (50%):** Locked in DEX liquidity pool at launch. Anyone can verify the LP tokens on-chain. This is the primary rug-pull protection for investors.
+
+**Security Audit (15%):** Funds the comprehensive third-party security audit. The full audit report will be published publicly for community review.
+
+**Founder Reimbursement (15%):** VFIDE was fully developed, audited, and deployed before the presale. This allocation reimburses the founder for pre-launch development costs including smart contract development, frontend development, infrastructure hosting, and legal consultation.
+
+*Unlike many projects that raise funds for "development" then build, VFIDE is fully functional before asking for community investment. The 15% reimbursement covers work already completed, not promises.*
+
+**Operations (10%):** Ongoing infrastructure costs, domain renewals, server hosting, and maintenance.
+
+**Marketing (10%):** Community growth, partnerships, and promotional activities.
 
 ---
 

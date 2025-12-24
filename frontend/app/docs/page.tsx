@@ -20,11 +20,11 @@ const faqs = [
     questions: [
       {
         q: "Who pays the fees? Is it really 0% for customers?",
-        a: "YES - Payment processing is 0% for both customers AND merchants. Only network gas applies (~$0.01-0.50 on zkSync). HOWEVER: When you TRANSFER VFIDE tokens, there's a ProofScore-based fee that scales from 0.25% (score ≥9000) to 5% (score ≤200). Payments are FREE. Token transfers fund the ecosystem through burn + Sanctum charity + ecosystem allocations."
+        a: "YES - Payment processing is 0% for both customers AND merchants. Only network gas applies (~$0.01-0.50 on zkSync). HOWEVER: When you TRANSFER VFIDE tokens, there's a ProofScore-based fee that scales from 0.25% (score ≥8000 / 80%) to 5% (score ≤4000 / 40%). Payments are FREE. Token transfers fund the ecosystem through burn + Sanctum charity + ecosystem allocations."
       },
       {
         q: "What are the VFIDE token transfer fees?",
-        a: "Fees scale DYNAMICALLY based on your ProofScore using a linear curve: Score ≤200 pays 5% (max), Score ≥9000 pays 0.25% (min). Between 200-9000, fees interpolate linearly. Example: Score 5000 pays ~2.41%. Higher reputation = lower fees. Fee split: ~86% burn (deflationary), ~3% Sanctum (charity), ~11% ecosystem."
+        a: "Fees scale DYNAMICALLY based on your ProofScore using a linear curve: Score ≤4000 (40%) pays 5% (max), Score ≥8000 (80%) pays 0.25% (min). Between 4000-8000, fees interpolate linearly. Example: Score 6000 pays ~2.63%. Higher reputation = lower fees. Fee split: 40% burn (deflationary), 10% Sanctum (charity), 50% ecosystem (staking, council, incentives)."
       },
       {
         q: "How does this compare to traditional processors?",
@@ -62,7 +62,7 @@ const faqs = [
       },
       {
         q: "What are the ProofScore tiers?",
-        a: "ProofScore ranges 0-10000. Fees scale LINEARLY: ≤200 = 5% fee (max), ≥9000 = 0.25% fee (min). Between these, fees decrease proportionally as score increases. At 5000 you'd pay ~2.41%. No fixed tiers - your exact score determines your exact fee. Governance requires 5400+ (54%), merchant listing requires 5600+ (56%)."
+        a: "ProofScore ranges 0-10000. Fees scale LINEARLY: ≤4000 (40%) = 5% fee (max), ≥8000 (80%) = 0.25% fee (min). Between these, fees decrease proportionally as score increases. At 6000 you'd pay ~2.63%. No fixed tiers - your exact score determines your exact fee. Governance requires 5400+ (54%), merchant listing requires 5600+ (56%)."
       }
     ]
   },

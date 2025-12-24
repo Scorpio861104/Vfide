@@ -57,7 +57,7 @@ Vote on every protocol decision:
 - Parameter changes
 - Council elections
 
-1 VFIDE = 1 vote (or 2x/5x with multipliers)
+Voting power = ProofScore (earned through good behavior)
 
 ### 💸 Zero-Fee Payments (Phase 2)
 Use VFIDE for commerce with no platform fees:
@@ -68,14 +68,14 @@ Use VFIDE for commerce with no platform fees:
 
 ### 🛡️ ProofScore Benefits (Live Day 1)
 Build reputation for lower fees:
-- High score = Lower transfer fees (2%)
-- Low score = Higher fees (4.5%)
-- Merchant access (400+ score required)
+- High score = Lower transfer fees (0.25%)
+- Low score = Higher fees (5%)
+- Merchant access (56%+ score required)
 - Trust endorsement rights
 
 ### 🌐 Network Participation (Phase 3)
 Operate infrastructure, earn VFIDE:
-- Guardian node operation
+- Node operation
 - Vault recovery assistance
 - Dispute resolution
 - Active service rewards
@@ -99,16 +99,19 @@ Direct protocol development:
 
 Choose based on your participation style:
 
-| | Sentinel | Guardian | Validator |
+| | Founding | Oath | Public |
 |---|---|---|---|
 | **Price** | $0.03/VFIDE | $0.05/VFIDE | $0.07/VFIDE |
-| **Voting Power** | 1.0x | 2.0x | 5.0x |
-| **Commitment** | 180 days | 90 days | 30 days |
-| **Max Purchase** | 1.5M VFIDE | 1.5M VFIDE | 1.5M VFIDE |
-| **Best For** | Max quantity | Balanced | Max power |
+| **Commitment** | 180 days | 90 days | Optional |
+| **Immediate Unlock** | 10% | 20% | 100% (no lock) |
+| **Lock Bonus** | Included in price | Included in price | +30% (180d) / +15% (90d) |
+| **Max Purchase** | 500K VFIDE | 500K VFIDE | 500K VFIDE |
+| **Best For** | Max value | Balanced | Flexibility |
 
 **Commitment periods** provide anti-dump protection and align participants 
 with protocol success. All governance and utility features work immediately.
+
+**Voting Power:** Based on ProofScore (earned through good behavior), not tier.
 
 **Choose your tier** → [Purchase VFIDE]
 
@@ -155,7 +158,7 @@ need VFIDE for governance, payments, or network participation.
 **Problem:** Can't meaningfully participate in most protocols.
 
 **VFIDE Solution:**
-- Operate guardian nodes (Phase 3)
+- Operate network nodes (Phase 3)
 - Provide vault recovery services
 - Participate in dispute resolution
 - Earn VFIDE for actual work
@@ -168,7 +171,7 @@ need VFIDE for governance, payments, or network participation.
 **Problem:** Tired of high fees and centralized control.
 
 **VFIDE Solution:**
-- Transfer with low fees (2-4.5% based on ProofScore)
+- Transfer fees: 0.25%-5% based on ProofScore
 - Build reputation for lower fees
 - Non-custodial vaults (you control funds)
 - Truly decentralized protocol
@@ -225,7 +228,7 @@ securities. Do not purchase expecting profits. Purchase only if you need
 VFIDE for governance, payments, or network participation.
 
 ### What are the commitment periods?
-Sentinel (180d), Guardian (90d), Validator (30d) commitments prevent 
+Founding (180d), Oath (90d), Public (optional) commitments prevent 
 immediate dumping and align participants with protocol success. You can 
 use all utility features immediately (voting, payments, etc.), but cannot 
 transfer externally until commitment ends.
@@ -243,11 +246,18 @@ central team can make unilateral decisions. This is genuine decentralization,
 not marketing.
 
 ### What happens to purchase proceeds?
-100% goes to protocol treasury (multi-sig controlled). Used for development, 
-operations, commerce incentives, and DAO transition. Founders do NOT keep 
-sale proceeds.
+Presale proceeds are allocated transparently:
+- **50%** - Liquidity Pool (locked on-chain, verifiable)
+- **15%** - Security Audit (report published publicly)
+- **15%** - Founder Reimbursement (pre-launch development costs)
+- **10%** - Operations & Maintenance
+- **10%** - Marketing & Growth
 
-Founders' compensation: 40M VFIDE from DevReserveVestingVault (vested over 3 years).
+VFIDE was fully built and audited before the presale. The founder reimbursement 
+covers work already completed, not future promises.
+
+Founder token allocation: 50M VFIDE from DevReserveVestingVault (vested over 36 months 
+with 60-day cliff).
 
 ### Is this legal?
 VFIDE tokens are structured as utility tokens, not securities. We've 
@@ -316,11 +326,11 @@ Not passive holding.
 ```
 3 Purchase Tiers:
 
-Sentinel: $0.03/VFIDE (180d, 1x power)
-Guardian: $0.05/VFIDE (90d, 2x power)
-Validator: $0.07/VFIDE (30d, 5x power)
+Founding: $0.03/VFIDE (180d lock, 10% immediate)
+Oath: $0.05/VFIDE (90d lock, 20% immediate)
+Public: $0.07/VFIDE (optional lock for bonus)
 
-Max: 1.5M VFIDE per wallet
+Max: 500K VFIDE per wallet
 
 Choose based on YOUR utility needs.
 
@@ -432,8 +442,8 @@ Traditional payment processors charge 2-3% fees, taking billions from merchants 
 **Key Details:**
 • Launch pricing: $0.03-$0.07 per token (utility-based tiers)
 • Governance active from Day 1
-• Max 1.5M VFIDE per participant (fair distribution)
-• 100% of proceeds fund protocol treasury
+• Max 500K VFIDE per participant (fair distribution)
+• Proceeds: 50% LP, 15% audit, 15% founder reimbursement, 20% ops/marketing
 
 **Important Disclaimers:**
 VFIDE tokens are utility tokens for protocol access, NOT investment securities. Token value may decrease to zero. No guarantee of profits or returns. Purchase only if you need these utility functions.
@@ -519,9 +529,9 @@ financial advice. You are responsible for your own decisions and tax obligations
 Get utility tokens for protocol governance and zero-fee payments.
 
 **Three Tiers Available:**
-• Sentinel: $0.03/VFIDE (180d, 1x voting)
-• Guardian: $0.05/VFIDE (90d, 2x voting)
-• Validator: $0.07/VFIDE (30d, 5x voting)
+• Founding: $0.03/VFIDE (180d lock, 10% immediate)
+• Oath: $0.05/VFIDE (90d lock, 20% immediate)
+• Public: $0.07/VFIDE (optional lock for bonus)
 
 **What You Can Do:**
 ✅ Vote on DAO proposals (Day 1)
@@ -529,7 +539,7 @@ Get utility tokens for protocol governance and zero-fee payments.
 ✅ Operate network (Phase 3)
 ✅ Build ProofScore (Day 1)
 
-**Max Purchase:** 1.5M VFIDE per wallet
+**Max Purchase:** 500K VFIDE per wallet
 
 🔗 Purchase: [link]
 📚 Learn more: [link]

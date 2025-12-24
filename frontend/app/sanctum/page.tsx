@@ -115,7 +115,7 @@ export default function SanctumPage() {
               { label: 'Total Donated', value: '125,000', unit: 'VFIDE', icon: Heart, color: '#FF6B9D' },
               { label: 'Active Charities', value: '8', unit: '', icon: Users, color: '#00F0FF' },
               { label: 'Disbursements', value: '24', unit: 'completed', icon: CheckCircle, color: '#22C55E' },
-              { label: 'Fee Allocation', value: '3%', unit: 'of burns', icon: DollarSign, color: '#FFD700' },
+              { label: 'Fee Allocation', value: '~3%', unit: 'of fees', icon: DollarSign, color: '#FFD700' },
             ].map((stat, idx) => (
               <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 text-center">
                 <stat.icon className="w-6 h-6 mx-auto mb-2" style={{ color: stat.color }} />
@@ -171,7 +171,7 @@ function OverviewTab() {
         <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">How The Sanctum Works</h2>
         <div className="space-y-6">
           {[
-            { step: '1', title: 'Fee Collection', desc: '~3% of all VFIDE transaction burn fees flow to The Sanctum' },
+            { step: '1', title: 'Fee Collection', desc: '10% of all VFIDE transaction fees flow to The Sanctum' },
             { step: '2', title: 'Charity Registration', desc: 'DAO approves vetted charitable organizations' },
             { step: '3', title: 'Proposal Creation', desc: 'Council members propose disbursements to charities' },
             { step: '4', title: 'Multi-Sig Approval', desc: 'Required approvers sign off on disbursement' },

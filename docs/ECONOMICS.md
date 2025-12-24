@@ -11,7 +11,7 @@
 
 | Allocation | Amount | Percentage | Vesting | Notes |
 |------------|---------|-----------|---------|-------|
-| **Dev Reserve** | **50M** | **25%** | 4-year linear | Pre-minted, locked in DevReserveVestingVault |
+| **Dev Reserve** | **50M** | **25%** | 36-month linear | Pre-minted, locked in DevReserveVestingVault |
 | **Presale** | **50M** | **25%** | Tiered sale | 35M base + 15M bonus allocation |
 | **Treasury/Operations** | **100M** | **50%** | Gradual | Liquidity, CEX listings, operations, DAO treasury |
 
@@ -22,7 +22,8 @@
 **Dev Reserve: 50,000,000 VFIDE** (`DEV_RESERVE_SUPPLY` in VFIDEToken.sol)
 - Pre-minted at deployment
 - Locked in `DevReserveVestingVault` contract
-- 4-year linear vesting
+- 36-month linear vesting (18 bi-monthly unlocks)
+- 60-day cliff before first unlock
 - Cannot be accessed early
 - Ensures long-term team alignment
 
@@ -46,6 +47,38 @@
 
 ---
 
+## Presale Proceeds Allocation
+
+All funds raised during the presale are allocated as follows:
+
+| Allocation | Percentage | Use | Accountability |
+|------------|------------|-----|----------------|
+| **Liquidity Pool** | **50%** | DEX liquidity pairing | Locked on-chain, verifiable |
+| **Security Audit** | **15%** | Third-party smart contract audit | Report published publicly |
+| **Founder Reimbursement** | **15%** | Pre-launch development costs | Disclosed upfront |
+| **Operations & Maintenance** | **10%** | Hosting, domains, infrastructure | Ongoing transparency |
+| **Marketing & Growth** | **10%** | Community building, partnerships | General updates |
+
+### Transparency Notes
+
+**Liquidity Pool (50%):** Locked in DEX liquidity pool at launch. Anyone can verify the LP tokens on-chain. This is the primary rug-pull protection for investors.
+
+**Security Audit (15%):** Funds the comprehensive third-party security audit. The full audit report will be published publicly for community review.
+
+**Founder Reimbursement (15%):** VFIDE was fully developed, audited, and deployed before the presale. This allocation reimburses the founder for pre-launch development costs including:
+- Smart contract development
+- Frontend/UI development
+- Infrastructure and hosting during development
+- Legal consultation
+
+*Unlike many projects that raise funds for "development" then build, VFIDE is fully functional before asking for community investment. The 15% reimbursement covers work already completed, not promises.*
+
+**Operations (10%):** Ongoing infrastructure costs, domain renewals, server hosting, and maintenance.
+
+**Marketing (10%):** Community growth, partnerships, and promotional activities.
+
+---
+
 ## Fee Structure
 
 ### Transfer Fees (Token Movements)
@@ -54,34 +87,31 @@ Fees apply to vault-to-vault token transfers (NOT payments):
 **Continuous Linear Fee Curve:**
 | ProofScore | Total Fee | Description |
 |------------|-----------|-------------|
-| **≤200** | **5.00%** | Maximum fee (low trust floor) |
-| **500** | **4.81%** | Linear interpolation |
-| **1000** | **4.57%** | Linear interpolation |
-| **2500** | **3.76%** | Linear interpolation |
-| **5000** | **2.41%** | Midpoint |
-| **7500** | **1.06%** | Linear interpolation |
-| **9000** | **0.25%** | Minimum fee (high trust ceiling) |
-| **≥9000** | **0.25%** | Minimum fee |
+| **≤4000** (≤40%) | **5.00%** | Maximum fee (low trust floor) |
+| **5000** (50%) | **3.81%** | Linear interpolation |
+| **6000** (60%) | **2.63%** | Midpoint |
+| **7000** (70%) | **1.44%** | Linear interpolation |
+| **≥8000** (≥80%) | **0.25%** | Minimum fee (high trust ceiling) |
 
 **Formula (from ProofScoreBurnRouter.sol):**
 ```
-For score 200-9000:
-fee = 5.00% - ((score - 200) × 4.75%) / 8800
+For score 4000-8000:
+fee = 5.00% - ((score - 4000) × 4.75%) / 4000
 
 Examples:
-- Score 200: 5.00% (max)
-- Score 4600 (midpoint): 2.63%
-- Score 9000: 0.25% (min)
+- Score 4000 (40%): 5.00% (max)
+- Score 6000 (60%): 2.63% (midpoint)
+- Score 8000 (80%): 0.25% (min)
 ```
 
-**Fee Split (proportional to original 150:5:20 ratio):**
-- **Burn:** ~85.7% of total fee (deflationary)
-- **Sanctum (charity):** ~2.9% of total fee
-- **Ecosystem (development):** ~11.4% of total fee
+**Fee Split (40/10/50):**
+- **Burn:** 40% of total fee (deflationary)
+- **Sanctum (charity):** 10% of total fee
+- **Ecosystem (operations):** 50% of total fee (council, staking, incentives)
 
 **Contract Constants:**
-- `LOW_SCORE_THRESHOLD = 200` (≤200 pays max fee)
-- `HIGH_SCORE_THRESHOLD = 9000` (≥9000 pays min fee)
+- `LOW_SCORE_THRESHOLD = 4000` (≤40% pays max fee)
+- `HIGH_SCORE_THRESHOLD = 8000` (≥80% pays min fee)
 - `minTotalBps = 25` (0.25% minimum)
 - `maxTotalBps = 500` (5% maximum)
 
@@ -186,7 +216,7 @@ Ensures ecosystem always receives baseline funding.
 |-----------|---------|---------|
 | **Ecosystem Min** | 0.05% (5 bps) | Floor for ecosystem portion |
 
-**Even high-trust users (ProofScore ≥9000) contribute minimum 0.05% to ecosystem**
+**Even high-trust users (ProofScore ≥8000 / 80%) contribute minimum 0.05% to ecosystem**
 
 ### Contract Functions
 ```solidity

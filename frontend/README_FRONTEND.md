@@ -204,7 +204,7 @@ function MyComponent() {
 ### Treasury Dashboard (`/treasury`)
 - Total treasury balance
 - Sustainability ratio
-- Revenue distribution (40% burn, 30% charity, 25% ecosystem, 5% DAO)
+- Fee split (40% burn, 10% sanctum, 50% ecosystem)
 - Vault balances
 - Recent transactions
 

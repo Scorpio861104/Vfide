@@ -137,9 +137,9 @@ This report documents a comprehensive line-by-line audit of all VFIDE smart cont
 | Elite (≥80%): 0.25% | `minTotalBps = 25` at `score ≥ 8000` | ✅ |
 | Low Trust (≤40%): 5.00% | `maxTotalBps = 500` at `score ≤ 4000` | ✅ |
 | Linear interpolation | `_calculateLinearFee()` | ✅ |
-| Fee Split: 85.7% burn | `burnBps = (totalBps * 150) / 175` | ✅ |
-| Fee Split: 2.9% sanctum | `sanctumBps = (totalBps * 5) / 175` | ✅ |
-| Fee Split: 11.4% ecosystem | Remainder calculation | ✅ |
+| Fee Split: 40% burn | `burnBps = (totalBps * 40) / 100` | ✅ |
+| Fee Split: 10% sanctum | `sanctumBps = (totalBps * 10) / 100` | ✅ |
+| Fee Split: 50% ecosystem | Remainder calculation | ✅ |
 
 ### Vault System (Section 6)
 

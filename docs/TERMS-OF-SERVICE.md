@@ -135,23 +135,25 @@ You represent and warrant that:
 
 Three purchase tiers are available with different utility characteristics:
 
-**(a) Sentinel Tier:**  
+**(a) Founding Tier:**  
 - Price: $0.03 per VFIDE (30,000 microUSD)  
-- Voting Power: 1.0x (standard)  
-- Commitment Period: 180 days  
-- Max Purchase: 1,500,000 VFIDE  
+- Commitment Period: 180 days (mandatory)  
+- Immediate Unlock: 10%  
+- Max Purchase: 500,000 VFIDE  
 
-**(b) Guardian Tier:**  
+**(b) Oath Tier:**  
 - Price: $0.05 per VFIDE (50,000 microUSD)  
-- Voting Power: 2.0x (enhanced)  
-- Commitment Period: 90 days  
-- Max Purchase: 1,500,000 VFIDE  
+- Commitment Period: 90 days (mandatory)  
+- Immediate Unlock: 20%  
+- Max Purchase: 500,000 VFIDE  
 
-**(c) Validator Tier:**  
+**(c) Public Tier:**  
 - Price: $0.07 per VFIDE (70,000 microUSD)  
-- Voting Power: 5.0x (maximum)  
-- Commitment Period: 30 days  
-- Max Purchase: 1,500,000 VFIDE  
+- Commitment Period: Optional (bonus for locking)  
+- Lock Bonus: +30% for 180d, +15% for 90d, 0% for no lock  
+- Max Purchase: 500,000 VFIDE  
+
+**Voting Power:** Determined by ProofScore (earned through behavior), not tier.
 
 ### 5.2 Payment
 
@@ -169,7 +171,7 @@ Three purchase tiers are available with different utility characteristics:
 
 ### 5.4 Purchase Limits
 
-(a) Maximum 1,500,000 VFIDE per wallet address  
+(a) Maximum 500,000 VFIDE per wallet address  
 (b) This limit includes referral bonuses received  
 (c) Anti-whale protection ensures fair distribution  
 (d) Attempting to circumvent limits may result in purchase rejection  

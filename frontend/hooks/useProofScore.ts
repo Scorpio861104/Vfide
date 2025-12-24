@@ -17,9 +17,10 @@ export function useProofScore(address?: `0x${string}`) {
 }
 
 export function getScoreTier(score: number): string {
-  if (score >= 900) return 'VERIFIED'
-  if (score >= 700) return 'TRUSTED'
-  if (score >= 400) return 'ESTABLISHED'
-  if (score >= 200) return 'PROBATIONARY'
+  // Contract uses 0-10000 scale (10x precision)
+  if (score >= 9000) return 'VERIFIED'
+  if (score >= 7000) return 'TRUSTED'
+  if (score >= 4000) return 'ESTABLISHED'
+  if (score >= 2000) return 'PROBATIONARY'
   return 'UNRANKED'
 }

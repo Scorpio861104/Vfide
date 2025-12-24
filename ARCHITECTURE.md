@@ -10,7 +10,7 @@ VFIDE is a trust-based payment protocol built on zkSync Era, featuring vault-onl
 - **Purpose:** ERC20 token with vault-only transfer enforcement
 - **Supply:** 200M max, 50M dev reserve, 75M presale cap
 - **Transfers:** Only between vaults (not direct wallet-to-wallet)
-- **Fees:** 2-4.5% on transfers (NOT on payments), ProofScore-adjusted
+- **Fees:** 0.25%-5% on transfers (NOT on payments), ProofScore-adjusted
 - **File:** `contracts/VFIDEToken.sol` (466 lines)
 
 ### 2. VaultInfrastructure (Custody Layer)
@@ -78,8 +78,8 @@ VFIDE is a trust-based payment protocol built on zkSync Era, featuring vault-onl
       ▼                       ▼
 ┌─────────────────────────────────────────┐
 │      ProofScoreBurnRouter               │
-│  • Dynamic fees (2-4.5%)                │
-│  • Charity split (67/17/17%)            │
+│  • Dynamic fees (0.25%-5%)              │
+│  • Fee split (40% burn/10% sanctum/50% eco) │
 │  • Deflationary mechanism               │
 └─────────────────────────────────────────┘
                   │
@@ -131,8 +131,8 @@ VFIDE is a trust-based payment protocol built on zkSync Era, featuring vault-onl
 - Customer-friendly experience
 
 **How it works:**
-- Token transfers have 2-4.5% fees
-- Payments use vault-to-vault transfers (0% fee)
+- Token transfers have 0.25%-5% fees (ProofScore-based)
+- Payments use vault-to-vault transfers (0% protocol fee)
 - Platform funded by transfer fees, not payment fees
 
 ## Contract Dependencies

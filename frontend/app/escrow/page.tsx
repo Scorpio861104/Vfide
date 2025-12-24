@@ -41,9 +41,9 @@ const ESCROW_MANAGER_ABI = [
   { name: 'nextId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// TODO: Replace with actual deployed address
-const ESCROW_MANAGER_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const VFIDE_TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+// Contract addresses from environment
+const ESCROW_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS || '0x2167C57dDfcd1bD2a6aDDB2bf510a05c48e7aC15') as `0x${string}`;
+const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
 
 // Escrow States (from contract)
 enum EscrowState {

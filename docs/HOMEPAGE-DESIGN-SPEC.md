@@ -187,7 +187,7 @@ export function HeroSection() {
 #### Card 4: GUARDIANS
 **Icon**: Node symbol  
 **Title**: Guardian Nodes  
-**Description**: Stake VFIDE in 3 tiers (Sentinel/Guardian/Validator). Earn rewards and governance power.  
+**Description**: Stake VFIDE as a network operator. Earn rewards through infrastructure participation.  
 **Link**: Buy Nodes → `/guardians`  
 **Stats**: "2,450 nodes active" (live)
 
@@ -201,7 +201,7 @@ export function HeroSection() {
 #### Card 6: TREASURY
 **Icon**: Coins symbol  
 **Title**: Transparent Finance  
-**Description**: 8.8x sustainability ratio. 40% burn, 30% charity, 30% ecosystem. All transactions public.  
+**Description**: Sustainable tokenomics. 40% burn, 10% charity, 50% ecosystem. All transactions public.  
 **Link**: View Treasury → `/treasury`  
 **Stats**: "$2.4M treasury balance" (live)
 

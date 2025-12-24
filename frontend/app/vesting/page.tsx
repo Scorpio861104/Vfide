@@ -96,8 +96,8 @@ const DEV_RESERVE_VESTING_ABI = [
   }
 ] as const;
 
-// TODO: Replace with actual deployed address
-const DEV_RESERVE_VESTING_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+// Contract address from environment
+const DEV_RESERVE_VESTING_ADDRESS = (process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS || '0xFd26e4b02b55baA45A2421fFf0D47107CCE1D5E6') as `0x${string}`;
 
 type TabType = 'overview' | 'schedule' | 'claim';
 
@@ -284,8 +284,8 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
         <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">How Vesting Works</h2>
         <div className="space-y-4">
           {[
-            { title: 'Cliff Period', desc: '12-month cliff before first unlock begins' },
-            { title: 'Linear Vesting', desc: 'Tokens unlock monthly over 48 months' },
+            { title: 'Cliff Period', desc: '60-day cliff before first unlock begins' },
+            { title: 'Linear Vesting', desc: 'Tokens unlock bi-monthly over 36 months' },
             { title: 'Claim Anytime', desc: 'Claim vested tokens whenever convenient' },
             { title: 'Beneficiary Only', desc: 'Only designated beneficiary can claim' },
             { title: 'Presale Sync', desc: 'Vesting starts from presale launch' },
@@ -364,9 +364,9 @@ function ScheduleTab({ schedule }: { schedule?: readonly Milestone[] }) {
         <div className="flex items-start gap-3">
           <Info className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
           <div className="text-sm text-[#A0A0A5]">
-            <strong className="text-[#F5F3E8]">Dev Reserve Schedule:</strong> 20% of total supply allocated 
-            to developer reserve. Tokens vest linearly over 48 months starting from presale launch, 
-            with a 12-month cliff period.
+            <strong className="text-[#F5F3E8]">Dev Reserve Schedule:</strong> 25% of total supply allocated 
+            to developer reserve. Tokens vest linearly over 36 months starting from presale launch, 
+            with a 60-day cliff period. Unlocks occur bi-monthly (every 60 days).
           </div>
         </div>
       </div>

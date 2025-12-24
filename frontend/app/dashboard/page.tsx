@@ -39,9 +39,9 @@ export default function DashboardPage() {
   };
 
   const currentFeeRate = useMemo(() => {
-    if (proofscore <= 200) return 5.00;
-    if (proofscore >= 9000) return 0.25;
-    return 5.00 - ((proofscore - 200) * 4.75 / 8800);
+    if (proofscore <= 4000) return 5.00;
+    if (proofscore >= 8000) return 0.25;
+    return 5.00 - ((proofscore - 4000) * 4.75 / 4000);
   }, [proofscore]);
 
   if (!isConnected) {
@@ -213,7 +213,7 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
           <div className="text-center py-6">
             <div className="text-6xl font-bold text-[#00F0FF] mb-2">{proofscore}</div>
             <div className="inline-block px-4 py-1 bg-[#00F0FF]/20 border border-[#00F0FF] rounded-full text-[#00F0FF] font-bold text-sm mb-4">
-              {proofscore >= 9000 ? 'ELITE' : proofscore >= 7000 ? 'VERIFIED' : proofscore >= 5000 ? 'TRUSTED' : 'NEUTRAL'}
+              {proofscore >= 8000 ? 'ELITE' : proofscore >= 7000 ? 'VERIFIED' : proofscore >= 5000 ? 'TRUSTED' : 'NEUTRAL'}
             </div>
             <div className="text-[#50C878] text-lg font-bold">{feeRate.toFixed(2)}% transfer fee</div>
           </div>
@@ -304,17 +304,17 @@ function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
   const [transferAmount, setTransferAmount] = useState(1000);
 
   const calculateFee = (score: number) => {
-    if (score <= 200) return 5.00;
-    if (score >= 9000) return 0.25;
-    return 5.00 - ((score - 200) * 4.75 / 8800);
+    if (score <= 4000) return 5.00;
+    if (score >= 8000) return 0.25;
+    return 5.00 - ((score - 4000) * 4.75 / 4000);
   };
 
   const feePercent = calculateFee(simulatedScore);
   const feeAmount = (transferAmount * feePercent) / 100;
   const receivedAmount = transferAmount - feeAmount;
-  const burnAmount = feeAmount * 0.86;
-  const sanctumAmount = feeAmount * 0.03;
-  const ecosystemAmount = feeAmount * 0.11;
+  const burnAmount = feeAmount * 0.40;
+  const sanctumAmount = feeAmount * 0.10;
+  const ecosystemAmount = feeAmount * 0.50;
   const currentFee = calculateFee(currentScore);
   const feeDifference = currentFee - feePercent;
 
@@ -416,15 +416,15 @@ function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="p-2 bg-[#1A1A1D] rounded-lg">
                 <div className="text-[#FF6B6B] font-bold">{burnAmount.toFixed(2)}</div>
-                <div className="text-[#A0A0A5] text-xs">Burned (86%)</div>
+                <div className="text-[#A0A0A5] text-xs">Burned (40%)</div>
               </div>
               <div className="p-2 bg-[#1A1A1D] rounded-lg">
                 <div className="text-[#FFD700] font-bold">{sanctumAmount.toFixed(2)}</div>
-                <div className="text-[#A0A0A5] text-xs">Sanctum (3%)</div>
+                <div className="text-[#A0A0A5] text-xs">Sanctum (10%)</div>
               </div>
               <div className="p-2 bg-[#1A1A1D] rounded-lg">
                 <div className="text-[#00F0FF] font-bold">{ecosystemAmount.toFixed(2)}</div>
-                <div className="text-[#A0A0A5] text-xs">Ecosystem (11%)</div>
+                <div className="text-[#A0A0A5] text-xs">Ecosystem (50%)</div>
               </div>
             </div>
           </div>
@@ -486,8 +486,8 @@ function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 
   const totalNewPoints = actions.filter(a => simulatedActions.includes(a.id)).reduce((sum, a) => sum + a.points, 0);
   const projectedScore = Math.min(10000, currentScore + totalNewPoints);
-  const currentFee = currentScore <= 200 ? 5.00 : currentScore >= 9000 ? 0.25 : 5.00 - ((currentScore - 200) * 4.75 / 8800);
-  const projectedFee = projectedScore <= 200 ? 5.00 : projectedScore >= 9000 ? 0.25 : 5.00 - ((projectedScore - 200) * 4.75 / 8800);
+  const currentFee = currentScore <= 4000 ? 5.00 : currentScore >= 8000 ? 0.25 : 5.00 - ((currentScore - 4000) * 4.75 / 4000);
+  const projectedFee = projectedScore <= 4000 ? 5.00 : projectedScore >= 8000 ? 0.25 : 5.00 - ((projectedScore - 4000) * 4.75 / 4000);
   const feeSavings = currentFee - projectedFee;
 
   const categoryColors: Record<string, string> = {
