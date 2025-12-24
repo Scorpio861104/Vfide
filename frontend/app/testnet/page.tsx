@@ -10,9 +10,10 @@ export default function TestnetPage() {
   const [step, setStep] = useState(1)
   const [copied, setCopied] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [switchError, setSwitchError] = useState<string | null>(null)
 
   // Use wagmi hooks for wallet state
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, connector } = useAccount()
   const chainId = useChainId()
   const { data: balanceData } = useBalance({ address })
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
@@ -23,6 +24,7 @@ export default function TestnetPage() {
 
   const ethBalance = balanceData ? parseFloat(balanceData.formatted).toFixed(4) : '0'
   const isOnCorrectChain = chainId === ZKSYNC_SEPOLIA_CHAIN_ID
+  const isWalletConnect = connector?.id === 'walletConnect'
 
   // Detect mobile
   useEffect(() => {
@@ -44,14 +46,33 @@ export default function TestnetPage() {
     }
   }, [isConnected, isOnCorrectChain, ethBalance])
 
+  // Clear error when network changes
+  useEffect(() => {
+    if (isOnCorrectChain) {
+      setSwitchError(null)
+    }
+  }, [isOnCorrectChain])
+
   const handleConnect = () => {
     if (openConnectModal) {
       openConnectModal()
     }
   }
 
-  const handleSwitchNetwork = () => {
-    switchChain({ chainId: ZKSYNC_SEPOLIA_CHAIN_ID })
+  const handleSwitchNetwork = async () => {
+    setSwitchError(null)
+    try {
+      await switchChain({ chainId: ZKSYNC_SEPOLIA_CHAIN_ID })
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to switch network'
+      if (errorMessage.includes('user rejected') || errorMessage.includes('User rejected')) {
+        setSwitchError('Please approve the network switch in your wallet app')
+      } else if (errorMessage.includes('Unrecognized chain')) {
+        setSwitchError('Please add zkSync Sepolia network manually in your wallet')
+      } else {
+        setSwitchError('Check your wallet app to approve the network switch')
+      }
+    }
   }
 
   const copyToClipboard = (text: string) => {
@@ -141,7 +162,7 @@ export default function TestnetPage() {
                   <span className="text-purple-400 font-semibold">💡 Wallet options:</span>
                 </p>
                 <ul className="text-gray-500 text-sm space-y-2">
-                  <li>• <strong>WalletConnect</strong> - Scan QR code from any wallet app</li>
+                  <li>• <strong>WalletConnect</strong> - Scan QR code from any wallet app (recommended)</li>
                   <li>• <strong>Coinbase Wallet</strong> - Great for beginners</li>
                   <li>• <strong>MetaMask</strong> - Most popular option</li>
                   <li>• <strong>Rainbow</strong> - Beautiful mobile wallet</li>
@@ -170,6 +191,17 @@ export default function TestnetPage() {
                 </p>
               </div>
 
+              {switchError && (
+                <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-yellow-400">⚠️ {switchError}</p>
+                  {isWalletConnect && (
+                    <p className="text-xs text-yellow-300 mt-2">
+                      Check your wallet app (MetaMask, Trust, etc.) for a pending request
+                    </p>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={handleSwitchNetwork}
                 disabled={isSwitchingChain}
@@ -186,8 +218,25 @@ export default function TestnetPage() {
               </button>
 
               <p className="mt-4 text-gray-500 text-sm">
-                Your wallet will ask you to approve the network switch
+                {isWalletConnect 
+                  ? "A request will be sent to your wallet app - please approve it there"
+                  : "Your wallet will ask you to approve the network switch"
+                }
               </p>
+
+              {/* Manual Add Network Info */}
+              <div className="mt-8 p-4 bg-white/5 rounded-lg text-left">
+                <p className="text-gray-400 text-sm mb-3">
+                  <span className="text-purple-400 font-semibold">📝 Add network manually:</span>
+                </p>
+                <div className="text-gray-500 text-xs space-y-1 font-mono">
+                  <p>Network: zkSync Sepolia Testnet</p>
+                  <p>RPC: https://sepolia.era.zksync.dev</p>
+                  <p>Chain ID: 300</p>
+                  <p>Symbol: ETH</p>
+                  <p>Explorer: https://sepolia.explorer.zksync.io</p>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -28,31 +28,19 @@ const appInfo = {
   projectId,
 }
 
-// Detect if user is on mobile
-const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-
-// Configure wallets - WalletConnect first on mobile to keep users in their browser
-// On mobile, tapping MetaMask redirects to MetaMask's in-app browser which is a poor UX
-// WalletConnect connects via QR/deep-link and returns user to their native browser
+// Configure wallets - WalletConnect first for best cross-platform UX
+// WalletConnect works universally (mobile stays in browser, desktop shows QR)
 const connectors = connectorsForWallets(
   [
     {
       groupName: 'Recommended',
-      wallets: isMobile 
-        ? [
-            walletConnectWallet,  // First on mobile - stays in native browser
-            coinbaseWallet,       // Coinbase also has good mobile UX
-            rainbowWallet,
-            trustWallet,
-            metaMaskWallet,       // Last on mobile - opens in-app browser
-          ]
-        : [
-            metaMaskWallet,       // First on desktop - best desktop experience
-            walletConnectWallet,
-            coinbaseWallet,
-            rainbowWallet,
-            rabbyWallet,
-          ],
+      wallets: [
+        walletConnectWallet,  // First - best UX for mobile (stays in browser)
+        metaMaskWallet,       // Popular desktop choice
+        coinbaseWallet,       // Good mobile UX
+        rainbowWallet,
+        rabbyWallet,
+      ],
     },
     {
       groupName: 'More Wallets',
@@ -73,9 +61,31 @@ const connectors = connectorsForWallets(
   appInfo
 )
 
+// Custom zkSync Sepolia with explicit RPC and block explorer
+// This helps wallets auto-add the network when switching
+const zkSyncSepoliaWithMetadata = {
+  ...zkSyncSepoliaTestnet,
+  rpcUrls: {
+    default: {
+      http: ['https://sepolia.era.zksync.dev'],
+      webSocket: ['wss://sepolia.era.zksync.dev/ws'],
+    },
+    public: {
+      http: ['https://sepolia.era.zksync.dev'],
+      webSocket: ['wss://sepolia.era.zksync.dev/ws'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'zkSync Sepolia Explorer',
+      url: 'https://sepolia.explorer.zksync.io',
+    },
+  },
+} as const
+
 // zkSync Sepolia is first as it's the default testnet
 export const config = createConfig({
-  chains: [zkSyncSepoliaTestnet, mainnet, polygon, arbitrum, sepolia],
+  chains: [zkSyncSepoliaWithMetadata, mainnet, polygon, arbitrum, sepolia],
   connectors,
   transports: {
     [mainnet.id]: http(),
@@ -84,6 +94,8 @@ export const config = createConfig({
     [sepolia.id]: http(),
     [zkSyncSepoliaTestnet.id]: http('https://sepolia.era.zksync.dev'),
   },
+  // Improve reconnection and network switching
+  syncConnectedChain: true,
 })
 
 declare module 'wagmi' {
