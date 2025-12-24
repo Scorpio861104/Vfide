@@ -2,20 +2,22 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { devLog } from '@/lib/utils'
 
 // Type for EIP-1193 provider (window.ethereum)
 interface EIP1193Provider {
   isMetaMask?: boolean;
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  request: (args: { method: string; params?: unknown }) => Promise<unknown>;
   on?: (event: string, callback: (...args: unknown[]) => void) => void;
 }
 
-// Extend window type
-declare global {
-  interface Window {
-    ethereum?: EIP1193Provider;
+// Helper to get ethereum provider with proper typing
+const getEthereumProvider = (): EIP1193Provider | undefined => {
+  if (typeof window !== 'undefined') {
+    return (window as unknown as { ethereum?: EIP1193Provider }).ethereum;
   }
-}
+  return undefined;
+};
 
 export default function TestnetPage() {
   const [step, setStep] = useState(1)
@@ -38,7 +40,7 @@ export default function TestnetPage() {
     if (typeof window !== 'undefined') {
       setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
       // Detect if we're inside MetaMask's in-app browser
-      const ethereum = window.ethereum
+      const ethereum = getEthereumProvider()
       const isMetaMask = ethereum?.isMetaMask
       const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
       // MetaMask mobile browser has ethereum injected immediately + mobile user agent
@@ -53,16 +55,16 @@ export default function TestnetPage() {
       await new Promise(resolve => setTimeout(resolve, 500))
       
       if (typeof window !== 'undefined') {
-        const ethereum = window.ethereum
+        const ethereum = getEthereumProvider()
         const hasEthereum = !!ethereum
         setHasWallet(hasEthereum)
         
-        if (hasEthereum) {
+        if (hasEthereum && ethereum) {
           try {
-            const accounts = await ethereum.request({ method: 'eth_accounts' })
+            const accounts = await ethereum.request({ method: 'eth_accounts' }) as string[]
             if (accounts && accounts.length > 0) {
               setWalletAddress(accounts[0])
-              const chain = await ethereum.request({ method: 'eth_chainId' })
+              const chain = await ethereum.request({ method: 'eth_chainId' }) as string
               const chainNum = parseInt(chain, 16)
               setChainId(chainNum)
               
@@ -71,7 +73,7 @@ export default function TestnetPage() {
                 const balance = await ethereum.request({
                   method: 'eth_getBalance',
                   params: [accounts[0], 'latest']
-                })
+                }) as string
                 const ethBal = parseInt(balance, 16) / 1e18
                 setEthBalance(ethBal.toFixed(4))
                 
@@ -88,7 +90,7 @@ export default function TestnetPage() {
               setStep(2)
             }
           } catch (e) {
-            console.error('Wallet check error:', e)
+            devLog.error('Wallet check error:', e)
             setStep(2) // Has wallet but error, go to connect
           }
         }
@@ -100,7 +102,8 @@ export default function TestnetPage() {
 
   const updateBalance = async (address: string) => {
     try {
-      const balance = await window.ethereum?.request({
+      const ethereum = getEthereumProvider()
+      const balance = await ethereum?.request({
         method: 'eth_getBalance',
         params: [address, 'latest']
       }) as string
@@ -108,7 +111,7 @@ export default function TestnetPage() {
       setEthBalance(ethBal.toFixed(4))
       return ethBal
     } catch (e) {
-      console.error(e)
+      devLog.error('Failed to get balance:', e)
       return 0
     }
   }
@@ -135,7 +138,7 @@ export default function TestnetPage() {
     setLoading(true)
     setError('')
     try {
-      const ethereum = window.ethereum
+      const ethereum = getEthereumProvider()
       if (!ethereum) {
         setError('No wallet found. Please install MetaMask.')
         setHasWallet(false)
@@ -145,11 +148,11 @@ export default function TestnetPage() {
       
       const accounts = await ethereum.request({
         method: 'eth_requestAccounts'
-      })
+      }) as string[]
       
       if (accounts && accounts.length > 0) {
         setWalletAddress(accounts[0])
-        const chain = await ethereum.request({ method: 'eth_chainId' })
+        const chain = await ethereum.request({ method: 'eth_chainId' }) as string
         const chainNum = parseInt(chain, 16)
         setChainId(chainNum)
         
@@ -166,7 +169,7 @@ export default function TestnetPage() {
         }
       }
     } catch (err: unknown) {
-      console.error('Connect error:', err)
+      devLog.error('Connect error:', err)
       const error = err as { code?: number; message?: string }
       if (error.code === 4001) {
         setError('You rejected the connection. Please try again and click "Connect".')
@@ -182,7 +185,7 @@ export default function TestnetPage() {
     setLoading(true)
     setError('')
     try {
-      const ethereum = window.ethereum
+      const ethereum = getEthereumProvider()
       if (!ethereum) throw new Error('No wallet found')
       try {
         await ethereum.request({
@@ -214,7 +217,7 @@ export default function TestnetPage() {
         setStep(4)
       }
     } catch (err: unknown) {
-      console.error('Switch network error:', err)
+      devLog.error('Switch network error:', err)
       const error = err as { code?: number; message?: string }
       if (error.code === 4001) {
         setError('You rejected the network switch. Please try again.')
@@ -228,7 +231,8 @@ export default function TestnetPage() {
 
   const handleAddToken = async () => {
     try {
-      await window.ethereum?.request({
+      const ethereum = getEthereumProvider()
+      await ethereum?.request({
         method: 'wallet_watchAsset',
         params: {
           type: 'ERC20',
@@ -241,7 +245,7 @@ export default function TestnetPage() {
         }
       })
     } catch (err) {
-      console.error(err)
+      devLog.error('Failed to add token:', err)
     }
   }
 

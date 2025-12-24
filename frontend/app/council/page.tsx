@@ -43,9 +43,13 @@ const COUNCIL_SALARY_ABI = [
   { name: 'lastClaim', type: 'function', stateMutability: 'view', inputs: [{ name: 'member', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// Contract addresses (CouncilElection and CouncilSalary not deployed to testnet yet)
-const COUNCIL_ELECTION_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
-const COUNCIL_SALARY_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+// Contract addresses from environment (CouncilElection and CouncilSalary not deployed to testnet yet)
+const COUNCIL_ELECTION_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const COUNCIL_SALARY_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+
+// Check if contracts are deployed (not zero address)
+const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_COUNCIL_SALARY_DEPLOYED = COUNCIL_SALARY_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 type TabType = 'overview' | 'members' | 'salary' | 'voting';
 
@@ -62,6 +66,7 @@ export default function CouncilPage() {
     address: COUNCIL_ELECTION_ADDRESS,
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'getCouncilMembers',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
   });
 
   // Read candidates
@@ -69,6 +74,7 @@ export default function CouncilPage() {
     address: COUNCIL_ELECTION_ADDRESS,
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'getCandidates',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
   });
 
   // Read election status
@@ -76,6 +82,7 @@ export default function CouncilPage() {
     address: COUNCIL_ELECTION_ADDRESS,
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'getElectionStatus',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
   });
 
   // Read if user is candidate
@@ -84,6 +91,7 @@ export default function CouncilPage() {
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'isCandidate',
     args: address ? [address] : undefined,
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED && !!address },
   });
 
   // Read if user is council member
@@ -92,6 +100,7 @@ export default function CouncilPage() {
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'isCouncilMember',
     args: address ? [address] : undefined,
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED && !!address },
   });
 
   // Read claimable salary
@@ -100,6 +109,7 @@ export default function CouncilPage() {
     abi: COUNCIL_SALARY_ABI,
     functionName: 'getClaimable',
     args: address ? [address] : undefined,
+    query: { enabled: IS_COUNCIL_SALARY_DEPLOYED && !!address },
   });
 
   // Read can register
@@ -108,6 +118,7 @@ export default function CouncilPage() {
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'canRegister',
     args: address ? [address] : undefined,
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED && !!address },
   });
 
   // Handlers

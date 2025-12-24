@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAccount } from "wagmi";
 import { useState } from "react";
 import { isAddress } from "viem";
+import { devLog } from "@/lib/utils";
 
 function VaultContent() {
   const { showToast } = useToast();
@@ -48,7 +49,7 @@ const { address } = useAccount();
       setNewKinAddress("");
       showToast("Next of Kin set successfully!", "success");
     } catch (error) {
-      console.error(error);
+      devLog.error('Failed to set Next of Kin:', error);
       showToast("Failed to set Next of Kin", "error");
     }
   };
@@ -63,7 +64,7 @@ const { address } = useAccount();
       setNewGuardianAddress("");
       showToast("Guardian added successfully!", "success");
     } catch (error) {
-      console.error(error);
+      devLog.error('Failed to add guardian:', error);
       showToast("Failed to add guardian", "error");
     }
   };
@@ -78,7 +79,7 @@ const { address } = useAccount();
       setRecoveryAddress("");
       showToast("Recovery requested! Guardians will be notified.", "success");
     } catch (error) {
-      console.error(error);
+      devLog.error('Failed to request recovery:', error);
       showToast("Failed to request recovery", "error");
     }
   };
@@ -88,7 +89,7 @@ const { address } = useAccount();
       await approveRecovery();
       showToast("Recovery approved!", "success");
     } catch (error) {
-      console.error(error);
+      devLog.error('Failed to approve recovery:', error);
       showToast("Failed to approve recovery", "error");
     }
   };
@@ -98,7 +99,7 @@ const { address } = useAccount();
       await finalizeRecovery();
       showToast("Recovery finalized! Vault ownership transferred.", "success");
     } catch (error) {
-      console.error(error);
+      devLog.error('Failed to finalize recovery:', error);
       showToast("Failed to finalize recovery", "error");
     }
   };
@@ -108,7 +109,7 @@ const { address } = useAccount();
       await cancelRecovery();
       showToast("Recovery cancelled successfully!", "success");
     } catch (error) {
-      console.error(error);
+      devLog.error('Failed to cancel recovery:', error);
       showToast("Failed to cancel recovery", "error");
     }
   };
@@ -142,7 +143,7 @@ const { address } = useAccount();
                         await createVault();
                         showToast("Vault created successfully!", "success");
                       } catch (error) {
-                        console.error('Vault creation error:', error);
+                        devLog.error('Vault creation error:', error);
                         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
                         showToast(errorMessage, "error");
                       }

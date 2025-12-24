@@ -134,7 +134,9 @@ export default function BadgesPage() {
     }
   };
 
-  // Mock user badges for UI (TODO: Replace with contract reads for each badge)
+  // Mock user badges for UI display
+  // Note: Badge status will be read from BadgeRegistry contract once deployed
+  // Currently showing demo data to illustrate badge categories and states
   const mockUserBadges: Record<string, { earned: boolean; expiry?: number; minted: boolean; tokenId?: number }> = {
     PIONEER: { earned: true, minted: true, tokenId: 2847 },
     GENESIS_PRESALE: { earned: true, minted: false },

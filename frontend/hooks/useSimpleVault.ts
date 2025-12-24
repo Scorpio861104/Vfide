@@ -1,6 +1,7 @@
 import { useWriteContract } from 'wagmi';
 import { useState } from 'react';
 import { useVaultHub } from './useVaultHub';
+import { devLog } from '../lib/utils';
 
 /**
  * Simple vault hook that hides the complexity of vault.execute()
@@ -72,7 +73,7 @@ export function useSimpleVault() {
     } catch (error) {
       setActionStatus('error');
       setUserMessage(`❌ ${actionName} failed. Please try again.`);
-      console.error('Vault action error:', error);
+      devLog.error('Vault action error:', error);
     }
   };
 

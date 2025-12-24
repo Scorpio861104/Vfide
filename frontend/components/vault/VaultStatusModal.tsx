@@ -5,6 +5,7 @@ import { useAccount, useSwitchChain } from 'wagmi';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/toast';
+import { devLog } from '@/lib/utils';
 
 export function VaultStatusModal() {
   const { address, isConnected } = useAccount();
@@ -58,7 +59,7 @@ export function VaultStatusModal() {
       await createVault();
       showToast("Vault created successfully!", "success");
     } catch (error) {
-      console.error('Failed to create vault:', error);
+      devLog.error('Failed to create vault:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       showToast(`Failed to create vault: ${errorMessage}`, "error");
       setIsCreating(false);

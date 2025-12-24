@@ -53,10 +53,15 @@ const PROMOTIONAL_TREASURY_ABI = [
   { name: 'isPromotionActive', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'bool' }] },
 ] as const;
 
-// Contract addresses (these contracts not deployed to testnet yet)
-const LIQUIDITY_INCENTIVES_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
-const DUTY_DISTRIBUTOR_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
-const PROMOTIONAL_TREASURY_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+// Contract addresses from environment (these contracts not deployed to testnet yet)
+const LIQUIDITY_INCENTIVES_ADDRESS = (process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const DUTY_DISTRIBUTOR_ADDRESS = (process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const PROMOTIONAL_TREASURY_ADDRESS = (process.env.NEXT_PUBLIC_PROMOTIONAL_TREASURY_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+
+// Check if contracts are deployed (not zero address)
+const IS_LIQUIDITY_DEPLOYED = LIQUIDITY_INCENTIVES_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_DUTY_DEPLOYED = DUTY_DISTRIBUTOR_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_PROMO_DEPLOYED = PROMOTIONAL_TREASURY_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 type TabId = 'overview' | 'duty' | 'promotional' | 'liquidity' | 'referral'
 
@@ -77,6 +82,7 @@ export default function RewardsPage() {
     abi: DUTY_DISTRIBUTOR_ABI,
     functionName: 'points',
     args: address ? [address] : undefined,
+    query: { enabled: IS_DUTY_DEPLOYED && !!address },
   });
 
   const { data: dutyClaimed } = useReadContract({
@@ -84,12 +90,14 @@ export default function RewardsPage() {
     abi: DUTY_DISTRIBUTOR_ABI,
     functionName: 'claimed',
     args: address ? [address] : undefined,
+    query: { enabled: IS_DUTY_DEPLOYED && !!address },
   });
 
   const { data: rewardPerPoint } = useReadContract({
     address: DUTY_DISTRIBUTOR_ADDRESS,
     abi: DUTY_DISTRIBUTOR_ABI,
     functionName: 'rewardPerPoint',
+    query: { enabled: IS_DUTY_DEPLOYED },
   });
 
   // Read promotional stats
@@ -98,18 +106,21 @@ export default function RewardsPage() {
     abi: PROMOTIONAL_TREASURY_ABI,
     functionName: 'getUserStats',
     args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
   });
 
   const { data: remainingBudgets } = useReadContract({
     address: PROMOTIONAL_TREASURY_ADDRESS,
     abi: PROMOTIONAL_TREASURY_ABI,
     functionName: 'getRemainingBudgets',
+    query: { enabled: IS_PROMO_DEPLOYED },
   });
 
   const { data: isPromoActive } = useReadContract({
     address: PROMOTIONAL_TREASURY_ADDRESS,
     abi: PROMOTIONAL_TREASURY_ABI,
     functionName: 'isPromotionActive',
+    query: { enabled: IS_PROMO_DEPLOYED },
   });
 
   // Read LP pools
@@ -117,6 +128,7 @@ export default function RewardsPage() {
     address: LIQUIDITY_INCENTIVES_ADDRESS,
     abi: LIQUIDITY_INCENTIVES_ABI,
     functionName: 'getAllPools',
+    query: { enabled: IS_LIQUIDITY_DEPLOYED },
   });
 
   // Calculate totals from contract data

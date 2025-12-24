@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
+import { devLog } from '@/lib/utils'
 
 export interface BadgeNFTMinterProps {
   badgeId: `0x${string}`
@@ -43,7 +44,7 @@ export function BadgeNFTMinter({ badgeId, onSuccess }: BadgeNFTMinterProps) {
       showToast("Badge NFT minted successfully!", "success")
       onSuccess?.()
     } catch (error) {
-      console.error('Failed to mint badge:', error)
+      devLog.error('Failed to mint badge:', error)
       const errorMessage = error instanceof Error ? error.message : 'Transaction failed'
       showToast(`Failed to mint badge: ${errorMessage}`, "error")
     }

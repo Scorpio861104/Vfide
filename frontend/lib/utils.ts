@@ -92,3 +92,25 @@ export function timeUntil(futureDate: Date): string {
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
   return `${minutes} min${minutes > 1 ? 's' : ''}`
 }
+
+/**
+ * Development-only logger that's silent in production
+ * Use instead of console.log/error for non-critical logging
+ */
+export const devLog = {
+  error: (message: string, ...args: unknown[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(`[DEV] ${message}`, ...args);
+    }
+  },
+  warn: (message: string, ...args: unknown[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[DEV] ${message}`, ...args);
+    }
+  },
+  log: (message: string, ...args: unknown[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] ${message}`, ...args);
+    }
+  },
+};

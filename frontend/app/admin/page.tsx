@@ -281,8 +281,12 @@ const TOKEN_ABI = [
   },
 ] as const;
 
-const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as `0x${string}` || '0x0000000000000000000000000000000000000000';
-const BURN_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS as `0x${string}` || '0x0000000000000000000000000000000000000000';
+const TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const BURN_ROUTER_ADDRESS = (process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+
+// Check if contracts are deployed (not zero address)
+const IS_TOKEN_DEPLOYED = TOKEN_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_BURN_ROUTER_DEPLOYED = BURN_ROUTER_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 // BurnRouter ABI
 const BURN_ROUTER_ABI = [
@@ -383,6 +387,7 @@ export default function AdminPanel() {
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'owner',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   // Read contract state
@@ -390,30 +395,35 @@ export default function AdminPanel() {
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'vaultOnly',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: policyLocked } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'policyLocked',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: circuitBreaker } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'circuitBreaker',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: totalSupply } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'totalSupply',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: presaleMinted } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'presaleMinted',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: isWhitelisted } = useReadContract({
@@ -421,6 +431,7 @@ export default function AdminPanel() {
     abi: TOKEN_ABI,
     functionName: 'systemWhitelist',
     args: checkAddress ? [checkAddress as `0x${string}`] : undefined,
+    query: { enabled: IS_TOKEN_DEPLOYED && !!checkAddress },
   });
 
   const { data: isExempt } = useReadContract({
@@ -428,6 +439,7 @@ export default function AdminPanel() {
     abi: TOKEN_ABI,
     functionName: 'systemExempt',
     args: exemptAddress ? [exemptAddress as `0x${string}`] : undefined,
+    query: { enabled: IS_TOKEN_DEPLOYED && !!exemptAddress },
   });
 
   const { data: isUserBlacklisted } = useReadContract({
@@ -435,6 +447,7 @@ export default function AdminPanel() {
     abi: TOKEN_ABI,
     functionName: 'isBlacklisted',
     args: blacklistAddress ? [blacklistAddress as `0x${string}`] : undefined,
+    query: { enabled: IS_TOKEN_DEPLOYED && !!blacklistAddress },
   });
 
   // Read vault-only whitelist status (exchanges bypass)
@@ -443,6 +456,7 @@ export default function AdminPanel() {
     abi: TOKEN_ABI,
     functionName: 'whitelisted',
     args: vaultBypassAddress ? [vaultBypassAddress as `0x${string}`] : undefined,
+    query: { enabled: IS_TOKEN_DEPLOYED && !!vaultBypassAddress },
   });
 
   // Read whale limit exempt status
@@ -451,6 +465,7 @@ export default function AdminPanel() {
     abi: TOKEN_ABI,
     functionName: 'whaleLimitExempt',
     args: whaleExemptAddress ? [whaleExemptAddress as `0x${string}`] : undefined,
+    query: { enabled: IS_TOKEN_DEPLOYED && !!whaleExemptAddress },
   });
 
   // Read module addresses
@@ -458,42 +473,49 @@ export default function AdminPanel() {
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'vaultHub',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: securityHubAddress } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'securityHub',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: ledgerAddress } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'ledger',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: burnRouterAddress } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'burnRouter',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: treasurySinkAddress } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'treasurySink',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: sanctumSinkAddress } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'sanctumSink',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   const { data: presaleContractAddress } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'presaleContract',
+    query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
   // Read BurnRouter parameters
@@ -501,36 +523,42 @@ export default function AdminPanel() {
     address: BURN_ROUTER_ADDRESS,
     abi: BURN_ROUTER_ABI,
     functionName: 'baseBurnBps',
+    query: { enabled: IS_BURN_ROUTER_DEPLOYED },
   });
 
   const { data: baseSanctumBps } = useReadContract({
     address: BURN_ROUTER_ADDRESS,
     abi: BURN_ROUTER_ABI,
     functionName: 'baseSanctumBps',
+    query: { enabled: IS_BURN_ROUTER_DEPLOYED },
   });
 
   const { data: baseEcosystemBps } = useReadContract({
     address: BURN_ROUTER_ADDRESS,
     abi: BURN_ROUTER_ABI,
     functionName: 'baseEcosystemBps',
+    query: { enabled: IS_BURN_ROUTER_DEPLOYED },
   });
 
   const { data: highTrustReduction } = useReadContract({
     address: BURN_ROUTER_ADDRESS,
     abi: BURN_ROUTER_ABI,
     functionName: 'highTrustReduction',
+    query: { enabled: IS_BURN_ROUTER_DEPLOYED },
   });
 
   const { data: lowTrustPenalty } = useReadContract({
     address: BURN_ROUTER_ADDRESS,
     abi: BURN_ROUTER_ABI,
     functionName: 'lowTrustPenalty',
+    query: { enabled: IS_BURN_ROUTER_DEPLOYED },
   });
 
   const { data: maxTotalBps } = useReadContract({
     address: BURN_ROUTER_ADDRESS,
     abi: BURN_ROUTER_ABI,
     functionName: 'maxTotalBps',
+    query: { enabled: IS_BURN_ROUTER_DEPLOYED },
   });
 
   // Write functions

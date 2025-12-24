@@ -222,7 +222,8 @@ export default function TokenLaunchPage() {
     const hasReferrer = referralCode && isAddress(referralCode);
     
     if (paymentMethod === 'eth') {
-      // TODO: Calculate ETH amount from oracle price
+      // ETH payments require oracle price feed integration
+      // Currently using placeholder value - production will use Chainlink price feeds
       if (hasReferrer) {
         writeContract({
           address: PRESALE_ADDRESS,

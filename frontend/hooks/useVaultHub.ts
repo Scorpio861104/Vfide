@@ -2,6 +2,7 @@ import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi
 import { isAddress, parseAbi } from 'viem';
 import { zkSyncSepoliaTestnet } from 'wagmi/chains';
 import { VAULT_HUB_ABI } from '../lib/contracts';
+import { devLog } from '../lib/utils';
 
 // Parse the ABI for proper type inference
 const PARSED_VAULT_HUB_ABI = parseAbi(VAULT_HUB_ABI);
@@ -140,7 +141,7 @@ export function useVaultHub() {
       });
       return result;
     } catch (error) {
-      console.error('Vault creation error:', error);
+      devLog.error('Vault creation error:', error);
       // Re-throw with user-friendly message
       throw new Error(parseContractError(error));
     }
