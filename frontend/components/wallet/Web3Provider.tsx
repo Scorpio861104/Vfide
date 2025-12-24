@@ -15,11 +15,16 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider 
           initialChain={zkSyncSepoliaTestnet}
+          modalSize="compact"
           theme={darkTheme({
             accentColor: '#00F0FF',
             accentColorForeground: '#1A1A1D',
             borderRadius: 'medium',
           })}
+          appInfo={{
+            appName: 'VFIDE',
+            learnMoreUrl: 'https://vfide.io/docs',
+          }}
         >
           {children}
         </RainbowKitProvider>
