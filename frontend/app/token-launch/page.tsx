@@ -137,9 +137,9 @@ const ERC20_ABI = [
 
 // Contract addresses from environment
 const PRESALE_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '0x338926cd13aAA99da8e846732e8010b16d1369ea') as `0x${string}`;
-// Note: These are zkSync Sepolia testnet mock stablecoins - no real USDC/USDT on testnet
-const USDC_ADDRESS = '0x0000000000000000000000000000000000000000' as const; // Not available on testnet
-const USDT_ADDRESS = '0x0000000000000000000000000000000000000000' as const; // Not available on testnet
+// Note: USDC/USDT are not available on zkSync Sepolia testnet
+// Users must use ETH for testnet purchases
+const STABLECOINS_AVAILABLE = false; // Set to true when stablecoins are deployed
 
 // Tier mapping: 0 = Founding, 1 = Oath, 2 = Public
 const TIER_MAP = { founding: 0, oath: 1, public: 2 } as const;
@@ -150,7 +150,7 @@ export default function TokenLaunchPage() {
   const [selectedTier, setSelectedTier] = useState<"founding" | "oath" | "public" | null>(null);
   const [amount, setAmount] = useState("");
   const [referralCode, setReferralCode] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<'usdc' | 'usdt' | 'eth'>('usdc');
+  const [paymentMethod, setPaymentMethod] = useState<'usdc' | 'usdt' | 'eth'>('eth');
   
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
@@ -190,21 +190,25 @@ export default function TokenLaunchPage() {
     args: address ? [address] : undefined,
   });
 
-  // Read stablecoin allowance
-  const stablecoinAddress = paymentMethod === 'usdc' ? USDC_ADDRESS : USDT_ADDRESS;
+  // Stablecoin allowance - disabled on testnet since no stablecoins available
+  // This will be enabled when USDC/USDT are deployed on mainnet
   const { data: allowance } = useReadContract({
-    address: stablecoinAddress,
+    address: PRESALE_ADDRESS, // Placeholder - won't be used since stablecoins disabled
     abi: ERC20_ABI,
     functionName: 'allowance',
     args: address ? [address, PRESALE_ADDRESS] : undefined,
+    query: {
+      enabled: STABLECOINS_AVAILABLE && paymentMethod !== 'eth',
+    }
   });
 
-  // Handle approve
+  // Handle approve - only for stablecoins (disabled on testnet)
   const handleApprove = () => {
+    if (!STABLECOINS_AVAILABLE) return;
     const usdAmount = calculateTotal();
     const amountWithBuffer = parseUnits((usdAmount * 1.01).toFixed(6), 6); // 1% buffer for rounding
     writeApprove({
-      address: stablecoinAddress,
+      address: PRESALE_ADDRESS, // Will be replaced with actual stablecoin address
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [PRESALE_ADDRESS, amountWithBuffer],
@@ -221,7 +225,9 @@ export default function TokenLaunchPage() {
     const stableAmount = parseUnits(usdAmount.toFixed(6), 6);
     const hasReferrer = referralCode && isAddress(referralCode);
     
-    if (paymentMethod === 'eth') {
+    // Only ETH payments are available on testnet
+    // Stablecoin payments will be enabled on mainnet
+    if (paymentMethod === 'eth' || !STABLECOINS_AVAILABLE) {
       // ETH payments require oracle price feed integration
       // Currently using placeholder value - production will use Chainlink price feeds
       if (hasReferrer) {
@@ -242,19 +248,22 @@ export default function TokenLaunchPage() {
         });
       }
     } else {
+      // Stablecoin payments - disabled on testnet
+      // This code path is kept for mainnet deployment
+      const stablecoinPlaceholder = PRESALE_ADDRESS; // Will be replaced with actual USDC/USDT address
       if (hasReferrer) {
         writeContract({
           address: PRESALE_ADDRESS,
           abi: PRESALE_ABI,
           functionName: 'buyWithStableReferral',
-          args: [stablecoinAddress, stableAmount, tier, lockPeriod, referralCode as `0x${string}`],
+          args: [stablecoinPlaceholder, stableAmount, tier, lockPeriod, referralCode as `0x${string}`],
         });
       } else {
         writeContract({
           address: PRESALE_ADDRESS,
           abi: PRESALE_ABI,
           functionName: 'buyWithStable',
-          args: [stablecoinAddress, stableAmount, tier, lockPeriod],
+          args: [stablecoinPlaceholder, stableAmount, tier, lockPeriod],
         });
       }
     }
@@ -423,7 +432,7 @@ export default function TokenLaunchPage() {
                   key={key}
                   whileHover={{ scale: 1.02 }}
                   onClick={() => setSelectedTier(key as "founding" | "oath" | "public")}
-                  className={`cursor-pointer bg-[#2A2A2F] border-2 rounded-xl p-8 transition-all ${
+                  className={`relative cursor-pointer bg-[#2A2A2F] border-2 rounded-xl p-8 pt-10 transition-all ${
                     selectedTier === key 
                       ? 'border-[#00F0FF] shadow-lg shadow-[#00F0FF]/20' 
                       : 'border-[#3A3A3F] hover:border-[#4A4A4F]'
@@ -680,22 +689,35 @@ export default function TokenLaunchPage() {
                 {/* Payment Method Selection */}
                 <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-6 mb-6">
                   <h3 className="text-lg font-bold text-[#F5F3E8] mb-4">Payment Method</h3>
+                  
+                  {/* Testnet Notice */}
+                  <div className="bg-yellow-500/10 border border-yellow-500 rounded-lg p-3 mb-4">
+                    <p className="text-yellow-400 text-sm text-center">
+                      🧪 <strong>Testnet:</strong> Only ETH payments available. Get free test ETH from{' '}
+                      <a href="https://www.alchemy.com/faucets/zksync-sepolia" target="_blank" rel="noopener noreferrer" className="underline">Alchemy Faucet</a>
+                    </p>
+                  </div>
+                  
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { id: 'usdc' as const, label: 'USDC', color: '#2775CA' },
-                      { id: 'usdt' as const, label: 'USDT', color: '#26A17B' },
-                      { id: 'eth' as const, label: 'ETH', color: '#627EEA' },
+                      { id: 'usdc' as const, label: 'USDC', color: '#2775CA', disabled: !STABLECOINS_AVAILABLE },
+                      { id: 'usdt' as const, label: 'USDT', color: '#26A17B', disabled: !STABLECOINS_AVAILABLE },
+                      { id: 'eth' as const, label: 'ETH', color: '#627EEA', disabled: false },
                     ].map((method) => (
                       <button
                         key={method.id}
-                        onClick={() => setPaymentMethod(method.id)}
+                        onClick={() => !method.disabled && setPaymentMethod(method.id)}
+                        disabled={method.disabled}
                         className={`p-4 rounded-lg border-2 transition-all ${
-                          paymentMethod === method.id
-                            ? 'border-[#00F0FF] bg-[#00F0FF]/10'
-                            : 'border-[#3A3A3F] hover:border-[#4A4A4F]'
+                          method.disabled 
+                            ? 'border-[#2A2A2F] bg-[#1A1A1D] opacity-50 cursor-not-allowed'
+                            : paymentMethod === method.id
+                              ? 'border-[#00F0FF] bg-[#00F0FF]/10'
+                              : 'border-[#3A3A3F] hover:border-[#4A4A4F]'
                         }`}
                       >
                         <div className="text-lg font-bold text-[#F5F3E8]">{method.label}</div>
+                        {method.disabled && <div className="text-xs text-[#707075]">Coming Soon</div>}
                       </button>
                     ))}
                   </div>

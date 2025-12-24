@@ -10,6 +10,7 @@ import { useAccount } from "wagmi";
 import { useState } from "react";
 import { isAddress } from "viem";
 import { devLog } from "@/lib/utils";
+import { useVaultBalance } from "@/lib/vfide-hooks";
 
 function VaultContent() {
   const { showToast } = useToast();
@@ -18,6 +19,11 @@ const { address } = useAccount();
   
   // Get user's vault address from VaultHub contract
   const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault } = useVaultHub();
+  
+  // Get vault balance
+  const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
+  const PRESALE_REFERENCE_PRICE = 0.07; // Use public tier price for estimation
+  const usdValue = (parseFloat(vaultBalance) * PRESALE_REFERENCE_PRICE).toFixed(2);
   
   const {
     vaultOwner,
@@ -207,8 +213,16 @@ const { address } = useAccount();
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
                 <div className="text-[#A0A0A5] text-sm font-[family-name:var(--font-body)] mb-2">Total Balance</div>
-                <div className="text-4xl font-bold text-[#F5F3E8] mb-1">24,850 VFIDE</div>
-                <div className="text-[#A0A0A5] text-sm">≈ $12,425 USD</div>
+                <div className="text-4xl font-bold text-[#F5F3E8] mb-1">
+                  {isLoadingBalance ? (
+                    <span className="animate-pulse">Loading...</span>
+                  ) : (
+                    `${parseFloat(vaultBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE`
+                  )}
+                </div>
+                <div className="text-[#A0A0A5] text-sm">
+                  {isLoadingBalance ? '...' : `≈ $${parseFloat(usdValue).toLocaleString()} USD`}
+                </div>
               </div>
               
               <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
@@ -219,8 +233,12 @@ const { address } = useAccount();
               
               <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
                 <div className="text-[#A0A0A5] text-sm font-[family-name:var(--font-body)] mb-2">Guardians</div>
-                <div className="text-4xl font-bold text-[#00F0FF] mb-1">3/3</div>
-                <div className="text-[#A0A0A5] text-sm">Recovery enabled</div>
+                <div className="text-4xl font-bold text-[#00F0FF] mb-1">
+                  {guardianCount !== undefined ? `${guardianCount}/5` : '...'}
+                </div>
+                <div className="text-[#A0A0A5] text-sm">
+                  {guardianCount && guardianCount >= 3 ? 'Recovery enabled' : 'Add guardians for recovery'}
+                </div>
               </div>
             </div>
           </div>
