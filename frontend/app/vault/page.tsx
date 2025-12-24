@@ -8,6 +8,7 @@ import { TransactionHistory } from "@/components/vault/TransactionHistory";
 import { useToast } from "@/components/ui/toast";
 import { useAccount } from "wagmi";
 import { useState } from "react";
+import { isAddress } from "viem";
 
 function VaultContent() {
   const { showToast } = useToast();
@@ -38,7 +39,7 @@ const { address } = useAccount();
   const [recoveryAddress, setRecoveryAddress] = useState("");
   
   const handleSetNextOfKin = async () => {
-    if (!newKinAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+    if (!isAddress(newKinAddress)) {
       showToast("Invalid address format", "error");
       return;
     }
@@ -53,7 +54,7 @@ const { address } = useAccount();
   };
   
   const handleAddGuardian = async () => {
-    if (!newGuardianAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+    if (!isAddress(newGuardianAddress)) {
       showToast("Invalid address format", "error");
       return;
     }
@@ -68,7 +69,7 @@ const { address } = useAccount();
   };
   
   const handleRequestRecovery = async () => {
-    if (!recoveryAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+    if (!isAddress(recoveryAddress)) {
       showToast("Invalid address format", "error");
       return;
     }

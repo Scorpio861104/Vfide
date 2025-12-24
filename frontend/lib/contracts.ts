@@ -49,6 +49,7 @@ export const VAULT_HUB_ABI = [
   'function getVaultInfo(address vault) view returns (address owner, uint256 createdAt, bool isLocked, bool exists)',
   'function checkVaultStatus(address addr) view returns (bool hasVault, address vaultAddress, bool isVaultContract)',
   'function totalVaults() view returns (uint256)',
+  'function vfideToken() view returns (address)',
 ] as const
 
 export const BADGE_NFT_ABI = [

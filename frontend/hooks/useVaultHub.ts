@@ -1,14 +1,7 @@
 import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi';
-import { parseAbi, isAddress } from 'viem';
+import { isAddress } from 'viem';
 import { zkSyncSepoliaTestnet } from 'wagmi/chains';
-
-const VAULT_HUB_ABI = parseAbi([
-  'function vaultOf(address owner) view returns (address)',
-  'function ownerOfVault(address vault) view returns (address)',
-  'function ensureVault(address owner) returns (address)',
-  'function vfideToken() view returns (address)',
-  'function predictVault(address owner) view returns (address)',
-]);
+import { VAULT_HUB_ABI } from '../lib/contracts';
 
 // VaultHub contract address from environment
 const VAULT_HUB_ADDRESS = process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS as `0x${string}` | undefined;
