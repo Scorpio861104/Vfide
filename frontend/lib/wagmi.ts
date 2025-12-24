@@ -28,33 +28,41 @@ const appInfo = {
   projectId,
 }
 
-// Configure wallets with proper grouping
+// Detect if user is on mobile
+const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
+// Configure wallets - WalletConnect first on mobile to keep users in their browser
+// On mobile, tapping MetaMask redirects to MetaMask's in-app browser which is a poor UX
+// WalletConnect connects via QR/deep-link and returns user to their native browser
 const connectors = connectorsForWallets(
   [
     {
-      groupName: 'Popular',
-      wallets: [
-        metaMaskWallet,
-        coinbaseWallet,
-        walletConnectWallet,
-        rainbowWallet,
-        trustWallet,
-      ],
+      groupName: 'Recommended',
+      wallets: isMobile 
+        ? [
+            walletConnectWallet,  // First on mobile - stays in native browser
+            coinbaseWallet,       // Coinbase also has good mobile UX
+            rainbowWallet,
+            trustWallet,
+            metaMaskWallet,       // Last on mobile - opens in-app browser
+          ]
+        : [
+            metaMaskWallet,       // First on desktop - best desktop experience
+            walletConnectWallet,
+            coinbaseWallet,
+            rainbowWallet,
+            rabbyWallet,
+          ],
     },
     {
-      groupName: 'Mobile',
+      groupName: 'More Wallets',
       wallets: [
+        trustWallet,
         phantomWallet,
         argentWallet,
-        imTokenWallet,
         okxWallet,
         zerionWallet,
-      ],
-    },
-    {
-      groupName: 'Desktop & Hardware',
-      wallets: [
-        rabbyWallet,
+        imTokenWallet,
         braveWallet,
         ledgerWallet,
         safeWallet,

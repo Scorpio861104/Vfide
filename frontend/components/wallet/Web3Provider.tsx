@@ -20,10 +20,18 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
             accentColor: '#00F0FF',
             accentColorForeground: '#1A1A1D',
             borderRadius: 'medium',
+            fontStack: 'system',
+            overlayBlur: 'small',
           })}
           appInfo={{
             appName: 'VFIDE',
             learnMoreUrl: 'https://vfide.io/docs',
+            disclaimer: ({ Text, Link }) => (
+              <Text>
+                On mobile? Use WalletConnect to stay in your browser.{' '}
+                <Link href="https://vfide.io/docs">Learn more</Link>
+              </Text>
+            ),
           }}
         >
           {children}
