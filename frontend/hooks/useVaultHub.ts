@@ -1,7 +1,10 @@
 import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi';
-import { isAddress } from 'viem';
+import { isAddress, parseAbi } from 'viem';
 import { zkSyncSepoliaTestnet } from 'wagmi/chains';
 import { VAULT_HUB_ABI } from '../lib/contracts';
+
+// Parse the ABI for proper type inference
+const PARSED_VAULT_HUB_ABI = parseAbi(VAULT_HUB_ABI);
 
 // VaultHub contract address from environment
 const VAULT_HUB_ADDRESS = process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS as `0x${string}` | undefined;
@@ -95,7 +98,7 @@ export function useVaultHub() {
   // Get user's vault address
   const { data: vaultAddress, isLoading: isLoadingVault, refetch: refetchVault } = useReadContract({
     address: VAULT_HUB_ADDRESS,
-    abi: VAULT_HUB_ABI,
+    abi: PARSED_VAULT_HUB_ABI,
     functionName: 'vaultOf',
     args: userAddress ? [userAddress] : undefined,
     chainId: EXPECTED_CHAIN_ID,
@@ -108,7 +111,7 @@ export function useVaultHub() {
   // Check if VaultHub has vfideToken set (contract is properly configured)
   const { data: vfideTokenAddress } = useReadContract({
     address: VAULT_HUB_ADDRESS,
-    abi: VAULT_HUB_ABI,
+    abi: PARSED_VAULT_HUB_ABI,
     functionName: 'vfideToken',
     chainId: EXPECTED_CHAIN_ID,
     query: { 
@@ -140,7 +143,7 @@ export function useVaultHub() {
     try {
       const result = await writeContractAsync({
         address: VAULT_HUB_ADDRESS,
-        abi: VAULT_HUB_ABI,
+        abi: PARSED_VAULT_HUB_ABI,
         functionName: 'ensureVault',
         args: [userAddress],
         chainId: EXPECTED_CHAIN_ID,
