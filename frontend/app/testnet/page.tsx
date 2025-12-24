@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useAccount, useChainId, useBalance, useSwitchChain } from 'wagmi'
-import { useConnectModal, useChainModal } from '@rainbow-me/rainbowkit'
+import { useAccount, useChainId, useBalance } from 'wagmi'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { zkSyncSepoliaTestnet } from 'wagmi/chains'
 
 export default function TestnetPage() {
@@ -11,23 +11,18 @@ export default function TestnetPage() {
   const [copied, setCopied] = useState(false)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
-  const [switchError, setSwitchError] = useState<string | null>(null)
-  const [showManualInstructions, setShowManualInstructions] = useState(false)
 
   // Use wagmi hooks for wallet state
-  const { address, isConnected, connector } = useAccount()
+  const { address, isConnected } = useAccount()
   const chainId = useChainId()
   const { data: balanceData } = useBalance({ address })
-  const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
   const { openConnectModal } = useConnectModal()
-  const { openChainModal } = useChainModal()
 
   const ZKSYNC_SEPOLIA_CHAIN_ID = zkSyncSepoliaTestnet.id // 300
   const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f'
 
   const ethBalance = balanceData ? parseFloat(balanceData.formatted).toFixed(4) : '0'
   const isOnCorrectChain = chainId === ZKSYNC_SEPOLIA_CHAIN_ID
-  const isWalletConnect = connector?.id === 'walletConnect'
 
   // Detect mobile
   useEffect(() => {
@@ -49,32 +44,9 @@ export default function TestnetPage() {
     }
   }, [isConnected, isOnCorrectChain, ethBalance])
 
-  // Clear error when network changes
-  useEffect(() => {
-    if (isOnCorrectChain) {
-      setSwitchError(null)
-    }
-  }, [isOnCorrectChain])
-
   const handleConnect = () => {
     if (openConnectModal) {
       openConnectModal()
-    }
-  }
-
-  const handleSwitchNetwork = async () => {
-    setSwitchError(null)
-    try {
-      await switchChain({ chainId: ZKSYNC_SEPOLIA_CHAIN_ID })
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to switch network'
-      if (errorMessage.includes('user rejected') || errorMessage.includes('User rejected')) {
-        setSwitchError('Please approve the network switch in your wallet app')
-      } else if (errorMessage.includes('Unrecognized chain')) {
-        setSwitchError('Please add zkSync Sepolia network manually in your wallet')
-      } else {
-        setSwitchError('Check your wallet app to approve the network switch')
-      }
     }
   }
 
@@ -198,94 +170,81 @@ export default function TestnetPage() {
                 </p>
               </div>
 
-              {/* How it works explanation */}
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-6 text-left">
-                <p className="text-blue-400 font-semibold text-sm mb-2">📱 How network switching works:</p>
-                <ol className="text-gray-400 text-sm space-y-2">
-                  <li>1. Click the button below to send a switch request</li>
-                  <li>2. <strong className="text-white">Open your wallet app</strong> (MetaMask, Trust, etc.)</li>
-                  <li>3. <strong className="text-white">Approve the network switch</strong> in your wallet</li>
-                  <li>4. This page will update automatically when done!</li>
-                </ol>
-              </div>
-
-              {switchError && (
-                <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-yellow-400">⚠️ {switchError}</p>
-                </div>
-              )}
-
-              {/* Primary action - Use RainbowKit chain modal for better UX */}
-              <div className="space-y-3">
-                <button
-                  onClick={() => openChainModal?.()}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-8 py-4 rounded-xl text-xl font-bold transition-all transform hover:scale-105"
-                >
-                  🔄 Select Network
-                </button>
-
-                <button
-                  onClick={handleSwitchNetwork}
-                  disabled={isSwitchingChain}
-                  className="w-full bg-white/10 hover:bg-white/20 disabled:opacity-50 px-8 py-3 rounded-xl font-bold transition-all border border-white/20"
-                >
-                  {isSwitchingChain ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-                      Waiting for wallet approval...
-                    </span>
-                  ) : (
-                    '⚡ Quick Switch to zkSync Sepolia'
-                  )}
-                </button>
-              </div>
-
-              {isWalletConnect && isSwitchingChain && (
-                <div className="mt-4 p-4 bg-green-900/30 border border-green-500/50 rounded-lg animate-pulse">
-                  <p className="text-green-400 font-bold">👆 Check your wallet app now!</p>
-                  <p className="text-green-300 text-sm mt-1">A network switch request is waiting for your approval</p>
-                </div>
-              )}
-
-              {/* Manual add network - collapsed by default */}
-              <div className="mt-8">
-                <button 
-                  onClick={() => setShowManualInstructions(!showManualInstructions)}
-                  className="text-gray-400 hover:text-white text-sm flex items-center gap-2 mx-auto"
-                >
-                  <span>{showManualInstructions ? '▼' : '▶'}</span>
-                  {showManualInstructions ? 'Hide' : 'Show'} manual setup instructions
-                </button>
-
-                {showManualInstructions && (
-                  <div className="mt-4 p-4 bg-white/5 rounded-lg text-left">
-                    <p className="text-gray-400 text-sm mb-3">
-                      <span className="text-purple-400 font-semibold">📝 Add network manually in your wallet:</span>
-                    </p>
-                    <div className="space-y-2">
-                      {[
-                        { label: 'Network Name', value: 'zkSync Sepolia Testnet' },
-                        { label: 'RPC URL', value: 'https://sepolia.era.zksync.dev' },
-                        { label: 'Chain ID', value: '300' },
-                        { label: 'Currency Symbol', value: 'ETH' },
-                        { label: 'Block Explorer', value: 'https://sepolia.explorer.zksync.io' },
-                      ].map((item) => (
-                        <div key={item.label} className="flex items-center justify-between bg-black/20 rounded p-2">
-                          <div>
-                            <span className="text-gray-500 text-xs">{item.label}:</span>
-                            <span className="text-gray-300 text-sm ml-2 font-mono">{item.value}</span>
-                          </div>
-                          <button
-                            onClick={() => copyToClipboard(item.value, item.label)}
-                            className="text-purple-400 hover:text-purple-300 text-xs px-2 py-1 bg-purple-500/20 rounded"
-                          >
-                            {copiedField === item.label ? '✓ Copied!' : 'Copy'}
-                          </button>
-                        </div>
-                      ))}
+              {/* Clear instructions */}
+              <div className="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border border-purple-500/30 rounded-xl p-6 mb-6">
+                <p className="text-purple-300 font-bold text-lg mb-4 text-center">
+                  📱 How to Switch Networks
+                </p>
+                <div className="space-y-3 text-left">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center font-bold text-white">1</div>
+                    <div>
+                      <p className="text-white font-semibold">Open your wallet app</p>
+                      <p className="text-gray-400 text-sm">MetaMask, Trust Wallet, Coinbase Wallet, etc.</p>
                     </div>
                   </div>
-                )}
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center font-bold text-white">2</div>
+                    <div>
+                      <p className="text-white font-semibold">Find the network selector</p>
+                      <p className="text-gray-400 text-sm">Usually at the top of the app (shows "Ethereum Mainnet" or similar)</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center font-bold text-white">3</div>
+                    <div>
+                      <p className="text-white font-semibold">Select "zkSync Sepolia Testnet"</p>
+                      <p className="text-gray-400 text-sm">If it's not in the list, you'll need to add it manually (see below)</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Add Network Details - Always visible with copy buttons */}
+              <div className="bg-black/30 border border-white/10 rounded-xl p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-white font-bold">zkSync Sepolia Network Details</p>
+                  <span className="text-xs text-gray-500">Copy each field to add manually</span>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Network Name', value: 'zkSync Sepolia Testnet', icon: '🏷️' },
+                    { label: 'RPC URL', value: 'https://sepolia.era.zksync.dev', icon: '🔗' },
+                    { label: 'Chain ID', value: '300', icon: '#️⃣' },
+                    { label: 'Currency Symbol', value: 'ETH', icon: '💎' },
+                    { label: 'Block Explorer', value: 'https://sepolia.explorer.zksync.io', icon: '🔍' },
+                  ].map((item) => (
+                    <div key={item.label} className="bg-white/5 rounded-lg p-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-xl">{item.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-gray-400 text-xs">{item.label}</p>
+                          <p className="text-white text-sm font-mono truncate">{item.value}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(item.value, item.label)}
+                        className={`flex-shrink-0 px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                          copiedField === item.label
+                            ? 'bg-green-600 text-white'
+                            : 'bg-purple-600 hover:bg-purple-500 text-white'
+                        }`}
+                      >
+                        {copiedField === item.label ? '✓ Copied' : 'Copy'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Help text */}
+              <div className="text-center space-y-2">
+                <p className="text-gray-400 text-sm">
+                  <strong className="text-yellow-400">💡 Tip:</strong> This page will automatically refresh once you switch networks
+                </p>
+                <p className="text-gray-500 text-xs">
+                  Having trouble? Make sure you're using the latest version of your wallet app
+                </p>
               </div>
             </div>
           </div>
