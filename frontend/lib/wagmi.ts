@@ -1,6 +1,6 @@
 import { http, createConfig } from 'wagmi'
 import { mainnet, polygon, arbitrum, sepolia, zkSyncSepoliaTestnet } from 'wagmi/chains'
-import { getDefaultWallets, connectorsForWallets } from '@rainbow-me/rainbowkit'
+import { connectorsForWallets } from '@rainbow-me/rainbowkit'
 import {
   metaMaskWallet,
   coinbaseWallet,
@@ -8,6 +8,15 @@ import {
   rainbowWallet,
   trustWallet,
   injectedWallet,
+  phantomWallet,
+  ledgerWallet,
+  argentWallet,
+  braveWallet,
+  imTokenWallet,
+  okxWallet,
+  safeWallet,
+  zerionWallet,
+  rabbyWallet,
 } from '@rainbow-me/rainbowkit/wallets'
 
 // WalletConnect Project ID - required for WalletConnect v2
@@ -29,12 +38,26 @@ const connectors = connectorsForWallets(
         coinbaseWallet,
         walletConnectWallet,
         rainbowWallet,
+        trustWallet,
       ],
     },
     {
-      groupName: 'More',
+      groupName: 'Mobile',
       wallets: [
-        trustWallet,
+        phantomWallet,
+        argentWallet,
+        imTokenWallet,
+        okxWallet,
+        zerionWallet,
+      ],
+    },
+    {
+      groupName: 'Desktop & Hardware',
+      wallets: [
+        rabbyWallet,
+        braveWallet,
+        ledgerWallet,
+        safeWallet,
         injectedWallet,
       ],
     },
