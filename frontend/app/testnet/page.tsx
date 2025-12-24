@@ -178,65 +178,117 @@ export default function TestnetPage() {
             <div className="text-center">
               <div className="text-6xl mb-6">🌐</div>
               <h2 className="text-2xl font-bold mb-4">Switch to Test Network</h2>
-              <p className="text-gray-400 mb-6 max-w-lg mx-auto">
-                You&apos;re connected! Now let&apos;s switch to the zkSync Sepolia testnet - this is where we test VFIDE for free.
-              </p>
-
-              <div className="bg-purple-900/30 border border-purple-500/50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-purple-400">
-                  Connected: <span className="font-mono">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+              
+              <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-4 mb-6">
+                <p className="text-sm text-green-400">
+                  ✓ Wallet Connected: <span className="font-mono">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
                 </p>
-                <p className="text-xs text-purple-300 mt-1">
-                  Current network: {chainId === 1 ? 'Ethereum Mainnet' : chainId === 300 ? 'zkSync Sepolia ✓' : `Chain ${chainId}`}
+              </div>
+
+              {/* Current Network Status */}
+              <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4 mb-6">
+                <p className="text-sm text-red-400 font-bold">
+                  ❌ Wrong Network Detected
+                </p>
+                <p className="text-xs text-red-300 mt-1">
+                  You&apos;re on: {chainId === 1 ? 'Ethereum Mainnet' : chainId === 11155111 ? 'Sepolia' : `Chain ${chainId}`}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Need: zkSync Sepolia (Chain ID: 300)
                 </p>
               </div>
 
               {switchError && (
                 <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-yellow-400">⚠️ {switchError}</p>
-                  {isWalletConnect && (
-                    <p className="text-xs text-yellow-300 mt-2">
-                      Check your wallet app (MetaMask, Trust, etc.) for a pending request
-                    </p>
-                  )}
                 </div>
               )}
 
-              <button
-                onClick={handleSwitchNetwork}
-                disabled={isSwitchingChain}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 px-8 py-4 rounded-xl text-xl font-bold transition-all transform hover:scale-105"
-              >
-                {isSwitchingChain ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-                    Switching...
-                  </span>
-                ) : (
-                  '🌐 Switch to zkSync Sepolia'
-                )}
-              </button>
+              {/* Two Options */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {/* Option 1: Automatic */}
+                <div className="bg-purple-900/20 border-2 border-purple-500 rounded-xl p-6">
+                  <div className="text-3xl mb-3">🔄</div>
+                  <h3 className="text-lg font-bold text-purple-400 mb-2">Option 1: Auto Switch</h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Click the button and approve in your wallet app
+                  </p>
+                  <button
+                    onClick={handleSwitchNetwork}
+                    disabled={isSwitchingChain}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 px-6 py-3 rounded-xl font-bold transition-all"
+                  >
+                    {isSwitchingChain ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        Check Your Wallet...
+                      </span>
+                    ) : (
+                      'Switch Network'
+                    )}
+                  </button>
+                  {isWalletConnect && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      📱 Open your wallet app to approve
+                    </p>
+                  )}
+                </div>
 
-              <p className="mt-4 text-gray-500 text-sm">
-                {isWalletConnect 
-                  ? "A request will be sent to your wallet app - please approve it there"
-                  : "Your wallet will ask you to approve the network switch"
-                }
-              </p>
-
-              {/* Manual Add Network Info */}
-              <div className="mt-8 p-4 bg-white/5 rounded-lg text-left">
-                <p className="text-gray-400 text-sm mb-3">
-                  <span className="text-purple-400 font-semibold">📝 Add network manually:</span>
-                </p>
-                <div className="text-gray-500 text-xs space-y-1 font-mono">
-                  <p>Network: zkSync Sepolia Testnet</p>
-                  <p>RPC: https://sepolia.era.zksync.dev</p>
-                  <p>Chain ID: 300</p>
-                  <p>Symbol: ETH</p>
-                  <p>Explorer: https://sepolia.explorer.zksync.io</p>
+                {/* Option 2: Manual */}
+                <div className="bg-gray-800/50 border border-gray-600 rounded-xl p-6">
+                  <div className="text-3xl mb-3">✍️</div>
+                  <h3 className="text-lg font-bold text-gray-300 mb-2">Option 2: Add Manually</h3>
+                  <p className="text-gray-500 text-sm mb-4">
+                    Add network in your wallet settings
+                  </p>
+                  <div className="text-left bg-black/50 rounded-lg p-3 text-xs space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Network:</span>
+                      <span className="text-white font-mono">zkSync Sepolia</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">RPC URL:</span>
+                      <button 
+                        onClick={() => copyToClipboard('https://sepolia.era.zksync.dev')}
+                        className="text-purple-400 font-mono hover:text-purple-300"
+                      >
+                        Copy ↗
+                      </button>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Chain ID:</span>
+                      <span className="text-white font-mono">300</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Symbol:</span>
+                      <span className="text-white font-mono">ETH</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Explorer:</span>
+                      <a 
+                        href="https://sepolia.explorer.zksync.io"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-400 font-mono hover:text-purple-300"
+                      >
+                        View ↗
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              {/* Video Tutorial Link */}
+              <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-4">
+                <p className="text-sm text-blue-400">
+                  📺 Need help? <a href="https://support.metamask.io/networks-and-sidechains/managing-networks/how-to-add-a-custom-network-rpc/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-300">How to add a network to MetaMask</a>
+                </p>
+              </div>
+
+              {/* Already switched? */}
+              <p className="mt-6 text-gray-500 text-sm">
+                Already switched? <button onClick={() => window.location.reload()} className="text-purple-400 hover:text-purple-300 underline">Refresh this page</button>
+              </p>
             </div>
           </div>
         )}
