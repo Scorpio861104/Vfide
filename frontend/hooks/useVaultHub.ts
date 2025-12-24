@@ -154,7 +154,7 @@ export function useVaultHub() {
   };
 
   return {
-    vaultAddress: hasVault ? vaultAddress : undefined,
+    vaultAddress: hasVault ? (vaultAddress as `0x${string}`) : undefined,
     hasVault,
     isLoadingVault,
     isCreatingVault,
