@@ -2,14 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAccount, useChainId, useBalance } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { zkSyncSepoliaTestnet } from 'wagmi/chains'
+import { IS_TESTNET } from '@/lib/testnet'
 
 export default function TestnetPage() {
+  const router = useRouter()
   const [copied, setCopied] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [confetti, setConfetti] = useState(false)
+
+  // Redirect to home if not testnet mode
+  useEffect(() => {
+    if (!IS_TESTNET) {
+      router.push('/')
+    }
+  }, [router])
 
   // Wallet state
   const { address, isConnected } = useAccount()

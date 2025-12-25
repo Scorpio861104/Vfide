@@ -1,30 +1,29 @@
 "use client";
 
 import { useAccount, useChainId } from 'wagmi';
-import { sepolia, mainnet, zkSyncSepoliaTestnet } from 'wagmi/chains';
+import { zkSyncSepoliaTestnet, zkSync } from 'wagmi/chains';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { IS_TESTNET, CURRENT_CHAIN_ID } from '@/lib/testnet';
 
 /**
  * Shows a warning when user is connected to wrong network
- * Simplified - just shows instructions, no broken programmatic switching
+ * Uses IS_TESTNET config for proper chain detection
  */
 export function NetworkWarning() {
   const { isConnected } = useAccount();
   const chainId = useChainId();
 
-  // Get expected chain from env - default to zkSync Sepolia for testnet (chain ID 300)
-  const envChainId = process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID;
-  const expectedChainId = envChainId === '1' ? mainnet.id : 
-                          envChainId === '300' ? zkSyncSepoliaTestnet.id : 
-                          zkSyncSepoliaTestnet.id; // Default to zkSync Sepolia
-  const expectedChain = expectedChainId === mainnet.id ? mainnet : 
-                        expectedChainId === zkSyncSepoliaTestnet.id ? zkSyncSepoliaTestnet :
-                        zkSyncSepoliaTestnet;
+  // Use centralized config for expected chain
+  const expectedChainId = CURRENT_CHAIN_ID;
+  const expectedChain = IS_TESTNET ? zkSyncSepoliaTestnet : zkSync;
   
   // Show warning if connected but on wrong chain
   const showWarning = isConnected && chainId !== expectedChainId;
+
+  // Link to setup guide only on testnet
+  const helpLink = IS_TESTNET ? '/testnet' : '/docs';
 
   return (
     <AnimatePresence>
@@ -50,10 +49,10 @@ export function NetworkWarning() {
               </div>
               
               <Link 
-                href="/testnet"
+                href={helpLink}
                 className="flex items-center gap-2 px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
               >
-                View Setup Guide <ExternalLink size={16} />
+                {IS_TESTNET ? 'View Setup Guide' : 'Learn More'} <ExternalLink size={16} />
               </Link>
             </div>
           </div>

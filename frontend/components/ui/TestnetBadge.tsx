@@ -2,17 +2,20 @@
 
 import { useChainId } from 'wagmi';
 import { sepolia, zkSyncSepoliaTestnet } from 'wagmi/chains';
+import { IS_TESTNET } from '@/lib/testnet';
 
 /**
  * Displays a prominent testnet indicator when connected to a test network
+ * Hidden when IS_TESTNET is false (mainnet mode)
  */
 export function TestnetBadge() {
   const chainId = useChainId();
   
-  // Only show on testnets (Sepolia or zkSync Sepolia)
-  const isTestnet = chainId === sepolia.id || chainId === zkSyncSepoliaTestnet.id;
+  // Only show if IS_TESTNET is true AND on a test network
+  if (!IS_TESTNET) return null;
   
-  if (!isTestnet) return null;
+  const isTestnetChain = chainId === sepolia.id || chainId === zkSyncSepoliaTestnet.id;
+  if (!isTestnetChain) return null;
 
   const networkName = chainId === zkSyncSepoliaTestnet.id ? 'zkSync Sepolia' : 'Sepolia';
 
@@ -25,14 +28,16 @@ export function TestnetBadge() {
 
 /**
  * Corner badge for testnet - less intrusive option
+ * Hidden when IS_TESTNET is false (mainnet mode)
  */
 export function TestnetCornerBadge() {
   const chainId = useChainId();
   
-  // Sepolia or zkSync Sepolia
-  const isTestnet = chainId === sepolia.id || chainId === zkSyncSepoliaTestnet.id;
+  // Only show if IS_TESTNET is true
+  if (!IS_TESTNET) return null;
   
-  if (!isTestnet) return null;
+  const isTestnetChain = chainId === sepolia.id || chainId === zkSyncSepoliaTestnet.id;
+  if (!isTestnetChain) return null;
 
   return (
     <a href="/testnet" className="fixed top-20 left-4 z-50 bg-orange-500/90 hover:bg-orange-400 text-black px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse cursor-pointer">
