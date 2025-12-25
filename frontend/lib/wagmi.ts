@@ -1,6 +1,6 @@
 import { http, createConfig } from 'wagmi'
 import { mainnet, polygon, arbitrum, sepolia, zkSyncSepoliaTestnet } from 'wagmi/chains'
-import { connectorsForWallets } from '@rainbow-me/rainbowkit'
+import { connectorsForWallets, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import {
   metaMaskWallet,
   coinbaseWallet,
@@ -28,24 +28,30 @@ const appInfo = {
   projectId,
 }
 
-// Configure wallets - WalletConnect first for best cross-platform UX
-// WalletConnect works universally (mobile stays in browser, desktop shows QR)
+// Configure wallets - Coinbase Smart Wallet first for easiest UX
+// Coinbase Smart Wallet can be created with just an email!
 const connectors = connectorsForWallets(
   [
     {
-      groupName: 'Recommended',
+      groupName: '🌟 Easiest - No Wallet Needed',
       wallets: [
-        walletConnectWallet,  // First - best UX for mobile (stays in browser)
+        // Coinbase Smart Wallet - can sign up with just email
+        coinbaseWallet,
+      ],
+    },
+    {
+      groupName: 'Connect Existing Wallet',
+      wallets: [
+        walletConnectWallet,  // Best for mobile (stays in browser)
         metaMaskWallet,       // Popular desktop choice
-        coinbaseWallet,       // Good mobile UX
         rainbowWallet,
         rabbyWallet,
+        trustWallet,
       ],
     },
     {
       groupName: 'More Wallets',
       wallets: [
-        trustWallet,
         phantomWallet,
         argentWallet,
         okxWallet,
