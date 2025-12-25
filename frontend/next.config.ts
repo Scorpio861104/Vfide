@@ -4,6 +4,17 @@ const nextConfig: NextConfig = {
   // Fix for pino/thread-stream compatibility
   serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
   
+  // Exclude test files from build
+  webpack: (config) => {
+    config.module = config.module || {};
+    config.module.rules = config.module.rules || [];
+    config.module.rules.push({
+      test: /node_modules\/@privy-io\/.*\/test\//,
+      use: 'null-loader',
+    });
+    return config;
+  },
+  
   // Turbopack configuration (Next.js 16 default)
   turbopack: {
     resolveAlias: {
