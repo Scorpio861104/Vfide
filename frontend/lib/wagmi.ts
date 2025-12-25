@@ -1,5 +1,14 @@
 import { http, createConfig } from 'wagmi'
-import { mainnet, polygon, arbitrum, sepolia, zkSyncSepoliaTestnet } from 'wagmi/chains'
+import { 
+  base, 
+  baseSepolia, 
+  polygon, 
+  polygonAmoy,
+  zkSync,
+  zkSyncSepoliaTestnet,
+  mainnet,
+  sepolia,
+} from 'wagmi/chains'
 import { connectorsForWallets, getDefaultWallets } from '@rainbow-me/rainbowkit'
 import {
   metaMaskWallet,
@@ -18,6 +27,7 @@ import {
   zerionWallet,
   rabbyWallet,
 } from '@rainbow-me/rainbowkit/wallets'
+import { IS_TESTNET } from './chains'
 
 // WalletConnect Project ID - required for WalletConnect v2
 // Get your free project ID at https://cloud.walletconnect.com
@@ -89,16 +99,45 @@ const zkSyncSepoliaWithMetadata = {
   },
 } as const
 
-// zkSync Sepolia is first as it's the default testnet
+// ========================================
+// MULTI-CHAIN CONFIGURATION
+// ========================================
+// We support Base, Polygon, and zkSync
+// Base is first because Coinbase users already have it!
+
+// Testnet chains (in order of user-friendliness)
+const testnetChains = [
+  baseSepolia,         // Coinbase users ready!
+  polygonAmoy,         // Many wallets have it
+  zkSyncSepoliaWithMetadata, // Needs network add
+] as const
+
+// Mainnet chains (same order)
+const mainnetChains = [
+  base,
+  polygon,
+  zkSync,
+] as const
+
+// Select chains based on environment
+const chains = IS_TESTNET ? testnetChains : mainnetChains
+
+// Base Sepolia is first as it's the easiest for users
 export const config = createConfig({
-  chains: [zkSyncSepoliaWithMetadata, mainnet, polygon, arbitrum, sepolia],
+  chains: chains as typeof testnetChains,
   connectors,
   transports: {
-    [mainnet.id]: http(),
-    [polygon.id]: http(),
-    [arbitrum.id]: http(),
-    [sepolia.id]: http(),
+    // Testnets
+    [baseSepolia.id]: http(),
+    [polygonAmoy.id]: http(),
     [zkSyncSepoliaTestnet.id]: http('https://sepolia.era.zksync.dev'),
+    // Mainnets
+    [base.id]: http(),
+    [polygon.id]: http(),
+    [zkSync.id]: http(),
+    // Keep these for compatibility
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
   },
   // Improve reconnection and network switching
   syncConnectedChain: true,

@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAccount, useChainId, useBalance } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
-import { zkSyncSepoliaTestnet } from 'wagmi/chains'
-import { IS_TESTNET } from '@/lib/testnet'
+import { baseSepolia } from 'wagmi/chains'
+import { IS_TESTNET, FAUCET_URLS } from '@/lib/testnet'
 
 export default function TestnetPage() {
   const router = useRouter()
@@ -27,9 +27,9 @@ export default function TestnetPage() {
   const { data: balanceData, refetch } = useBalance({ address })
   const { openConnectModal } = useConnectModal()
 
-  const ZKSYNC_SEPOLIA_CHAIN_ID = zkSyncSepoliaTestnet.id
+  const BASE_SEPOLIA_CHAIN_ID = baseSepolia.id
   const ethBalance = balanceData ? parseFloat(balanceData.formatted).toFixed(4) : '0'
-  const isOnCorrectChain = chainId === ZKSYNC_SEPOLIA_CHAIN_ID
+  const isOnCorrectChain = chainId === BASE_SEPOLIA_CHAIN_ID
   const hasBalance = parseFloat(ethBalance) >= 0.0001
 
   // Calculate step
@@ -190,13 +190,13 @@ export default function TestnetPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-2xl p-6 border border-purple-500/20 mb-6">
+              <div className="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 rounded-2xl p-6 border border-blue-500/20 mb-6">
                 <p className="text-center text-gray-300 mb-4">
                   Open your wallet app and switch to:
                 </p>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-white mb-1">zkSync Sepolia</p>
-                  <p className="text-gray-400 text-sm">Test Network</p>
+                  <p className="text-2xl font-bold text-white mb-1">Base Sepolia</p>
+                  <p className="text-gray-400 text-sm">Test Network (Coinbase&apos;s Chain)</p>
                 </div>
               </div>
 
@@ -208,9 +208,9 @@ export default function TestnetPage() {
                 </summary>
                 <div className="mt-4 space-y-2 text-sm">
                   {[
-                    { label: 'Network', value: 'zkSync Sepolia Testnet' },
-                    { label: 'RPC', value: 'https://sepolia.era.zksync.dev' },
-                    { label: 'Chain ID', value: '300' },
+                    { label: 'Network', value: 'Base Sepolia' },
+                    { label: 'RPC', value: 'https://sepolia.base.org' },
+                    { label: 'Chain ID', value: '84532' },
                     { label: 'Symbol', value: 'ETH' },
                   ].map((item) => (
                     <div key={item.label} className="flex justify-between items-center bg-black/30 rounded-lg p-3">
@@ -230,7 +230,7 @@ export default function TestnetPage() {
                 <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl animate-fadeIn">
                   <p className="text-yellow-400 font-bold text-sm mb-2">💡 Stuck?</p>
                   <p className="text-gray-300 text-sm">
-                    In your wallet app, tap the network name at the top (like &quot;Ethereum&quot;), then search for &quot;zkSync Sepolia&quot; or add it manually using the details above.
+                    In your wallet app, tap the network name at the top (like &quot;Ethereum&quot;), then search for &quot;Base Sepolia&quot;. Coinbase Wallet usually has it built-in!
                   </p>
                 </div>
               )}
@@ -248,7 +248,7 @@ export default function TestnetPage() {
                 
                 <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full mb-4">
                   <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                  On zkSync Sepolia ✓
+                  On Base Sepolia ✓
                 </div>
               </div>
 
@@ -263,19 +263,34 @@ export default function TestnetPage() {
                 </button>
               </div>
 
-              {/* Faucet */}
+              {/* Faucet - Multiple options */}
               <a
-                href="https://cloud.google.com/application/web3/faucet/ethereum/sepolia"
+                href={FAUCET_URLS.coinbase}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-6 py-5 rounded-xl text-xl font-bold text-center transition-all transform hover:scale-[1.02] mb-3"
               >
-                🚰 Get Free Test Tokens
+                🚰 Get Free Test ETH (Coinbase)
               </a>
               
-              <p className="text-center text-gray-500 text-sm mb-6">
-                Opens Google&apos;s free faucet in a new tab
-              </p>
+              <div className="flex gap-2 mb-6">
+                <a
+                  href={FAUCET_URLS.alchemy}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg text-sm font-medium text-center transition-all"
+                >
+                  Alchemy Faucet
+                </a>
+                <a
+                  href={FAUCET_URLS.quicknode}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg text-sm font-medium text-center transition-all"
+                >
+                  QuickNode Faucet
+                </a>
+              </div>
 
               <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
                 <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>

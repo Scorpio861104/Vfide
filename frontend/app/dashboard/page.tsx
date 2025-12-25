@@ -15,6 +15,7 @@ import { BadgeGallery } from "@/components/badge/BadgeGallery";
 import { BadgeProgress } from "@/components/badge/BadgeProgress";
 import { useUserBadges, useVaultBalance, useProofScore } from "@/lib/vfide-hooks";
 import { getBadgeById, type BadgeMetadata } from "@/lib/badge-registry";
+import { EXPLORER_URL } from "@/lib/testnet";
 import Link from "next/link";
 
 type TabType = 'overview' | 'fee-simulator' | 'score-simulator' | 'badges';
@@ -81,7 +82,7 @@ export default function DashboardPage() {
                     <button onClick={copyAddress} className="p-1 hover:bg-[#2A2A2F] rounded">
                       {copiedAddress ? <CheckCircle2 className="text-[#50C878]" size={14} /> : <Copy className="text-[#A0A0A5]" size={14} />}
                     </button>
-                    <a href={`https://explorer.zksync.io/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-[#2A2A2F] rounded">
+                    <a href={`${EXPLORER_URL}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-[#2A2A2F] rounded">
                       <ExternalLink className="text-[#A0A0A5]" size={14} />
                     </a>
                   </div>
@@ -269,7 +270,7 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
       <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-[#F5F3E8]">Recent Activity</h2>
-          <a href="https://explorer.zksync.io" target="_blank" rel="noopener noreferrer" className="text-[#00F0FF] text-sm hover:underline flex items-center gap-1">
+          <a href={EXPLORER_URL} target="_blank" rel="noopener noreferrer" className="text-[#00F0FF] text-sm hover:underline flex items-center gap-1">
             View all <ExternalLink size={14} />
           </a>
         </div>
