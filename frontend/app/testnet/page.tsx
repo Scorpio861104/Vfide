@@ -8,39 +8,45 @@ import { zkSyncSepoliaTestnet } from 'wagmi/chains'
 
 export default function TestnetPage() {
   const [copied, setCopied] = useState(false)
-  const [showHint, setShowHint] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
+  const [confetti, setConfetti] = useState(false)
 
   // Wallet state
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
-  const { data: balanceData } = useBalance({ address })
+  const { data: balanceData, refetch } = useBalance({ address })
   const { openConnectModal } = useConnectModal()
 
   const ZKSYNC_SEPOLIA_CHAIN_ID = zkSyncSepoliaTestnet.id
   const ethBalance = balanceData ? parseFloat(balanceData.formatted).toFixed(4) : '0'
   const isOnCorrectChain = chainId === ZKSYNC_SEPOLIA_CHAIN_ID
-  const hasBalance = parseFloat(ethBalance) >= 0.001
+  const hasBalance = parseFloat(ethBalance) >= 0.0001
 
-  // Determine which step they're on
+  // Calculate step
   const step = !isConnected ? 1 : !isOnCorrectChain ? 2 : !hasBalance ? 3 : 4
 
-  // Auto-show hint after 5 seconds on steps 2 and 3
+  // Show help after delay on steps 2-3
   useEffect(() => {
     if (step === 2 || step === 3) {
-      const timer = setTimeout(() => setShowHint(true), 5000)
+      const timer = setTimeout(() => setShowHelp(true), 8000)
       return () => clearTimeout(timer)
-    } else {
-      setShowHint(false)
     }
+    setShowHelp(false)
   }, [step])
 
-  // Refetch balance every 5 seconds when waiting for funds
+  // Poll for balance updates on step 3
   useEffect(() => {
     if (step === 3) {
-      const interval = setInterval(() => {
-        // Balance hook auto-refetches
-      }, 5000)
+      const interval = setInterval(() => refetch(), 5000)
       return () => clearInterval(interval)
+    }
+  }, [step, refetch])
+
+  // Celebration when reaching step 4
+  useEffect(() => {
+    if (step === 4) {
+      setConfetti(true)
+      setTimeout(() => setConfetti(false), 3000)
     }
   }, [step])
 
@@ -53,132 +59,168 @@ export default function TestnetPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0f] to-[#1a1a2f] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0f] via-[#12121a] to-[#1a1a2f] text-white overflow-hidden">
+      {/* Animated background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+      </div>
+
+      {/* Confetti effect */}
+      {confetti && (
+        <div className="fixed inset-0 pointer-events-none z-50">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute animate-confetti"
+              style={{
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 2}s`,
+                backgroundColor: ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#3B82F6'][Math.floor(Math.random() * 5)],
+                width: '10px',
+                height: '10px',
+                borderRadius: Math.random() > 0.5 ? '50%' : '0',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Banner */}
-      <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black py-4 px-4 text-center">
-        <p className="font-bold text-lg">🧪 TESTNET - 100% Free to Try!</p>
-        <p className="text-sm">No real money. No risk. Just fun.</p>
+      <div className="relative bg-gradient-to-r from-yellow-500 via-orange-500 to-yellow-500 text-black py-4 px-4 text-center">
+        <p className="font-bold text-lg">🧪 TESTNET - Play with fake money!</p>
+        <p className="text-sm opacity-80">100% free. Zero risk. All fun.</p>
       </div>
 
       {/* Toast */}
       {copied && (
-        <div className="fixed top-24 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+        <div className="fixed top-24 right-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-2xl z-50 animate-bounce">
           ✓ Copied!
         </div>
       )}
 
-      <div className="max-w-xl mx-auto px-4 py-10">
+      <div className="relative max-w-lg mx-auto px-4 py-10">
         {/* Hero */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+        <div className="text-center mb-10">
+          <h1 className="text-5xl md:text-6xl font-black mb-3 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
             Try VFIDE
           </h1>
-          <p className="text-2xl text-gray-300 mb-2">
-            Takes 2 minutes. Free forever.
+          <p className="text-xl text-gray-300 mb-4">
+            {step === 1 && "Let's set you up in 2 minutes"}
+            {step === 2 && "Almost there! One quick step"}
+            {step === 3 && "Last step - get free tokens"}
+            {step === 4 && "🎉 You're ready to explore!"}
           </p>
-          <div className="flex items-center justify-center gap-2 text-gray-500">
-            <span className="text-sm">Step {step} of 4</span>
-            <span className="text-xs">•</span>
-            <span className="text-sm">
-              {step === 1 && '⏱️ 30 seconds'}
-              {step === 2 && '⏱️ 1 minute'}
-              {step === 3 && '⏱️ 30 seconds'}
-              {step === 4 && '✅ Done!'}
-            </span>
-          </div>
         </div>
 
-        {/* Progress dots */}
-        <div className="flex justify-center gap-3 mb-10">
+        {/* Progress */}
+        <div className="flex justify-center items-center gap-2 mb-10">
           {[1, 2, 3, 4].map((s) => (
-            <div
-              key={s}
-              className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                step > s ? 'bg-green-500' : step === s ? 'bg-purple-500 ring-4 ring-purple-500/30' : 'bg-gray-700'
-              }`}
-            />
+            <div key={s} className="flex items-center">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-500 ${
+                  step > s
+                    ? 'bg-green-500 text-white scale-90'
+                    : step === s
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white scale-110 ring-4 ring-purple-500/30'
+                    : 'bg-gray-800 text-gray-500'
+                }`}
+              >
+                {step > s ? '✓' : s}
+              </div>
+              {s < 4 && (
+                <div className={`w-8 h-1 mx-1 rounded ${step > s ? 'bg-green-500' : 'bg-gray-800'}`} />
+              )}
+            </div>
           ))}
         </div>
 
         {/* Step 1: Connect */}
         {step === 1 && (
-          <div className="text-center">
-            <div className="bg-white/5 rounded-3xl p-10 border border-white/10">
-              <div className="text-8xl mb-6">👋</div>
-              <h2 className="text-3xl font-bold mb-4">Let&apos;s Get Started</h2>
-              <p className="text-gray-400 text-lg mb-8">
-                Click below to sign in.<br/>
-                <span className="text-purple-400">Use Coinbase Wallet for the easiest setup</span> - just your email!
-              </p>
+          <div className="animate-fadeIn">
+            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl">
+              <div className="text-center mb-8">
+                <div className="text-8xl mb-6 animate-wave">👋</div>
+                <h2 className="text-3xl font-bold mb-3">Welcome!</h2>
+                <p className="text-gray-400 text-lg">
+                  First, let&apos;s connect your account.
+                </p>
+              </div>
               
               <button
                 onClick={openConnectModal}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-8 py-6 rounded-2xl text-2xl font-bold transition-all transform hover:scale-[1.02] shadow-xl shadow-purple-500/20"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-8 py-6 rounded-2xl text-2xl font-bold transition-all transform hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/25 active:scale-[0.98]"
               >
-                🚀 Sign In
+                🚀 Get Started
               </button>
 
-              <div className="mt-8 p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl text-left">
-                <p className="text-blue-400 font-bold mb-2">💡 First time? Choose Coinbase Wallet</p>
-                <p className="text-gray-400 text-sm">
-                  It lets you create an account with just your email - no crypto experience needed!
+              <div className="mt-8 p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
+                <p className="text-blue-400 font-bold mb-2 flex items-center gap-2">
+                  <span className="text-xl">💡</span> New to crypto?
+                </p>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Choose <strong className="text-white">Coinbase Wallet</strong> - you can sign up with just your email. No downloads needed!
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 2: Wrong Network */}
+        {/* Step 2: Switch Network */}
         {step === 2 && (
-          <div className="text-center">
-            <div className="bg-white/5 rounded-3xl p-10 border border-white/10">
-              <div className="text-8xl mb-6">🔄</div>
-              <h2 className="text-3xl font-bold mb-4">Switch Networks</h2>
-              
-              <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-4 mb-6">
-                <p className="text-green-400 font-bold">✓ You&apos;re connected!</p>
-              </div>
-
-              <p className="text-gray-400 text-lg mb-6">
-                We need to switch to the zkSync Sepolia test network.<br/>
-                <span className="text-yellow-400">Open your wallet app and switch there.</span>
-              </p>
-
-              {/* Network details card */}
-              <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 border border-purple-500/30 text-left mb-6">
-                <p className="text-white font-bold text-lg mb-4 text-center">📍 Network to Add:</p>
+          <div className="animate-fadeIn">
+            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl">
+              <div className="text-center mb-6">
+                <div className="text-8xl mb-6">🔄</div>
+                <h2 className="text-3xl font-bold mb-3">Switch Networks</h2>
                 
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg">
-                    <span className="text-gray-400">Name:</span>
-                    <span className="text-white font-mono">zkSync Sepolia</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg">
-                    <span className="text-gray-400">RPC:</span>
-                    <span className="text-white font-mono text-sm">sepolia.era.zksync.dev</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg">
-                    <span className="text-gray-400">Chain ID:</span>
-                    <span className="text-white font-mono">300</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg">
-                    <span className="text-gray-400">Symbol:</span>
-                    <span className="text-white font-mono">ETH</span>
-                  </div>
+                <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full mb-4">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  Connected!
                 </div>
               </div>
 
-              <p className="text-gray-500 text-sm">
-                This page will update automatically when you switch.
-              </p>
+              <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-2xl p-6 border border-purple-500/20 mb-6">
+                <p className="text-center text-gray-300 mb-4">
+                  Open your wallet app and switch to:
+                </p>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-white mb-1">zkSync Sepolia</p>
+                  <p className="text-gray-400 text-sm">Test Network</p>
+                </div>
+              </div>
 
-              {/* Hint bubble after 5 seconds */}
-              {showHint && (
-                <div className="mt-6 p-4 bg-yellow-900/30 border border-yellow-500/50 rounded-xl animate-pulse">
-                  <p className="text-yellow-400 font-bold text-sm mb-2">💡 Need Help?</p>
+              {/* Network details for manual add */}
+              <details className="group">
+                <summary className="cursor-pointer text-gray-400 hover:text-white text-sm flex items-center gap-2 justify-center py-2">
+                  <span className="group-open:rotate-90 transition-transform">▶</span>
+                  Need to add it manually?
+                </summary>
+                <div className="mt-4 space-y-2 text-sm">
+                  {[
+                    { label: 'Network', value: 'zkSync Sepolia Testnet' },
+                    { label: 'RPC', value: 'https://sepolia.era.zksync.dev' },
+                    { label: 'Chain ID', value: '300' },
+                    { label: 'Symbol', value: 'ETH' },
+                  ].map((item) => (
+                    <div key={item.label} className="flex justify-between items-center bg-black/30 rounded-lg p-3">
+                      <span className="text-gray-500">{item.label}:</span>
+                      <span className="text-white font-mono text-xs">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+
+              <div className="mt-6 flex items-center justify-center gap-2 text-gray-500 text-sm">
+                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                Waiting for you to switch...
+              </div>
+
+              {showHelp && (
+                <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl animate-fadeIn">
+                  <p className="text-yellow-400 font-bold text-sm mb-2">💡 Stuck?</p>
                   <p className="text-gray-300 text-sm">
-                    In your wallet app, look for "Networks" or "Settings" at the top. 
-                    Tap it, then search for "zkSync Sepolia" or tap "Add Network" and enter the details above.
+                    In your wallet app, tap the network name at the top (like &quot;Ethereum&quot;), then search for &quot;zkSync Sepolia&quot; or add it manually using the details above.
                   </p>
                 </div>
               )}
@@ -188,67 +230,53 @@ export default function TestnetPage() {
 
         {/* Step 3: Get Test ETH */}
         {step === 3 && (
-          <div className="text-center">
-            <div className="bg-white/5 rounded-3xl p-10 border border-white/10">
-              <div className="text-8xl mb-6">🎉</div>
-              <h2 className="text-3xl font-bold mb-4">Almost There!</h2>
-              
-              <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-4 mb-6">
-                <p className="text-green-400 font-bold">✓ Connected to zkSync Sepolia!</p>
+          <div className="animate-fadeIn">
+            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl">
+              <div className="text-center mb-6">
+                <div className="text-8xl mb-6">🎁</div>
+                <h2 className="text-3xl font-bold mb-3">Get Free Tokens</h2>
+                
+                <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full mb-4">
+                  <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                  On zkSync Sepolia ✓
+                </div>
               </div>
 
-              <p className="text-gray-400 text-lg mb-6">
-                Get some free test tokens to try everything:
-              </p>
-
-              {/* Wallet address */}
+              {/* Address */}
               <div className="bg-black/30 rounded-xl p-4 mb-6">
-                <p className="text-gray-500 text-sm mb-2">Your address (click to copy):</p>
+                <p className="text-gray-500 text-xs mb-2">Your address (tap to copy):</p>
                 <button
                   onClick={copyAddress}
-                  className="w-full text-left bg-black/50 px-4 py-3 rounded-lg text-purple-300 font-mono text-sm hover:bg-black/70 transition-colors truncate"
+                  className="w-full text-left bg-black/50 hover:bg-black/70 px-4 py-3 rounded-lg text-purple-300 font-mono text-sm transition-colors truncate"
                 >
                   {address}
                 </button>
               </div>
 
-              {/* Faucet buttons */}
-              <div className="space-y-3">
-                <a
-                  href="https://cloud.google.com/application/web3/faucet/ethereum/sepolia"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-6 py-5 rounded-xl text-xl font-bold transition-all"
-                >
-                  🚰 Get Free Test ETH (Google)
-                </a>
-                <a
-                  href="https://faucet.quicknode.com/ethereum/sepolia"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold border border-white/20 transition-all"
-                >
-                  Alternative: QuickNode Faucet
-                </a>
-              </div>
-
-              <p className="text-gray-500 text-sm mt-6">
-                This page updates automatically when you get tokens.
+              {/* Faucet */}
+              <a
+                href="https://cloud.google.com/application/web3/faucet/ethereum/sepolia"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-6 py-5 rounded-xl text-xl font-bold text-center transition-all transform hover:scale-[1.02] mb-3"
+              >
+                🚰 Get Free Test Tokens
+              </a>
+              
+              <p className="text-center text-gray-500 text-sm mb-6">
+                Opens Google&apos;s free faucet in a new tab
               </p>
 
-              {/* Polling indicator */}
-              <div className="mt-4 flex items-center justify-center gap-2 text-gray-500 text-sm">
+              <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
                 <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                <span>Checking your balance every 5 seconds...</span>
+                Checking every 5 seconds...
               </div>
 
-              {/* Hint bubble after 5 seconds */}
-              {showHint && (
-                <div className="mt-6 p-4 bg-yellow-900/30 border border-yellow-500/50 rounded-xl animate-pulse">
-                  <p className="text-yellow-400 font-bold text-sm mb-2">💡 Pro Tip</p>
+              {showHelp && (
+                <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl animate-fadeIn">
+                  <p className="text-yellow-400 font-bold text-sm mb-2">💡 Pro tip</p>
                   <p className="text-gray-300 text-sm">
-                    After clicking the faucet, you may need to verify with a CAPTCHA or sign in. 
-                    The faucet typically sends tokens within 30 seconds. This page will detect them automatically!
+                    The faucet may ask you to solve a quick puzzle (CAPTCHA). After that, tokens arrive in about 30 seconds. This page updates automatically!
                   </p>
                 </div>
               )}
@@ -256,66 +284,89 @@ export default function TestnetPage() {
           </div>
         )}
 
-        {/* Step 4: Ready! */}
+        {/* Step 4: Success! */}
         {step === 4 && (
-          <div className="text-center">
-            <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 rounded-3xl p-10 border border-green-500/30">
-              <div className="text-8xl mb-6 animate-bounce">🎊</div>
-              <h2 className="text-3xl font-bold mb-4 text-green-400">You&apos;re Ready!</h2>
-              
-              <div className="bg-green-900/50 border border-green-500/50 rounded-xl p-6 mb-8">
-                <p className="text-green-300 text-2xl font-bold">{ethBalance} ETH</p>
-                <p className="text-green-400 text-sm mt-1">Available for testing</p>
+          <div className="animate-fadeIn">
+            <div className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-green-500/30 shadow-2xl shadow-green-500/10">
+              <div className="text-center mb-8">
+                <div className="text-8xl mb-6 animate-bounce">🎊</div>
+                <h2 className="text-3xl font-bold mb-3 text-green-400">You Did It!</h2>
+                
+                <div className="bg-green-500/20 rounded-xl p-4 mb-4 inline-block">
+                  <p className="text-green-300 text-3xl font-bold">{ethBalance} ETH</p>
+                  <p className="text-green-400 text-sm">Ready to spend</p>
+                </div>
               </div>
 
-              <div className="mb-8 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl">
-                <p className="text-purple-300 font-bold mb-2">🎉 Congratulations!</p>
-                <p className="text-gray-300 text-sm">
-                  You&apos;re now set up on zkSync Sepolia testnet. Everything below is completely free to try.
-                </p>
-              </div>
-
-              <p className="text-gray-300 text-lg mb-8">
-                Explore everything VFIDE has to offer:
+              <p className="text-center text-gray-300 mb-8">
+                Now the fun begins! Try these:
               </p>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <Link
                   href="/token-launch"
-                  className="block w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-6 py-5 rounded-xl text-xl font-bold transition-all transform hover:scale-[1.02]"
+                  className="block w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-6 py-5 rounded-xl text-xl font-bold text-center transition-all transform hover:scale-[1.02]"
                 >
-                  🪙 Buy Test Tokens
+                  🪙 Buy VFIDE Tokens
                 </Link>
                 <Link
                   href="/vault"
-                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold border border-white/20 transition-all"
+                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold text-center border border-white/10 transition-all"
                 >
                   🏦 Create a Savings Vault
                 </Link>
                 <Link
                   href="/pay"
-                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold border border-white/20 transition-all"
+                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold text-center border border-white/10 transition-all"
                 >
                   💸 Send a Payment
                 </Link>
                 <Link
                   href="/merchant"
-                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold border border-white/20 transition-all"
+                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold text-center border border-white/10 transition-all"
                 >
-                  🏪 Accept Payments (Merchant)
+                  🏪 Accept Payments
                 </Link>
               </div>
             </div>
           </div>
         )}
 
-        {/* Help Footer */}
-        <div className="mt-10 text-center">
-          <Link href="/docs" className="text-gray-500 hover:text-gray-300 text-sm underline">
+        {/* Footer */}
+        <div className="mt-10 text-center text-gray-600 text-sm">
+          <p>This is a testnet. No real money involved.</p>
+          <Link href="/docs" className="text-purple-400 hover:text-purple-300 underline mt-2 inline-block">
             Need help?
           </Link>
         </div>
       </div>
+
+      {/* CSS for animations */}
+      <style jsx>{`
+        @keyframes confetti {
+          0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .animate-confetti {
+          animation: confetti 3s ease-out forwards;
+        }
+        @keyframes wave {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(20deg); }
+          75% { transform: rotate(-20deg); }
+        }
+        .animate-wave {
+          animation: wave 1s ease-in-out infinite;
+          display: inline-block;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+      `}</style>
     </div>
   )
 }
