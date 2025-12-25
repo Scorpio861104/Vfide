@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Fix for pino/thread-stream compatibility
-  serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
+  // Fix for pino/thread-stream compatibility and Privy
+  serverExternalPackages: [
+    'pino', 
+    'pino-pretty', 
+    'thread-stream',
+    '@privy-io/react-auth',
+    '@privy-io/wagmi',
+  ],
   
   // Turbopack configuration (Next.js 16 default)
   turbopack: {
@@ -12,6 +18,16 @@ const nextConfig: NextConfig = {
       net: { browser: '' },
       tls: { browser: '' },
       crypto: { browser: '' },
+      // Privy test files that shouldn't be bundled
+      'thread-stream/test/syntax-error.mjs': { browser: '' },
+      'thread-stream/test/close-on-gc.js': { browser: '' },
+      'thread-stream/test/create-and-exit.js': { browser: '' },
+      // Other Node dependencies
+      desm: { browser: '' },
+      fastbench: { browser: '' },
+      'pino-elasticsearch': { browser: '' },
+      tap: { browser: '' },
+      '@solana-program/system': { browser: '' },
     },
   },
   

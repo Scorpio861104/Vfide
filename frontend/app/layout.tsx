@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { Web3Provider } from "@/components/wallet/Web3Provider";
+import { PrivyWeb3Provider } from "@/components/wallet/PrivyWeb3Provider";
 import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
 import { HelpCenter } from "@/components/onboarding/HelpCenter";
 import { ToastProvider } from "@/components/ui/toast";
 import { TestnetCornerBadge } from "@/components/ui/TestnetBadge";
-import { NetworkWarning } from "@/components/ui/NetworkWarning";
 import { DemoModeBanner } from "@/components/DemoModeBanner";
 
 const inter = Inter({
@@ -76,16 +75,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${spaceGrotesk.variable} font-[family-name:var(--font-body)] antialiased bg-[#0F0F12]`}>
-        <Web3Provider>
+        <PrivyWeb3Provider>
           <ToastProvider>
             <DemoModeBanner />
-            <NetworkWarning />
             <TestnetCornerBadge />
             {children}
             <OnboardingManager />
             <HelpCenter />
           </ToastProvider>
-        </Web3Provider>
+        </PrivyWeb3Provider>
       </body>
     </html>
   );
