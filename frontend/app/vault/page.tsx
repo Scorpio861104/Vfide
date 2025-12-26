@@ -20,7 +20,7 @@ import { useEffect } from "react";
 function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
   const quarantineData = useQuarantineStatus(vaultAddress || undefined);
   const panicData = useCanSelfPanic();
-  const { selfPanic, isPanicking, isSuccess } = useSelfPanic();
+  const { selfPanic, isPanicking, isSuccess, isAvailable: isPanicAvailable } = useSelfPanic();
   
   const [showPanicConfirm, setShowPanicConfirm] = useState(false);
   const [panicDuration, setPanicDuration] = useState(24);
@@ -40,14 +40,38 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
   
   // Compute panic eligibility
   const cooldownRemaining = Math.max(0, (panicData.lastPanicTime + panicData.cooldownSeconds) - now);
-  const canPanic = cooldownRemaining === 0 && !isQuarantined;
+  const canPanic = isPanicAvailable && cooldownRemaining === 0 && !isQuarantined;
   
   const handlePanic = () => {
+    if (!isPanicAvailable) return;
     selfPanic(panicDuration);
     setShowPanicConfirm(false);
   };
 
   if (!vaultAddress) return null;
+
+  // If PanicGuard not deployed, show a disabled info section
+  if (!isPanicAvailable) {
+    return (
+      <section className="py-8">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="rounded-xl p-6 border-2 bg-[#2A2A2F] border-[#3A3A3F]">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-gray-500/20">
+                <Shield className="w-6 h-6 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[#F5F3E8]">Emergency Security</h3>
+                <p className="text-[#A0A0A5] text-sm">
+                  Self-panic feature coming soon. For emergencies, contact support.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-8">

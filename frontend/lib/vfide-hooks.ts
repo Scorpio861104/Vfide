@@ -1098,6 +1098,7 @@ export function useCanSelfPanic() {
 
 /**
  * Self-panic: Lock your own vault immediately
+ * NOTE: Returns isAvailable=false if PanicGuard is not deployed
  */
 export function useSelfPanic() {
   const { writeContract, data, isPending } = useWriteContract()
@@ -1106,7 +1107,14 @@ export function useSelfPanic() {
     hash: data,
   })
   
+  // Check if PanicGuard is deployed
+  const isAvailable = !!CONTRACT_ADDRESSES.PanicGuard && CONTRACT_ADDRESSES.PanicGuard !== '0x' && CONTRACT_ADDRESSES.PanicGuard.length === 42
+  
   const selfPanic = (durationHours: number = 24) => {
+    if (!isAvailable) {
+      console.error('PanicGuard contract not deployed - selfPanic unavailable')
+      return
+    }
     const durationSeconds = durationHours * 3600
     writeContract({
       address: CONTRACT_ADDRESSES.PanicGuard,
@@ -1127,6 +1135,7 @@ export function useSelfPanic() {
     isPanicking: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    isAvailable, // New: indicates if the feature is available
   }
 }
 
