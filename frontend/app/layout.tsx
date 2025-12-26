@@ -6,7 +6,7 @@ import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
 import { HelpCenter } from "@/components/onboarding/HelpCenter";
 import { ToastProvider } from "@/components/ui/toast";
 import { TestnetCornerBadge } from "@/components/ui/TestnetBadge";
-import { NetworkWarning } from "@/components/ui/NetworkWarning";
+import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
 import { DemoModeBanner } from "@/components/DemoModeBanner";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
@@ -80,7 +80,7 @@ export default function RootLayout({
         <Web3Provider>
           <ToastProvider>
             <DemoModeBanner />
-            <NetworkWarning />
+            <NetworkSwitchOverlay />
             <TestnetCornerBadge />
             {children}
             <MobileBottomNav />
