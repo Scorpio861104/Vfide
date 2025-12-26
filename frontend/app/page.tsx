@@ -4,7 +4,84 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CheckCircle2, Shield, Zap, Users, TrendingDown, Lock } from "lucide-react";
+import { CheckCircle2, Shield, Zap, Users, TrendingDown, Lock, Building2, Store, Activity } from "lucide-react";
+import { useSystemStats } from "@/lib/vfide-hooks";
+
+// Compact network stats bar for social proof
+function NetworkStatsBar() {
+  const { vaults, merchants, transactions24h, tvl } = useSystemStats();
+  
+  return (
+    <section className="py-6 bg-gradient-to-r from-[#00F0FF]/5 via-[#1A1A1F] to-[#00F0FF]/5 border-y border-[#2A2A35]">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <Lock className="w-4 h-4 text-[#00F0FF]" />
+              <span className="text-2xl md:text-3xl font-bold text-[#F5F5F7]">
+                ${(tvl / 1000000).toFixed(1)}M
+              </span>
+            </div>
+            <span className="text-xs md:text-sm text-[#8A8A8F]">Total Value Locked</span>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-center"
+          >
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <Building2 className="w-4 h-4 text-[#FF6B9D]" />
+              <span className="text-2xl md:text-3xl font-bold text-[#F5F5F7]">
+                {vaults.toLocaleString()}
+              </span>
+            </div>
+            <span className="text-xs md:text-sm text-[#8A8A8F]">Active Vaults</span>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-center"
+          >
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <Store className="w-4 h-4 text-[#50C878]" />
+              <span className="text-2xl md:text-3xl font-bold text-[#F5F5F7]">
+                {merchants.toLocaleString()}
+              </span>
+            </div>
+            <span className="text-xs md:text-sm text-[#8A8A8F]">Merchants</span>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="text-center"
+          >
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <Activity className="w-4 h-4 text-[#FFD700]" />
+              <span className="text-2xl md:text-3xl font-bold text-[#F5F5F7]">
+                {transactions24h.toLocaleString()}
+              </span>
+            </div>
+            <span className="text-xs md:text-sm text-[#8A8A8F]">24h Transactions</span>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   return (
@@ -71,6 +148,9 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* Live Network Stats Bar */}
+      <NetworkStatsBar />
 
       {/* Value Props - Clean 3x2 Grid */}
       <section className="py-20 bg-[#1A1A1F]">

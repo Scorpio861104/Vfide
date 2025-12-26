@@ -1,7 +1,7 @@
 "use client";
 
-import { useEstimateGas, useGasPrice } from 'wagmi';
-import { formatEther, parseEther } from 'viem';
+import { useGasPrice } from 'wagmi';
+import { formatEther } from 'viem';
 import { Fuel } from 'lucide-react';
 
 interface TransactionPreviewProps {
@@ -22,6 +22,7 @@ interface TransactionPreviewProps {
  * Displays: Network gas fee + Burn fee (if applicable) = Total
  */
 export function TransactionPreview({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   action,
   amount,
   burnFeePercent = 0,

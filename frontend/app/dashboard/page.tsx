@@ -259,6 +259,37 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
               <span>0.25% fee</span>
             </div>
           </div>
+          
+          {/* ProofScore Breakdown */}
+          <div className="mt-6 pt-6 border-t border-[#3A3A3F]">
+            <h3 className="text-sm font-bold text-[#A0A0A5] mb-3">SCORE BREAKDOWN</h3>
+            <div className="space-y-2">
+              {[
+                { label: 'Base Score', value: 5000, color: '#A0A0A5', icon: '📊' },
+                { label: 'Vault Created', value: 500, color: '#00F0FF', icon: '🏦' },
+                { label: 'Transactions (est.)', value: Math.min((proofscore - 5500) * 0.4, 1500), color: '#50C878', icon: '💳' },
+                { label: 'Governance Votes', value: Math.min(250, Math.max(0, proofscore - 6000) * 0.2), color: '#9B59B6', icon: '🗳️' },
+                { label: 'Badges Earned', value: Math.min(500, Math.max(0, proofscore - 6500) * 0.3), color: '#FFD700', icon: '🏆' },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-[#F5F3E8]">
+                    <span>{item.icon}</span>
+                    {item.label}
+                  </span>
+                  <span className="font-bold" style={{ color: item.color }}>
+                    +{Math.round(Math.max(0, item.value)).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 pt-3 border-t border-[#3A3A3F] flex items-center justify-between">
+              <span className="text-[#F5F3E8] font-bold">Total</span>
+              <span className="text-[#00F0FF] font-bold text-lg">{proofscore.toLocaleString()}</span>
+            </div>
+            <p className="text-xs text-[#A0A0A5] mt-2">
+              💡 Tip: Vote on proposals, add guardians, and complete transactions to boost your score
+            </p>
+          </div>
         </div>
 
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">

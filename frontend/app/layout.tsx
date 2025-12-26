@@ -8,6 +8,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import { TestnetCornerBadge } from "@/components/ui/TestnetBadge";
 import { NetworkWarning } from "@/components/ui/NetworkWarning";
 import { DemoModeBanner } from "@/components/DemoModeBanner";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
 const inter = Inter({
   variable: "--font-body",
@@ -81,7 +82,8 @@ export default function RootLayout({
             <DemoModeBanner />
             <NetworkWarning />
             <TestnetCornerBadge />
-            {children}
+            <div className="pb-16 md:pb-0">{children}</div>
+            <MobileBottomNav />
             <OnboardingManager />
             <HelpCenter />
           </ToastProvider>

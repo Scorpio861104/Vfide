@@ -781,21 +781,102 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
     )
   }
 
+  // Generate referral URL
+  const referralUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/token-launch?ref=${referralStats.code}` 
+    : `https://vfide.app/token-launch?ref=${referralStats.code}`;
+
+  const shareText = `Join VFIDE - the trust-based payment ecosystem! Use my referral code ${referralStats.code} to get started. 🚀`;
+  
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join VFIDE',
+          text: shareText,
+          url: referralUrl,
+        });
+      } catch (err) {
+        // User cancelled or share failed
+      }
+    } else {
+      navigator.clipboard.writeText(referralUrl);
+      alert('Referral link copied!');
+    }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(referralUrl);
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Referral Code */}
-      <div className="bg-gradient-to-r from-[#A78BFA]/20 to-[#8B5CF6]/20 border border-[#A78BFA] rounded-xl p-6 text-center">
-        <h3 className="text-lg font-bold text-[#A78BFA] mb-2">Your Referral Code</h3>
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <code className="text-3xl font-bold text-[#F5F3E8] bg-[#1A1A1D] px-6 py-3 rounded-lg">{referralStats.code}</code>
-          <button 
-            onClick={() => navigator.clipboard.writeText(referralStats.code)}
-            className="px-4 py-3 bg-[#A78BFA] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#9061F9] transition-colors"
-          >
-            Copy
-          </button>
+      {/* Referral Link Generator */}
+      <div className="bg-gradient-to-r from-[#A78BFA]/20 to-[#8B5CF6]/20 border border-[#A78BFA] rounded-xl p-6">
+        <h3 className="text-lg font-bold text-[#A78BFA] mb-4 text-center">Your Referral Link</h3>
+        
+        {/* Full Link Display */}
+        <div className="bg-[#1A1A1D] rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <code className="text-sm md:text-base text-[#00F0FF] whitespace-nowrap flex-1">
+              {referralUrl}
+            </code>
+            <button 
+              onClick={handleCopyLink}
+              className="px-3 py-2 bg-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:bg-[#4A4A4F] transition-colors shrink-0"
+            >
+              📋 Copy
+            </button>
+          </div>
         </div>
-        <p className="text-[#A0A0A5]">Share this code. Earn 50 VFIDE for each user who makes their first purchase using your code.</p>
+        
+        {/* Share Buttons */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <button
+            onClick={handleShare}
+            className="px-4 py-3 bg-[#A78BFA] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#9061F9] transition-colors flex items-center justify-center gap-2"
+          >
+            📤 Share
+          </button>
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(referralUrl)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-3 bg-[#1DA1F2] text-white rounded-lg font-bold hover:bg-[#1a8cd8] transition-colors flex items-center justify-center gap-2"
+          >
+            𝕏 Tweet
+          </a>
+          <a
+            href={`https://t.me/share/url?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent(shareText)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-3 bg-[#0088cc] text-white rounded-lg font-bold hover:bg-[#006da3] transition-colors flex items-center justify-center gap-2"
+          >
+            📱 Telegram
+          </a>
+          <a
+            href={`mailto:?subject=Join VFIDE&body=${encodeURIComponent(shareText + '\n\n' + referralUrl)}`}
+            className="px-4 py-3 bg-[#3A3A3F] text-[#F5F3E8] rounded-lg font-bold hover:bg-[#4A4A4F] transition-colors flex items-center justify-center gap-2"
+          >
+            ✉️ Email
+          </a>
+        </div>
+        
+        {/* Referral Code */}
+        <div className="text-center border-t border-[#A78BFA]/30 pt-4">
+          <p className="text-[#A0A0A5] text-sm mb-2">Or share your code directly:</p>
+          <div className="flex items-center justify-center gap-3">
+            <code className="text-2xl font-bold text-[#F5F3E8] bg-[#1A1A1D] px-6 py-3 rounded-lg">{referralStats.code}</code>
+            <button 
+              onClick={() => navigator.clipboard.writeText(referralStats.code)}
+              className="px-4 py-3 bg-[#A78BFA] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#9061F9] transition-colors"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+        
+        <p className="text-[#A0A0A5] text-center mt-4">Earn <strong className="text-[#FFD700]">50 VFIDE</strong> for each user who makes their first purchase using your link.</p>
       </div>
 
       {/* Stats */}

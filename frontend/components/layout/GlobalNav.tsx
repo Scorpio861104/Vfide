@@ -7,6 +7,7 @@ import { FaucetButton } from "../wallet/FaucetButton";
 import { VaultStatusModal } from "../vault/VaultStatusModal";
 import { VaultStatusIndicator } from "../vault/VaultStatusIndicator";
 import { NavbarBalance } from "../ui/TokenBalance";
+import { NotificationBell } from "../ui/NotificationBell";
 
 export function GlobalNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -69,6 +70,7 @@ export function GlobalNav() {
           <div className="hidden md:flex items-center gap-3">
             <FaucetButton />
             <NavbarBalance />
+            <NotificationBell />
             <VaultStatusIndicator />
             <SimpleWalletConnect />
           </div>

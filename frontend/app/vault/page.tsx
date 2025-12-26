@@ -11,7 +11,153 @@ import { useAccount } from "wagmi";
 import { useState } from "react";
 import { isAddress } from "viem";
 import { devLog } from "@/lib/utils";
-import { useVaultBalance } from "@/lib/vfide-hooks";
+import { useVaultBalance, useSelfPanic, useQuarantineStatus, useCanSelfPanic } from "@/lib/vfide-hooks";
+import { motion, AnimatePresence } from "framer-motion";
+import { Shield, AlertTriangle, Lock, Clock } from "lucide-react";
+import { useEffect } from "react";
+
+// Compact security section with Panic Button
+function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null }) {
+  const quarantineData = useQuarantineStatus(vaultAddress || undefined);
+  const panicData = useCanSelfPanic();
+  const { selfPanic, isPanicking, isSuccess } = useSelfPanic();
+  
+  const [showPanicConfirm, setShowPanicConfirm] = useState(false);
+  const [panicDuration, setPanicDuration] = useState(24);
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  
+  // Update time every minute
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 60000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Compute quarantine remaining
+  const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now);
+  const isQuarantined = quarantineRemaining > 0;
+  const remainingHours = Math.floor(quarantineRemaining / 3600);
+  const remainingMinutes = Math.floor((quarantineRemaining % 3600) / 60);
+  
+  // Compute panic eligibility
+  const cooldownRemaining = Math.max(0, (panicData.lastPanicTime + panicData.cooldownSeconds) - now);
+  const canPanic = cooldownRemaining === 0 && !isQuarantined;
+  
+  const handlePanic = () => {
+    selfPanic(panicDuration);
+    setShowPanicConfirm(false);
+  };
+
+  if (!vaultAddress) return null;
+
+  return (
+    <section className="py-8">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className={`rounded-xl p-6 border-2 ${isQuarantined ? 'bg-red-900/20 border-red-500' : 'bg-[#2A2A2F] border-[#3A3A3F]'}`}>
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-full ${isQuarantined ? 'bg-red-500/20' : 'bg-[#00F0FF]/20'}`}>
+                {isQuarantined ? (
+                  <Lock className="w-6 h-6 text-red-500" />
+                ) : (
+                  <Shield className="w-6 h-6 text-[#00F0FF]" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[#F5F3E8]">
+                  {isQuarantined ? 'Vault Quarantined' : 'Emergency Security'}
+                </h3>
+                <p className="text-[#A0A0A5] text-sm">
+                  {isQuarantined 
+                    ? `Locked for ${remainingHours}h ${remainingMinutes}m - all outgoing transactions blocked`
+                    : 'Suspect your account is compromised? Lock it immediately.'}
+                </p>
+              </div>
+            </div>
+            
+            <AnimatePresence mode="wait">
+              {!showPanicConfirm ? (
+                <motion.button
+                  key="panic-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowPanicConfirm(true)}
+                  disabled={!canPanic || isQuarantined}
+                  className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                    isQuarantined 
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : canPanic 
+                        ? 'bg-red-600 hover:bg-red-700 text-white hover:scale-105'
+                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {isQuarantined ? (
+                    <span className="flex items-center gap-2">
+                      <Lock className="w-4 h-4" /> Already Locked
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" /> Panic Button
+                    </span>
+                  )}
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="panic-confirm"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="flex flex-col sm:flex-row items-center gap-3"
+                >
+                  <select
+                    value={panicDuration}
+                    onChange={(e) => setPanicDuration(Number(e.target.value))}
+                    className="px-3 py-2 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8]"
+                  >
+                    <option value={1}>1 hour</option>
+                    <option value={6}>6 hours</option>
+                    <option value={24}>24 hours</option>
+                    <option value={72}>3 days</option>
+                    <option value={168}>7 days</option>
+                  </select>
+                  <button
+                    onClick={handlePanic}
+                    disabled={isPanicking}
+                    className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold disabled:opacity-50"
+                  >
+                    {isPanicking ? 'Locking...' : 'Confirm Lock'}
+                  </button>
+                  <button
+                    onClick={() => setShowPanicConfirm(false)}
+                    className="px-4 py-2 border border-[#3A3A3F] text-[#A0A0A5] rounded-lg hover:text-[#F5F3E8]"
+                  >
+                    Cancel
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          {/* Quarantine countdown */}
+          {isQuarantined && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mt-4 pt-4 border-t border-red-500/30"
+            >
+              <div className="flex items-center gap-2 text-red-400">
+                <Clock className="w-4 h-4" />
+                <span className="text-sm">
+                  Auto-unlock in <strong>{remainingHours}h {remainingMinutes}m</strong>
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function VaultContent() {
   const { showToast } = useToast();
@@ -272,6 +418,9 @@ const { address } = useAccount();
             </div>
           </div>
         </section>
+
+        {/* Emergency Security / Panic Button */}
+        <VaultSecuritySection vaultAddress={vaultAddress ?? null} />
 
         {/* Next of Kin (Inheritance) */}
         <section className="py-8">
