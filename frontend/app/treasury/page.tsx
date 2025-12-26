@@ -4,6 +4,7 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount } from "wagmi";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Wallet, 
   TrendingUp, 
@@ -14,75 +15,152 @@ import {
   Shield, 
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  Coins,
+  Building2
 } from "lucide-react";
 
 type TabType = 'overview' | 'sanctum' | 'ecosystem' | 'revenue' | 'vesting';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
+};
 
 export default function TreasuryPage() {
   const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   const tabs = [
-    { id: 'overview' as const, label: 'Overview', icon: PieChart },
-    { id: 'sanctum' as const, label: 'Sanctum (Charity)', icon: Heart },
-    { id: 'ecosystem' as const, label: 'Ecosystem Vault', icon: Users },
-    { id: 'revenue' as const, label: 'Revenue Splitter', icon: TrendingUp },
-    { id: 'vesting' as const, label: 'Dev Vesting', icon: Clock },
+    { id: 'overview' as const, label: 'Overview', icon: PieChart, color: 'cyan' },
+    { id: 'sanctum' as const, label: 'Sanctum (Charity)', icon: Heart, color: 'pink' },
+    { id: 'ecosystem' as const, label: 'Ecosystem Vault', icon: Users, color: 'purple' },
+    { id: 'revenue' as const, label: 'Revenue Splitter', icon: TrendingUp, color: 'emerald' },
+    { id: 'vesting' as const, label: 'Dev Vesting', icon: Clock, color: 'amber' },
   ];
+
+  const colorMap: Record<string, { active: string; hover: string }> = {
+    cyan: { active: 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25', hover: 'hover:bg-cyan-500/10 hover:text-cyan-400' },
+    pink: { active: 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25', hover: 'hover:bg-pink-500/10 hover:text-pink-400' },
+    purple: { active: 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25', hover: 'hover:bg-purple-500/10 hover:text-purple-400' },
+    emerald: { active: 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25', hover: 'hover:bg-emerald-500/10 hover:text-emerald-400' },
+    amber: { active: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25', hover: 'hover:bg-amber-500/10 hover:text-amber-400' },
+  };
 
   return (
     <>
       <GlobalNav />
-      <main className="min-h-screen bg-[#0D0D0F] pt-24 pb-16">
+      
+      {/* Premium background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.12),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(16,185,129,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(124,58,237,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
+      <motion.main 
+        initial="hidden"
+        animate="show"
+        variants={containerVariants}
+        className="min-h-screen pt-24 pb-16"
+      >
         <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-4">
-              Treasury Dashboard
+          <motion.div variants={itemVariants} className="text-center mb-12">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-sm text-emerald-300 mb-4"
+            >
+              <Coins className="w-4 h-4" />
+              Protocol Finances
+            </motion.div>
+            <h1 className="text-4xl md:text-5xl font-black mb-4">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400">
+                Treasury Dashboard
+              </span>
             </h1>
-            <p className="text-[#A0A0A5] text-lg max-w-2xl mx-auto">
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               View protocol treasury allocations, charity distributions, and ecosystem funding
             </p>
-          </div>
+          </motion.div>
 
           {/* Tab Navigation */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#00F0FF] text-[#0D0D0F]'
-                    : 'bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#F5F3E8]'
-                }`}
-              >
-                <tab.icon size={18} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-2 mb-8">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const colors = colorMap[tab.color];
+              return (
+                <motion.button
+                  key={tab.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+                    isActive ? colors.active : `bg-white/5 text-gray-400 ${colors.hover}`
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </motion.button>
+              );
+            })}
+          </motion.div>
 
           {/* Tab Content */}
-          {activeTab === 'overview' && <OverviewTab />}
-          {activeTab === 'sanctum' && <SanctumTab isConnected={isConnected} />}
-          {activeTab === 'ecosystem' && <EcosystemTab isConnected={isConnected} />}
-          {activeTab === 'revenue' && <RevenueTab />}
-          {activeTab === 'vesting' && <VestingTab />}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {activeTab === 'overview' && <OverviewTab />}
+              {activeTab === 'sanctum' && <SanctumTab isConnected={isConnected} />}
+              {activeTab === 'ecosystem' && <EcosystemTab isConnected={isConnected} />}
+              {activeTab === 'revenue' && <RevenueTab />}
+              {activeTab === 'vesting' && <VestingTab />}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </main>
+      </motion.main>
       <Footer />
     </>
   );
 }
 
+// GlassCard component for consistent styling
+function GlassCard({ children, className = "", gradient }: { 
+  children: React.ReactNode; 
+  className?: string;
+  gradient?: string;
+}) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.01, y: -2 }}
+      transition={{ type: "spring", stiffness: 400 }}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient || 'from-white/[0.08] to-white/[0.02]'} backdrop-blur-xl border border-white/10 ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 function OverviewTab() {
   const treasuryStats = [
-    { label: 'Total Treasury', value: '45.2M VFIDE', icon: Wallet, color: '#00F0FF' },
-    { label: 'Sanctum (Charity)', value: '2.1M VFIDE', icon: Heart, color: '#FF6B6B' },
-    { label: 'Ecosystem Vault', value: '18.5M VFIDE', icon: Users, color: '#4ECDC4' },
-    { label: 'Operations', value: '12.3M VFIDE', icon: TrendingUp, color: '#FFD700' },
+    { label: 'Total Treasury', value: '45.2M VFIDE', icon: Wallet, gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
+    { label: 'Sanctum (Charity)', value: '2.1M VFIDE', icon: Heart, gradient: 'from-pink-500/20 to-rose-500/10', border: 'border-pink-500/20', text: 'text-pink-400' },
+    { label: 'Ecosystem Vault', value: '18.5M VFIDE', icon: Users, gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+    { label: 'Operations', value: '12.3M VFIDE', icon: TrendingUp, gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
   ];
 
   const recentDistributions = [
@@ -93,33 +171,53 @@ function OverviewTab() {
   ];
 
   return (
-    <div className="space-y-8">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-8"
+    >
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {treasuryStats.map((stat, idx) => (
-          <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+          <motion.div 
+            key={idx} 
+            variants={itemVariants}
+            whileHover={{ scale: 1.02, y: -4 }}
+            className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 group`}
+          >
             <div className="flex items-center justify-between mb-4">
-              <stat.icon size={24} style={{ color: stat.color }} />
-              <span className="text-xs text-[#A0A0A5]">Live</span>
+              <div className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
+                <stat.icon className={`w-5 h-5 ${stat.text}`} />
+              </div>
+              <span className="text-xs text-emerald-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live
+              </span>
             </div>
-            <div className="text-2xl font-bold text-[#F5F3E8] mb-1">{stat.value}</div>
-            <div className="text-sm text-[#A0A0A5]">{stat.label}</div>
-          </div>
+            <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+            <div className="text-sm text-gray-400">{stat.label}</div>
+          </motion.div>
         ))}
       </div>
 
       {/* Allocation Chart */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Fee Distribution Breakdown</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center p-4 bg-[#1A1A1D] rounded-lg">
-            <div className="text-4xl font-bold text-orange-400 mb-2">40%</div>
-            <div className="text-[#F5F3E8] font-bold">Burn</div>
-            <div className="text-xs text-[#A0A0A5]">Deflationary mechanism</div>
+      <GlassCard className="p-6">
+        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5">
+            <PieChart className="w-5 h-5 text-purple-400" />
           </div>
-          <div className="text-center p-4 bg-[#1A1A1D] rounded-lg">
+          Fee Distribution Breakdown
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-2xl">
+            <div className="text-4xl font-bold text-orange-400 mb-2">40%</div>
+            <div className="text-white font-bold">Burn</div>
+            <div className="text-xs text-gray-500">Deflationary mechanism</div>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-pink-500/10 to-rose-500/5 border border-pink-500/20 rounded-2xl">
             <div className="text-4xl font-bold text-pink-400 mb-2">10%</div>
-            <div className="text-[#F5F3E8] font-bold">Sanctum</div>
+            <div className="text-white font-bold">Sanctum</div>
             <div className="text-xs text-[#A0A0A5]">Charity fund</div>
           </div>
           <div className="text-center p-4 bg-[#1A1A1D] rounded-lg">

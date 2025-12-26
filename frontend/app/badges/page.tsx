@@ -1,8 +1,3 @@
-/**
- * VFIDE Badge System Page
- * View earned badges, mint NFTs, track progress
- */
-
 'use client'
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
@@ -14,7 +9,7 @@ import { keccak256, toBytes } from 'viem'
 import { 
   Award, Shield, Star, TrendingUp, CheckCircle, 
   Clock, Lock, Sparkles, Trophy, Target, Zap, Heart,
-  ShoppingBag, Crown, Gem, Loader2
+  ShoppingBag, Crown, Gem, Loader2, Search, Filter
 } from 'lucide-react'
 import { 
   BADGE_REGISTRY, 
@@ -23,30 +18,21 @@ import {
   type BadgeMetadata 
 } from '@/lib/badge-registry'
 
-// VFIDEBadgeNFT ABI
+// Contract ABIs
 const BADGE_NFT_ABI = [
   { name: 'mintBadge', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'badge', type: 'bytes32' }], outputs: [{ name: 'tokenId', type: 'uint256' }] },
-  { name: 'mintBadges', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'badges', type: 'bytes32[]' }], outputs: [{ name: 'tokenIds', type: 'uint256[]' }] },
-  { name: 'burnBadge', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'tokenId', type: 'uint256' }], outputs: [] },
-  { name: 'userBadgeToken', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }, { name: 'badge', type: 'bytes32' }], outputs: [{ type: 'uint256' }] },
-  { name: 'badgeMintCount', type: 'function', stateMutability: 'view', inputs: [{ name: 'badge', type: 'bytes32' }], outputs: [{ type: 'uint256' }] },
-  { name: 'badgeNumber', type: 'function', stateMutability: 'view', inputs: [{ name: 'tokenId', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
-  { name: 'tokenBadge', type: 'function', stateMutability: 'view', inputs: [{ name: 'tokenId', type: 'uint256' }], outputs: [{ type: 'bytes32' }] },
   { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'owner', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// Seer (VFIDETrust) ABI for checking badges
 const SEER_ABI = [
   { name: 'hasBadge', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }, { name: 'badge', type: 'bytes32' }], outputs: [{ type: 'bool' }] },
-  { name: 'badgeExpiry', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }, { name: 'badge', type: 'bytes32' }], outputs: [{ type: 'uint256' }] },
   { name: 'score', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// Contract addresses from environment (BadgeNFT not deployed yet)
 const BADGE_NFT_ADDRESS = (process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 const SEER_ADDRESS = (process.env.NEXT_PUBLIC_SEER_ADDRESS || '0xD22944d47bAD4Bd5fF1A366393c4bdbc9250fd8E') as `0x${string}`;
 
-// Category icons
+// Category icons and colors
 const categoryIcons: Record<string, React.ReactNode> = {
   'Pioneer & Foundation': <Crown className="w-5 h-5" />,
   'Activity & Participation': <Zap className="w-5 h-5" />,
@@ -57,25 +43,50 @@ const categoryIcons: Record<string, React.ReactNode> = {
   'Education & Contribution': <Star className="w-5 h-5" />,
 }
 
-// Category colors
 const categoryColors: Record<string, string> = {
-  'Pioneer & Foundation': '#FFD700',
-  'Activity & Participation': '#00F0FF',
-  'Trust & Community': '#FF6B9D',
-  'Commerce & Merchants': '#00FF88',
-  'Security & Integrity': '#A78BFA',
-  'Achievements & Milestones': '#FF9500',
-  'Education & Contribution': '#00D4FF',
+  'Pioneer & Foundation': 'amber',
+  'Activity & Participation': 'cyan',
+  'Trust & Community': 'pink',
+  'Commerce & Merchants': 'emerald',
+  'Security & Integrity': 'purple',
+  'Achievements & Milestones': 'orange',
+  'Education & Contribution': 'blue',
 }
 
-// Rarity colors
-const rarityColors: Record<string, string> = {
-  Common: '#8A8A8F',
-  Uncommon: '#00FF88',
-  Rare: '#00F0FF',
-  Epic: '#A78BFA',
-  Legendary: '#FFD700',
-  Mythic: '#FF6B9D',
+const rarityColors: Record<string, { bg: string; border: string; text: string; glow: string }> = {
+  Common: { bg: 'bg-gray-500/20', border: 'border-gray-500/30', text: 'text-gray-400', glow: '' },
+  Uncommon: { bg: 'bg-emerald-500/20', border: 'border-emerald-500/30', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
+  Rare: { bg: 'bg-cyan-500/20', border: 'border-cyan-500/30', text: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
+  Epic: { bg: 'bg-purple-500/20', border: 'border-purple-500/30', text: 'text-purple-400', glow: 'shadow-purple-500/20' },
+  Legendary: { bg: 'bg-amber-500/20', border: 'border-amber-500/30', text: 'text-amber-400', glow: 'shadow-amber-500/30' },
+  Mythic: { bg: 'bg-pink-500/20', border: 'border-pink-500/30', text: 'text-pink-400', glow: 'shadow-pink-500/30' },
+}
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, stiffness: 100 } }
+};
+
+function GlassCard({ children, className = "", hover = true }: { 
+  children: React.ReactNode; 
+  className?: string;
+  hover?: boolean;
+}) {
+  return (
+    <motion.div
+      whileHover={hover ? { scale: 1.02, y: -4 } : {}}
+      transition={{ type: "spring", stiffness: 400 }}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 type TabId = 'all' | 'earned' | 'available' | 'minted'
@@ -84,20 +95,16 @@ export default function BadgesPage() {
   const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('all')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [mintingBadge, setMintingBadge] = useState<string | null>(null)
 
-  // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  // Calculate current time once to avoid impure function calls during render
   const currentTime = useMemo(() => Date.now(), [])
-  const oneWeekFromNow = useMemo(() => currentTime + 7 * 24 * 60 * 60 * 1000, [currentTime])
-
   const allBadges = getAllBadges()
   const categories = getBadgeCategories()
 
-  // Read user's NFT balance
   const { data: nftBalance } = useReadContract({
     address: BADGE_NFT_ADDRESS,
     abi: BADGE_NFT_ABI,
@@ -105,7 +112,6 @@ export default function BadgesPage() {
     args: address ? [address] : undefined,
   });
 
-  // Read user's ProofScore
   const { data: proofScore } = useReadContract({
     address: SEER_ADDRESS,
     abi: SEER_ABI,
@@ -113,30 +119,22 @@ export default function BadgesPage() {
     args: address ? [address] : undefined,
   });
 
-  // Handler to mint a badge as NFT
   const handleMintBadge = async (badgeName: string) => {
     if (!address) return;
     setMintingBadge(badgeName);
-    
-    // Convert badge name to bytes32 hash (matches contract's BadgeRegistry)
     const badgeId = keccak256(toBytes(badgeName));
-    
     writeContract({
       address: BADGE_NFT_ADDRESS,
       abi: BADGE_NFT_ABI,
       functionName: 'mintBadge',
       args: [badgeId],
     });
-    
-    // Clear minting state after tx
     if (isSuccess || !isPending) {
       setMintingBadge(null);
     }
   };
 
-  // Mock user badges for UI display
-  // Note: Badge status will be read from BadgeRegistry contract once deployed
-  // Currently showing demo data to illustrate badge categories and states
+  // Mock user badges
   const mockUserBadges: Record<string, { earned: boolean; expiry?: number; minted: boolean; tokenId?: number }> = {
     PIONEER: { earned: true, minted: true, tokenId: 2847 },
     GENESIS_PRESALE: { earned: true, minted: false },
@@ -148,30 +146,27 @@ export default function BadgesPage() {
     FOUNDING_MEMBER: { earned: false, minted: false },
   };
 
-  // Filter badges based on tab
   const filteredBadges = allBadges.filter(badge => {
     const userBadge = mockUserBadges[badge.name]
+    
+    if (searchQuery && !badge.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
+        !badge.description.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false
+    }
     
     if (selectedCategory && badge.category !== selectedCategory) return false
     
     switch (activeTab) {
-      case 'earned':
-        return userBadge?.earned
-      case 'available':
-        return !userBadge?.earned
-      case 'minted':
-        return userBadge?.minted
-      default:
-        return true
+      case 'earned': return userBadge?.earned
+      case 'available': return !userBadge?.earned
+      case 'minted': return userBadge?.minted
+      default: return true
     }
   })
 
-  // Stats
   const earnedCount = allBadges.filter(b => mockUserBadges[b.name]?.earned).length
   const mintedCount = Number(nftBalance ?? 0) || allBadges.filter(b => mockUserBadges[b.name]?.minted).length
-  const totalPoints = allBadges
-    .filter(b => mockUserBadges[b.name]?.earned)
-    .reduce((sum, b) => sum + b.points, 0)
+  const totalPoints = allBadges.filter(b => mockUserBadges[b.name]?.earned).reduce((sum, b) => sum + b.points, 0)
 
   const tabs: { id: TabId; label: string; count: number }[] = [
     { id: 'all', label: 'All Badges', count: allBadges.length },
@@ -184,299 +179,242 @@ export default function BadgesPage() {
     <>
       <GlobalNav />
       
-      <main className="min-h-screen bg-[#1A1A1D] pt-20">
+      <main className="min-h-screen bg-[#08080A] pt-20 relative">
+        {/* Ambient Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[100px]" />
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
+        </div>
+
         {/* Hero */}
-        <section className="py-8 sm:py-12 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+        <section className="py-12 border-b border-white/5 relative z-10">
           <div className="container mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center max-w-3xl mx-auto"
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#FFD700] to-[#FF9500] rounded-2xl mb-4">
-                <Award className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#F5F3E8] mb-4">
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2 }}
+                className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-500/30 to-orange-500/20 border border-amber-500/30 rounded-3xl mb-6 shadow-lg shadow-amber-500/20"
+              >
+                <Award className="w-10 h-10 text-amber-400" />
+              </motion.div>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                 Badge Collection
               </h1>
-              <p className="text-sm sm:text-base md:text-lg text-[#A0A0A5]">
-                Earn badges through actions, mint them as soulbound NFTs
+              <p className="text-xl text-white/60">
+                Earn badges through participation, build trust, and mint them as NFTs
               </p>
             </motion.div>
 
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="grid grid-cols-3 gap-4 max-w-2xl mx-auto mt-8"
+            {/* Stats Row */}
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 max-w-4xl mx-auto"
             >
-              <div className="text-center p-4 bg-[#2A2A2F] rounded-xl border border-[#3A3A3F]">
-                <p className="text-2xl sm:text-3xl font-bold text-[#00FF88]">{earnedCount}</p>
-                <p className="text-xs sm:text-sm text-[#A0A0A5]">Earned</p>
-              </div>
-              <div className="text-center p-4 bg-[#2A2A2F] rounded-xl border border-[#3A3A3F]">
-                <p className="text-2xl sm:text-3xl font-bold text-[#FFD700]">{mintedCount}</p>
-                <p className="text-xs sm:text-sm text-[#A0A0A5]">NFTs Minted</p>
-              </div>
-              <div className="text-center p-4 bg-[#2A2A2F] rounded-xl border border-[#3A3A3F]">
-                <p className="text-2xl sm:text-3xl font-bold text-[#00F0FF]">+{totalPoints}</p>
-                <p className="text-xs sm:text-sm text-[#A0A0A5]">Score Boost</p>
-              </div>
+              {[
+                { label: 'Total Badges', value: allBadges.length, icon: Trophy, color: 'amber' },
+                { label: 'Earned', value: earnedCount, icon: CheckCircle, color: 'emerald' },
+                { label: 'NFTs Minted', value: mintedCount, icon: Gem, color: 'purple' },
+                { label: 'Points', value: totalPoints.toLocaleString(), icon: Star, color: 'cyan' },
+              ].map((stat) => (
+                <motion.div key={stat.label} variants={itemVariants}>
+                  <GlassCard className="p-4 text-center">
+                    <stat.icon className={`w-6 h-6 mx-auto mb-2 ${
+                      stat.color === 'amber' ? 'text-amber-400' :
+                      stat.color === 'emerald' ? 'text-emerald-400' :
+                      stat.color === 'purple' ? 'text-purple-400' :
+                      'text-cyan-400'
+                    }`} />
+                    <div className="text-2xl font-bold text-white">{stat.value}</div>
+                    <div className="text-white/40 text-sm">{stat.label}</div>
+                  </GlassCard>
+                </motion.div>
+              ))}
             </motion.div>
           </div>
         </section>
 
-        {/* Tabs & Filters */}
-        <div className="sticky top-16 z-40 bg-[#1A1A1D]/95 backdrop-blur border-b border-[#3A3A3F]">
+        {/* Filters & Search */}
+        <section className="py-6 sticky top-20 z-40 bg-[#08080A]/80 backdrop-blur-xl border-b border-white/5">
           <div className="container mx-auto px-4">
             {/* Tabs */}
-            <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
-              {tabs.map((tab) => (
-                <button
+            <div className="flex flex-wrap gap-2 mb-4">
+              {tabs.map(tab => (
+                <motion.button
                   key={tab.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
+                  className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
                     activeTab === tab.id
-                      ? "bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/50"
-                      : "text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A2F]"
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
+                      : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  {tab.label}
-                  <span className="px-1.5 py-0.5 text-xs bg-[#3A3A3F] rounded">
-                    {tab.count}
-                  </span>
-                </button>
+                  {tab.label} ({tab.count})
+                </motion.button>
               ))}
             </div>
 
-            {/* Category Filter */}
-            <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                  !selectedCategory
-                    ? "bg-[#F5F3E8] text-[#1A1A1D]"
-                    : "bg-[#2A2A2F] text-[#A0A0A5] hover:bg-[#3A3A3F]"
-                }`}
-              >
-                All Categories
-              </button>
-              {categories.map((category) => (
+            {/* Search & Category Filter */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search badges..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
                 <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                    selectedCategory === category
-                      ? "text-[#1A1A1D]"
-                      : "bg-[#2A2A2F] text-[#A0A0A5] hover:bg-[#3A3A3F]"
+                  onClick={() => setSelectedCategory(null)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                    !selectedCategory 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-white/5 text-white/60 hover:text-white'
                   }`}
-                  style={selectedCategory === category ? { backgroundColor: categoryColors[category] } : {}}
                 >
-                  {categoryIcons[category]}
-                  <span className="hidden sm:inline">{category}</span>
+                  All Categories
                 </button>
-              ))}
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat === selectedCategory ? null : cat)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
+                      selectedCategory === cat 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-white/5 text-white/60 hover:text-white'
+                    }`}
+                  >
+                    {categoryIcons[cat]}
+                    {cat.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Badge Grid */}
-        <section className="py-8">
+        <section className="py-8 relative z-10">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            >
               <AnimatePresence mode="popLayout">
-                {filteredBadges.map((badge, idx) => {
+                {filteredBadges.map((badge) => {
                   const userBadge = mockUserBadges[badge.name]
+                  const rarity = rarityColors[badge.rarity] || rarityColors.Common
                   const isEarned = userBadge?.earned
                   const isMinted = userBadge?.minted
-                  const expiry = userBadge?.expiry
-                  const tokenId = userBadge?.tokenId
-
+                  
                   return (
                     <motion.div
                       key={badge.name}
+                      variants={itemVariants}
                       layout
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ delay: idx * 0.02 }}
-                      className={`relative group rounded-xl border overflow-hidden transition-all ${
-                        isEarned
-                          ? 'bg-[#2A2A2F] border-[#3A3A3F] hover:border-[#FFD700]/50'
-                          : 'bg-[#1F1F22] border-[#2A2A2F] opacity-60'
-                      }`}
+                      className="group"
                     >
-                      {/* Rarity Indicator */}
-                      <div 
-                        className="absolute top-0 left-0 right-0 h-1"
-                        style={{ backgroundColor: rarityColors[badge.rarity] }}
-                      />
-
-                      {/* Content */}
-                      <div className="p-4">
+                      <GlassCard className={`p-5 h-full ${rarity.border} ${isEarned ? '' : 'opacity-60'}`}>
                         {/* Header */}
-                        <div className="flex items-start justify-between mb-3">
-                          <div 
-                            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                            style={{ 
-                              backgroundColor: `${categoryColors[badge.category]}20`,
-                              border: `1px solid ${categoryColors[badge.category]}40`
-                            }}
-                          >
-                            {badge.icon}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className={`p-3 rounded-2xl ${rarity.bg} ${rarity.glow ? `shadow-lg ${rarity.glow}` : ''}`}>
+                            <Award className={`w-8 h-8 ${rarity.text}`} />
                           </div>
                           <div className="flex flex-col items-end gap-1">
-                            <span 
-                              className="text-[10px] font-bold px-2 py-0.5 rounded"
-                              style={{ 
-                                backgroundColor: `${rarityColors[badge.rarity]}20`,
-                                color: rarityColors[badge.rarity]
-                              }}
-                            >
+                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${rarity.bg} ${rarity.text}`}>
                               {badge.rarity}
                             </span>
                             {isEarned && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#00FF88]/20 text-[#00FF88] flex items-center gap-1">
-                                <CheckCircle className="w-3 h-3" /> Earned
+                              <span className="px-2 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-400">
+                                ✓ Earned
                               </span>
                             )}
                           </div>
                         </div>
 
-                        {/* Name & Description */}
-                        <h3 className="text-base font-bold text-[#F5F3E8] mb-1">
-                          {badge.displayName}
+                        {/* Content */}
+                        <h3 className="text-lg font-bold text-white mb-1">
+                          {badge.name.replace(/_/g, ' ')}
                         </h3>
-                        <p className="text-xs text-[#A0A0A5] mb-3 line-clamp-2">
+                        <p className="text-white/60 text-sm mb-4 line-clamp-2">
                           {badge.description}
                         </p>
 
-                        {/* Stats */}
-                        <div className="flex items-center gap-3 mb-3 text-xs">
-                          <div className="flex items-center gap-1 text-[#00F0FF]">
-                            <TrendingUp className="w-3 h-3" />
-                            <span>+{badge.points} pts</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-[#A0A0A5]">
-                            {badge.isPermanent ? (
-                              <>
-                                <Lock className="w-3 h-3" />
-                                <span>Permanent</span>
-                              </>
-                            ) : (
-                              <>
-                                <Clock className="w-3 h-3" />
-                                <span>{Math.floor(badge.duration / (24 * 60 * 60))}d</span>
-                              </>
-                            )}
-                          </div>
+                        {/* Points */}
+                        <div className="flex items-center gap-2 mb-4">
+                          <Star className="text-amber-400" size={16} />
+                          <span className="text-amber-400 font-bold">{badge.points} points</span>
                         </div>
 
-                        {/* Expiry Warning */}
-                        {expiry && expiry < oneWeekFromNow && (
-                          <div className="mb-3 p-2 rounded-lg bg-[#FF9500]/10 border border-[#FF9500]/30">
-                            <p className="text-[10px] text-[#FF9500] flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              Expires in {Math.floor((expiry - currentTime) / (24 * 60 * 60 * 1000))} days
-                            </p>
-                          </div>
-                        )}
+                        {/* Category */}
+                        <div className="flex items-center gap-2 text-white/40 text-xs mb-4">
+                          {categoryIcons[badge.category]}
+                          <span>{badge.category}</span>
+                        </div>
 
-                        {/* Actions */}
+                        {/* Action Button */}
                         {isEarned && !isMinted && (
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={() => handleMintBadge(badge.name)}
                             disabled={mintingBadge === badge.name}
-                            className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-[#FFD700] to-[#FF9500] text-[#1A1A1D] font-bold text-sm hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25"
                           >
                             {mintingBadge === badge.name ? (
-                              <>
-                                <motion.div
-                                  animate={{ rotate: 360 }}
-                                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                                >
-                                  <Sparkles className="w-4 h-4" />
-                                </motion.div>
-                                Minting...
-                              </>
+                              <Loader2 className="animate-spin" size={18} />
                             ) : (
-                              <>
-                                <Gem className="w-4 h-4" />
-                                Mint as NFT
-                              </>
+                              <Gem size={18} />
                             )}
-                          </button>
+                            {mintingBadge === badge.name ? 'Minting...' : 'Mint as NFT'}
+                          </motion.button>
                         )}
 
-                        {isMinted && tokenId && (
-                          <div className="flex items-center justify-between p-2 rounded-lg bg-[#A78BFA]/10 border border-[#A78BFA]/30">
-                            <span className="text-xs text-[#A78BFA] font-medium">
-                              NFT #{tokenId.toLocaleString()}
-                            </span>
-                            <span className="text-[10px] text-[#A0A0A5]">Soulbound</span>
+                        {isMinted && (
+                          <div className="w-full py-3 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-xl font-bold flex items-center justify-center gap-2">
+                            <Gem size={18} />
+                            NFT #{userBadge?.tokenId}
                           </div>
                         )}
 
                         {!isEarned && (
-                          <div className="p-2 rounded-lg bg-[#2A2A2F] border border-[#3A3A3F]">
-                            <p className="text-[10px] text-[#A0A0A5]">
-                              <Target className="w-3 h-3 inline mr-1" />
-                              {badge.earnRequirement}
-                            </p>
+                          <div className="w-full py-3 bg-white/5 text-white/40 rounded-xl font-medium flex items-center justify-center gap-2">
+                            <Lock size={18} />
+                            Not Yet Earned
                           </div>
                         )}
-                      </div>
+                      </GlassCard>
                     </motion.div>
                   )
                 })}
               </AnimatePresence>
-            </div>
+            </motion.div>
 
             {filteredBadges.length === 0 && (
-              <div className="text-center py-16">
-                <Award className="w-16 h-16 mx-auto text-[#3A3A3F] mb-4" />
-                <p className="text-[#A0A0A5]">No badges found matching your filters</p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-16"
+              >
+                <Search className="w-16 h-16 text-white/20 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">No Badges Found</h3>
+                <p className="text-white/60">Try adjusting your search or filters</p>
+              </motion.div>
             )}
-          </div>
-        </section>
-
-        {/* How it Works */}
-        <section className="py-12 bg-[#0F0F12] border-t border-[#3A3A3F]">
-          <div className="container mx-auto px-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-[#F5F3E8] text-center mb-8">
-              How Badges Work
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <div className="text-center p-6 bg-[#1A1A1D] rounded-xl border border-[#3A3A3F]">
-                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-[#00FF88]/20 flex items-center justify-center">
-                  <Target className="w-6 h-6 text-[#00FF88]" />
-                </div>
-                <h3 className="text-lg font-bold text-[#F5F3E8] mb-2">1. Earn Through Actions</h3>
-                <p className="text-sm text-[#A0A0A5]">
-                  Complete activities like trading, voting, and helping others to earn badges automatically
-                </p>
-              </div>
-              <div className="text-center p-6 bg-[#1A1A1D] rounded-xl border border-[#3A3A3F]">
-                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-[#FFD700]/20 flex items-center justify-center">
-                  <Gem className="w-6 h-6 text-[#FFD700]" />
-                </div>
-                <h3 className="text-lg font-bold text-[#F5F3E8] mb-2">2. Mint as NFT</h3>
-                <p className="text-sm text-[#A0A0A5]">
-                  Convert earned badges to soulbound NFTs - they cannot be transferred or sold
-                </p>
-              </div>
-              <div className="text-center p-6 bg-[#1A1A1D] rounded-xl border border-[#3A3A3F]">
-                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-[#00F0FF]/20 flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-[#00F0FF]" />
-                </div>
-                <h3 className="text-lg font-bold text-[#F5F3E8] mb-2">3. Boost Your Score</h3>
-                <p className="text-sm text-[#A0A0A5]">
-                  Each badge adds points to your ProofScore, unlocking lower fees and more features
-                </p>
-              </div>
-            </div>
           </div>
         </section>
       </main>

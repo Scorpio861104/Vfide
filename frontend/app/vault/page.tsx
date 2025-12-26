@@ -8,13 +8,52 @@ import { TransactionHistory } from "@/components/vault/TransactionHistory";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAccount } from "wagmi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { isAddress } from "viem";
 import { devLog } from "@/lib/utils";
 import { useVaultBalance, useSelfPanic, useQuarantineStatus, useCanSelfPanic } from "@/lib/vfide-hooks";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, AlertTriangle, Lock, Clock } from "lucide-react";
-import { useEffect } from "react";
+import { 
+  Shield, AlertTriangle, Lock, Clock, Plus, UserPlus, Users, Key, 
+  Heart, ArrowDownToLine, ArrowUpFromLine, RefreshCw, CheckCircle2,
+  Sparkles, Zap, ChevronRight, DollarSign, TrendingUp
+} from "lucide-react";
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+};
+
+// Glassmorphism card
+function GlassCard({ children, className = "", hover = true, gradient }: { 
+  children: React.ReactNode; 
+  className?: string;
+  hover?: boolean;
+  gradient?: "cyan" | "gold" | "red" | "green";
+}) {
+  const gradientMap = {
+    cyan: "from-cyan-500/20 to-blue-500/10",
+    gold: "from-amber-500/20 to-orange-500/10",
+    red: "from-red-500/20 to-red-500/5",
+    green: "from-emerald-500/20 to-emerald-500/5"
+  };
+  
+  return (
+    <motion.div
+      whileHover={hover ? { scale: 1.01, y: -2 } : {}}
+      transition={{ type: "spring", stiffness: 400 }}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient ? gradientMap[gradient] : 'from-white/[0.08] to-white/[0.02]'} backdrop-blur-xl border border-white/10 ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 // Compact security section with Panic Button
 function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
@@ -26,19 +65,16 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
   const [panicDuration, setPanicDuration] = useState(24);
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   
-  // Update time every minute
   useEffect(() => {
     const interval = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 60000);
     return () => clearInterval(interval);
   }, []);
   
-  // Compute quarantine remaining
   const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now);
   const isQuarantined = quarantineRemaining > 0;
   const remainingHours = Math.floor(quarantineRemaining / 3600);
   const remainingMinutes = Math.floor((quarantineRemaining % 3600) / 60);
   
-  // Compute panic eligibility
   const cooldownRemaining = Math.max(0, (panicData.lastPanicTime + panicData.cooldownSeconds) - now);
   const canPanic = isPanicAvailable && cooldownRemaining === 0 && !isQuarantined;
   
@@ -50,50 +86,35 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
 
   if (!vaultAddress) return null;
 
-  // If PanicGuard not deployed, show a disabled info section
-  if (!isPanicAvailable) {
-    return (
-      <section className="py-8">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="rounded-xl p-6 border-2 bg-[#2A2A2F] border-[#3A3A3F]">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-gray-500/20">
-                <Shield className="w-6 h-6 text-gray-400" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-[#F5F3E8]">Emergency Security</h3>
-                <p className="text-[#A0A0A5] text-sm">
-                  Self-panic feature coming soon. For emergencies, contact support.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="py-8">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className={`rounded-xl p-6 border-2 ${isQuarantined ? 'bg-red-900/20 border-red-500' : 'bg-[#2A2A2F] border-[#3A3A3F]'}`}>
+        <GlassCard 
+          className={`p-6 ${isQuarantined ? 'border-red-500/50' : 'border-white/10'}`} 
+          hover={false}
+          gradient={isQuarantined ? "red" : undefined}
+        >
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-full ${isQuarantined ? 'bg-red-500/20' : 'bg-[#00F0FF]/20'}`}>
+              <motion.div 
+                animate={isQuarantined ? { scale: [1, 1.1, 1] } : {}}
+                transition={{ duration: 2, repeat: Infinity }}
+                className={`p-4 rounded-2xl ${isQuarantined ? 'bg-red-500/20' : 'bg-cyan-500/20'}`}
+              >
                 {isQuarantined ? (
-                  <Lock className="w-6 h-6 text-red-500" />
+                  <Lock className="w-8 h-8 text-red-400" />
                 ) : (
-                  <Shield className="w-6 h-6 text-[#00F0FF]" />
+                  <Shield className="w-8 h-8 text-cyan-400" />
                 )}
-              </div>
+              </motion.div>
               <div>
-                <h3 className="text-xl font-bold text-[#F5F3E8]">
+                <h3 className="text-xl font-bold text-white">
                   {isQuarantined ? 'Vault Quarantined' : 'Emergency Security'}
                 </h3>
-                <p className="text-[#A0A0A5] text-sm">
+                <p className="text-white/60 text-sm">
                   {isQuarantined 
-                    ? `Locked for ${remainingHours}h ${remainingMinutes}m - all outgoing transactions blocked`
-                    : 'Suspect your account is compromised? Lock it immediately.'}
+                    ? `Locked for ${remainingHours}h ${remainingMinutes}m`
+                    : 'Suspect compromise? Lock immediately.'}
                 </p>
               </div>
             </div>
@@ -105,25 +126,20 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
+                  whileHover={{ scale: canPanic ? 1.05 : 1 }}
+                  whileTap={{ scale: canPanic ? 0.95 : 1 }}
                   onClick={() => setShowPanicConfirm(true)}
                   disabled={!canPanic || isQuarantined}
-                  className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                  className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
                     isQuarantined 
-                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      ? 'bg-white/10 text-white/40 cursor-not-allowed'
                       : canPanic 
-                        ? 'bg-red-600 hover:bg-red-700 text-white hover:scale-105'
-                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25'
+                        : 'bg-white/10 text-white/40 cursor-not-allowed'
                   }`}
                 >
-                  {isQuarantined ? (
-                    <span className="flex items-center gap-2">
-                      <Lock className="w-4 h-4" /> Already Locked
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" /> Panic Button
-                    </span>
-                  )}
+                  {isQuarantined ? <Lock size={18} /> : <AlertTriangle size={18} />}
+                  {isQuarantined ? 'Already Locked' : 'Panic Button'}
                 </motion.button>
               ) : (
                 <motion.div
@@ -136,7 +152,7 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
                   <select
                     value={panicDuration}
                     onChange={(e) => setPanicDuration(Number(e.target.value))}
-                    className="px-3 py-2 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8]"
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white"
                   >
                     <option value={1}>1 hour</option>
                     <option value={6}>6 hours</option>
@@ -147,13 +163,13 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
                   <button
                     onClick={handlePanic}
                     disabled={isPanicking}
-                    className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold disabled:opacity-50"
+                    className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold disabled:opacity-50"
                   >
                     {isPanicking ? 'Locking...' : 'Confirm Lock'}
                   </button>
                   <button
                     onClick={() => setShowPanicConfirm(false)}
-                    className="px-4 py-2 border border-[#3A3A3F] text-[#A0A0A5] rounded-lg hover:text-[#F5F3E8]"
+                    className="px-4 py-2 text-white/60 hover:text-white rounded-xl"
                   >
                     Cancel
                   </button>
@@ -162,22 +178,21 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
             </AnimatePresence>
           </div>
           
-          {/* Quarantine countdown */}
           {isQuarantined && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="mt-4 pt-4 border-t border-red-500/30"
+              className="mt-4 pt-4 border-t border-white/10"
             >
               <div className="flex items-center gap-2 text-red-400">
-                <Clock className="w-4 h-4" />
+                <Clock size={16} />
                 <span className="text-sm">
                   Auto-unlock in <strong>{remainingHours}h {remainingMinutes}m</strong>
                 </span>
               </div>
             </motion.div>
           )}
-        </div>
+        </GlassCard>
       </div>
     </section>
   );
@@ -185,15 +200,11 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
 
 function VaultContent() {
   const { showToast } = useToast();
-
-const { address } = useAccount();
+  const { address } = useAccount();
   
-  // Get user's vault address from VaultHub contract
   const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault } = useVaultHub();
-  
-  // Get vault balance
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
-  const PRESALE_REFERENCE_PRICE = 0.07; // Use public tier price for estimation
+  const PRESALE_REFERENCE_PRICE = 0.07;
   const usdValue = (parseFloat(vaultBalance) * PRESALE_REFERENCE_PRICE).toFixed(2);
   
   const {
@@ -254,40 +265,10 @@ const { address } = useAccount();
     try {
       await requestRecovery(recoveryAddress as `0x${string}`);
       setRecoveryAddress("");
-      showToast("Recovery requested! Guardians will be notified.", "success");
+      showToast("Recovery requested!", "success");
     } catch (error) {
       devLog.error('Failed to request recovery:', error);
       showToast("Failed to request recovery", "error");
-    }
-  };
-  
-  const handleApproveRecovery = async () => {
-    try {
-      await approveRecovery();
-      showToast("Recovery approved!", "success");
-    } catch (error) {
-      devLog.error('Failed to approve recovery:', error);
-      showToast("Failed to approve recovery", "error");
-    }
-  };
-  
-  const handleFinalizeRecovery = async () => {
-    try {
-      await finalizeRecovery();
-      showToast("Recovery finalized! Vault ownership transferred.", "success");
-    } catch (error) {
-      devLog.error('Failed to finalize recovery:', error);
-      showToast("Failed to finalize recovery", "error");
-    }
-  };
-  
-  const handleCancelRecovery = async () => {
-    try {
-      await cancelRecovery();
-      showToast("Recovery cancelled successfully!", "success");
-    } catch (error) {
-      devLog.error('Failed to cancel recovery:', error);
-      showToast("Failed to cancel recovery", "error");
     }
   };
   
@@ -295,568 +276,401 @@ const { address } = useAccount();
     <>
       <GlobalNav />
       
-      <main className="min-h-screen bg-[#1A1A1D] pt-20">
+      <main className="min-h-screen bg-[#08080A] pt-20 relative">
+        {/* Ambient Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[100px]" />
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
+        </div>
+
         {/* Header */}
-        <section className="py-12 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+        <section className="relative py-12 border-b border-white/5">
           <div className="container mx-auto px-4 max-w-6xl">
-            <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
-              Vault Manager
-            </h1>
-            <p className="text-xl text-[#A0A0A5] font-[family-name:var(--font-body)] mb-4">
-              Non-custodial storage with dual protection: recovery + inheritance
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 flex items-center gap-3">
+                Vault Manager
+                <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}>
+                  <Shield className="text-emerald-400" size={40} />
+                </motion.span>
+              </h1>
+              <p className="text-xl text-white/60 mb-6">
+                Non-custodial storage with dual protection: recovery + inheritance
+              </p>
+            </motion.div>
             
             {/* No Vault - Create One */}
             {!hasVault && !isLoadingVault && address && (
-              <div className="bg-[#FFD700]/10 border border-[#FFD700] rounded-lg p-6 mt-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-[#FFD700] mb-2">No Vault Found</h3>
-                    <p className="text-[#A0A0A5]">Create your vault to start using VFIDE securely</p>
-                  </div>
-                  <button 
-                    onClick={async () => {
-                      try {
-                        await createVault();
-                        showToast("Vault created successfully!", "success");
-                      } catch (error) {
-                        devLog.error('Vault creation error:', error);
-                        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-                        showToast(errorMessage, "error");
-                      }
-                    }}
-                    disabled={isCreatingVault}
-                    className="px-8 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isCreatingVault ? "Creating..." : "Create Vault"}
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {/* Loading State */}
-            {isLoadingVault && (
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg p-6 mt-6 text-center">
-                <p className="text-[#A0A0A5]">Loading vault information...</p>
-              </div>
-            )}
-            
-            {/* Wallet Not Connected */}
-            {!address && (
-              <div className="bg-[#FF4444]/10 border border-[#FF4444] rounded-lg p-6 mt-6 text-center">
-                <p className="text-[#FF4444] font-bold mb-2">Wallet Not Connected</p>
-                <p className="text-[#A0A0A5]">Please connect your wallet to view your vault</p>
-              </div>
-            )}
-            
-            {/* Feature Distinction Card - Only show when vault exists */}
-            {hasVault && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <div className="bg-[#00F0FF]/10 border border-[#00F0FF] rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="text-2xl">🔑</div>
-                  <div className="text-[#00F0FF] font-bold">Chain of Return</div>
-                </div>
-                <div className="text-[#A0A0A5] text-sm">
-                  Lost wallet? Guardians verify your identity and help YOU regain access with a new wallet address.
-                </div>
-              </div>
-              
-              <div className="bg-[#FFD700]/10 border border-[#FFD700] rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="text-2xl">💎</div>
-                  <div className="text-[#FFD700] font-bold">Next of Kin</div>
-                </div>
-                <div className="text-[#A0A0A5] text-sm">
-                  Estate planning. If you die, guardians verify death and your HEIR inherits vault ownership.
-                </div>
-              </div>
-            </div>
-            )}
-          </div>
-        </section>
-
-        {/* Only show vault content sections when vault exists */}
-        {hasVault && (<>
-        {/* Vault Overview */}
-        <section className="py-8">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-                <div className="text-[#A0A0A5] text-sm font-[family-name:var(--font-body)] mb-2">Total Balance</div>
-                {isLoadingBalance ? (
-                  <>
-                    <Skeleton height={40} className="w-48 mb-1" />
-                    <Skeleton height={16} className="w-32" />
-                  </>
-                ) : (
-                  <>
-                    <div className="text-4xl font-bold text-[#F5F3E8] mb-1">
-                      {parseFloat(vaultBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
-                    </div>
-                    <div className="text-[#A0A0A5] text-sm">
-                      ≈ ${parseFloat(usdValue).toLocaleString()} USD
-                    </div>
-                  </>
-                )}
-              </div>
-              
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-                <div className="text-[#A0A0A5] text-sm font-[family-name:var(--font-body)] mb-2">Vault Status</div>
-                <div className="text-4xl font-bold text-[#50C878] mb-1">ACTIVE</div>
-                <div className="text-[#A0A0A5] text-sm">All systems secure</div>
-              </div>
-              
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-                <div className="text-[#A0A0A5] text-sm font-[family-name:var(--font-body)] mb-2">Guardians</div>
-                <div className="text-4xl font-bold text-[#00F0FF] mb-1">
-                  {guardianCount !== undefined ? `${guardianCount}/5` : '...'}
-                </div>
-                <div className="text-[#A0A0A5] text-sm">
-                  {guardianCount && guardianCount >= 3 ? 'Recovery enabled' : 'Add guardians for recovery'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Actions */}
-        <section className="py-8">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
-                Quick Actions
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button className="p-4 md:p-6 min-h-[56px] bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 active:scale-95 transition-transform touch-manipulation">
-                  Deposit Funds
-                </button>
-                <button className="p-4 md:p-6 min-h-[56px] border-2 border-[#00F0FF] text-[#00F0FF] rounded-lg font-bold hover:bg-[#00F0FF]/10 active:bg-[#00F0FF]/20 transition-colors touch-manipulation">
-                  Withdraw Funds
-                </button>
-                <button className="p-4 md:p-6 min-h-[56px] border-2 border-[#A0A0A5] text-[#A0A0A5] rounded-lg font-bold hover:border-[#F5F3E8] hover:text-[#F5F3E8] active:bg-[#F5F3E8]/10 transition-colors touch-manipulation">
-                  Transfer to Vault
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Emergency Security / Panic Button */}
-        <VaultSecuritySection vaultAddress={vaultAddress} />
-
-        {/* Next of Kin (Inheritance) */}
-        <section className="py-8">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="bg-gradient-to-br from-[#FFD700]/10 to-[#FFA500]/10 border-2 border-[#FFD700] rounded-xl p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
-                    Next of Kin (Inheritance)
-                  </h2>
-                  <p className="text-[#A0A0A5] text-sm max-w-2xl">
-                    Estate planning for crypto. Your designated heir can claim vault ownership if you pass away or become incapacitated. 
-                    If guardians exist, they must approve (2/3). If no guardians, Next of Kin gets instant access.
-                  </p>
-                </div>
-                <div className="px-4 py-2 bg-[#FFD700]/20 border border-[#FFD700] rounded-lg">
-                  <div className="text-[#FFD700] text-xs font-bold">INHERITANCE</div>
-                  <div className="text-[#A0A0A5] text-xs">(Death/Incapacitation)</div>
-                </div>
-              </div>
-              
-              {/* Current Next of Kin */}
-              <div className="p-4 bg-[#1A1A1D] border border-[#FFD700]/50 rounded-lg mb-4">
-                {nextOfKin && nextOfKin !== "0x0000000000000000000000000000000000000000" ? (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-[#A0A0A5] text-xs mb-1">Designated Heir</div>
-                      <div className="text-[#F5F3E8] font-mono font-bold text-lg">
-                        {nextOfKin.slice(0, 6)}...{nextOfKin.slice(-4)}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <GlassCard className="p-6 border-amber-500/30" gradient="gold" hover={false}>
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-4 rounded-2xl bg-amber-500/20">
+                        <Plus className="w-8 h-8 text-amber-400" />
                       </div>
-                      <div className="text-[#50C878] text-xs mt-1 flex items-center gap-1">
-                        ✓ Can inherit vault ownership
-                      </div>
-                    </div>
-                    {address === vaultOwner && (
-                      <button 
-                        onClick={() => setNewKinAddress("")}
-                        className="px-4 py-2 border-2 border-[#FFA500] text-[#FFA500] rounded-lg hover:bg-[#FFA500]/10 transition-colors"
-                      >
-                        Change Heir
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-[#FFA500] font-bold text-sm mb-3">
-                      ⚠️ No Next of Kin Set
-                    </div>
-                    {address === vaultOwner ? (
                       <div>
-                        <input
-                          type="text"
-                          placeholder="Heir address (0x...)"
-                          value={newKinAddress}
-                          onChange={(e) => setNewKinAddress(e.target.value)}
-                          pattern="^0x[a-fA-F0-9]{40}$"
-                          aria-label="Next of kin address"
-                          className="w-full px-4 py-2 text-sm md:text-base bg-[#2A2A2F] border border-[#3A3A3F] rounded text-[#F5F3E8] mb-3 touch-manipulation"
-                        />
-                        <button
-                          onClick={handleSetNextOfKin}
-                          disabled={isWritePending || !newKinAddress}
-                          className="w-full min-h-[56px] px-4 py-3 bg-[#FFD700] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#FFA500] active:bg-[#FF8C00] transition-colors disabled:opacity-50 touch-manipulation"
-                        >
-                          {isWritePending ? "Processing..." : "Set Next of Kin"}
-                        </button>
+                        <h3 className="text-xl font-bold text-white mb-1">No Vault Found</h3>
+                        <p className="text-white/60">Create your vault to start using VFIDE securely</p>
+                      </div>
+                    </div>
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={async () => {
+                        try {
+                          await createVault();
+                          showToast("Vault created successfully!", "success");
+                        } catch (error) {
+                          devLog.error('Vault creation error:', error);
+                          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                          showToast(errorMessage, "error");
+                        }
+                      }}
+                      disabled={isCreatingVault}
+                      className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
+                    >
+                      {isCreatingVault ? "Creating..." : "Create Vault"}
+                    </motion.button>
+                  </div>
+                </GlassCard>
+              </motion.div>
+            )}
+            
+            {isLoadingVault && (
+              <GlassCard className="p-6" hover={false}>
+                <div className="flex items-center justify-center gap-3 py-4">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-6 h-6 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full"
+                  />
+                  <p className="text-white/60">Loading vault information...</p>
+                </div>
+              </GlassCard>
+            )}
+            
+            {!address && (
+              <GlassCard className="p-6 border-red-500/30" gradient="red" hover={false}>
+                <div className="text-center py-4">
+                  <p className="text-red-400 font-bold mb-2">Wallet Not Connected</p>
+                  <p className="text-white/60">Please connect your wallet to view your vault</p>
+                </div>
+              </GlassCard>
+            )}
+            
+            {/* Feature Cards */}
+            {hasVault && (
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"
+              >
+                <motion.div variants={itemVariants}>
+                  <GlassCard className="p-5 border-cyan-500/30" gradient="cyan">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Key className="text-cyan-400" size={24} />
+                      <span className="text-cyan-400 font-bold">Chain of Return</span>
+                    </div>
+                    <p className="text-white/60 text-sm">
+                      Lost wallet? Guardians verify your identity and help YOU regain access.
+                    </p>
+                  </GlassCard>
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <GlassCard className="p-5 border-amber-500/30" gradient="gold">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Heart className="text-amber-400" size={24} />
+                      <span className="text-amber-400 font-bold">Next of Kin</span>
+                    </div>
+                    <p className="text-white/60 text-sm">
+                      Estate planning. If you die, guardians verify and your HEIR inherits.
+                    </p>
+                  </GlassCard>
+                </motion.div>
+              </motion.div>
+            )}
+          </div>
+        </section>
+
+        {hasVault && (
+          <>
+            {/* Vault Overview Stats */}
+            <section className="py-8 relative z-10">
+              <div className="container mx-auto px-4 max-w-6xl">
+                <motion.div 
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="show"
+                  className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                >
+                  <motion.div variants={itemVariants}>
+                    <GlassCard className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-white/60 text-sm">Total Balance</span>
+                        <div className="p-2 rounded-xl bg-cyan-500/20">
+                          <DollarSign className="text-cyan-400" size={18} />
+                        </div>
+                      </div>
+                      {isLoadingBalance ? (
+                        <>
+                          <Skeleton height={40} className="w-48 mb-1 bg-white/10" />
+                          <Skeleton height={16} className="w-32 bg-white/5" />
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-3xl font-bold text-white mb-1">
+                            {parseFloat(vaultBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
+                          </div>
+                          <div className="text-white/40 text-sm">≈ ${parseFloat(usdValue).toLocaleString()} USD</div>
+                        </>
+                      )}
+                    </GlassCard>
+                  </motion.div>
+                  
+                  <motion.div variants={itemVariants}>
+                    <GlassCard className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-white/60 text-sm">Vault Status</span>
+                        <div className="p-2 rounded-xl bg-emerald-500/20">
+                          <CheckCircle2 className="text-emerald-400" size={18} />
+                        </div>
+                      </div>
+                      <div className="text-3xl font-bold text-emerald-400 mb-1">ACTIVE</div>
+                      <div className="text-white/40 text-sm">All systems secure</div>
+                    </GlassCard>
+                  </motion.div>
+                  
+                  <motion.div variants={itemVariants}>
+                    <GlassCard className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-white/60 text-sm">Guardians</span>
+                        <div className="p-2 rounded-xl bg-purple-500/20">
+                          <Users className="text-purple-400" size={18} />
+                        </div>
+                      </div>
+                      <div className="text-3xl font-bold text-purple-400 mb-1">
+                        {guardianCount !== undefined ? `${guardianCount}/5` : '...'}
+                      </div>
+                      <div className="text-white/40 text-sm">
+                        {guardianCount && guardianCount >= 3 ? 'Recovery enabled' : 'Add guardians for recovery'}
+                      </div>
+                    </GlassCard>
+                  </motion.div>
+                </motion.div>
+              </div>
+            </section>
+
+            {/* Quick Actions */}
+            <section className="py-8 relative z-10">
+              <div className="container mx-auto px-4 max-w-6xl">
+                <GlassCard className="p-6" hover={false}>
+                  <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    <Zap className="text-amber-400" size={24} />
+                    Quick Actions
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <motion.button 
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="p-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
+                    >
+                      <ArrowDownToLine size={20} />
+                      Deposit Funds
+                    </motion.button>
+                    <motion.button 
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="p-5 bg-white/5 border border-cyan-500/30 text-cyan-400 rounded-xl font-bold hover:bg-cyan-500/10 flex items-center justify-center gap-2"
+                    >
+                      <ArrowUpFromLine size={20} />
+                      Withdraw Funds
+                    </motion.button>
+                    <motion.button 
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="p-5 bg-white/5 border border-white/10 text-white/80 rounded-xl font-bold hover:border-white/20 hover:text-white flex items-center justify-center gap-2"
+                    >
+                      <RefreshCw size={20} />
+                      Transfer to Vault
+                    </motion.button>
+                  </div>
+                </GlassCard>
+              </div>
+            </section>
+
+            {/* Emergency Security */}
+            <VaultSecuritySection vaultAddress={vaultAddress} />
+
+            {/* Next of Kin Section */}
+            <section className="py-8 relative z-10">
+              <div className="container mx-auto px-4 max-w-6xl">
+                <GlassCard className="p-6 border-amber-500/30" gradient="gold" hover={false}>
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                        <Heart className="text-amber-400" />
+                        Next of Kin (Inheritance)
+                      </h2>
+                      <p className="text-white/60 text-sm max-w-2xl">
+                        Estate planning for crypto. Your designated heir can claim vault ownership if you pass away.
+                      </p>
+                    </div>
+                    <div className="px-4 py-2 bg-amber-500/20 border border-amber-500/30 rounded-xl text-center">
+                      <div className="text-amber-400 text-xs font-bold">INHERITANCE</div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl mb-4">
+                    {nextOfKin && nextOfKin !== "0x0000000000000000000000000000000000000000" ? (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-white/40 text-xs mb-1">Designated Heir</div>
+                          <div className="text-white font-mono font-bold text-lg">
+                            {nextOfKin.slice(0, 6)}...{nextOfKin.slice(-4)}
+                          </div>
+                          <div className="text-emerald-400 text-xs mt-1">✓ Can inherit vault ownership</div>
+                        </div>
+                        {address === vaultOwner && (
+                          <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setNewKinAddress("")}
+                            className="px-4 py-2 border border-amber-500/50 text-amber-400 rounded-xl hover:bg-amber-500/10"
+                          >
+                            Change Heir
+                          </motion.button>
+                        )}
                       </div>
                     ) : (
-                      <div className="text-[#A0A0A5] text-sm">Only vault owner can set Next of Kin</div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* How It Works */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-3 bg-[#1A1A1D]/50 rounded-lg border border-[#3A3A3F]">
-                  <div className="text-[#FFD700] font-bold text-sm mb-1">🔓 Instant Inheritance (No Guardians)</div>
-                  <div className="text-[#A0A0A5] text-xs">
-                    If you have 0 guardians, your Next of Kin can immediately claim ownership after your death. No approval needed.
-                  </div>
-                </div>
-                <div className="p-3 bg-[#1A1A1D]/50 rounded-lg border border-[#3A3A3F]">
-                  <div className="text-[#00F0FF] font-bold text-sm mb-1">🛡️ Protected Inheritance (With Guardians)</div>
-                  <div className="text-[#A0A0A5] text-xs">
-                    If you have guardians, your Next of Kin must get 2/3 guardian approval to inherit. Prevents premature claims.
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 p-3 bg-[#FFD700]/10 border border-[#FFD700]/50 rounded-lg">
-                <div className="text-[#FFD700] font-bold text-sm mb-1">💎 Estate Planning</div>
-                <div className="text-[#A0A0A5] text-xs">
-                  Set your spouse, child, or parent as Next of Kin. If you pass away, they can inherit your vault. 
-                  Guardians prevent fraudulent death claims - they verify you&apos;re truly gone before approving inheritance.
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Guardian Management */}
-        <section className="py-8">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
-                    Chain of Return (Lost Wallet Recovery)
-                  </h2>
-                  <p className="text-[#A0A0A5] text-sm">
-                    If you lose your wallet or it gets compromised, guardians can help you regain access. 
-                    Requires 2/3 approval + 7-day maturity period. Prevents flash attacks.
-                  </p>
-                </div>
-                <div className="px-4 py-2 bg-[#00F0FF]/20 border border-[#00F0FF] rounded-lg text-center">
-                  <div className="text-[#00F0FF] text-xs font-bold">30-DAY EXPIRY</div>
-                  <div className="text-[#A0A0A5] text-xs">Recovery requests</div>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                {guardianCount > 0 ? (
-                  <div className="text-[#A0A0A5] text-sm text-center py-4">
-                    {guardianCount} guardian{guardianCount !== 1 ? 's' : ''} configured
-                    {isUserGuardian && (
-                      <div className="text-[#00F0FF] mt-2">
-                        ✓ You are a guardian{isGuardianMature ? " (Mature - can vote)" : " (Maturing - 7 days required)"}
+                      <div>
+                        <div className="text-amber-400 font-bold text-sm mb-3">⚠️ No Next of Kin Set</div>
+                        {address === vaultOwner ? (
+                          <div className="space-y-3">
+                            <input
+                              type="text"
+                              placeholder="Heir address (0x...)"
+                              value={newKinAddress}
+                              onChange={(e) => setNewKinAddress(e.target.value)}
+                              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-amber-500/50"
+                            />
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={handleSetNextOfKin}
+                              disabled={isWritePending || !newKinAddress}
+                              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold disabled:opacity-50"
+                            >
+                              {isWritePending ? "Processing..." : "Set Next of Kin"}
+                            </motion.button>
+                          </div>
+                        ) : (
+                          <div className="text-white/40 text-sm">Only vault owner can set Next of Kin</div>
+                        )}
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className="text-[#FFA500] text-sm text-center py-4">
-                    ⚠️ No guardians configured. Next of Kin will have instant access.
-                  </div>
-                )}
-                
-                {/* Guardian list fetched via contract events */}
-              </div>
-              
-              {address === vaultOwner && (
-                <div className="mt-6">
-                  <input
-                    type="text"
-                    placeholder="Guardian address (0x...)"
-                    value={newGuardianAddress}
-                    onChange={(e) => setNewGuardianAddress(e.target.value)}
-                    pattern="^0x[a-fA-F0-9]{40}$"
-                    aria-label="Guardian address"
-                    className="w-full px-4 py-2 text-sm md:text-base bg-[#1A1A1D] border border-[#3A3A3F] rounded text-[#F5F3E8] mb-3 touch-manipulation"
-                  />
-                  <button
-                    onClick={handleAddGuardian}
-                    disabled={isWritePending || !newGuardianAddress}
-                    className="w-full min-h-[56px] px-6 py-3 border-2 border-[#00F0FF] text-[#00F0FF] rounded-lg font-bold hover:bg-[#00F0FF]/10 active:bg-[#00F0FF]/20 transition-colors disabled:opacity-50 touch-manipulation"
-                  >
-                    {isWritePending ? "Processing..." : "Add New Guardian"}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
 
-        {/* Security Features */}
-        <section className="py-8">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
-                Security Features
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F] hover:border-[#00F0FF] transition-colors">
-                  <h3 className="text-xl font-bold text-[#00F0FF] mb-2">Withdrawal Cooldown</h3>
-                  <p className="text-[#A0A0A5] text-sm mb-2">Configurable 24h cooldown between withdrawals</p>
-                  <div className="text-[#50C878] text-xs">✓ Active: 24 hours</div>
-                </div>
-                
-                <div className="p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F] hover:border-[#00F0FF] transition-colors">
-                  <h3 className="text-xl font-bold text-[#00F0FF] mb-2">Large Transfer Alert</h3>
-                  <p className="text-[#A0A0A5] text-sm mb-2">Threshold tracking for amounts ≥10k VFIDE</p>
-                  <div className="text-[#50C878] text-xs">✓ Threshold: 10,000 VFIDE</div>
-                </div>
-                
-                <div className="p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F] hover:border-[#00F0FF] transition-colors">
-                  <h3 className="text-xl font-bold text-[#00F0FF] mb-2">Execute Cooldown</h3>
-                  <p className="text-[#A0A0A5] text-sm mb-2">1-hour cooldown on execute() calls</p>
-                  <div className="text-[#50C878] text-xs">✓ Prevents rapid attacks</div>
-                </div>
-                
-                <div className="p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F] hover:border-[#00F0FF] transition-colors">
-                  <h3 className="text-xl font-bold text-[#00F0FF] mb-2">Guardian Maturity</h3>
-                  <p className="text-[#A0A0A5] text-sm mb-2">7-day wait before guardians can vote</p>
-                  <div className="text-[#50C878] text-xs">✓ Prevents flash attacks</div>
-                </div>
-                
-                <div className="p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F] hover:border-[#00F0FF] transition-colors">
-                  <h3 className="text-xl font-bold text-[#00F0FF] mb-2">Recovery Expiry</h3>
-                  <p className="text-[#A0A0A5] text-sm mb-2">Recovery requests expire after 30 days</p>
-                  <div className="text-[#50C878] text-xs">✓ Prevents stale requests</div>
-                </div>
-                
-                <div className="p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F] hover:border-[#00F0FF] transition-colors">
-                  <h3 className="text-xl font-bold text-[#00F0FF] mb-2">Security Lock</h3>
-                  <p className="text-[#A0A0A5] text-sm mb-2">SecurityHub can freeze vault if needed</p>
-                  <div className="text-[#50C878] text-xs">✓ Emergency protection</div>
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-gradient-to-r from-[#00F0FF]/10 to-[#0080FF]/10 border border-[#00F0FF] rounded-lg">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="text-[#00F0FF] font-bold mb-1">⚙️ Customize Security Settings</div>
-                    <div className="text-[#A0A0A5] text-sm">
-                      Adjust withdrawal cooldown (1h-7days) and transfer threshold (100-1M VFIDE)
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-white/5 rounded-xl">
+                      <div className="text-amber-400 font-bold text-sm mb-1">🔓 Instant Inheritance</div>
+                      <div className="text-white/60 text-xs">
+                        No guardians = immediate access after death.
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-xl">
+                      <div className="text-cyan-400 font-bold text-sm mb-1">🛡️ Protected Inheritance</div>
+                      <div className="text-white/60 text-xs">
+                        With guardians = 2/3 approval required.
+                      </div>
                     </div>
                   </div>
-                  <button className="w-full md:w-auto min-h-[56px] px-6 py-2 bg-[#00F0FF] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#00D0DF] active:bg-[#00B0BF] transition-colors touch-manipulation">
-                    Configure
-                  </button>
-                </div>
+                </GlassCard>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        {/* Recovery Status Dashboard */}
-        <section className="py-8">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="bg-gradient-to-br from-[#C41E3A]/10 to-[#FF6B6B]/10 border-2 border-[#C41E3A] rounded-xl p-6">
-              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
-                🚨 Active Recovery Request (Lost/Compromised Wallet)
-              </h2>
-              
-              {/* Active Recovery Status - Real-time from blockchain */}
-              {!recoveryStatus.isActive ? (
-                <div className="p-6 bg-[#1A1A1D] border border-[#50C878] rounded-lg text-center">
-                  <div className="text-[#50C878] text-4xl mb-3">✓</div>
-                  <div className="text-[#50C878] font-bold text-lg mb-1">No Recovery In Progress</div>
-                  <div className="text-[#A0A0A5] text-sm">Your vault is secure. Only you have access.</div>
+            {/* Guardian Management */}
+            <section className="py-8 relative z-10">
+              <div className="container mx-auto px-4 max-w-6xl">
+                <GlassCard className="p-6" hover={false}>
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                        <Key className="text-cyan-400" />
+                        Chain of Return (Recovery)
+                      </h2>
+                      <p className="text-white/60 text-sm">
+                        Lost wallet? Guardians help you regain access. Requires 2/3 approval + 7-day maturity.
+                      </p>
+                    </div>
+                    <div className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 rounded-xl text-center">
+                      <div className="text-cyan-400 text-xs font-bold">30-DAY EXPIRY</div>
+                    </div>
+                  </div>
                   
-                  {/* Recovery Initiation Form */}
-                  {(isUserGuardian || address === nextOfKin) && (
-                    <div className="mt-6 p-4 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg">
-                      <div className="text-[#F5F3E8] font-bold text-sm mb-3">Initiate Recovery</div>
+                  <div className="p-4 bg-white/5 rounded-xl mb-4">
+                    {guardianCount > 0 ? (
+                      <div className="text-center py-2">
+                        <span className="text-white">{guardianCount} guardian{guardianCount !== 1 ? 's' : ''} configured</span>
+                        {isUserGuardian && (
+                          <div className="text-cyan-400 mt-2 text-sm">
+                            ✓ You are a guardian {isGuardianMature ? "(Can vote)" : "(Maturing)"}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-amber-400 text-sm text-center py-2">
+                        ⚠️ No guardians. Next of Kin will have instant access.
+                      </div>
+                    )}
+                  </div>
+                  
+                  {address === vaultOwner && (
+                    <div className="space-y-3">
                       <input
                         type="text"
-                        placeholder="New owner address (0x...)"
-                        value={recoveryAddress}
-                        onChange={(e) => setRecoveryAddress(e.target.value)}
-                        pattern="^0x[a-fA-F0-9]{40}$"
-                        aria-label="Recovery address"
-                        className="w-full px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] rounded text-[#F5F3E8] mb-3"
+                        placeholder="Guardian address (0x...)"
+                        value={newGuardianAddress}
+                        onChange={(e) => setNewGuardianAddress(e.target.value)}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50"
                       />
-                      <button
-                        onClick={handleRequestRecovery}
-                        disabled={isWritePending || !recoveryAddress}
-                        className="w-full px-6 py-2 bg-[#FFA500] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#FF8C00] transition-colors disabled:opacity-50"
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleAddGuardian}
+                        disabled={isWritePending || !newGuardianAddress}
+                        className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                       >
-                        {isWritePending ? "Processing..." : "Request Recovery"}
-                      </button>
+                        <UserPlus size={18} />
+                        {isWritePending ? "Processing..." : "Add Guardian"}
+                      </motion.button>
                     </div>
                   )}
-                </div>
-              ) : (
-                <div className="p-6 bg-[#1A1A1D] border border-[#C41E3A] rounded-lg">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-[#C41E3A] font-bold text-lg">Recovery to: {recoveryStatus.proposedOwner}</div>
-                      <div className="text-[#A0A0A5] text-sm">
-                        {recoveryStatus.daysRemaining} days remaining
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[#FFA500] font-bold text-2xl">
-                        {recoveryStatus.approvals}/{guardianCount}
-                      </div>
-                      <div className="text-[#A0A0A5] text-xs">Approvals</div>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-[#A0A0A5]">Progress:</span>
-                      <span className="text-[#FFD700] font-bold">
-                        {Math.round((recoveryStatus.approvals / Math.max(guardianCount, 2)) * 100)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-[#3A3A3F] rounded-full h-2">
-                      <div 
-                        className="bg-[#FFA500] h-2 rounded-full transition-all" 
-                        style={{width: `${(recoveryStatus.approvals / Math.max(guardianCount, 2)) * 100}%`}}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mb-3">
-                    {address === vaultOwner && (
-                      <button
-                        onClick={handleCancelRecovery}
-                        disabled={isWritePending}
-                        className="flex-1 px-6 py-3 bg-[#C41E3A] text-white rounded-lg font-bold hover:bg-[#A01828] transition-colors disabled:opacity-50"
-                      >
-                        {isWritePending ? "Processing..." : "🛑 Cancel Recovery"}
-                      </button>
-                    )}
-                    
-                    {isUserGuardian && isGuardianMature && (
-                      <button
-                        onClick={handleApproveRecovery}
-                        disabled={isWritePending}
-                        className="flex-1 px-6 py-3 border-2 border-[#00F0FF] text-[#00F0FF] rounded-lg font-bold hover:bg-[#00F0FF]/10 transition-colors disabled:opacity-50"
-                      >
-                        {isWritePending ? "Processing..." : "✓ Approve Recovery"}
-                      </button>
-                    )}
-                    
-                    {recoveryStatus.approvals >= Math.max(guardianCount >= 2 ? 2 : 1, 1) && (
-                      <button
-                        onClick={handleFinalizeRecovery}
-                        disabled={isWritePending}
-                        className="flex-1 px-6 py-3 border-2 border-[#50C878] text-[#50C878] rounded-lg font-bold hover:bg-[#50C878]/10 transition-colors disabled:opacity-50"
-                      >
-                        {isWritePending ? "Processing..." : "✓ Finalize Recovery"}
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="text-[#FFA500] text-xs text-center">
-                    ⚠️ Owner can cancel anytime. Use if recovery was initiated by mistake or fraud.
-                  </div>
-                </div>
-              )}
-
-              {/* Archived: Old example */}
-
-              <div className="mt-4 p-4 bg-[#1A1A1D]/50 border border-[#3A3A3F] rounded-lg">
-                <div className="text-[#F5F3E8] font-bold text-sm mb-2">Two Recovery Paths</div>
-                <div className="space-y-3 text-[#A0A0A5] text-xs">
-                  <div>
-                    <div className="text-[#00F0FF] font-bold mb-1">🔑 Lost Wallet (Chain of Return):</div>
-                    <ul className="space-y-1 ml-4">
-                      <li>• Guardian initiates requestRecovery(yourNewAddress)</li>
-                      <li>• 2/3 mature guardians approve</li>
-                      <li>• You regain access with new wallet</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <div className="text-[#FFD700] font-bold mb-1">💀 Death/Incapacitation (Next of Kin):</div>
-                    <ul className="space-y-1 ml-4">
-                      <li>• Next of Kin initiates requestRecovery(theirAddress)</li>
-                      <li>• Guardians verify death/incapacitation (2/3 approval)</li>
-                      <li>• Heir inherits vault ownership</li>
-                    </ul>
-                  </div>
-                  <div className="text-[#C41E3A] font-bold">⚠️ Protection: Recovery expires after 30 days if not completed.</div>
-                </div>
+                </GlassCard>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        {/* Transaction History */}
-        <section className="py-8">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
-                Recent Activity
-              </h2>
-              
-              <div className="space-y-2">
-                {[
-                  { type: "Deposit", amount: "+5,000 VFIDE", time: "2 hours ago", status: "Completed" },
-                  { type: "Transfer", amount: "-125 VFIDE", time: "1 day ago", status: "Completed" },
-                  { type: "Withdraw", amount: "-2,000 VFIDE", time: "3 days ago", status: "Completed" },
-                  { type: "Guardian Added", amount: "0x5e6f...7g8h", time: "5 days ago", status: "Maturing" },
-                  { type: "Next of Kin Set", amount: "0x9a8b...7c6d", time: "1 week ago", status: "Active" },
-                ].map((tx, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg">
-                    <div>
-                      <div className="text-[#F5F3E8] font-bold">{tx.type}</div>
-                      <div className="text-[#A0A0A5] text-sm">{tx.time}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className={`font-bold ${
-                        tx.amount.startsWith('+') ? 'text-[#50C878]' : 
-                        tx.amount.startsWith('-') ? 'text-[#FFA500]' : 
-                        'text-[#00F0FF]'
-                      }`}>
-                        {tx.amount}
-                      </div>
-                      <div className={`text-sm ${
-                        tx.status === 'Completed' ? 'text-[#50C878]' :
-                        tx.status === 'Maturing' ? 'text-[#FFA500]' :
-                        'text-[#00F0FF]'
-                      }`}>
-                        {tx.status}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            {/* Transaction History */}
+            <section className="py-8 relative z-10">
+              <div className="container mx-auto px-4 max-w-6xl">
+                <GlassCard className="p-6" hover={false}>
+                  <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    <TrendingUp className="text-cyan-400" size={24} />
+                    Transaction History
+                  </h2>
+                  <TransactionHistory />
+                </GlassCard>
               </div>
-            </div>
-          </div>
-        </section>
-        
-        {/* Transaction History */}
-        <section className="py-12 container mx-auto px-4 max-w-6xl">
-          <TransactionHistory />
-        </section>
-        </>)}
+            </section>
+          </>
+        )}
       </main>
 
       <Footer />

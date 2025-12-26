@@ -5,7 +5,8 @@ import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect, useMemo } from "react";
 import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-import { Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 
 // DAO Contract ABI
 const DAO_ABI = [
@@ -151,187 +152,152 @@ export default function GovernancePage() {
     <>
       <GlobalNav />
       
-      <main className="min-h-screen bg-[#1A1A1D] pt-20">
-        <section className="py-12 bg-[#2A2A2F] border-b border-[#3A3A3F]">
+      {/* Premium background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,240,255,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
+      <main className="min-h-screen pt-20">
+        {/* Hero Header */}
+        <motion.section 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="py-12 border-b border-white/10 backdrop-blur-xl bg-white/[0.02]"
+        >
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
-                  DAO Governance Dashboard
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-sm text-purple-300 mb-4"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Decentralized Governance
+                </motion.div>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-black mb-2">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400">
+                    DAO Governance
+                  </span>
                 </h1>
-                <p className="text-lg md:text-xl text-[#A0A0A5] font-[family-name:var(--font-body)]">
-                  Complete governance control center
+                <p className="text-lg md:text-xl text-gray-400">
+                  Shape the future of the VFIDE ecosystem
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                 <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input
                     type="text"
                     placeholder="Search proposals..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full sm:w-64 px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none"
+                    className="w-full sm:w-64 pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#A0A0A5] hover:text-[#00F0FF]"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-400 transition-colors"
                     >
-                      ✕
+                      <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg hover:border-[#00F0FF] transition-colors"
+                  className="relative p-3 bg-white/5 border border-white/10 rounded-xl hover:border-cyan-500/50 hover:bg-white/10 transition-all"
                   aria-label="Notifications"
                 >
-                  <span className="text-xl">🔔</span>
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#C41E3A] rounded-full text-xs text-white flex items-center justify-center font-bold">
+                  <Bell className="w-5 h-5 text-gray-400" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-xs text-white flex items-center justify-center font-bold animate-pulse">
                     3
                   </span>
-                </button>
+                </motion.button>
               </div>
             </div>
             
-            {showNotifications && (
-              <div className="mt-4 bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-4 max-w-md ml-auto">
-                <h3 className="font-bold text-[#F5F3E8] mb-3 flex items-center justify-between">
-                  <span>🔔 Urgent Notifications</span>
-                  <button onClick={() => setShowNotifications(false)} className="text-[#A0A0A5] hover:text-[#00F0FF]">
-                    ✕
-                  </button>
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="p-2 bg-[#C41E3A]/20 border border-[#C41E3A] rounded">
-                    <div className="text-[#C41E3A] font-bold">⚠ 5 hours left</div>
-                    <div className="text-[#F5F3E8]">Security Audit proposal needs your vote</div>
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  className="mt-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 max-w-md ml-auto shadow-2xl"
+                >
+                  <h3 className="font-bold text-white mb-3 flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-cyan-400" />
+                      Urgent Notifications
+                    </span>
+                    <button onClick={() => setShowNotifications(false)} className="text-gray-500 hover:text-white transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+                      <div className="text-red-400 font-bold flex items-center gap-1"><Clock className="w-3 h-3" /> 5 hours left</div>
+                      <div className="text-gray-300">Security Audit proposal needs your vote</div>
+                    </div>
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                      <div className="text-amber-400 font-bold flex items-center gap-1"><Sparkles className="w-3 h-3" /> Quorum alert</div>
+                      <div className="text-gray-300">Multi-Chain proposal at 85% quorum</div>
+                    </div>
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                      <div className="text-emerald-400 font-bold flex items-center gap-1"><Vote className="w-3 h-3" /> Vote confirmed</div>
+                      <div className="text-gray-300">Your vote on Proposal #140 recorded</div>
+                    </div>
                   </div>
-                  <div className="p-2 bg-[#FFA500]/20 border border-[#FFA500] rounded">
-                    <div className="text-[#FFA500] font-bold">⚡ Quorum alert</div>
-                    <div className="text-[#F5F3E8]">Multi-Chain proposal at 85% quorum</div>
-                  </div>
-                  <div className="p-2 bg-[#00F0FF]/20 border border-[#00F0FF] rounded">
-                    <div className="text-[#00F0FF] font-bold">✓ Vote confirmed</div>
-                    <div className="text-[#F5F3E8]">Your vote on Proposal #140 recorded</div>
-                  </div>
-                </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </section>
+        </motion.section>
 
-        <section className="py-4 bg-[#2A2A2F] border-b border-[#3A3A3F]">
+        {/* Tab Navigation */}
+        <section className="py-4 border-b border-white/5 backdrop-blur-sm bg-black/20 sticky top-16 z-40">
           <div className="container mx-auto px-4">
-            <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label="Governance sections">
-              <button
-                role="tab"
-                aria-selected={activeTab === 'overview'}
-                onClick={() => setActiveTab('overview')}
-                className={`px-6 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                  activeTab === 'overview'
-                    ? 'bg-[#00F0FF] text-[#1A1A1D]' 
-                    : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#00F0FF]'
-                }`}
-              >
-                📊 Overview
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'proposals'}
-                onClick={() => setActiveTab('proposals')}
-                className={`px-6 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                  activeTab === 'proposals'
-                    ? 'bg-[#00F0FF] text-[#1A1A1D]' 
-                    : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#00F0FF]'
-                }`}
-              >
-                📜 Proposals
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'create'}
-                onClick={() => setActiveTab('create')}
-                className={`px-6 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                  activeTab === 'create'
-                    ? 'bg-[#50C878] text-[#1A1A1D]' 
-                    : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#50C878]'
-                }`}
-              >
-                ✏️ Create Proposal
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'council'}
-                onClick={() => setActiveTab('council')}
-                className={`px-6 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                  activeTab === 'council'
-                    ? 'bg-[#FFD700] text-[#1A1A1D]' 
-                    : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#FFD700]'
-                }`}
-              >
-                👑 Council
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'suggestions'}
-                onClick={() => setActiveTab('suggestions')}
-                className={`px-6 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                  activeTab === 'suggestions'
-                    ? 'bg-[#50C878] text-[#1A1A1D]' 
-                    : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#50C878]'
-                }`}
-              >
-                💡 Submit Idea
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'discussions'}
-                onClick={() => setActiveTab('discussions')}
-                className={`px-6 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                  activeTab === 'discussions'
-                    ? 'bg-[#FFD700] text-[#1A1A1D]' 
-                    : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#FFD700]'
-                }`}
-              >
-                💬 Discussions
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'members'}
-                onClick={() => setActiveTab('members')}
-                className={`px-6 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                  activeTab === 'members'
-                    ? 'bg-[#00F0FF] text-[#1A1A1D]' 
-                    : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#00F0FF]'
-                }`}
-              >
-                👥 Members & Votes
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'history'}
-                onClick={() => setActiveTab('history')}
-                className={`px-6 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                  activeTab === 'history'
-                    ? 'bg-[#00F0FF] text-[#1A1A1D]' 
-                    : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#00F0FF]'
-                }`}
-              >
-                📚 Voting History
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'stats'}
-                onClick={() => setActiveTab('stats')}
-                className={`px-6 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                  activeTab === 'stats'
-                    ? 'bg-[#00F0FF] text-[#1A1A1D]' 
-                    : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#00F0FF]'
-                }`}
-              >
-                📈 Statistics
-              </button>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" role="tablist" aria-label="Governance sections">
+              {[
+                { id: 'overview', label: 'Overview', icon: BarChart3, color: 'cyan' },
+                { id: 'proposals', label: 'Proposals', icon: FileText, color: 'cyan' },
+                { id: 'create', label: 'Create Proposal', icon: Plus, color: 'emerald' },
+                { id: 'council', label: 'Council', icon: Crown, color: 'amber' },
+                { id: 'suggestions', label: 'Submit Idea', icon: Lightbulb, color: 'emerald' },
+                { id: 'discussions', label: 'Discussions', icon: MessageSquare, color: 'amber' },
+                { id: 'members', label: 'Members', icon: Users, color: 'cyan' },
+                { id: 'history', label: 'History', icon: History, color: 'cyan' },
+                { id: 'stats', label: 'Statistics', icon: BarChart3, color: 'cyan' },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                const colorMap: Record<string, string> = {
+                  cyan: isActive ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25' : 'hover:bg-cyan-500/10 hover:text-cyan-400',
+                  emerald: isActive ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25' : 'hover:bg-emerald-500/10 hover:text-emerald-400',
+                  amber: isActive ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' : 'hover:bg-amber-500/10 hover:text-amber-400',
+                };
+                return (
+                  <motion.button
+                    key={tab.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setActiveTab(tab.id as TabType)}
+                    className={`px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-2 ${
+                      isActive ? colorMap[tab.color] : `bg-white/5 text-gray-400 ${colorMap[tab.color]}`
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {tab.label}
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -360,49 +326,103 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
     <>
       <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <div className="text-[#A0A0A5] text-sm mb-2">Your Voting Power</div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          >
+            <motion.div 
+              whileHover={{ scale: 1.02, y: -2 }}
+              className="bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 group"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-gray-400 text-sm">Your Voting Power</div>
+                <div className="p-2 rounded-xl bg-cyan-500/20">
+                  <Vote className="w-4 h-4 text-cyan-400" />
+                </div>
+              </div>
               {address ? (
                 <>
-                  <div className="text-3xl font-bold text-[#00F0FF]">{votingPower}</div>
-                  <div className="text-[#A0A0A5] text-sm mt-1">Based on ProofScore</div>
-                  <div className="mt-3 text-xs text-[#50C878]">✓ Eligible to vote</div>
+                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">{votingPower}</div>
+                  <div className="text-gray-500 text-sm mt-1">Based on ProofScore</div>
+                  <div className="mt-3 text-xs text-emerald-400 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Eligible to vote
+                  </div>
                 </>
               ) : (
-                <div className="text-lg text-[#A0A0A5]">Connect wallet</div>
+                <div className="text-lg text-gray-500">Connect wallet</div>
               )}
-            </div>
+            </motion.div>
             
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <div className="text-[#A0A0A5] text-sm mb-2">Active Proposals</div>
-              <div className="text-3xl font-bold text-[#F5F3E8]">{proposalCount || 0}</div>
-              <div className="text-[#50C878] text-sm mt-1">On-chain data</div>
-              <div className="mt-3 text-xs text-[#FFA500]">⚠ Vote to participate</div>
-            </div>
+            <motion.div 
+              whileHover={{ scale: 1.02, y: -2 }}
+              className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-gray-400 text-sm">Active Proposals</div>
+                <div className="p-2 rounded-xl bg-purple-500/20">
+                  <FileText className="w-4 h-4 text-purple-400" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-white">{proposalCount || 0}</div>
+              <div className="text-emerald-400 text-sm mt-1 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> On-chain data
+              </div>
+              <div className="mt-3 text-xs text-amber-400 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Vote to participate
+              </div>
+            </motion.div>
             
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <div className="text-[#A0A0A5] text-sm mb-2">Your Participation</div>
-              <div className="text-3xl font-bold text-[#F5F3E8]">87%</div>
-              <div className="text-[#A0A0A5] text-sm mt-1">12 of 14 votes</div>
-              <div className="mt-3 text-xs text-[#50C878]">Above average</div>
-            </div>
+            <motion.div 
+              whileHover={{ scale: 1.02, y: -2 }}
+              className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-gray-400 text-sm">Your Participation</div>
+                <div className="p-2 rounded-xl bg-emerald-500/20">
+                  <Users className="w-4 h-4 text-emerald-400" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-white">87%</div>
+              <div className="text-gray-500 text-sm mt-1">12 of 14 votes</div>
+              <div className="mt-3 text-xs text-emerald-400 flex items-center gap-1">
+                <ChevronRight className="w-3 h-3" /> Above average
+              </div>
+            </motion.div>
             
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <div className="text-[#A0A0A5] text-sm mb-2">Governance Fatigue</div>
-              <div className="text-3xl font-bold text-[#FFA500]">40%</div>
-              <div className="text-[#A0A0A5] text-sm mt-1">Current: 506/845</div>
-              <div className="mt-3 text-xs text-[#A0A0A5]">+42/day recovery</div>
-            </div>
-          </div>
+            <motion.div 
+              whileHover={{ scale: 1.02, y: -2 }}
+              className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-gray-400 text-sm">Governance Fatigue</div>
+                <div className="p-2 rounded-xl bg-amber-500/20">
+                  <BarChart3 className="w-4 h-4 text-amber-400" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-amber-400">40%</div>
+              <div className="text-gray-500 text-sm mt-1">Current: 506/845</div>
+              <div className="mt-3 text-xs text-gray-500 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> +42/day recovery
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">
-              ⏰ Upcoming Voting Deadlines
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+          >
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20">
+                <Clock className="w-5 h-5 text-red-400" />
+              </div>
+              Upcoming Voting Deadlines
             </h2>
             
             <div className="space-y-3">
@@ -425,7 +445,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
                 voted={true}
               />
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
     </>
@@ -436,22 +456,38 @@ function DeadlineCard({ id, title, hoursRemaining, voted }: { id: number; title:
   const [endTime] = useState(() => Date.now() + hoursRemaining * 60 * 60 * 1000);
   const timeLeft = useCountdown(endTime);
   
-  const borderColor = hoursRemaining < 12 ? '#C41E3A' : hoursRemaining < 48 ? '#FFA500' : '#50C878';
-  const textColor = hoursRemaining < 12 ? '#C41E3A' : hoursRemaining < 48 ? '#FFA500' : '#50C878';
+  const urgency = hoursRemaining < 12 ? 'urgent' : hoursRemaining < 48 ? 'warning' : 'normal';
+  const colorMap = {
+    urgent: { border: 'border-red-500/50', bg: 'from-red-500/10 to-red-500/5', text: 'text-red-400', glow: 'shadow-red-500/20' },
+    warning: { border: 'border-amber-500/50', bg: 'from-amber-500/10 to-amber-500/5', text: 'text-amber-400', glow: 'shadow-amber-500/20' },
+    normal: { border: 'border-emerald-500/50', bg: 'from-emerald-500/10 to-emerald-500/5', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
+  };
+  const colors = colorMap[urgency];
   
   return (
-    <div className="flex items-center justify-between p-4 bg-[#1A1A1D] border rounded-lg" style={{ borderColor }}>
+    <motion.div 
+      whileHover={{ scale: 1.01, x: 4 }}
+      className={`flex items-center justify-between p-4 bg-gradient-to-r ${colors.bg} backdrop-blur-sm border ${colors.border} rounded-xl hover:shadow-lg ${colors.glow} transition-all`}
+    >
       <div>
-        <div className="text-[#F5F3E8] font-bold">{title}</div>
-        <div className="text-[#A0A0A5] text-sm">Proposal #{id}</div>
+        <div className="text-white font-bold">{title}</div>
+        <div className="text-gray-500 text-sm">Proposal #{id}</div>
       </div>
       <div className="text-right">
-        <div className="font-bold text-lg" style={{ color: textColor }}>{timeLeft} left</div>
-        <div className={`text-sm ${voted ? 'text-[#50C878]' : 'text-[#A0A0A5]'}`}>
-          {voted ? '✓ Voted FOR' : 'You haven\'t voted'}
+        <div className={`font-bold text-lg ${colors.text}`}>{timeLeft} left</div>
+        <div className={`text-sm flex items-center gap-1 justify-end ${voted ? 'text-emerald-400' : 'text-gray-500'}`}>
+          {voted ? (
+            <>
+              <Sparkles className="w-3 h-3" /> Voted FOR
+            </>
+          ) : (
+            <>
+              <Clock className="w-3 h-3" /> Not voted
+            </>
+          )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

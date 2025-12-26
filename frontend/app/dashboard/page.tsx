@@ -4,22 +4,137 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { SimpleWalletConnect } from "@/components/wallet/SimpleWalletConnect";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ProofScoreRing } from "@/components/ui/ProofScoreRing";
+import { PageWrapper } from "@/components/ui/PageLayout";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Wallet, ArrowUpRight, ArrowDownLeft, Shield, ExternalLink, Copy, 
   CheckCircle2, TrendingUp, Activity, Trophy, Star, Award,
-  Lock, Gift, Banknote, Vote, Calculator, Bell, ChevronRight,
-  Sliders, RotateCcw
+  Lock, Gift, Banknote, Vote, Calculator, ChevronRight,
+  Sliders, Sparkles, Zap
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useAccount } from "wagmi";
 import { BadgeGallery } from "@/components/badge/BadgeGallery";
 import { BadgeProgress } from "@/components/badge/BadgeProgress";
 import { useUserBadges, useVaultBalance, useProofScore } from "@/lib/vfide-hooks";
-import { getBadgeById, type BadgeMetadata } from "@/lib/badge-registry";
 import { EXPLORER_URL } from "@/lib/testnet";
 import Link from "next/link";
 
 type TabType = 'overview' | 'fee-simulator' | 'score-simulator' | 'badges';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+};
+
+function GlassCard({ children, className = "", hover = true }: { 
+  children: React.ReactNode; 
+  className?: string;
+  hover?: boolean;
+}) {
+  return (
+    <motion.div
+      whileHover={hover ? { scale: 1.02, y: -4 } : {}}
+      transition={{ type: "spring", stiffness: 400 }}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function StatCard({ 
+  icon: Icon, 
+  label, 
+  value, 
+  subValue, 
+  color = "cyan",
+  href,
+  loading = false
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  subValue?: string;
+  color?: "cyan" | "green" | "gold" | "purple";
+  href?: string;
+  loading?: boolean;
+}) {
+  const colorMap = {
+    cyan: { bg: "bg-cyan-500/20", text: "text-cyan-400", glow: "shadow-cyan-500/20" },
+    green: { bg: "bg-emerald-500/20", text: "text-emerald-400", glow: "shadow-emerald-500/20" },
+    gold: { bg: "bg-amber-500/20", text: "text-amber-400", glow: "shadow-amber-500/20" },
+    purple: { bg: "bg-purple-500/20", text: "text-purple-400", glow: "shadow-purple-500/20" },
+  };
+  
+  const styles = colorMap[color];
+  
+  const content = (
+    <GlassCard className={`p-5 ${href ? 'cursor-pointer hover:border-white/20' : ''}`}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-white/60 text-sm font-medium">{label}</span>
+        <div className={`p-2 rounded-xl ${styles.bg} shadow-lg ${styles.glow}`}>
+          <Icon className={styles.text} size={18} />
+        </div>
+      </div>
+      {loading ? (
+        <>
+          <Skeleton height={32} className="w-24 mb-1 bg-white/10" />
+          <Skeleton height={14} className="w-16 bg-white/5" />
+        </>
+      ) : (
+        <>
+          <div className="text-2xl font-bold text-white mb-1">{value}</div>
+          {subValue && (
+            <div className={`text-sm ${styles.text} flex items-center gap-1`}>
+              {href && <ChevronRight size={14} />}
+              {subValue}
+            </div>
+          )}
+        </>
+      )}
+    </GlassCard>
+  );
+
+  return href ? <Link href={href}>{content}</Link> : content;
+}
+
+function QuickAction({ 
+  icon: Icon, 
+  label, 
+  href, 
+  variant = "default" 
+}: {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  variant?: "primary" | "default";
+}) {
+  const isPrimary = variant === "primary";
+  
+  return (
+    <Link href={href}>
+      <motion.div
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        className={`p-4 rounded-2xl font-semibold transition-all flex flex-col items-center gap-3 text-center ${isPrimary 
+          ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25' 
+          : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20'}`}
+      >
+        <div className={`p-3 rounded-xl ${isPrimary ? 'bg-white/20' : 'bg-gradient-to-br from-white/10 to-white/5'}`}>
+          <Icon size={24} />
+        </div>
+        <span className="text-sm">{label}</span>
+      </motion.div>
+    </Link>
+  );
+}
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
@@ -50,15 +165,31 @@ export default function DashboardPage() {
     return (
       <>
         <GlobalNav />
-        <main className="min-h-screen bg-[#1A1A1D] pt-20 flex items-center justify-center">
-          <div className="text-center px-4">
-            <Wallet className="text-[#00F0FF] mx-auto mb-6" size={64} />
-            <h1 className="text-4xl font-bold text-[#F5F3E8] mb-4">Connect Your Wallet</h1>
-            <p className="text-[#A0A0A5] mb-8 max-w-md">
-              Connect your wallet to access your dashboard, view your ProofScore, and explore simulators.
+        <main className="min-h-screen bg-[#08080A] pt-20 flex items-center justify-center relative overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+          </div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center px-4 relative z-10"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+              className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center backdrop-blur-xl"
+            >
+              <Wallet className="text-cyan-400" size={48} />
+            </motion.div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Connect Your Wallet</h1>
+            <p className="text-white/60 mb-8 max-w-md text-lg">
+              Connect your wallet to access your dashboard, view your ProofScore, and explore the ecosystem.
             </p>
             <SimpleWalletConnect />
-          </div>
+          </motion.div>
         </main>
         <Footer />
       </>
@@ -69,134 +200,137 @@ export default function DashboardPage() {
     <>
       <GlobalNav />
       
-      <main className="min-h-screen bg-[#1A1A1D] pt-20">
-        <section className="py-8 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+      <PageWrapper variant="cosmic" showOrbs showGrid>
+        <main className="pt-20 pb-20">
+          <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#00F0FF]/5 rounded-full blur-[120px]" />
+            <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[100px]" />
+          </div>
+
+        <section className="relative py-8 border-b border-white/5">
           <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8"
+            >
               <div>
-                <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 flex items-center gap-3">
                   Dashboard
+                  <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}>
+                    <Sparkles className="text-amber-400" size={28} />
+                  </motion.span>
                 </h1>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg px-3 py-2 flex items-center gap-2">
-                    <span className="text-[#F5F3E8] font-mono text-sm">{`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}</span>
-                    <button onClick={copyAddress} className="p-1 hover:bg-[#2A2A2F] rounded">
-                      {copiedAddress ? <CheckCircle2 className="text-[#50C878]" size={14} /> : <Copy className="text-[#A0A0A5]" size={14} />}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-white font-mono text-sm">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+                    <button onClick={copyAddress} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+                      <AnimatePresence mode="wait">
+                        {copiedAddress ? (
+                          <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                            <CheckCircle2 className="text-emerald-400" size={14} />
+                          </motion.div>
+                        ) : (
+                          <motion.div key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                            <Copy className="text-white/60" size={14} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </button>
-                    <a href={`${EXPLORER_URL}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-[#2A2A2F] rounded">
-                      <ExternalLink className="text-[#A0A0A5]" size={14} />
+                    <a href={`${EXPLORER_URL}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+                      <ExternalLink className="text-white/60" size={14} />
                     </a>
-                  </div>
-                  <div className="px-3 py-2 bg-[#00F0FF]/20 border border-[#00F0FF] rounded-lg">
-                    <span className="text-[#00F0FF] font-bold text-sm">ProofScore {proofscore}</span>
-                  </div>
-                  <div className="px-3 py-2 bg-[#50C878]/20 border border-[#50C878] rounded-lg">
-                    <span className="text-[#50C878] font-bold text-sm">{currentFeeRate.toFixed(2)}% fee</span>
-                  </div>
+                  </motion.div>
+                  
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
+                    <span className="text-cyan-400 font-bold text-sm flex items-center gap-2">
+                      <Zap size={14} />
+                      ProofScore {proofscore}
+                    </span>
+                  </motion.div>
+                  
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
+                    <span className="text-emerald-400 font-bold text-sm">{currentFeeRate.toFixed(2)}% fee</span>
+                  </motion.div>
                 </div>
               </div>
               <SimpleWalletConnect />
-            </div>
+            </motion.div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[#A0A0A5] text-xs">Wallet Balance</span>
-                  <Wallet className="text-[#00F0FF]" size={18} />
-                </div>
-                {vaultLoading ? (
-                  <>
-                    <Skeleton height={28} className="w-24 mb-1" />
-                    <Skeleton height={12} className="w-16" />
-                  </>
-                ) : (
-                  <>
-                    <div className="text-xl font-bold text-[#F5F3E8]">{walletBalance}</div>
-                    <div className="text-[#A0A0A5] text-xs">≈ ${usdValue}</div>
-                  </>
-                )}
-              </div>
-              <Link href="/vault" className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 hover:border-[#50C878] transition-colors group">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[#A0A0A5] text-xs">Vault</span>
-                  <Shield className="text-[#50C878]" size={18} />
-                </div>
-                {vaultLoading ? (
-                  <>
-                    <Skeleton height={28} className="w-20 mb-1" />
-                    <Skeleton height={12} className="w-16" />
-                  </>
-                ) : (
-                  <>
-                    <div className="text-xl font-bold text-[#F5F3E8]">{vaultBalanceRaw}</div>
-                    <div className="text-[#00F0FF] text-xs group-hover:underline">Manage →</div>
-                  </>
-                )}
-              </Link>
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[#A0A0A5] text-xs">ProofScore</span>
-                  <TrendingUp className="text-[#FFD700]" size={18} />
-                </div>
-                {scoreLoading ? (
-                  <>
-                    <Skeleton height={28} className="w-16 mb-1" />
-                    <Skeleton height={12} className="w-20" />
-                  </>
-                ) : (
-                  <>
-                    <div className="text-xl font-bold text-[#00F0FF]">{proofscore}</div>
-                    <div className="text-[#50C878] text-xs">{tier || 'NEUTRAL'} tier</div>
-                  </>
-                )}
-              </div>
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[#A0A0A5] text-xs">Current Fee Rate</span>
-                  <Calculator className="text-[#00F0FF]" size={18} />
-                </div>
-                <div className="text-xl font-bold text-[#50C878]">{currentFeeRate.toFixed(2)}%</div>
-                <div className="text-[#A0A0A5] text-xs">On transfers</div>
-              </div>
-            </div>
+            <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <motion.div variants={itemVariants}>
+                <StatCard icon={Wallet} label="Wallet Balance" value={walletBalance} subValue={`≈ \$${usdValue}`} color="cyan" loading={vaultLoading} />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <StatCard icon={Shield} label="Vault" value={vaultBalanceRaw} subValue="Manage →" color="green" href="/vault" loading={vaultLoading} />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <StatCard icon={TrendingUp} label="ProofScore" value={proofscore} subValue={`${tier || 'NEUTRAL'} tier`} color="gold" loading={scoreLoading} />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <StatCard icon={Calculator} label="Fee Rate" value={`${currentFeeRate.toFixed(2)}%`} subValue="On transfers" color="purple" />
+              </motion.div>
+            </motion.div>
           </div>
         </section>
 
-        <section className="bg-[#1A1A1D] border-b border-[#3A3A3F] sticky top-20 z-40">
+        <section className="sticky top-20 z-40 bg-[#08080A]/80 backdrop-blur-xl border-b border-white/5">
           <div className="container mx-auto px-4">
-            <div className="flex gap-1 overflow-x-auto py-2 scrollbar-hide" role="tablist">
+            <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide" role="tablist">
               {[
                 { id: 'overview' as const, label: 'Overview', icon: Activity },
                 { id: 'fee-simulator' as const, label: 'Fee Simulator', icon: Calculator },
                 { id: 'score-simulator' as const, label: 'Score Simulator', icon: Sliders },
                 { id: 'badges' as const, label: 'Badges', icon: Trophy },
               ].map(tab => (
-                <button
+                <motion.button
                   key={tab.id}
                   role="tab"
                   aria-selected={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-5 py-3 rounded-lg font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`px-5 py-3 rounded-xl font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
                     activeTab === tab.id
-                      ? 'bg-[#00F0FF] text-[#1A1A1D]'
-                      : 'bg-transparent text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A2F]'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
+                      : 'bg-transparent text-white/60 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   <tab.icon size={18} />
                   {tab.label}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
         </section>
 
-        <div className="container mx-auto px-4 py-8">
-          {activeTab === 'overview' && <OverviewTab proofscore={proofscore} feeRate={currentFeeRate} />}
-          {activeTab === 'fee-simulator' && <FeeSimulatorTab currentScore={proofscore} />}
-          {activeTab === 'score-simulator' && <ScoreSimulatorTab currentScore={proofscore} />}
-          {activeTab === 'badges' && <BadgesTab address={address} />}
+        <div className="container mx-auto px-4 py-8 relative z-10">
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <motion.div key="overview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <OverviewTab proofscore={proofscore} feeRate={currentFeeRate} />
+              </motion.div>
+            )}
+            {activeTab === 'fee-simulator' && (
+              <motion.div key="fee-simulator" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <FeeSimulatorTab currentScore={proofscore} />
+              </motion.div>
+            )}
+            {activeTab === 'score-simulator' && (
+              <motion.div key="score-simulator" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <ScoreSimulatorTab currentScore={proofscore} />
+              </motion.div>
+            )}
+            {activeTab === 'badges' && (
+              <motion.div key="badges" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <BadgesTab address={address} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
+      </PageWrapper>
 
       <Footer />
     </>
@@ -205,539 +339,307 @@ export default function DashboardPage() {
 
 function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: number }) {
   return (
-    <div className="space-y-6">
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h2 className="text-xl font-bold text-[#F5F3E8] mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          <Link href="/pay" className="p-4 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform flex flex-col items-center gap-2 text-center">
-            <ArrowUpRight size={24} />
-            <span>Send</span>
-          </Link>
-          <Link href="/vault" className="p-4 border-2 border-[#50C878] text-[#50C878] rounded-lg font-bold hover:bg-[#50C878]/10 flex flex-col items-center gap-2 text-center">
-            <Shield size={24} />
-            <span>Vault</span>
-          </Link>
-          <Link href="/escrow" className="p-4 border-2 border-[#00F0FF] text-[#00F0FF] rounded-lg font-bold hover:bg-[#00F0FF]/10 flex flex-col items-center gap-2 text-center">
-            <Lock size={24} />
-            <span>Escrow</span>
-          </Link>
-          <Link href="/payroll" className="p-4 border-2 border-[#FFD700] text-[#FFD700] rounded-lg font-bold hover:bg-[#FFD700]/10 flex flex-col items-center gap-2 text-center">
-            <Banknote size={24} />
-            <span>Payroll</span>
-          </Link>
-          <Link href="/governance" className="p-4 border-2 border-[#9B59B6] text-[#9B59B6] rounded-lg font-bold hover:bg-[#9B59B6]/10 flex flex-col items-center gap-2 text-center">
-            <Vote size={24} />
-            <span>Governance</span>
-          </Link>
-          <Link href="/rewards" className="p-4 border-2 border-[#FF6B6B] text-[#FF6B6B] rounded-lg font-bold hover:bg-[#FF6B6B]/10 flex flex-col items-center gap-2 text-center">
-            <Gift size={24} />
-            <span>Rewards</span>
-          </Link>
-        </div>
-      </div>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-6" hover={false}>
+          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <Zap className="text-amber-400" size={24} />
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+            <QuickAction icon={ArrowUpRight} label="Send" href="/pay" variant="primary" />
+            <QuickAction icon={Shield} label="Vault" href="/vault" />
+            <QuickAction icon={Lock} label="Escrow" href="/escrow" />
+            <QuickAction icon={Banknote} label="Payroll" href="/payroll" />
+            <QuickAction icon={Vote} label="Governance" href="/governance" />
+            <QuickAction icon={Gift} label="Rewards" href="/rewards" />
+          </div>
+        </GlassCard>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-          <h2 className="text-xl font-bold text-[#F5F3E8] mb-4">Your ProofScore</h2>
-          <div className="text-center py-6">
-            <div className="text-6xl font-bold text-[#00F0FF] mb-2">{proofscore}</div>
-            <div className="inline-block px-4 py-1 bg-[#00F0FF]/20 border border-[#00F0FF] rounded-full text-[#00F0FF] font-bold text-sm mb-4">
-              {proofscore >= 8000 ? 'ELITE' : proofscore >= 7000 ? 'VERIFIED' : proofscore >= 5000 ? 'TRUSTED' : 'NEUTRAL'}
+        <motion.div variants={itemVariants}>
+          <GlassCard className="p-6" hover={false}>
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <TrendingUp className="text-cyan-400" size={24} />
+              Your ProofScore
+            </h2>
+            <div className="flex flex-col items-center py-6">
+              <ProofScoreRing score={proofscore} size="lg" showBreakdown />
+              <div className="mt-6 text-center">
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.5 }} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                  <span className="text-emerald-400 font-bold">{feeRate.toFixed(2)}% transfer fee</span>
+                </motion.div>
+              </div>
             </div>
-            <div className="text-[#50C878] text-lg font-bold">{feeRate.toFixed(2)}% transfer fee</div>
-          </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between text-[#A0A0A5]">
-              <span>Score Range</span>
-              <span>0 - 10,000</span>
-            </div>
-            <div className="w-full h-3 bg-[#1A1A1D] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#FF6B6B] via-[#FFD700] to-[#50C878]" style={{ width: `${(proofscore / 10000) * 100}%` }} />
-            </div>
-            <div className="flex justify-between text-xs text-[#A0A0A5]">
-              <span>5% fee</span>
-              <span>0.25% fee</span>
-            </div>
-          </div>
-          
-          {/* ProofScore Breakdown */}
-          <div className="mt-6 pt-6 border-t border-[#3A3A3F]">
-            <h3 className="text-sm font-bold text-[#A0A0A5] mb-3">SCORE BREAKDOWN</h3>
-            <div className="space-y-2">
+          </GlassCard>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <GlassCard className="p-6" hover={false}>
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Star className="text-amber-400" size={24} />
+              Score Breakdown
+            </h2>
+            <div className="space-y-4">
               {[
-                { label: 'Base Score', value: 5000, color: '#A0A0A5', icon: '📊' },
-                { label: 'Vault Created', value: 500, color: '#00F0FF', icon: '🏦' },
-                { label: 'Transactions (est.)', value: Math.min((proofscore - 5500) * 0.4, 1500), color: '#50C878', icon: '💳' },
-                { label: 'Governance Votes', value: Math.min(250, Math.max(0, proofscore - 6000) * 0.2), color: '#9B59B6', icon: '🗳️' },
-                { label: 'Badges Earned', value: Math.min(500, Math.max(0, proofscore - 6500) * 0.3), color: '#FFD700', icon: '🏆' },
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-[#F5F3E8]">
-                    <span>{item.icon}</span>
-                    {item.label}
-                  </span>
-                  <span className="font-bold" style={{ color: item.color }}>
-                    +{Math.round(Math.max(0, item.value)).toLocaleString()}
-                  </span>
-                </div>
+                { label: "Transaction Volume", value: 2500, max: 3000, color: "cyan" },
+                { label: "Account Age", value: 1200, max: 2000, color: "emerald" },
+                { label: "Badge Bonuses", value: 800, max: 1500, color: "amber" },
+                { label: "Governance Participation", value: 500, max: 1000, color: "purple" },
+                { label: "Community Endorsements", value: 300, max: 500, color: "pink" },
+              ].map((item, index) => (
+                <motion.div key={item.label} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/60">{item.label}</span>
+                    <span className="text-white font-medium">{item.value.toLocaleString()} / {item.max.toLocaleString()}</span>
+                  </div>
+                  <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${(item.value / item.max) * 100}%` }} transition={{ duration: 1, delay: index * 0.1 }} className={`h-full rounded-full bg-gradient-to-r ${
+                      item.color === 'cyan' ? 'from-cyan-500 to-cyan-400' :
+                      item.color === 'emerald' ? 'from-emerald-500 to-emerald-400' :
+                      item.color === 'amber' ? 'from-amber-500 to-amber-400' :
+                      item.color === 'purple' ? 'from-purple-500 to-purple-400' :
+                      'from-pink-500 to-pink-400'
+                    }`} />
+                  </div>
+                </motion.div>
               ))}
             </div>
-            <div className="mt-3 pt-3 border-t border-[#3A3A3F] flex items-center justify-between">
-              <span className="text-[#F5F3E8] font-bold">Total</span>
-              <span className="text-[#00F0FF] font-bold text-lg">{proofscore.toLocaleString()}</span>
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <div className="flex justify-between items-center">
+                <span className="text-white/60">Total ProofScore</span>
+                <span className="text-2xl font-bold text-cyan-400">{proofscore}</span>
+              </div>
             </div>
-            <p className="text-xs text-[#A0A0A5] mt-2">
-              💡 Tip: Vote on proposals, add guardians, and complete transactions to boost your score
-            </p>
-          </div>
-        </div>
+          </GlassCard>
+        </motion.div>
+      </div>
 
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-          <h2 className="text-xl font-bold text-[#F5F3E8] flex items-center gap-2 mb-4">
-            <Bell size={20} className="text-[#FFD700]" />
-            Notifications
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-6" hover={false}>
+          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <Activity className="text-cyan-400" size={24} />
+            Recent Activity
           </h2>
           <div className="space-y-3">
-            <div className="p-3 bg-[#FFD700]/10 border border-[#FFD700]/30 rounded-lg flex items-start gap-3">
-              <Vote className="text-[#FFD700] shrink-0 mt-0.5" size={18} />
-              <div>
-                <div className="text-[#F5F3E8] font-bold text-sm">Active Vote</div>
-                <div className="text-[#A0A0A5] text-xs">Proposal #142: Treasury allocation ends in 5 hours</div>
-                <Link href="/governance" className="text-[#00F0FF] text-xs hover:underline">Vote now →</Link>
-              </div>
-            </div>
-            <div className="p-3 bg-[#50C878]/10 border border-[#50C878]/30 rounded-lg flex items-start gap-3">
-              <Gift className="text-[#50C878] shrink-0 mt-0.5" size={18} />
-              <div>
-                <div className="text-[#F5F3E8] font-bold text-sm">Claimable Rewards</div>
-                <div className="text-[#A0A0A5] text-xs">467.50 VFIDE from payroll streams</div>
-                <Link href="/payroll" className="text-[#00F0FF] text-xs hover:underline">Claim →</Link>
-              </div>
-            </div>
-            <div className="p-3 bg-[#00F0FF]/10 border border-[#00F0FF]/30 rounded-lg flex items-start gap-3">
-              <Shield className="text-[#00F0FF] shrink-0 mt-0.5" size={18} />
-              <div>
-                <div className="text-[#F5F3E8] font-bold text-sm">Guardian Request</div>
-                <div className="text-[#A0A0A5] text-xs">0x1a2b...3c4d wants you as guardian</div>
-                <Link href="/vault" className="text-[#00F0FF] text-xs hover:underline">Review →</Link>
-              </div>
-            </div>
+            {[
+              { desc: "Sent 500 VFIDE to 0x742d...5678", time: "2 hours ago", icon: ArrowUpRight, color: "cyan" },
+              { desc: "Received 1,200 VFIDE from presale", time: "1 day ago", icon: ArrowDownLeft, color: "emerald" },
+              { desc: "Earned PIONEER badge", time: "2 days ago", icon: Award, color: "amber" },
+              { desc: "Voted on Proposal #42", time: "3 days ago", icon: Vote, color: "purple" },
+            ].map((activity, index) => (
+              <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/8 transition-colors">
+                <div className={`p-2 rounded-xl ${
+                  activity.color === 'cyan' ? 'bg-cyan-500/20 text-cyan-400' :
+                  activity.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400' :
+                  activity.color === 'amber' ? 'bg-amber-500/20 text-amber-400' :
+                  'bg-purple-500/20 text-purple-400'
+                }`}>
+                  <activity.icon size={20} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-white text-sm">{activity.desc}</p>
+                  <p className="text-white/40 text-xs">{activity.time}</p>
+                </div>
+                <ChevronRight className="text-white/20" size={16} />
+              </motion.div>
+            ))}
           </div>
-        </div>
-      </div>
-
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#F5F3E8]">Recent Activity</h2>
-          <a href={EXPLORER_URL} target="_blank" rel="noopener noreferrer" className="text-[#00F0FF] text-sm hover:underline flex items-center gap-1">
-            View all <ExternalLink size={14} />
-          </a>
-        </div>
-        <div className="space-y-2">
-          {[
-            { action: "Payment Received", details: "125 VFIDE", usd: 8.75, time: "2 hours ago", icon: ArrowDownLeft, color: "#50C878" },
-            { action: "Voted on Proposal", details: "#142 - Treasury", usd: null, time: "1 day ago", icon: Vote, color: "#9B59B6" },
-            { action: "Badge Earned", details: "Early Adopter", usd: null, time: "2 days ago", icon: Trophy, color: "#FFD700" },
-            { action: "Vault Deposit", details: "1,000 VFIDE", usd: 70.00, time: "3 days ago", icon: Shield, color: "#0080FF" },
-          ].map((activity, idx) => (
-            <div key={idx} className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full" style={{ backgroundColor: `${activity.color}20`, color: activity.color }}>
-                  <activity.icon size={16} />
-                </div>
-                <div>
-                  <div className="text-[#F5F3E8] font-bold text-sm">{activity.action}</div>
-                  <div className="text-[#A0A0A5] text-xs">
-                    {activity.details}
-                    {activity.usd !== null && (
-                      <span className="text-[#50C878] ml-1">(~${activity.usd.toFixed(2)})</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="text-[#A0A0A5] text-xs">{activity.time}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+          <div className="mt-4 text-center">
+            <Link href="/history" className="text-cyan-400 hover:text-cyan-300 text-sm font-medium inline-flex items-center gap-1">
+              View All Activity <ChevronRight size={14} />
+            </Link>
+          </div>
+        </GlassCard>
+      </motion.div>
+    </motion.div>
   );
 }
 
 function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
+  const [amount, setAmount] = useState(1000);
   const [simulatedScore, setSimulatedScore] = useState(currentScore);
-  const [transferAmount, setTransferAmount] = useState(1000);
-
+  
   const calculateFee = (score: number) => {
     if (score <= 4000) return 5.00;
     if (score >= 8000) return 0.25;
     return 5.00 - ((score - 4000) * 4.75 / 4000);
   };
-
+  
   const feePercent = calculateFee(simulatedScore);
-  const feeAmount = (transferAmount * feePercent) / 100;
-  const receivedAmount = transferAmount - feeAmount;
-  const burnAmount = feeAmount * 0.40;
-  const sanctumAmount = feeAmount * 0.10;
-  const ecosystemAmount = feeAmount * 0.50;
-  const currentFee = calculateFee(currentScore);
-  const feeDifference = currentFee - feePercent;
-
+  const feeAmount = (amount * feePercent) / 100;
+  const netAmount = amount - feeAmount;
+  
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-[#00F0FF]/20 to-[#0080FF]/20 border border-[#00F0FF]/30 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2 flex items-center gap-2">
-          <Calculator size={28} className="text-[#00F0FF]" />
-          Transaction Fee Simulator
-        </h2>
-        <p className="text-[#A0A0A5]">
-          See exactly how much you will pay in fees based on your ProofScore. Adjust the sliders to simulate different scenarios.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 space-y-6">
-          <h3 className="text-xl font-bold text-[#F5F3E8]">Adjust Parameters</h3>
-          <div>
-            <div className="flex justify-between mb-2">
-              <label className="text-[#A0A0A5]">ProofScore</label>
-              <span className="text-[#00F0FF] font-bold">{simulatedScore}</span>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="max-w-2xl mx-auto space-y-6">
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-8" hover={false}>
+          <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+            <Calculator className="text-cyan-400" size={28} />
+            Fee Simulator
+          </h2>
+          <p className="text-white/60 mb-8">See how your ProofScore affects transaction fees</p>
+          
+          <div className="space-y-8">
+            <div>
+              <label className="block text-white/80 font-medium mb-3">Transfer Amount (VFIDE)</label>
+              <input type="number" value={amount} onChange={(e) => setAmount(Number(e.target.value))} className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-xl font-bold focus:outline-none focus:border-cyan-500/50 transition-colors" />
             </div>
-            <input
-              type="range"
-              min="0"
-              max="10000"
-              value={simulatedScore}
-              onChange={(e) => setSimulatedScore(Number(e.target.value))}
-              className="w-full h-3 bg-[#1A1A1D] rounded-full appearance-none cursor-pointer accent-[#00F0FF]"
-            />
-            <div className="flex justify-between text-xs text-[#A0A0A5] mt-1">
-              <span>0 (5% fee)</span>
-              <span>10,000 (0.25% fee)</span>
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between mb-2">
-              <label className="text-[#A0A0A5]">Transfer Amount (VFIDE)</label>
-              <button
-                onClick={() => setTransferAmount(50000)}
-                className="text-xs text-[#00F0FF] hover:text-[#00D4FF] font-bold"
-              >
-                MAX
-              </button>
-            </div>
-            <input
-              type="number"
-              value={transferAmount}
-              onChange={(e) => setTransferAmount(Math.max(0, Number(e.target.value)))}
-              className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] text-xl font-bold focus:border-[#00F0FF] focus:outline-none"
-            />
-            <div className="flex gap-2 mt-2">
-              {[100, 500, 1000, 5000, 10000].map(amt => (
-                <button
-                  key={amt}
-                  onClick={() => setTransferAmount(amt)}
-                  className={`px-3 py-1 rounded text-sm font-bold transition-colors ${
-                    transferAmount === amt 
-                      ? 'bg-[#00F0FF] text-[#1A1A1D]' 
-                      : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#F5F3E8]'
-                  }`}
-                >
-                  {amt.toLocaleString()}
-                </button>
-              ))}
-            </div>
-          </div>
-          <button
-            onClick={() => { setSimulatedScore(currentScore); setTransferAmount(1000); }}
-            className="flex items-center gap-2 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
-          >
-            <RotateCcw size={16} />
-            Reset to current values
-          </button>
-        </div>
-
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 space-y-4">
-          <h3 className="text-xl font-bold text-[#F5F3E8]">Fee Breakdown</h3>
-          <div className="bg-[#1A1A1D] rounded-xl p-6 text-center">
-            <div className="text-[#A0A0A5] text-sm mb-1">Fee Rate</div>
-            <div className="text-5xl font-bold text-[#00F0FF] mb-2">{feePercent.toFixed(2)}%</div>
-            {feeDifference !== 0 && (
-              <div className={`text-sm font-bold ${feeDifference > 0 ? 'text-[#50C878]' : 'text-[#FF6B6B]'}`}>
-                {feeDifference > 0 ? '↓' : '↑'} {Math.abs(feeDifference).toFixed(2)}% vs current
-              </div>
-            )}
-          </div>
-          <div className="space-y-3">
-            <div className="flex justify-between p-3 bg-[#1A1A1D] rounded-lg">
-              <span className="text-[#A0A0A5]">You Send</span>
-              <span className="text-[#F5F3E8] font-bold">{transferAmount.toLocaleString()} VFIDE</span>
-            </div>
-            <div className="flex justify-between p-3 bg-[#FF6B6B]/10 border border-[#FF6B6B]/30 rounded-lg">
-              <span className="text-[#FF6B6B]">Fee Deducted</span>
-              <span className="text-[#FF6B6B] font-bold">-{feeAmount.toFixed(2)} VFIDE</span>
-            </div>
-            <div className="flex justify-between p-3 bg-[#50C878]/10 border border-[#50C878]/30 rounded-lg">
-              <span className="text-[#50C878]">Recipient Gets</span>
-              <span className="text-[#50C878] font-bold">{receivedAmount.toFixed(2)} VFIDE</span>
-            </div>
-          </div>
-          <div className="pt-4 border-t border-[#3A3A3F]">
-            <div className="text-[#A0A0A5] text-sm mb-3">Where your fee goes:</div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2 bg-[#1A1A1D] rounded-lg">
-                <div className="text-[#FF6B6B] font-bold">{burnAmount.toFixed(2)}</div>
-                <div className="text-[#A0A0A5] text-xs">Burned (40%)</div>
-              </div>
-              <div className="p-2 bg-[#1A1A1D] rounded-lg">
-                <div className="text-[#FFD700] font-bold">{sanctumAmount.toFixed(2)}</div>
-                <div className="text-[#A0A0A5] text-xs">Sanctum (10%)</div>
-              </div>
-              <div className="p-2 bg-[#1A1A1D] rounded-lg">
-                <div className="text-[#00F0FF] font-bold">{ecosystemAmount.toFixed(2)}</div>
-                <div className="text-[#A0A0A5] text-xs">Ecosystem (50%)</div>
+            
+            <div>
+              <label className="block text-white/80 font-medium mb-3">
+                Simulated ProofScore: <span className="text-cyan-400">{simulatedScore}</span>
+              </label>
+              <input type="range" min={0} max={10000} value={simulatedScore} onChange={(e) => setSimulatedScore(Number(e.target.value))} className="w-full h-3 bg-white/10 rounded-full appearance-none cursor-pointer accent-cyan-500" />
+              <div className="flex justify-between text-white/40 text-xs mt-2">
+                <span>0</span>
+                <span>4000 (5%)</span>
+                <span>8000 (0.25%)</span>
+                <span>10000</span>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Fee Scale by ProofScore</h3>
-        <div className="relative h-16 bg-gradient-to-r from-[#FF6B6B] via-[#FFD700] to-[#50C878] rounded-lg overflow-hidden">
-          <div 
-            className="absolute top-0 bottom-0 w-1 bg-white shadow-lg"
-            style={{ left: `${(simulatedScore / 10000) * 100}%` }}
-          >
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#F5F3E8] text-[#1A1A1D] px-2 py-1 rounded text-xs font-bold whitespace-nowrap">
-              {simulatedScore} → {feePercent.toFixed(2)}%
+            
+            <div className="grid grid-cols-3 gap-4 p-6 bg-white/5 rounded-2xl border border-white/10">
+              <div className="text-center">
+                <p className="text-white/60 text-sm mb-1">Fee Rate</p>
+                <p className="text-2xl font-bold text-amber-400">{feePercent.toFixed(2)}%</p>
+              </div>
+              <div className="text-center border-x border-white/10">
+                <p className="text-white/60 text-sm mb-1">Fee Amount</p>
+                <p className="text-2xl font-bold text-red-400">-{feeAmount.toFixed(2)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-white/60 text-sm mb-1">You Receive</p>
+                <p className="text-2xl font-bold text-emerald-400">{netAmount.toFixed(2)}</p>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+              <p className="text-cyan-400 text-sm">
+                💡 <strong>Tip:</strong> Your current score of {currentScore} gives you a {calculateFee(currentScore).toFixed(2)}% fee rate.
+                {currentScore < 8000 && ` Increase your score to 8000 to unlock the minimum 0.25% rate!`}
+              </p>
             </div>
           </div>
-          {simulatedScore !== currentScore && (
-            <div 
-              className="absolute top-0 bottom-0 w-0.5 bg-[#00F0FF] opacity-50"
-              style={{ left: `${(currentScore / 10000) * 100}%` }}
-            />
-          )}
-        </div>
-        <div className="flex justify-between text-sm mt-2">
-          <span className="text-[#FF6B6B]">0 → 5%</span>
-          <span className="text-[#FFD700]">5000 → 2.41%</span>
-          <span className="text-[#50C878]">10000 → 0.25%</span>
-        </div>
-      </div>
-    </div>
+        </GlassCard>
+      </motion.div>
+    </motion.div>
   );
 }
 
 function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
-  const [simulatedActions, setSimulatedActions] = useState<string[]>([]);
+  const [activities, setActivities] = useState({
+    transactions: 10,
+    vaultDeposit: 1000,
+    governanceVotes: 5,
+    endorsements: 3,
+    badges: 2,
+  });
   
-  const actions = [
-    { id: 'tx_10', label: 'Complete 10 transactions', points: 50, category: 'activity' },
-    { id: 'tx_100', label: 'Complete 100 transactions', points: 200, category: 'activity' },
-    { id: 'endorse_5', label: 'Receive 5 endorsements', points: 100, category: 'social' },
-    { id: 'endorse_20', label: 'Receive 20 endorsements', points: 300, category: 'social' },
-    { id: 'vote_5', label: 'Vote on 5 proposals', points: 75, category: 'governance' },
-    { id: 'vote_20', label: 'Vote on 20 proposals', points: 200, category: 'governance' },
-    { id: 'merchant_reg', label: 'Register as merchant', points: 150, category: 'merchant' },
-    { id: 'merchant_100tx', label: '100 merchant transactions', points: 400, category: 'merchant' },
-    { id: 'badge_early', label: 'Earn Early Adopter badge', points: 100, category: 'badge' },
-    { id: 'badge_voter', label: 'Earn Governance Voter badge', points: 150, category: 'badge' },
-    { id: 'badge_merchant', label: 'Earn Trusted Merchant badge', points: 200, category: 'badge' },
-    { id: 'guardian_add', label: 'Add 3 guardians', points: 50, category: 'security' },
-    { id: 'kin_set', label: 'Set Next of Kin', points: 25, category: 'security' },
-    { id: 'age_6mo', label: 'Account age: 6 months', points: 100, category: 'time' },
-    { id: 'age_1yr', label: 'Account age: 1 year', points: 250, category: 'time' },
-  ];
-
-  const toggleAction = (id: string) => {
-    setSimulatedActions(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
+  const calculateBonus = () => {
+    return (
+      activities.transactions * 50 +
+      Math.floor(activities.vaultDeposit / 100) * 10 +
+      activities.governanceVotes * 100 +
+      activities.endorsements * 150 +
+      activities.badges * 200
+    );
   };
-
-  const totalNewPoints = actions.filter(a => simulatedActions.includes(a.id)).reduce((sum, a) => sum + a.points, 0);
-  const projectedScore = Math.min(10000, currentScore + totalNewPoints);
-  const currentFee = currentScore <= 4000 ? 5.00 : currentScore >= 8000 ? 0.25 : 5.00 - ((currentScore - 4000) * 4.75 / 4000);
-  const projectedFee = projectedScore <= 4000 ? 5.00 : projectedScore >= 8000 ? 0.25 : 5.00 - ((projectedScore - 4000) * 4.75 / 4000);
-  const feeSavings = currentFee - projectedFee;
-
-  const categoryColors: Record<string, string> = {
-    activity: '#00F0FF',
-    social: '#9B59B6',
-    governance: '#FFD700',
-    merchant: '#50C878',
-    badge: '#FF6B6B',
-    security: '#0080FF',
-    time: '#A0A0A5',
-  };
-
+  
+  const projectedScore = Math.min(10000, currentScore + calculateBonus());
+  
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-[#9B59B6]/20 to-[#FFD700]/20 border border-[#9B59B6]/30 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2 flex items-center gap-2">
-          <Sliders size={28} className="text-[#9B59B6]" />
-          ProofScore Simulator
-        </h2>
-        <p className="text-[#A0A0A5]">
-          Select actions to see how they would affect your ProofScore and transaction fees. Plan your path to lower fees!
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-[#F5F3E8]">Select Actions</h3>
-            <button onClick={() => setSimulatedActions([])} className="text-[#A0A0A5] hover:text-[#F5F3E8] text-sm flex items-center gap-1">
-              <RotateCcw size={14} /> Clear all
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {actions.map(action => (
-              <button
-                key={action.id}
-                onClick={() => toggleAction(action.id)}
-                className={`p-4 rounded-lg border-2 text-left transition-all ${
-                  simulatedActions.includes(action.id)
-                    ? 'border-[#00F0FF] bg-[#00F0FF]/10'
-                    : 'border-[#3A3A3F] bg-[#1A1A1D] hover:border-[#505055]'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="text-[#F5F3E8] font-bold text-sm">{action.label}</div>
-                    <div className="text-xs mt-1 capitalize" style={{ color: categoryColors[action.category] }}>
-                      {action.category}
-                    </div>
-                  </div>
-                  <div className={`text-lg font-bold ${simulatedActions.includes(action.id) ? 'text-[#50C878]' : 'text-[#00F0FF]'}`}>
-                    +{action.points}
-                  </div>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="max-w-2xl mx-auto space-y-6">
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-8" hover={false}>
+          <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+            <Sliders className="text-purple-400" size={28} />
+            Score Simulator
+          </h2>
+          <p className="text-white/60 mb-8">Plan your path to a higher ProofScore</p>
+          
+          <div className="space-y-6">
+            {[
+              { key: 'transactions', label: 'Monthly Transactions', bonus: 50, max: 50 },
+              { key: 'vaultDeposit', label: 'Vault Deposit (VFIDE)', bonus: 10, max: 10000, step: 100 },
+              { key: 'governanceVotes', label: 'Governance Votes', bonus: 100, max: 20 },
+              { key: 'endorsements', label: 'Endorsements Received', bonus: 150, max: 10 },
+              { key: 'badges', label: 'New Badges Earned', bonus: 200, max: 10 },
+            ].map((item) => (
+              <div key={item.key} className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-white/80 text-sm mb-2">
+                    {item.label} <span className="text-cyan-400/60">(+{item.bonus} per)</span>
+                  </label>
+                  <input type="range" min={0} max={item.max} step={item.step || 1} value={activities[item.key as keyof typeof activities]} onChange={(e) => setActivities(prev => ({ ...prev, [item.key]: Number(e.target.value) }))} className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-purple-500" />
                 </div>
-                {simulatedActions.includes(action.id) && (
-                  <div className="mt-2 flex items-center gap-1 text-[#50C878] text-xs">
-                    <CheckCircle2 size={14} /> Selected
-                  </div>
-                )}
-              </button>
+                <div className="w-20 text-right">
+                  <span className="text-white font-bold">{activities[item.key as keyof typeof activities]}</span>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-            <div className="text-[#A0A0A5] text-sm mb-2">Projected Score</div>
-            <div className="flex items-center justify-center gap-4">
-              <div>
-                <div className="text-3xl font-bold text-[#A0A0A5]">{currentScore}</div>
-                <div className="text-xs text-[#A0A0A5]">Current</div>
-              </div>
-              <div className="text-[#00F0FF]">→</div>
-              <div>
-                <div className="text-4xl font-bold text-[#00F0FF]">{projectedScore}</div>
-                <div className="text-xs text-[#00F0FF]">Projected</div>
-              </div>
+          
+          <div className="mt-8 p-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-white/80">Current Score</span>
+              <span className="text-xl font-bold text-white">{currentScore}</span>
             </div>
-            {totalNewPoints > 0 && (
-              <div className="mt-3 text-[#50C878] font-bold">+{totalNewPoints} points</div>
-            )}
-          </div>
-
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <div className="text-[#A0A0A5] text-sm mb-3">Fee Impact</div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-[#A0A0A5]">Current Fee</span>
-                <span className="text-[#F5F3E8] font-bold">{currentFee.toFixed(2)}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#A0A0A5]">Projected Fee</span>
-                <span className="text-[#00F0FF] font-bold">{projectedFee.toFixed(2)}%</span>
-              </div>
-              {feeSavings > 0 && (
-                <div className="pt-2 border-t border-[#3A3A3F]">
-                  <div className="flex justify-between">
-                    <span className="text-[#50C878]">Savings</span>
-                    <span className="text-[#50C878] font-bold">↓ {feeSavings.toFixed(2)}%</span>
-                  </div>
-                </div>
-              )}
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-white/80">Projected Bonus</span>
+              <span className="text-xl font-bold text-emerald-400">+{calculateBonus()}</span>
+            </div>
+            <div className="h-px bg-white/20 my-4" />
+            <div className="flex justify-between items-center">
+              <span className="text-white font-bold">Projected Score</span>
+              <span className="text-3xl font-bold text-purple-400">{projectedScore}</span>
             </div>
           </div>
-
-          {feeSavings > 0 && (
-            <div className="bg-[#50C878]/10 border border-[#50C878]/30 rounded-xl p-6">
-              <div className="text-[#50C878] font-bold mb-2">💰 On a 10,000 VFIDE transfer:</div>
-              <div className="text-[#F5F3E8]">
-                You would save <span className="font-bold text-[#50C878]">{(10000 * feeSavings / 100).toFixed(2)} VFIDE</span>
-              </div>
-            </div>
+          
+          {projectedScore >= 8000 && (
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="mt-6 p-4 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center gap-3">
+              <CheckCircle2 className="text-emerald-400" size={24} />
+              <span className="text-emerald-400">🎉 You will unlock the minimum 0.25% fee rate!</span>
+            </motion.div>
           )}
-
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 text-center">
-            <div className="text-[#A0A0A5] text-sm mb-3">Ready to improve your score?</div>
-            <div className="grid grid-cols-2 gap-2">
-              <Link href="/governance" className="px-4 py-2 bg-[#FFD700] text-[#1A1A1D] rounded-lg font-bold text-sm hover:scale-105 transition-transform">
-                Vote Now
-              </Link>
-              <Link href="/badges" className="px-4 py-2 bg-[#00F0FF] text-[#1A1A1D] rounded-lg font-bold text-sm hover:scale-105 transition-transform">
-                Earn Badges
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        </GlassCard>
+      </motion.div>
+    </motion.div>
   );
 }
 
 function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
-  const { badgeIds } = useUserBadges(address);
-  const earnedBadges = badgeIds.map(id => getBadgeById(id)).filter(Boolean) as BadgeMetadata[];
-  const totalPoints = earnedBadges.reduce((sum, badge) => sum + badge.points, 0);
-
+  const { badges, isLoading } = useUserBadges(address);
+  
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[#A0A0A5] text-sm">Badges Earned</span>
-            <Trophy className="text-[#FFD700]" size={20} />
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-6" hover={false}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Trophy className="text-amber-400" size={24} />
+              Your Badges
+            </h2>
+            <Link href="/badges" className="text-cyan-400 hover:text-cyan-300 text-sm font-medium inline-flex items-center gap-1">
+              View All <ChevronRight size={14} />
+            </Link>
           </div>
-          <div className="text-3xl font-bold text-[#F5F3E8]">{badgeIds.length}</div>
-          <div className="text-[#A0A0A5] text-xs">Keep participating!</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[#A0A0A5] text-sm">Total Points</span>
-            <Star className="text-[#00F0FF]" size={20} />
-          </div>
-          <div className="text-3xl font-bold text-[#00F0FF]">+{totalPoints}</div>
-          <div className="text-[#A0A0A5] text-xs">Contributing to ProofScore</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[#A0A0A5] text-sm">NFTs Minted</span>
-            <Award className="text-[#50C878]" size={20} />
-          </div>
-          <div className="text-3xl font-bold text-[#F5F3E8]">0</div>
-          <Link href="/badges" className="text-[#00F0FF] text-xs hover:underline">Mint as NFTs →</Link>
-        </div>
-      </div>
-
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-[#F5F3E8]">Your Badges</h3>
-          <Link href="/badges" className="text-[#00F0FF] text-sm hover:underline flex items-center gap-1">
-            View all <ChevronRight size={14} />
-          </Link>
-        </div>
-        <BadgeGallery address={address} />
-      </div>
-
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Progress Towards Next Badges</h3>
-        <BadgeProgress />
-      </div>
-    </div>
+          
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full" />
+            </div>
+          ) : (
+            <>
+              <BadgeGallery address={address} />
+              <div className="mt-6">
+                <BadgeProgress address={address} />
+              </div>
+            </>
+          )}
+        </GlassCard>
+      </motion.div>
+    </motion.div>
   );
 }

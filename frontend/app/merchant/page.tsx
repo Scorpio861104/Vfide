@@ -1,179 +1,370 @@
 "use client";
 
-import { GlobalNav } from '@/components/layout/GlobalNav'
-import { Footer } from '@/components/layout/Footer'
-import { MerchantDashboard } from '@/components/merchant/MerchantDashboard'
-import { PaymentInterface } from '@/components/merchant/PaymentInterface'
-import { PaymentQR } from '@/components/merchant/PaymentQR'
-import { Store, CreditCard, QrCode } from 'lucide-react'
+import { motion } from 'framer-motion';
+import { GlobalNav } from '@/components/layout/GlobalNav';
+import { Footer } from '@/components/layout/Footer';
+import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
+import { PaymentInterface } from '@/components/merchant/PaymentInterface';
+import { PaymentQR } from '@/components/merchant/PaymentQR';
+import { 
+  Store, 
+  CreditCard, 
+  QrCode, 
+  Zap, 
+  Shield, 
+  RefreshCw, 
+  DollarSign,
+  Check,
+  Sparkles,
+  ArrowRight
+} from 'lucide-react';
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 100, damping: 15 }
+  }
+};
+
+const scaleVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { 
+    opacity: 1, 
+    scale: 1,
+    transition: { type: "spring" as const, stiffness: 100, damping: 15 }
+  }
+};
+
+// Feature card component
+function FeatureCard({ 
+  icon: Icon, 
+  title, 
+  description, 
+  color 
+}: { 
+  icon: React.ElementType; 
+  title: string; 
+  description: string; 
+  color: string;
+}) {
+  const colorClasses: Record<string, { bg: string; border: string; text: string; glow: string }> = {
+    green: { bg: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', glow: 'group-hover:shadow-emerald-500/20' },
+    blue: { bg: 'from-blue-500/20 to-cyan-500/10', border: 'border-blue-500/30', text: 'text-blue-400', glow: 'group-hover:shadow-blue-500/20' },
+    purple: { bg: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/30', text: 'text-purple-400', glow: 'group-hover:shadow-purple-500/20' },
+    orange: { bg: 'from-orange-500/20 to-amber-500/10', border: 'border-orange-500/30', text: 'text-orange-400', glow: 'group-hover:shadow-orange-500/20' },
+  };
+
+  const c = colorClasses[color] || colorClasses.blue;
+
+  return (
+    <motion.div
+      variants={scaleVariants}
+      whileHover={{ y: -5, scale: 1.02 }}
+      className={`group relative p-6 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} backdrop-blur-xl transition-all duration-300 hover:shadow-xl ${c.glow}`}
+    >
+      {/* Glow effect */}
+      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${c.bg} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
+      
+      <div className="relative z-10 text-center">
+        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} flex items-center justify-center`}>
+          <Icon className={`w-8 h-8 ${c.text}`} />
+        </div>
+        <h3 className={`font-bold text-lg mb-2 ${c.text}`}>{title}</h3>
+        <p className="text-sm text-gray-400 leading-relaxed">{description}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+// Comparison table row
+function ComparisonRow({ 
+  feature, 
+  vfide, 
+  stripe, 
+  square, 
+  paypal,
+  isLast = false 
+}: { 
+  feature: string;
+  vfide: string;
+  stripe: string;
+  square: string;
+  paypal: string;
+  isLast?: boolean;
+}) {
+  return (
+    <motion.tr 
+      variants={itemVariants}
+      className={`${!isLast ? 'border-b border-white/5' : ''} group hover:bg-white/[0.02] transition-colors`}
+    >
+      <td className="py-4 px-4 text-gray-300 font-medium">{feature}</td>
+      <td className="py-4 px-4 text-center">
+        <span className="inline-flex items-center gap-1.5 text-emerald-400 font-bold">
+          {vfide === 'Yes' ? <Check className="w-4 h-4" /> : null}
+          {vfide}
+        </span>
+      </td>
+      <td className="py-4 px-4 text-center text-gray-500">{stripe}</td>
+      <td className="py-4 px-4 text-center text-gray-500">{square}</td>
+      <td className="py-4 px-4 text-center text-gray-500">{paypal}</td>
+    </motion.tr>
+  );
+}
+
+// Step component
+function Step({ number, title, description }: { number: number; title: string; description: string }) {
+  return (
+    <motion.div
+      variants={itemVariants}
+      whileHover={{ x: 5 }}
+      className="flex gap-4 items-start group"
+    >
+      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+        {number}
+      </div>
+      <div>
+        <h4 className="font-semibold text-white mb-1">{title}</h4>
+        <p className="text-sm text-gray-400">{description}</p>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function MerchantPage() {
   return (
     <>
       <GlobalNav />
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white pt-20">
-        <div className="container mx-auto px-4 py-12 max-w-6xl">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mb-4">
-              <Store className="w-10 h-10" />
-            </div>
-            <h1 className="text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400">
-              Merchant Portal
+      
+      {/* Background effects */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(59,130,246,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(16,185,129,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
+      <motion.div 
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="min-h-screen text-white pt-24 pb-12"
+      >
+        <div className="container mx-auto px-4 max-w-7xl">
+          {/* Hero Header */}
+          <motion.div variants={itemVariants} className="text-center mb-16">
+            {/* Floating icon */}
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="inline-flex items-center justify-center w-24 h-24 mb-6 rounded-3xl bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 shadow-2xl shadow-purple-500/30"
+            >
+              <Store className="w-12 h-12 text-white" />
+            </motion.div>
+
+            <h1 className="text-5xl md:text-6xl font-black mb-6">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400">
+                Merchant Portal
+              </span>
             </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Accept VFIDE payments with 0% protocol fees • Direct or Escrow modes • Optional STABLE-PAY auto-conversion
+
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+              Accept VFIDE payments with <span className="text-emerald-400 font-semibold">0% protocol fees</span> • 
+              Direct or Escrow modes • Optional <span className="text-blue-400 font-semibold">STABLE-PAY</span> auto-conversion
             </p>
-          </div>
 
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Left Column: Merchant Dashboard */}
-            <div>
-              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Store className="w-6 h-6 text-purple-400" />
-                Merchant Dashboard
-              </h2>
+            {/* Trust badges */}
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
+              {[
+                { icon: Shield, text: 'Non-Custodial' },
+                { icon: Zap, text: 'Instant Settlement' },
+                { icon: Sparkles, text: 'Zero Fees' }
+              ].map((badge, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + i * 0.1 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300"
+                >
+                  <badge.icon className="w-4 h-4 text-emerald-400" />
+                  {badge.text}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Main Dashboard Grid */}
+          <motion.div variants={containerVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+            {/* Merchant Dashboard Section */}
+            <motion.div variants={itemVariants}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20">
+                  <Store className="w-5 h-5 text-purple-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Merchant Dashboard</h2>
+              </div>
               <MerchantDashboard />
-            </div>
+            </motion.div>
 
-            {/* Right Column: Payment Interface */}
-            <div>
-              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <CreditCard className="w-6 h-6 text-blue-400" />
-                Make Payment
-              </h2>
+            {/* Payment Interface Section */}
+            <motion.div variants={itemVariants}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20">
+                  <CreditCard className="w-5 h-5 text-blue-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Make Payment</h2>
+              </div>
               <PaymentInterface />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* QR Code Section - Full Width */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <QrCode className="w-6 h-6 text-cyan-400" />
-              Generate Payment QR Code
-            </h2>
+          {/* QR Code Section */}
+          <motion.div variants={itemVariants} className="mb-16">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
+                <QrCode className="w-5 h-5 text-cyan-400" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Generate Payment QR Code</h2>
+            </div>
             <PaymentQR />
-          </div>
+          </motion.div>
 
           {/* Features Section */}
-          <div className="bg-gradient-to-br from-purple-900/10 to-blue-900/10 border border-purple-500/20 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold mb-6 text-center">Why Choose VFIDE Merchant Portal?</h3>
-            
+          <motion.section variants={containerVariants} className="mb-16">
+            <motion.div variants={itemVariants} className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+                  Why Choose VFIDE?
+                </span>
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Revolutionary payment infrastructure built for the future of commerce
+              </p>
+            </motion.div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-3 bg-green-600/20 border-2 border-green-500 rounded-xl flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
-                <div className="font-bold text-green-400 mb-2">0% Processing Fees</div>
-                <div className="text-xs text-gray-400">
-                  No payment processor fees. Network burn fees apply (0.25-5% based on ProofScore).
-                </div>
-              </div>
-
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-3 bg-blue-600/20 border-2 border-blue-500 rounded-xl flex items-center justify-center">
-                  <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                </div>
-                <div className="font-bold text-blue-400 mb-2">Flexible Settlement</div>
-                <div className="text-xs text-gray-400">
-                  Direct payments settle instantly. Escrow mode holds funds until release. Your choice per transaction.
-                </div>
-              </div>
-
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-3 bg-purple-600/20 border-2 border-purple-500 rounded-xl flex items-center justify-center">
-                  <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                </div>
-                <div className="font-bold text-purple-400 mb-2">STABLE-PAY (Optional)</div>
-                <div className="text-xs text-gray-400">
-                  Auto-convert VFIDE → stablecoins via DEX. DEX swap fees ~0.3% apply. 5% slippage protection.
-                </div>
-              </div>
-
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-3 bg-orange-600/20 border-2 border-orange-500 rounded-xl flex items-center justify-center">
-                  <svg className="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                </div>
-                <div className="font-bold text-orange-400 mb-2">Trust Scoring</div>
-                <div className="text-xs text-gray-400">
-                  Real-time customer risk assessment. Know who you&apos;re dealing with before payment.
-                </div>
-              </div>
+              <FeatureCard
+                icon={DollarSign}
+                title="0% Processing Fees"
+                description="No payment processor fees. Network burn fees apply (0.25-5% based on ProofScore)."
+                color="green"
+              />
+              <FeatureCard
+                icon={Zap}
+                title="Flexible Settlement"
+                description="Direct payments settle instantly. Escrow mode holds funds until release."
+                color="blue"
+              />
+              <FeatureCard
+                icon={RefreshCw}
+                title="STABLE-PAY"
+                description="Auto-convert VFIDE → stablecoins via DEX. ~0.3% swap fees, 5% slippage protection."
+                color="purple"
+              />
+              <FeatureCard
+                icon={Shield}
+                title="Trust Scoring"
+                description="Real-time customer risk assessment. Know who you're dealing with before payment."
+                color="orange"
+              />
             </div>
-          </div>
+          </motion.section>
 
           {/* Comparison Table */}
-          <div className="mt-8 bg-gray-900/50 border border-gray-700 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold mb-6 text-center">vs Traditional Payment Processors</h3>
-            
+          <motion.section 
+            variants={containerVariants}
+            className="mb-16 p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-xl"
+          >
+            <motion.div variants={itemVariants} className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+                  vs Traditional Processors
+                </span>
+              </h2>
+              <p className="text-gray-400">See how VFIDE compares to traditional payment solutions</p>
+            </motion.div>
+
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-700">
-                    <th className="text-left py-3 px-4">Feature</th>
-                    <th className="text-center py-3 px-4 text-green-400">VFIDE</th>
-                    <th className="text-center py-3 px-4 text-gray-400">Stripe</th>
-                    <th className="text-center py-3 px-4 text-gray-400">Square</th>
-                    <th className="text-center py-3 px-4 text-gray-400">PayPal</th>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left py-4 px-4 text-gray-400 font-medium">Feature</th>
+                    <th className="text-center py-4 px-4">
+                      <span className="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                        VFIDE
+                      </span>
+                    </th>
+                    <th className="text-center py-4 px-4 text-gray-500 font-medium">Stripe</th>
+                    <th className="text-center py-4 px-4 text-gray-500 font-medium">Square</th>
+                    <th className="text-center py-4 px-4 text-gray-500 font-medium">PayPal</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr className="border-b border-gray-800">
-                    <td className="py-3 px-4">Processing Fee</td>
-                    <td className="text-center py-3 px-4 text-green-400 font-bold">0%*</td>
-                    <td className="text-center py-3 px-4">2.9% + $0.30</td>
-                    <td className="text-center py-3 px-4">2.6% + $0.10</td>
-                    <td className="text-center py-3 px-4">2.9% + $0.30</td>
-                  </tr>
-                  <tr className="border-b border-gray-800">
-                    <td className="py-3 px-4">Settlement Time</td>
-                    <td className="text-center py-3 px-4 text-green-400 font-bold">Instant</td>
-                    <td className="text-center py-3 px-4">2-7 days</td>
-                    <td className="text-center py-3 px-4">1-2 days</td>
-                    <td className="text-center py-3 px-4">1-3 days</td>
-                  </tr>
-                  <tr className="border-b border-gray-800">
-                    <td className="py-3 px-4">Chargebacks</td>
-                    <td className="text-center py-3 px-4 text-green-400 font-bold">None</td>
-                    <td className="text-center py-3 px-4">Yes ($15 fee)</td>
-                    <td className="text-center py-3 px-4">Yes</td>
-                    <td className="text-center py-3 px-4">Yes</td>
-                  </tr>
-                  <tr className="border-b border-gray-800">
-                    <td className="py-3 px-4">Trust Scoring</td>
-                    <td className="text-center py-3 px-4 text-green-400 font-bold">Yes</td>
-                    <td className="text-center py-3 px-4">Basic</td>
-                    <td className="text-center py-3 px-4">Basic</td>
-                    <td className="text-center py-3 px-4">Basic</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-4">Auto-Conversion</td>
-                    <td className="text-center py-3 px-4 text-green-400 font-bold">Yes (STABLE-PAY)</td>
-                    <td className="text-center py-3 px-4">No</td>
-                    <td className="text-center py-3 px-4">No</td>
-                    <td className="text-center py-3 px-4">No</td>
-                  </tr>
-                </tbody>
+                <motion.tbody variants={containerVariants}>
+                  <ComparisonRow feature="Processing Fee" vfide="0%*" stripe="2.9% + $0.30" square="2.6% + $0.10" paypal="2.9% + $0.30" />
+                  <ComparisonRow feature="Settlement Time" vfide="Instant" stripe="2-7 days" square="1-2 days" paypal="1-3 days" />
+                  <ComparisonRow feature="Chargebacks" vfide="None" stripe="Yes ($15 fee)" square="Yes" paypal="Yes" />
+                  <ComparisonRow feature="Trust Scoring" vfide="Yes" stripe="Basic" square="Basic" paypal="Basic" />
+                  <ComparisonRow feature="Auto-Conversion" vfide="Yes" stripe="No" square="No" paypal="No" isLast />
+                </motion.tbody>
               </table>
-              <p className="text-xs text-gray-500 mt-4">
-                *0% processing fees. Network burn fees (0.25-5% based on buyer ProofScore) are separate from processing fees and go to deflationary burn, not VFIDE.
-              </p>
             </div>
-          </div>
+
+            <motion.p variants={itemVariants} className="text-xs text-gray-500 mt-6 text-center">
+              *0% processing fees. Network burn fees (0.25-5% based on buyer ProofScore) are separate and go to deflationary burn.
+            </motion.p>
+          </motion.section>
 
           {/* Getting Started */}
-          <div className="mt-8 bg-blue-900/10 border border-blue-500/20 rounded-xl p-6">
-            <h3 className="font-bold text-lg mb-3 text-blue-400">Getting Started (3 Steps)</h3>
-            <div className="space-y-2 text-sm text-gray-400">
-              <div><strong className="text-white">1. Register:</strong> Achieve ProofScore ≥5,600 and register your business (takes 2 minutes)</div>
-              <div><strong className="text-white">2. Configure:</strong> Enable STABLE-PAY if you want automatic stablecoin conversion</div>
-              <div><strong className="text-white">3. Accept Payments:</strong> Share your merchant address or integrate our API/widget</div>
+          <motion.section
+            variants={containerVariants}
+            className="p-8 rounded-3xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl"
+          >
+            <motion.div variants={itemVariants} className="flex items-center gap-3 mb-8">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">Getting Started</h2>
+              <span className="ml-auto text-sm text-blue-400 flex items-center gap-1">
+                3 simple steps <ArrowRight className="w-4 h-4" />
+              </span>
+            </motion.div>
+
+            <div className="space-y-6">
+              <Step
+                number={1}
+                title="Register Your Business"
+                description="Achieve ProofScore ≥5,600 and register your business details (takes 2 minutes)"
+              />
+              <Step
+                number={2}
+                title="Configure Settings"
+                description="Enable STABLE-PAY if you want automatic stablecoin conversion for received payments"
+              />
+              <Step
+                number={3}
+                title="Start Accepting Payments"
+                description="Share your merchant address, generate QR codes, or integrate our API/widget"
+              />
             </div>
-          </div>
+          </motion.section>
         </div>
-      </div>
+      </motion.div>
+      
       <Footer />
     </>
-  )
+  );
 }

@@ -2,6 +2,9 @@
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
+import { PageWrapper, PageHeader, Section, GlassCard, TabNavigation, StatsGrid } from '@/components/ui/PageLayout'
+import { Badge } from '@/components/ui/FormElements'
+import { Counter } from '@/components/ui/Animations'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
@@ -14,7 +17,10 @@ import {
   Shield,
   ChevronUp,
   ChevronDown,
-  Minus
+  Minus,
+  Sparkles,
+  Target,
+  Award
 } from 'lucide-react'
 
 // Mock leaderboard data - in production this would come from contract events or indexer
@@ -36,13 +42,13 @@ const mockLeaderboard = [
   { rank: 15, address: '0xFog0000000000000000000000000000000000000', score: 5900, tier: 'MERCHANT', change: 5, badges: 3 },
 ]
 
-const tierColors: Record<string, { bg: string; text: string; border: string }> = {
-  'CHAMPION': { bg: 'bg-[#FFD700]/20', text: 'text-[#FFD700]', border: 'border-[#FFD700]' },
-  'GUARDIAN': { bg: 'bg-[#C0C0C0]/20', text: 'text-[#C0C0C0]', border: 'border-[#C0C0C0]' },
-  'DELEGATE': { bg: 'bg-[#CD7F32]/20', text: 'text-[#CD7F32]', border: 'border-[#CD7F32]' },
-  'ADVOCATE': { bg: 'bg-[#00F0FF]/20', text: 'text-[#00F0FF]', border: 'border-[#00F0FF]' },
-  'MERCHANT': { bg: 'bg-[#50C878]/20', text: 'text-[#50C878]', border: 'border-[#50C878]' },
-  'NEUTRAL': { bg: 'bg-[#A0A0A5]/20', text: 'text-[#A0A0A5]', border: 'border-[#A0A0A5]' },
+const tierColors: Record<string, { gradient: string; text: string; glow: string }> = {
+  'CHAMPION': { gradient: 'from-[#FFD700] to-[#FFA500]', text: 'text-[#FFD700]', glow: 'shadow-[#FFD700]/30' },
+  'GUARDIAN': { gradient: 'from-[#C0C0C0] to-[#A0A0A0]', text: 'text-[#C0C0C0]', glow: 'shadow-[#C0C0C0]/30' },
+  'DELEGATE': { gradient: 'from-[#CD7F32] to-[#8B4513]', text: 'text-[#CD7F32]', glow: 'shadow-[#CD7F32]/30' },
+  'ADVOCATE': { gradient: 'from-[#00F0FF] to-[#00A8B5]', text: 'text-[#00F0FF]', glow: 'shadow-[#00F0FF]/30' },
+  'MERCHANT': { gradient: 'from-[#50C878] to-[#3DA55D]', text: 'text-[#50C878]', glow: 'shadow-[#50C878]/30' },
+  'NEUTRAL': { gradient: 'from-[#A0A0A5] to-[#6A6A6F]', text: 'text-[#A0A0A5]', glow: 'shadow-[#A0A0A5]/30' },
 }
 
 const getRankIcon = (rank: number) => {
@@ -55,21 +61,175 @@ const getRankIcon = (rank: number) => {
 const getChangeIndicator = (change: number) => {
   if (change > 0) {
     return (
-      <div className="flex items-center gap-1 text-[#50C878] text-xs">
-        <ChevronUp size={14} />
+      <motion.div 
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        className="flex items-center gap-1 text-[#50C878] text-sm font-bold"
+      >
+        <ChevronUp size={16} strokeWidth={3} />
         <span>{change}</span>
-      </div>
+      </motion.div>
     )
   }
   if (change < 0) {
     return (
-      <div className="flex items-center gap-1 text-[#FF4444] text-xs">
-        <ChevronDown size={14} />
+      <motion.div 
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        className="flex items-center gap-1 text-[#FF4444] text-sm font-bold"
+      >
+        <ChevronDown size={16} strokeWidth={3} />
         <span>{Math.abs(change)}</span>
-      </div>
+      </motion.div>
     )
   }
   return <Minus className="w-4 h-4 text-[#6A6A6F]" />
+}
+
+function PodiumCard({ 
+  entry, 
+  place, 
+  delay 
+}: { 
+  entry: typeof mockLeaderboard[0]
+  place: 1 | 2 | 3
+  delay: number 
+}) {
+  const heights = { 1: 'h-52', 2: 'h-44', 3: 'h-40' }
+  const colors = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' }
+  const Icon = place === 1 ? Crown : Medal
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, type: "spring", stiffness: 100 }}
+      className={`relative ${place === 1 ? 'order-2 -mt-4' : place === 2 ? 'order-1 mt-8' : 'order-3 mt-8'}`}
+    >
+      <GlassCard 
+        className={`p-6 text-center border-2 ${heights[place]}`}
+        glow={colors[place]}
+      >
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: delay + 0.2, type: "spring" }}
+          className="absolute -top-6 left-1/2 -translate-x-1/2"
+        >
+          <div 
+            className="w-12 h-12 rounded-full flex items-center justify-center"
+            style={{ 
+              background: `linear-gradient(135deg, ${colors[place]}40, ${colors[place]}20)`,
+              boxShadow: `0 0 30px ${colors[place]}40`
+            }}
+          >
+            <Icon className="w-6 h-6" style={{ color: colors[place] }} />
+          </div>
+        </motion.div>
+
+        <div 
+          className="text-4xl font-black mt-4 mb-2"
+          style={{ color: colors[place] }}
+        >
+          {place === 1 ? '1st' : place === 2 ? '2nd' : '3rd'}
+        </div>
+
+        <div className="font-mono text-sm text-[#A0A0A5] mb-3">
+          {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
+        </div>
+
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: delay + 0.3, type: "spring" }}
+          className="text-2xl font-bold mb-2"
+          style={{ color: colors[place] }}
+        >
+          <Counter end={entry.score} />
+        </motion.div>
+
+        <div className="flex items-center justify-center gap-1 text-xs text-[#A0A0A5]">
+          <Star className="w-3 h-3" style={{ color: colors[place] }} />
+          <span>{entry.badges} badges</span>
+        </div>
+      </GlassCard>
+    </motion.div>
+  )
+}
+
+function LeaderboardRow({ entry, index }: { entry: typeof mockLeaderboard[0]; index: number }) {
+  const tierStyle = tierColors[entry.tier] || tierColors['NEUTRAL']
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.03 }}
+      whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+      className={`
+        border-b border-white/5 last:border-0
+        ${entry.rank <= 3 ? 'bg-gradient-to-r from-[#FFD700]/5 to-transparent' : ''}
+      `}
+    >
+      <div className="md:hidden flex items-center justify-between px-4 py-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8">{getRankIcon(entry.rank)}</div>
+          <div>
+            <div className="font-mono text-sm text-[#F5F3E8]">
+              {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
+            </div>
+            <Badge variant={entry.tier === 'CHAMPION' ? 'premium' : 'info'} size="sm">
+              {entry.tier}
+            </Badge>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="font-bold text-[#00F0FF]">{entry.score.toLocaleString()}</div>
+          {getChangeIndicator(entry.change)}
+        </div>
+      </div>
+
+      <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center">
+        <div className="col-span-1 flex items-center gap-2">
+          {getRankIcon(entry.rank)}
+        </div>
+        
+        <div className="col-span-4 flex items-center gap-3">
+          <div 
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: `linear-gradient(135deg, ${tierColors[entry.tier]?.gradient.split(' ')[0].replace('from-[', '').replace(']', '')}20, transparent)` }}
+          >
+            <Shield className={`w-5 h-5 ${tierStyle.text}`} />
+          </div>
+          <span className="font-mono text-[#F5F3E8]">
+            {entry.address.slice(0, 8)}...{entry.address.slice(-6)}
+          </span>
+        </div>
+        
+        <div className="col-span-2 text-center">
+          <span className="text-xl font-bold text-[#00F0FF]">{entry.score.toLocaleString()}</span>
+        </div>
+        
+        <div className="col-span-2 text-center">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${tierStyle.text}`}
+            style={{ background: `linear-gradient(135deg, ${tierColors[entry.tier]?.gradient.split(' ')[0].replace('from-[', '').replace(']', '')}20, transparent)` }}
+          >
+            <Sparkles size={12} />
+            {entry.tier}
+          </span>
+        </div>
+        
+        <div className="col-span-2 flex items-center justify-center gap-2">
+          <Award className="w-4 h-4 text-[#A0A0A5]" />
+          <span className="text-[#F5F3E8] font-medium">{entry.badges}</span>
+        </div>
+        
+        <div className="col-span-1 flex justify-center">
+          {getChangeIndicator(entry.change)}
+        </div>
+      </div>
+    </motion.div>
+  )
 }
 
 export default function LeaderboardPage() {

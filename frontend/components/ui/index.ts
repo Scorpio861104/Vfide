@@ -1,5 +1,6 @@
-// UI Components barrel export
-// Import from '@/components/ui' for cleaner imports
+// =============================================================================
+// VFIDE UI COMPONENTS - Central Export
+// =============================================================================
 
 // Buttons & Inputs
 export { LoadingButton } from './LoadingButton';
@@ -24,3 +25,65 @@ export { ConfirmModal } from './ConfirmModal';
 // Layout & Display
 export { ProgressSteps } from './ProgressSteps';
 export { EmptyState, NoResults, NoData } from './EmptyState';
+
+// =============================================================================
+// PREMIUM UI COMPONENTS
+// =============================================================================
+
+// Page Layout Components
+export {
+  PageWrapper,
+  PageHeader,
+  Section,
+  StatsGrid,
+  StatItem,
+  GlassCard,
+  TabNavigation,
+  EmptyState as PremiumEmptyState,
+  PageLoading,
+  CardLoading,
+  FeatureCard,
+  ActionBar,
+} from './PageLayout';
+
+// Form Elements
+export {
+  Modal,
+  Button,
+  Input,
+  Select,
+  Badge,
+  Tooltip,
+  ProgressBar,
+  Alert,
+  Divider,
+} from './FormElements';
+
+// Animation Components
+export {
+  PageTransition,
+  StaggerContainer,
+  StaggerItem,
+  PulseDot,
+  Shimmer,
+  SuccessCheck,
+  Confetti,
+  Counter,
+  HoverCardEffect,
+  Magnetic,
+  GlowHover,
+} from './Animations';
+
+// Dashboard Components
+export {
+  StatCard,
+  QuickAction,
+  NotificationItem,
+  ActivityItem,
+} from './DashboardCards';
+
+// ProofScore Components
+export {
+  ProofScoreRing,
+  ProofScoreCard,
+} from './ProofScoreRing';
