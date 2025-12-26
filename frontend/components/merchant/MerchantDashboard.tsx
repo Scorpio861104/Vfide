@@ -134,7 +134,7 @@ export function MerchantDashboard() {
           <div className="bg-blue-900/10 border border-blue-500/20 rounded-lg p-4">
             <DollarSign className="w-8 h-8 text-blue-400 mb-2" />
             <div className="font-bold text-blue-400 mb-1">No Processor Fees</div>
-            <div className="text-xs text-gray-400">No payment processing fees. Burn fees (0.25-5%) + zkSync gas apply.</div>
+            <div className="text-xs text-gray-400">No payment processing fees. Burn fees (0.25-5%) + Base gas apply.</div>
           </div>
 
           <div className="bg-green-900/10 border border-green-500/20 rounded-lg p-4">

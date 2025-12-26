@@ -135,9 +135,9 @@ const ERC20_ABI = [
   }
 ] as const;
 
-// Contract addresses from environment
-const PRESALE_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '0x338926cd13aAA99da8e846732e8010b16d1369ea') as `0x${string}`;
-// Note: USDC/USDT are not available on zkSync Sepolia testnet
+// Contract addresses from environment - Base Sepolia deployment
+const PRESALE_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '0x89aefb047B6CB2bB302FE2734DDa452985eF1658') as `0x${string}`;
+// Note: USDC/USDT are not available on Base Sepolia testnet
 // Users must use ETH for testnet purchases
 const STABLECOINS_AVAILABLE = false; // Set to true when stablecoins are deployed
 
@@ -694,7 +694,7 @@ export default function TokenLaunchPage() {
                   <div className="bg-yellow-500/10 border border-yellow-500 rounded-lg p-3 mb-4">
                     <p className="text-yellow-400 text-sm text-center">
                       🧪 <strong>Testnet:</strong> Only ETH payments available. Get free test ETH from{' '}
-                      <a href="https://www.alchemy.com/faucets/zksync-sepolia" target="_blank" rel="noopener noreferrer" className="underline">Alchemy Faucet</a>
+                      <a href="https://www.alchemy.com/faucets/base-sepolia" target="_blank" rel="noopener noreferrer" className="underline">Alchemy Faucet</a>
                     </p>
                   </div>
                   

@@ -64,7 +64,7 @@ export function BadgeNFTMinter({ badgeId, onSuccess }: BadgeNFTMinterProps) {
           
           {txHash && (
             <a
-              href={`https://explorer.zksync.io/tx/${txHash}`}
+              href={`https://sepolia.basescan.org/tx/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 text-sm text-primary hover:underline"

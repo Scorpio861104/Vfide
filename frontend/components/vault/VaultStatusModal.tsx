@@ -172,14 +172,14 @@ export function VaultStatusModal() {
                 {!isOnCorrectChain ? (
                   <div className="bg-[#FF4444]/10 border border-[#FF4444] rounded-lg p-4 mb-2">
                     <p className="text-[#FF4444] text-sm mb-3">
-                      ⚠️ Please switch to zkSync Sepolia network to continue.
+                      ⚠️ Please switch to Base Sepolia network to continue.
                     </p>
                     <button
                       onClick={() => switchChain({ chainId: expectedChainId })}
                       disabled={isSwitchingChain}
                       className="w-full py-2 bg-[#FF4444] text-white font-bold rounded-lg hover:bg-[#FF6666] transition-colors disabled:opacity-50"
                     >
-                      {isSwitchingChain ? 'Switching...' : 'Switch to zkSync Sepolia'}
+                      {isSwitchingChain ? 'Switching...' : 'Switch to Base Sepolia'}
                     </button>
                   </div>
                 ) : isContractConfigured === false ? (

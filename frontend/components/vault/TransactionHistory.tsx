@@ -239,7 +239,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
                   {tx.status}
                 </div>
                 <a 
-                  href={`https://explorer.zksync.io/tx/${tx.txHash}`}
+                  href={`https://sepolia.basescan.org/tx/${tx.txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#00F0FF] hover:text-[#00D0DF] transition-colors flex items-center gap-1 text-xs"

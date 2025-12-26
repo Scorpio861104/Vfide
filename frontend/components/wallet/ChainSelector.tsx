@@ -38,7 +38,8 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
     // Switch chain if connected
     if (switchChain) {
       try {
-        await switchChain({ chainId: network.id })
+        // Type assertion needed because wagmi config is strictly typed to specific chain IDs
+        await switchChain({ chainId: network.id as 84532 | 300 | 80002 })
       } catch (error) {
         console.error('Failed to switch chain:', error)
       }

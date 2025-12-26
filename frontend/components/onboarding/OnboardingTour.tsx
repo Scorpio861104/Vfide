@@ -28,7 +28,7 @@ const tourSteps: TourStep[] = [
   {
     id: "zero-fees",
     title: "No Processor Fees",
-    description: "Unlike traditional payment processors that charge 2-3%, VFIDE has no processor fees. Network burn fees (0.25-5% based on ProofScore) and zkSync gas fees apply.",
+    description: "Unlike traditional payment processors that charge 2-3%, VFIDE has no processor fees. Network burn fees (0.25-5% based on ProofScore) and Base gas fees apply.",
     icon: <DollarSign className={iconClass} />,
     position: "center"
   },

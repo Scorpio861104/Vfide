@@ -119,32 +119,35 @@ const mainnetChains = [
   zkSync,
 ] as const
 
-// Select chains based on environment
-const chains = IS_TESTNET ? testnetChains : mainnetChains
-
-// Base Sepolia is first as it's the easiest for users
-export const config = createConfig({
-  chains: chains as typeof testnetChains,
+// Create testnet config
+const testnetConfig = createConfig({
+  chains: testnetChains,
   connectors,
   transports: {
-    // Testnets
     [baseSepolia.id]: http(),
     [polygonAmoy.id]: http(),
     [zkSyncSepoliaTestnet.id]: http('https://sepolia.era.zksync.dev'),
-    // Mainnets
-    [base.id]: http(),
-    [polygon.id]: http(),
-    [zkSync.id]: http(),
-    // Keep these for compatibility
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
   },
-  // Improve reconnection and network switching
   syncConnectedChain: true,
 })
 
+// Create mainnet config
+const mainnetConfig = createConfig({
+  chains: mainnetChains,
+  connectors,
+  transports: {
+    [base.id]: http(),
+    [polygon.id]: http(),
+    [zkSync.id]: http(),
+  },
+  syncConnectedChain: true,
+})
+
+// Export the appropriate config based on environment
+export const config = IS_TESTNET ? testnetConfig : mainnetConfig
+
 declare module 'wagmi' {
   interface Register {
-    config: typeof config
+    config: typeof testnetConfig | typeof mainnetConfig
   }
 }

@@ -166,7 +166,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
               <motion.a
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                href={`https://explorer.zksync.io/tx/${activity.txHash}`}
+                href={`https://sepolia.basescan.org/tx/${activity.txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-[#00F0FF] hover:text-[#00D4FF] mt-2 inline-flex items-center gap-1 transition-colors"

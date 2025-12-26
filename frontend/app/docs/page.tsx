@@ -20,7 +20,7 @@ const faqs = [
     questions: [
       {
         q: "Who pays the fees? Is it really 0% for customers?",
-        a: "YES - Payment processing is 0% for both customers AND merchants. Only network gas applies (~$0.01-0.50 on zkSync). HOWEVER: When you TRANSFER VFIDE tokens, there's a ProofScore-based fee that scales from 0.25% (score ≥8000 / 80%) to 5% (score ≤4000 / 40%). Payments are FREE. Token transfers fund the ecosystem through burn + Sanctum charity + ecosystem allocations."
+        a: "YES - Payment processing is 0% for both customers AND merchants. Only network gas applies (~$0.01-0.10 on Base). HOWEVER: When you TRANSFER VFIDE tokens, there's a ProofScore-based fee that scales from 0.25% (score ≥8000 / 80%) to 5% (score ≤4000 / 40%). Payments are FREE. Token transfers fund the ecosystem through burn + Sanctum charity + ecosystem allocations."
       },
       {
         q: "What are the VFIDE token transfer fees?",

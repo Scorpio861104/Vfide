@@ -24,7 +24,7 @@ export default function LiveDemoPage() {
     showNotification(
       'pending',
       'Transaction Pending',
-      `Your ${type} transaction is being processed on zkSync...`,
+      `Your ${type} transaction is being processed on Base...`,
       '0x1234567890abcdef'
     )
     

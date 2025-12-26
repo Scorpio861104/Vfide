@@ -99,7 +99,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">No Processor Fees</h3>
                 <p className="text-[#A0A0A5]">
-                  Merchants pay no payment processing fees like Stripe/PayPal. Network burn fees (0.25-5%) and zkSync gas apply.
+                  Merchants pay no payment processing fees like Stripe/PayPal. Network burn fees (0.25-5%) and Base gas apply.
                 </p>
               </motion.div>
 

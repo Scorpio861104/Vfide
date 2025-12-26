@@ -1,7 +1,7 @@
 "use client";
 
 import { useChainId } from 'wagmi';
-import { sepolia, zkSyncSepoliaTestnet } from 'wagmi/chains';
+import { baseSepolia, polygonAmoy, zkSyncSepoliaTestnet } from 'wagmi/chains';
 import { IS_TESTNET } from '@/lib/testnet';
 
 /**
@@ -14,14 +14,20 @@ export function TestnetBadge() {
   // Only show if IS_TESTNET is true AND on a test network
   if (!IS_TESTNET) return null;
   
-  const isTestnetChain = chainId === sepolia.id || chainId === zkSyncSepoliaTestnet.id;
+  // Supported testnet chains: Base Sepolia, Polygon Amoy, zkSync Sepolia
+  const isTestnetChain = chainId === baseSepolia.id || chainId === polygonAmoy.id || chainId === zkSyncSepoliaTestnet.id;
   if (!isTestnetChain) return null;
 
-  const networkName = chainId === zkSyncSepoliaTestnet.id ? 'zkSync Sepolia' : 'Sepolia';
+  const getNetworkName = () => {
+    if (chainId === baseSepolia.id) return 'Base Sepolia';
+    if (chainId === polygonAmoy.id) return 'Polygon Amoy';
+    if (chainId === zkSyncSepoliaTestnet.id) return 'zkSync Sepolia';
+    return 'Testnet';
+  };
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 text-black text-center py-1 text-sm font-bold">
-      ⚠️ TESTNET MODE - Using {networkName} Test Network - Tokens have no real value ⚠️
+      ⚠️ TESTNET MODE - Using {getNetworkName()} Test Network - Tokens have no real value ⚠️
     </div>
   );
 }
@@ -36,7 +42,8 @@ export function TestnetCornerBadge() {
   // Only show if IS_TESTNET is true
   if (!IS_TESTNET) return null;
   
-  const isTestnetChain = chainId === sepolia.id || chainId === zkSyncSepoliaTestnet.id;
+  // Supported testnet chains: Base Sepolia, Polygon Amoy, zkSync Sepolia
+  const isTestnetChain = chainId === baseSepolia.id || chainId === polygonAmoy.id || chainId === zkSyncSepoliaTestnet.id;
   if (!isTestnetChain) return null;
 
   return (

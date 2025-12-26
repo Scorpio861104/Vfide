@@ -18,6 +18,8 @@ import {
   zkSyncSepoliaTestnet 
 } from 'wagmi/chains'
 
+import type { Chain } from 'viem'
+
 // ========================================
 // CHAIN DEFINITIONS
 // ========================================
@@ -30,8 +32,8 @@ export interface ChainConfig {
   icon: string
   description: string
   tagline: string
-  mainnet: typeof base
-  testnet: typeof baseSepolia
+  mainnet: Chain
+  testnet: Chain
   contracts: {
     mainnet: ChainContracts
     testnet: ChainContracts

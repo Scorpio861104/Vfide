@@ -1,7 +1,7 @@
 "use client";
 
 import { useAccount, useChainId } from 'wagmi';
-import { zkSyncSepoliaTestnet, zkSync } from 'wagmi/chains';
+import { baseSepolia, base } from 'wagmi/chains';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ export function NetworkWarning() {
 
   // Use centralized config for expected chain
   const expectedChainId = CURRENT_CHAIN_ID;
-  const expectedChain = IS_TESTNET ? zkSyncSepoliaTestnet : zkSync;
+  const expectedChain = IS_TESTNET ? baseSepolia : base;
   
   // Show warning if connected but on wrong chain
   const showWarning = isConnected && chainId !== expectedChainId;
