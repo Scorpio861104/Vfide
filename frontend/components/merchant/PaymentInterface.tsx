@@ -120,7 +120,15 @@ export function PaymentInterface() {
 
           {/* Amount */}
           <div>
-            <label className="text-sm text-gray-400 mb-2 block">Amount (VFIDE)</label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm text-gray-400">Amount (VFIDE)</label>
+              <button
+                onClick={() => setAmount('1000')}
+                className="text-xs text-blue-400 hover:text-blue-300 font-bold"
+              >
+                MAX
+              </button>
+            </div>
             <input
               type="number"
               value={amount}

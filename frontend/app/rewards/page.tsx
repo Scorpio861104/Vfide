@@ -728,7 +728,15 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
 
       {/* Stake Form */}
       <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Quick Stake</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-[#F5F3E8]">Quick Stake</h3>
+          <button
+            onClick={() => setStakeAmount('1000')}
+            className="text-xs text-[#00F0FF] hover:text-[#00D4FF] font-bold"
+          >
+            MAX
+          </button>
+        </div>
         <div className="flex gap-4">
           <input
             type="number"

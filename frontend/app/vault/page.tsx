@@ -6,6 +6,7 @@ import { useVaultRecovery } from "@/hooks/useVaultRecovery";
 import { useVaultHub } from "@/hooks/useVaultHub";
 import { TransactionHistory } from "@/components/vault/TransactionHistory";
 import { useToast } from "@/components/ui/toast";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useAccount } from "wagmi";
 import { useState } from "react";
 import { isAddress } from "viem";
@@ -213,16 +214,21 @@ const { address } = useAccount();
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
                 <div className="text-[#A0A0A5] text-sm font-[family-name:var(--font-body)] mb-2">Total Balance</div>
-                <div className="text-4xl font-bold text-[#F5F3E8] mb-1">
-                  {isLoadingBalance ? (
-                    <span className="animate-pulse">Loading...</span>
-                  ) : (
-                    `${parseFloat(vaultBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE`
-                  )}
-                </div>
-                <div className="text-[#A0A0A5] text-sm">
-                  {isLoadingBalance ? '...' : `≈ $${parseFloat(usdValue).toLocaleString()} USD`}
-                </div>
+                {isLoadingBalance ? (
+                  <>
+                    <Skeleton height={40} className="w-48 mb-1" />
+                    <Skeleton height={16} className="w-32" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-4xl font-bold text-[#F5F3E8] mb-1">
+                      {parseFloat(vaultBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
+                    </div>
+                    <div className="text-[#A0A0A5] text-sm">
+                      ≈ ${parseFloat(usdValue).toLocaleString()} USD
+                    </div>
+                  </>
+                )}
               </div>
               
               <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">

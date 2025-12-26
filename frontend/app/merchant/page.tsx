@@ -4,7 +4,8 @@ import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard'
 import { PaymentInterface } from '@/components/merchant/PaymentInterface'
-import { Store, CreditCard } from 'lucide-react'
+import { PaymentQR } from '@/components/merchant/PaymentQR'
+import { Store, CreditCard, QrCode } from 'lucide-react'
 
 export default function MerchantPage() {
   return (
@@ -44,6 +45,15 @@ export default function MerchantPage() {
               </h2>
               <PaymentInterface />
             </div>
+          </div>
+
+          {/* QR Code Section - Full Width */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <QrCode className="w-6 h-6 text-cyan-400" />
+              Generate Payment QR Code
+            </h2>
+            <PaymentQR />
           </div>
 
           {/* Features Section */}

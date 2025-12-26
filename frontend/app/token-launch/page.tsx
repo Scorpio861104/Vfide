@@ -4,9 +4,9 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useBalance } from "wagmi";
-import { parseUnits, formatUnits, isAddress } from "viem";
-import { Loader2, CheckCircle, Wallet } from "lucide-react";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useBalance, useGasPrice } from "wagmi";
+import { parseUnits, formatUnits, isAddress, formatEther } from "viem";
+import { Loader2, CheckCircle, Wallet, Fuel } from "lucide-react";
 
 // VFIDEPresale ABI
 const PRESALE_ABI = [
@@ -159,6 +159,13 @@ export default function TokenLaunchPage() {
   // Approval hooks
   const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending } = useWriteContract();
   const { isLoading: isApproveConfirming, isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({ hash: approveHash });
+
+  // Gas price for fee estimate
+  const { data: gasPrice } = useGasPrice();
+  const estimatedGas = BigInt(150000); // Typical presale tx gas
+  const gasCostWei = gasPrice ? estimatedGas * gasPrice : BigInt(0);
+  const gasCostEth = parseFloat(formatEther(gasCostWei));
+  const gasCostUsd = gasCostEth * 2500; // Rough ETH price
 
   // Read tier availability
   const { data: foundingRemaining } = useReadContract({
@@ -533,14 +540,23 @@ export default function TokenLaunchPage() {
 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-[#F5F3E8] font-bold mb-2">
-                      Amount of VFIDE Tokens
-                    </label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-[#F5F3E8] font-bold">
+                        Amount of VFIDE Tokens
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setAmount('500000')}
+                        className="text-xs text-[#00F0FF] hover:text-[#00D4FF] font-bold"
+                      >
+                        MAX
+                      </button>
+                    </div>
                     <input
                       type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      placeholder="Enter amount (max 500,000)"
+                      placeholder="Enter amount"
                       min="0"
                       max="500000"
                       step="1"
@@ -548,6 +564,22 @@ export default function TokenLaunchPage() {
                       aria-describedby="amount-hint"
                       className="w-full px-4 py-3 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
                     />
+                    <div className="flex gap-2 mt-2">
+                      {[1000, 10000, 50000, 100000, 500000].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setAmount(String(preset))}
+                          className={`flex-1 py-1.5 text-xs font-bold rounded transition-colors ${
+                            amount === String(preset)
+                              ? 'bg-[#00F0FF] text-[#1A1A1D]'
+                              : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#F5F3E8] border border-[#3A3A3F]'
+                          }`}
+                        >
+                          {preset >= 1000 ? `${preset / 1000}K` : preset}
+                        </button>
+                      ))}
+                    </div>
                     <p id="amount-hint" className="text-xs text-[#A0A0A5] mt-2">
                       Maximum 500,000 VFIDE per address (including referral bonuses)
                     </p>
@@ -764,6 +796,24 @@ export default function TokenLaunchPage() {
                             `Approve ${paymentMethod.toUpperCase()} Spending`
                           )}
                         </button>
+                      )}
+
+                      {/* Gas Fee Preview */}
+                      {allAcknowledged && !needsApproval && amount && parseFloat(amount) > 0 && (
+                        <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg p-4 mb-4">
+                          <div className="flex items-center gap-2 text-[#A0A0A5] text-sm mb-2">
+                            <Fuel size={14} />
+                            <span>Transaction Cost</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-[#707075]">Network fee (gas)</span>
+                            <span className="text-[#F5F3E8]">~${gasCostUsd < 0.01 ? '<0.01' : gasCostUsd.toFixed(2)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-[#50C878] mt-2">
+                            <div className="w-1.5 h-1.5 bg-[#50C878] rounded-full" />
+                            <span>~2 sec confirmation on Base</span>
+                          </div>
+                        </div>
                       )}
 
                       {/* Purchase Button */}

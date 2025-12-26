@@ -3,6 +3,7 @@
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { SimpleWalletConnect } from "@/components/wallet/SimpleWalletConnect";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { 
   Wallet, ArrowUpRight, ArrowDownLeft, Shield, ExternalLink, Copy, 
   CheckCircle2, TrendingUp, Activity, Trophy, Star, Award,
@@ -103,24 +104,51 @@ export default function DashboardPage() {
                   <span className="text-[#A0A0A5] text-xs">Wallet Balance</span>
                   <Wallet className="text-[#00F0FF]" size={18} />
                 </div>
-                <div className="text-xl font-bold text-[#F5F3E8]">{walletBalance}</div>
-                <div className="text-[#A0A0A5] text-xs">≈ ${usdValue}</div>
+                {vaultLoading ? (
+                  <>
+                    <Skeleton height={28} className="w-24 mb-1" />
+                    <Skeleton height={12} className="w-16" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xl font-bold text-[#F5F3E8]">{walletBalance}</div>
+                    <div className="text-[#A0A0A5] text-xs">≈ ${usdValue}</div>
+                  </>
+                )}
               </div>
               <Link href="/vault" className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 hover:border-[#50C878] transition-colors group">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[#A0A0A5] text-xs">Vault</span>
                   <Shield className="text-[#50C878]" size={18} />
                 </div>
-                <div className="text-xl font-bold text-[#F5F3E8]">{vaultBalanceRaw}</div>
-                <div className="text-[#00F0FF] text-xs group-hover:underline">Manage →</div>
+                {vaultLoading ? (
+                  <>
+                    <Skeleton height={28} className="w-20 mb-1" />
+                    <Skeleton height={12} className="w-16" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xl font-bold text-[#F5F3E8]">{vaultBalanceRaw}</div>
+                    <div className="text-[#00F0FF] text-xs group-hover:underline">Manage →</div>
+                  </>
+                )}
               </Link>
               <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[#A0A0A5] text-xs">ProofScore</span>
                   <TrendingUp className="text-[#FFD700]" size={18} />
                 </div>
-                <div className="text-xl font-bold text-[#00F0FF]">{scoreLoading ? '...' : proofscore}</div>
-                <div className="text-[#50C878] text-xs">{tier || 'NEUTRAL'} tier</div>
+                {scoreLoading ? (
+                  <>
+                    <Skeleton height={28} className="w-16 mb-1" />
+                    <Skeleton height={12} className="w-20" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xl font-bold text-[#00F0FF]">{proofscore}</div>
+                    <div className="text-[#50C878] text-xs">{tier || 'NEUTRAL'} tier</div>
+                  </>
+                )}
               </div>
               <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -276,10 +304,10 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
         </div>
         <div className="space-y-2">
           {[
-            { action: "Payment Received", details: "125 VFIDE", time: "2 hours ago", icon: ArrowDownLeft, color: "#50C878" },
-            { action: "Voted on Proposal", details: "#142 - Treasury", time: "1 day ago", icon: Vote, color: "#9B59B6" },
-            { action: "Badge Earned", details: "Early Adopter", time: "2 days ago", icon: Trophy, color: "#FFD700" },
-            { action: "Vault Deposit", details: "1,000 VFIDE", time: "3 days ago", icon: Shield, color: "#0080FF" },
+            { action: "Payment Received", details: "125 VFIDE", usd: 8.75, time: "2 hours ago", icon: ArrowDownLeft, color: "#50C878" },
+            { action: "Voted on Proposal", details: "#142 - Treasury", usd: null, time: "1 day ago", icon: Vote, color: "#9B59B6" },
+            { action: "Badge Earned", details: "Early Adopter", usd: null, time: "2 days ago", icon: Trophy, color: "#FFD700" },
+            { action: "Vault Deposit", details: "1,000 VFIDE", usd: 70.00, time: "3 days ago", icon: Shield, color: "#0080FF" },
           ].map((activity, idx) => (
             <div key={idx} className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
               <div className="flex items-center gap-3">
@@ -288,7 +316,12 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
                 </div>
                 <div>
                   <div className="text-[#F5F3E8] font-bold text-sm">{activity.action}</div>
-                  <div className="text-[#A0A0A5] text-xs">{activity.details}</div>
+                  <div className="text-[#A0A0A5] text-xs">
+                    {activity.details}
+                    {activity.usd !== null && (
+                      <span className="text-[#50C878] ml-1">(~${activity.usd.toFixed(2)})</span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="text-[#A0A0A5] text-xs">{activity.time}</div>
@@ -355,6 +388,12 @@ function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
           <div>
             <div className="flex justify-between mb-2">
               <label className="text-[#A0A0A5]">Transfer Amount (VFIDE)</label>
+              <button
+                onClick={() => setTransferAmount(50000)}
+                className="text-xs text-[#00F0FF] hover:text-[#00D4FF] font-bold"
+              >
+                MAX
+              </button>
             </div>
             <input
               type="number"

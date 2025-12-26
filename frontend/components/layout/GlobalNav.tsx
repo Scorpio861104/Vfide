@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { SimpleWalletConnect } from "../wallet/SimpleWalletConnect";
+import { FaucetButton } from "../wallet/FaucetButton";
 import { VaultStatusModal } from "../vault/VaultStatusModal";
 import { VaultStatusIndicator } from "../vault/VaultStatusIndicator";
 import { NavbarBalance } from "../ui/TokenBalance";
@@ -50,6 +51,9 @@ export function GlobalNav() {
             <Link href="/merchant" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
               Merchant
             </Link>
+            <Link href="/leaderboard" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
+              Leaderboard
+            </Link>
             <Link href="/governance" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
               Governance
             </Link>
@@ -63,6 +67,7 @@ export function GlobalNav() {
 
           {/* Wallet Connection & Vault Status */}
           <div className="hidden md:flex items-center gap-3">
+            <FaucetButton />
             <NavbarBalance />
             <VaultStatusIndicator />
             <SimpleWalletConnect />
@@ -92,6 +97,9 @@ export function GlobalNav() {
             </Link>
             <Link href="/merchant" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
               Merchant
+            </Link>
+            <Link href="/leaderboard" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
+              Leaderboard
             </Link>
             <Link href="/governance" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
               Governance

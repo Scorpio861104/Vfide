@@ -386,7 +386,15 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
 
         <div className="space-y-6">
           <div>
-            <label className="text-[#A0A0A5] text-sm mb-2 block">Amount (VFIDE)</label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-[#A0A0A5] text-sm">Amount (VFIDE)</label>
+              <button
+                onClick={() => setAmount('10000')}
+                className="text-xs text-pink-400 hover:text-pink-300 font-bold"
+              >
+                MAX
+              </button>
+            </div>
             <input
               type="number"
               value={amount}
