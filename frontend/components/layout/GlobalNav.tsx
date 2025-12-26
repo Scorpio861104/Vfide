@@ -59,9 +59,6 @@ export function GlobalNav() {
             <Link href="/docs" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
               Docs
             </Link>
-            <Link href="/testnet" className="bg-yellow-500 hover:bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold transition-colors">
-              🧪 Try Testnet
-            </Link>
           </div>
 
           {/* Wallet Connection & Vault Status */}
@@ -104,9 +101,6 @@ export function GlobalNav() {
             </Link>
             <Link href="/docs" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
               Docs
-            </Link>
-            <Link href="/testnet" className="block py-2 bg-yellow-500 hover:bg-yellow-400 text-black px-3 rounded-lg text-center font-bold mt-2" onClick={() => setMobileMenuOpen(false)}>
-              🧪 Try Testnet Free
             </Link>
             <div className="mt-2">
               <SimpleWalletConnect />

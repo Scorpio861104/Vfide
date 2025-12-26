@@ -33,7 +33,7 @@ export function TestnetBadge() {
 }
 
 /**
- * Corner badge for testnet - less intrusive option
+ * Corner badge for testnet - subtle indicator
  * Hidden when IS_TESTNET is false (mainnet mode)
  */
 export function TestnetCornerBadge() {
@@ -47,8 +47,8 @@ export function TestnetCornerBadge() {
   if (!isTestnetChain) return null;
 
   return (
-    <a href="/testnet" className="fixed top-20 left-4 z-50 bg-orange-500/90 hover:bg-orange-400 text-black px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse cursor-pointer">
-      🧪 TESTNET
-    </a>
+    <span className="fixed top-20 left-4 z-50 bg-amber-500/80 text-black px-2 py-0.5 rounded text-xs font-medium">
+      Testnet
+    </span>
   );
 }
