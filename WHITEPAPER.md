@@ -14,7 +14,7 @@ The ecosystem is built around three core innovations:
 2. **Personal Smart Vaults** — Deterministic smart contract wallets with built-in security features, guardian recovery, and inheritance mechanisms
 3. **Trust-Based Economics** — Transaction fees that decrease with good behavior and increase with suspicious activity, creating natural incentives for ecosystem integrity
 
-VFIDE is designed for zkSync Era with full EVM compatibility, enabling high throughput and low-cost transactions while maintaining Ethereum-level security guarantees.
+VFIDE is designed as a multi-chain protocol supporting Base, Polygon, and zkSync, with full EVM compatibility, enabling high throughput and low-cost transactions while maintaining Ethereum-level security guarantees.
 
 ---
 
@@ -257,7 +257,7 @@ This creates an unalterable history that:
 | **Symbol** | VFIDE |
 | **Decimals** | 18 |
 | **Total Supply** | 200,000,000 VFIDE (fixed) |
-| **Network** | zkSync Era (EVM compatible) |
+| **Network** | Base, Polygon, zkSync (EVM compatible) |
 | **Standard** | ERC-20 + EIP-2612 (Permit) |
 
 ### 5.2 Supply Distribution
@@ -1211,7 +1211,7 @@ All funds raised during the presale are allocated transparently:
 | Component | Technology |
 |-----------|------------|
 | Language | Solidity 0.8.30 |
-| Network | zkSync Era (EVM compatible) |
+| Network | Base, Polygon, zkSync (EVM compatible) |
 | Framework | Foundry |
 | Compiler | solc with via-IR optimization |
 | EVM Version | Cancun |
@@ -1256,7 +1256,7 @@ All funds raised during the presale are allocated transparently:
 - [x] Comprehensive testing (193 tests)
 - [x] Security audit preparation
 - [ ] External security audit
-- [ ] zkSync Era testnet deployment
+- [x] Base Sepolia testnet deployment
 
 ### Phase 2: Launch (Q1 2026)
 - [ ] Presale launch

@@ -35,9 +35,11 @@ The following critical and high severity issues have been fixed:
 | H-25 | VFIDEPresale | emergencyWithdraw uses deprecated .transfer() | ✅ FIXED |
 | H-27 | VFIDEFinance | noteVFIDE has no access control | ✅ FIXED |
 
-### zkSync Era Deployment Status
+### Base Sepolia Deployment Status
 
-**Contract Size Issues:** ✅ NOT A BLOCKER on zkSync Era (2MB limit vs EVM's 24KB)
+**Contract Size Issues:** ✅ RESOLVED - VaultHubLite replaces VaultInfrastructure
+**Deployed Contracts:** 32 contracts on Base Sepolia (Chain ID 84532)
+**Date:** December 25, 2025
 
 ---
 
@@ -284,7 +286,7 @@ function executeBatch(...) external onlyOwner notLocked nonReentrant returns (by
 7. **Timelock** - Governance actions properly delayed
 8. **Extensive Test Suite** - 500+ test files covering edge cases
 9. **Fuzz Testing** - Echidna/Medusa integration present
-10. **zkSync Compatibility** - Proper zksolc configuration
+10. **Multi-Chain Compatibility** - Base, Polygon, zkSync support
 
 ---
 

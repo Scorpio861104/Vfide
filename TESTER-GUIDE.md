@@ -1,6 +1,6 @@
 # 🧪 VFIDE Testnet Tester Guide
 
-**Welcome Early Testers!** You're among the first to experience VFIDE - the decentralized financial ecosystem built on zkSync. Your feedback shapes our launch.
+**Welcome Early Testers!** You're among the first to experience VFIDE - the decentralized financial ecosystem built on Base. Your feedback shapes our launch.
 
 ---
 
@@ -21,29 +21,29 @@
 
 If you don't have one, install [MetaMask](https://metamask.io/download/) or [Rabby](https://rabby.io/).
 
-### Step 2: Add zkSync Sepolia Network
+### Step 2: Add Base Sepolia Network
 
 | Setting | Value |
 |---------|-------|
-| Network Name | zkSync Sepolia Testnet |
-| RPC URL | `https://sepolia.era.zksync.dev` |
-| Chain ID | `300` |
+| Network Name | Base Sepolia |
+| RPC URL | `https://sepolia.base.org` |
+| Chain ID | `84532` |
 | Currency | ETH |
-| Block Explorer | `https://sepolia.explorer.zksync.io` |
+| Block Explorer | `https://sepolia.basescan.org` |
 
-**Or click:** [Add zkSync Sepolia to MetaMask](https://chainlist.org/chain/300)
+**Or click:** [Add Base Sepolia to MetaMask](https://chainlist.org/chain/84532)
 
 ### Step 3: Get Free Test ETH
 
 You need test ETH (fake money, no real value) to pay for transactions:
 
-1. **zkSync Faucet** (recommended): https://portal.zksync.io/faucet
-2. **Sepolia Faucet** (then bridge): https://sepoliafaucet.com
-3. **Alchemy Faucet**: https://www.alchemy.com/faucets/zksync-sepolia
+1. **Base Faucet** (recommended): https://faucet.quicknode.com/base/sepolia
+2. **Coinbase Faucet**: https://www.coinbase.com/faucets/base-ethereum-goerli-faucet
+3. **Alchemy Faucet**: https://www.alchemy.com/faucets/base-sepolia
 
 ### Step 4: Start Testing
 
-Visit: **https://vfide-frontend.vercel.app/testnet**
+Visit: **https://vfide.vercel.app/testnet**
 
 ---
 
@@ -150,10 +150,10 @@ Testing runs until we launch mainnet. Expected: **Q1 2025**
 Complete the testing checklist and submit your wallet address. Badges are minted at mainnet launch.
 
 ### Can I test on mobile?
-Yes! Use any mobile wallet that supports zkSync Sepolia (MetaMask mobile, Rabby, etc.)
+Yes! Use any mobile wallet that supports Base Sepolia (MetaMask mobile, Rabby, Coinbase Wallet, etc.)
 
 ### What if I get stuck?
-- Check the [docs](https://vfide-frontend.vercel.app/docs)
+- Check the [docs](https://vfide.vercel.app/docs)
 - Ask in Discord
 - Email testnet@vfide.io
 
@@ -163,10 +163,10 @@ Yes! Use any mobile wallet that supports zkSync Sepolia (MetaMask mobile, Rabby,
 
 | Resource | URL |
 |----------|-----|
-| **Testnet App** | https://vfide-frontend.vercel.app/testnet |
-| **Main Site** | https://vfide-frontend.vercel.app |
-| **Documentation** | https://vfide-frontend.vercel.app/docs |
-| **Block Explorer** | https://sepolia.explorer.zksync.io |
+| **Testnet App** | https://vfide.vercel.app/testnet |
+| **Main Site** | https://vfide.vercel.app |
+| **Documentation** | https://vfide.vercel.app/docs |
+| **Block Explorer** | https://sepolia.basescan.org |
 | **GitHub** | https://github.com/Scorpio861104/Vfide |
 
 ---
@@ -177,16 +177,16 @@ Help spread the word and earn bonus rewards!
 
 ### Twitter/X Template:
 ```
-🧪 Testing @VFIDE on zkSync testnet!
+🧪 Testing @VFIDE on Base Sepolia testnet!
 
 Early testers get:
 ✅ NFT Badge
 ✅ Priority presale access
 ✅ Up to 10% bonus tokens
 
-Join the test: vfide-frontend.vercel.app/testnet
+Join the test: vfide.vercel.app/testnet
 
-#VFIDE #zkSync #DeFi #Testnet
+#VFIDE #Base #DeFi #Testnet
 ```
 
 ### Discord Template:
@@ -198,9 +198,9 @@ If you help test, you get:
 - Priority access to token presale
 - Bonus token allocation
 
-It's on zkSync so transactions are fast and cheap (free on testnet).
+It's on Base so transactions are fast and cheap (free on testnet).
 
-Link: https://vfide-frontend.vercel.app/testnet
+Link: https://vfide.vercel.app/testnet
 ```
 
 ---

@@ -16,9 +16,9 @@
 
 1️⃣ **Get Wallet** → [metamask.io](https://metamask.io)
 
-2️⃣ **Get Test ETH** → [portal.zksync.io/faucet](https://portal.zksync.io/faucet)
+2️⃣ **Get Test ETH** → [faucet.quicknode.com/base/sepolia](https://faucet.quicknode.com/base/sepolia)
 
-3️⃣ **Start Testing** → [vfide-frontend.vercel.app/testnet](https://vfide-frontend.vercel.app/testnet)
+3️⃣ **Start Testing** → [vfide.vercel.app/testnet](https://vfide.vercel.app/testnet)
 
 ---
 
@@ -35,17 +35,17 @@
 ### 📱 SHARE & EARN
 
 ```
-🧪 Testing @VFIDE on zkSync!
+🧪 Testing @VFIDE on Base Sepolia!
 
 Early testers get NFT badges + priority presale + bonus tokens
 
-Join: vfide-frontend.vercel.app/testnet
+Join: vfide.vercel.app/testnet
 
-#VFIDE #zkSync #DeFi
+#VFIDE #Base #DeFi
 ```
 
 ---
 
-**🌐 vfide-frontend.vercel.app/testnet**
+**🌐 vfide.vercel.app/testnet**
 
 *No real money. Just test & earn rewards.*

@@ -6,7 +6,7 @@
 
 ## Welcome to VFIDE! 🚀
 
-VFIDE is a revolutionary **zero-fee payment system** built on zkSync Era that combines **on-chain reputation** (ProofScore) with **secure vault custody** to create a fair, transparent financial ecosystem.
+VFIDE is a revolutionary **zero-fee payment system** built on Base, Polygon, and zkSync that combines **on-chain reputation** (ProofScore) with **secure vault custody** to create a fair, transparent financial ecosystem.
 
 ---
 
@@ -20,7 +20,7 @@ VFIDE is a revolutionary **zero-fee payment system** built on zkSync Era that co
    - WalletConnect
    - Coinbase Wallet
    - Rainbow
-4. Approve connection to zkSync Era network
+4. Approve connection to Base network (or Polygon/zkSync)
 
 ### 2. **Create Your Vault**
 Your vault is a smart contract that holds your VFIDE tokens safely.
@@ -143,7 +143,7 @@ If you lose access to your wallet:
 Your Vault → Merchant Vault
 Fee: 0% protocol fee
 Transfer Fee: 0.25%-5% (mostly burn, varies by ProofScore)
-Speed: 2-3 seconds (zkSync)
+Speed: 2-3 seconds (Base/Polygon/zkSync)
 Cost: ~$0.02 gas
 ```
 
@@ -301,7 +301,7 @@ After commitment period ends, transfer freely.
 **A:** **NO.** VFIDE tokens are **utility tokens** for payments, governance, and commerce. Not securities. Not investment contracts. Review legal disclaimers before purchase.
 
 ### **Q: Which networks does VFIDE support?**
-**A:** Currently **zkSync Era only**. Multi-chain expansion planned for 2026.
+**A:** Currently **Base Sepolia (testnet)**. Mainnet on Base, Polygon, and zkSync planned for Q2 2025.
 
 ### **Q: How do I withdraw to USD?**
 **A:** Use merchant portal to convert VFIDE → stablecoin (USDC) → off-ramp to bank via:
@@ -315,14 +315,14 @@ After commitment period ends, transfer freely.
 ## Troubleshooting
 
 ### **"Transaction Failed"**
-- **Check gas:** Ensure you have ETH on zkSync Era for gas
+- **Check gas:** Ensure you have ETH on Base (or your selected network) for gas
 - **Check balance:** Verify vault has sufficient VFIDE
 - **Check locks:** Ensure vault isn't guardian-locked
 - **Check score:** Some actions require minimum ProofScore
 
 ### **"Vault Not Found"**
 - Create vault first (see section 2)
-- Ensure connected to zkSync Era network
+- Ensure connected to Base Sepolia network (for testnet)
 - Clear browser cache and reconnect wallet
 
 ### **"Insufficient ProofScore"**
@@ -390,7 +390,7 @@ After commitment period ends, transfer freely.
 
 **DAO:** Decentralized Autonomous Organization (community governance)
 
-**zkSync Era:** Layer 2 scaling solution for Ethereum (low fees, fast)
+**Base/Polygon/zkSync:** Layer 2 scaling solutions for Ethereum (low fees, fast)
 
 **Timelock:** Delay mechanism for DAO proposals (3 days)
 

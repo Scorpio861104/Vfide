@@ -20,7 +20,7 @@
 
 ## 🌟 What is VFIDE?
 
-VFIDE is revolutionizing commerce by making **trust the currency of the future**. Built on zkSync Era, VFIDE creates a world where honest behavior is rewarded, scammers are excluded, and everyone benefits from a more trustworthy marketplace.
+VFIDE is revolutionizing commerce by making **trust the currency of the future**. Built as a multi-chain protocol on Base, Polygon, and zkSync, VFIDE creates a world where honest behavior is rewarded, scammers are excluded, and everyone benefits from a more trustworthy marketplace.
 
 > *"In a world of anonymous transactions, VFIDE proves that you can be trusted."*
 
@@ -74,7 +74,7 @@ Every VFIDE user has a **ProofScore** — a dynamic reputation score from 0 to 1
 |--------|-------|
 | **Total Supply** | 1,000,000,000 VFIDE |
 | **Burn Rate** | 35% of all transaction fees |
-| **Chain** | zkSync Era |
+| **Chains** | Base, Polygon, zkSync |
 | **Standard** | ERC-20 |
 
 ### Token Utility
@@ -134,15 +134,15 @@ Every transaction fee is split:
 - **Guardian Recovery** — Trusted contacts help you recover access
 - **Audited Contracts** — Comprehensive security testing
 - **Emergency Controls** — Protocol-level circuit breakers
-- **zkSync Native** — Inherits Ethereum security
+- **L2 Native** — Built on secure Ethereum L2 networks
 
 ## 🗓️ Roadmap
 
 - [x] **Q4 2024** — Core contracts deployed to testnet
-- [x] **Q1 2025** — Frontend launch & community beta
-- [ ] **Q2 2025** — Mainnet launch on zkSync Era
+- [x] **Q1 2025** — Frontend launch & community beta on Base Sepolia
+- [ ] **Q2 2025** — Mainnet launch on Base
 - [ ] **Q3 2025** — Mobile app & merchant onboarding
-- [ ] **Q4 2025** — Cross-chain expansion
+- [ ] **Q4 2025** — Multi-chain expansion (Polygon, zkSync)
 
 ## 🔗 Links
 

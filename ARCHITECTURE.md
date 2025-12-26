@@ -2,7 +2,7 @@
 
 ## System Overview
 
-VFIDE is a trust-based payment protocol built on zkSync Era, featuring vault-only custody, on-chain reputation (ProofScore), and zero-fee merchant payments.
+VFIDE is a trust-based payment protocol built as a multi-chain solution on Base, Polygon, and zkSync, featuring vault-only custody, on-chain reputation (ProofScore), and zero-fee merchant payments.
 
 ## Core Components
 
@@ -229,7 +229,7 @@ test/
 ## Deployment Process
 
 ### Phase 1: TestNet (1 week)
-1. Deploy to zkSync Sepolia testnet
+1. Deploy to Base Sepolia testnet ✅
 2. Verify all contracts
 3. Test with community
 4. Gather feedback
@@ -243,7 +243,7 @@ test/
 5. Publish audit report
 
 ### Phase 3: Mainnet Launch (1 week)
-1. Deploy to zkSync Era mainnet
+1. Deploy to Base mainnet
 2. Initialize parameters
 3. Transfer ownership to DAO
 4. Activate circuit breaker

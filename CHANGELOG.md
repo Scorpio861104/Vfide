@@ -28,10 +28,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flash loan protection in governance
 - Guardian recovery for vaults
 
+## [1.1.0] - 2025-12-26
+
+### Added
+- Base Sepolia testnet deployment (32 contracts)
+- Multi-chain support (Base, Polygon, zkSync)
+- VaultHubLite contract (replaces oversized VaultInfrastructure)
+- Updated frontend for Base Sepolia
+
+### Changed
+- Primary chain changed from zkSync to Base
+- Documentation updated for multi-chain support
+
 ## [1.0.0] - 2025-01-XX (Planned Mainnet Launch)
 
 ### Planned Features
-- zkSync Era mainnet deployment
+- Base mainnet deployment
 - Frontend dApp launch
 - Public presale opening
 - Initial liquidity provision
@@ -44,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Pre-Release Development
 - Extensive security audits
 - Gas optimization
-- zkSync compatibility testing
+- Multi-chain compatibility testing
 - Community feedback integration
 
 ---

@@ -33,11 +33,11 @@ npm install wagmi@^2.0.0 @rainbow-me/rainbowkit@^2.0.0
 
 ```typescript
 import { createPublicClient, http } from 'viem'
-import { zkSync } from 'viem/chains'
+import { base } from 'viem/chains'
 
 // 1. Setup client
 const client = createPublicClient({
-  chain: zkSync,
+  chain: base,
   transport: http()
 })
 
@@ -75,7 +75,7 @@ console.log(`User ProofScore: ${proofScore}/1000`)
 
 ## Contract Addresses
 
-### zkSync Era Mainnet (DEPLOY THESE FIRST)
+### Base Mainnet (DEPLOY THESE FIRST)
 ```typescript
 export const VFIDE_CONTRACTS = {
   // Core
@@ -114,13 +114,17 @@ export const VFIDE_CONTRACTS = {
 }
 ```
 
-### zkSync Sepolia Testnet
+### Base Sepolia Testnet (LIVE NOW)
 ```typescript
 export const VFIDE_CONTRACTS_TESTNET = {
-  // Add testnet addresses after deployment
-  VFIDEToken: '0x...',
-  VaultInfrastructure: '0x...',
-  // ... etc
+  // Base Sepolia - Chain ID 84532
+  VFIDEToken: '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5',
+  VaultHubLite: '0x1508fa7D70A88F3c5E89d3a82f668cD92Fa902B5',
+  Seer: '0x90b672C009F0F16201E7bE2c6696d1c375d28422',
+  VFIDEPresale: '0x89aefb047B6CB2bB302FE2734DDa452985eF1658',
+  MerchantPortal: '0x62Be75642b9334a5276a733c5E40B91eD8a6055d',
+  DAO: '0xA462F4C2825f48545a9217FD65B7eB621ea8b507',
+  // See BASE_SEPOLIA_DEPLOYMENT.md for full list
 }
 ```
 
@@ -758,11 +762,11 @@ cd Vfide
 npm install
 forge install
 
-# 3. Run local zkSync node (or use testnet)
-npx zksync-cli dev start
+# 3. Run local node (or use Base Sepolia testnet)
+anvil
 
 # 4. Deploy contracts locally
-forge script script/Deploy.s.sol:DeployVfide --rpc-url http://127.0.0.1:3050 --broadcast
+forge script script/Deploy.s.sol:DeployVfide --rpc-url http://127.0.0.1:8545 --broadcast
 
 # 5. Run tests
 forge test -vvv
@@ -882,7 +886,7 @@ localStorage.setItem('lastVFIDETx', Date.now().toString())
 **Fix:** Contact guardians to review and unlock
 
 ### Gas Estimation Failures
-**Cause:** zkSync gas estimation can be flaky  
+**Cause:** L2 gas estimation can sometimes be flaky  
 **Fix:** Manually set gas limit: `gas: 2000000n`
 
 ---
@@ -915,10 +919,14 @@ localStorage.setItem('lastVFIDETx', Date.now().toString())
 
 ## Changelog
 
+### v1.1.0 (December 26, 2025)
+- Base Sepolia testnet deployment (32 contracts)
+- Multi-chain support (Base, Polygon, zkSync)
+- Updated frontend for Base Sepolia
+
 ### v1.0.0 (December 4, 2025)
 - Initial release
 - Core contracts: VFIDEToken, VaultInfrastructure, VFIDETrust, MerchantPortal, DAO
-- zkSync Era deployment
 - Full developer API documentation
 
 ---
