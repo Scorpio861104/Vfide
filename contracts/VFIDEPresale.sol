@@ -465,6 +465,7 @@ contract VFIDEPresale is ReentrancyGuard {
      *      Requires prior approval of stablecoin to this contract
      */
     function buyWithStable(address stablecoin, uint256 amount, uint8 tier, uint256 lockPeriod) external nonReentrant whenNotPaused {
+        require(tokensDeposited, "PS: tokens not yet deposited");
         require(address(stablecoinRegistry) != address(0), "PS: no registry");
         if (!stablecoinRegistry.isWhitelisted(stablecoin)) revert PS_InvalidStablecoin();
         if (!isTierAvailable(tier)) revert PS_TierDisabled();
@@ -511,6 +512,7 @@ contract VFIDEPresale is ReentrancyGuard {
      * @param referrer Address of the referrer
      */
     function buyWithStableReferral(address stablecoin, uint256 amount, uint8 tier, uint256 lockPeriod, address referrer) external nonReentrant whenNotPaused {
+        require(tokensDeposited, "PS: tokens not yet deposited");
         require(address(stablecoinRegistry) != address(0), "PS: no registry");
         if (!stablecoinRegistry.isWhitelisted(stablecoin)) revert PS_InvalidStablecoin();
         if (!isTierAvailable(tier)) revert PS_TierDisabled();

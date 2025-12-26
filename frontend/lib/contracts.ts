@@ -1,24 +1,47 @@
 /**
  * VFIDE Contract Addresses and ABIs
  */
+import { isAddress } from 'viem'
+
+// Zero address placeholder for missing contracts
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
+
+/**
+ * H-5 Fix: Validate contract address at runtime
+ * Returns properly typed address, or zero address if invalid/missing
+ * Runtime validation logs warnings for debugging
+ */
+function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
+  if (!address) {
+    if (typeof window !== 'undefined') {
+      console.warn(`[VFIDE] Missing contract address: ${name}`)
+    }
+    return ZERO_ADDRESS
+  }
+  if (!isAddress(address)) {
+    console.warn(`[VFIDE] Invalid contract address for ${name}: ${address}`)
+    return ZERO_ADDRESS
+  }
+  return address as `0x${string}`
+}
 
 export const CONTRACT_ADDRESSES = {
-  VFIDEToken: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS as `0x${string}`,
-  VFIDEPresale: process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS as `0x${string}`,
-  StablecoinRegistry: process.env.NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS as `0x${string}`,
-  VFIDECommerce: process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS as `0x${string}`,
-  MerchantPortal: process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS as `0x${string}`,
-  VaultHub: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS as `0x${string}`,
-  Seer: process.env.NEXT_PUBLIC_SEER_ADDRESS as `0x${string}`,
-  DAO: process.env.NEXT_PUBLIC_DAO_ADDRESS as `0x${string}`,
-  DAOTimelock: process.env.NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS as `0x${string}`,
-  TrustGateway: process.env.NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS as `0x${string}`,
-  BadgeNFT: process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS as `0x${string}`,
-  SecurityHub: process.env.NEXT_PUBLIC_SECURITY_HUB_ADDRESS as `0x${string}`,
-  GuardianRegistry: process.env.NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS as `0x${string}`,
-  GuardianLock: process.env.NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS as `0x${string}`,
-  PanicGuard: process.env.NEXT_PUBLIC_PANIC_GUARD_ADDRESS as `0x${string}`,
-  EmergencyBreaker: process.env.NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS as `0x${string}`,
+  VFIDEToken: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS, 'VFIDEToken'),
+  VFIDEPresale: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS, 'VFIDEPresale'),
+  StablecoinRegistry: validateContractAddress(process.env.NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS, 'StablecoinRegistry'),
+  VFIDECommerce: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS, 'VFIDECommerce'),
+  MerchantPortal: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS, 'MerchantPortal'),
+  VaultHub: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS, 'VaultHub'),
+  Seer: validateContractAddress(process.env.NEXT_PUBLIC_SEER_ADDRESS, 'Seer'),
+  DAO: validateContractAddress(process.env.NEXT_PUBLIC_DAO_ADDRESS, 'DAO'),
+  DAOTimelock: validateContractAddress(process.env.NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS, 'DAOTimelock'),
+  TrustGateway: validateContractAddress(process.env.NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS, 'TrustGateway'),
+  BadgeNFT: validateContractAddress(process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS, 'BadgeNFT'),
+  SecurityHub: validateContractAddress(process.env.NEXT_PUBLIC_SECURITY_HUB_ADDRESS, 'SecurityHub'),
+  GuardianRegistry: validateContractAddress(process.env.NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS, 'GuardianRegistry'),
+  GuardianLock: validateContractAddress(process.env.NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS, 'GuardianLock'),
+  PanicGuard: validateContractAddress(process.env.NEXT_PUBLIC_PANIC_GUARD_ADDRESS, 'PanicGuard'),
+  EmergencyBreaker: validateContractAddress(process.env.NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS, 'EmergencyBreaker'),
 } as const
 
 // Minimal ABIs for common interactions

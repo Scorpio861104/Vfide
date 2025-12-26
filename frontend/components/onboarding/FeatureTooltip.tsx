@@ -114,32 +114,47 @@ export function FeatureTooltip({
 
 // Hook to manage tooltip visibility
 export function useFeatureTooltip(id: string) {
-  const [isVisible, setIsVisible] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const dismissedTooltips = JSON.parse(
-      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
-    );
-    return !dismissedTooltips.includes(id);
-  });
+  // M-4 Fix: Initialize as false to avoid SSR hydration mismatch
+  const [isVisible, setIsVisible] = useState(false);
+  
+  // Check localStorage after mount to avoid hydration issues
+  useEffect(() => {
+    try {
+      const dismissedTooltips = JSON.parse(
+        localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+      );
+      setIsVisible(!dismissedTooltips.includes(id));
+    } catch {
+      setIsVisible(true); // Default to showing tooltip if localStorage fails
+    }
+  }, [id]);
 
   const dismiss = () => {
     setIsVisible(false);
-    const dismissedTooltips = JSON.parse(
-      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
-    );
-    if (!dismissedTooltips.includes(id)) {
-      dismissedTooltips.push(id);
-      localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(dismissedTooltips));
+    try {
+      const dismissedTooltips = JSON.parse(
+        localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+      );
+      if (!dismissedTooltips.includes(id)) {
+        dismissedTooltips.push(id);
+        localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(dismissedTooltips));
+      }
+    } catch {
+      // Ignore localStorage errors (private browsing mode)
     }
   };
 
   const reset = () => {
     setIsVisible(true);
-    const dismissedTooltips = JSON.parse(
-      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
-    );
-    const filtered = dismissedTooltips.filter((tooltipId: string) => tooltipId !== id);
-    localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(filtered));
+    try {
+      const dismissedTooltips = JSON.parse(
+        localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+      );
+      const filtered = dismissedTooltips.filter((tooltipId: string) => tooltipId !== id);
+      localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(filtered));
+    } catch {
+      // Ignore localStorage errors (private browsing mode)
+    }
   };
 
   return { isVisible, dismiss, reset };

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useBalance, useGasPrice } from "wagmi";
 import { parseUnits, formatUnits, isAddress, formatEther } from "viem";
 import { Loader2, CheckCircle, Wallet, Fuel } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 // VFIDEPresale ABI
 const PRESALE_ABI = [
@@ -147,6 +148,7 @@ const LOCK_PERIODS = { founding: 180 * 24 * 3600, oath: 90 * 24 * 3600, public: 
 
 export default function TokenLaunchPage() {
   const { address, isConnected } = useAccount();
+  const { showToast } = useToast();
   const [selectedTier, setSelectedTier] = useState<"founding" | "oath" | "public" | null>(null);
   const [amount, setAmount] = useState("");
   const [referralCode, setReferralCode] = useState("");
@@ -231,6 +233,12 @@ export default function TokenLaunchPage() {
     const usdAmount = calculateTotal();
     const stableAmount = parseUnits(usdAmount.toFixed(6), 6);
     const hasReferrer = referralCode && isAddress(referralCode);
+    
+    // M-3 Fix: Block self-referral
+    if (hasReferrer && referralCode.toLowerCase() === address?.toLowerCase()) {
+      showToast("Cannot use your own address as referrer", "error");
+      return;
+    }
     
     // Only ETH payments are available on testnet
     // Stablecoin payments will be enabled on mainnet

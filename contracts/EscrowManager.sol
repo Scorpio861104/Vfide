@@ -206,16 +206,17 @@ contract EscrowManager is ReentrancyGuard {
         emit EscrowNearTimeout(id, timeRemaining);
     }
     
-    // 6. Resolve Dispute (Arbiter decides)
+    // 6. Resolve Dispute (Arbiter decides, DAO for high-value)
     // C-4 Fix: Add nonReentrant modifier
     function resolveDispute(uint256 id, bool refundBuyer) external nonReentrant {
-        require(msg.sender == arbiter && arbiter != address(0), "ES: not arbiter");
         Escrow storage e = escrows[id];
         require(e.state == State.DISPUTED, "not disputed");
         
-        // C-5: High-value disputes require DAO confirmation
+        // C-5: High-value disputes require DAO, normal disputes require arbiter
         if (e.amount > HIGH_VALUE_THRESHOLD) {
-            require(msg.sender == dao, "high value requires DAO");
+            require(msg.sender == dao && dao != address(0), "ES: high value requires DAO");
+        } else {
+            require(msg.sender == arbiter && arbiter != address(0), "ES: not arbiter");
         }
 
         if (refundBuyer) {
@@ -250,15 +251,16 @@ contract EscrowManager is ReentrancyGuard {
      */
     // C-4 Fix: Add nonReentrant modifier
     function resolveDisputePartial(uint256 id, uint256 buyerShareBps) external nonReentrant {
-        require(msg.sender == arbiter && arbiter != address(0), "ES: not arbiter");
         require(buyerShareBps <= 10000, "ES: invalid bps");
         
         Escrow storage e = escrows[id];
         require(e.state == State.DISPUTED, "not disputed");
         
-        // C-5: High-value disputes require DAO confirmation
+        // C-5: High-value disputes require DAO, normal disputes require arbiter
         if (e.amount > HIGH_VALUE_THRESHOLD) {
-            require(msg.sender == dao, "high value requires DAO");
+            require(msg.sender == dao && dao != address(0), "ES: high value requires DAO");
+        } else {
+            require(msg.sender == arbiter && arbiter != address(0), "ES: not arbiter");
         }
         
         e.state = State.RELEASED; // Using RELEASED for partial resolution

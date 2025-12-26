@@ -446,7 +446,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
 
         if (from == address(0) || to == address(0)) revert VF_ZERO();
-        if (amount == 0) { emit Transfer(from, to, 0); return; }
+        if (amount == 0) revert VF_ZERO();  // H-2 Fix: Reject zero amount transfers
 
         // Optimization: Fetch vaults once if needed for SecurityHub
         address fromVault;
@@ -606,9 +606,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // 3. Daily transfer limit check (for sender)
         if (dailyTransferLimit > 0) {
             // Reset daily counter if 24h has passed
-            if (block.timestamp >= dailyResetTime[from] + 24 hours) {
+            // H-3 Fix: Align to consistent 24-hour periods to prevent gaming
+            uint256 currentDay = block.timestamp / 1 days;
+            uint256 lastResetDay = dailyResetTime[from] / 1 days;
+            if (currentDay > lastResetDay) {
                 dailyTransferred[from] = 0;
-                dailyResetTime[from] = block.timestamp;
+                dailyResetTime[from] = currentDay * 1 days; // Align to day boundary
             }
             
             if (dailyTransferred[from] + amount > dailyTransferLimit) {
@@ -636,7 +639,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (dailyTransferLimit == 0) return type(uint256).max; // No limit
         
         // If reset time has passed, return full limit
-        if (block.timestamp >= dailyResetTime[account] + 24 hours) {
+        // H-3 Fix: Use day boundary check for consistency
+        uint256 currentDay = block.timestamp / 1 days;
+        uint256 lastResetDay = dailyResetTime[account] / 1 days;
+        if (currentDay > lastResetDay) {
             return dailyTransferLimit;
         }
         
@@ -702,7 +708,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             // Daily limit
             if (dailyTransferLimit > 0) {
                 uint256 transferred = dailyTransferred[from];
-                if (block.timestamp < dailyResetTime[from] + 24 hours) {
+                // H-3 Fix: Use day boundary check for consistency
+                uint256 currentDay = block.timestamp / 1 days;
+                uint256 lastResetDay = dailyResetTime[from] / 1 days;
+                if (currentDay == lastResetDay) {
                     if (transferred + amount > dailyTransferLimit) {
                         return (false, "Exceeds daily transfer limit");
                     }
@@ -807,7 +816,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             
             // Calculate daily remaining
             if (dailyTransferLimit > 0) {
-                if (block.timestamp >= dailyResetTime[account] + 24 hours) {
+                // H-3 Fix: Use day boundary check for consistency
+                uint256 currentDay = block.timestamp / 1 days;
+                uint256 lastResetDay = dailyResetTime[account] / 1 days;
+                if (currentDay > lastResetDay) {
                     dailyRemaining = dailyTransferLimit;
                 } else if (dailyTransferred[account] >= dailyTransferLimit) {
                     dailyRemaining = 0;

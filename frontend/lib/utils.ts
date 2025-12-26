@@ -1,11 +1,57 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { isAddress, getAddress } from "viem"
 
 /**
  * Merge Tailwind CSS classes
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+/**
+ * Validate and checksum an Ethereum address
+ * Returns checksummed address or null if invalid
+ * H-4 Fix: Adds proper checksum validation for addresses
+ */
+export function validateAddress(address: string | undefined): `0x${string}` | null {
+  if (!address) return null
+  try {
+    if (!isAddress(address)) return null
+    return getAddress(address)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Safe localStorage wrapper that handles errors
+ * M-1 Fix: Prevents crashes in private browsing mode
+ */
+export const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      return localStorage.getItem(key)
+    } catch {
+      return null
+    }
+  },
+  setItem: (key: string, value: string): boolean => {
+    try {
+      localStorage.setItem(key, value)
+      return true
+    } catch {
+      return false
+    }
+  },
+  removeItem: (key: string): boolean => {
+    try {
+      localStorage.removeItem(key)
+      return true
+    } catch {
+      return false
+    }
+  },
 }
 
 /**

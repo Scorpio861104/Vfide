@@ -75,12 +75,17 @@ contract DAOTimelock {
         (bool ok, bytes memory r) = op.target.call{value:op.value}(op.data);
         require(ok, "exec failed");
         
-        // H-2 Fix: Check return value for known ERC20 calls that return bool
-        // If the call was a token transfer/approve, validate the return data
-        if (r.length == 32) {
-            // Decode as bool if return data is 32 bytes
-            bool returnValue = abi.decode(r, (bool));
-            require(returnValue, "TL: call returned false");
+        // H-2 Fix: Check return value ONLY for known ERC20 calls that return bool
+        // Only validate bool return for transfer/transferFrom/approve selectors
+        if (r.length == 32 && op.data.length >= 4) {
+            bytes4 selector = bytes4(op.data[:4]);
+            // ERC20: transfer(address,uint256), transferFrom(address,address,uint256), approve(address,uint256)
+            if (selector == bytes4(0xa9059cbb) ||  // transfer
+                selector == bytes4(0x23b872dd) ||  // transferFrom  
+                selector == bytes4(0x095ea7b3)) {  // approve
+                bool returnValue = abi.decode(r, (bool));
+                require(returnValue, "TL: ERC20 call returned false");
+            }
         }
         
         emit Executed(id); _log("tl_executed");

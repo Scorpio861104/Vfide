@@ -130,6 +130,10 @@ contract CouncilElection {
 
         uint64 newTermEnd = uint64(block.timestamp) + termSeconds;
         
+        // H-3 Fix: Use half the term length as threshold for "consecutive" terms
+        // This prevents gaming by waiting 15 days to reset consecutive count
+        uint64 consecutiveThreshold = termSeconds / 2;
+        
         uint256 membersLength = members.length;
         for (uint256 i=0; i<membersLength; ++i) {
             address member = members[i];
@@ -141,8 +145,8 @@ contract CouncilElection {
             }
             
             // H-11 Fix: Enforce term limit properly
-            // Check if consecutive (heuristic: last term ended recently)
-            bool isConsecutive = lastTermEndDate[member] > 0 && lastTermEndDate[member] >= block.timestamp - refreshInterval;
+            // H-3 Fix: Use consecutiveThreshold instead of refreshInterval
+            bool isConsecutive = lastTermEndDate[member] > 0 && lastTermEndDate[member] >= block.timestamp - consecutiveThreshold;
             
             if (isConsecutive) {
                 // H-11 Fix: Check BEFORE incrementing to prevent bypass

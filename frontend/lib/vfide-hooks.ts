@@ -954,9 +954,14 @@ export function useActivityFeed() {
   const [activities, setActivities] = useState<ActivityItem[]>([])
   
   useEffect(() => {
+    // H-6 Fix: Track mounted state to prevent memory leak
+    let mounted = true
+    
     // In production, this would subscribe to contract events
     // For now, simulate real-time activity
     const interval = setInterval(() => {
+      if (!mounted) return  // Don't update state if unmounted
+      
       const types: ActivityItem['type'][] = ['transfer', 'merchant_payment', 'endorsement', 'vault_created', 'proposal_voted']
       const randomType = types[Math.floor(Math.random() * types.length)]
       
@@ -973,7 +978,10 @@ export function useActivityFeed() {
       setActivities(prev => [newActivity, ...prev].slice(0, 20)) // Keep last 20
     }, 3000) // New activity every 3 seconds
     
-    return () => clearInterval(interval)
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
   }, [])
   
   return { activities }
