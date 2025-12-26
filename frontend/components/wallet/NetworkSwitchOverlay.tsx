@@ -3,9 +3,35 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAccount, useChainId, useSwitchChain } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertTriangle, ArrowRight, Check, Loader2, X, Zap } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Check, Loader2, X, Zap, Plus } from 'lucide-react'
 import { IS_TESTNET, CURRENT_CHAIN_ID } from '@/lib/testnet'
 import { baseSepolia, base } from 'wagmi/chains'
+
+// Base Sepolia network configuration for MetaMask
+const BASE_SEPOLIA_CONFIG = {
+  chainId: '0x14A34', // 84532 in hex
+  chainName: 'Base Sepolia',
+  nativeCurrency: {
+    name: 'Sepolia Ether',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  rpcUrls: ['https://sepolia.base.org'],
+  blockExplorerUrls: ['https://sepolia.basescan.org'],
+}
+
+// Base Mainnet network configuration for MetaMask
+const BASE_MAINNET_CONFIG = {
+  chainId: '0x2105', // 8453 in hex
+  chainName: 'Base',
+  nativeCurrency: {
+    name: 'Ether',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  rpcUrls: ['https://mainnet.base.org'],
+  blockExplorerUrls: ['https://basescan.org'],
+}
 
 /**
  * Seamless Network Switch Overlay
@@ -13,6 +39,7 @@ import { baseSepolia, base } from 'wagmi/chains'
  * Shows a beautiful full-screen overlay when user is on wrong network.
  * Features:
  * - Auto-switch option (one-click)
+ * - Manual "Add Network" fallback for MetaMask issues
  * - Clear visual feedback
  * - Non-blocking (can dismiss)
  * - Remembers user preference
@@ -22,8 +49,9 @@ export function NetworkSwitchOverlay() {
   const chainId = useChainId()
   const { switchChain, isPending, isError, isSuccess, error } = useSwitchChain()
   const [dismissed, setDismissed] = useState(false)
-  const [autoSwitching, setAutoSwitching] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [isAddingNetwork, setIsAddingNetwork] = useState(false)
+  const [addNetworkError, setAddNetworkError] = useState<string | null>(null)
 
   const expectedChainId = CURRENT_CHAIN_ID
   const expectedChain = IS_TESTNET ? baseSepolia : base
@@ -37,6 +65,7 @@ export function NetworkSwitchOverlay() {
     if (autoSwitch && isWrongNetwork && !isPending && !dismissed) {
       handleSwitch(true)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWrongNetwork])
 
   // Show success animation briefly
@@ -53,18 +82,77 @@ export function NetworkSwitchOverlay() {
   // Reset dismissed state when address changes (new wallet)
   useEffect(() => {
     setDismissed(false)
-    setAutoSwitching(false)
+    setAddNetworkError(null)
   }, [address])
 
   // Reset when user manually switches to correct network
   useEffect(() => {
     if (!isWrongNetwork) {
       setDismissed(false)
+      setAddNetworkError(null)
     }
   }, [isWrongNetwork])
 
+  // Manual add network to MetaMask (fallback for stubborn wallets)
+  const addNetworkToWallet = useCallback(async () => {
+    setIsAddingNetwork(true)
+    setAddNetworkError(null)
+    
+    try {
+      const ethereum = (window as { ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum
+      if (!ethereum) {
+        throw new Error('No wallet detected')
+      }
+
+      const networkConfig = IS_TESTNET ? BASE_SEPOLIA_CONFIG : BASE_MAINNET_CONFIG
+
+      // First try to switch (in case network already exists)
+      try {
+        await ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: networkConfig.chainId }],
+        })
+        // If switch works, we're done!
+        setShowSuccess(true)
+        setTimeout(() => {
+          setShowSuccess(false)
+          setDismissed(true)
+        }, 1500)
+        return
+      } catch (switchError) {
+        // Error 4902 means chain doesn't exist, we need to add it
+        if ((switchError as { code?: number }).code !== 4902) {
+          throw switchError
+        }
+      }
+
+      // Add the network
+      await ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [networkConfig],
+      })
+      
+      // Success!
+      setShowSuccess(true)
+      setTimeout(() => {
+        setShowSuccess(false)
+        setDismissed(true)
+      }, 1500)
+    } catch (err) {
+      console.error('Add network failed:', err)
+      const error = err as { code?: number; message?: string }
+      if (error.code === 4001) {
+        setAddNetworkError('You rejected the request. Try again when ready.')
+      } else {
+        setAddNetworkError(error.message || 'Failed to add network. Try manually in MetaMask settings.')
+      }
+    } finally {
+      setIsAddingNetwork(false)
+    }
+  }, [])
+
   const handleSwitch = useCallback(async (remember: boolean = false) => {
-    setAutoSwitching(true)
+    setAddNetworkError(null)
     
     if (remember) {
       localStorage.setItem(AUTO_SWITCH_KEY, 'true')
@@ -74,7 +162,6 @@ export function NetworkSwitchOverlay() {
       switchChain({ chainId: expectedChainId as 84532 | 8453 })
     } catch (e) {
       console.error('Switch failed:', e)
-      setAutoSwitching(false)
     }
   }, [switchChain, expectedChainId])
 
@@ -111,7 +198,7 @@ export function NetworkSwitchOverlay() {
                 <Check className="w-12 h-12 text-green-500" />
               </motion.div>
               <h2 className="text-2xl font-bold text-white mb-2">Connected!</h2>
-              <p className="text-gray-400">You're now on {expectedChain.name}</p>
+              <p className="text-gray-400">You&apos;re now on {expectedChain.name}</p>
             </motion.div>
           ) : (
             /* Main Switch Card */
@@ -172,16 +259,18 @@ export function NetworkSwitchOverlay() {
               </div>
 
               {/* Error Message */}
-              {isError && (
+              {(isError || addNetworkError) && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   className="mx-6 mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg"
                 >
                   <p className="text-red-400 text-sm text-center">
-                    {error?.message?.includes('rejected') 
-                      ? 'Switch was cancelled. Try again when ready.'
-                      : 'Failed to switch network. Please try again.'}
+                    {addNetworkError 
+                      ? addNetworkError
+                      : error?.message?.includes('rejected') 
+                        ? 'Switch was cancelled. Try again when ready.'
+                        : 'Network not found in wallet. Use "Add Network" below.'}
                   </p>
                 </motion.div>
               )}
@@ -191,7 +280,7 @@ export function NetworkSwitchOverlay() {
                 {/* Primary: One-Click Switch */}
                 <button
                   onClick={() => handleSwitch(false)}
-                  disabled={isPending}
+                  disabled={isPending || isAddingNetwork}
                   className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
                 >
                   {isPending ? (
@@ -207,7 +296,26 @@ export function NetworkSwitchOverlay() {
                   )}
                 </button>
 
-                {/* Secondary: Auto-switch checkbox */}
+                {/* Add Network button - shown after error or always visible */}
+                <button
+                  onClick={addNetworkToWallet}
+                  disabled={isPending || isAddingNetwork}
+                  className="w-full py-3 px-4 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-900 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 border border-zinc-700"
+                >
+                  {isAddingNetwork ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Adding Network...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      Add {expectedChain.name} to Wallet
+                    </>
+                  )}
+                </button>
+
+                {/* Auto-switch checkbox */}
                 <label className="flex items-center justify-center gap-2 text-sm text-gray-400 cursor-pointer hover:text-gray-300">
                   <input
                     type="checkbox"
@@ -223,19 +331,19 @@ export function NetworkSwitchOverlay() {
                   Switch automatically next time
                 </label>
 
-                {/* Tertiary: Skip for now */}
+                {/* Skip for now */}
                 <button
                   onClick={handleDismiss}
                   className="w-full py-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
                 >
-                  I'll switch later
+                  I&apos;ll switch later
                 </button>
               </div>
 
               {/* Bottom info */}
               <div className="px-6 py-4 bg-zinc-900/50 border-t border-zinc-800">
                 <p className="text-xs text-gray-500 text-center">
-                  💡 Your wallet will prompt you to approve the network switch
+                  💡 If switching doesn&apos;t work, click &quot;Add Network&quot; to set up {expectedChain.name}
                 </p>
               </div>
             </motion.div>
