@@ -3,25 +3,18 @@
 import { useState, useEffect } from "react";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
+/**
+ * OnboardingManager - Controls when the tour is shown
+ * 
+ * DISABLED AUTO-START: The tour no longer auto-shows on first visit.
+ * Users can start the tour manually via:
+ * - The Help Center (? icon)
+ * - window.startVFIDETour() in console
+ * 
+ * This provides a less intrusive experience while keeping the tour accessible.
+ */
 export function OnboardingManager() {
   const [showTour, setShowTour] = useState(false);
-
-  useEffect(() => {
-    // Guard for SSR - localStorage only available in browser
-    if (typeof window === 'undefined') return;
-    
-    // Check if user has completed the tour
-    const tourCompleted = localStorage.getItem("vfide_tour_completed");
-    const isFirstVisit = !tourCompleted;
-
-    // Show tour on first visit after a short delay
-    if (isFirstVisit) {
-      const timer = setTimeout(() => {
-        setShowTour(true);
-      }, 2000); // Wait 2 seconds after page load
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   const handleTourComplete = () => {
     setShowTour(false);
