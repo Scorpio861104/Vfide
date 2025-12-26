@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAccount, useChainId, useBalance } from 'wagmi'
+import { useAccount, useChainId, useBalance, useSwitchChain } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { baseSepolia } from 'wagmi/chains'
 import { IS_TESTNET, FAUCET_URLS } from '@/lib/testnet'
@@ -11,8 +11,6 @@ import { IS_TESTNET, FAUCET_URLS } from '@/lib/testnet'
 export default function TestnetPage() {
   const router = useRouter()
   const [copied, setCopied] = useState(false)
-  const [showHelp, setShowHelp] = useState(false)
-  const [confetti, setConfetti] = useState(false)
 
   // Redirect to home if not testnet mode
   useEffect(() => {
@@ -26,6 +24,7 @@ export default function TestnetPage() {
   const chainId = useChainId()
   const { data: balanceData, refetch } = useBalance({ address })
   const { openConnectModal } = useConnectModal()
+  const { switchChain, isPending: isSwitching } = useSwitchChain()
 
   const BASE_SEPOLIA_CHAIN_ID = baseSepolia.id
   const ethBalance = balanceData ? parseFloat(balanceData.formatted).toFixed(4) : '0'
@@ -35,30 +34,13 @@ export default function TestnetPage() {
   // Calculate step
   const step = !isConnected ? 1 : !isOnCorrectChain ? 2 : !hasBalance ? 3 : 4
 
-  // Show help after delay on steps 2-3
-  useEffect(() => {
-    if (step === 2 || step === 3) {
-      const timer = setTimeout(() => setShowHelp(true), 8000)
-      return () => clearTimeout(timer)
-    }
-    setShowHelp(false)
-  }, [step])
-
   // Poll for balance updates on step 3
   useEffect(() => {
     if (step === 3) {
-      const interval = setInterval(() => refetch(), 5000)
+      const interval = setInterval(() => refetch(), 4000)
       return () => clearInterval(interval)
     }
   }, [step, refetch])
-
-  // Celebration when reaching step 4
-  useEffect(() => {
-    if (step === 4) {
-      setConfetti(true)
-      setTimeout(() => setConfetti(false), 3000)
-    }
-  }, [step])
 
   const copyAddress = () => {
     if (address) {
@@ -68,289 +50,264 @@ export default function TestnetPage() {
     }
   }
 
+  const handleSwitchNetwork = () => {
+    switchChain({ chainId: BASE_SEPOLIA_CHAIN_ID })
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0f] via-[#12121a] to-[#1a1a2f] text-white overflow-hidden">
-      {/* Animated background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
+      {/* Minimal testnet indicator */}
+      <div className="bg-amber-500/10 border-b border-amber-500/20 py-2 px-4 text-center">
+        <span className="text-amber-400 text-sm font-medium">🧪 Testnet Mode — No real funds</span>
       </div>
 
-      {/* Confetti effect */}
-      {confetti && (
-        <div className="fixed inset-0 pointer-events-none z-50">
-          {[...Array(50)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute animate-confetti"
-              style={{
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                backgroundColor: ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#3B82F6'][Math.floor(Math.random() * 5)],
-                width: '10px',
-                height: '10px',
-                borderRadius: Math.random() > 0.5 ? '50%' : '0',
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Banner */}
-      <div className="relative bg-gradient-to-r from-yellow-500 via-orange-500 to-yellow-500 text-black py-4 px-4 text-center">
-        <p className="font-bold text-lg">🧪 TESTNET - Play with fake money!</p>
-        <p className="text-sm opacity-80">100% free. Zero risk. All fun.</p>
-      </div>
-
-      {/* Toast */}
+      {/* Toast notification */}
       {copied && (
-        <div className="fixed top-24 right-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-2xl z-50 animate-bounce">
-          ✓ Copied!
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 bg-zinc-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm">
+          ✓ Address copied
         </div>
       )}
 
-      <div className="relative max-w-lg mx-auto px-4 py-10">
-        {/* Hero */}
+      <div className="max-w-md mx-auto px-5 py-12">
+        {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-5xl md:text-6xl font-black mb-3 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-            Try VFIDE
-          </h1>
-          <p className="text-xl text-gray-300 mb-4">
-            {step === 1 && "Let's set you up in 2 minutes"}
-            {step === 2 && "Almost there! One quick step"}
-            {step === 3 && "Last step - get free tokens"}
-            {step === 4 && "🎉 You're ready to explore!"}
+          <h1 className="text-3xl font-bold mb-2">Get Started</h1>
+          <p className="text-zinc-400">
+            {step < 4 ? 'Set up your wallet to try VFIDE' : 'You\'re all set!'}
           </p>
         </div>
 
-        {/* Progress */}
-        <div className="flex justify-center items-center gap-2 mb-10">
-          {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex items-center">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-500 ${
-                  step > s
-                    ? 'bg-green-500 text-white scale-90'
-                    : step === s
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white scale-110 ring-4 ring-purple-500/30'
-                    : 'bg-gray-800 text-gray-500'
-                }`}
-              >
-                {step > s ? '✓' : s}
-              </div>
-              {s < 4 && (
-                <div className={`w-8 h-1 mx-1 rounded ${step > s ? 'bg-green-500' : 'bg-gray-800'}`} />
-              )}
-            </div>
+        {/* Progress indicator - minimal */}
+        <div className="flex items-center justify-center gap-1 mb-10">
+          {[1, 2, 3].map((s) => (
+            <div
+              key={s}
+              className={`h-1 rounded-full transition-all duration-300 ${
+                step > s ? 'w-10 bg-green-500' : step === s ? 'w-10 bg-purple-500' : 'w-10 bg-zinc-800'
+              }`}
+            />
           ))}
         </div>
 
-        {/* Step 1: Connect */}
+        {/* Step 1: Connect Wallet */}
         {step === 1 && (
-          <div className="animate-fadeIn">
-            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl">
-              <div className="text-center mb-8">
-                <div className="text-8xl mb-6 animate-wave">👋</div>
-                <h2 className="text-3xl font-bold mb-3">Welcome!</h2>
-                <p className="text-gray-400 text-lg">
-                  First, let&apos;s connect your account.
-                </p>
+          <div className="space-y-6">
+            <div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-purple-400 text-lg">1</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold mb-1">Connect Your Wallet</h2>
+                  <p className="text-zinc-400 text-sm">Link a wallet to interact with the testnet</p>
+                </div>
               </div>
               
               <button
                 onClick={openConnectModal}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-8 py-6 rounded-2xl text-2xl font-bold transition-all transform hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/25 active:scale-[0.98]"
+                className="w-full bg-purple-600 hover:bg-purple-500 py-3.5 rounded-xl font-semibold transition-colors"
               >
-                🚀 Get Started
+                Connect Wallet
               </button>
+            </div>
 
-              <div className="mt-8 p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
-                <p className="text-blue-400 font-bold mb-2 flex items-center gap-2">
-                  <span className="text-xl">💡</span> New to crypto?
-                </p>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  Choose <strong className="text-white">Coinbase Wallet</strong> - you can sign up with just your email. No downloads needed!
-                </p>
-              </div>
+            <div className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800/50">
+              <p className="text-zinc-400 text-sm">
+                <span className="text-zinc-300 font-medium">New to crypto?</span> Try Coinbase Wallet — sign up with email, no app needed.
+              </p>
             </div>
           </div>
         )}
 
         {/* Step 2: Switch Network */}
         {step === 2 && (
-          <div className="animate-fadeIn">
-            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl">
-              <div className="text-center mb-6">
-                <div className="text-8xl mb-6">🔄</div>
-                <h2 className="text-3xl font-bold mb-3">Switch Networks</h2>
-                
-                <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full mb-4">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                  Connected!
-                </div>
+          <div className="space-y-6">
+            <div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
+              <div className="flex items-center gap-2 text-green-400 text-sm mb-4">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Wallet connected
               </div>
 
-              <div className="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 rounded-2xl p-6 border border-blue-500/20 mb-6">
-                <p className="text-center text-gray-300 mb-4">
-                  Open your wallet app and switch to:
-                </p>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white mb-1">Base Sepolia</p>
-                  <p className="text-gray-400 text-sm">Test Network (Coinbase&apos;s Chain)</p>
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-purple-400 text-lg">2</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold mb-1">Switch to Base Sepolia</h2>
+                  <p className="text-zinc-400 text-sm">This is the test network we use</p>
                 </div>
               </div>
-
-              {/* Network details for manual add */}
-              <details className="group">
-                <summary className="cursor-pointer text-gray-400 hover:text-white text-sm flex items-center gap-2 justify-center py-2">
-                  <span className="group-open:rotate-90 transition-transform">▶</span>
-                  Need to add it manually?
-                </summary>
-                <div className="mt-4 space-y-2 text-sm">
-                  {[
-                    { label: 'Network', value: 'Base Sepolia' },
-                    { label: 'RPC', value: 'https://sepolia.base.org' },
-                    { label: 'Chain ID', value: '84532' },
-                    { label: 'Symbol', value: 'ETH' },
-                  ].map((item) => (
-                    <div key={item.label} className="flex justify-between items-center bg-black/30 rounded-lg p-3">
-                      <span className="text-gray-500">{item.label}:</span>
-                      <span className="text-white font-mono text-xs">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-
-              <div className="mt-6 flex items-center justify-center gap-2 text-gray-500 text-sm">
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                Waiting for you to switch...
-              </div>
-
-              {showHelp && (
-                <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl animate-fadeIn">
-                  <p className="text-yellow-400 font-bold text-sm mb-2">💡 Stuck?</p>
-                  <p className="text-gray-300 text-sm">
-                    In your wallet app, tap the network name at the top (like &quot;Ethereum&quot;), then search for &quot;Base Sepolia&quot;. Coinbase Wallet usually has it built-in!
-                  </p>
-                </div>
-              )}
+              
+              <button
+                onClick={handleSwitchNetwork}
+                disabled={isSwitching}
+                className="w-full bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 py-3.5 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                {isSwitching ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Switching...
+                  </>
+                ) : (
+                  'Switch Network'
+                )}
+              </button>
             </div>
+
+            <details className="bg-zinc-900/50 rounded-xl border border-zinc-800/50">
+              <summary className="p-4 cursor-pointer text-zinc-400 text-sm hover:text-zinc-300">
+                Add network manually
+              </summary>
+              <div className="px-4 pb-4 space-y-2 text-sm">
+                <div className="flex justify-between py-2 border-t border-zinc-800">
+                  <span className="text-zinc-500">Network</span>
+                  <span className="text-zinc-300 font-mono">Base Sepolia</span>
+                </div>
+                <div className="flex justify-between py-2 border-t border-zinc-800">
+                  <span className="text-zinc-500">RPC</span>
+                  <span className="text-zinc-300 font-mono text-xs">https://sepolia.base.org</span>
+                </div>
+                <div className="flex justify-between py-2 border-t border-zinc-800">
+                  <span className="text-zinc-500">Chain ID</span>
+                  <span className="text-zinc-300 font-mono">84532</span>
+                </div>
+                <div className="flex justify-between py-2 border-t border-zinc-800">
+                  <span className="text-zinc-500">Symbol</span>
+                  <span className="text-zinc-300 font-mono">ETH</span>
+                </div>
+              </div>
+            </details>
           </div>
         )}
 
         {/* Step 3: Get Test ETH */}
         {step === 3 && (
-          <div className="animate-fadeIn">
-            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl">
-              <div className="text-center mb-6">
-                <div className="text-8xl mb-6">🎁</div>
-                <h2 className="text-3xl font-bold mb-3">Get Free Tokens</h2>
-                
-                <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full mb-4">
-                  <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                  On Base Sepolia ✓
+          <div className="space-y-6">
+            <div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
+              <div className="flex items-center gap-2 text-green-400 text-sm mb-4">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                On Base Sepolia
+              </div>
+
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-purple-400 text-lg">3</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold mb-1">Get Test ETH</h2>
+                  <p className="text-zinc-400 text-sm">Free tokens to pay for transactions</p>
                 </div>
               </div>
 
-              {/* Address */}
-              <div className="bg-black/30 rounded-xl p-4 mb-6">
-                <p className="text-gray-500 text-xs mb-2">Your address (tap to copy):</p>
+              {/* Address display */}
+              <div className="mb-4">
+                <label className="text-zinc-500 text-xs mb-1.5 block">Your address</label>
                 <button
                   onClick={copyAddress}
-                  className="w-full text-left bg-black/50 hover:bg-black/70 px-4 py-3 rounded-lg text-purple-300 font-mono text-sm transition-colors truncate"
+                  className="w-full bg-zinc-800 hover:bg-zinc-700 px-3 py-2.5 rounded-lg text-left font-mono text-sm text-zinc-300 transition-colors truncate"
                 >
                   {address}
                 </button>
               </div>
-
-              {/* Faucet - Multiple options */}
+              
               <a
                 href={FAUCET_URLS.coinbase}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-6 py-5 rounded-xl text-xl font-bold text-center transition-all transform hover:scale-[1.02] mb-3"
+                className="block w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl font-semibold text-center transition-colors"
               >
-                🚰 Get Free Test ETH (Coinbase)
+                Get Free ETH →
               </a>
-              
-              <div className="flex gap-2 mb-6">
+
+              <div className="flex items-center justify-center gap-2 mt-4 text-zinc-500 text-sm">
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                Checking for balance...
+              </div>
+            </div>
+
+            <div className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800/50">
+              <p className="text-zinc-400 text-sm">
+                <span className="text-zinc-300 font-medium">Tip:</span> After completing the faucet, tokens arrive in ~30 seconds. This page auto-updates.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <p className="text-zinc-500 text-sm mb-2">Coinbase faucet not working?</p>
+              <div className="flex gap-2 justify-center">
                 <a
                   href={FAUCET_URLS.alchemy}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg text-sm font-medium text-center transition-all"
+                  className="text-purple-400 hover:text-purple-300 text-sm underline"
                 >
-                  Alchemy Faucet
+                  Try Alchemy
                 </a>
+                <span className="text-zinc-600">or</span>
                 <a
                   href={FAUCET_URLS.quicknode}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg text-sm font-medium text-center transition-all"
+                  className="text-purple-400 hover:text-purple-300 text-sm underline"
                 >
-                  QuickNode Faucet
+                  QuickNode
                 </a>
               </div>
-
-              <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                Checking every 5 seconds...
-              </div>
-
-              {showHelp && (
-                <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl animate-fadeIn">
-                  <p className="text-yellow-400 font-bold text-sm mb-2">💡 Pro tip</p>
-                  <p className="text-gray-300 text-sm">
-                    The faucet may ask you to solve a quick puzzle (CAPTCHA). After that, tokens arrive in about 30 seconds. This page updates automatically!
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         )}
 
-        {/* Step 4: Success! */}
+        {/* Step 4: Success */}
         {step === 4 && (
-          <div className="animate-fadeIn">
-            <div className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-green-500/30 shadow-2xl shadow-green-500/10">
-              <div className="text-center mb-8">
-                <div className="text-8xl mb-6 animate-bounce">🎊</div>
-                <h2 className="text-3xl font-bold mb-3 text-green-400">You Did It!</h2>
-                
-                <div className="bg-green-500/20 rounded-xl p-4 mb-4 inline-block">
-                  <p className="text-green-300 text-3xl font-bold">{ethBalance} ETH</p>
-                  <p className="text-green-400 text-sm">Ready to spend</p>
+          <div className="space-y-6">
+            <div className="bg-gradient-to-b from-green-500/10 to-zinc-900 rounded-2xl p-6 border border-green-500/20">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
+                <h2 className="text-xl font-bold mb-1">You're Ready!</h2>
+                <p className="text-zinc-400 text-sm">Balance: <span className="text-green-400 font-semibold">{ethBalance} ETH</span></p>
               </div>
 
-              <p className="text-center text-gray-300 mb-8">
-                Now the fun begins! Try these:
-              </p>
-
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <Link
                   href="/token-launch"
-                  className="block w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-6 py-5 rounded-xl text-xl font-bold text-center transition-all transform hover:scale-[1.02]"
+                  className="flex items-center justify-between w-full bg-purple-600 hover:bg-purple-500 px-4 py-3.5 rounded-xl font-semibold transition-colors"
                 >
-                  🪙 Buy VFIDE Tokens
+                  <span>Buy VFIDE Tokens</span>
+                  <span>→</span>
                 </Link>
                 <Link
                   href="/vault"
-                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold text-center border border-white/10 transition-all"
+                  className="flex items-center justify-between w-full bg-zinc-800 hover:bg-zinc-700 px-4 py-3 rounded-xl font-medium transition-colors"
                 >
-                  🏦 Create a Savings Vault
+                  <span>Create a Savings Vault</span>
+                  <span className="text-zinc-400">→</span>
                 </Link>
                 <Link
                   href="/pay"
-                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold text-center border border-white/10 transition-all"
+                  className="flex items-center justify-between w-full bg-zinc-800 hover:bg-zinc-700 px-4 py-3 rounded-xl font-medium transition-colors"
                 >
-                  💸 Send a Payment
+                  <span>Send a Payment</span>
+                  <span className="text-zinc-400">→</span>
                 </Link>
                 <Link
                   href="/merchant"
-                  className="block w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-xl font-bold text-center border border-white/10 transition-all"
+                  className="flex items-center justify-between w-full bg-zinc-800 hover:bg-zinc-700 px-4 py-3 rounded-xl font-medium transition-colors"
                 >
-                  🏪 Accept Payments
+                  <span>Accept Payments</span>
+                  <span className="text-zinc-400">→</span>
                 </Link>
               </div>
             </div>
@@ -358,40 +315,12 @@ export default function TestnetPage() {
         )}
 
         {/* Footer */}
-        <div className="mt-10 text-center text-gray-600 text-sm">
-          <p>This is a testnet. No real money involved.</p>
-          <Link href="/docs" className="text-purple-400 hover:text-purple-300 underline mt-2 inline-block">
-            Need help?
+        <div className="mt-10 text-center">
+          <Link href="/docs" className="text-zinc-500 hover:text-zinc-400 text-sm">
+            Need help? View docs →
           </Link>
         </div>
       </div>
-
-      {/* CSS for animations */}
-      <style jsx>{`
-        @keyframes confetti {
-          0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-        .animate-confetti {
-          animation: confetti 3s ease-out forwards;
-        }
-        @keyframes wave {
-          0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(20deg); }
-          75% { transform: rotate(-20deg); }
-        }
-        .animate-wave {
-          animation: wave 1s ease-in-out infinite;
-          display: inline-block;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out forwards;
-        }
-      `}</style>
     </div>
   )
 }
