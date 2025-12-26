@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useAccount } from 'wagmi'
 import { useIsMerchant } from '@/lib/vfide-hooks'
@@ -31,6 +31,14 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   const [amount, setAmount] = useState(defaultAmount || '')
   const [orderId, setOrderId] = useState(defaultOrderId || '')
   const [copied, setCopied] = useState(false)
+
+  // Generate payment URL/data
+  const paymentData = {
+    to: address,
+    amount: amount || undefined,
+    orderId: orderId || undefined,
+    merchant: merchantInfo.businessName || undefined,
+  }
 
   // Create a payment deep link (could be customized for mobile wallets)
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.com'
@@ -81,7 +89,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           text: amount ? `Pay ${amount} VFIDE (~$${usdValue})` : 'VFIDE Payment',
           url: paymentUrl,
         })
-      } catch {
+      } catch (err) {
         // User cancelled or share failed, fall back to copy
         copyPaymentLink()
       }

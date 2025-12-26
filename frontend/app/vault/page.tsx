@@ -17,7 +17,7 @@ import { Shield, AlertTriangle, Lock, Clock } from "lucide-react";
 import { useEffect } from "react";
 
 // Compact security section with Panic Button
-function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null }) {
+function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
   const quarantineData = useQuarantineStatus(vaultAddress || undefined);
   const panicData = useCanSelfPanic();
   const { selfPanic, isPanicking, isSuccess } = useSelfPanic();
@@ -420,7 +420,7 @@ const { address } = useAccount();
         </section>
 
         {/* Emergency Security / Panic Button */}
-        <VaultSecuritySection vaultAddress={vaultAddress ?? null} />
+        <VaultSecuritySection vaultAddress={vaultAddress} />
 
         {/* Next of Kin (Inheritance) */}
         <section className="py-8">

@@ -1,63 +1,120 @@
 /**
  * MobileBottomNav - Fixed bottom navigation for mobile users
- * Shows quick access to key features on small screens
+ * Shows on screens smaller than md (768px)
  */
 
 'use client'
 
-import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Home, Wallet, Send, Store, User } from 'lucide-react'
-import { useAccount } from 'wagmi'
+import { usePathname } from 'next/navigation'
+import { Home, LayoutDashboard, Vault, Store, Vote, MoreHorizontal } from 'lucide-react'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+const navItems = [
+  { href: '/', label: 'Home', icon: Home },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/vault', label: 'Vault', icon: Vault },
+  { href: '/merchant', label: 'Merchant', icon: Store },
+  { href: '/governance', label: 'Gov', icon: Vote },
+]
+
+const moreItems = [
+  { href: '/token-launch', label: 'Token Launch' },
+  { href: '/leaderboard', label: 'Leaderboard' },
+  { href: '/rewards', label: 'Rewards' },
+  { href: '/escrow', label: 'Escrow' },
+  { href: '/sanctum', label: 'Sanctum' },
+  { href: '/docs', label: 'Docs' },
+]
 
 export function MobileBottomNav() {
   const pathname = usePathname()
-  useAccount() // Keep for future conditional display
-  
-  const navItems = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/vault', label: 'Vault', icon: Wallet },
-    { href: '/pay', label: 'Send', icon: Send, highlight: true },
-    { href: '/merchant', label: 'Merchant', icon: Store },
-    { href: '/dashboard', label: 'Profile', icon: User },
-  ]
+  const [showMore, setShowMore] = useState(false)
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#1A1A1D]/95 backdrop-blur-xl border-t border-[#3A3A3F] z-50 safe-area-bottom">
-      <div className="flex items-center justify-around px-2 py-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href
-          const Icon = item.icon
-          
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all ${
-                item.highlight 
-                  ? 'bg-gradient-to-r from-[#00F0FF] to-[#0080FF] -mt-4 shadow-lg shadow-[#00F0FF]/20'
-                  : isActive 
-                    ? 'text-[#00F0FF]' 
-                    : 'text-[#A0A0A5]'
-              }`}
+    <>
+      {/* More Menu Overlay */}
+      <AnimatePresence>
+        {showMore && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMore(false)}
+              className="fixed inset-0 bg-black/60 z-40 md:hidden"
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="fixed bottom-20 left-4 right-4 bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl z-50 md:hidden p-2"
             >
-              <div className={`${item.highlight ? 'p-3 rounded-full' : ''}`}>
-                <Icon 
-                  className={`w-5 h-5 ${item.highlight ? 'text-[#1A1A1D]' : ''}`} 
-                />
+              <div className="grid grid-cols-2 gap-2">
+                {moreItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setShowMore(false)}
+                    className={`px-4 py-3 rounded-lg text-center font-medium transition-colors ${
+                      pathname === item.href
+                        ? 'bg-[#00F0FF]/20 text-[#00F0FF]'
+                        : 'text-[#A0A0A5] hover:bg-[#3A3A3F] hover:text-[#F5F3E8]'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </div>
-              <span className={`text-[10px] mt-1 font-medium ${
-                item.highlight ? 'text-[#1A1A1D]' : ''
-              }`}>
-                {item.label}
-              </span>
-              {isActive && !item.highlight && (
-                <div className="w-1 h-1 bg-[#00F0FF] rounded-full mt-1" />
-              )}
-            </Link>
-          )
-        })}
-      </div>
-    </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#1A1A1D]/95 backdrop-blur-lg border-t border-[#2A2A35] md:hidden safe-area-bottom">
+        <div className="flex items-center justify-around h-16 px-2">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || 
+              (item.href !== '/' && pathname.startsWith(item.href))
+            const Icon = item.icon
+            
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center justify-center w-16 h-14 rounded-lg transition-colors ${
+                  isActive 
+                    ? 'text-[#00F0FF]' 
+                    : 'text-[#A0A0A5] active:text-[#F5F3E8]'
+                }`}
+              >
+                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-xs mt-1 font-medium">{item.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="bottomNavIndicator"
+                    className="absolute -top-0.5 w-8 h-0.5 bg-[#00F0FF] rounded-full"
+                  />
+                )}
+              </Link>
+            )
+          })}
+          
+          {/* More Button */}
+          <button
+            onClick={() => setShowMore(!showMore)}
+            className={`flex flex-col items-center justify-center w-16 h-14 rounded-lg transition-colors ${
+              showMore ? 'text-[#00F0FF]' : 'text-[#A0A0A5] active:text-[#F5F3E8]'
+            }`}
+          >
+            <MoreHorizontal size={22} strokeWidth={showMore ? 2.5 : 2} />
+            <span className="text-xs mt-1 font-medium">More</span>
+          </button>
+        </div>
+      </nav>
+    </>
   )
 }

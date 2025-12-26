@@ -82,7 +82,7 @@ export default function RootLayout({
             <DemoModeBanner />
             <NetworkWarning />
             <TestnetCornerBadge />
-            <div className="pb-16 md:pb-0">{children}</div>
+            {children}
             <MobileBottomNav />
             <OnboardingManager />
             <HelpCenter />

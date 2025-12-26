@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 import { IS_TESTNET, FAUCET_URLS } from '@/lib/testnet';
-import { Droplets, ExternalLink, Copy, Check } from 'lucide-react';
+import { Droplets, X, ExternalLink, Copy, Check } from 'lucide-react';
 
 /**
  * Faucet button for testnet - shows "Get ETH" when balance is low
