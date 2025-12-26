@@ -1,26 +1,59 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { SimpleWalletConnect } from "../wallet/SimpleWalletConnect";
 import { FaucetButton } from "../wallet/FaucetButton";
 import { VaultStatusModal } from "../vault/VaultStatusModal";
 import { VaultStatusIndicator } from "../vault/VaultStatusIndicator";
 import { NavbarBalance } from "../ui/TokenBalance";
 import { NotificationCenter } from "../ui/NotificationCenter";
+import { motion } from "framer-motion";
+
+const navLinks = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/vault", label: "Vault" },
+  { href: "/merchant", label: "Merchant" },
+  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/governance", label: "Governance" },
+  { href: "/token-launch", label: "Launch", accent: true },
+  { href: "/docs", label: "Docs" },
+];
 
 export function GlobalNav() {
+  const pathname = usePathname();
+  
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F12]/95 backdrop-blur-sm border-b border-[#2A2A35]">
-      <div className="container mx-auto px-4 py-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-[#1F1F2A]">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="hover:scale-110 transition-transform">
+          <Link href="/" className="flex items-center gap-3 group">
+            <motion.svg 
+              width="40" 
+              height="40" 
+              viewBox="0 0 40 40" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg" 
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
               {/* Shield background */}
-              <path d="M20 2L35 8V18C35 28 28 35 20 38C12 35 5 28 5 18V8L20 2Z" fill="url(#shield-gradient)" stroke="#00F0FF" strokeWidth="1.5"/>
+              <path 
+                d="M20 2L35 8V18C35 28 28 35 20 38C12 35 5 28 5 18V8L20 2Z" 
+                fill="url(#shield-gradient)" 
+                stroke="url(#shield-stroke)" 
+                strokeWidth="1.5"
+              />
               
               {/* V letterform */}
-              <path d="M12 12L20 28L28 12" stroke="#F5F3E8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+              <path 
+                d="M12 12L20 28L28 12" 
+                stroke="#F8F8FC" 
+                strokeWidth="3" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              />
               
               {/* Accent lines */}
               <path d="M15 10H25" stroke="#00F0FF" strokeWidth="1" opacity="0.6"/>
@@ -29,42 +62,52 @@ export function GlobalNav() {
               <defs>
                 <linearGradient id="shield-gradient" x1="20" y1="2" x2="20" y2="38" gradientUnits="userSpaceOnUse">
                   <stop stopColor="#1A1A1D"/>
-                  <stop offset="1" stopColor="#2A2A2F"/>
+                  <stop offset="1" stopColor="#0F0F12"/>
+                </linearGradient>
+                <linearGradient id="shield-stroke" x1="5" y1="2" x2="35" y2="38" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#00F0FF"/>
+                  <stop offset="1" stopColor="#0080FF"/>
                 </linearGradient>
               </defs>
-            </svg>
-            <span className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F5F7]">
+            </motion.svg>
+            <span className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] group-hover:text-[#00F0FF] transition-colors">
               VFIDE
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-5">
-            <Link href="/dashboard" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
-              Dashboard
-            </Link>
-            <Link href="/vault" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
-              Vault
-            </Link>
-            <Link href="/merchant" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
-              Merchant
-            </Link>
-            <Link href="/leaderboard" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
-              Leaderboard
-            </Link>
-            <Link href="/governance" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
-              Governance
-            </Link>
-            <Link href="/token-launch" className="text-[#00F0FF] hover:text-[#00D4FF] transition-colors font-semibold">
-              Launch
-            </Link>
-            <Link href="/docs" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
-              Docs
-            </Link>
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link 
+                  key={link.href}
+                  href={link.href} 
+                  className={`
+                    relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
+                    ${link.accent 
+                      ? 'text-[#00F0FF] hover:bg-[#00F0FF]/10' 
+                      : isActive 
+                        ? 'text-[#F8F8FC] bg-[#1F1F2A]' 
+                        : 'text-[#8A8A8F] hover:text-[#F8F8FC] hover:bg-[#16161D]'
+                    }
+                  `}
+                >
+                  {link.label}
+                  {isActive && !link.accent && (
+                    <motion.div
+                      layoutId="nav-indicator"
+                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#00F0FF] rounded-full"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Wallet Connection & Vault Status - Desktop */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
             <FaucetButton />
             <NavbarBalance />
             <NotificationCenter />
