@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { SimpleWalletConnect } from "../wallet/SimpleWalletConnect";
 import { FaucetButton } from "../wallet/FaucetButton";
 import { VaultStatusModal } from "../vault/VaultStatusModal";
@@ -10,8 +9,6 @@ import { NavbarBalance } from "../ui/TokenBalance";
 import { NotificationCenter } from "../ui/NotificationCenter";
 
 export function GlobalNav() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F12]/95 backdrop-blur-sm border-b border-[#2A2A35]">
       <div className="container mx-auto px-4 py-4">
@@ -41,7 +38,7 @@ export function GlobalNav() {
             </span>
           </Link>
 
-          {/* Desktop Navigation - Simplified */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-5">
             <Link href="/dashboard" className="text-[#B8B8BD] hover:text-[#00F0FF] transition-colors font-medium">
               Dashboard
@@ -66,7 +63,7 @@ export function GlobalNav() {
             </Link>
           </div>
 
-          {/* Wallet Connection & Vault Status */}
+          {/* Wallet Connection & Vault Status - Desktop */}
           <div className="hidden md:flex items-center gap-3">
             <FaucetButton />
             <NavbarBalance />
@@ -75,48 +72,12 @@ export function GlobalNav() {
             <SimpleWalletConnect />
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-[#F5F3E8]"
-            aria-label="Toggle navigation menu"
-            aria-expanded={mobileMenuOpen}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 space-y-2">
-            <Link href="/dashboard" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
-              Dashboard
-            </Link>
-            <Link href="/vault" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
-              Vault
-            </Link>
-            <Link href="/merchant" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
-              Merchant
-            </Link>
-            <Link href="/leaderboard" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
-              Leaderboard
-            </Link>
-            <Link href="/governance" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
-              Governance
-            </Link>
-            <Link href="/token-launch" className="block py-2 text-[#00F0FF] hover:text-[#00D4FF] font-bold" onClick={() => setMobileMenuOpen(false)}>
-              Launch
-            </Link>
-            <Link href="/docs" className="block py-2 text-[#A0A0A5] hover:text-[#00F0FF]" onClick={() => setMobileMenuOpen(false)}>
-              Docs
-            </Link>
-            <div className="mt-2">
-              <SimpleWalletConnect />
-            </div>
+          {/* Mobile: Just wallet essentials (navigation is in bottom nav) */}
+          <div className="flex md:hidden items-center gap-2">
+            <NotificationCenter />
+            <SimpleWalletConnect />
           </div>
-        )}
+        </div>
       </div>
       
       {/* Vault Status Modal - shows when wallet connects */}
