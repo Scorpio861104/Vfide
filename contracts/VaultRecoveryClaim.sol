@@ -32,6 +32,12 @@ interface IVaultInfrastructure {
     function vaultOf(address owner) external view returns (address);
     function ownerOfVault(address vault) external view returns (address);
     function isVault(address a) external view returns (bool);
+    // Recovery functions
+    function approveForceRecovery(address vault, address newOwner) external;
+    function recoveryApprovalCount(address vault) external view returns (uint8);
+    function recoveryProposedOwner(address vault) external view returns (address);
+    function recoveryUnlockTime(address vault) external view returns (uint64);
+    function finalizeForceRecovery(address vault) external;
 }
 
 interface IUserVault {
@@ -229,6 +235,18 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         bytes32 evidenceHash,
         string calldata reason
     ) external nonReentrant returns (uint256 claimId) {
+        return _initiateClaim(vault, recoveryId, evidenceHash, reason);
+    }
+    
+    /**
+     * @notice Internal implementation of claim initiation
+     */
+    function _initiateClaim(
+        address vault,
+        string calldata recoveryId,
+        bytes32 evidenceHash,
+        string calldata reason
+    ) internal returns (uint256 claimId) {
         // Validate vault exists
         if (!vaultHub.isVault(vault)) revert InvalidVault();
         
@@ -294,7 +312,8 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         address vault = vaultRegistry.searchByRecoveryId(recoveryId);
         require(vault != address(0), "Vault not found");
         
-        return this.initiateClaim(vault, recoveryId, bytes32(0), reason);
+        // Use internal function instead of external call to preserve msg.sender
+        return _initiateClaim(vault, recoveryId, bytes32(0), reason);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -450,18 +469,61 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /**
      * @notice Execute the actual ownership transfer
      * @dev Internal function called after all verifications pass
+     *      This contract must be registered as a recovery approver on VaultInfrastructure
      */
     function _executeRecovery(uint256 claimId) internal {
         RecoveryClaim storage claim = claims[claimId];
         
-        claim.status = ClaimStatus.Executed;
+        // First, approve the recovery via VaultInfrastructure
+        // This contract must be set as a recovery approver using:
+        // VaultInfrastructure.setRecoveryApprover(address(this), true)
+        vaultHub.approveForceRecovery(claim.vault, claim.claimant);
+        
+        // Check if approval threshold is met and timelock has started
+        // If we're the only approver or last needed, this will initiate the timelock
+        uint64 unlockTime = vaultHub.recoveryUnlockTime(claim.vault);
+        
+        if (unlockTime != 0 && block.timestamp >= unlockTime) {
+            // Timelock passed, finalize the recovery
+            // Note: DAO must call finalizeForceRecovery, or we need DAO role
+            // For now, emit event and update status - DAO/governance will finalize
+            claim.status = ClaimStatus.Executed;
+        } else if (unlockTime != 0) {
+            // Timelock started but not passed yet - mark as approved, will need finalize later
+            claim.status = ClaimStatus.Approved;
+        } else {
+            // Need more approvals - keep in approved state
+            claim.status = ClaimStatus.Approved;
+        }
+        
         activeClaimForVault[claim.vault] = 0;
         
-        // Call VaultInfrastructure to transfer ownership
-        // Note: This requires VaultInfrastructure to have a recovery function that this contract can call
-        // The actual implementation would need VaultInfrastructure integration
-        
         emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
+    }
+    
+    /**
+     * @notice Finalize a claim after VaultInfrastructure timelock has passed
+     * @dev Can be called by anyone once the timelock on VaultInfrastructure is complete
+     * @param claimId The claim to finalize
+     */
+    function finalizeExecution(uint256 claimId) external nonReentrant {
+        RecoveryClaim storage claim = claims[claimId];
+        require(claim.status == ClaimStatus.Approved || claim.status == ClaimStatus.Executed, "not approved");
+        
+        uint64 unlockTime = vaultHub.recoveryUnlockTime(claim.vault);
+        require(unlockTime != 0, "recovery not initiated on hub");
+        require(block.timestamp >= unlockTime, "timelock not passed");
+        
+        // Call VaultInfrastructure to finalize
+        // Note: This requires this contract or caller to have DAO role
+        // If this fails, DAO must manually call finalizeForceRecovery
+        try vaultHub.finalizeForceRecovery(claim.vault) {
+            claim.status = ClaimStatus.Executed;
+            emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
+        } catch {
+            // DAO must manually finalize - emit event for tracking
+            emit ClaimApproved(claimId, claim.vault, claim.claimant);
+        }
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
