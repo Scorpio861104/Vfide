@@ -30,7 +30,7 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+  show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
 };
 
 function GlassCard({ children, className = "", hover = true }: { 
@@ -41,7 +41,7 @@ function GlassCard({ children, className = "", hover = true }: {
   return (
     <motion.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
-      transition={{ type: "spring", stiffness: 400 }}
+      transition={{ type: "spring" as const, stiffness: 400 }}
       className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
@@ -365,9 +365,9 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
               Your ProofScore
             </h2>
             <div className="flex flex-col items-center py-6">
-              <ProofScoreRing score={proofscore} size="lg" showBreakdown />
+              <ProofScoreRing score={proofscore} size="lg" />
               <div className="mt-6 text-center">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.5 }} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" as const, delay: 0.5 }} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
                   <span className="text-emerald-400 font-bold">{feeRate.toFixed(2)}% transfer fee</span>
                 </motion.div>
               </div>
@@ -610,7 +610,7 @@ function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 }
 
 function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
-  const { badges, isLoading } = useUserBadges(address);
+  const { badgeIds, isLoading } = useUserBadges(address);
   
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">

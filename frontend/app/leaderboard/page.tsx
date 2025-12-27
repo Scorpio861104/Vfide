@@ -42,13 +42,13 @@ const mockLeaderboard = [
   { rank: 15, address: '0xFog0000000000000000000000000000000000000', score: 5900, tier: 'MERCHANT', change: 5, badges: 3 },
 ]
 
-const tierColors: Record<string, { gradient: string; text: string; glow: string }> = {
-  'CHAMPION': { gradient: 'from-[#FFD700] to-[#FFA500]', text: 'text-[#FFD700]', glow: 'shadow-[#FFD700]/30' },
-  'GUARDIAN': { gradient: 'from-[#C0C0C0] to-[#A0A0A0]', text: 'text-[#C0C0C0]', glow: 'shadow-[#C0C0C0]/30' },
-  'DELEGATE': { gradient: 'from-[#CD7F32] to-[#8B4513]', text: 'text-[#CD7F32]', glow: 'shadow-[#CD7F32]/30' },
-  'ADVOCATE': { gradient: 'from-[#00F0FF] to-[#00A8B5]', text: 'text-[#00F0FF]', glow: 'shadow-[#00F0FF]/30' },
-  'MERCHANT': { gradient: 'from-[#50C878] to-[#3DA55D]', text: 'text-[#50C878]', glow: 'shadow-[#50C878]/30' },
-  'NEUTRAL': { gradient: 'from-[#A0A0A5] to-[#6A6A6F]', text: 'text-[#A0A0A5]', glow: 'shadow-[#A0A0A5]/30' },
+const tierColors: Record<string, { gradient: string; text: string; glow: string; bg: string; border: string }> = {
+  'CHAMPION': { gradient: 'from-[#FFD700] to-[#FFA500]', text: 'text-[#FFD700]', glow: 'shadow-[#FFD700]/30', bg: 'bg-[#FFD700]/20', border: 'border-[#FFD700]/30' },
+  'GUARDIAN': { gradient: 'from-[#C0C0C0] to-[#A0A0A0]', text: 'text-[#C0C0C0]', glow: 'shadow-[#C0C0C0]/30', bg: 'bg-[#C0C0C0]/20', border: 'border-[#C0C0C0]/30' },
+  'DELEGATE': { gradient: 'from-[#CD7F32] to-[#8B4513]', text: 'text-[#CD7F32]', glow: 'shadow-[#CD7F32]/30', bg: 'bg-[#CD7F32]/20', border: 'border-[#CD7F32]/30' },
+  'ADVOCATE': { gradient: 'from-[#00F0FF] to-[#00A8B5]', text: 'text-[#00F0FF]', glow: 'shadow-[#00F0FF]/30', bg: 'bg-[#00F0FF]/20', border: 'border-[#00F0FF]/30' },
+  'MERCHANT': { gradient: 'from-[#50C878] to-[#3DA55D]', text: 'text-[#50C878]', glow: 'shadow-[#50C878]/30', bg: 'bg-[#50C878]/20', border: 'border-[#50C878]/30' },
+  'NEUTRAL': { gradient: 'from-[#A0A0A5] to-[#6A6A6F]', text: 'text-[#A0A0A5]', glow: 'shadow-[#A0A0A5]/30', bg: 'bg-[#A0A0A5]/20', border: 'border-[#A0A0A5]/30' },
 }
 
 const getRankIcon = (rank: number) => {
@@ -141,11 +141,11 @@ function PodiumCard({
         <motion.div 
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: delay + 0.3, type: "spring" }}
+          transition={{ delay: delay + 0.3, type: "spring" as const }}
           className="text-2xl font-bold mb-2"
           style={{ color: colors[place] }}
         >
-          <Counter end={entry.score} />
+          <Counter value={entry.score} />
         </motion.div>
 
         <div className="flex items-center justify-center gap-1 text-xs text-[#A0A0A5]">
