@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, 
   Award, 
@@ -18,7 +19,8 @@ import {
   Calendar,
   TrendingUp,
   Crown,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
 
 // CouncilElection ABI
@@ -156,45 +158,105 @@ export default function CouncilPage() {
   return (
     <>
       <GlobalNav />
-      <main className="min-h-screen bg-[#0D0D0F] pt-24 pb-16">
+      
+      {/* Premium background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(168,85,247,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
+      <motion.main 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen pt-24 pb-16"
+      >
         <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-4">
-              Council Management
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 rounded-full mb-4"
+            >
+              <Crown className="w-4 h-4 text-indigo-400" />
+              <span className="text-indigo-400 text-sm font-medium">Governance Council</span>
+            </motion.div>
+            <h1 className="text-4xl md:text-5xl font-black mb-4">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+                Council Management
+              </span>
             </h1>
-            <p className="text-[#A0A0A5] text-lg max-w-2xl mx-auto">
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Governance council operations, member management, and salary distribution
             </p>
-          </div>
+          </motion.div>
 
           {/* Tab Navigation */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#00F0FF] text-[#0D0D0F]'
-                    : 'bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#F5F3E8]'
-                }`}
-              >
-                <tab.icon size={18} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-wrap justify-center gap-2 mb-8"
+          >
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <motion.button
+                  key={tab.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25'
+                      : 'bg-white/5 text-gray-400 hover:bg-indigo-500/10 hover:text-indigo-400'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </motion.button>
+              );
+            })}
+          </motion.div>
 
           {/* Tab Content */}
-          {activeTab === 'overview' && <OverviewTab />}
-          {activeTab === 'members' && <MembersTab />}
-          {activeTab === 'salary' && <SalaryTab isConnected={isConnected} />}
-          {activeTab === 'voting' && <VotingTab isConnected={isConnected} />}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {activeTab === 'overview' && <OverviewTab />}
+              {activeTab === 'members' && <MembersTab />}
+              {activeTab === 'salary' && <SalaryTab isConnected={isConnected} />}
+              {activeTab === 'voting' && <VotingTab isConnected={isConnected} />}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </main>
+      </motion.main>
       <Footer />
     </>
+  );
+}
+
+// GlassCard component
+function GlassCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.01, y: -2 }}
+      transition={{ type: "spring", stiffness: 400 }}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -202,97 +264,98 @@ function OverviewTab() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/30 rounded-xl p-8 text-center">
-        <Users className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
-        <h2 className="text-3xl font-bold text-[#F5F3E8] mb-4">VFIDE Governance Council</h2>
-        <p className="text-[#A0A0A5] max-w-2xl mx-auto">
+      <GlassCard className="p-8 text-center bg-gradient-to-br from-indigo-500/10 to-purple-500/5">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 inline-block mb-4">
+          <Users className="w-12 h-12 text-indigo-400" />
+        </div>
+        <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">VFIDE Governance Council</h2>
+        <p className="text-gray-400 max-w-2xl mx-auto">
           The Council manages day-to-day protocol operations, reviews proposals, and ensures 
           the smooth functioning of the VFIDE ecosystem. Members are elected by token holders.
         </p>
-      </div>
+      </GlassCard>
 
       {/* Council Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-[#00F0FF]">12</div>
-          <div className="text-sm text-[#A0A0A5]">Council Seats</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-green-400">--</div>
-          <div className="text-sm text-[#A0A0A5]">Active Members</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-yellow-400">365</div>
-          <div className="text-sm text-[#A0A0A5]">Days Term Length</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-purple-400">120d</div>
-          <div className="text-sm text-[#A0A0A5]">Pay Interval</div>
-        </div>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-1 md:grid-cols-4 gap-4"
+      >
+        {[
+          { value: '12', label: 'Council Seats', gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
+          { value: '--', label: 'Active Members', gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+          { value: '365', label: 'Days Term Length', gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
+          { value: '120d', label: 'Pay Interval', gradient: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
+        ].map((stat, idx) => (
+          <motion.div
+            key={stat.label}
+            whileHover={{ scale: 1.02, y: -2 }}
+            className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 text-center`}
+          >
+            <div className={`text-3xl font-bold ${stat.text}`}>{stat.value}</div>
+            <div className="text-sm text-gray-400">{stat.label}</div>
+          </motion.div>
+        ))}
+      </motion.div>
 
       {/* Responsibilities */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Council Responsibilities</h3>
+      <GlassCard className="p-6">
+        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5">
+            <Sparkles className="w-5 h-5 text-indigo-400" />
+          </div>
+          Council Responsibilities
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex items-start gap-4">
-            <Shield className="text-cyan-400 flex-shrink-0" size={24} />
-            <div>
-              <h4 className="text-[#F5F3E8] font-bold mb-1">Protocol Security</h4>
-              <p className="text-[#A0A0A5] text-sm">Monitor and respond to security incidents, manage emergency controls</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <Vote className="text-purple-400 flex-shrink-0" size={24} />
-            <div>
-              <h4 className="text-[#F5F3E8] font-bold mb-1">Proposal Review</h4>
-              <p className="text-[#A0A0A5] text-sm">Review and recommend DAO proposals before community voting</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <DollarSign className="text-green-400 flex-shrink-0" size={24} />
-            <div>
-              <h4 className="text-[#F5F3E8] font-bold mb-1">Treasury Oversight</h4>
-              <p className="text-[#A0A0A5] text-sm">Approve multi-sig transactions and manage fund allocations</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <TrendingUp className="text-yellow-400 flex-shrink-0" size={24} />
-            <div>
-              <h4 className="text-[#F5F3E8] font-bold mb-1">Ecosystem Growth</h4>
-              <p className="text-[#A0A0A5] text-sm">Drive partnerships, integrations, and community expansion</p>
-            </div>
-          </div>
+          {[
+            { icon: Shield, color: 'text-cyan-400', bg: 'from-cyan-500/20 to-cyan-500/5', border: 'border-cyan-500/20', title: 'Protocol Security', desc: 'Monitor and respond to security incidents, manage emergency controls' },
+            { icon: Vote, color: 'text-purple-400', bg: 'from-purple-500/20 to-purple-500/5', border: 'border-purple-500/20', title: 'Proposal Review', desc: 'Review and recommend DAO proposals before community voting' },
+            { icon: DollarSign, color: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', title: 'Treasury Oversight', desc: 'Approve multi-sig transactions and manage fund allocations' },
+            { icon: TrendingUp, color: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/20', title: 'Ecosystem Growth', desc: 'Drive partnerships, integrations, and community expansion' },
+          ].map((item, idx) => (
+            <motion.div 
+              key={item.title}
+              whileHover={{ scale: 1.02 }}
+              className={`flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br ${item.bg} border ${item.border}`}
+            >
+              <item.icon className={`${item.color} flex-shrink-0`} size={24} />
+              <div>
+                <h4 className="text-white font-bold mb-1">{item.title}</h4>
+                <p className="text-gray-400 text-sm">{item.desc}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
-      </div>
+      </GlassCard>
 
       {/* Contracts Info */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Smart Contracts</h3>
+      <GlassCard className="p-6">
+        <h3 className="text-xl font-bold text-white mb-4">Smart Contracts</h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
             <div>
-              <div className="text-[#F5F3E8] font-bold">CouncilManager</div>
-              <div className="text-xs text-[#A0A0A5]">Daily score checks and payment distribution</div>
+              <div className="text-white font-bold">CouncilManager</div>
+              <div className="text-xs text-gray-400">Daily score checks and payment distribution</div>
             </div>
-            <span className="text-green-400 text-xs font-bold">Active</span>
+            <span className="text-emerald-400 text-xs font-bold px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">Active</span>
           </div>
-          <div className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
             <div>
-              <div className="text-[#F5F3E8] font-bold">CouncilSalary</div>
-              <div className="text-xs text-[#A0A0A5]">Salary distribution and removal voting</div>
+              <div className="text-white font-bold">CouncilSalary</div>
+              <div className="text-xs text-gray-400">Salary distribution and removal voting</div>
             </div>
-            <span className="text-green-400 text-xs font-bold">Active</span>
+            <span className="text-emerald-400 text-xs font-bold px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">Active</span>
           </div>
-          <div className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
             <div>
-              <div className="text-[#F5F3E8] font-bold">CouncilElection</div>
-              <div className="text-xs text-[#A0A0A5]">Election cycles and candidate registration</div>
+              <div className="text-white font-bold">CouncilElection</div>
+              <div className="text-xs text-gray-400">Election cycles and candidate registration</div>
             </div>
-            <span className="text-green-400 text-xs font-bold">Active</span>
+            <span className="text-emerald-400 text-xs font-bold px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">Active</span>
           </div>
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }
@@ -360,80 +423,99 @@ function MembersTab() {
   return (
     <div className="space-y-8">
       {/* Members List */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Current Council Members</h3>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+      >
+        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5">
+            <Crown className="w-5 h-5 text-indigo-400" />
+          </div>
+          Current Council Members
+        </h3>
         <div className="space-y-4">
           {members.map((member, idx) => (
-            <div 
-              key={idx} 
-              className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg ${
-                member.status === 'vacant' ? 'bg-[#1A1A1D]/50 border border-dashed border-[#3A3A3F]' : 'bg-[#1A1A1D]'
+            <motion.div 
+              key={idx}
+              whileHover={{ scale: 1.005, x: 4 }}
+              className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl ${
+                member.status === 'vacant' 
+                  ? 'bg-white/5 border border-dashed border-white/20' 
+                  : 'bg-white/5 border border-white/10'
               }`}
             >
               <div className="flex items-center gap-4 mb-3 md:mb-0">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                   member.status === 'vacant' 
-                    ? 'bg-[#2A2A2F] text-[#505055]' 
-                    : 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white'
+                    ? 'bg-white/5 border border-white/10 text-gray-500' 
+                    : 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25'
                 } font-bold`}>
                   {member.status === 'vacant' ? '?' : idx + 1}
                 </div>
                 <div>
-                  <div className="text-[#F5F3E8] font-bold">{member.name}</div>
-                  <div className="text-xs text-[#A0A0A5]">{member.address}</div>
+                  <div className="text-white font-bold">{member.name}</div>
+                  <div className="text-xs text-gray-400 font-mono">{member.address}</div>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
                   member.role === 'Chair' 
-                    ? 'bg-yellow-500/20 text-yellow-400'
+                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                     : member.role === 'Open'
-                    ? 'bg-gray-500/20 text-gray-400'
-                    : 'bg-cyan-500/20 text-cyan-400'
+                    ? 'bg-white/5 text-gray-400 border-white/10'
+                    : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
                 }`}>
                   {member.role}
                 </span>
                 {member.status !== 'vacant' && (
                   <>
-                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold">
+                    <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold">
                       Score: {member.proofScore}
                     </span>
-                    <span className="text-xs text-[#A0A0A5]">
+                    <span className="text-xs text-gray-400">
                       <Calendar size={12} className="inline mr-1" />
                       {member.joinedDays} days
                     </span>
                   </>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Daily Score Check */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+      >
         <div className="flex items-center gap-4 mb-4">
-          <TrendingUp className="text-cyan-400" size={24} />
+          <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
+            <TrendingUp className="text-cyan-400" size={20} />
+          </div>
           <div>
-            <h3 className="text-xl font-bold text-[#F5F3E8]">Daily Score Verification</h3>
-            <p className="text-[#A0A0A5] text-sm">CouncilManager checks member ProofScores daily</p>
+            <h3 className="text-xl font-bold text-white">Daily Score Verification</h3>
+            <p className="text-gray-400 text-sm">CouncilManager checks member ProofScores daily</p>
           </div>
         </div>
-        <div className="bg-[#1A1A1D] rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[#A0A0A5]">Last Check</span>
-            <span className="text-[#F5F3E8]">Today, 00:00 UTC</span>
-          </div>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[#A0A0A5]">Members Passing</span>
-            <span className="text-green-400">12 / 12</span>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-400">Last Check</span>
+            <span className="text-white">Today, 00:00 UTC</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[#A0A0A5]">Minimum Required Score</span>
-            <span className="text-[#00F0FF]">7000 (70%)</span>
+            <span className="text-gray-400">Members Passing</span>
+            <span className="text-emerald-400 font-semibold">12 / 12</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-400">Minimum Required Score</span>
+            <span className="text-cyan-400 font-semibold">7000 (70%)</span>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -447,46 +529,57 @@ function SalaryTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Salary Overview */}
-      <div className="bg-gradient-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 p-8"
+      >
         <div className="flex items-center gap-4 mb-6">
-          <DollarSign className="w-12 h-12 text-green-400" />
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20">
+            <DollarSign className="w-8 h-8 text-emerald-400" />
+          </div>
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">Council Salary System</h2>
-            <p className="text-[#A0A0A5]">Fee-funded compensation for eligible council members</p>
+            <h2 className="text-2xl font-bold text-white">Council Salary System</h2>
+            <p className="text-gray-400">Fee-funded compensation for eligible council members</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-green-400">Variable</div>
-            <div className="text-sm text-[#A0A0A5]">Funded by ecosystem fees</div>
-          </div>
-          <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-[#F5F3E8]">120 Days</div>
-            <div className="text-sm text-[#A0A0A5]">Distribution Interval</div>
-          </div>
-          <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-cyan-400">Equal</div>
-            <div className="text-sm text-[#A0A0A5]">Split among eligible</div>
-          </div>
+          {[
+            { value: 'Variable', label: 'Funded by ecosystem fees', gradient: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+            { value: '120 Days', label: 'Distribution Interval', gradient: 'from-white/10 to-white/5', border: 'border-white/10', text: 'text-white' },
+            { value: 'Equal', label: 'Split among eligible', gradient: 'from-cyan-500/20 to-cyan-500/5', border: 'border-cyan-500/20', text: 'text-cyan-400' },
+          ].map((stat, idx) => (
+            <div key={idx} className={`bg-gradient-to-br ${stat.gradient} border ${stat.border} rounded-xl p-4`}>
+              <div className={`text-3xl font-bold ${stat.text}`}>{stat.value}</div>
+              <div className="text-sm text-gray-400">{stat.label}</div>
+            </div>
+          ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Distribution History */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Distribution History</h3>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+      >
+        <h3 className="text-xl font-bold text-white mb-6">Distribution History</h3>
         <div className="space-y-3">
           {salaryHistory.map((entry, idx) => (
-            <div key={idx} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg">
+            <div key={idx} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
               <div className="flex items-center gap-4">
-                <Calendar className="text-[#A0A0A5]" size={20} />
+                <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+                  <Calendar className="text-gray-400" size={20} />
+                </div>
                 <div>
-                  <div className="text-[#F5F3E8] font-bold">{entry.period}</div>
-                  <div className="text-xs text-[#A0A0A5]">{entry.recipients} recipients</div>
+                  <div className="text-white font-bold">{entry.period}</div>
+                  <div className="text-xs text-gray-400">{entry.recipients} recipients</div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-green-400 font-bold">{entry.amount}</div>
-                <div className="text-xs text-green-400">
+                <div className="text-emerald-400 font-bold">{entry.amount}</div>
+                <div className="text-xs text-emerald-400">
                   <CheckCircle size={12} className="inline mr-1" />
                   Distributed
                 </div>
@@ -494,27 +587,32 @@ function SalaryTab({ isConnected }: { isConnected: boolean }) {
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Trigger Distribution (Admin) */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Distribute Salary</h3>
-        <p className="text-[#A0A0A5] text-sm mb-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+      >
+        <h3 className="text-xl font-bold text-white mb-4">Distribute Salary</h3>
+        <p className="text-gray-400 text-sm mb-4">
           Keeper can trigger monthly salary distribution on or after the 1st of each month.
         </p>
-        <div className="bg-[#1A1A1D] rounded-lg p-4 mb-4">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4">
           <div className="flex items-center justify-between">
-            <span className="text-[#A0A0A5]">Next Distribution Available</span>
-            <span className="text-[#00F0FF] font-bold">January 1, 2026</span>
+            <span className="text-gray-400">Next Distribution Available</span>
+            <span className="text-cyan-400 font-bold">January 1, 2026</span>
           </div>
         </div>
         <button 
-          className="w-full bg-[#3A3A3F] text-[#707075] font-bold py-3 rounded-lg cursor-not-allowed"
+          className="w-full bg-white/5 text-gray-500 font-bold py-3 rounded-xl border border-white/10 cursor-not-allowed"
           disabled
         >
           Distribution Not Available Yet
         </button>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -535,109 +633,140 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Voting Overview */}
-      <div className="bg-gradient-to-br from-red-900/20 to-orange-900/20 border border-red-500/30 rounded-xl p-8">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500/10 to-orange-500/5 backdrop-blur-xl border border-red-500/20 p-8"
+      >
         <div className="flex items-center gap-4 mb-6">
-          <Vote className="w-12 h-12 text-red-400" />
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/20">
+            <Vote className="w-8 h-8 text-red-400" />
+          </div>
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">Member Removal Voting</h2>
-            <p className="text-[#A0A0A5]">Council members can vote to remove underperforming members</p>
+            <h2 className="text-2xl font-bold text-white">Member Removal Voting</h2>
+            <p className="text-gray-400">Council members can vote to remove underperforming members</p>
           </div>
         </div>
-        <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-4">
-          <p className="text-yellow-400 text-sm font-bold">Vote Threshold: &gt;50% (7/12)</p>
-          <p className="text-[#A0A0A5] text-sm">At least 7 council members must vote for removal</p>
+        <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-4">
+          <p className="text-amber-400 text-sm font-bold">Vote Threshold: &gt;50% (7/12)</p>
+          <p className="text-gray-400 text-sm">At least 7 council members must vote for removal</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Active Removal Votes */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Active Removal Votes</h3>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+      >
+        <h3 className="text-xl font-bold text-white mb-6">Active Removal Votes</h3>
         {removalVotes.length > 0 ? (
           <div className="space-y-4">
             {removalVotes.map((vote, idx) => (
-              <div key={idx} className="p-4 bg-[#1A1A1D] rounded-lg border border-red-500/30">
+              <div key={idx} className="p-4 bg-red-500/10 rounded-xl border border-red-500/30">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <div className="text-[#F5F3E8] font-bold">{vote.targetName}</div>
-                    <div className="text-xs text-[#A0A0A5]">{vote.target}</div>
+                    <div className="text-white font-bold">{vote.targetName}</div>
+                    <div className="text-xs text-gray-400 font-mono">{vote.target}</div>
                   </div>
-                  <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-bold">
+                  <span className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-full text-xs font-bold">
                     Removal Vote
                   </span>
                 </div>
                 <div className="mb-4">
-                  <div className="text-sm text-[#A0A0A5] mb-2">Reason:</div>
-                  <p className="text-[#F5F3E8] text-sm bg-[#0D0D0F] p-3 rounded-lg">{vote.reason}</p>
+                  <div className="text-sm text-gray-400 mb-2">Reason:</div>
+                  <p className="text-white text-sm bg-white/5 border border-white/10 p-3 rounded-xl">{vote.reason}</p>
                 </div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-[#A0A0A5]">Votes:</span>
-                    <span className="text-[#00F0FF] font-bold">{vote.votesFor}/{vote.votesNeeded}</span>
+                    <span className="text-gray-400">Votes:</span>
+                    <span className="text-cyan-400 font-bold">{vote.votesFor}/{vote.votesNeeded}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-[#A0A0A5]">
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
                     <Clock size={14} />
                     {vote.deadline} remaining
                   </div>
                 </div>
-                <div className="h-2 bg-[#0D0D0F] rounded-full overflow-hidden mb-4">
-                  <div 
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden mb-4">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(vote.votesFor / vote.votesNeeded) * 100}%` }}
                     className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
-                    style={{ width: `${(vote.votesFor / vote.votesNeeded) * 100}%` }}
                   />
                 </div>
                 {isConnected ? (
                   <div className="flex gap-3">
-                    <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg transition-colors">
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-2 rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
+                    >
                       Vote For Removal
-                    </button>
-                    <button className="flex-1 bg-[#3A3A3F] hover:bg-[#4A4A4F] text-[#F5F3E8] font-bold py-2 rounded-lg transition-colors">
+                    </motion.button>
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex-1 bg-white/5 border border-white/10 text-white font-bold py-2 rounded-xl hover:bg-white/10 transition-colors"
+                    >
                       Abstain
-                    </button>
+                    </motion.button>
                   </div>
                 ) : (
-                  <p className="text-center text-[#A0A0A5] text-sm">Connect wallet to vote</p>
+                  <p className="text-center text-gray-400 text-sm">Connect wallet to vote</p>
                 )}
               </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-8">
-            <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-            <p className="text-[#A0A0A5]">No active removal votes</p>
+            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 inline-block mb-3">
+              <CheckCircle className="w-8 h-8 text-emerald-400" />
+            </div>
+            <p className="text-gray-400">No active removal votes</p>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Initiate Removal (Council Only) */}
       {isConnected && (
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-          <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Initiate Member Removal</h3>
-          <p className="text-[#A0A0A5] text-sm mb-4">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+        >
+          <h3 className="text-xl font-bold text-white mb-4">Initiate Member Removal</h3>
+          <p className="text-gray-400 text-sm mb-4">
             Council members can propose removal of another member who fails to meet requirements.
           </p>
           <div className="space-y-4 mb-4">
             <div>
-              <label className="text-sm text-[#A0A0A5] mb-2 block">Target Member Address</label>
+              <label className="text-sm text-gray-400 mb-2 block">Target Member Address</label>
               <input
                 type="text"
                 placeholder="0x..."
-                className="w-full bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg px-4 py-3 text-[#F5F3E8] placeholder-[#505055] focus:border-[#00F0FF] focus:outline-none"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none transition-colors"
               />
             </div>
             <div>
-              <label className="text-sm text-[#A0A0A5] mb-2 block">Reason for Removal</label>
+              <label className="text-sm text-gray-400 mb-2 block">Reason for Removal</label>
               <textarea
                 placeholder="Describe why this member should be removed..."
                 rows={3}
-                className="w-full bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg px-4 py-3 text-[#F5F3E8] placeholder-[#505055] focus:border-[#00F0FF] focus:outline-none resize-none"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none resize-none transition-colors"
               />
             </div>
           </div>
-          <button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all flex items-center justify-center gap-2"
+          >
             <AlertTriangle size={18} />
             Propose Removal
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
     </div>
   );

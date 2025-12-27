@@ -297,185 +297,242 @@ export default function PayrollPage() {
   // Contract handlers are defined above (handleCreateStream, handleWithdraw, handlePauseStream, handleResumeStream, handleCancelStream, handleTopUp)
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      {/* Hero */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.08),transparent_60%)]" />
-          <div className="absolute top-20 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-        </div>
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-6">
-              <Banknote className="w-4 h-4 text-purple-400" />
-              <span className="text-sm text-purple-300">Salary Streaming</span>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Get Paid <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Every Second</span>
-            </h1>
-            
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-              Stream salaries continuously to your team. Employees can withdraw earned wages 
-              instantly - no more waiting for payday. Zero custody, full transparency.
-            </p>
-          </motion.div>
-          
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-4xl mx-auto">
-            {[
-              { 
-                label: activeTab === 'receiving' ? 'Available to Claim' : 'Total Streaming', 
-                value: `${formatAmount(activeTab === 'receiving' ? totalClaimable : totalStreaming)} VFIDE`, 
-                icon: <DollarSign className="w-5 h-5" />, 
-                color: 'from-purple-500 to-purple-600',
-                pulse: activeTab === 'receiving'
-              },
-              { label: 'Active Streams', value: activeStreamCount.toString(), icon: <Zap className="w-5 h-5" />, color: 'from-emerald-500 to-emerald-600' },
-              { label: 'Paused Streams', value: pausedStreamCount.toString(), icon: <Pause className="w-5 h-5" />, color: 'from-amber-500 to-amber-600' },
-              { label: 'Total Streams', value: mockStreams.filter(s => s.active).length.toString(), icon: <Timer className="w-5 h-5" />, color: 'from-blue-500 to-blue-600' }
-            ].map((stat, idx) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4"
-              >
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-                  {stat.icon}
-                </div>
-                <p className={`text-2xl font-bold text-white ${stat.pulse ? 'animate-pulse' : ''}`}>{stat.value}</p>
-                <p className="text-sm text-slate-400">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+    <>
+      <GlobalNav />
+      
+      {/* Premium background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
 
-      {/* Main Content */}
-      <section className="pb-20">
-        <div className="container mx-auto px-4">
-          {/* Tabs & Create Button */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div className="flex gap-2">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-slate-800/50 text-slate-400 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  {tab.icon}
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all"
+      <motion.main 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen pt-24 pb-16"
+      >
+        {/* Hero */}
+        <section className="relative py-12 overflow-hidden">
+          <div className="container mx-auto px-4 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center max-w-4xl mx-auto"
             >
-              <Plus className="w-4 h-4" />
-              Create Stream
-            </button>
-          </div>
-
-          {/* Stream List */}
-          {!isConnected ? (
-            <div className="text-center py-16">
-              <Wallet className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h3>
-              <p className="text-slate-400">Connect your wallet to view and manage your salary streams</p>
-            </div>
-          ) : filteredStreams.length === 0 ? (
-            <div className="text-center py-16">
-              <Banknote className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">No Streams Found</h3>
-              <p className="text-slate-400">
-                {activeTab === 'receiving' 
-                  ? "You're not receiving any salary streams yet" 
-                  : "You haven't created any salary streams yet"}
+              <motion.div 
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-full mb-6"
+              >
+                <Banknote className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-medium text-purple-300">Salary Streaming</span>
+              </motion.div>
+              
+              <h1 className="text-4xl md:text-5xl font-black mb-4">
+                <span className="text-white">Get Paid </span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-indigo-400 to-blue-400">
+                  Every Second
+                </span>
+              </h1>
+              
+              <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                Stream salaries continuously to your team. Employees can withdraw earned wages 
+                instantly - no more waiting for payday. Zero custody, full transparency.
               </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredStreams.map((stream, idx) => {
-                const role = getRole(stream)
-                const claimable = calculateClaimable(stream)
-                const runway = calculateRunway(stream)
-                const isLowRunway = runway < 7 * 24 * 60 * 60 // Less than 7 days
-                
-                return (
-                  <motion.div
-                    key={stream.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className={`bg-slate-800/50 border rounded-xl overflow-hidden transition-colors ${
-                      stream.paused 
-                        ? 'border-amber-500/30' 
-                        : isLowRunway && role === 'employer'
-                        ? 'border-red-500/30'
-                        : 'border-slate-700/50 hover:border-slate-600/50'
+            </motion.div>
+          
+            {/* Stats */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-4xl mx-auto"
+            >
+              {[
+                { 
+                  label: activeTab === 'receiving' ? 'Available to Claim' : 'Total Streaming', 
+                  value: `${formatAmount(activeTab === 'receiving' ? totalClaimable : totalStreaming)} VFIDE`, 
+                  icon: <DollarSign className="w-5 h-5" />, 
+                  gradient: 'from-purple-500/20 to-indigo-500/10',
+                  border: 'border-purple-500/20',
+                  text: 'text-purple-400',
+                  pulse: activeTab === 'receiving'
+                },
+                { label: 'Active Streams', value: activeStreamCount.toString(), icon: <Zap className="w-5 h-5" />, gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+                { label: 'Paused Streams', value: pausedStreamCount.toString(), icon: <Pause className="w-5 h-5" />, gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
+                { label: 'Total Streams', value: mockStreams.filter(s => s.active).length.toString(), icon: <Timer className="w-5 h-5" />, gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' }
+              ].map((stat, idx) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4`}
+                >
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-3`}>
+                    <div className={stat.text}>{stat.icon}</div>
+                  </div>
+                  <p className={`text-2xl font-bold text-white ${stat.pulse ? 'animate-pulse' : ''}`}>{stat.value}</p>
+                  <p className="text-sm text-gray-400">{stat.label}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Main Content */}
+        <section className="pb-12">
+          <div className="container mx-auto px-4">
+            {/* Tabs & Create Button */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
+            >
+              <div className="flex gap-2">
+                {tabs.map(tab => (
+                  <motion.button
+                    key={tab.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+                      activeTab === tab.id
+                        ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg shadow-purple-500/25'
+                        : 'bg-white/5 text-gray-400 hover:bg-purple-500/10 hover:text-purple-400'
                     }`}
                   >
-                    <div className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        {/* Left: Stream Info */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            {stream.paused ? (
-                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 flex items-center gap-1">
-                                <Pause className="w-3 h-3" /> Paused
-                              </span>
-                            ) : (
-                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 flex items-center gap-1">
-                                <Play className="w-3 h-3" /> Active
-                              </span>
-                            )}
-                            <span className="text-slate-500 text-sm">
-                              Stream #{stream.id}
-                            </span>
-                            {role === 'employee' && (
-                              <span className="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">
-                                Receiving
-                              </span>
-                            )}
-                            {role === 'employer' && (
-                              <span className="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400">
-                                Paying
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <p className="text-slate-500 mb-1 flex items-center gap-1">
-                                {role === 'employee' ? <Building className="w-3 h-3" /> : <User className="w-3 h-3" />}
-                                {role === 'employee' ? 'From' : 'To'}
-                              </p>
-                              <p className="text-white font-mono">
-                                {role === 'employee' ? stream.payer : stream.payee}
-                              </p>
+                    {tab.icon}
+                    {tab.label}
+                  </motion.button>
+              ))}
+              </div>
+            
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Create Stream
+              </motion.button>
+            </motion.div>
+
+            {/* Stream List */}
+            <AnimatePresence mode="wait">
+              {!isConnected ? (
+                <motion.div 
+                  key="connect"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="text-center py-16"
+                >
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-indigo-500/5 border border-purple-500/20 inline-block mb-4">
+                    <Wallet className="w-12 h-12 text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h3>
+                  <p className="text-gray-400">Connect your wallet to view and manage your salary streams</p>
+                </motion.div>
+              ) : filteredStreams.length === 0 ? (
+                <motion.div 
+                  key="empty"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="text-center py-16"
+                >
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-indigo-500/5 border border-purple-500/20 inline-block mb-4">
+                    <Banknote className="w-12 h-12 text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">No Streams Found</h3>
+                  <p className="text-gray-400">
+                    {activeTab === 'receiving' 
+                      ? "You're not receiving any salary streams yet" 
+                      : "You haven't created any salary streams yet"}
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="streams"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-4"
+                >
+                  {filteredStreams.map((stream, idx) => {
+                    const role = getRole(stream)
+                    const claimable = calculateClaimable(stream)
+                    const runway = calculateRunway(stream)
+                    const isLowRunway = runway < 7 * 24 * 60 * 60 // Less than 7 days
+                  
+                    return (
+                      <motion.div
+                        key={stream.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ scale: 1.005, y: -2 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border transition-colors ${
+                          stream.paused 
+                            ? 'border-amber-500/30' 
+                            : isLowRunway && role === 'employer'
+                            ? 'border-red-500/30'
+                            : 'border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="p-6">
+                          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            {/* Left: Stream Info */}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                {stream.paused ? (
+                                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 flex items-center gap-1 border border-amber-500/30">
+                                    <Pause className="w-3 h-3" /> Paused
+                                  </span>
+                                ) : (
+                                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 flex items-center gap-1 border border-emerald-500/30">
+                                    <Play className="w-3 h-3" /> Active
+                                  </span>
+                                )}
+                                <span className="text-gray-500 text-sm">
+                                  Stream #{stream.id}
+                                </span>
+                                {role === 'employee' && (
+                                  <span className="px-2 py-0.5 rounded-lg text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                                    Receiving
+                                  </span>
+                                )}
+                                {role === 'employer' && (
+                                  <span className="px-2 py-0.5 rounded-lg text-xs bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                                    Paying
+                                  </span>
+                                )}
+                              </div>
+                            
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <p className="text-gray-500 mb-1 flex items-center gap-1">
+                                    {role === 'employee' ? <Building className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                                    {role === 'employee' ? 'From' : 'To'}
+                                  </p>
+                                  <p className="text-white font-mono">
+                                    {role === 'employee' ? stream.payer : stream.payee}
+                                  </p>
                             </div>
                             <div>
-                              <p className="text-slate-500 mb-1 flex items-center gap-1">
+                              <p className="text-gray-500 mb-1 flex items-center gap-1">
                                 <TrendingUp className="w-3 h-3" /> Monthly Rate
                               </p>
                               <p className="text-white font-semibold">{formatRate(stream.ratePerSecond)} {stream.token}</p>
                             </div>
                             <div>
-                              <p className="text-slate-500 mb-1 flex items-center gap-1">
+                              <p className="text-gray-500 mb-1 flex items-center gap-1">
                                 <DollarSign className="w-3 h-3" /> 
                                 {role === 'employee' ? 'Claimable' : 'Balance'}
                               </p>
@@ -491,7 +548,7 @@ export default function PayrollPage() {
                               </p>
                             </div>
                             <div>
-                              <p className="text-slate-500 mb-1 flex items-center gap-1">
+                              <p className="text-gray-500 mb-1 flex items-center gap-1">
                                 <Timer className="w-3 h-3" /> Runway
                               </p>
                               <p className={`font-medium ${
@@ -506,10 +563,12 @@ export default function PayrollPage() {
                         {/* Right: Actions */}
                         <div className="flex gap-3 lg:flex-col">
                           {role === 'employee' && (
-                            <button
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                               onClick={() => handleWithdraw(stream.id)}
                               disabled={actionLoading === `withdraw-${stream.id}` || claimable === BigInt(0)}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50"
                             >
                               {actionLoading === `withdraw-${stream.id}` ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -517,14 +576,16 @@ export default function PayrollPage() {
                                 <ArrowDownToLine className="w-4 h-4" />
                               )}
                               Withdraw
-                            </button>
+                            </motion.button>
                           )}
                           
                           {role === 'employer' && (
-                            <button
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                               onClick={() => handleTopUp(stream.id, '5000')}
                               disabled={actionLoading === `topup-${stream.id}`}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50"
+                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-medium shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50"
                             >
                               {actionLoading === `topup-${stream.id}` ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -532,14 +593,16 @@ export default function PayrollPage() {
                                 <Plus className="w-4 h-4" />
                               )}
                               Top Up
-                            </button>
+                            </motion.button>
                           )}
                           
                           {stream.paused ? (
-                            <button
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                               onClick={() => handleResumeStream(stream.id)}
                               disabled={actionLoading === `resume-${stream.id}`}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 text-emerald-400 rounded-lg font-medium hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-emerald-400 rounded-xl font-medium border border-emerald-500/30 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
                             >
                               {actionLoading === `resume-${stream.id}` ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -547,12 +610,14 @@ export default function PayrollPage() {
                                 <Play className="w-4 h-4" />
                               )}
                               Resume
-                            </button>
+                            </motion.button>
                           ) : (
-                            <button
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                               onClick={() => handlePauseStream(stream.id)}
                               disabled={actionLoading === `pause-${stream.id}`}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 text-amber-400 rounded-lg font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-amber-400 rounded-xl font-medium border border-amber-500/30 hover:bg-amber-500/10 transition-all disabled:opacity-50"
                             >
                               {actionLoading === `pause-${stream.id}` ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -560,22 +625,22 @@ export default function PayrollPage() {
                                 <Pause className="w-4 h-4" />
                               )}
                               Pause
-                            </button>
+                            </motion.button>
                           )}
                         </div>
                       </div>
                       
                       {/* Progress bar for runway */}
                       {role === 'employer' && (
-                        <div className="mt-4 pt-4 border-t border-slate-700/50">
-                          <div className="flex justify-between text-xs text-slate-400 mb-2">
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                          <div className="flex justify-between text-xs text-gray-400 mb-2">
                             <span>Runway Progress</span>
                             <span>{formatRunway(runway)} remaining</span>
                           </div>
-                          <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                             <motion.div 
                               className={`h-full rounded-full ${
-                                isLowRunway ? 'bg-red-500' : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                                isLowRunway ? 'bg-red-500' : 'bg-gradient-to-r from-purple-500 to-indigo-500'
                               }`}
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.max(5, Math.min(100, (runway / (90 * 24 * 60 * 60)) * 100))}%` }}
@@ -586,17 +651,18 @@ export default function PayrollPage() {
                       )}
                     </div>
                   </motion.div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-20 border-t border-slate-800">
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-white text-center mb-12">How Streaming Works</h2>
+          <h2 className="text-2xl font-bold text-white text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">How Streaming Works</h2>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
@@ -604,46 +670,56 @@ export default function PayrollPage() {
                 title: 'Employer Creates Stream',
                 description: 'Set the rate and deposit tokens. Stream starts immediately.',
                 icon: <Plus className="w-6 h-6" />,
-                color: 'from-purple-500 to-purple-600'
+                gradient: 'from-purple-500/20 to-indigo-500/10',
+                border: 'border-purple-500/20',
+                text: 'text-purple-400'
               },
               {
                 title: 'Tokens Stream Per Second',
                 description: 'Funds accrue to the employee continuously, every second.',
                 icon: <Zap className="w-6 h-6" />,
-                color: 'from-blue-500 to-blue-600'
+                gradient: 'from-cyan-500/20 to-blue-500/10',
+                border: 'border-cyan-500/20',
+                text: 'text-cyan-400'
               },
               {
                 title: 'Employee Withdraws Anytime',
                 description: 'Claim earned wages instantly - no waiting for payday.',
                 icon: <ArrowDownToLine className="w-6 h-6" />,
-                color: 'from-emerald-500 to-emerald-600'
+                gradient: 'from-emerald-500/20 to-green-500/10',
+                border: 'border-emerald-500/20',
+                text: 'text-emerald-400'
               }
             ].map((step, idx) => (
               <motion.div
                 key={step.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.02, y: -4 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.15 }}
-                className="text-center"
+                className={`text-center bg-gradient-to-br ${step.gradient} backdrop-blur-xl border ${step.border} rounded-2xl p-6`}
               >
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center mx-auto mb-4`}>
-                  {step.icon}
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${step.gradient} border ${step.border} flex items-center justify-center mx-auto mb-4`}>
+                  <div className={step.text}>{step.icon}</div>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
-                <p className="text-slate-400 text-sm">{step.description}</p>
+                <p className="text-gray-400 text-sm">{step.description}</p>
               </motion.div>
             ))}
           </div>
           
           {/* Benefits */}
           <div className="mt-16 grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+            <motion.div 
+              whileHover={{ scale: 1.01, y: -2 }}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 p-6"
+            >
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-400" />
+                <User className="w-5 h-5 text-cyan-400" />
                 For Employees
               </h3>
-              <ul className="space-y-3 text-slate-400 text-sm">
+              <ul className="space-y-3 text-gray-400 text-sm">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                   Access earned wages instantly, no more waiting for payday
@@ -657,14 +733,17 @@ export default function PayrollPage() {
                   Full transparency - see exactly what you&apos;ve earned
                 </li>
               </ul>
-            </div>
+            </motion.div>
             
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+            <motion.div 
+              whileHover={{ scale: 1.01, y: -2 }}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500/10 to-indigo-500/5 backdrop-blur-xl border border-purple-500/20 p-6"
+            >
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Building className="w-5 h-5 text-purple-400" />
                 For Employers
               </h3>
-              <ul className="space-y-3 text-slate-400 text-sm">
+              <ul className="space-y-3 text-gray-400 text-sm">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                   Attract top talent with instant wage access benefit
@@ -678,7 +757,7 @@ export default function PayrollPage() {
                   Flexible rate adjustments and top-ups anytime
                 </li>
               </ul>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -698,47 +777,47 @@ export default function PayrollPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-lg w-full"
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
             >
-              <h2 className="text-2xl font-bold text-white mb-6">Create Salary Stream</h2>
+              <h2 className="text-2xl font-bold text-white mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Create Salary Stream</h2>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">Employee Address</label>
+                  <label className="block text-sm text-gray-400 mb-2">Employee Address</label>
                   <input
                     type="text"
                     value={createForm.payee}
                     onChange={e => setCreateForm(f => ({ ...f, payee: e.target.value }))}
                     placeholder="0x..."
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500/50 transition-colors"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">Monthly Rate (VFIDE)</label>
+                  <label className="block text-sm text-gray-400 mb-2">Monthly Rate (VFIDE)</label>
                   <input
                     type="number"
                     value={createForm.rate}
                     onChange={e => setCreateForm(f => ({ ...f, rate: e.target.value }))}
                     placeholder="5000"
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500/50 transition-colors"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     Will be converted to per-second rate for streaming
                   </p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">Initial Deposit (VFIDE)</label>
+                  <label className="block text-sm text-gray-400 mb-2">Initial Deposit (VFIDE)</label>
                   <input
                     type="number"
                     value={createForm.deposit}
                     onChange={e => setCreateForm(f => ({ ...f, deposit: e.target.value }))}
                     placeholder="15000"
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500/50 transition-colors"
                   />
                   {createForm.rate && createForm.deposit && (
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-gray-400 mt-1">
                       Runway: ~{Math.floor(Number(createForm.deposit) / Number(createForm.rate))} months
                     </p>
                   )}
@@ -746,16 +825,20 @@ export default function PayrollPage() {
               </div>
               
               <div className="flex gap-3 mt-6">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-3 bg-slate-800 text-slate-300 rounded-lg font-medium hover:bg-slate-700 transition-colors"
+                  className="flex-1 px-4 py-3 bg-white/5 text-gray-300 rounded-xl font-medium border border-white/10 hover:bg-white/10 transition-colors"
                 >
                   Cancel
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleCreateStream}
                   disabled={actionLoading === 'create' || !createForm.payee || !createForm.rate || !createForm.deposit}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-medium shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all disabled:opacity-50"
                 >
                   {actionLoading === 'create' ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -765,12 +848,14 @@ export default function PayrollPage() {
                       Start Streaming
                     </>
                   )}
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </main>
+      </motion.main>
+      <Footer />
+    </>
   )
 }

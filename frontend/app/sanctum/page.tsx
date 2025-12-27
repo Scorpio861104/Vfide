@@ -5,7 +5,8 @@ import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { parseUnits, formatUnits, isAddress } from "viem";
-import { Heart, Shield, DollarSign, Users, CheckCircle, Clock, AlertTriangle, ExternalLink, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, Shield, DollarSign, Users, CheckCircle, Clock, AlertTriangle, ExternalLink, Loader2, Sparkles } from "lucide-react";
 
 // SanctumVault ABI
 const SANCTUM_VAULT_ABI = [
@@ -100,74 +101,139 @@ export default function SanctumPage() {
   return (
     <>
       <GlobalNav />
-      <main className="min-h-screen bg-[#0D0D0F] pt-24 pb-16">
+      
+      {/* Premium background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,107,157,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
+      <motion.main 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen pt-24 pb-16"
+      >
         <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500/10 border border-pink-500/30 rounded-full mb-4">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500/20 to-rose-500/20 border border-pink-500/30 rounded-full mb-4"
+            >
               <Heart className="w-4 h-4 text-pink-400" />
               <span className="text-pink-400 text-sm font-medium">Sanctum Charity Vault</span>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-4">
-              The Sanctum
+            </motion.div>
+            <h1 className="text-4xl md:text-5xl font-black mb-4">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-rose-400 to-red-400">
+                The Sanctum
+              </span>
             </h1>
-            <p className="text-[#A0A0A5] text-lg max-w-2xl mx-auto">
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               A portion of all VFIDE transaction fees funds charitable causes. 
               Community-governed, transparent, and impactful.
             </p>
-          </div>
+          </motion.div>
 
           {/* Stats Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          >
             {[
-              { label: 'Total Donated', value: '125,000', unit: 'VFIDE', icon: Heart, color: '#FF6B9D' },
-              { label: 'Active Charities', value: '8', unit: '', icon: Users, color: '#00F0FF' },
-              { label: 'Disbursements', value: '24', unit: 'completed', icon: CheckCircle, color: '#22C55E' },
-              { label: 'Fee Allocation', value: '~3%', unit: 'of fees', icon: DollarSign, color: '#FFD700' },
+              { label: 'Total Donated', value: '125,000', unit: 'VFIDE', icon: Heart, gradient: 'from-pink-500/20 to-rose-500/10', border: 'border-pink-500/20', text: 'text-pink-400' },
+              { label: 'Active Charities', value: '8', unit: '', icon: Users, gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
+              { label: 'Disbursements', value: '24', unit: 'completed', icon: CheckCircle, gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+              { label: 'Fee Allocation', value: '~3%', unit: 'of fees', icon: DollarSign, gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
             ].map((stat, idx) => (
-              <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 text-center">
-                <stat.icon className="w-6 h-6 mx-auto mb-2" style={{ color: stat.color }} />
-                <div className="text-2xl font-bold text-[#F5F3E8]">{stat.value}</div>
-                <div className="text-xs text-[#A0A0A5]">{stat.label}</div>
-                {stat.unit && <div className="text-xs text-[#707075]">{stat.unit}</div>}
-              </div>
+              <motion.div 
+                key={idx} 
+                whileHover={{ scale: 1.02, y: -2 }}
+                className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
+              >
+                <stat.icon className={`w-6 h-6 mx-auto mb-2 ${stat.text}`} />
+                <div className="text-2xl font-bold text-white">{stat.value}</div>
+                <div className="text-xs text-gray-400">{stat.label}</div>
+                {stat.unit && <div className="text-xs text-gray-500">{stat.unit}</div>}
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Tabs */}
-          <div className="flex flex-wrap gap-2 mb-8 justify-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-wrap gap-2 mb-8 justify-center"
+          >
             {[
               { id: 'overview' as const, label: 'Overview', icon: Shield },
               { id: 'charities' as const, label: 'Charities', icon: Users },
               { id: 'disbursements' as const, label: 'Disbursements', icon: DollarSign },
               { id: 'donate' as const, label: 'Donate', icon: Heart },
               { id: 'history' as const, label: 'History', icon: Clock },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-pink-500 text-white'
-                    : 'bg-[#2A2A2F] text-[#A0A0A5] hover:bg-[#3A3A3F]'
-                }`}
-              >
-                <tab.icon size={16} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <motion.button
+                  key={tab.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25'
+                      : 'bg-white/5 text-gray-400 hover:bg-pink-500/10 hover:text-pink-400'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </motion.button>
+              );
+            })}
+          </motion.div>
 
           {/* Tab Content */}
-          {activeTab === 'overview' && <OverviewTab />}
-          {activeTab === 'charities' && <CharitiesTab />}
-          {activeTab === 'disbursements' && <DisbursementsTab isConnected={isConnected} />}
-          {activeTab === 'donate' && <DonateTab isConnected={isConnected} />}
-          {activeTab === 'history' && <HistoryTab />}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {activeTab === 'overview' && <OverviewTab />}
+              {activeTab === 'charities' && <CharitiesTab />}
+              {activeTab === 'disbursements' && <DisbursementsTab isConnected={isConnected} />}
+              {activeTab === 'donate' && <DonateTab isConnected={isConnected} />}
+              {activeTab === 'history' && <HistoryTab />}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </main>
+      </motion.main>
       <Footer />
     </>
+  );
+}
+
+// GlassCard component
+function GlassCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.01, y: -2 }}
+      transition={{ type: "spring", stiffness: 400 }}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -175,8 +241,13 @@ function OverviewTab() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* How It Works */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-8">
-        <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">How The Sanctum Works</h2>
+      <GlassCard className="p-8">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-pink-500/5">
+            <Sparkles className="w-5 h-5 text-pink-400" />
+          </div>
+          How The Sanctum Works
+        </h2>
         <div className="space-y-6">
           {[
             { step: '1', title: 'Fee Collection', desc: '10% of all VFIDE transaction fees flow to The Sanctum' },
@@ -190,54 +261,54 @@ function OverviewTab() {
                 {item.step}
               </div>
               <div>
-                <div className="text-[#F5F3E8] font-bold">{item.title}</div>
-                <div className="text-sm text-[#A0A0A5]">{item.desc}</div>
+                <div className="text-white font-bold">{item.title}</div>
+                <div className="text-sm text-gray-400">{item.desc}</div>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </GlassCard>
 
       {/* Governance */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-8">
-        <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">Governance & Security</h2>
+      <GlassCard className="p-8">
+        <h2 className="text-2xl font-bold text-white mb-6">Governance & Security</h2>
         <div className="space-y-4">
-          <div className="bg-[#1A1A1D] rounded-lg p-4">
+          <div className="bg-black/30 rounded-xl p-4 border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-5 h-5 text-[#00F0FF]" />
-              <span className="text-[#F5F3E8] font-bold">Multi-Signature Required</span>
+              <Shield className="w-5 h-5 text-cyan-400" />
+              <span className="text-white font-bold">Multi-Signature Required</span>
             </div>
-            <p className="text-sm text-[#A0A0A5]">
+            <p className="text-sm text-gray-400">
               All disbursements require approval from multiple trusted signers before execution.
             </p>
           </div>
-          <div className="bg-[#1A1A1D] rounded-lg p-4">
+          <div className="bg-black/30 rounded-xl p-4 border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="w-5 h-5 text-[#00F0FF]" />
-              <span className="text-[#F5F3E8] font-bold">DAO Oversight</span>
+              <Users className="w-5 h-5 text-cyan-400" />
+              <span className="text-white font-bold">DAO Oversight</span>
             </div>
-            <p className="text-sm text-[#A0A0A5]">
+            <p className="text-sm text-gray-400">
               Community votes on charity additions, removals, and major policy changes.
             </p>
           </div>
-          <div className="bg-[#1A1A1D] rounded-lg p-4">
+          <div className="bg-black/30 rounded-xl p-4 border border-white/5">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="w-5 h-5 text-green-400" />
-              <span className="text-[#F5F3E8] font-bold">Full Transparency</span>
+              <span className="text-white font-bold">Full Transparency</span>
             </div>
-            <p className="text-sm text-[#A0A0A5]">
+            <p className="text-sm text-gray-400">
               All donations and disbursements recorded permanently on-chain.
             </p>
           </div>
         </div>
-      </div>
+      </GlassCard>
 
       {/* Current Balance */}
-      <div className="lg:col-span-2 bg-gradient-to-r from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-xl p-8">
+      <div className="lg:col-span-2 bg-gradient-to-r from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-2xl p-8">
         <div className="text-center">
-          <div className="text-[#A0A0A5] mb-2">Current Sanctum Balance</div>
+          <div className="text-gray-400 mb-2">Current Sanctum Balance</div>
           <div className="text-5xl font-bold text-pink-400 mb-4">45,230 VFIDE</div>
-          <div className="text-sm text-[#A0A0A5]">Ready for disbursement to approved charities</div>
+          <div className="text-sm text-gray-400">Ready for disbursement to approved charities</div>
         </div>
       </div>
     </div>

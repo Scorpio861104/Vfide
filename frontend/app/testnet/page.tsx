@@ -35,7 +35,7 @@ export default function TestnetPage() {
         <div className="max-w-2xl mx-auto px-4 py-12">
           <h1 className="text-3xl font-bold mb-2">Get Test ETH</h1>
           <p className="text-zinc-400 mb-8">
-            You need test ETH to pay for transactions on Base Sepolia. It's free.
+            You need test ETH to pay for transactions on Base Sepolia. It&apos;s free.
           </p>
 
           {/* Address section */}

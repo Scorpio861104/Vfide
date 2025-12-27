@@ -4,6 +4,7 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount } from "wagmi";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Gift, 
   Star, 
@@ -21,59 +22,131 @@ import {
 
 type TabType = 'overview' | 'tiers' | 'rewards' | 'stats';
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
+};
+
 export default function BenefitsPage() {
   const { isConnected, address } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   const tabs = [
-    { id: 'overview' as const, label: 'Overview', icon: Gift },
-    { id: 'tiers' as const, label: 'Membership Tiers', icon: Crown },
-    { id: 'rewards' as const, label: 'Available Rewards', icon: Award },
-    { id: 'stats' as const, label: 'My Stats', icon: TrendingUp },
+    { id: 'overview' as const, label: 'Overview', icon: Gift, color: 'cyan' },
+    { id: 'tiers' as const, label: 'Membership Tiers', icon: Crown, color: 'amber' },
+    { id: 'rewards' as const, label: 'Available Rewards', icon: Award, color: 'emerald' },
+    { id: 'stats' as const, label: 'My Stats', icon: TrendingUp, color: 'purple' },
   ];
+
+  const colorMap: Record<string, { active: string; hover: string }> = {
+    cyan: { active: 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25', hover: 'hover:bg-cyan-500/10 hover:text-cyan-400' },
+    amber: { active: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25', hover: 'hover:bg-amber-500/10 hover:text-amber-400' },
+    emerald: { active: 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25', hover: 'hover:bg-emerald-500/10 hover:text-emerald-400' },
+    purple: { active: 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25', hover: 'hover:bg-purple-500/10 hover:text-purple-400' },
+  };
 
   return (
     <>
       <GlobalNav />
-      <main className="min-h-screen bg-[#0D0D0F] pt-24 pb-16">
+      
+      {/* Premium background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,240,255,0.12),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,215,0,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
+      <motion.main 
+        initial="hidden"
+        animate="show"
+        variants={containerVariants}
+        className="min-h-screen pt-24 pb-16"
+      >
         <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-4">
-              Member Benefits
+          <motion.div variants={itemVariants} className="text-center mb-12">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-sm text-cyan-300 mb-4"
+            >
+              <Sparkles className="w-4 h-4" />
+              Exclusive Member Perks
+            </motion.div>
+            <h1 className="text-4xl md:text-5xl font-black mb-4">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-400">
+                Member Benefits
+              </span>
             </h1>
-            <p className="text-[#A0A0A5] text-lg max-w-2xl mx-auto">
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Exclusive perks and rewards for VFIDE token holders and active participants
             </p>
-          </div>
+          </motion.div>
 
           {/* Tab Navigation */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#00F0FF] text-[#0D0D0F]'
-                    : 'bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#F5F3E8]'
-                }`}
-              >
-                <tab.icon size={18} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-2 mb-8">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const colors = colorMap[tab.color];
+              return (
+                <motion.button
+                  key={tab.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+                    isActive ? colors.active : `bg-white/5 text-gray-400 ${colors.hover}`
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </motion.button>
+              );
+            })}
+          </motion.div>
 
           {/* Tab Content */}
-          {activeTab === 'overview' && <OverviewTab />}
-          {activeTab === 'tiers' && <TiersTab />}
-          {activeTab === 'rewards' && <RewardsTab isConnected={isConnected} />}
-          {activeTab === 'stats' && <StatsTab isConnected={isConnected} address={address} />}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {activeTab === 'overview' && <OverviewTab />}
+              {activeTab === 'tiers' && <TiersTab />}
+              {activeTab === 'rewards' && <RewardsTab isConnected={isConnected} />}
+              {activeTab === 'stats' && <StatsTab isConnected={isConnected} address={address} />}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </main>
+      </motion.main>
       <Footer />
     </>
+  );
+}
+
+// GlassCard component
+function GlassCard({ children, className = "", gradient }: { 
+  children: React.ReactNode; 
+  className?: string;
+  gradient?: string;
+}) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.01, y: -2 }}
+      transition={{ type: "spring", stiffness: 400 }}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient || 'from-white/[0.08] to-white/[0.02]'} backdrop-blur-xl border border-white/10 ${className}`}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -241,7 +314,7 @@ function TiersTab() {
             <h4 className="text-[#00F0FF] font-bold mb-2">Token Holdings</h4>
             <p className="text-[#A0A0A5] text-sm">
               Your tier is determined by the minimum VFIDE balance you hold for 30 consecutive days.
-              Short-term holdings don't count toward tier qualification.
+              Short-term holdings don&apos;t count toward tier qualification.
             </p>
           </div>
           <div>
@@ -326,7 +399,7 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
           <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
             <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Preview Upcoming Rewards</h3>
             <p className="text-[#A0A0A5] text-sm mb-4">
-              Based on your current activity and holdings, here's what you can expect:
+              Based on your current activity and holdings, here&apos;s what you can expect:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 bg-[#1A1A1D] rounded-lg text-center">

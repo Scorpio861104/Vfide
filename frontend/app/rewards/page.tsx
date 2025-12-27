@@ -3,7 +3,7 @@
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { formatUnits, parseUnits } from 'viem'
 import {
@@ -22,7 +22,8 @@ import {
   Lock,
   Coins,
   RefreshCw,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react'
 
 // Contract ABIs
@@ -219,22 +220,40 @@ export default function RewardsPage() {
     <>
       <GlobalNav />
       
-      <main className="min-h-screen bg-[#1A1A1D] pt-20">
+      {/* Premium background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,215,0,0.12),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(80,200,120,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
+      <main className="min-h-screen pt-20">
         {/* Header */}
-        <section className="py-12 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+        <motion.section 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="py-12 border-b border-white/10 backdrop-blur-xl bg-white/[0.02]"
+        >
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               <div>
                 <div className="flex items-center gap-4 mb-2">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#FFD700] to-[#FFA500] rounded-2xl flex items-center justify-center">
-                    <Gift className="w-8 h-8 text-[#1A1A1D]" />
-                  </div>
+                  <motion.div 
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 4, repeat: Infinity }}
+                    className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-amber-500/30"
+                  >
+                    <Gift className="w-8 h-8 text-white" />
+                  </motion.div>
                   <div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8]">
-                      Rewards Center
+                    <h1 className="text-4xl md:text-5xl font-black">
+                      <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400">
+                        Rewards Center
+                      </span>
                     </h1>
-                    <p className="text-xl text-[#A0A0A5]">
-                      Receive rewards for active participation in the VFIDE ecosystem
+                    <p className="text-xl text-gray-400">
+                      Earn rewards for active participation in the VFIDE ecosystem
                     </p>
                   </div>
                 </div>
@@ -242,44 +261,66 @@ export default function RewardsPage() {
               
               {isConnected && (
                 <div className="flex gap-4">
-                  <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 min-w-[160px]">
-                    <div className="text-[#A0A0A5] text-sm mb-1">Total Claimable</div>
-                    <div className="text-2xl font-bold text-[#50C878]">{totalClaimable.toLocaleString()} VFIDE</div>
-                  </div>
-                  <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 min-w-[160px]">
-                    <div className="text-[#A0A0A5] text-sm mb-1">Total Earned</div>
-                    <div className="text-2xl font-bold text-[#FFD700]">{totalEarned.toLocaleString()} VFIDE</div>
-                  </div>
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 min-w-[160px]"
+                  >
+                    <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-emerald-400" />
+                      Total Claimable
+                    </div>
+                    <div className="text-2xl font-bold text-emerald-400">{totalClaimable.toLocaleString()} VFIDE</div>
+                  </motion.div>
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 min-w-[160px]"
+                  >
+                    <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
+                      <Trophy className="w-3 h-3 text-amber-400" />
+                      Total Earned
+                    </div>
+                    <div className="text-2xl font-bold text-amber-400">{totalEarned.toLocaleString()} VFIDE</div>
+                  </motion.div>
                 </div>
               )}
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Tab Navigation */}
-        <section className="bg-[#1A1A1D] border-b border-[#3A3A3F] sticky top-20 z-40">
+        <section className="border-b border-white/5 backdrop-blur-sm bg-black/20 sticky top-16 z-40">
           <div className="container mx-auto px-4">
             <div className="flex gap-1 overflow-x-auto py-2 scrollbar-hide">
               {[
-                { id: 'overview' as const, label: 'Overview', icon: Gift },
-                { id: 'duty' as const, label: 'Duty Rewards', icon: Vote },
-                { id: 'promotional' as const, label: 'Promotional', icon: Trophy },
-                { id: 'liquidity' as const, label: 'LP Staking', icon: Droplets },
-                { id: 'referral' as const, label: 'Referrals', icon: Users },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-lg font-bold transition-all whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'bg-[#FFD700] text-[#1A1A1D]'
-                      : 'bg-transparent text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A2F]'
-                  }`}
-                >
-                  <tab.icon size={18} />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </button>
-              ))}
+                { id: 'overview' as const, label: 'Overview', icon: Gift, color: 'amber' },
+                { id: 'duty' as const, label: 'Duty Rewards', icon: Vote, color: 'purple' },
+                { id: 'promotional' as const, label: 'Promotional', icon: Trophy, color: 'emerald' },
+                { id: 'liquidity' as const, label: 'LP Staking', icon: Droplets, color: 'cyan' },
+                { id: 'referral' as const, label: 'Referrals', icon: Users, color: 'pink' },
+              ].map(tab => {
+                const isActive = activeTab === tab.id;
+                const colorMap: Record<string, string> = {
+                  amber: isActive ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' : 'hover:bg-amber-500/10 hover:text-amber-400',
+                  purple: isActive ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25' : 'hover:bg-purple-500/10 hover:text-purple-400',
+                  emerald: isActive ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25' : 'hover:bg-emerald-500/10 hover:text-emerald-400',
+                  cyan: isActive ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25' : 'hover:bg-cyan-500/10 hover:text-cyan-400',
+                  pink: isActive ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25' : 'hover:bg-pink-500/10 hover:text-pink-400',
+                };
+                return (
+                  <motion.button
+                    key={tab.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
+                      isActive ? colorMap[tab.color] : `bg-white/5 text-gray-400 ${colorMap[tab.color]}`
+                    }`}
+                  >
+                    <tab.icon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         </section>

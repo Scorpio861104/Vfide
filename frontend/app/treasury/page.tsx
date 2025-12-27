@@ -218,22 +218,26 @@ function OverviewTab() {
           <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-pink-500/10 to-rose-500/5 border border-pink-500/20 rounded-2xl">
             <div className="text-4xl font-bold text-pink-400 mb-2">10%</div>
             <div className="text-white font-bold">Sanctum</div>
-            <div className="text-xs text-[#A0A0A5]">Charity fund</div>
-          </div>
-          <div className="text-center p-4 bg-[#1A1A1D] rounded-lg">
+            <div className="text-xs text-gray-400">Charity fund</div>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-2xl">
             <div className="text-4xl font-bold text-cyan-400 mb-2">50%</div>
-            <div className="text-[#F5F3E8] font-bold">Ecosystem</div>
-            <div className="text-xs text-[#A0A0A5]">Council, staking, incentives</div>
-          </div>
+            <div className="text-white font-bold">Ecosystem</div>
+            <div className="text-xs text-gray-400">Council, staking, incentives</div>
+          </motion.div>
         </div>
-      </div>
+      </GlassCard>
 
       {/* Recent Distributions */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Recent Distributions</h3>
+      <GlassCard className="p-6">
+        <h3 className="text-xl font-bold text-white mb-6">Recent Distributions</h3>
         <div className="space-y-3">
           {recentDistributions.map((dist, idx) => (
-            <div key={idx} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg">
+            <motion.div 
+              key={idx} 
+              whileHover={{ scale: 1.01 }}
+              className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-white/5"
+            >
               <div className="flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                   dist.type === 'council' ? 'bg-purple-500/20' :
@@ -244,16 +248,16 @@ function OverviewTab() {
                    <TrendingUp size={20} className="text-cyan-400" />}
                 </div>
                 <div>
-                  <div className="text-[#F5F3E8] font-bold">{dist.recipient}</div>
-                  <div className="text-xs text-[#A0A0A5]">{dist.date}</div>
+                  <div className="text-white font-bold">{dist.recipient}</div>
+                  <div className="text-xs text-gray-400">{dist.date}</div>
                 </div>
               </div>
-              <div className="text-[#00F0FF] font-bold">{dist.amount}</div>
-            </div>
+              <div className="text-cyan-400 font-bold">{dist.amount}</div>
+            </motion.div>
           ))}
         </div>
-      </div>
-    </div>
+      </GlassCard>
+    </motion.div>
   );
 }
 
