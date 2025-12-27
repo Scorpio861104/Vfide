@@ -11,7 +11,7 @@ import { useAccount } from "wagmi";
 import { useState, useEffect } from "react";
 import { isAddress } from "viem";
 import { devLog } from "@/lib/utils";
-import { useVaultBalance, useSelfPanic, useQuarantineStatus, useCanSelfPanic } from "@/lib/vfide-hooks";
+import { useVaultBalance, useSelfPanic, useQuarantineStatus, useCanSelfPanic, useProofScore } from "@/lib/vfide-hooks";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Shield, AlertTriangle, Lock, Clock, Plus, UserPlus, Users, Key, 
@@ -204,6 +204,7 @@ function VaultContent() {
   
   const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault } = useVaultHub();
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
+  const { score: proofScore, tier, burnFee, color: scoreColor, isLoading: scoreLoading } = useProofScore(address);
   const PRESALE_REFERENCE_PRICE = 0.07;
   const usdValue = (parseFloat(vaultBalance) * PRESALE_REFERENCE_PRICE).toFixed(2);
   
@@ -413,7 +414,7 @@ function VaultContent() {
                   variants={containerVariants}
                   initial="hidden"
                   animate="show"
-                  className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
                 >
                   <motion.div variants={itemVariants}>
                     <GlassCard className="p-6">
@@ -434,6 +435,30 @@ function VaultContent() {
                             {parseFloat(vaultBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
                           </div>
                           <div className="text-white/40 text-sm">≈ ${parseFloat(usdValue).toLocaleString()} USD</div>
+                        </>
+                      )}
+                    </GlassCard>
+                  </motion.div>
+                  
+                  <motion.div variants={itemVariants}>
+                    <GlassCard className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-white/60 text-sm">ProofScore</span>
+                        <div className="p-2 rounded-xl" style={{ backgroundColor: `${scoreColor}20` }}>
+                          <TrendingUp style={{ color: scoreColor }} size={18} />
+                        </div>
+                      </div>
+                      {scoreLoading ? (
+                        <>
+                          <Skeleton height={40} className="w-24 mb-1 bg-white/10" />
+                          <Skeleton height={16} className="w-32 bg-white/5" />
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-3xl font-bold mb-1" style={{ color: scoreColor }}>
+                            {proofScore.toLocaleString()}
+                          </div>
+                          <div className="text-white/40 text-sm">{tier} • {burnFee}% fee</div>
                         </>
                       )}
                     </GlassCard>

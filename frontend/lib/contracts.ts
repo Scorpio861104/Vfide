@@ -53,8 +53,24 @@ export const VFIDE_TOKEN_ABI = [
 ] as const
 
 export const SEER_ABI = [
-  'function getScore(address user) view returns (uint256)',
+  // Score reading
+  'function getScore(address user) view returns (uint16)',
+  'function calculateAutomatedScore(address subject) view returns (uint16)',
+  'function calculateOnChainScore(address subject) view returns (uint16)',
+  // Badge system
+  'function hasBadge(address user, bytes32 badge) view returns (bool)',
+  'function badgeExpiry(address user, bytes32 badge) view returns (uint256)',
+  // Thresholds
+  'function lowTrustThreshold() view returns (uint16)',
+  'function highTrustThreshold() view returns (uint16)',
+  'function minForGovernance() view returns (uint16)',
+  'function minForMerchant() view returns (uint16)',
+  // User actions
   'function endorseUser(address user)',
+  // Constants
+  'function MIN_SCORE() view returns (uint16)',
+  'function MAX_SCORE() view returns (uint16)',
+  'function NEUTRAL() view returns (uint16)',
 ] as const
 
 export const MERCHANT_PORTAL_ABI = [
