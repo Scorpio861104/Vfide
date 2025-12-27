@@ -297,9 +297,14 @@ function VaultContent() {
                   <Shield className="text-emerald-400" size={40} />
                 </motion.span>
               </h1>
-              <p className="text-xl text-white/60 mb-6">
+              <p className="text-xl text-white/60 mb-2">
                 Non-custodial storage with dual protection: recovery + inheritance
               </p>
+              <a href="/vault/recover" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm transition-colors">
+                <Key size={16} />
+                Lost your wallet? Recover your vault here
+                <ChevronRight size={16} />
+              </a>
             </motion.div>
             
             {/* No Vault - Create One */}

@@ -78,7 +78,11 @@ contract DAOTimelock {
         // H-2 Fix: Check return value ONLY for known ERC20 calls that return bool
         // Only validate bool return for transfer/transferFrom/approve selectors
         if (r.length == 32 && op.data.length >= 4) {
-            bytes4 selector = bytes4(op.data[:4]);
+            bytes4 selector;
+            bytes memory data = op.data;
+            assembly {
+                selector := mload(add(data, 32))
+            }
             // ERC20: transfer(address,uint256), transferFrom(address,address,uint256), approve(address,uint256)
             if (selector == bytes4(0xa9059cbb) ||  // transfer
                 selector == bytes4(0x23b872dd) ||  // transferFrom  
