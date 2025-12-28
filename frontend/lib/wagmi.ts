@@ -42,36 +42,31 @@ if (!process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID) {
 }
 
 // Wallet configuration for RainbowKit v2
+// MetaMask and injected wallets first (no WalletConnect needed)
 const walletList = [
   {
-    groupName: '🌟 Easiest - No Wallet Needed',
+    groupName: '🔌 Browser Wallets',
     wallets: [
-      // Coinbase Smart Wallet - can sign up with just email
-      coinbaseWallet,
-    ],
-  },
-  {
-    groupName: 'Connect Existing Wallet',
-    wallets: [
-      walletConnectWallet,  // Best for mobile (stays in browser)
-      metaMaskWallet,       // Popular desktop choice
-      rainbowWallet,
+      injectedWallet,       // Works with any injected wallet
+      metaMaskWallet,       // Most popular - no WalletConnect needed
+      coinbaseWallet,       // Coinbase Smart Wallet
       rabbyWallet,
-      trustWallet,
+      braveWallet,
     ],
   },
   {
-    groupName: 'More Wallets',
+    groupName: '📱 Mobile & Other',
     wallets: [
+      walletConnectWallet,  // For mobile wallets
+      rainbowWallet,
+      trustWallet,
       phantomWallet,
       argentWallet,
       okxWallet,
       zerionWallet,
       imTokenWallet,
-      braveWallet,
       ledgerWallet,
       safeWallet,
-      injectedWallet,
     ],
   },
 ]
@@ -79,6 +74,10 @@ const walletList = [
 const walletConnectOptions = {
   appName: 'VFIDE',
   projectId: projectId,
+  // Additional metadata for WalletConnect
+  appDescription: 'Decentralized Payment Protocol',
+  appUrl: typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io',
+  appIcon: 'https://vfide.io/icon.png',
 }
 
 // Create separate connectors for each config (wagmi v2 requirement)
