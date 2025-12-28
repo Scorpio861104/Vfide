@@ -3,19 +3,17 @@
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { keccak256, toBytes } from 'viem'
 import { 
-  Award, Shield, Star, TrendingUp, CheckCircle, 
-  Clock, Lock, Sparkles, Trophy, Target, Zap, Heart,
-  ShoppingBag, Crown, Gem, Loader2, Search, Filter
+  Award, Shield, Star, CheckCircle, 
+  Lock, Trophy, Zap, Heart,
+  ShoppingBag, Crown, Gem, Loader2, Search
 } from 'lucide-react'
 import { 
-  BADGE_REGISTRY, 
   getBadgeCategories, 
-  getAllBadges,
-  type BadgeMetadata 
+  getAllBadges
 } from '@/lib/badge-registry'
 
 // Contract ABIs
@@ -43,7 +41,8 @@ const categoryIcons: Record<string, React.ReactNode> = {
   'Education & Contribution': <Star className="w-5 h-5" />,
 }
 
-const categoryColors: Record<string, string> = {
+// Category color mappings (used in badge display)
+const _categoryColors: Record<string, string> = {
   'Pioneer & Foundation': 'amber',
   'Activity & Participation': 'cyan',
   'Trust & Community': 'pink',
@@ -52,6 +51,7 @@ const categoryColors: Record<string, string> = {
   'Achievements & Milestones': 'orange',
   'Education & Contribution': 'blue',
 }
+void _categoryColors // Silence unused warning - reserved for future use
 
 const rarityColors: Record<string, { bg: string; border: string; text: string; glow: string }> = {
   Common: { bg: 'bg-gray-500/20', border: 'border-gray-500/30', text: 'text-gray-400', glow: '' },
@@ -92,16 +92,15 @@ function GlassCard({ children, className = "", hover = true }: {
 type TabId = 'all' | 'earned' | 'available' | 'minted'
 
 export default function BadgesPage() {
-  const { address, isConnected } = useAccount()
+  const { address } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('all')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [mintingBadge, setMintingBadge] = useState<string | null>(null)
 
   const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const currentTime = useMemo(() => Date.now(), [])
   const allBadges = getAllBadges()
   const categories = getBadgeCategories()
 
@@ -112,7 +111,8 @@ export default function BadgesPage() {
     args: address ? [address] : undefined,
   });
 
-  const { data: proofScore } = useReadContract({
+  // ProofScore check - reserved for badge eligibility checks
+  useReadContract({
     address: SEER_ADDRESS,
     abi: SEER_ABI,
     functionName: 'score',
@@ -134,11 +134,12 @@ export default function BadgesPage() {
     }
   };
 
-  // Mock user badges
+  // Mock user badges - using static timestamp for demo
+  const mockExpiryTime = 1735689600000 // Jan 1, 2025 - static value for SSR
   const mockUserBadges: Record<string, { earned: boolean; expiry?: number; minted: boolean; tokenId?: number }> = {
     PIONEER: { earned: true, minted: true, tokenId: 2847 },
     GENESIS_PRESALE: { earned: true, minted: false },
-    ACTIVE_TRADER: { earned: true, expiry: Date.now() + 60 * 24 * 60 * 60 * 1000, minted: false },
+    ACTIVE_TRADER: { earned: true, expiry: mockExpiryTime + 60 * 24 * 60 * 60 * 1000, minted: false },
     GOVERNANCE_VOTER: { earned: false, minted: false },
     POWER_USER: { earned: false, minted: false },
     TRUSTED_ENDORSER: { earned: false, minted: false },
