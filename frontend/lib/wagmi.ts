@@ -1,4 +1,4 @@
-import { http, createStorage } from 'wagmi'
+import { http, createStorage, createConfig } from 'wagmi'
 import { 
   base, 
   baseSepolia, 
@@ -7,7 +7,14 @@ import {
   zkSync,
   zkSyncSepoliaTestnet,
 } from 'wagmi/chains'
-import { getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { connectorsForWallets } from '@rainbow-me/rainbowkit'
+import {
+  metaMaskWallet,
+  coinbaseWallet,
+  walletConnectWallet,
+  injectedWallet,
+  rainbowWallet,
+} from '@rainbow-me/rainbowkit/wallets'
 import { IS_TESTNET } from './chains'
 
 // Create noopStorage for SSR to avoid hydration mismatches
@@ -23,6 +30,9 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '21fef4809
 if (!process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID) {
   console.warn('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID not set, using fallback. Get one at https://cloud.walletconnect.com')
 }
+
+// App metadata for wallet connections
+const appName = 'VFIDE'
 
 // Custom zkSync Sepolia with explicit RPC
 const zkSyncSepoliaWithMetadata = {
@@ -69,13 +79,54 @@ const wagmiStorage = createStorage({
 })
 
 // ========================================
-// RAINBOWKIT DEFAULT CONFIG
+// WALLET CONNECTORS
 // ========================================
-// Uses getDefaultConfig for reliable wallet connections
+// Explicitly configure wallets for reliable connections
 
-const testnetConfig = getDefaultConfig({
-  appName: 'VFIDE',
-  projectId: projectId,
+const testnetConnectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Popular',
+      wallets: [
+        injectedWallet,
+        metaMaskWallet,
+        coinbaseWallet,
+        rainbowWallet,
+        walletConnectWallet,
+      ],
+    },
+  ],
+  {
+    appName,
+    projectId,
+  }
+)
+
+const mainnetConnectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Popular',
+      wallets: [
+        injectedWallet,
+        metaMaskWallet,
+        coinbaseWallet,
+        rainbowWallet,
+        walletConnectWallet,
+      ],
+    },
+  ],
+  {
+    appName,
+    projectId,
+  }
+)
+
+// ========================================
+// WAGMI CONFIG
+// ========================================
+
+const testnetConfig = createConfig({
+  connectors: testnetConnectors,
   chains: testnetChains,
   transports: {
     [baseSepolia.id]: http(),
@@ -86,9 +137,8 @@ const testnetConfig = getDefaultConfig({
   storage: wagmiStorage,
 })
 
-const mainnetConfig = getDefaultConfig({
-  appName: 'VFIDE',
-  projectId: projectId,
+const mainnetConfig = createConfig({
+  connectors: mainnetConnectors,
   chains: mainnetChains,
   transports: {
     [base.id]: http(),
