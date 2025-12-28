@@ -102,6 +102,13 @@ contract Seer {
     mapping(address => bool) public operators;
     bool public paused;
     
+    // C-2 FIX: Rate limiting for operators to prevent score inflation attacks
+    mapping(address => mapping(address => uint64)) public lastOperatorRewardTime;
+    mapping(address => mapping(address => uint16)) public dailyOperatorRewardTotal;
+    mapping(address => uint64) public operatorRewardDayStart;
+    uint16 public maxDailyOperatorReward = 200; // Max 2% score change per day per operator
+    uint16 public maxSingleReward = 100; // Max 1% score change per call
+    
     // ═══════════════════════════════════════════════════════════════════════
     // SCORE HISTORY - Track score changes for analytics and dispute resolution
     // ═══════════════════════════════════════════════════════════════════════
@@ -242,6 +249,11 @@ contract Seer {
     function setThresholds(uint16 low, uint16 high, uint16 minGov, uint16 minMerch) external onlyDAO {
         if (low > high) revert TRUST_Bounds();
         if (high > MAX_SCORE) revert TRUST_Bounds();
+        // M-1 FIX: Add minimum value constraints to prevent threshold manipulation
+        require(low >= 1000, "SEER: low threshold too low"); // At least 10%
+        require(high <= 9500, "SEER: high threshold too high"); // At most 95%
+        require(minGov >= 3000, "SEER: governance threshold too low"); // At least 30%
+        require(minMerch >= 3000, "SEER: merchant threshold too low"); // At least 30%
         lowTrustThreshold  = low;
         highTrustThreshold = high;
         minForGovernance   = minGov;
@@ -513,11 +525,38 @@ contract Seer {
 
     /// Light-weight behavior hooks (can be called by authorized modules).
     function reward(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused {
+        // C-2 FIX: Rate limit operator rewards to prevent score inflation
+        require(delta <= maxSingleReward, "SEER: reward exceeds max single");
+        
+        // Reset daily counter if new day
+        if (block.timestamp >= operatorRewardDayStart[msg.sender] + 1 days) {
+            operatorRewardDayStart[msg.sender] = uint64(block.timestamp);
+            dailyOperatorRewardTotal[msg.sender][subject] = 0;
+        }
+        
+        // Check daily limit per subject
+        require(
+            dailyOperatorRewardTotal[msg.sender][subject] + delta <= maxDailyOperatorReward,
+            "SEER: daily reward limit exceeded"
+        );
+        
+        dailyOperatorRewardTotal[msg.sender][subject] += delta;
         _delta(subject, int256(uint256(delta)), reason);
     }
 
     function punish(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused {
+        // C-2 FIX: Rate limit punishments too
+        require(delta <= maxSingleReward, "SEER: punish exceeds max single");
         _delta(subject, -int256(uint256(delta)), reason);
+    }
+    
+    /// @notice DAO can set operator rate limits
+    function setOperatorLimits(uint16 _maxSingle, uint16 _maxDaily) external onlyDAO {
+        require(_maxSingle <= 500, "SEER: max single too high"); // Max 5% per call
+        require(_maxDaily <= 1000, "SEER: max daily too high"); // Max 10% per day
+        maxSingleReward = _maxSingle;
+        maxDailyOperatorReward = _maxDaily;
+        _logSystem("operator_limits_set");
     }
 
     function _delta(address subject, int256 d, string calldata reason) internal {

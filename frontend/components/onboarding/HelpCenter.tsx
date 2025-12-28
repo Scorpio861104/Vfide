@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, X, Book, Wallet, Shield, Store, Star, Vote, ChevronRight } from "lucide-react";
+import { HelpCircle, X, Book, Wallet, Shield, Store, Star, Vote, ChevronRight, Globe, Droplets } from "lucide-react";
 
 interface HelpTopic {
   id: string;
@@ -20,10 +20,46 @@ const helpTopics: HelpTopic[] = [
     description: "New to VFIDE? Start here!",
     content: [
       "1. Connect your Web3 wallet (MetaMask, Coinbase Wallet, etc.)",
-      "2. Explore the platform and see how everything works",
-      "3. Set up your vault for secure fund storage",
-      "4. Start building your Trust Score by completing tasks",
-      "5. Join the community and participate in governance"
+      "2. Add Base Sepolia network to your wallet (see 'Network Setup' below)",
+      "3. Get free test ETH from a faucet (see 'Get Test ETH' below)",
+      "4. Set up your vault for secure fund storage",
+      "5. Start building your ProofScore by completing tasks"
+    ]
+  },
+  {
+    id: "network-setup",
+    title: "Network Setup",
+    icon: <Globe size={24} />,
+    description: "Add Base Sepolia to your wallet",
+    content: [
+      "VFIDE runs on Base Sepolia (testnet). Add it to your wallet:",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "Network Name: Base Sepolia",
+      "RPC URL: https://sepolia.base.org",
+      "Chain ID: 84532",
+      "Currency Symbol: ETH",
+      "Block Explorer: https://sepolia.basescan.org",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "MetaMask: Settings → Networks → Add Network → Add Manually",
+      "Coinbase Wallet: Settings → Networks → + Add Network",
+      "Tip: Click 'Switch Network' in the app and your wallet should auto-add it!"
+    ]
+  },
+  {
+    id: "get-test-eth",
+    title: "Get Test ETH",
+    icon: <Droplets size={24} />,
+    description: "Free ETH for testing on Base Sepolia",
+    content: [
+      "You need test ETH to pay for transactions. It's completely free!",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "🏆 Coinbase Faucet (Best): portal.cdp.coinbase.com/products/faucet",
+      "⚗️ Alchemy Faucet: alchemy.com/faucets/base-sepolia",
+      "⚡ QuickNode Faucet: faucet.quicknode.com/base/sepolia",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "Steps: 1) Copy your wallet address, 2) Paste into faucet, 3) Click 'Request'",
+      "You'll receive 0.1-0.5 ETH within seconds. This is enough for 100+ transactions!",
+      "Tip: Use the 'Get ETH' button in the app header for quick faucet links"
     ]
   },
   {
@@ -187,6 +223,13 @@ export function HelpCenter() {
                     <div className="mt-8 p-4 bg-[#00F0FF]/10 border border-[#00F0FF] rounded-lg">
                       <h3 className="font-bold text-[#00F0FF] mb-3">Quick Actions</h3>
                       <div className="space-y-2">
+                        <a
+                          href="/testnet"
+                          onClick={() => setIsOpen(false)}
+                          className="block w-full px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] hover:border-[#00F0FF] rounded-lg text-[#F5F3E8] text-sm text-left transition-all"
+                        >
+                          💧 Get Test ETH (Faucet Links)
+                        </a>
                         <button
                           onClick={() => {
                             setIsOpen(false);
@@ -203,11 +246,11 @@ export function HelpCenter() {
                           🎓 Restart Platform Tour
                         </button>
                         <a
-                          href="/faq"
+                          href="/docs"
                           onClick={() => setIsOpen(false)}
                           className="block w-full px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] hover:border-[#00F0FF] rounded-lg text-[#F5F3E8] text-sm text-left transition-all"
                         >
-                          ❓ View FAQ
+                          📚 Full Documentation
                         </a>
                       </div>
                     </div>

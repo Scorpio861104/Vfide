@@ -9,7 +9,7 @@ import { devLog } from '@/lib/utils';
 
 export function VaultStatusModal() {
   const { address, isConnected } = useAccount();
-  const { vaultAddress, hasVault, isLoadingVault, isCreatingVault, createVault, isContractConfigured, isOnCorrectChain, expectedChainId } = useVaultHub();
+  const { vaultAddress, hasVault, isLoadingVault, isCreatingVault, createVault, isContractConfigured, isOnCorrectChain, expectedChainId, expectedChainName } = useVaultHub();
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
   const [showModal, setShowModal] = useState(false);
   const hasCheckedRef = useRef(false);
@@ -172,14 +172,14 @@ export function VaultStatusModal() {
                 {!isOnCorrectChain ? (
                   <div className="bg-[#FF4444]/10 border border-[#FF4444] rounded-lg p-4 mb-2">
                     <p className="text-[#FF4444] text-sm mb-3">
-                      ⚠️ Please switch to Base Sepolia network to continue.
+                      ⚠️ Please switch to {expectedChainName} network to continue.
                     </p>
                     <button
-                      onClick={() => switchChain({ chainId: expectedChainId })}
+                      onClick={() => switchChain({ chainId: expectedChainId as 84532 | 8453 })}
                       disabled={isSwitchingChain}
                       className="w-full py-2 bg-[#FF4444] text-white font-bold rounded-lg hover:bg-[#FF6666] transition-colors disabled:opacity-50"
                     >
-                      {isSwitchingChain ? 'Switching...' : 'Switch to Base Sepolia'}
+                      {isSwitchingChain ? 'Switching...' : `Switch to ${expectedChainName}`}
                     </button>
                   </div>
                 ) : isContractConfigured === false ? (

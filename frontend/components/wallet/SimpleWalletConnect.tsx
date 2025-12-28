@@ -16,11 +16,14 @@ export function SimpleWalletConnect() {
         authenticationStatus,
         mounted,
       }) => {
+        // Wait for mount to avoid hydration mismatch
         const ready = mounted && authenticationStatus !== 'loading';
+        
+        // Check all connection requirements
         const connected =
           ready &&
-          account &&
-          chain &&
+          account != null &&
+          chain != null &&
           (!authenticationStatus || authenticationStatus === 'authenticated');
 
         return (

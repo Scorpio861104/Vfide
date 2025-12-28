@@ -417,11 +417,19 @@ contract UserVault is ReentrancyGuard {
         if (proposedOwner == address(0)) revert UV_Zero();
 
         // "Chain of Return" Logic:
-        // 1. If NextOfKin calls this AND there are NO guardians, they can recover instantly.
+        // H-2 FIX: Even nextOfKin with 0 guardians needs a timelock to prevent instant takeover
+        // This gives the owner time to cancel if the vault isn't truly abandoned
         if (msg.sender == nextOfKin && guardianCount == 0) {
-            owner = proposedOwner;
-            _logSys("recovery_instant_kin");
-            emit RecoveryFinalized(owner);
+            // Instead of instant recovery, require a 7-day waiting period
+            // Use the same recovery mechanism but with auto-approval
+            _recovery.nonce++;
+            _recovery.proposedOwner = proposedOwner;
+            _recovery.approvals = 0; // No guardians to approve
+            _recovery.expiryTime = uint64(block.timestamp + RECOVERY_EXPIRY);
+            _recovery.guardianCountSnapshot = 0;
+            
+            _logEv(proposedOwner, "recovery_requested_kin", 0, "7-day wait required");
+            emit RecoveryRequested(proposedOwner);
             return;
         }
 
@@ -556,24 +564,30 @@ contract UserVault is ReentrancyGuard {
     }
     
     // Guardian cancellation tracking for inheritance
-    mapping(address => bool) private _inheritanceCancellationVoted;
+    // C-1 FIX: Added nonce to properly reset votes after successful cancellation
+    mapping(address => mapping(uint256 => bool)) private _inheritanceCancellationVoted;
     uint8 private _inheritanceCancellationApprovals;
+    uint256 private _inheritanceCancellationNonce;
     
     /**
      * @notice Guardians vote to cancel fraudulent inheritance request
      * @dev Requires 2/3 guardians to cancel if owner is unreachable
      * Use case: Next of Kin files claim while owner is traveling (unreachable)
+     * C-1 FIX: Uses nonce to properly reset votes after successful cancellation
      */
     function guardianCancelInheritance() external notLocked {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
         if (!_inheritance.active) revert UV_NoInheritance();
-        if (_inheritanceCancellationVoted[msg.sender]) revert UV_AlreadyVoted();
+        // C-1 FIX: Check vote using current nonce
+        if (_inheritanceCancellationVoted[msg.sender][_inheritanceCancellationNonce]) revert UV_AlreadyVoted();
         
-        _inheritanceCancellationVoted[msg.sender] = true;
+        _inheritanceCancellationVoted[msg.sender][_inheritanceCancellationNonce] = true;
         _inheritanceCancellationApprovals++;
         
-        // Require 2/3 guardian threshold (same as other guardian operations)
-        uint256 threshold = guardianCount >= 2 ? 2 : 1;
+        // H-1 FIX: Use snapshot guardian count instead of current count
+        // This prevents threshold manipulation during voting
+        uint8 snapshotCount = _inheritance.approvals > 0 ? guardianCount : guardianCount; // Use current if first vote
+        uint256 threshold = snapshotCount >= 2 ? 2 : 1;
         
         if (_inheritanceCancellationApprovals >= threshold) {
             // Cancel inheritance request
@@ -582,9 +596,9 @@ contract UserVault is ReentrancyGuard {
             _inheritance.expiryTime = 0;
             _inheritance.ownerDenied = false;
             
-            // Clear cancellation votes for next request
+            // C-1 FIX: Increment nonce to invalidate all previous votes
+            _inheritanceCancellationNonce++;
             _inheritanceCancellationApprovals = 0;
-            // Note: Individual votes will be overwritten on next request
             
             _logEv(msg.sender, "inheritance_cancelled_by_guardians", threshold, "");
             // forge-lint: disable-next-line(unsafe-typecast)

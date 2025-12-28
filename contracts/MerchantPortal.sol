@@ -560,6 +560,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         uint256 fee = (amount * protocolFeeBps) / 10000;
         netAmount = amount - fee;
         
+        // C-3 FIX: Update merchant stats BEFORE external calls (CEI pattern)
+        MerchantInfo storage m = merchants[merchant];
+        m.totalVolume += amount;
+        m.txCount += 1;
+        
         // Transfer fee FIRST (before net amount)
         if (fee > 0 && feeSink != address(0)) {
             IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
@@ -596,7 +601,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
                 block.timestamp + 300
             ) {
                 converted = true;
+                // C-4 FIX: Revoke approval after successful swap
+                IERC20(token).approve(address(swapRouter), 0);
             } catch {
+                // C-4 FIX: Revoke approval after failed swap to prevent lingering approvals
+                IERC20(token).approve(address(swapRouter), 0);
                 // Fallback: Send original token if swap fails
                 IERC20(token).safeTransfer(recipient, netAmount);
             }
@@ -605,10 +614,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             IERC20(token).safeTransferFrom(customerVault, recipient, netAmount);
         }
         
-        // H-3 Fix: Update merchant stats BEFORE external calls
-        MerchantInfo storage m = merchants[merchant];
-        m.totalVolume += amount;
-        m.txCount += 1;
+        // Note: Stats already updated before external calls (C-3 fix)
         
         // Final merchant score check
         _checkMerchantScore(merchant);

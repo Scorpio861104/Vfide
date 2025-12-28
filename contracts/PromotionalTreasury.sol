@@ -241,13 +241,18 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     
     /**
      * @notice Claim referral transaction bonus (when referee makes first transaction)
+     * DEEP-C-2 FIX: Prevent double-claiming for same referee
      */
+    mapping(address => bool) public referralTxBonusClaimed;
+    
     function claimReferralTransactionBonus(address referee) external nonReentrant {
         address referrer = referredBy[referee];
         require(referrer == msg.sender, "Not the referrer");
+        require(!referralTxBonusClaimed[referee], "Already claimed for this referee"); // DEEP-C-2 FIX
         require(referralRewardsClaimed[referrer] < MAX_REFERRAL_PER_USER, "Referral cap reached");
         require(referralBudgetRemaining >= REFERRAL_TRANSACTION_BONUS, "Referral budget depleted");
         
+        referralTxBonusClaimed[referee] = true; // DEEP-C-2 FIX
         _distributeReward(referrer, REFERRAL_TRANSACTION_BONUS, "referral");
         referralRewardsClaimed[referrer] += REFERRAL_TRANSACTION_BONUS;
         referralBudgetRemaining -= REFERRAL_TRANSACTION_BONUS;

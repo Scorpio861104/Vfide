@@ -99,9 +99,17 @@ export function NetworkSwitchOverlay() {
     setAddNetworkError(null)
     
     try {
-      const ethereum = (window as { ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum
+      // Type-safe window.ethereum access
+      interface EthereumProvider {
+        request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
+        isMetaMask?: boolean
+      }
+      
+      const ethereum = (window as { ethereum?: EthereumProvider }).ethereum
       if (!ethereum) {
-        throw new Error('No wallet detected')
+        setAddNetworkError('No wallet extension detected. Please install MetaMask or another Web3 wallet.')
+        setIsAddingNetwork(false)
+        return
       }
 
       const networkConfig = IS_TESTNET ? BASE_SEPOLIA_CONFIG : BASE_MAINNET_CONFIG

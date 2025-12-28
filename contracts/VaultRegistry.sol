@@ -387,6 +387,96 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     }
     
     /**
+     * @notice Search vault by full old wallet address
+     * @dev User may have their old address saved in email confirmations, browser history, etc.
+     * @param oldWallet The full wallet address the user remembers
+     * @return vault The vault address if found
+     * @return info Vault information for verification
+     */
+    function searchByWalletAddress(address oldWallet) external view returns (address vault, VaultInfo memory info) {
+        vault = vaultHub.vaultOf(oldWallet);
+        if (vault != address(0) && vaultHub.isVault(vault)) {
+            info = getVaultInfo(vault);
+        }
+    }
+    
+    /**
+     * @notice Search vault by vault address directly
+     * @dev User may have their vault address saved from transaction history
+     * @param vaultAddress The vault address
+     * @return info Vault information
+     */
+    function searchByVaultAddress(address vaultAddress) external view returns (VaultInfo memory info) {
+        if (vaultHub.isVault(vaultAddress)) {
+            info = getVaultInfo(vaultAddress);
+        }
+    }
+    
+    /**
+     * @notice Search vaults created in a time range
+     * @dev Helps users who remember approximately when they created their vault
+     * @param startTime Unix timestamp for range start
+     * @param endTime Unix timestamp for range end
+     * @param limit Maximum results to return
+     * @return matches Array of matching vault info
+     */
+    function searchByCreationTime(
+        uint256 startTime,
+        uint256 endTime,
+        uint256 limit
+    ) external view returns (VaultInfo[] memory matches) {
+        require(startTime < endTime, "invalid range");
+        require(limit > 0 && limit <= 50, "limit 1-50");
+        
+        // Count matches first
+        uint256 matchCount = 0;
+        uint256 maxToCheck = allVaults.length > 1000 ? 1000 : allVaults.length;
+        
+        for (uint256 i = 0; i < maxToCheck && matchCount < limit; i++) {
+            address vault = allVaults[i];
+            uint256 created = vaultCreatedAt[vault];
+            
+            if (created >= startTime && created <= endTime) {
+                matchCount++;
+            }
+        }
+        
+        // Populate results
+        matches = new VaultInfo[](matchCount);
+        uint256 idx = 0;
+        
+        for (uint256 i = 0; i < maxToCheck && idx < matchCount; i++) {
+            address vault = allVaults[i];
+            uint256 created = vaultCreatedAt[vault];
+            
+            if (created >= startTime && created <= endTime) {
+                matches[idx] = getVaultInfo(vault);
+                idx++;
+            }
+        }
+    }
+    
+    /**
+     * @notice Get vault by index (for pagination/browsing)
+     * @dev Allows users to browse vaults if they remember approximate creation order
+     * @param index The vault index
+     * @return vault The vault address
+     * @return info Vault information
+     */
+    function getVaultByIndex(uint256 index) external view returns (address vault, VaultInfo memory info) {
+        require(index < allVaults.length, "index out of bounds");
+        vault = allVaults[index];
+        info = getVaultInfo(vault);
+    }
+    
+    /**
+     * @notice Get total number of registered vaults
+     */
+    function getTotalVaults() external view returns (uint256) {
+        return allVaults.length;
+    }
+
+    /**
      * @notice Search vaults by partial old wallet address
      * @dev For users who remember part of their old address
      * @param addressPrefix First bytes of the address they remember (e.g., "0x1234")

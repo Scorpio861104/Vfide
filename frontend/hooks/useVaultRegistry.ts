@@ -112,6 +112,112 @@ const VAULT_REGISTRY_ABI = [
     stateMutability: 'view',
     inputs: [{ name: 'username', type: 'string' }],
     outputs: [{ name: '', type: 'bool' }]
+  },
+  // New search functions for wallet-less recovery
+  {
+    name: 'searchByWalletAddress',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'oldWallet', type: 'address' }],
+    outputs: [
+      { name: 'vault', type: 'address' },
+      {
+        name: 'info',
+        type: 'tuple',
+        components: [
+          { name: 'vault', type: 'address' },
+          { name: 'originalOwner', type: 'address' },
+          { name: 'createdAt', type: 'uint256' },
+          { name: 'lastActiveAt', type: 'uint256' },
+          { name: 'proofScore', type: 'uint256' },
+          { name: 'badgeCount', type: 'uint256' },
+          { name: 'hasGuardians', type: 'bool' },
+          { name: 'hasRecoveryId', type: 'bool' },
+          { name: 'isRecoverable', type: 'bool' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'searchByVaultAddress',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'vaultAddress', type: 'address' }],
+    outputs: [
+      {
+        name: 'info',
+        type: 'tuple',
+        components: [
+          { name: 'vault', type: 'address' },
+          { name: 'originalOwner', type: 'address' },
+          { name: 'createdAt', type: 'uint256' },
+          { name: 'lastActiveAt', type: 'uint256' },
+          { name: 'proofScore', type: 'uint256' },
+          { name: 'badgeCount', type: 'uint256' },
+          { name: 'hasGuardians', type: 'bool' },
+          { name: 'hasRecoveryId', type: 'bool' },
+          { name: 'isRecoverable', type: 'bool' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'searchByCreationTime',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'startTime', type: 'uint256' },
+      { name: 'endTime', type: 'uint256' },
+      { name: 'limit', type: 'uint256' }
+    ],
+    outputs: [
+      {
+        name: 'matches',
+        type: 'tuple[]',
+        components: [
+          { name: 'vault', type: 'address' },
+          { name: 'originalOwner', type: 'address' },
+          { name: 'createdAt', type: 'uint256' },
+          { name: 'lastActiveAt', type: 'uint256' },
+          { name: 'proofScore', type: 'uint256' },
+          { name: 'badgeCount', type: 'uint256' },
+          { name: 'hasGuardians', type: 'bool' },
+          { name: 'hasRecoveryId', type: 'bool' },
+          { name: 'isRecoverable', type: 'bool' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'getTotalVaults',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }]
+  },
+  {
+    name: 'getVaultByIndex',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'index', type: 'uint256' }],
+    outputs: [
+      { name: 'vault', type: 'address' },
+      {
+        name: 'info',
+        type: 'tuple',
+        components: [
+          { name: 'vault', type: 'address' },
+          { name: 'originalOwner', type: 'address' },
+          { name: 'createdAt', type: 'uint256' },
+          { name: 'lastActiveAt', type: 'uint256' },
+          { name: 'proofScore', type: 'uint256' },
+          { name: 'badgeCount', type: 'uint256' },
+          { name: 'hasGuardians', type: 'bool' },
+          { name: 'hasRecoveryId', type: 'bool' },
+          { name: 'isRecoverable', type: 'bool' }
+        ]
+      }
+    ]
   }
 ] as const;
 
@@ -435,6 +541,124 @@ export function useVaultSearch() {
     isSearching,
     error,
     search: () => search(searchType, searchQuery)
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WALLET-LESS VAULT DISCOVERY HOOKS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Search for a vault by old wallet address
+ * User may have their old address saved in email confirmations, browser history, etc.
+ */
+export function useSearchByWalletAddress(oldWallet: Address | undefined) {
+  const { data, isLoading, error, refetch } = useReadContract({
+    address: VAULT_REGISTRY_ADDRESS,
+    abi: VAULT_REGISTRY_ABI,
+    functionName: 'searchByWalletAddress',
+    args: oldWallet ? [oldWallet] : undefined,
+    query: {
+      enabled: !!oldWallet
+    }
+  });
+
+  const result = data as [Address, VaultInfo] | undefined;
+  
+  return {
+    vault: result?.[0],
+    vaultInfo: result?.[1],
+    isLoading,
+    error,
+    refetch
+  };
+}
+
+/**
+ * Search for a vault by vault address directly
+ * User may have their vault address saved from transaction history
+ */
+export function useSearchByVaultAddress(vaultAddress: Address | undefined) {
+  const { data, isLoading, error, refetch } = useReadContract({
+    address: VAULT_REGISTRY_ADDRESS,
+    abi: VAULT_REGISTRY_ABI,
+    functionName: 'searchByVaultAddress',
+    args: vaultAddress ? [vaultAddress] : undefined,
+    query: {
+      enabled: !!vaultAddress
+    }
+  });
+
+  return {
+    vaultInfo: data as VaultInfo | undefined,
+    isLoading,
+    error,
+    refetch
+  };
+}
+
+/**
+ * Search vaults by creation time range
+ * Helps users who remember approximately when they created their vault
+ */
+export function useSearchByCreationTime(startTime: bigint | undefined, endTime: bigint | undefined, limit: number = 20) {
+  const { data, isLoading, error, refetch } = useReadContract({
+    address: VAULT_REGISTRY_ADDRESS,
+    abi: VAULT_REGISTRY_ABI,
+    functionName: 'searchByCreationTime',
+    args: startTime && endTime ? [startTime, endTime, BigInt(limit)] : undefined,
+    query: {
+      enabled: !!startTime && !!endTime
+    }
+  });
+
+  return {
+    matches: data as VaultInfo[] | undefined,
+    isLoading,
+    error,
+    refetch
+  };
+}
+
+/**
+ * Get total number of vaults in registry
+ */
+export function useTotalVaults() {
+  const { data, isLoading, error } = useReadContract({
+    address: VAULT_REGISTRY_ADDRESS,
+    abi: VAULT_REGISTRY_ABI,
+    functionName: 'getTotalVaults',
+  });
+
+  return {
+    totalVaults: data ? Number(data) : 0,
+    isLoading,
+    error
+  };
+}
+
+/**
+ * Get vault by index for pagination/browsing
+ */
+export function useVaultByIndex(index: number | undefined) {
+  const { data, isLoading, error, refetch } = useReadContract({
+    address: VAULT_REGISTRY_ADDRESS,
+    abi: VAULT_REGISTRY_ABI,
+    functionName: 'getVaultByIndex',
+    args: index !== undefined ? [BigInt(index)] : undefined,
+    query: {
+      enabled: index !== undefined
+    }
+  });
+
+  const result = data as [Address, VaultInfo] | undefined;
+  
+  return {
+    vault: result?.[0],
+    vaultInfo: result?.[1],
+    isLoading,
+    error,
+    refetch
   };
 }
 

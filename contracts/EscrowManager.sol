@@ -61,6 +61,8 @@ contract EscrowManager is ReentrancyGuard {
         arbiter = _arbiter;
         seer = ISeer(_seer);
         dao = _arbiter; // Initially DAO is arbiter
+        // C-2 FIX: Initialize arbiterChangeTime to max to prevent instant execution
+        arbiterChangeTime = type(uint256).max;
     }
 
     // 1. Create Escrow (Buyer pays)
@@ -168,11 +170,31 @@ contract EscrowManager is ReentrancyGuard {
     }
     
     function executeArbiterChange() external {
+        // C-1 FIX: Only DAO can execute arbiter change
+        require(msg.sender == dao, "only DAO");
         require(block.timestamp >= arbiterChangeTime, "timelock active");
         require(pendingArbiter != address(0), "no pending change");
+        // C-2 FIX: Additional check that timelock was actually set
+        require(arbiterChangeTime != type(uint256).max, "no pending proposal");
+        
+        address oldArbiter = arbiter;
         arbiter = pendingArbiter;
         pendingArbiter = address(0);
+        arbiterChangeTime = type(uint256).max; // Reset timelock
+        
+        emit ArbiterChanged(oldArbiter, arbiter);
     }
+    
+    /// @notice Cancel pending arbiter change
+    function cancelArbiterChange() external {
+        require(msg.sender == dao, "only DAO");
+        require(pendingArbiter != address(0), "no pending change");
+        pendingArbiter = address(0);
+        arbiterChangeTime = type(uint256).max;
+    }
+    
+    // L-1 FIX: Add event for arbiter change
+    event ArbiterChanged(address indexed oldArbiter, address indexed newArbiter);
     
     function setDAO(address newDAO) external {
         require(msg.sender == dao, "only DAO");

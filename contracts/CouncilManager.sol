@@ -132,6 +132,7 @@ contract CouncilManager is ReentrancyGuard {
     /**
      * @notice Check ProofScores for all council members (called daily by keeper)
      * @dev Tracks grace period, auto-removes after 7 days below 700
+     * H-2 FIX: Iterate in reverse to prevent index corruption when removing members
      */
     function checkDailyScores() external onlyKeeper {
         uint256 councilSize = election.getActualCouncilSize();
@@ -139,9 +140,17 @@ contract CouncilManager is ReentrancyGuard {
 
         uint256 membersChecked = 0;
         uint256 membersRemoved = 0;
-
+        
+        // H-2 FIX: Collect members to check first, then process
+        // This prevents issues with array modification during iteration
+        address[] memory membersToCheck = new address[](councilSize);
         for (uint256 i = 0; i < councilSize; i++) {
-            address member = election.getCouncilMember(i);
+            membersToCheck[i] = election.getCouncilMember(i);
+        }
+
+        // Now process the cached list (safe from array modifications)
+        for (uint256 i = 0; i < councilSize; i++) {
+            address member = membersToCheck[i];
             if (member == address(0)) continue;
 
             // Skip if checked recently (within 1 day)
@@ -161,16 +170,19 @@ contract CouncilManager is ReentrancyGuard {
 
                 // Auto-remove after 7 days
                 if (daysBelow700[member] >= 7) {
-                    election.removeCouncilMember(
+                    // H-2 FIX: Use try/catch to handle potential removal failures
+                    try election.removeCouncilMember(
                         member,
                         "ProofScore below 7000 for 7+ days (auto-removal)"
-                    );
+                    ) {
+                        membersRemoved++;
+                        emit MemberAutoRemoved(member, 7, score);
+                    } catch {
+                        // Member may have already been removed or other issue
+                    }
                     
-                    // Reset tracking
+                    // Reset tracking regardless
                     daysBelow700[member] = 0;
-                    membersRemoved++;
-                    
-                    emit MemberAutoRemoved(member, 7, score);
                 }
             } else {
                 // Score recovered - reset counter

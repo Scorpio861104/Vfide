@@ -1,8 +1,9 @@
 import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi';
 import { isAddress, parseAbi } from 'viem';
-import { zkSyncSepoliaTestnet } from 'wagmi/chains';
+import { baseSepolia, base } from 'wagmi/chains';
 import { VAULT_HUB_ABI } from '../lib/contracts';
 import { devLog } from '../lib/utils';
+import { IS_TESTNET, CURRENT_CHAIN_ID } from '../lib/testnet';
 
 // Parse the ABI for proper type inference
 const PARSED_VAULT_HUB_ABI = parseAbi(VAULT_HUB_ABI);
@@ -10,8 +11,9 @@ const PARSED_VAULT_HUB_ABI = parseAbi(VAULT_HUB_ABI);
 // VaultHub contract address from environment
 const VAULT_HUB_ADDRESS = process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS as `0x${string}` | undefined;
 
-// Expected chain ID for the vault operations
-const EXPECTED_CHAIN_ID = zkSyncSepoliaTestnet.id; // 300
+// Expected chain ID for the vault operations - use configured chain
+// Type assertion for wagmi's strict chain ID type system
+const EXPECTED_CHAIN_ID = CURRENT_CHAIN_ID as 84532 | 8453 | 300 | 80002 | 137 | 324;
 
 // Helper to parse contract errors into user-friendly messages
 function parseContractError(error: unknown): string {
@@ -123,7 +125,7 @@ export function useVaultHub() {
     }
 
     if (!isOnCorrectChain) {
-      throw new Error('Please switch to zkSync Sepolia network to create a vault.');
+      throw new Error(`Please switch to ${IS_TESTNET ? 'Base Sepolia' : 'Base'} network to create a vault.`);
     }
 
     // Check if contract is properly configured before attempting
@@ -158,5 +160,6 @@ export function useVaultHub() {
     isContractConfigured,
     isOnCorrectChain,
     expectedChainId: EXPECTED_CHAIN_ID,
+    expectedChainName: IS_TESTNET ? 'Base Sepolia' : 'Base',
   };
 }

@@ -250,12 +250,21 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // Validate vault exists
         if (!vaultHub.isVault(vault)) revert InvalidVault();
         
-        // Check no active claim exists for this vault
+        // C-2 FIX: Auto-expire stale claims and check for active ones
+        // Also include Challenged status in blocking check
         if (activeClaimForVault[vault] != 0) {
             RecoveryClaim storage existing = claims[activeClaimForVault[vault]];
-            if (existing.status == ClaimStatus.Pending || 
+            // Auto-expire if past expiry time
+            if (block.timestamp > existing.expiresAt && 
+                (existing.status == ClaimStatus.Pending || 
+                 existing.status == ClaimStatus.GuardianApproved ||
+                 existing.status == ClaimStatus.Challenged)) {
+                existing.status = ClaimStatus.Expired;
+                activeClaimForVault[vault] = 0;
+            } else if (existing.status == ClaimStatus.Pending || 
                 existing.status == ClaimStatus.GuardianApproved ||
-                existing.status == ClaimStatus.Approved) {
+                existing.status == ClaimStatus.Approved ||
+                existing.status == ClaimStatus.Challenged) {
                 revert ClaimAlreadyExists();
             }
         }
@@ -375,10 +384,9 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (block.timestamp > claim.expiresAt) revert ClaimHasExpired();
         if (nodeVoted[claimId][msg.sender]) revert AlreadyVoted();
         
-        // Verify caller is an active guardian node
-        if (address(guardianNodeManager) != address(0)) {
-            if (!guardianNodeManager.isActiveGuardian(msg.sender)) revert NotGuardianNode();
-        }
+        // C-1 FIX: Require guardianNodeManager to be set to prevent anyone from voting
+        require(address(guardianNodeManager) != address(0), "Guardian node manager not set");
+        if (!guardianNodeManager.isActiveGuardian(msg.sender)) revert NotGuardianNode();
         
         nodeVoted[claimId][msg.sender] = true;
         

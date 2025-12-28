@@ -155,6 +155,13 @@ contract EmergencyControl {
 
         emit MemberRemoved(m);
         _log("ec_member_remove");
+        
+        // H-1 FIX: Reset votes when membership changes to prevent threshold manipulation
+        _resetVotes();
+        // M-3 FIX: Reset vote timers
+        haltVotingStartTime = 0;
+        unhaltVotingStartTime = 0;
+        
         if (threshold > memberCount) {
             threshold = memberCount; // clamp for safety
         }
@@ -246,6 +253,9 @@ contract EmergencyControl {
         approvalsHalt = 0;
         approvalsUnhalt = 0;
         epoch++;
+        // M-3 FIX: Reset vote timers
+        haltVotingStartTime = 0;
+        unhaltVotingStartTime = 0;
     }
 
     function _enforceCooldown() internal view {

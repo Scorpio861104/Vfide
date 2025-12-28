@@ -186,6 +186,8 @@ contract PayrollManager is ReentrancyGuard {
      * @notice Resume paused stream
      * @dev Both payer and payee must agree to resume (or DAO can force)
      *      For simplicity, payer can resume their own stream
+     * DEEP-C-3 FIX: Don't clear pausedAccrued on resume - it needs to be claimed first
+     * The pausedAccrued will be cleared when payee withdraws
      */
     function resumeStream(uint256 streamId) external {
         Stream storage s = streams[streamId];
@@ -196,6 +198,8 @@ contract PayrollManager is ReentrancyGuard {
         // Resume from current time
         s.lastWithdrawTime = block.timestamp;
         s.paused = false;
+        // DEEP-C-3 FIX: pausedAccrued is NOT cleared here - it represents 
+        // already-owed funds that payee can still claim. Clearing happens on withdraw.
         
         emit StreamResumed(streamId, msg.sender);
     }
@@ -280,8 +284,10 @@ contract PayrollManager is ReentrancyGuard {
         s.depositBalance -= amount;
         s.lastWithdrawTime = block.timestamp;
         
-        // Clear paused accrued if applicable
-        if (s.paused && s.pausedAccrued > 0) {
+        // DEEP-C-3 FIX: Clear paused accrued on ANY withdraw, not just while paused
+        // This prevents double-counting: after resume, pausedAccrued persists in claimable()
+        // but must be cleared once actually withdrawn
+        if (s.pausedAccrued > 0) {
             s.pausedAccrued = 0;
         }
 

@@ -16,6 +16,7 @@ contract DAOTimelock {
     event Queued(bytes32 id, address target, uint256 value, bytes data, uint64 eta);
     event Cancelled(bytes32 id);
     event Executed(bytes32 id);
+    event GracePeriodExpired(bytes32 id);
 
     address public admin;
     uint64  public delay = 48 hours;
@@ -38,8 +39,19 @@ contract DAOTimelock {
 
     constructor(address _admin){ require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); }
 
+    // AUDIT: Minimum delay to prevent timelock bypass
+    uint64 public constant MIN_DELAY = 12 hours;
+    uint64 public constant MAX_DELAY = 30 days;
+    
     function setAdmin(address _admin) external onlyAdmin { require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); _log("tl_admin_set"); }
-    function setDelay(uint64 _delay) external onlyAdmin { delay=_delay; emit DelaySet(_delay); _log("tl_delay_set"); }
+    function setDelay(uint64 _delay) external onlyAdmin { 
+        // C-1 FIX: Enforce minimum and maximum delay to prevent timelock bypass
+        require(_delay >= MIN_DELAY, "TL: delay below minimum");
+        require(_delay <= MAX_DELAY, "TL: delay above maximum");
+        delay=_delay; 
+        emit DelaySet(_delay); 
+        _log("tl_delay_set"); 
+    }
     function setLedger(address _ledger) external onlyAdmin { ledger=IProofLedger(_ledger); emit LedgerSet(_ledger); _log("tl_ledger_set"); }
     function setPanicGuard(address _pg) external onlyAdmin { panicGuard=IPanicGuard(_pg); emit PanicGuardSet(_pg); _log("tl_panicguard_set"); }
 
@@ -112,10 +124,12 @@ contract DAOTimelock {
     
     /**
      * @notice Queue transaction with tracking
+     * FLOW-5 FIX: Use nonce for unique ID (consistent with queueTx)
      */
     function queueTxWithTracking(address target, uint256 value, bytes calldata data) external onlyAdmin returns(bytes32 id) {
         uint64 eta = uint64(block.timestamp) + delay;
-        id = keccak256(abi.encode(target, value, data, eta));
+        uint256 currentNonce = nonce++; // FLOW-5 FIX: Use nonce for uniqueness
+        id = keccak256(abi.encode(target, value, data, eta, currentNonce));
         if(queue[id].eta != 0) revert TL_AlreadyQueued();
         queue[id] = Op({target: target, value: value, data: data, eta: eta, done: false});
         queuedIds.push(id);
@@ -208,6 +222,7 @@ contract DAOTimelock {
     /**
      * @notice Re-queue an expired transaction with new ETA
      * @param oldId The expired transaction ID
+     * FLOW-4 FIX: Use nonce in new ID to prevent hash collisions
      */
     function requeueExpired(bytes32 oldId) external onlyAdmin returns (bytes32 newId) {
         Op storage op = queue[oldId];
@@ -223,9 +238,10 @@ contract DAOTimelock {
         // Delete old
         delete queue[oldId];
         
-        // Create new with fresh ETA
+        // Create new with fresh ETA and unique nonce
         uint64 eta = uint64(block.timestamp) + delay;
-        newId = keccak256(abi.encode(target, value, data, eta));
+        uint256 currentNonce = nonce++; // FLOW-4 FIX: Use nonce to ensure unique ID
+        newId = keccak256(abi.encode(target, value, data, eta, currentNonce));
         require(queue[newId].eta == 0, "TL: already queued");
         
         queue[newId] = Op({target: target, value: value, data: data, eta: eta, done: false});

@@ -37,6 +37,7 @@ contract DAO is ReentrancyGuard {
     uint64 public votingPeriod = 3 days;
     uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
+    uint256 public minParticipation = 2; // FLOW-2 FIX: Minimum unique voters required
 
     struct Proposal {
         address proposer;
@@ -51,6 +52,7 @@ contract DAO is ReentrancyGuard {
         bool    queued;
         uint256 forVotes;      // Score-weighted
         uint256 againstVotes;  // Score-weighted
+        uint256 voterCount;    // FLOW-2 FIX: Track unique voter count
         mapping(address => bool) hasVoted;
     }
     uint256 public proposalCount;
@@ -101,6 +103,13 @@ contract DAO is ReentrancyGuard {
         minVotesRequired=_minVotes;
         emit ParamsSet(_period,_minVotes);
     }
+    
+    /// @notice Set minimum participation requirement (FLOW-2 FIX)
+    /// @param _minParticipation Minimum unique voters required for quorum
+    function setMinParticipation(uint256 _minParticipation) external onlyAdmin {
+        require(_minParticipation >= 1 && _minParticipation <= 100, "DAO: invalid participation");
+        minParticipation = _minParticipation;
+    }
 
     function _eligible(address a) internal view returns (bool) {
         // L-8 Fix: Cache external calls to save gas
@@ -132,7 +141,8 @@ contract DAO is ReentrancyGuard {
     function vote(uint256 id, bool support) external nonReentrant {
         address voter = msg.sender;
         Proposal storage p = proposals[id];
-        if (p.end == 0) revert DAO_UnknownProposal();
+        // FLOW-1 FIX: Check both start and end are set (proposal exists and wasn't deleted)
+        if (p.end == 0 || p.start == 0) revert DAO_UnknownProposal();
         if (block.timestamp < p.start) revert DAO_VoteNotStarted(); // Flash loan protection
         if (block.timestamp >= p.end) revert DAO_VoteEnded();
         if (!_eligible(voter)) revert DAO_NotEligible();
@@ -142,6 +152,7 @@ contract DAO is ReentrancyGuard {
         require(!p.executed && !p.queued, "DAO: proposal already processed");
         
         p.hasVoted[voter] = true;
+        p.voterCount++; // FLOW-2 FIX: Track unique voter count
         
         // Track voter history
         voterProposals[voter].push(id);
@@ -193,13 +204,15 @@ contract DAO is ReentrancyGuard {
     // H-5 Fix: Add nonReentrant to prevent reentrancy via malicious hooks
     function finalize(uint256 id) external nonReentrant {
         Proposal storage p=proposals[id];
-        if(p.end==0) revert DAO_UnknownProposal();
+        // FLOW-3 FIX: Check proposal exists (both start and end must be set)
+        if(p.end==0 || p.start==0) revert DAO_UnknownProposal();
         require(block.timestamp>=p.end,"early");
         require(!p.executed&&!p.queued,"done");
         
         uint256 total = p.forVotes + p.againstVotes;
         // Quorum is interpreted as absolute number of vote-points required
-        bool qmet = total >= minVotesRequired; 
+        // FLOW-2 FIX: Also require minimum number of unique voters
+        bool qmet = total >= minVotesRequired && p.voterCount >= minParticipation; 
         bool passed = qmet && p.forVotes > p.againstVotes;
         
         emit Finalized(id,passed);
@@ -221,6 +234,11 @@ contract DAO is ReentrancyGuard {
         Proposal storage p = proposals[id];
         require(p.proposer == msg.sender, "Not proposer");
         require(!p.executed && !p.queued, "Already processed");
+        
+        // FLOW-6 FIX: Cannot withdraw proposal once voting has started and votes cast
+        // This prevents gaming by withdrawing losing proposals
+        require(block.timestamp < p.start || (p.forVotes == 0 && p.againstVotes == 0), 
+            "DAO: cannot withdraw after votes cast");
         
         // M-1 Fix: Record proposal hash before deleting to prevent re-submission
         bytes32 proposalHash = keccak256(abi.encode(p.ptype, p.target, p.value, p.data));

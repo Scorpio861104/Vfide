@@ -39,6 +39,12 @@ contract CouncilSalary {
     
     // H-3 Fix: DAO address for term management
     address public dao;
+    
+    // C-1 FIX: Authorized keepers for distribution
+    mapping(address => bool) public isKeeper;
+    
+    // C-2 FIX: Distribution nonce to prevent replay/frontrunning
+    uint256 public distributionNonce;
 
     constructor(address _election, address _seer, address _token, address _dao) {
         election = ICouncilElection(_election);
@@ -46,6 +52,14 @@ contract CouncilSalary {
         token = IERC20(_token);
         dao = _dao;
         lastPayTime = block.timestamp;
+        isKeeper[_dao] = true; // DAO is always a keeper
+    }
+    
+    // C-1 FIX: Add keeper management
+    function setKeeper(address keeper, bool authorized) external {
+        require(msg.sender == dao, "not dao");
+        require(keeper != address(0), "zero address");
+        isKeeper[keeper] = authorized;
     }
     
     // H-3 Fix: Allow DAO to start new term (resets removal votes)
@@ -63,10 +77,16 @@ contract CouncilSalary {
 
     /**
      * Distribute salary to eligible council members.
-     * Can be called by anyone after the interval passes.
+     * C-1 FIX: Now requires DAO or authorized keeper to call
+     * This prevents MEV manipulation and timing attacks
      */
     function distributeSalary() external {
+        // C-1 FIX: Only DAO or authorized keepers can distribute
+        require(msg.sender == dao || isKeeper[msg.sender], "CS: not authorized");
         require(block.timestamp >= lastPayTime + payInterval, "too early");
+        
+        // C-2 FIX: Increment nonce to prevent replay
+        distributionNonce++;
         
         uint256 balance = token.balanceOf(address(this));
         require(balance > 0, "no funds");

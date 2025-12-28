@@ -865,18 +865,22 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
         
         limit = dailyTransferLimit;
-        resetTime = dailyResetTime[user];
-        nextResetTime = resetTime + 24 hours;
         
-        // Check if we're in a new period
-        if (block.timestamp >= nextResetTime) {
+        // H-3 FIX: Use day-boundary logic consistent with enforcement
+        uint256 currentDay = block.timestamp / 1 days;
+        uint256 lastResetDay = dailyResetTime[user] / 1 days;
+        
+        if (currentDay > lastResetDay) {
+            // New day - counter would reset on next transfer
             transferred = 0;
             remaining = limit;
-            resetTime = block.timestamp;
-            nextResetTime = block.timestamp + 24 hours;
+            resetTime = currentDay * 1 days;
+            nextResetTime = resetTime + 24 hours;
         } else {
             transferred = dailyTransferred[user];
             remaining = transferred >= limit ? 0 : limit - transferred;
+            resetTime = lastResetDay * 1 days;
+            nextResetTime = resetTime + 24 hours;
         }
     }
 }

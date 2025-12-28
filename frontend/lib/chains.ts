@@ -71,13 +71,14 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
         seer: '',
       },
       testnet: {
-        vfideToken: '', // Deploy pending
-        vaultHub: '',
-        presale: '',
-        seer: '',
+        // Deployed on Base Sepolia - Dec 25, 2025
+        vfideToken: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '',
+        vaultHub: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS || '',
+        presale: process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '',
+        seer: process.env.NEXT_PUBLIC_SEER_ADDRESS || '',
       },
     },
-    faucetUrl: 'https://www.coinbase.com/faucets/base-ethereum-goerli-faucet',
+    faucetUrl: 'https://portal.cdp.coinbase.com/products/faucet',
     bridgeUrl: 'https://bridge.base.org',
     color: '#0052FF',
   },

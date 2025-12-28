@@ -37,8 +37,8 @@ export const NETWORK_INFO = {
 // Contract addresses - these change between testnet/mainnet
 export const CONTRACT_ADDRESSES = {
   vfideToken: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '',
-  vaultHub: process.env.NEXT_PUBLIC_VAULTHUB_ADDRESS || '',
-  presale: process.env.NEXT_PUBLIC_PRESALE_ADDRESS || '',
+  vaultHub: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS || '',
+  presale: process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '',
   seer: process.env.NEXT_PUBLIC_SEER_ADDRESS || '',
 }
 

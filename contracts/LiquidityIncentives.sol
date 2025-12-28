@@ -183,18 +183,17 @@ contract LiquidityIncentives is ReentrancyGuard {
         require(ILPToken(lpToken).transferFrom(msg.sender, address(this), amount), "LP: transfer failed");
         
         UserStake storage userStake = userStakes[lpToken][msg.sender];
-        userStake.amount += amount;
         
-        // Update stake time (weighted average for existing stake)
+        // M-4 FIX: Track time bonus per stake amount, not weighted average
+        // This prevents gaming by staking small amount first, waiting, then adding large amount
         if (userStake.stakedAt == 0) {
+            // First stake - use current time
             userStake.stakedAt = block.timestamp;
-        } else {
-            // Weighted average timestamp based on amounts
-            uint256 oldWeight = userStake.amount - amount;
-            uint256 newWeight = amount;
-            userStake.stakedAt = (userStake.stakedAt * oldWeight + block.timestamp * newWeight) / userStake.amount;
         }
+        // For additional stakes, keep original time (no manipulation)
+        // Time bonus is based on when user FIRST staked, not a weighted average
         
+        userStake.amount += amount;
         pool.totalStaked += amount;
         
         emit Staked(msg.sender, lpToken, amount);
@@ -240,6 +239,10 @@ contract LiquidityIncentives is ReentrancyGuard {
             
             // Apply bonuses
             uint256 totalReward = _applyBonuses(msg.sender, pending, userStake.stakedAt);
+            
+            // H-4 FIX: Verify contract has sufficient balance before transfer
+            uint256 contractBalance = IERC20(address(vfideToken)).balanceOf(address(this));
+            require(contractBalance >= totalReward, "LP: insufficient reward balance");
             
             // Transfer VFIDE rewards
             IERC20(address(vfideToken)).safeTransfer(msg.sender, totalReward);

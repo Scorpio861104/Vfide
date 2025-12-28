@@ -208,6 +208,7 @@ contract VFIDEEnterpriseGateway {
     /**
      * @notice Internal: Swap VFIDE to stablecoin via DEX
      * @dev Uses simple swap interface - can be adapted for different DEXes
+     * DEEP-C-1 FIX: Revoke approval after swap to prevent leftover allowance exploitation
      */
     function _swapToStable(uint256 vfideAmount) internal returns (uint256) {
         if (vfideAmount == 0) return 0;
@@ -229,8 +230,12 @@ contract VFIDEEnterpriseGateway {
             address(this),
             block.timestamp + 300 // 5 min deadline
         ) returns (uint256[] memory amounts) {
+            // DEEP-C-1 FIX: Revoke leftover approval
+            token.approve(swapRouter, 0);
             return amounts[amounts.length - 1];
         } catch {
+            // DEEP-C-1 FIX: Revoke approval on failure too
+            token.approve(swapRouter, 0);
             // Swap failed, return 0 to fallback to VFIDE settlement
             return 0;
         }
