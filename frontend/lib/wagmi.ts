@@ -1,4 +1,6 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { connectorsForWallets } from '@rainbow-me/rainbowkit'
+import { walletConnectWallet } from '@rainbow-me/rainbowkit/wallets'
+import { createConfig, http, createStorage } from 'wagmi'
 import { 
   base, 
   baseSepolia, 
@@ -8,6 +10,13 @@ import {
   zkSyncSepoliaTestnet,
 } from 'wagmi/chains'
 import { IS_TESTNET } from './chains'
+
+// Create noopStorage for SSR to avoid hydration mismatches
+const noopStorage = {
+  getItem: (_key: string) => null,
+  setItem: (_key: string, _value: string) => {},
+  removeItem: (_key: string) => {},
+}
 
 // WalletConnect Project ID - required for WalletConnect v2
 // Get your free project ID at https://cloud.walletconnect.com
@@ -58,22 +67,56 @@ const mainnetChains = [
   zkSync,
 ] as const
 
+// Create storage that works with SSR
+const wagmiStorage = createStorage({
+  storage: typeof window !== 'undefined' ? window.localStorage : noopStorage,
+})
+
+// ========================================
+// WALLET CONNECTORS
+// ========================================
+
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Recommended',
+      wallets: [walletConnectWallet],
+    },
+  ],
+  {
+    appName,
+    projectId,
+  }
+)
+
 // ========================================
 // WAGMI CONFIG
 // ========================================
 
-const testnetConfig = getDefaultConfig({
-  appName,
-  projectId,
+const testnetConfig = createConfig({
+  connectors,
   chains: testnetChains,
+  transports: {
+    [baseSepolia.id]: http(),
+    [polygonAmoy.id]: http(),
+    [zkSyncSepoliaTestnet.id]: http('https://sepolia.era.zksync.dev'),
+  },
   ssr: true,
+  storage: wagmiStorage,
+  multiInjectedProviderDiscovery: false, // Disable auto-discovery to avoid duplicates
 })
 
-const mainnetConfig = getDefaultConfig({
-  appName,
-  projectId,
+const mainnetConfig = createConfig({
+  connectors,
   chains: mainnetChains,
+  transports: {
+    [base.id]: http(),
+    [polygon.id]: http(),
+    [zkSync.id]: http(),
+  },
   ssr: true,
+  storage: wagmiStorage,
+  multiInjectedProviderDiscovery: false,
 })
 
 // Export the appropriate config based on environment
