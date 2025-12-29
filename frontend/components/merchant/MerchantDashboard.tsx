@@ -186,7 +186,7 @@ export function MerchantDashboard() {
           </div>
           <div>
             <div className="text-3xl font-bold text-purple-400">
-              {merchantInfo.category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+              {merchantInfo.category.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
             </div>
             <div className="text-xs text-gray-400">Category</div>
           </div>

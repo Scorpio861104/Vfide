@@ -38,7 +38,7 @@ export function useUserVault() {
   const hasVault = vaultAddress && vaultAddress !== '0x0000000000000000000000000000000000000000'
   
   return {
-    vaultAddress: hasVault ? vaultAddress : null,
+    vaultAddress: hasVault ? (vaultAddress as `0x${string}`) : null,
     hasVault,
     isLoading,
   }
@@ -82,8 +82,8 @@ export function useVaultBalance() {
   })
   
   return {
-    balance: balance ? formatEther(balance) : '0',
-    balanceRaw: balance || 0n,
+    balance: balance ? formatEther(balance as bigint) : '0',
+    balanceRaw: (balance as bigint) || 0n,
     isLoading,
     refetch,
   }
@@ -234,9 +234,9 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
   })
 
   return {
-    threshold: threshold || 0n,
+    threshold: (threshold as bigint) || 0n,
     usePercentage: usePercentage || false,
-    percentageBps: percentageBps || 0,
+    percentageBps: percentageBps ? Number(percentageBps) : 0,
   }
 }
 
@@ -331,7 +331,7 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
 
   return {
     useSnapshot: useSnapshot || false,
-    snapshot: snapshot || 0n,
+    snapshot: (snapshot as bigint) || 0n,
   }
 }
 
@@ -358,15 +358,17 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
     }
   })
 
+  const tx = pendingTx as any[] | undefined
+
   return {
-    pendingTx: pendingTx ? {
-      toVault: pendingTx[0],
-      amount: pendingTx[1],
-      requestTime: pendingTx[2],
-      approved: pendingTx[3],
-      executed: pendingTx[4],
+    pendingTx: tx ? {
+      toVault: tx[0],
+      amount: tx[1],
+      requestTime: tx[2],
+      approved: tx[3],
+      executed: tx[4],
     } : null,
-    pendingTxCount: pendingTxCount || 0n,
+    pendingTxCount: (pendingTxCount as bigint) || 0n,
   }
 }
 
@@ -519,7 +521,7 @@ export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
   })
 
   return {
-    nextOfKin: nextOfKin || '0x0000000000000000000000000000000000000000',
+    nextOfKin: (nextOfKin as `0x${string}`) || '0x0000000000000000000000000000000000000000',
     hasNextOfKin: nextOfKin !== '0x0000000000000000000000000000000000000000',
   }
 }

@@ -6,7 +6,7 @@ import { devLog } from '../lib/utils';
 import { IS_TESTNET, CURRENT_CHAIN_ID } from '../lib/testnet';
 
 // Parse the ABI for proper type inference
-const PARSED_VAULT_HUB_ABI = parseAbi(VAULT_HUB_ABI);
+const PARSED_VAULT_HUB_ABI = VAULT_HUB_ABI;
 
 // VaultHub contract address from environment
 const VAULT_HUB_ADDRESS = process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS as `0x${string}` | undefined;

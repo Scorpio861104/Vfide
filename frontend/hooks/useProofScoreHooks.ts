@@ -98,17 +98,19 @@ export function useScoreBreakdown(address?: `0x${string}`) {
     }
   })
   
+  const info = data as any[] | undefined
+
   return {
-    breakdown: data ? {
-      totalScore: Number(data[0]),
-      baseScore: Number(data[1]),
-      vaultBonus: Number(data[2]),
-      ageBonus: Number(data[3]),
-      activityPoints: Number(data[4]),
-      endorsementPoints: Number(data[5]),
-      badgePoints: Number(data[6]),
-      reputationDelta: Number(data[7]),
-      hasDiversityBonus: Boolean(data[8]),
+    breakdown: info ? {
+      totalScore: Number(info[0]),
+      baseScore: Number(info[1]),
+      vaultBonus: Number(info[2]),
+      ageBonus: Number(info[3]),
+      activityPoints: Number(info[4]),
+      endorsementPoints: Number(info[5]),
+      badgePoints: Number(info[6]),
+      reputationDelta: Number(info[7]),
+      hasDiversityBonus: Boolean(info[8]),
     } : null,
     isLoading,
     refetch,

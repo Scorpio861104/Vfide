@@ -44,8 +44,8 @@ export function useBadgeNFTs(address?: `0x${string}`) {
   })
   
   return {
-    tokenIds: tokenIds || [],
-    count: tokenIds ? tokenIds.length : 0,
+    tokenIds: (tokenIds as bigint[]) || [],
+    count: tokenIds ? (tokenIds as bigint[]).length : 0,
     isLoading,
     refetch,
   }
@@ -90,8 +90,8 @@ export function useCanMintBadge(badgeId: `0x${string}`, address?: `0x${string}`)
   })
   
   return {
-    canMint: data ? data[0] : false,
-    reason: data ? data[1] : '',
+    canMint: data ? (data as [boolean, string])[0] : false,
+    reason: data ? (data as [boolean, string])[1] : '',
     isLoading,
   }
 }

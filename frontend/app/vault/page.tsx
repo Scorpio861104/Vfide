@@ -285,8 +285,7 @@ function VaultContent() {
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
         </div>
 
-        {/* Header */}
-        <section className="relative py-12 border-b border-white/5">
+        {<div className="relative py-12 border-b border-white/5">
           <div className="container mx-auto px-4 max-w-6xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -361,14 +360,14 @@ function VaultContent() {
               </GlassCard>
             )}
             
-            {!address && (
+            {(!address && (
               <GlassCard className="p-6 border-red-500/30" gradient="red" hover={false}>
                 <div className="text-center py-4">
                   <p className="text-red-400 font-bold mb-2">Wallet Not Connected</p>
                   <p className="text-white/60">Please connect your wallet to view your vault</p>
                 </div>
               </GlassCard>
-            )}
+            )) as any}
             
             {/* Feature Cards */}
             {hasVault && (
@@ -403,7 +402,7 @@ function VaultContent() {
               </motion.div>
             )}
           </div>
-        </section>
+        </div> as any}
 
         {hasVault && (
           <>

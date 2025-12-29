@@ -23,14 +23,16 @@ export function useIsMerchant(address?: `0x${string}`) {
     }
   })
   
+  const info = merchantInfo as any[] | undefined
+
   return {
-    isMerchant: merchantInfo?.[0] || false,
-    isSuspended: merchantInfo?.[1] || false,
-    businessName: merchantInfo?.[2] || '',
-    category: merchantInfo?.[3] || '',
-    registeredAt: merchantInfo?.[4] ? Number(merchantInfo[4]) : 0,
-    totalVolume: merchantInfo?.[5] ? formatEther(merchantInfo[5]) : '0',
-    txCount: merchantInfo?.[6] ? Number(merchantInfo[6]) : 0,
+    isMerchant: info?.[0] || false,
+    isSuspended: info?.[1] || false,
+    businessName: info?.[2] || '',
+    category: info?.[3] || '',
+    registeredAt: info?.[4] ? Number(info[4]) : 0,
+    totalVolume: info?.[5] ? formatEther(info[5]) : '0',
+    txCount: info?.[6] ? Number(info[6]) : 0,
     isLoading,
     refetch,
   }
@@ -138,11 +140,13 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
     }
   })
   
+  const info = data as any[] | undefined
+  
   return {
-    score: data?.[0] ? Number(data[0]) : 5000,
-    highTrust: data?.[1] || false,
-    lowTrust: data?.[2] || false,
-    eligible: data?.[3] || false,
+    score: info?.[0] ? Number(info[0]) : 5000,
+    highTrust: info?.[1] || false,
+    lowTrust: info?.[2] || false,
+    eligible: info?.[3] || false,
     isLoading,
   }
 }
