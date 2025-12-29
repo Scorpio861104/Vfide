@@ -119,14 +119,17 @@ export function useFeatureTooltip(id: string) {
   
   // Check localStorage after mount to avoid hydration issues
   useEffect(() => {
-    try {
-      const dismissedTooltips = JSON.parse(
-        localStorage.getItem("vfide_dismissed_tooltips") || "[]"
-      );
-      setIsVisible(!dismissedTooltips.includes(id));
-    } catch {
-      setIsVisible(true); // Default to showing tooltip if localStorage fails
-    }
+    const timer = setTimeout(() => {
+      try {
+        const dismissedTooltips = JSON.parse(
+          localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+        );
+        setIsVisible(!dismissedTooltips.includes(id));
+      } catch {
+        setIsVisible(true); // Default to showing tooltip if localStorage fails
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [id]);
 
   const dismiss = () => {

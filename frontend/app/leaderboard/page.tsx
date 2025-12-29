@@ -2,7 +2,7 @@
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
-import { PageWrapper, PageHeader, Section, GlassCard, TabNavigation, StatsGrid } from '@/components/ui/PageLayout'
+import { GlassCard } from '@/components/ui/PageLayout'
 import { Badge } from '@/components/ui/FormElements'
 import { Counter } from '@/components/ui/Animations'
 import { useState } from 'react'
@@ -19,7 +19,6 @@ import {
   ChevronDown,
   Minus,
   Sparkles,
-  Target,
   Award
 } from 'lucide-react'
 
@@ -84,152 +83,6 @@ const getChangeIndicator = (change: number) => {
     )
   }
   return <Minus className="w-4 h-4 text-[#6A6A6F]" />
-}
-
-function PodiumCard({ 
-  entry, 
-  place, 
-  delay 
-}: { 
-  entry: typeof mockLeaderboard[0]
-  place: 1 | 2 | 3
-  delay: number 
-}) {
-  const heights = { 1: 'h-52', 2: 'h-44', 3: 'h-40' }
-  const colors = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' }
-  const Icon = place === 1 ? Crown : Medal
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, type: "spring", stiffness: 100 }}
-      className={`relative ${place === 1 ? 'order-2 -mt-4' : place === 2 ? 'order-1 mt-8' : 'order-3 mt-8'}`}
-    >
-      <GlassCard 
-        className={`p-6 text-center border-2 ${heights[place]}`}
-        glow={colors[place]}
-      >
-        <motion.div
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ delay: delay + 0.2, type: "spring" }}
-          className="absolute -top-6 left-1/2 -translate-x-1/2"
-        >
-          <div 
-            className="w-12 h-12 rounded-full flex items-center justify-center"
-            style={{ 
-              background: `linear-gradient(135deg, ${colors[place]}40, ${colors[place]}20)`,
-              boxShadow: `0 0 30px ${colors[place]}40`
-            }}
-          >
-            <Icon className="w-6 h-6" style={{ color: colors[place] }} />
-          </div>
-        </motion.div>
-
-        <div 
-          className="text-4xl font-black mt-4 mb-2"
-          style={{ color: colors[place] }}
-        >
-          {place === 1 ? '1st' : place === 2 ? '2nd' : '3rd'}
-        </div>
-
-        <div className="font-mono text-sm text-[#A0A0A5] mb-3">
-          {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
-        </div>
-
-        <motion.div 
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: delay + 0.3, type: "spring" as const }}
-          className="text-2xl font-bold mb-2"
-          style={{ color: colors[place] }}
-        >
-          <Counter value={entry.score} />
-        </motion.div>
-
-        <div className="flex items-center justify-center gap-1 text-xs text-[#A0A0A5]">
-          <Star className="w-3 h-3" style={{ color: colors[place] }} />
-          <span>{entry.badges} badges</span>
-        </div>
-      </GlassCard>
-    </motion.div>
-  )
-}
-
-function LeaderboardRow({ entry, index }: { entry: typeof mockLeaderboard[0]; index: number }) {
-  const tierStyle = tierColors[entry.tier] || tierColors['NEUTRAL']
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.03 }}
-      whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
-      className={`
-        border-b border-white/5 last:border-0
-        ${entry.rank <= 3 ? 'bg-gradient-to-r from-[#FFD700]/5 to-transparent' : ''}
-      `}
-    >
-      <div className="md:hidden flex items-center justify-between px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8">{getRankIcon(entry.rank)}</div>
-          <div>
-            <div className="font-mono text-sm text-[#F5F3E8]">
-              {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
-            </div>
-            <Badge variant={entry.tier === 'CHAMPION' ? 'premium' : 'info'} size="sm">
-              {entry.tier}
-            </Badge>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="font-bold text-[#00F0FF]">{entry.score.toLocaleString()}</div>
-          {getChangeIndicator(entry.change)}
-        </div>
-      </div>
-
-      <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center">
-        <div className="col-span-1 flex items-center gap-2">
-          {getRankIcon(entry.rank)}
-        </div>
-        
-        <div className="col-span-4 flex items-center gap-3">
-          <div 
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${tierColors[entry.tier]?.gradient.split(' ')[0].replace('from-[', '').replace(']', '')}20, transparent)` }}
-          >
-            <Shield className={`w-5 h-5 ${tierStyle.text}`} />
-          </div>
-          <span className="font-mono text-[#F5F3E8]">
-            {entry.address.slice(0, 8)}...{entry.address.slice(-6)}
-          </span>
-        </div>
-        
-        <div className="col-span-2 text-center">
-          <span className="text-xl font-bold text-[#00F0FF]">{entry.score.toLocaleString()}</span>
-        </div>
-        
-        <div className="col-span-2 text-center">
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${tierStyle.text}`}
-            style={{ background: `linear-gradient(135deg, ${tierColors[entry.tier]?.gradient.split(' ')[0].replace('from-[', '').replace(']', '')}20, transparent)` }}
-          >
-            <Sparkles size={12} />
-            {entry.tier}
-          </span>
-        </div>
-        
-        <div className="col-span-2 flex items-center justify-center gap-2">
-          <Award className="w-4 h-4 text-[#A0A0A5]" />
-          <span className="text-[#F5F3E8] font-medium">{entry.badges}</span>
-        </div>
-        
-        <div className="col-span-1 flex justify-center">
-          {getChangeIndicator(entry.change)}
-        </div>
-      </div>
-    </motion.div>
-  )
 }
 
 export default function LeaderboardPage() {

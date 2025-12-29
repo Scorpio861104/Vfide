@@ -23,7 +23,7 @@ export function useIsMerchant(address?: `0x${string}`) {
     }
   })
   
-  const info = merchantInfo as any[] | undefined
+  const info = merchantInfo as [boolean, boolean, string, bigint, bigint] | undefined
 
   return {
     isMerchant: info?.[0] || false,

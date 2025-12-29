@@ -2,7 +2,7 @@
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { formatUnits, parseUnits } from 'viem'
@@ -13,10 +13,8 @@ import {
   Droplets,
   GraduationCap,
   Users,
-  Target,
   Star,
   Zap,
-  TrendingUp,
   CheckCircle2,
   Clock,
   Lock,
@@ -25,6 +23,8 @@ import {
   Loader2,
   Sparkles
 } from 'lucide-react'
+
+import { useToast } from "@/components/ui/toast"
 
 // Contract ABIs
 const LIQUIDITY_INCENTIVES_ABI = [
@@ -68,14 +68,29 @@ type TabId = 'overview' | 'duty' | 'promotional' | 'liquidity' | 'referral'
 
 export default function RewardsPage() {
   const { address, isConnected } = useAccount()
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
-  const [stakeAmount, setStakeAmount] = useState('')
-  const [selectedPool, setSelectedPool] = useState<string | null>(null)
   const [claimingId, setClaimingId] = useState<string | null>(null)
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { writeContract, data: hash } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const successHandled = useRef(false);
+
+  useEffect(() => {
+    if (isSuccess && !successHandled.current) {
+      toast({
+        title: "Transaction Successful",
+        description: "Your transaction has been confirmed.",
+        variant: "default",
+      });
+      setTimeout(() => setClaimingId(null), 0);
+      successHandled.current = true;
+    } else if (!isSuccess) {
+      successHandled.current = false;
+    }
+  }, [isSuccess, toast]);
 
   // Read duty points
   const { data: dutyPoints } = useReadContract({
@@ -144,6 +159,7 @@ export default function RewardsPage() {
 
   // Claim handlers
   const handleClaimDuty = () => {
+    setClaimingId('duty');
     writeContract({
       address: DUTY_DISTRIBUTOR_ADDRESS,
       abi: DUTY_DISTRIBUTOR_ABI,
@@ -152,6 +168,7 @@ export default function RewardsPage() {
   };
 
   const handleClaimEducation = (milestone: string) => {
+    setClaimingId(`education-${milestone}`);
     writeContract({
       address: PROMOTIONAL_TREASURY_ADDRESS,
       abi: PROMOTIONAL_TREASURY_ABI,
@@ -161,6 +178,7 @@ export default function RewardsPage() {
   };
 
   const handleClaimMilestone = (milestone: string) => {
+    setClaimingId(`milestone-${milestone}`);
     writeContract({
       address: PROMOTIONAL_TREASURY_ADDRESS,
       abi: PROMOTIONAL_TREASURY_ABI,
@@ -170,6 +188,7 @@ export default function RewardsPage() {
   };
 
   const handleStake = (lpToken: string, amount: string) => {
+    setClaimingId(`stake-${lpToken}`);
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
       abi: LIQUIDITY_INCENTIVES_ABI,
@@ -179,6 +198,7 @@ export default function RewardsPage() {
   };
 
   const handleUnstake = (lpToken: string, amount: string) => {
+    setClaimingId(`unstake-${lpToken}`);
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
       abi: LIQUIDITY_INCENTIVES_ABI,
@@ -188,6 +208,7 @@ export default function RewardsPage() {
   };
 
   const handleClaimLPRewards = (lpToken: string) => {
+    setClaimingId(`claim-${lpToken}`);
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
       abi: LIQUIDITY_INCENTIVES_ABI,
@@ -197,6 +218,7 @@ export default function RewardsPage() {
   };
 
   const handleCompound = (lpToken: string) => {
+    setClaimingId(`compound-${lpToken}`);
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
       abi: LIQUIDITY_INCENTIVES_ABI,
@@ -212,7 +234,27 @@ export default function RewardsPage() {
       case 'all':
         handleClaimDuty();
         break;
-      // Add other reward types as needed
+      case 'pioneer':
+        handleClaimMilestone('pioneer');
+        break;
+      case 'education1':
+        handleClaimEducation('profile_setup');
+        break;
+      case 'education2':
+        handleClaimEducation('first_vote');
+        break;
+      case 'education3':
+        handleClaimEducation('guardian_setup');
+        break;
+      case 'milestone1':
+        handleClaimMilestone('1000_vfide');
+        break;
+      default:
+        // Handle LP rewards if ID matches a pool address or ID
+        if (id.startsWith('0x')) {
+          handleClaimLPRewards(id);
+        }
+        break;
     }
   };
 
@@ -220,6 +262,25 @@ export default function RewardsPage() {
     <>
       <GlobalNav />
       
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {(isConfirming || claimingId) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          >
+            <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-8 flex flex-col items-center gap-4">
+              <Loader2 className="w-12 h-12 text-[#00F0FF] animate-spin" />
+              <div className="text-xl font-bold text-white">
+                {isConfirming ? 'Confirming Transaction...' : 'Processing...'}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
@@ -229,6 +290,12 @@ export default function RewardsPage() {
       </div>
 
       <main className="min-h-screen pt-20">
+        {/* Promo Banner */}
+        {isPromoActive && (
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-2 text-center font-bold mb-4">
+                🎉 Promotional Rewards are Active! Earn extra VFIDE for completing milestones.
+            </div>
+        )}
         {/* Header */}
         <motion.section 
           initial={{ opacity: 0, y: -20 }}
@@ -329,8 +396,25 @@ export default function RewardsPage() {
         <div className="container mx-auto px-4 py-8">
           {activeTab === 'overview' && <OverviewTab isConnected={isConnected} totalClaimable={totalClaimable} onClaim={handleClaim} claimingId={claimingId} />}
           {activeTab === 'duty' && <DutyRewardsTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
-          {activeTab === 'promotional' && <PromotionalTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
-          {activeTab === 'liquidity' && <LiquidityTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
+          {activeTab === 'promotional' && (
+            <PromotionalTab 
+              isConnected={isConnected} 
+              onClaim={handleClaim} 
+              claimingId={claimingId} 
+              remainingBudgets={remainingBudgets}
+            />
+          )}
+          {activeTab === 'liquidity' && (
+            <LiquidityTab 
+              isConnected={isConnected} 
+              onClaim={handleClaim} 
+              claimingId={claimingId}
+              onStake={handleStake}
+              onUnstake={handleUnstake}
+              onCompound={handleCompound}
+              contractPools={allPools}
+            />
+          )}
           {activeTab === 'referral' && <ReferralTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
         </div>
       </main>
@@ -559,10 +643,11 @@ function DutyRewardsTab({ isConnected, onClaim, claimingId }: {
   )
 }
 
-function PromotionalTab({ isConnected, onClaim, claimingId }: {
+function PromotionalTab({ isConnected, onClaim, claimingId, remainingBudgets }: {
   isConnected: boolean;
   onClaim: (id: string) => void;
   claimingId: string | null;
+  remainingBudgets: readonly [bigint, bigint, bigint, bigint, bigint] | undefined;
 }) {
   const promotionalRewards = [
     { id: 'pioneer', name: 'Pioneer Badge', amount: 500, icon: Star, status: 'claimable', desc: 'Early adopter reward for joining before mainnet' },
@@ -571,6 +656,12 @@ function PromotionalTab({ isConnected, onClaim, claimingId }: {
     { id: 'education3', name: 'Guardian Setup', amount: 200, icon: Lock, status: 'locked', desc: 'Add at least 2 guardians to your vault', progress: 50 },
     { id: 'milestone1', name: '1,000 VFIDE Held', amount: 300, icon: Coins, status: 'claimed', desc: 'Hold 1,000+ VFIDE for 30 days' },
   ]
+
+  // Calculate total budget usage if data available
+  const totalBudget = 2000000; // 2M VFIDE
+  const remaining = remainingBudgets ? Number(formatUnits(remainingBudgets[0] + remainingBudgets[1] + remainingBudgets[2] + remainingBudgets[3] + remainingBudgets[4], 18)) : 700000;
+  const distributed = totalBudget - remaining;
+  const percentage = (distributed / totalBudget) * 100;
 
   if (!isConnected) {
     return (
@@ -590,10 +681,10 @@ function PromotionalTab({ isConnected, onClaim, claimingId }: {
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <div className="h-3 bg-[#3A3A3F] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#FFD700] to-[#FFA500]" style={{ width: '35%' }} />
+              <div className="h-full bg-gradient-to-r from-[#FFD700] to-[#FFA500]" style={{ width: `${percentage}%` }} />
             </div>
           </div>
-          <div className="text-[#F5F3E8] font-bold">700K / 2M VFIDE distributed</div>
+          <div className="text-[#F5F3E8] font-bold">{distributed.toLocaleString()} / {totalBudget.toLocaleString()} VFIDE distributed</div>
         </div>
       </div>
 
@@ -663,10 +754,14 @@ function PromotionalTab({ isConnected, onClaim, claimingId }: {
   )
 }
 
-function LiquidityTab({ isConnected, onClaim, claimingId }: {
+function LiquidityTab({ isConnected, onClaim, claimingId, onStake, onUnstake, onCompound, contractPools }: {
   isConnected: boolean;
   onClaim: (id: string) => void;
   claimingId: string | null;
+  onStake: (token: string, amount: string) => void;
+  onUnstake: (token: string, amount: string) => void;
+  onCompound: (token: string) => void;
+  contractPools: readonly `0x${string}`[] | undefined;
 }) {
   const [stakeAmount, setStakeAmount] = useState('')
   const [isStaking, setIsStaking] = useState(false)
@@ -676,13 +771,14 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
     { id: 'vfide-usdc', name: 'VFIDE/USDC', estimatedRate: 28.3, tvl: '1.8M', yourStake: 0, earned: 0, multiplier: '1.5x' },
   ]
 
-  const handleStake = async () => {
+  const handleStakeClick = async () => {
     if (!stakeAmount) return
     setIsStaking(true)
-    await new Promise(r => setTimeout(r, 2000))
+    // Use the first pool from contract if available, otherwise fallback
+    const poolAddress = contractPools?.[0] || '0x0000000000000000000000000000000000000000';
+    onStake(poolAddress, stakeAmount);
     setIsStaking(false)
     setStakeAmount('')
-    alert('Staked successfully!')
   }
 
   if (!isConnected) {
@@ -753,11 +849,26 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
                     {claimingId === pool.id ? 'Claiming...' : 'Claim'}
                   </button>
                 )}
+                <button 
+                  onClick={() => {
+                    const poolAddress = contractPools?.[0] || '0x0000000000000000000000000000000000000000';
+                    onCompound(poolAddress);
+                  }}
+                  className="px-4 py-2 bg-[#A78BFA] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#9061F9] transition-colors"
+                >
+                  Compound
+                </button>
                 <button className="px-4 py-2 bg-[#00F0FF] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#00D4E0] transition-colors">
                   Stake
                 </button>
                 {pool.yourStake > 0 && (
-                  <button className="px-4 py-2 border border-[#A0A0A5] text-[#A0A0A5] rounded-lg font-bold hover:border-[#F5F3E8] hover:text-[#F5F3E8] transition-colors">
+                  <button 
+                    onClick={() => {
+                      const poolAddress = contractPools?.[0] || '0x0000000000000000000000000000000000000000';
+                      onUnstake(poolAddress, '0'); // TODO: Add amount input for unstaking
+                    }}
+                    className="px-4 py-2 border border-[#A0A0A5] text-[#A0A0A5] rounded-lg font-bold hover:border-[#F5F3E8] hover:text-[#F5F3E8] transition-colors"
+                  >
                     Unstake
                   </button>
                 )}
@@ -787,7 +898,7 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
             className="flex-1 px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
           />
           <button
-            onClick={handleStake}
+            onClick={handleStakeClick}
             disabled={isStaking || !stakeAmount}
             className="px-8 py-3 bg-gradient-to-r from-[#00F0FF] to-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform"
           >
@@ -877,6 +988,7 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
             onClick={() => {
               const qrData = `https://vfide.app/join?ref=${referralStats.code}`;
               // Open QR code modal or generate inline
+              console.log('QR Data:', qrData);
               alert('QR Code feature coming soon!');
             }}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] hover:border-[#A78BFA] transition-colors"

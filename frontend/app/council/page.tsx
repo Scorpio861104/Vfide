@@ -2,26 +2,25 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, 
-  Award, 
   DollarSign, 
   Clock, 
   Shield, 
   Vote,
   AlertTriangle,
   CheckCircle,
-  XCircle,
   Calendar,
   TrendingUp,
   Crown,
   Loader2,
   Sparkles
 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 // CouncilElection ABI
 const COUNCIL_ELECTION_ABI = [
@@ -57,11 +56,22 @@ type TabType = 'overview' | 'members' | 'salary' | 'voting';
 
 export default function CouncilPage() {
   const { address, isConnected } = useAccount();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast({
+        title: "Transaction Successful",
+        description: "Your transaction has been confirmed on the blockchain.",
+        variant: "default",
+      });
+    }
+  }, [isSuccess, toast]);
 
   // Read council members
   const { data: councilMembers } = useReadContract({
@@ -235,8 +245,27 @@ export default function CouncilPage() {
               transition={{ duration: 0.2 }}
             >
               {activeTab === 'overview' && <OverviewTab />}
-              {activeTab === 'members' && <MembersTab />}
-              {activeTab === 'salary' && <SalaryTab isConnected={isConnected} />}
+              {activeTab === 'members' && (
+                <MembersTab 
+                  members={councilMembers}
+                  candidates={candidates}
+                  electionStatus={electionStatus}
+                  isCandidate={!!isCandidate}
+                  isCouncilMember={!!isCouncilMember}
+                  canRegister={canRegisterResult}
+                  onRegister={handleRegister}
+                  onUnregister={handleUnregister}
+                  isPending={isPending || isConfirming}
+                />
+              )}
+              {activeTab === 'salary' && (
+                <SalaryTab 
+                  isConnected={isConnected} 
+                  claimable={claimableSalary}
+                  onClaim={handleClaimSalary}
+                  isPending={isPending || isConfirming}
+                />
+              )}
               {activeTab === 'voting' && <VotingTab isConnected={isConnected} />}
             </motion.div>
           </AnimatePresence>
@@ -287,7 +316,7 @@ function OverviewTab() {
           { value: '--', label: 'Active Members', gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
           { value: '365', label: 'Days Term Length', gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
           { value: '120d', label: 'Pay Interval', gradient: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
-        ].map((stat, idx) => (
+        ].map((stat) => (
           <motion.div
             key={stat.label}
             whileHover={{ scale: 1.02, y: -2 }}
@@ -313,7 +342,7 @@ function OverviewTab() {
             { icon: Vote, color: 'text-purple-400', bg: 'from-purple-500/20 to-purple-500/5', border: 'border-purple-500/20', title: 'Proposal Review', desc: 'Review and recommend DAO proposals before community voting' },
             { icon: DollarSign, color: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', title: 'Treasury Oversight', desc: 'Approve multi-sig transactions and manage fund allocations' },
             { icon: TrendingUp, color: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/20', title: 'Ecosystem Growth', desc: 'Drive partnerships, integrations, and community expansion' },
-          ].map((item, idx) => (
+          ].map((item) => (
             <motion.div 
               key={item.title}
               whileHover={{ scale: 1.02 }}
@@ -360,8 +389,40 @@ function OverviewTab() {
   );
 }
 
-function MembersTab() {
-  const members = [
+function MembersTab({ 
+  members, 
+  candidates, 
+  electionStatus, 
+  isCandidate, 
+  isCouncilMember, 
+  canRegister, 
+  onRegister, 
+  onUnregister,
+  isPending 
+}: { 
+  members: unknown, 
+  candidates: unknown, 
+  electionStatus: unknown, 
+  isCandidate: boolean, 
+  isCouncilMember: boolean, 
+  canRegister: unknown, 
+  onRegister: () => void, 
+  onUnregister: () => void,
+  isPending: boolean
+}) {
+  const canRegisterTyped = canRegister as readonly [boolean, string] | undefined;
+  const electionStatusTyped = electionStatus as readonly [number, number, bigint, bigint, bigint, bigint] | undefined;
+  
+  const realMembers = Array.isArray(members) ? members.map((addr: string) => ({
+      address: addr,
+      name: 'Council Member',
+      role: 'Member',
+      proofScore: 0,
+      joinedDays: 0,
+      status: 'active'
+    })) : [];
+
+  const displayMembers = realMembers.length > 0 ? realMembers : [
     { 
       address: '0x1234...5678', 
       name: 'Council Member 1',
@@ -422,6 +483,82 @@ function MembersTab() {
 
   return (
     <div className="space-y-8">
+      {/* Election Status */}
+      {electionStatusTyped && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
+           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+             <div className="text-gray-400 text-sm">Council Size</div>
+             <div className="text-2xl font-bold text-white">{electionStatusTyped[0]}</div>
+           </div>
+           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+             <div className="text-gray-400 text-sm">Min Score</div>
+             <div className="text-2xl font-bold text-white">{electionStatusTyped[1]}</div>
+           </div>
+           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+             <div className="text-gray-400 text-sm">Candidates</div>
+             <div className="text-2xl font-bold text-white">{electionStatusTyped[5].toString()}</div>
+           </div>
+        </motion.div>
+      )}
+
+      {/* Registration Section */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+      >
+        <h3 className="text-xl font-bold text-white mb-4">Council Elections</h3>
+        
+        {isCandidate ? (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6 text-center">
+            <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
+            <h4 className="text-xl font-bold text-white mb-2">You are a Candidate</h4>
+            <p className="text-gray-400 mb-6">Campaign for votes to be elected to the council.</p>
+            <button
+              onClick={onUnregister}
+              disabled={isPending}
+              className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-lg font-bold transition-colors"
+            >
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Unregister Candidacy'}
+            </button>
+          </div>
+        ) : isCouncilMember ? (
+          <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-6 text-center">
+            <Crown className="w-12 h-12 text-indigo-400 mx-auto mb-4" />
+            <h4 className="text-xl font-bold text-white mb-2">You are a Council Member</h4>
+            <p className="text-gray-400">Serve the protocol faithfully.</p>
+          </div>
+        ) : (
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h4 className="text-lg font-bold text-white">Register as Candidate</h4>
+                <p className="text-sm text-gray-400">
+                  {canRegisterTyped?.[0] 
+                    ? "You are eligible to run for council." 
+                    : `Not eligible: ${canRegisterTyped?.[1] || 'Check requirements'}`}
+                </p>
+              </div>
+              <button
+                onClick={onRegister}
+                disabled={!canRegisterTyped?.[0] || isPending}
+                className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                  canRegisterTyped?.[0]
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25'
+                    : 'bg-white/5 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Register Candidacy'}
+              </button>
+            </div>
+          </div>
+        )}
+      </motion.div>
+
       {/* Members List */}
       <motion.div 
         initial={{ opacity: 0 }}
@@ -435,7 +572,7 @@ function MembersTab() {
           Current Council Members
         </h3>
         <div className="space-y-4">
-          {members.map((member, idx) => (
+          {displayMembers.map((member, idx) => (
             <motion.div 
               key={idx}
               whileHover={{ scale: 1.005, x: 4 }}
@@ -485,6 +622,25 @@ function MembersTab() {
         </div>
       </motion.div>
 
+      {/* Candidates List (if any) */}
+      {Array.isArray(candidates) && candidates.length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+        >
+          <h3 className="text-xl font-bold text-white mb-6">Candidates</h3>
+          <div className="space-y-4">
+            {candidates.map((candidate: string, idx: number) => (
+              <div key={idx} className="p-4 bg-white/5 border border-white/10 rounded-xl flex justify-between items-center">
+                 <span className="text-white font-mono">{candidate}</span>
+                 <span className="text-xs text-gray-400">Candidate</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* Daily Score Check */}
       <motion.div 
         initial={{ opacity: 0 }}
@@ -520,7 +676,17 @@ function MembersTab() {
   );
 }
 
-function SalaryTab({ isConnected }: { isConnected: boolean }) {
+function SalaryTab({ 
+  isConnected, 
+  claimable, 
+  onClaim, 
+  isPending 
+}: { 
+  isConnected: boolean; 
+  claimable: unknown; 
+  onClaim: () => void; 
+  isPending: boolean; 
+}) {
   // Salary is NOT fixed - funded by ecosystem fees, distributed every 120 days
   const salaryHistory = [
     { period: 'Period 1 (Days 1-120)', amount: 'Variable (fees collected)', recipients: 12, status: 'pending' },
@@ -556,6 +722,37 @@ function SalaryTab({ isConnected }: { isConnected: boolean }) {
           ))}
         </div>
       </motion.div>
+
+      {/* Claimable Salary Section */}
+      {isConnected && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+        >
+          <h3 className="text-xl font-bold text-white mb-4">Your Claimable Salary</h3>
+          <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-6">
+            <div>
+              <div className="text-3xl font-bold text-emerald-400">
+                {claimable ? parseFloat(formatUnits(claimable as bigint, 18)).toLocaleString() : '0'} VFIDE
+              </div>
+              <div className="text-sm text-gray-400">Available to claim</div>
+            </div>
+            <button
+              onClick={onClaim}
+              disabled={!claimable || (claimable as bigint) <= 0n || isPending}
+              className={`px-8 py-3 rounded-xl font-bold transition-all ${
+                claimable && (claimable as bigint) > 0n
+                  ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25'
+                  : 'bg-white/5 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Claim Salary'}
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Distribution History */}
       <motion.div 

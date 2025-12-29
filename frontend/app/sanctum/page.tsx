@@ -2,11 +2,12 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-import { parseUnits, formatUnits, isAddress } from "viem";
+import { parseUnits, formatUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Shield, DollarSign, Users, CheckCircle, Clock, AlertTriangle, ExternalLink, Loader2, Sparkles } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 // SanctumVault ABI
 const SANCTUM_VAULT_ABI = [
@@ -35,6 +36,7 @@ type TabType = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history'
 
 export default function SanctumPage() {
   const { address, isConnected } = useAccount();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [donateAmount, setDonateAmount] = useState('');
   const [donateNote, setDonateNote] = useState('');
@@ -42,6 +44,36 @@ export default function SanctumPage() {
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const successHandled = useRef(false);
+
+  useEffect(() => {
+    if (isSuccess && !successHandled.current) {
+      toast({
+        title: "Transaction Successful",
+        description: "Your transaction has been confirmed.",
+        variant: "default",
+      });
+      setTimeout(() => {
+        setDonateAmount('');
+        setDonateNote('');
+      }, 0);
+      successHandled.current = true;
+    } else if (!isSuccess) {
+      successHandled.current = false;
+    }
+  }, [isSuccess, toast]);
+
+  // Debug logging
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Sanctum Debug:', {
+        address,
+        isPending,
+        isConfirming
+      });
+    }
+  }, [address, isPending, isConfirming]);
 
   // Read vault balance (only if deployed)
   const { data: vaultBalance } = useReadContract({
@@ -210,16 +242,41 @@ export default function SanctumPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'overview' && <OverviewTab />}
-              {activeTab === 'charities' && <CharitiesTab />}
-              {activeTab === 'disbursements' && <DisbursementsTab isConnected={isConnected} />}
-              {activeTab === 'donate' && <DonateTab isConnected={isConnected} />}
+              {activeTab === 'overview' && <OverviewTab vaultBalance={vaultBalance} />}
+              {activeTab === 'charities' && <CharitiesTab charityCount={charityCount} />}
+              {activeTab === 'disbursements' && (
+                <DisbursementsTab 
+                  isConnected={isConnected} 
+                  onApprove={handleApproveDisbursement}
+                  onExecute={handleExecuteDisbursement}
+                  nextProposalId={nextProposalId}
+                />
+              )}
+              {activeTab === 'donate' && (
+                <DonateTab 
+                  isConnected={isConnected} 
+                  amount={donateAmount}
+                  setAmount={setDonateAmount}
+                  note={donateNote}
+                  setNote={setDonateNote}
+                  onDonate={handleDonate}
+                />
+              )}
               {activeTab === 'history' && <HistoryTab />}
             </motion.div>
           </AnimatePresence>
         </div>
       </motion.main>
       <Footer />
+      
+      {isConfirming && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-zinc-900 p-6 rounded-xl border border-white/10 flex flex-col items-center gap-4">
+            <Loader2 className="w-10 h-10 text-pink-400 animate-spin" />
+            <p className="text-white font-medium">Confirming Transaction...</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -237,7 +294,7 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
   );
 }
 
-function OverviewTab() {
+function OverviewTab({ vaultBalance }: { vaultBalance: unknown }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* How It Works */}
@@ -307,7 +364,9 @@ function OverviewTab() {
       <div className="lg:col-span-2 bg-gradient-to-r from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-2xl p-8">
         <div className="text-center">
           <div className="text-gray-400 mb-2">Current Sanctum Balance</div>
-          <div className="text-5xl font-bold text-pink-400 mb-4">45,230 VFIDE</div>
+          <div className="text-5xl font-bold text-pink-400 mb-4">
+            {vaultBalance ? `${parseFloat(formatUnits(vaultBalance as bigint, 18)).toLocaleString()} VFIDE` : 'Loading...'}
+          </div>
           <div className="text-sm text-gray-400">Ready for disbursement to approved charities</div>
         </div>
       </div>
@@ -315,7 +374,7 @@ function OverviewTab() {
   );
 }
 
-function CharitiesTab() {
+function CharitiesTab({ charityCount }: { charityCount: unknown }) {
   const charities = [
     { name: 'Save the Children', category: 'Children', verified: true, totalReceived: 25000, status: 'active' },
     { name: 'Doctors Without Borders', category: 'Healthcare', verified: true, totalReceived: 18000, status: 'active' },
@@ -331,7 +390,9 @@ function CharitiesTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-[#F5F3E8]">Approved Charities</h2>
-        <div className="text-sm text-[#A0A0A5]">DAO-verified organizations</div>
+        <div className="text-sm text-[#A0A0A5]">
+          {charityCount ? `${(charityCount as bigint).toString()} DAO-verified organizations` : 'DAO-verified organizations'}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -373,7 +434,11 @@ function CharitiesTab() {
   );
 }
 
-function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
+function DisbursementsTab({ isConnected, onApprove, onExecute }: { 
+  isConnected: boolean;
+  onApprove: (id: number) => void;
+  onExecute: (id: number) => void;
+}) {
   const disbursements = [
     { id: 1, charity: 'Save the Children', amount: 5000, status: 'executed', approvals: '3/3', date: '2025-12-15' },
     { id: 2, charity: 'Doctors Without Borders', amount: 3000, status: 'pending', approvals: '2/3', date: '2025-12-18' },
@@ -417,8 +482,17 @@ function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
             </div>
             {d.status === 'pending' && isConnected && (
               <div className="mt-4 pt-4 border-t border-[#3A3A3F] flex gap-3">
-                <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold">
+                <button 
+                  onClick={() => onApprove(d.id)}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold"
+                >
                   Approve
+                </button>
+                <button 
+                  onClick={() => onExecute(d.id)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold"
+                >
+                  Execute
                 </button>
                 <button className="px-4 py-2 bg-[#3A3A3F] hover:bg-[#4A4A4F] text-[#F5F3E8] rounded-lg text-sm font-bold">
                   View Details
@@ -432,10 +506,14 @@ function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
   );
 }
 
-function DonateTab({ isConnected }: { isConnected: boolean }) {
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-
+function DonateTab({ isConnected, amount, setAmount, note, setNote, onDonate }: { 
+  isConnected: boolean;
+  amount: string;
+  setAmount: (val: string) => void;
+  note: string;
+  setNote: (val: string) => void;
+  onDonate: () => void;
+}) {
   if (!isConnected) {
     return (
       <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-12 text-center">
@@ -499,6 +577,7 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
           </div>
 
           <button
+            onClick={onDonate}
             disabled={!amount || parseFloat(amount) <= 0}
             className="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 disabled:from-gray-600 disabled:to-gray-600 text-white font-bold rounded-lg transition-all"
           >

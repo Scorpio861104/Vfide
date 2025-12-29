@@ -5,8 +5,8 @@
  * Enables wallet-independent vault search and recovery functionality
  */
 
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi';
-import { keccak256, toBytes, encodeFunctionData, Address } from 'viem';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { keccak256, toBytes, Address } from 'viem';
 import { useState, useCallback } from 'react';
 
 // Contract addresses (will be updated after deployment)

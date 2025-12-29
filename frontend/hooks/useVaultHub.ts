@@ -1,6 +1,5 @@
 import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi';
-import { isAddress, parseAbi } from 'viem';
-import { baseSepolia, base } from 'wagmi/chains';
+import { isAddress } from 'viem';
 import { VAULT_HUB_ABI } from '../lib/contracts';
 import { devLog } from '../lib/utils';
 import { IS_TESTNET, CURRENT_CHAIN_ID } from '../lib/testnet';

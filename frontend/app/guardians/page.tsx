@@ -5,7 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, Clock, CheckCircle2, AlertCircle, Key, Heart, UserPlus, UserMinus, RefreshCw, XCircle, ArrowRightCircle, Timer, Lock, Unlock, FileText, Settings, Sparkles } from "lucide-react";
+import { Shield, Users, Clock, CheckCircle2, AlertCircle, Key, Heart, UserPlus, UserMinus, RefreshCw, ArrowRightCircle, Timer, Lock, FileText } from "lucide-react";
 
 type TabType = 'overview' | 'my-guardians' | 'next-of-kin' | 'recovery' | 'responsibilities' | 'pending';
 

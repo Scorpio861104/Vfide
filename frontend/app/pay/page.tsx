@@ -28,7 +28,7 @@ function PayContent() {
       // Payment will be processed via smart contract
       showToast('Payment initiated - please confirm in your wallet', 'info');
       // Actual payment logic will use VFIDECommerce contract
-    } catch (error) {
+    } catch {
       showToast('Payment failed. Please try again.', 'error');
     } finally {
       setIsProcessing(false);

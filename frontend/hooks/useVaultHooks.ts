@@ -346,7 +346,7 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
     }
   })
 
-  const tx = pendingTx as any[] | undefined
+  const tx = pendingTx as [string, bigint, bigint, boolean, boolean] | undefined
 
   return {
     pendingTx: tx ? {

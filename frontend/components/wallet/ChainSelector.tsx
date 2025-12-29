@@ -22,14 +22,14 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
     for (const chain of chains) {
       const network = IS_TESTNET ? chain.testnet : chain.mainnet
       if (network.id === chainId) {
-        setSelectedChain(chain.id)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedChain(prev => prev !== chain.id ? chain.id : prev)
         break
       }
     }
   }, [chainId])
 
   const handleSelect = async (chain: SupportedChain) => {
-    const config = CHAINS[chain]
     const network = getChainNetwork(chain)
     
     setSelectedChain(chain)

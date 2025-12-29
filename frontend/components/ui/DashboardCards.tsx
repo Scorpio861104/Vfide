@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 

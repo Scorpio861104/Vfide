@@ -26,19 +26,24 @@ export function NetworkWarning() {
   
   // Check localStorage on mount
   useEffect(() => {
-    const dismissedUntil = localStorage.getItem(DISMISS_KEY);
-    if (dismissedUntil && Date.now() < parseInt(dismissedUntil)) {
-      setDismissed(true);
-    } else {
-      setDismissed(false);
-    }
+    const timer = setTimeout(() => {
+      const dismissedUntil = localStorage.getItem(DISMISS_KEY);
+      if (dismissedUntil && Date.now() < parseInt(dismissedUntil)) {
+        setDismissed(prev => prev !== true ? true : prev);
+      } else {
+        setDismissed(prev => prev !== false ? false : prev);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Clear dismissal when user switches to correct chain
   useEffect(() => {
     if (chainId === expectedChainId) {
       localStorage.removeItem(DISMISS_KEY);
-      setDismissed(false);
+      setTimeout(() => {
+        setDismissed(prev => prev !== false ? false : prev);
+      }, 0);
     }
   }, [chainId, expectedChainId]);
 

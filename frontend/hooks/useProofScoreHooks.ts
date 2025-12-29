@@ -98,7 +98,7 @@ export function useScoreBreakdown(address?: `0x${string}`) {
     }
   })
   
-  const info = data as any[] | undefined
+  const info = data as [bigint, bigint, bigint, bigint, bigint, bigint] | undefined
 
   return {
     breakdown: info ? {

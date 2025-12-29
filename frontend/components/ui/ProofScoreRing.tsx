@@ -44,7 +44,7 @@ export function ProofScoreRing({ score, size = "md", showLabel = true, className
     // Animate the number
     const duration = 1500;
     const startTime = Date.now();
-    let startScore = displayScore;
+    const startScore = displayScore;
     
     const animate = () => {
       const elapsed = Date.now() - startTime;

@@ -20,17 +20,38 @@ interface TransactionSuccessProps {
   type?: 'payment' | 'vote' | 'stake' | 'badge' | 'escrow'
 }
 
+interface ConfettiParticle {
+  id: number;
+  color: string;
+  x: number;
+  delay: number;
+  duration: number;
+  size: number;
+  rotateDir: number;
+  borderRadius: string;
+}
+
 // Confetti particle component
 function Confetti() {
-  const colors = ['#00F0FF', '#FFD700', '#50C878', '#FF6B6B', '#A78BFA', '#0080FF']
-  const particles = Array.from({ length: 50 }, (_, i) => ({
-    id: i,
-    color: colors[Math.floor(Math.random() * colors.length)],
-    x: Math.random() * 100,
-    delay: Math.random() * 0.5,
-    duration: 2 + Math.random() * 2,
-    size: 6 + Math.random() * 8,
-  }))
+  const [particles, setParticles] = useState<ConfettiParticle[]>([])
+
+  useEffect(() => {
+    const colors = ['#00F0FF', '#FFD700', '#50C878', '#FF6B6B', '#A78BFA', '#0080FF']
+    const newParticles = Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      x: Math.random() * 100,
+      delay: Math.random() * 0.5,
+      duration: 2 + Math.random() * 2,
+      size: 6 + Math.random() * 8,
+      rotateDir: Math.random() > 0.5 ? 1 : -1,
+      borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+    }))
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setParticles(newParticles)
+  }, [])
+
+  if (particles.length === 0) return null
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -45,7 +66,7 @@ function Confetti() {
           }}
           animate={{ 
             y: '100vh', 
-            rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
+            rotate: 360 * p.rotateDir,
             opacity: 0 
           }}
           transition={{ 
@@ -58,7 +79,7 @@ function Confetti() {
             width: p.size,
             height: p.size,
             backgroundColor: p.color,
-            borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+            borderRadius: p.borderRadius,
           }}
         />
       ))}
@@ -71,16 +92,12 @@ export function TransactionSuccess({
   onClose,
   txHash,
   amount,
-  recipient,
   scoreIncrease = 5,
   badgeUnlocked,
   type = 'payment'
 }: TransactionSuccessProps) {
-  const [showConfetti, setShowConfetti] = useState(false)
-
   useEffect(() => {
     if (isOpen) {
-      setShowConfetti(true)
       // Auto-close after 5 seconds
       const timeout = setTimeout(() => {
         onClose()
@@ -119,7 +136,7 @@ export function TransactionSuccess({
           onClick={onClose}
         >
           {/* Confetti */}
-          {showConfetti && <Confetti />}
+          <Confetti />
 
           {/* Success Card */}
           <motion.div

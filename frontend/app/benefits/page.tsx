@@ -198,7 +198,31 @@ function OverviewTab() {
         <h2 className="text-3xl font-bold text-[#F5F3E8] mb-4">Active Participation Benefits</h2>
         <p className="text-[#A0A0A5] max-w-2xl mx-auto">
           VFIDE rewards active participation through governance voting, merchant transactions,
-          and community engagement. Build your ProofScore through positive actions to unlock fee discounts.
+        </p>
+      </div>
+
+      {/* Benefits Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {benefits.map((benefit, idx) => (
+          <GlassCard key={idx} className="p-6" gradient="from-white/[0.05] to-white/[0.01]">
+            <div className="flex items-start gap-4">
+              <div 
+                className="p-3 rounded-xl bg-white/5"
+                style={{ color: benefit.color }}
+              >
+                <benefit.icon className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">{benefit.title}</h3>
+                <p className="text-sm text-gray-400">{benefit.description}</p>
+              </div>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+    </div>
+  );
+}          and community engagement. Build your ProofScore through positive actions to unlock fee discounts.
         </p>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { 
   Search, Shield, Key, Mail, User, Users,
@@ -74,14 +74,37 @@ function AuroraBackground() {
 // FLOATING PARTICLES
 // ═══════════════════════════════════════════════════════════════════════════════
 
+interface Particle {
+  id: number;
+  x: number;
+  duration: number;
+  delay: number;
+}
+
 function FloatingParticles() {
+  const [particles, setParticles] = useState<Particle[]>([]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParticles([...Array(15)].map((_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        duration: Math.random() * 15 + 15,
+        delay: Math.random() * 10
+      })));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (particles.length === 0) return null;
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {[...Array(15)].map((_, i) => (
+      {particles.map((p) => (
         <motion.div
-          key={i}
+          key={p.id}
           initial={{ 
-            x: `${Math.random() * 100}%`,
+            x: `${p.x}%`,
             y: '110%',
             opacity: 0
           }}
@@ -90,9 +113,9 @@ function FloatingParticles() {
             opacity: [0, 0.6, 0]
           }}
           transition={{ 
-            duration: Math.random() * 15 + 15,
+            duration: p.duration,
             repeat: Infinity,
-            delay: Math.random() * 10,
+            delay: p.delay,
             ease: "linear"
           }}
           className="absolute w-1 h-1 bg-cyan-400/40 rounded-full"
@@ -788,7 +811,6 @@ function ClaimFlowModal({
 }
 
 export default function VaultRecoveryPage() {
-  const { isConnected, address } = useAccount();
   const [searchMethod, setSearchMethod] = useState<"recoveryId" | "email" | "username" | "guardian">("recoveryId");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);

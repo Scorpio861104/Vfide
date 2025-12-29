@@ -2,7 +2,7 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useBalance, useGasPrice } from "wagmi";
 import { parseUnits, formatUnits, isAddress, formatEther } from "viem";
@@ -162,8 +162,15 @@ export default function TokenLaunchPage() {
   const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending } = useWriteContract();
   const { isLoading: isApproveConfirming, isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({ hash: approveHash });
 
+  useEffect(() => {
+    if (isApproveSuccess) {
+      showToast("Approval successful! You can now complete your purchase.", "success");
+    }
+  }, [isApproveSuccess, showToast]);
+
   // Gas price for fee estimate
   const { data: gasPrice } = useGasPrice();
+  const { data: ethBalance } = useBalance({ address });
   const estimatedGas = BigInt(150000); // Typical presale tx gas
   const gasCostWei = gasPrice ? estimatedGas * gasPrice : BigInt(0);
   const gasCostEth = parseFloat(formatEther(gasCostWei));
@@ -308,6 +315,7 @@ export default function TokenLaunchPage() {
       commitment: "180 days (mandatory)",
       immediateUnlock: "10%",
       supply: "10,000,000 VFIDE",
+      remaining: foundingRemaining,
       maxPurchase: "500,000 VFIDE",
       color: "#FFD700",
       features: [
@@ -326,6 +334,7 @@ export default function TokenLaunchPage() {
       commitment: "90 days (mandatory)",
       immediateUnlock: "20%",
       supply: "10,000,000 VFIDE",
+      remaining: oathRemaining,
       maxPurchase: "500,000 VFIDE",
       color: "#00F0FF",
       features: [
@@ -344,6 +353,7 @@ export default function TokenLaunchPage() {
       commitment: "Optional",
       immediateUnlock: "Varies",
       supply: "15,000,000 VFIDE",
+      remaining: publicRemaining,
       maxPurchase: "500,000 VFIDE",
       color: "#0080FF",
       features: [
@@ -438,6 +448,44 @@ export default function TokenLaunchPage() {
                 </p>
               </motion.div>
 
+              {/* User Participation Stats */}
+              {userInfo && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6"
+                >
+                  <h3 className="text-lg font-bold text-white mb-4 text-center">Your Participation</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-cyan-400">
+                        {parseFloat(formatUnits((userInfo as readonly [bigint, bigint, bigint, bigint])[0], 18)).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-400">Total Purchased</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-cyan-400">
+                        {parseFloat(formatUnits((userInfo as readonly [bigint, bigint, bigint, bigint])[1], 18)).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-400">Total Claimed</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-cyan-400">
+                        {parseFloat(formatUnits((userInfo as readonly [bigint, bigint, bigint, bigint])[2], 18)).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-400">Referral Bonus</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-cyan-400">
+                        {(userInfo as readonly [bigint, bigint, bigint, bigint])[3].toString()}
+                      </div>
+                      <div className="text-xs text-gray-400">Transactions</div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Clean Legal Notice */}
               <div className="mt-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
                 <p className="text-sm text-gray-400 leading-relaxed">
@@ -508,6 +556,12 @@ export default function TokenLaunchPage() {
                     <div className="flex justify-between text-sm p-2 bg-white/5 rounded-lg">
                       <span className="text-gray-400">Immediate Unlock:</span>
                       <span className="text-white font-bold">{tier.immediateUnlock}</span>
+                    </div>
+                    <div className="flex justify-between text-sm p-2 bg-white/5 rounded-lg">
+                      <span className="text-gray-400">Remaining:</span>
+                      <span className="text-white font-bold">
+                        {tier.remaining ? parseFloat(formatUnits(tier.remaining as bigint, 18)).toLocaleString() : tier.supply}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm p-2 bg-white/5 rounded-lg">
                       <span className="text-gray-400">Max Purchase:</span>
@@ -802,7 +856,7 @@ export default function TokenLaunchPage() {
                     {[
                       { id: 'usdc' as const, label: 'USDC', color: '#2775CA', disabled: !STABLECOINS_AVAILABLE },
                       { id: 'usdt' as const, label: 'USDT', color: '#26A17B', disabled: !STABLECOINS_AVAILABLE },
-                      { id: 'eth' as const, label: 'ETH', color: '#627EEA', disabled: false },
+                      { id: 'eth' as const, label: 'ETH', color: '#627EEA', disabled: false, balance: ethBalance },
                     ].map((method) => (
                       <motion.button
                         key={method.id}
@@ -819,6 +873,11 @@ export default function TokenLaunchPage() {
                         }`}
                       >
                         <div className="text-lg font-bold text-white">{method.label}</div>
+                        {method.id === 'eth' && method.balance && (
+                          <div className="text-xs text-gray-400">
+                            {parseFloat(method.balance.formatted).toFixed(4)} {method.balance.symbol}
+                          </div>
+                        )}
                         {method.disabled && <div className="text-xs text-gray-500">Coming Soon</div>}
                       </motion.button>
                     ))}

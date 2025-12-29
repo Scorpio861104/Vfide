@@ -7,6 +7,7 @@ import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 // DAO Contract ABI
 const DAO_ABI = [
@@ -79,13 +80,53 @@ export default function GovernancePage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
-  const { address, isConnected } = useAccount();
+  const { address } = useAccount();
+  const { toast } = useToast();
   const { score } = useProofScore();
   const { proposalCount } = useDAOProposals();
 
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast({
+        title: "Transaction Successful",
+        description: "Your transaction has been confirmed.",
+        variant: "default",
+      });
+    }
+  }, [isSuccess, toast]);
+
+  const handleVote = (proposalId: bigint, support: boolean) => {
+    writeContract({
+      address: DAO_ADDRESS,
+      abi: DAO_ABI,
+      functionName: 'vote',
+      args: [proposalId, support],
+    });
+  };
+
+  const handlePropose = (targets: `0x${string}`[], values: bigint[], calldatas: `0x${string}`[], description: string) => {
+    if (targets.length > 0) {
+        writeContract({
+            address: DAO_ADDRESS,
+            abi: DAO_ABI,
+            functionName: 'propose',
+            args: [0, targets[0], values[0], calldatas[0], description],
+        });
+    }
+  };
+  
+  const handleFinalize = (proposalId: bigint) => {
+    writeContract({
+      address: DAO_ADDRESS,
+      abi: DAO_ABI,
+      functionName: 'finalize',
+      args: [proposalId],
+    });
+  };
 
   // Read active proposals
   const { data: activeProposalIds } = useReadContract({
@@ -118,39 +159,30 @@ export default function GovernancePage() {
     args: address ? [address] : undefined,
   });
 
-  // Vote handler
-  const handleVote = (proposalId: number, support: boolean) => {
-    writeContract({
-      address: DAO_ADDRESS,
-      abi: DAO_ABI,
-      functionName: 'vote',
-      args: [BigInt(proposalId), support],
-    });
-  };
 
-  // Finalize handler
-  const handleFinalize = (proposalId: number) => {
-    writeContract({
-      address: DAO_ADDRESS,
-      abi: DAO_ABI,
-      functionName: 'finalize',
-      args: [BigInt(proposalId)],
-    });
-  };
-
-  // Create proposal handler
-  const handlePropose = (ptype: number, target: string, value: bigint, data: string, description: string) => {
-    writeContract({
-      address: DAO_ADDRESS,
-      abi: DAO_ABI,
-      functionName: 'propose',
-      args: [ptype, target as `0x${string}`, value, data as `0x${string}`, description],
-    });
-  };
   
   return (
     <>
       <GlobalNav />
+      
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {(isPending || isConfirming) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          >
+            <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-8 flex flex-col items-center gap-4">
+              <Loader2 className="w-12 h-12 text-[#00F0FF] animate-spin" />
+              <div className="text-xl font-bold text-white">
+                {isPending ? 'Confirm in Wallet...' : 'Processing Transaction...'}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
@@ -302,9 +334,9 @@ export default function GovernancePage() {
           </div>
         </section>
 
-        {activeTab === 'overview' && <OverviewTab score={score} proposalCount={proposalCount} />}
-        {activeTab === 'proposals' && <ProposalsTab searchQuery={searchQuery} />}
-        {activeTab === 'create' && <CreateProposalTab />}
+        {activeTab === 'overview' && <OverviewTab score={score} proposalCount={proposalCount} votingPowerData={votingPower} voterStats={voterStats} isEligible={isEligible} />}
+        {activeTab === 'proposals' && <ProposalsTab searchQuery={searchQuery} activeProposalIds={activeProposalIds} onVote={handleVote} onFinalize={handleFinalize} />}
+        {activeTab === 'create' && <CreateProposalTab onPropose={handlePropose} />}
         {activeTab === 'council' && <CouncilTab />}
         {activeTab === 'suggestions' && <SuggestionsTab />}
         {activeTab === 'discussions' && <DiscussionsTab searchQuery={searchQuery} />}
@@ -318,9 +350,26 @@ export default function GovernancePage() {
   );
 }
 
-function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?: number }) {
+function OverviewTab({ 
+  score, 
+  proposalCount,
+  votingPowerData,
+  voterStats,
+  isEligible
+}: { 
+  score?: number; 
+  proposalCount?: number;
+  votingPowerData?: unknown;
+  voterStats?: unknown;
+  isEligible?: unknown;
+}) {
   const { address } = useAccount();
-  const votingPower = score || 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const votingPower = (votingPowerData as any)?.[2] ? Number((votingPowerData as any)[2]) : (score || 0);
+  const isEligibleBool = (isEligible as boolean) || false;
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const votesCast = (voterStats as any)?.[0] ? Number((voterStats as any)[0]) : 0;
   
   return (
     <>
@@ -346,7 +395,15 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
                   <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">{votingPower}</div>
                   <div className="text-gray-500 text-sm mt-1">Based on ProofScore</div>
                   <div className="mt-3 text-xs text-emerald-400 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" /> Eligible to vote
+                    {isEligibleBool ? (
+                      <>
+                        <Sparkles className="w-3 h-3" /> Eligible to vote
+                      </>
+                    ) : (
+                      <>
+                        <X className="w-3 h-3" /> Not eligible
+                      </>
+                    )}
                   </div>
                 </>
               ) : (
@@ -383,10 +440,10 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
                   <Users className="w-4 h-4 text-emerald-400" />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-white">87%</div>
-              <div className="text-gray-500 text-sm mt-1">12 of 14 votes</div>
+              <div className="text-3xl font-bold text-white">{votesCast}</div>
+              <div className="text-gray-500 text-sm mt-1">Votes Cast</div>
               <div className="mt-3 text-xs text-emerald-400 flex items-center gap-1">
-                <ChevronRight className="w-3 h-3" /> Above average
+                <ChevronRight className="w-3 h-3" /> Keep voting!
               </div>
             </motion.div>
             
@@ -491,10 +548,23 @@ function DeadlineCard({ id, title, hoursRemaining, voted }: { id: number; title:
   );
 }
 
-function ProposalsTab({ searchQuery }: { searchQuery: string }) {
+function ProposalsTab({ 
+  searchQuery,
+  activeProposalIds,
+  onVote,
+  onFinalize
+}: { 
+  searchQuery: string;
+  activeProposalIds?: bigint[];
+  onVote?: (proposalId: bigint, support: boolean) => void;
+  onFinalize?: (proposalId: bigint) => void;
+}) {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
   const [baseTime] = useState(() => Date.now());
+  
+  // Use activeProposalIds to filter or enhance the proposals list if needed
+  // For now, we'll keep the mock data but this is where you'd fetch real proposal data
   
   const filteredProposals = useMemo(() => {
     const now = baseTime;
@@ -565,6 +635,11 @@ function ProposalsTab({ searchQuery }: { searchQuery: string }) {
             {filteredProposals.length === 0 ? (
               <div className="text-center py-12 text-[#A0A0A5]">
                 No proposals found matching your search.
+                {activeProposalIds && activeProposalIds.length > 0 && (
+                    <div className="mt-4 text-sm text-gray-600">
+                        (Debug) Active on-chain IDs: {activeProposalIds.map(id => id.toString()).join(', ')}
+                    </div>
+                )}
               </div>
             ) : null}
             {filteredProposals.map(prop => {
@@ -600,12 +675,26 @@ function ProposalsTab({ searchQuery }: { searchQuery: string }) {
                   </div>
                   
                   <div className="flex gap-3">
-                    <button className="flex-1 px-4 py-2 bg-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#50C878]/90">
+                    <button 
+                      onClick={() => onVote?.(BigInt(prop.id), true)}
+                      className="flex-1 px-4 py-2 bg-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#50C878]/90"
+                    >
                       Vote FOR
                     </button>
-                    <button className="flex-1 px-4 py-2 bg-[#C41E3A] text-[#F5F3E8] rounded-lg font-bold hover:bg-[#C41E3A]/90">
+                    <button 
+                      onClick={() => onVote?.(BigInt(prop.id), false)}
+                      className="flex-1 px-4 py-2 bg-[#C41E3A] text-[#F5F3E8] rounded-lg font-bold hover:bg-[#C41E3A]/90"
+                    >
                       Vote AGAINST
                     </button>
+                    {onFinalize && baseTime > prop.endTime && (
+                      <button
+                        onClick={() => onFinalize(BigInt(prop.id))}
+                        className="px-4 py-2 bg-purple-500 text-white rounded-lg font-bold hover:bg-purple-600"
+                      >
+                        Finalize
+                      </button>
+                    )}
                     <button
                       onClick={() => setSelectedProposal(prop)}
                       className="px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] text-[#A0A0A5] rounded-lg hover:text-[#00F0FF] hover:border-[#00F0FF]"
@@ -1937,8 +2026,12 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
 }
 
 // ========== CREATE PROPOSAL TAB ==========
-function CreateProposalTab() {
-  const { address, isConnected } = useAccount();
+function CreateProposalTab({
+  onPropose
+}: {
+  onPropose?: (targets: `0x${string}`[], values: bigint[], calldatas: `0x${string}`[], description: string) => void;
+}) {
+  const { isConnected } = useAccount();
   const { score } = useProofScore();
   const [proposalType, setProposalType] = useState<'parameter' | 'treasury' | 'upgrade' | 'other'>('parameter');
   const [formData, setFormData] = useState({
@@ -1959,10 +2052,33 @@ function CreateProposalTab() {
     if (!canCreate || !isConnected) return;
     
     setIsSubmitting(true);
-    // In production: call DAO.propose(targets, values, calldatas, description)
-    await new Promise(r => setTimeout(r, 2000));
-    setIsSubmitting(false);
-    alert('Proposal submitted! It will appear in Active Proposals after confirmation.');
+    
+    try {
+      if (onPropose) {
+        // Construct proposal data based on type
+        const targets: `0x${string}`[] = [];
+        const values: bigint[] = [];
+        const calldatas: `0x${string}`[] = [];
+        
+        // This is a simplified example - in a real app you'd parse the form data
+        // to build the actual proposal transaction
+        if (formData.targetContract) {
+          targets.push(formData.targetContract as `0x${string}`);
+          values.push(0n);
+          calldatas.push((formData.calldata as `0x${string}`) || '0x');
+        }
+        
+        onPropose(targets, values, calldatas, formData.description);
+      } else {
+        // Fallback for demo
+        await new Promise(r => setTimeout(r, 2000));
+        alert('Proposal submitted! It will appear in Active Proposals after confirmation.');
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isConnected) {
@@ -2150,7 +2266,7 @@ function CreateProposalTab() {
 
 // ========== COUNCIL TAB ==========
 function CouncilTab() {
-  const { isConnected, address } = useAccount();
+  const { isConnected } = useAccount();
   const { score } = useProofScore();
   const [activeSection, setActiveSection] = useState<'members' | 'candidates' | 'register'>('members');
   const [isRegistering, setIsRegistering] = useState(false);

@@ -8,7 +8,7 @@ import { TransactionHistory } from "@/components/vault/TransactionHistory";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAccount } from "wagmi";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { isAddress } from "viem";
 import { devLog } from "@/lib/utils";
 import { useVaultBalance, useSelfPanic, useQuarantineStatus, useCanSelfPanic, useProofScore } from "@/lib/vfide-hooks";
@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Shield, AlertTriangle, Lock, Clock, Plus, UserPlus, Users, Key, 
   Heart, ArrowDownToLine, ArrowUpFromLine, RefreshCw, CheckCircle2,
-  Sparkles, Zap, ChevronRight, DollarSign, TrendingUp
+  Zap, ChevronRight, DollarSign, TrendingUp
 } from "lucide-react";
 
 // Animation variants
@@ -57,6 +57,7 @@ function GlassCard({ children, className = "", hover = true, gradient }: {
 
 // Compact security section with Panic Button
 function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
+  const { toast } = useToast();
   const quarantineData = useQuarantineStatus(vaultAddress || undefined);
   const panicData = useCanSelfPanic();
   const { selfPanic, isPanicking, isSuccess, isAvailable: isPanicAvailable } = useSelfPanic();
@@ -69,6 +70,22 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
     const interval = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 60000);
     return () => clearInterval(interval);
   }, []);
+
+  const successHandled = useRef(false);
+
+  useEffect(() => {
+    if (isSuccess && !successHandled.current) {
+      setTimeout(() => setShowPanicConfirm(false), 0);
+      toast({
+        title: "Panic Mode Activated",
+        description: "Your vault has been locked for security.",
+        variant: "destructive",
+      });
+      successHandled.current = true;
+    } else if (!isSuccess) {
+      successHandled.current = false;
+    }
+  }, [isSuccess, toast]);
   
   const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now);
   const isQuarantined = quarantineRemaining > 0;
@@ -227,7 +244,7 @@ function VaultContent() {
   const [newKinAddress, setNewKinAddress] = useState("");
   const [newGuardianAddress, setNewGuardianAddress] = useState("");
   const [recoveryAddress, setRecoveryAddress] = useState("");
-  
+
   const handleSetNextOfKin = async () => {
     if (!isAddress(newKinAddress)) {
       showToast("Invalid address format", "error");
@@ -257,8 +274,8 @@ function VaultContent() {
       showToast("Failed to add guardian", "error");
     }
   };
-  
-  const handleRequestRecovery = async () => {
+
+  const handleRequestRecovery = useCallback(async () => {
     if (!isAddress(recoveryAddress)) {
       showToast("Invalid address format", "error");
       return;
@@ -271,7 +288,20 @@ function VaultContent() {
       devLog.error('Failed to request recovery:', error);
       showToast("Failed to request recovery", "error");
     }
-  };
+  }, [recoveryAddress, requestRecovery, showToast]);
+
+  // Debug logging for unused recovery variables
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Vault Recovery Debug:', {
+        recoveryStatus,
+        approveRecovery,
+        finalizeRecovery,
+        cancelRecovery,
+        handleRequestRecovery
+      });
+    }
+  }, [recoveryStatus, approveRecovery, finalizeRecovery, cancelRecovery, handleRequestRecovery]);
   
   return (
     <>
@@ -360,14 +390,14 @@ function VaultContent() {
               </GlassCard>
             )}
             
-            {(!address && (
+            {!address && (
               <GlassCard className="p-6 border-red-500/30" gradient="red" hover={false}>
                 <div className="text-center py-4">
                   <p className="text-red-400 font-bold mb-2">Wallet Not Connected</p>
                   <p className="text-white/60">Please connect your wallet to view your vault</p>
                 </div>
               </GlassCard>
-            )) as any}
+            )}
             
             {/* Feature Cards */}
             {hasVault && (
@@ -402,7 +432,7 @@ function VaultContent() {
               </motion.div>
             )}
           </div>
-        </div> as any}
+        </div>}
 
         {hasVault && (
           <>

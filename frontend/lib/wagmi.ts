@@ -13,9 +13,9 @@ import { IS_TESTNET } from './chains'
 
 // Create noopStorage for SSR to avoid hydration mismatches
 const noopStorage = {
-  getItem: (_key: string) => null,
-  setItem: (_key: string, _value: string) => {},
-  removeItem: (_key: string) => {},
+  getItem: (_key: string) => null, // eslint-disable-line @typescript-eslint/no-unused-vars
+  setItem: (_key: string, _value: string) => {}, // eslint-disable-line @typescript-eslint/no-unused-vars
+  removeItem: (_key: string) => {}, // eslint-disable-line @typescript-eslint/no-unused-vars
 }
 
 // WalletConnect Project ID - required for WalletConnect v2

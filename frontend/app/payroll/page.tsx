@@ -18,12 +18,14 @@ import {
   Timer,
   Zap,
   ArrowDownToLine,
-  Loader2
+  Loader2,
+  X
 } from 'lucide-react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { formatUnits, parseUnits, isAddress } from 'viem'
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
+import { useToast } from "@/components/ui/toast"
 
 // PayrollManager ABI
 const PAYROLL_MANAGER_ABI = [
@@ -116,6 +118,7 @@ type RoleType = 'employee' | 'employer'
 
 export default function PayrollPage() {
   const { address, isConnected } = useAccount()
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState<TabId>('receiving')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [currentTime, setCurrentTime] = useState(Date.now())
@@ -131,6 +134,18 @@ export default function PayrollPage() {
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast({
+        title: "Transaction Successful",
+        description: "Your transaction has been confirmed.",
+        variant: "default",
+      });
+      setShowCreateModal(false);
+      setActionLoading(null);
+    }
+  }, [isSuccess, toast]);
 
   // Read payer streams
   const { data: payerStreamIds } = useReadContract({
@@ -274,8 +289,14 @@ export default function PayrollPage() {
   const activeStreamCount = filteredStreams.filter(s => !s.paused).length
   const pausedStreamCount = filteredStreams.filter(s => s.paused).length
 
+  // Debug: Log stream IDs
+  useEffect(() => {
+    if (payerStreamIds) console.log('Payer Streams:', payerStreamIds)
+    if (payeeStreamIds) console.log('Payee Streams:', payeeStreamIds)
+  }, [payerStreamIds, payeeStreamIds])
+
   const formatAmount = (amount: bigint): string => {
-    return (Number(amount) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })
+    return Number(formatUnits(amount, 18)).toLocaleString(undefined, { maximumFractionDigits: 2 })
   }
 
   const formatRate = (ratePerSecond: bigint): string => {
@@ -300,19 +321,47 @@ export default function PayrollPage() {
     <>
       <GlobalNav />
       
-      {/* Premium background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.15),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.08),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
-      </div>
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {(isPending || isConfirming) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          >
+            <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-8 flex flex-col items-center gap-4">
+              <Loader2 className="w-12 h-12 text-[#00F0FF] animate-spin" />
+              <div className="text-xl font-bold text-white">
+                {isPending ? 'Confirm in Wallet...' : 'Processing Transaction...'}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <motion.main 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="min-h-screen pt-24 pb-16"
-      >
+      {!IS_PAYROLL_DEPLOYED ? (
+        <div className="min-h-screen bg-[#0A0A0B] flex items-center justify-center">
+            <div className="text-center p-8 bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl">
+                <h2 className="text-2xl font-bold text-white mb-4">Payroll Manager Not Deployed</h2>
+                <p className="text-gray-400">The Payroll Manager contract is not yet available on this network.</p>
+            </div>
+        </div>
+      ) : (
+        <>
+          {/* Premium background */}
+          <div className="fixed inset-0 -z-10">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.15),transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.08),transparent_50%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+          </div>
+
+          <motion.main 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen pt-24 pb-16"
+          >
         {/* Hero */}
         <section className="relative py-12 overflow-hidden">
           <div className="container mx-auto px-4 relative z-10">
@@ -580,6 +629,7 @@ export default function PayrollPage() {
                           )}
                           
                           {role === 'employer' && (
+                            <>
                             <motion.button
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
@@ -594,6 +644,21 @@ export default function PayrollPage() {
                               )}
                               Top Up
                             </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handleCancelStream(stream.id)}
+                              disabled={actionLoading === `cancel-${stream.id}`}
+                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-red-400 rounded-xl font-medium border border-red-500/30 hover:bg-red-500/10 transition-all disabled:opacity-50"
+                            >
+                              {actionLoading === `cancel-${stream.id}` ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <X className="w-4 h-4" />
+                              )}
+                              Cancel
+                            </motion.button>
+                            </>
                           )}
                           
                           {stream.paused ? (
@@ -855,6 +920,8 @@ export default function PayrollPage() {
         )}
       </AnimatePresence>
       </motion.main>
+      </>
+      )}
       <Footer />
     </>
   )

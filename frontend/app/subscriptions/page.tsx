@@ -40,11 +40,21 @@ interface Subscription {
 
 export default function SubscriptionsPage() {
   const { address, isConnected } = useAccount();
-  const { showToast } = useToast();
+  const { toast } = useToast();
   
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast({
+        title: "Transaction Successful",
+        description: "Your transaction has been confirmed.",
+        variant: "default",
+      });
+    }
+  }, [isSuccess, toast]);
 
   // Read user subscriptions
   const { data: userSubIds } = useReadContract({
@@ -58,7 +68,7 @@ export default function SubscriptionsPage() {
   // Contract action handlers
   const handlePause = (id: number) => {
     if (!isConnected) {
-      showToast("Please connect your wallet", "error");
+      toast({ title: "Error", description: "Please connect your wallet", variant: "destructive" });
       return;
     }
     writeContract({
@@ -71,7 +81,7 @@ export default function SubscriptionsPage() {
 
   const handleResume = (id: number) => {
     if (!isConnected) {
-      showToast("Please connect your wallet", "error");
+      toast({ title: "Error", description: "Please connect your wallet", variant: "destructive" });
       return;
     }
     writeContract({
@@ -84,7 +94,7 @@ export default function SubscriptionsPage() {
 
   const handleCancel = (id: number) => {
     if (!isConnected) {
-      showToast("Please connect your wallet", "error");
+      toast({ title: "Error", description: "Please connect your wallet", variant: "destructive" });
       return;
     }
     writeContract({
@@ -96,11 +106,44 @@ export default function SubscriptionsPage() {
   };
 
   // Display mock or empty subscriptions for now
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptions] = useState<Subscription[]>([
+    {
+        id: 1,
+        name: "Premium Plan",
+        merchant: "0x123...abc",
+        amount: "50 VFIDE",
+        frequency: "Monthly",
+        nextPayment: "2023-12-01",
+        status: "Active"
+    }
+  ]);
+
+  // Helpers
+  const formatAmount = (amount: bigint) => formatUnits(amount, 18);
+  const parseAmount = (amount: string) => parseUnits(amount, 18);
+
+  // Debug: Log userSubIds
+  if (userSubIds) {
+    console.log('User Subscriptions:', userSubIds);
+    console.log('Token Address:', VFIDE_TOKEN_ADDRESS);
+    console.log('Formatted 1 VFIDE:', formatAmount(parseAmount('1')));
+  }
 
   return (
     <>
       <GlobalNav />
+      
+      {/* Loading Overlay */}
+      {(isPending || isConfirming) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-8 flex flex-col items-center gap-4">
+              <Loader2 className="w-12 h-12 text-[#00F0FF] animate-spin" />
+              <div className="text-xl font-bold text-white">
+                {isPending ? 'Confirm in Wallet...' : 'Processing Transaction...'}
+              </div>
+            </div>
+          </div>
+      )}
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Header */}

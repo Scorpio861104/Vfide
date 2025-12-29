@@ -202,6 +202,7 @@ export function Confetti({ trigger, colors = ["#00F0FF", "#00FF88", "#FFD700", "
         rotation: Math.random() * 360,
         scale: Math.random() * 0.5 + 0.5
       }));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setParticles(newParticles);
       
       const timeout = setTimeout(() => setParticles([]), 2000);
@@ -266,6 +267,7 @@ export function Counter({ value, duration = 1500, prefix = "", suffix = "", clas
     };
     
     requestAnimationFrame(animate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, duration]);
   
   return (
