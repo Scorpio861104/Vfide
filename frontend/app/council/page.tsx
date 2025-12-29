@@ -56,7 +56,7 @@ type TabType = 'overview' | 'members' | 'salary' | 'voting';
 
 export default function CouncilPage() {
   const { address, isConnected } = useAccount();
-  const { toast } = useToast();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   // Contract write hooks
@@ -65,13 +65,9 @@ export default function CouncilPage() {
 
   useEffect(() => {
     if (isSuccess) {
-      toast({
-        title: "Transaction Successful",
-        description: "Your transaction has been confirmed on the blockchain.",
-        variant: "default",
-      });
+      showToast("Transaction Successful: Your transaction has been confirmed on the blockchain.", "success");
     }
-  }, [isSuccess, toast]);
+  }, [isSuccess, showToast]);
 
   // Read council members
   const { data: councilMembers } = useReadContract({
