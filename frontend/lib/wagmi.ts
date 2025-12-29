@@ -7,9 +7,13 @@ import {
   zkSync,
   zkSyncSepoliaTestnet,
 } from 'wagmi/chains'
-import { getDefaultWallets, connectorsForWallets } from '@rainbow-me/rainbowkit'
+import { connectorsForWallets } from '@rainbow-me/rainbowkit'
 import {
   injectedWallet,
+  rainbowWallet,
+  metaMaskWallet,
+  coinbaseWallet,
+  walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets'
 import { IS_TESTNET } from './chains'
 
@@ -77,17 +81,21 @@ const wagmiStorage = createStorage({
 // ========================================
 // WALLET CONNECTORS
 // ========================================
-// Use getDefaultWallets for reliable wallet detection + injectedWallet for browser extensions
 
-const { wallets } = getDefaultWallets()
+const wallets = [
+  injectedWallet,
+  rainbowWallet,
+  metaMaskWallet,
+  coinbaseWallet,
+  walletConnectWallet,
+]
 
 const testnetConnectors = connectorsForWallets(
   [
     {
-      groupName: 'Installed',
-      wallets: [injectedWallet],
+      groupName: 'Recommended',
+      wallets,
     },
-    ...wallets,
   ],
   {
     appName,
@@ -98,10 +106,9 @@ const testnetConnectors = connectorsForWallets(
 const mainnetConnectors = connectorsForWallets(
   [
     {
-      groupName: 'Installed',
-      wallets: [injectedWallet],
+      groupName: 'Recommended',
+      wallets,
     },
-    ...wallets,
   ],
   {
     appName,
