@@ -18,6 +18,7 @@ import {
 type TabType = 'overview' | 'gateway' | 'fiat' | 'finance';
 
 export default function EnterprisePage() {
+  const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   const tabs = [
