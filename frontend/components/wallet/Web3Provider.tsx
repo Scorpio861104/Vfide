@@ -4,8 +4,9 @@ import '@rainbow-me/rainbowkit/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
-import { baseSepolia } from 'wagmi/chains';
+import { base, baseSepolia } from 'wagmi/chains';
 import { config } from '@/lib/wagmi';
+import { IS_TESTNET } from '@/lib/chains';
 import { useState, type ReactNode } from 'react';
 
 /**
@@ -33,7 +34,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     <WagmiProvider config={config} reconnectOnMount={true}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider 
-          initialChain={baseSepolia}
+          initialChain={IS_TESTNET ? baseSepolia : base}
           modalSize="compact"
           theme={darkTheme({
             accentColor: '#00F0FF',
