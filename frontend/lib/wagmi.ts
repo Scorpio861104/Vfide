@@ -1,6 +1,6 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { connectorsForWallets } from '@rainbow-me/rainbowkit'
 import { walletConnectWallet } from '@rainbow-me/rainbowkit/wallets'
-import { createStorage } from 'wagmi'
+import { createConfig, http, createStorage } from 'wagmi'
 import { 
   base, 
   baseSepolia, 
@@ -73,24 +73,57 @@ const wagmiStorage = createStorage({
 })
 
 // ========================================
+// WALLET CONNECTORS
+// ========================================
+
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Recommended',
+      wallets: [walletConnectWallet],
+    },
+  ],
+  {
+    appName,
+    projectId,
+  }
+)
+
+// ========================================
 // WAGMI CONFIG
 // ========================================
 
-export const config = getDefaultConfig({
-  appName,
-  projectId,
-  chains: IS_TESTNET ? testnetChains : mainnetChains,
-  wallets: [{
-    groupName: 'Recommended',
-    wallets: [walletConnectWallet],
-  }],
+const testnetConfig = createConfig({
+  connectors,
+  chains: testnetChains,
+  transports: {
+    [baseSepolia.id]: http(),
+    [polygonAmoy.id]: http(),
+    [zkSyncSepoliaTestnet.id]: http('https://sepolia.era.zksync.dev'),
+  },
   ssr: true,
   storage: wagmiStorage,
+  multiInjectedProviderDiscovery: false, // Disable auto-discovery to avoid duplicates
 })
 
+const mainnetConfig = createConfig({
+  connectors,
+  chains: mainnetChains,
+  transports: {
+    [base.id]: http(),
+    [polygon.id]: http(),
+    [zkSync.id]: http(),
+  },
+  ssr: true,
+  storage: wagmiStorage,
+  multiInjectedProviderDiscovery: false,
+})
+
+// Export the appropriate config based on environment
+export const config = IS_TESTNET ? testnetConfig : mainnetConfig
 
 declare module 'wagmi' {
   interface Register {
-    config: typeof config
+    config: typeof testnetConfig | typeof mainnetConfig
   }
 }
