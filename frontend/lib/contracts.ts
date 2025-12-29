@@ -1,7 +1,30 @@
 /**
  * VFIDE Contract Addresses and ABIs
+ * 
+ * REFACTORED: Now imports ABIs from JSON artifacts to ensure consistency.
+ * Legacy constant names (e.g. VFIDE_TOKEN_ABI) are preserved as aliases.
  */
 import { isAddress } from 'viem'
+import {
+  VFIDETokenABI,
+  VFIDEPresaleABI,
+  StablecoinRegistryABI,
+  VaultInfrastructureABI,
+  SeerABI,
+  VFIDEBadgeNFTABI,
+  DAOABI,
+  DAOTimelockABI,
+  SecurityHubABI,
+  GuardianRegistryABI,
+  GuardianLockABI,
+  PanicGuardABI,
+  EmergencyBreakerABI,
+  MerchantRegistryABI,
+  MerchantPortalABI,
+  ProofScoreBurnRouterABI,
+  ProofLedgerABI,
+  CommerceEscrowABI
+} from './abis'
 
 // Zero address placeholder for missing contracts
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
@@ -44,104 +67,37 @@ export const CONTRACT_ADDRESSES = {
   EmergencyBreaker: validateContractAddress(process.env.NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS, 'EmergencyBreaker'),
 } as const
 
-// Minimal ABIs for common interactions
-export const VFIDE_TOKEN_ABI = [
-  'function balanceOf(address) view returns (uint256)',
-  'function transfer(address to, uint256 amount) returns (bool)',
-  'function approve(address spender, uint256 amount) returns (bool)',
-  'function allowance(address owner, address spender) view returns (uint256)',
-] as const
+// ==============================================================================
+// ABI EXPORTS
+// Aliased to match legacy usage while using the full JSON source of truth.
+// ==============================================================================
 
-export const SEER_ABI = [
-  // Score reading
-  'function getScore(address user) view returns (uint16)',
-  'function calculateAutomatedScore(address subject) view returns (uint16)',
-  'function calculateOnChainScore(address subject) view returns (uint16)',
-  // Badge system
-  'function hasBadge(address user, bytes32 badge) view returns (bool)',
-  'function badgeExpiry(address user, bytes32 badge) view returns (uint256)',
-  // Thresholds
-  'function lowTrustThreshold() view returns (uint16)',
-  'function highTrustThreshold() view returns (uint16)',
-  'function minForGovernance() view returns (uint16)',
-  'function minForMerchant() view returns (uint16)',
-  // User actions
-  'function endorseUser(address user)',
-  // Constants
-  'function MIN_SCORE() view returns (uint16)',
-  'function MAX_SCORE() view returns (uint16)',
-  'function NEUTRAL() view returns (uint16)',
-] as const
+export const VFIDE_TOKEN_ABI = VFIDETokenABI
+export const SEER_ABI = SeerABI
+export const MERCHANT_PORTAL_ABI = MerchantPortalABI
+export const VAULT_HUB_ABI = VaultInfrastructureABI
+export const BADGE_NFT_ABI = VFIDEBadgeNFTABI
+export const PRESALE_ABI = VFIDEPresaleABI
+export const STABLECOIN_REGISTRY_ABI = StablecoinRegistryABI
 
-export const MERCHANT_PORTAL_ABI = [
-  'function isMerchant(address) view returns (bool)',
-  'function getMerchantInfo(address) view returns (tuple)',
-  'function addMerchant(bytes32 metadata)',
-] as const
-
-export const VAULT_HUB_ABI = [
-  'function vaultOf(address owner) view returns (address)',
-  'function ownerOfVault(address vault) view returns (address)',
-  'function ensureVault(address owner) returns (address)',
-  'function predictVault(address owner) view returns (address)',
-  'function isVault(address a) view returns (bool)',
-  'function getVaultInfo(address vault) view returns (address owner, uint256 createdAt, bool isLocked, bool exists)',
-  'function checkVaultStatus(address addr) view returns (bool hasVault, address vaultAddress, bool isVaultContract)',
-  'function totalVaults() view returns (uint256)',
-  'function vfideToken() view returns (address)',
-] as const
-
-export const BADGE_NFT_ABI = [
-  'function mintBadge(bytes32 badge) returns (uint256)',
-  'function mintBadges(bytes32[] badges) returns (uint256[])',
-  'function burnBadge(uint256 tokenId)',
-  'function getBadgesOfUser(address user) view returns (uint256[])',
-  'function getBadgeDetails(uint256 tokenId) view returns (bytes32 badge, string name, string category, uint256 mintTime, uint256 number)',
-  'function canMintBadge(address user, bytes32 badge) view returns (bool canMint, string reason)',
-  'function getBadgeMintCount(bytes32 badge) view returns (uint256)',
-  'function userBadgeToken(address user, bytes32 badge) view returns (uint256)',
-  'function tokenURI(uint256 tokenId) view returns (string)',
-  'function balanceOf(address owner) view returns (uint256)',
-] as const
-
-// Presale ABI - 3-tier stablecoin-first presale
-export const PRESALE_ABI = [
-  // View functions
-  'function TIER_0_PRICE() view returns (uint256)',
-  'function TIER_1_PRICE() view returns (uint256)', 
-  'function TIER_2_PRICE() view returns (uint256)',
-  'function TIER_0_CAP() view returns (uint256)',
-  'function TIER_1_CAP() view returns (uint256)',
-  'function TIER_2_CAP() view returns (uint256)',
-  'function tier0Sold() view returns (uint256)',
-  'function tier1Sold() view returns (uint256)',
-  'function tier2Sold() view returns (uint256)',
-  'function tier0Enabled() view returns (bool)',
-  'function tier1Enabled() view returns (bool)',
-  'function tier2Enabled() view returns (bool)',
-  'function getCurrentTier() view returns (uint8)',
-  'function getTierPrice(uint8 tier) view returns (uint256)',
-  'function getTierRemaining(uint8 tier) view returns (uint256)',
-  'function getTierRequiredLock(uint8 tier) view returns (uint256)',
-  'function purchases(address) view returns (uint256 totalTokens, uint256 lockedTokens, uint256 lockEnd, bool claimed)',
-  'function presaleActive() view returns (bool)',
-  'function startTime() view returns (uint256)',
-  'function stablecoinRegistry() view returns (address)',
-  // Buy functions
-  'function buyWithStable(address stable, uint256 amount, uint8 tier, uint256 lockPeriod)',
-  'function buyWithStableReferral(address stable, uint256 amount, uint8 tier, uint256 lockPeriod, address referrer)',
-  'function buyWithETH(uint256 lockPeriod) payable',
-  'function buyWithETHReferral(uint256 lockPeriod, address referrer) payable',
-  // Claim function
-  'function claim()',
-] as const
-
-// StablecoinRegistry ABI
-export const STABLECOIN_REGISTRY_ABI = [
-  'function isAllowed(address stable) view returns (bool)',
-  'function isWhitelisted(address token) view returns (bool)',
-  'function decimalsOf(address stable) view returns (uint8)',
-  'function tokenDecimals(address token) view returns (uint8)',
-  'function getAllStablecoins() view returns (address[], tuple(bool allowed, uint8 decimals, string symbol)[])',
-  'function allowedCount() view returns (uint256)',
-] as const
+// Export all other ABIs directly
+export {
+  VFIDETokenABI,
+  VFIDEPresaleABI,
+  StablecoinRegistryABI,
+  VaultInfrastructureABI,
+  SeerABI,
+  VFIDEBadgeNFTABI,
+  DAOABI,
+  DAOTimelockABI,
+  SecurityHubABI,
+  GuardianRegistryABI,
+  GuardianLockABI,
+  PanicGuardABI,
+  EmergencyBreakerABI,
+  MerchantRegistryABI,
+  MerchantPortalABI,
+  ProofScoreBurnRouterABI,
+  ProofLedgerABI,
+  CommerceEscrowABI
+}
