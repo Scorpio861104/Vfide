@@ -23,7 +23,8 @@ import {
   MerchantPortalABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
-  CommerceEscrowABI
+  CommerceEscrowABI,
+  VaultHubLiteABI
 } from './abis'
 
 // Zero address placeholder for missing contracts
@@ -75,7 +76,7 @@ export const CONTRACT_ADDRESSES = {
 export const VFIDE_TOKEN_ABI = VFIDETokenABI
 export const SEER_ABI = SeerABI
 export const MERCHANT_PORTAL_ABI = MerchantPortalABI
-export const VAULT_HUB_ABI = VaultInfrastructureABI
+export const VAULT_HUB_ABI = VaultHubLiteABI
 export const BADGE_NFT_ABI = VFIDEBadgeNFTABI
 export const PRESALE_ABI = VFIDEPresaleABI
 export const STABLECOIN_REGISTRY_ABI = StablecoinRegistryABI
@@ -99,5 +100,6 @@ export {
   MerchantPortalABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
-  CommerceEscrowABI
+  CommerceEscrowABI,
+  VaultHubLiteABI
 }

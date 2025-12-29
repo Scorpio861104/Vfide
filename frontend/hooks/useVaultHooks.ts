@@ -4,7 +4,7 @@ import { useReadContract, useWriteContract, useAccount, useWaitForTransactionRec
 import { parseEther, formatEther } from 'viem'
 import { useState } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
-import { VaultInfrastructureABI, VFIDETokenABI } from '../lib/abis'
+import { VaultInfrastructureABI, VFIDETokenABI, VaultHubLiteABI } from '../lib/abis'
 
 // ============================================
 // VAULT HOOKS - Non-custodial vault management
@@ -15,19 +15,7 @@ export function useUserVault() {
   
   const { data: vaultAddress, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.VaultHub,
-    abi: VaultInfrastructureABI, // Note: VaultHub likely shares ABI or has specific one. Using VaultInfrastructureABI as placeholder if it matches, or need VaultHubABI. 
-    // Wait, the original code used inline ABI for VaultHub. Let's check if VaultHubABI exists in abis/index.ts. 
-    // It wasn't explicitly exported in my read of abis/index.ts, but VaultInfrastructureABI was.
-    // The inline ABI was: vaultOf(address) -> address.
-    // Let's assume VaultInfrastructureABI covers it or I should check.
-    // Actually, VaultHub is likely the factory. 
-    // Let's stick to the inline ABI structure but use the imported JSON if it matches.
-    // If I'm not sure, I should check the JSON content. 
-    // But for now, I will use the imported ABI if it has the function.
-    // If not, I will use the inline ABI but defined as a constant in this file to avoid "magic strings" everywhere.
-    // However, the instruction was to use imported ABIs.
-    // Let's look at `VaultInfrastructure.json` again. It had a constructor.
-    // I'll use `VaultInfrastructureABI` for now.
+    abi: VaultHubLiteABI,
     functionName: 'vaultOf',
     args: address ? [address] : undefined,
     query: {
@@ -54,7 +42,7 @@ export function useCreateVault() {
   const createVault = () => {
     writeContract({
       address: CONTRACT_ADDRESSES.VaultHub,
-      abi: VaultInfrastructureABI, // Assuming createVault is here
+      abi: VaultHubLiteABI,
       functionName: 'createVault',
     })
   }

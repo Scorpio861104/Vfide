@@ -137,8 +137,8 @@ export function useVaultHub() {
       const result = await writeContractAsync({
         address: VAULT_HUB_ADDRESS,
         abi: PARSED_VAULT_HUB_ABI,
-        functionName: 'ensureVault',
-        args: [userAddress],
+        functionName: 'createVault',
+        args: [],
         chainId: EXPECTED_CHAIN_ID,
       });
       return result;
