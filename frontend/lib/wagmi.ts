@@ -7,13 +7,9 @@ import {
   zkSync,
   zkSyncSepoliaTestnet,
 } from 'wagmi/chains'
-import { connectorsForWallets } from '@rainbow-me/rainbowkit'
+import { getDefaultWallets, connectorsForWallets } from '@rainbow-me/rainbowkit'
 import {
-  metaMaskWallet,
-  coinbaseWallet,
-  walletConnectWallet,
   injectedWallet,
-  rainbowWallet,
 } from '@rainbow-me/rainbowkit/wallets'
 import { IS_TESTNET } from './chains'
 
@@ -81,20 +77,17 @@ const wagmiStorage = createStorage({
 // ========================================
 // WALLET CONNECTORS
 // ========================================
-// Explicitly configure wallets for reliable connections
+// Use getDefaultWallets for reliable wallet detection + injectedWallet for browser extensions
+
+const { wallets } = getDefaultWallets()
 
 const testnetConnectors = connectorsForWallets(
   [
     {
-      groupName: 'Popular',
-      wallets: [
-        injectedWallet,
-        metaMaskWallet,
-        coinbaseWallet,
-        rainbowWallet,
-        walletConnectWallet,
-      ],
+      groupName: 'Installed',
+      wallets: [injectedWallet],
     },
+    ...wallets,
   ],
   {
     appName,
@@ -105,15 +98,10 @@ const testnetConnectors = connectorsForWallets(
 const mainnetConnectors = connectorsForWallets(
   [
     {
-      groupName: 'Popular',
-      wallets: [
-        injectedWallet,
-        metaMaskWallet,
-        coinbaseWallet,
-        rainbowWallet,
-        walletConnectWallet,
-      ],
+      groupName: 'Installed',
+      wallets: [injectedWallet],
     },
+    ...wallets,
   ],
   {
     appName,
@@ -135,6 +123,7 @@ const testnetConfig = createConfig({
   },
   ssr: true,
   storage: wagmiStorage,
+  multiInjectedProviderDiscovery: true,
 })
 
 const mainnetConfig = createConfig({
@@ -147,6 +136,7 @@ const mainnetConfig = createConfig({
   },
   ssr: true,
   storage: wagmiStorage,
+  multiInjectedProviderDiscovery: true,
 })
 
 // Export the appropriate config based on environment
