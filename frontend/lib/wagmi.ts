@@ -81,13 +81,13 @@ const connectors = connectorsForWallets(
     {
       groupName: 'Recommended',
       wallets: [
-        walletConnectWallet({ projectId }),
+        walletConnectWallet,
       ],
     },
     {
       groupName: 'Others',
       wallets: [
-        metaMaskWallet({ projectId }),
+        metaMaskWallet,
       ],
     },
   ],
