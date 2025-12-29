@@ -1,4 +1,4 @@
-import { http, createStorage, createConfig } from 'wagmi'
+import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { 
   base, 
   baseSepolia, 
@@ -7,22 +7,7 @@ import {
   zkSync,
   zkSyncSepoliaTestnet,
 } from 'wagmi/chains'
-import { connectorsForWallets } from '@rainbow-me/rainbowkit'
-import {
-  injectedWallet,
-  rainbowWallet,
-  metaMaskWallet,
-  coinbaseWallet,
-  walletConnectWallet,
-} from '@rainbow-me/rainbowkit/wallets'
 import { IS_TESTNET } from './chains'
-
-// Create noopStorage for SSR to avoid hydration mismatches
-const noopStorage = {
-  getItem: (_key: string) => null,
-  setItem: (_key: string, _value: string) => {},
-  removeItem: (_key: string) => {},
-}
 
 // WalletConnect Project ID - required for WalletConnect v2
 // Get your free project ID at https://cloud.walletconnect.com
@@ -73,77 +58,22 @@ const mainnetChains = [
   zkSync,
 ] as const
 
-// Create storage that works with SSR
-const wagmiStorage = createStorage({
-  storage: typeof window !== 'undefined' ? window.localStorage : noopStorage,
-})
-
-// ========================================
-// WALLET CONNECTORS
-// ========================================
-
-const wallets = [
-  injectedWallet,
-  rainbowWallet,
-  metaMaskWallet,
-  coinbaseWallet,
-  walletConnectWallet,
-]
-
-const testnetConnectors = connectorsForWallets(
-  [
-    {
-      groupName: 'Recommended',
-      wallets,
-    },
-  ],
-  {
-    appName,
-    projectId,
-  }
-)
-
-const mainnetConnectors = connectorsForWallets(
-  [
-    {
-      groupName: 'Recommended',
-      wallets,
-    },
-  ],
-  {
-    appName,
-    projectId,
-  }
-)
-
 // ========================================
 // WAGMI CONFIG
 // ========================================
 
-const testnetConfig = createConfig({
-  connectors: testnetConnectors,
+const testnetConfig = getDefaultConfig({
+  appName,
+  projectId,
   chains: testnetChains,
-  transports: {
-    [baseSepolia.id]: http(),
-    [polygonAmoy.id]: http(),
-    [zkSyncSepoliaTestnet.id]: http('https://sepolia.era.zksync.dev'),
-  },
   ssr: true,
-  storage: wagmiStorage,
-  multiInjectedProviderDiscovery: true,
 })
 
-const mainnetConfig = createConfig({
-  connectors: mainnetConnectors,
+const mainnetConfig = getDefaultConfig({
+  appName,
+  projectId,
   chains: mainnetChains,
-  transports: {
-    [base.id]: http(),
-    [polygon.id]: http(),
-    [zkSync.id]: http(),
-  },
   ssr: true,
-  storage: wagmiStorage,
-  multiInjectedProviderDiscovery: true,
 })
 
 // Export the appropriate config based on environment
