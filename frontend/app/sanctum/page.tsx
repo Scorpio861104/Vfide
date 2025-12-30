@@ -64,16 +64,7 @@ export default function SanctumPage() {
     }
   }, [isSuccess, toast]);
 
-  // Debug logging
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Sanctum Debug:', {
-        address,
-        isPending,
-        isConfirming
-      });
-    }
-  }, [address, isPending, isConfirming]);
+  // Debug logging removed for production
 
   // Read vault balance (only if deployed)
   const { data: vaultBalance } = useReadContract({
@@ -434,10 +425,11 @@ function CharitiesTab({ charityCount }: { charityCount: unknown }) {
   );
 }
 
-function DisbursementsTab({ isConnected, onApprove, onExecute }: { 
+function DisbursementsTab({ isConnected, onApprove, onExecute, nextProposalId }: { 
   isConnected: boolean;
   onApprove: (id: number) => void;
   onExecute: (id: number) => void;
+  nextProposalId?: bigint;
 }) {
   const disbursements = [
     { id: 1, charity: 'Save the Children', amount: 5000, status: 'executed', approvals: '3/3', date: '2025-12-15' },

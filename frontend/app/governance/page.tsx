@@ -8,6 +8,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadCont
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 
 // DAO Contract ABI
 const DAO_ABI = [
@@ -23,8 +24,8 @@ const DAO_ABI = [
   { name: 'getVoterStats', type: 'function', stateMutability: 'view', inputs: [{ name: 'voter', type: 'address' }], outputs: [{ name: 'totalVotes', type: 'uint256' }, { name: 'forVotes', type: 'uint256' }, { name: 'againstVotes', type: 'uint256' }, { name: 'lastVoteTime', type: 'uint256' }] },
 ] as const;
 
-// Contract address from environment
-const DAO_ADDRESS = (process.env.NEXT_PUBLIC_DAO_ADDRESS || '0xB75b08C5e42da4242e218C25B6A6B05d7BeF0728') as `0x${string}`;
+// Contract address from centralized config
+const DAO_ADDRESS = CONTRACT_ADDRESSES.DAO;
 
 type TabType = 'overview' | 'proposals' | 'create' | 'council' | 'suggestions' | 'discussions' | 'members' | 'history' | 'stats';
 
@@ -80,26 +81,43 @@ export default function GovernancePage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [lastAction, setLastAction] = useState<string>('');
   const { address } = useAccount();
   const { toast } = useToast();
   const { score } = useProofScore();
   const { proposalCount } = useDAOProposals();
+
+  // Check if DAO is deployed
+  const DAO_DEPLOYED = DAO_ADDRESS && DAO_ADDRESS !== '0x0000000000000000000000000000000000000000'
 
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && lastAction) {
+      const actionMessages: Record<string, { title: string; description: string }> = {
+        'vote-for': { title: 'Vote Cast', description: 'You voted FOR the proposal.' },
+        'vote-against': { title: 'Vote Cast', description: 'You voted AGAINST the proposal.' },
+        'propose': { title: 'Proposal Created', description: 'Your proposal has been submitted.' },
+        'finalize': { title: 'Proposal Finalized', description: 'The proposal has been finalized.' },
+      }
+      const message = actionMessages[lastAction] || { title: 'Transaction Successful', description: 'Your transaction has been confirmed.' }
       toast({
-        title: "Transaction Successful",
-        description: "Your transaction has been confirmed.",
+        title: message.title,
+        description: message.description,
         variant: "default",
       });
+      setLastAction('');
     }
-  }, [isSuccess, toast]);
+  }, [isSuccess, toast, lastAction]);
 
   const handleVote = (proposalId: bigint, support: boolean) => {
+    if (!DAO_DEPLOYED) {
+      toast({ title: 'DAO Not Deployed', description: 'Governance contract not available yet.', variant: 'destructive' });
+      return;
+    }
+    setLastAction(support ? 'vote-for' : 'vote-against');
     writeContract({
       address: DAO_ADDRESS,
       abi: DAO_ABI,
@@ -109,7 +127,12 @@ export default function GovernancePage() {
   };
 
   const handlePropose = (targets: `0x${string}`[], values: bigint[], calldatas: `0x${string}`[], description: string) => {
+    if (!DAO_DEPLOYED) {
+      toast({ title: 'DAO Not Deployed', description: 'Governance contract not available yet.', variant: 'destructive' });
+      return;
+    }
     if (targets.length > 0) {
+        setLastAction('propose');
         writeContract({
             address: DAO_ADDRESS,
             abi: DAO_ABI,
@@ -120,6 +143,11 @@ export default function GovernancePage() {
   };
   
   const handleFinalize = (proposalId: bigint) => {
+    if (!DAO_DEPLOYED) {
+      toast({ title: 'DAO Not Deployed', description: 'Governance contract not available yet.', variant: 'destructive' });
+      return;
+    }
+    setLastAction('finalize');
     writeContract({
       address: DAO_ADDRESS,
       abi: DAO_ABI,
@@ -555,7 +583,7 @@ function ProposalsTab({
   onFinalize
 }: { 
   searchQuery: string;
-  activeProposalIds?: bigint[];
+  activeProposalIds?: readonly bigint[];
   onVote?: (proposalId: bigint, support: boolean) => void;
   onFinalize?: (proposalId: bigint) => void;
 }) {

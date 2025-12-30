@@ -2,9 +2,6 @@
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
-import { GlassCard } from '@/components/ui/PageLayout'
-import { Badge } from '@/components/ui/FormElements'
-import { Counter } from '@/components/ui/Animations'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
@@ -17,9 +14,7 @@ import {
   Shield,
   ChevronUp,
   ChevronDown,
-  Minus,
-  Sparkles,
-  Award
+  Minus
 } from 'lucide-react'
 
 // Mock leaderboard data - in production this would come from contract events or indexer

@@ -2,7 +2,7 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/toast";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { formatUnits, parseUnits } from "viem";
@@ -124,9 +124,7 @@ export default function SubscriptionsPage() {
 
   // Debug: Log userSubIds
   if (userSubIds) {
-    console.log('User Subscriptions:', userSubIds);
-    console.log('Token Address:', VFIDE_TOKEN_ADDRESS);
-    console.log('Formatted 1 VFIDE:', formatAmount(parseAmount('1')));
+    // Subscription data loaded
   }
 
   return (

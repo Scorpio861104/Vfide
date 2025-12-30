@@ -2,12 +2,17 @@
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { parseEther, formatEther } from 'viem'
+import { useState } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { MerchantPortalABI } from '../lib/abis'
 
 // ============================================
 // MERCHANT HOOKS - No processor fees (burn + gas apply)
 // ============================================
+
+// Type matches MerchantPortal.sol getMerchantInfo return:
+// (bool registered, bool suspended, string businessName, string category, uint64 registeredAt, uint256 totalVolume, uint256 txCount)
+type MerchantInfo = [boolean, boolean, string, string, bigint, bigint, bigint]
 
 export function useIsMerchant(address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
@@ -23,7 +28,7 @@ export function useIsMerchant(address?: `0x${string}`) {
     }
   })
   
-  const info = merchantInfo as [boolean, boolean, string, bigint, bigint] | undefined
+  const info = merchantInfo as MerchantInfo | undefined
 
   return {
     isMerchant: info?.[0] || false,
@@ -39,19 +44,28 @@ export function useIsMerchant(address?: `0x${string}`) {
 }
 
 export function useRegisterMerchant() {
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContractAsync, data, isPending } = useWriteContract()
+  const [error, setError] = useState<string | null>(null)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
-  const registerMerchant = (businessName: string, category: string) => {
-    writeContract({
-      address: CONTRACT_ADDRESSES.MerchantPortal,
-      abi: MerchantPortalABI,
-      functionName: 'registerMerchant', // Assuming this exists in ABI
-      args: [businessName, category],
-    })
+  const registerMerchant = async (businessName: string, category: string) => {
+    setError(null)
+    try {
+      await writeContractAsync({
+        address: CONTRACT_ADDRESSES.MerchantPortal,
+        abi: MerchantPortalABI,
+        functionName: 'registerMerchant',
+        args: [businessName, category],
+      })
+      return { success: true }
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Transaction failed'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
   }
   
   return {
@@ -59,6 +73,7 @@ export function useRegisterMerchant() {
     isRegistering: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    error,
   }
 }
 
@@ -66,24 +81,33 @@ export function useRegisterMerchant() {
  * Process payment from customer to merchant (merchant-initiated)
  */
 export function useProcessPayment() {
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContractAsync, data, isPending } = useWriteContract()
+  const [error, setError] = useState<string | null>(null)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
-  const processPayment = (
+  const processPayment = async (
     customer: `0x${string}`,
     token: `0x${string}`,
     amount: string,
     orderId: string
   ) => {
-    writeContract({
-      address: CONTRACT_ADDRESSES.MerchantPortal,
-      abi: MerchantPortalABI,
-      functionName: 'processPayment',
-      args: [customer, token, parseEther(amount), orderId],
-    })
+    setError(null)
+    try {
+      await writeContractAsync({
+        address: CONTRACT_ADDRESSES.MerchantPortal,
+        abi: MerchantPortalABI,
+        functionName: 'processPayment',
+        args: [customer, token, parseEther(amount), orderId],
+      })
+      return { success: true }
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Transaction failed'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
   }
   
   return {
@@ -91,6 +115,7 @@ export function useProcessPayment() {
     isProcessing: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    error,
   }
 }
 
@@ -98,24 +123,33 @@ export function useProcessPayment() {
  * Pay merchant (customer-initiated)
  */
 export function usePayMerchant() {
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContractAsync, data, isPending } = useWriteContract()
+  const [error, setError] = useState<string | null>(null)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
-  const payMerchant = (
+  const payMerchant = async (
     merchant: `0x${string}`,
     token: `0x${string}`,
     amount: string,
     orderId: string
   ) => {
-    writeContract({
-      address: CONTRACT_ADDRESSES.MerchantPortal,
-      abi: MerchantPortalABI,
-      functionName: 'pay',
-      args: [merchant, token, parseEther(amount), orderId],
-    })
+    setError(null)
+    try {
+      await writeContractAsync({
+        address: CONTRACT_ADDRESSES.MerchantPortal,
+        abi: MerchantPortalABI,
+        functionName: 'pay',
+        args: [merchant, token, parseEther(amount), orderId],
+      })
+      return { success: true }
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Transaction failed'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
   }
   
   return {
@@ -123,6 +157,7 @@ export function usePayMerchant() {
     isPaying: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    error,
   }
 }
 

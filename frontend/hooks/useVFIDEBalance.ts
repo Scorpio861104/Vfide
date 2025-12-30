@@ -7,6 +7,9 @@ export function useVFIDEBalance(address?: `0x${string}`) {
     abi: VFIDE_TOKEN_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && !!CONTRACT_ADDRESSES.VFIDEToken,
+    }
   })
 
   return {

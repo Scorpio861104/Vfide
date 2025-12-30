@@ -27,6 +27,7 @@ import { parseUnits, formatUnits, isAddress } from 'viem'
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { useToast } from '@/components/ui/toast'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 
 // EscrowManager ABI
 const ESCROW_MANAGER_ABI = [
@@ -40,9 +41,9 @@ const ESCROW_MANAGER_ABI = [
   { name: 'nextId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// Contract addresses from environment
-const ESCROW_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS || '0x2167C57dDfcd1bD2a6aDDB2bf510a05c48e7aC15') as `0x${string}`;
-const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
+// Contract addresses from centralized config
+const ESCROW_MANAGER_ADDRESS = CONTRACT_ADDRESSES.VFIDECommerce;
+const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
 
 // Escrow States (from contract)
 enum EscrowState {
@@ -66,7 +67,7 @@ const stateColors: Record<EscrowState, string> = {
   [EscrowState.DISPUTED]: 'text-red-400 bg-red-500/20 border-red-500/30'
 }
 
-// Mock escrow data
+// Escrow data interface
 interface EscrowData {
   id: number
   buyer: string
@@ -79,7 +80,10 @@ interface EscrowData {
   orderId: string
 }
 
-const mockEscrows: EscrowData[] = [
+// Demo escrows - ONLY shown in demo mode when contracts not deployed
+const DEMO_MODE = !CONTRACT_ADDRESSES.VFIDECommerce || CONTRACT_ADDRESSES.VFIDECommerce === '0x0000000000000000000000000000000000000000'
+
+const demoEscrows: EscrowData[] = DEMO_MODE ? [
   {
     id: 1,
     buyer: '0x1234...5678',
@@ -89,7 +93,7 @@ const mockEscrows: EscrowData[] = [
     createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
     releaseTime: Date.now() + 5 * 24 * 60 * 60 * 1000,
     state: EscrowState.CREATED,
-    orderId: 'ORD-2024-001'
+    orderId: 'DEMO-001'
   },
   {
     id: 2,
@@ -100,7 +104,7 @@ const mockEscrows: EscrowData[] = [
     createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
     releaseTime: Date.now() - 2 * 24 * 60 * 60 * 1000,
     state: EscrowState.RELEASED,
-    orderId: 'ORD-2024-002'
+    orderId: 'DEMO-002'
   },
   {
     id: 3,
@@ -111,9 +115,9 @@ const mockEscrows: EscrowData[] = [
     createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
     releaseTime: Date.now() + 13 * 24 * 60 * 60 * 1000,
     state: EscrowState.DISPUTED,
-    orderId: 'ORD-2024-003'
+    orderId: 'DEMO-003'
   }
-]
+] : []
 
 type TabId = 'active' | 'completed' | 'disputed'
 
@@ -123,6 +127,7 @@ export default function EscrowPage() {
   const [activeTab, setActiveTab] = useState<TabId>('active')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [lastAction, setLastAction] = useState<string>('')
   
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -137,27 +142,44 @@ export default function EscrowPage() {
   const { isSuccess } = useWaitForTransactionReceipt({ hash });
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && lastAction) {
+      const actionMessages: Record<string, { title: string; description: string }> = {
+        'create': { title: 'Escrow Created', description: 'Your escrow has been created successfully.' },
+        'release': { title: 'Funds Released', description: 'Funds have been released to the seller.' },
+        'refund': { title: 'Refund Processed', description: 'Funds have been refunded to the buyer.' },
+        'dispute': { title: 'Dispute Raised', description: 'Your dispute has been submitted for review.' },
+        'timeout': { title: 'Timeout Claimed', description: 'Funds have been returned due to timeout.' },
+      }
+      const message = actionMessages[lastAction] || { title: 'Transaction Successful', description: 'Your transaction has been confirmed.' }
       toast({
-        title: "Transaction Successful",
-        description: "Your transaction has been confirmed.",
+        title: message.title,
+        description: message.description,
         variant: "default",
       });
       setActionLoading(null);
+      setLastAction('');
     }
-  }, [isSuccess, toast]);
+  }, [isSuccess, toast, lastAction]);
 
   // Read next escrow ID
   const { data: nextId } = useReadContract({
     address: ESCROW_MANAGER_ADDRESS,
     abi: ESCROW_MANAGER_ABI,
     functionName: 'nextId',
+    query: {
+      enabled: !DEMO_MODE,
+    }
   });
 
   // Contract action handlers
   const handleCreateEscrow = () => {
+    if (DEMO_MODE) {
+      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
+      return;
+    }
     if (!isAddress(createForm.merchant)) return;
     setActionLoading('create');
+    setLastAction('create');
     const amount = parseUnits(createForm.amount, 18);
     const timeout = BigInt(parseInt(createForm.timeout) * 24 * 60 * 60);
     
@@ -170,7 +192,12 @@ export default function EscrowPage() {
   };
 
   const handleRelease = (id: number) => {
+    if (DEMO_MODE) {
+      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
+      return;
+    }
     setActionLoading(`release-${id}`);
+    setLastAction('release');
     writeContract({
       address: ESCROW_MANAGER_ADDRESS,
       abi: ESCROW_MANAGER_ABI,
@@ -180,7 +207,12 @@ export default function EscrowPage() {
   };
 
   const handleRefund = (id: number) => {
+    if (DEMO_MODE) {
+      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
+      return;
+    }
     setActionLoading(`refund-${id}`);
+    setLastAction('refund');
     writeContract({
       address: ESCROW_MANAGER_ADDRESS,
       abi: ESCROW_MANAGER_ABI,
@@ -190,7 +222,12 @@ export default function EscrowPage() {
   };
 
   const handleDispute = (id: number) => {
+    if (DEMO_MODE) {
+      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
+      return;
+    }
     setActionLoading(`dispute-${id}`);
+    setLastAction('dispute');
     writeContract({
       address: ESCROW_MANAGER_ADDRESS,
       abi: ESCROW_MANAGER_ABI,
@@ -200,7 +237,12 @@ export default function EscrowPage() {
   };
 
   const handleClaimTimeout = (id: number) => {
+    if (DEMO_MODE) {
+      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
+      return;
+    }
     setActionLoading(`timeout-${id}`);
+    setLastAction('timeout');
     writeContract({
       address: ESCROW_MANAGER_ADDRESS,
       abi: ESCROW_MANAGER_ABI,
@@ -216,7 +258,7 @@ export default function EscrowPage() {
   ]
 
   // Filter escrows based on tab
-  const filteredEscrows = mockEscrows.filter(e => {
+  const filteredEscrows = demoEscrows.filter(e => {
     switch (activeTab) {
       case 'active':
         return e.state === EscrowState.CREATED

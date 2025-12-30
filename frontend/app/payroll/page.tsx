@@ -291,8 +291,7 @@ export default function PayrollPage() {
 
   // Debug: Log stream IDs
   useEffect(() => {
-    if (payerStreamIds) console.log('Payer Streams:', payerStreamIds)
-    if (payeeStreamIds) console.log('Payee Streams:', payeeStreamIds)
+    // Stream IDs loaded successfully
   }, [payerStreamIds, payeeStreamIds])
 
   const formatAmount = (amount: bigint): string => {

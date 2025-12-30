@@ -34,13 +34,8 @@ export const NETWORK_INFO = {
   symbol: 'ETH',
 }
 
-// Contract addresses - these change between testnet/mainnet
-export const CONTRACT_ADDRESSES = {
-  vfideToken: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '',
-  vaultHub: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS || '',
-  presale: process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '',
-  seer: process.env.NEXT_PUBLIC_SEER_ADDRESS || '',
-}
+// NOTE: Contract addresses are centralized in contracts.ts
+// Import from '@/lib/contracts' for CONTRACT_ADDRESSES
 
 // Faucet URLs (testnet only) - Base Sepolia uses ETH from various faucets
 export const FAUCET_URLS = {

@@ -20,10 +20,13 @@ const noopStorage = {
 
 // WalletConnect Project ID - required for WalletConnect v2
 // Get your free project ID at https://cloud.walletconnect.com
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '21fef48091f12692cad574a6f7753643'
-if (!process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID) {
-  console.warn('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID not set, using fallback. Get one at https://cloud.walletconnect.com')
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+if (!projectId) {
+  console.error('[VFIDE] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is required. Get one at https://cloud.walletconnect.com')
 }
+
+// Use empty string if not set - will show connection error to user
+const safeProjectId = projectId || ''
 
 // App metadata for wallet connections
 const appName = 'VFIDE'
@@ -93,7 +96,7 @@ const connectors = connectorsForWallets(
   ],
   {
     appName,
-    projectId,
+    projectId: safeProjectId,
   }
 )
 

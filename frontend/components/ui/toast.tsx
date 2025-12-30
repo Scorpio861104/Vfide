@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, AlertCircle, X } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'info';
+type ToastVariant = 'default' | 'destructive';
 
 interface Toast {
   id: string;
@@ -13,8 +14,16 @@ interface Toast {
   duration?: number;
 }
 
+// Shadcn-style toast options
+interface ToastOptions {
+  title?: string;
+  description?: string;
+  variant?: ToastVariant;
+}
+
 interface ToastContextType {
   showToast: (message: string, type?: ToastType, duration?: number) => void;
+  toast: (options: ToastOptions) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -24,9 +33,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const showToast = useCallback((message: string, type: ToastType = 'info', duration = 5000) => {
     const id = Math.random().toString(36).substring(7);
-    const toast: Toast = { id, type, message, duration };
+    const toastItem: Toast = { id, type, message, duration };
     
-    setToasts((prev) => [...prev, toast]);
+    setToasts((prev) => [...prev, toastItem]);
 
     if (duration > 0) {
       setTimeout(() => {
@@ -35,12 +44,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Shadcn-compatible toast function
+  const toast = useCallback((options: ToastOptions) => {
+    const type: ToastType = options.variant === 'destructive' ? 'error' : 'success';
+    const message = options.description || options.title || '';
+    showToast(message, type);
+  }, [showToast]);
+
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, toast }}>
       {children}
       
       {/* Toast Container */}

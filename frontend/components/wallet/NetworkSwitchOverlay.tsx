@@ -5,6 +5,7 @@ import { useAccount, useChainId, useSwitchChain } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle, ArrowRight, Check, Loader2, X, Zap, Plus } from 'lucide-react'
 import { IS_TESTNET, CURRENT_CHAIN_ID } from '@/lib/testnet'
+import { safeLocalStorage } from '@/lib/utils'
 import { baseSepolia, base } from 'wagmi/chains'
 
 // Base Sepolia network configuration for MetaMask
@@ -61,7 +62,7 @@ export function NetworkSwitchOverlay() {
   const AUTO_SWITCH_KEY = 'vfide-auto-switch-network'
 
   useEffect(() => {
-    const autoSwitch = localStorage.getItem(AUTO_SWITCH_KEY) === 'true'
+    const autoSwitch = safeLocalStorage.getItem(AUTO_SWITCH_KEY) === 'true'
     if (autoSwitch && isWrongNetwork && !isPending && !dismissed) {
       handleSwitch(true)
     }

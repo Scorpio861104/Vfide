@@ -988,7 +988,7 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
             onClick={() => {
               const qrData = `https://vfide.app/join?ref=${referralStats.code}`;
               // Open QR code modal or generate inline
-              console.log('QR Data:', qrData);
+              // QR code generated
               alert('QR Code feature coming soon!');
             }}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] hover:border-[#A78BFA] transition-colors"

@@ -51,12 +51,16 @@ export function MobileBottomNav() {
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
               className="fixed bottom-20 left-3 right-3 glass rounded-2xl z-50 md:hidden p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="more-menu-title"
             >
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-semibold text-[#F8F8FC]">More Options</span>
+                <span id="more-menu-title" className="text-sm font-semibold text-[#F8F8FC]">More Options</span>
                 <button 
                   onClick={() => setShowMore(false)}
                   className="w-8 h-8 rounded-lg bg-[#1F1F2A] flex items-center justify-center text-[#6B6B78] hover:text-[#F8F8FC] transition-colors"
+                  aria-label="Close menu"
                 >
                   <X size={16} />
                 </button>
@@ -135,6 +139,8 @@ export function MobileBottomNav() {
             className={`relative flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all ${
               showMore ? 'text-[#00F0FF]' : 'text-[#6B6B78] active:text-[#F8F8FC]'
             }`}
+            aria-label={showMore ? 'Close more options' : 'Open more options'}
+            aria-expanded={showMore}
           >
             <motion.div
               whileTap={{ scale: 0.9 }}

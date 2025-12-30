@@ -610,7 +610,7 @@ function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 }
 
 function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
-  const { badgeIds, isLoading } = useUserBadges(address);
+  const { isLoading } = useUserBadges(address);
   
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">

@@ -11,6 +11,7 @@ import {
   useCustomerTrustScore,
   useIsMerchant,
   useProofScore,
+  useVaultBalance,
 } from '@/lib/vfide-hooks'
 import { useAccount } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
@@ -23,10 +24,11 @@ export function PaymentInterface() {
   const [amount, setAmount] = useState('')
   const [orderId, setOrderId] = useState('')
   
-  const { payMerchant, isPaying, isSuccess } = usePayMerchant()
+  const { payMerchant, isPaying, isSuccess, error } = usePayMerchant()
   const merchantInfo = useIsMerchant(merchantAddress as `0x${string}` | undefined)
   const trustScore = useCustomerTrustScore(address)
   const { score } = useProofScore(address)
+  const { balance: vaultBalance } = useVaultBalance()
 
   const handlePayment = () => {
     if (!merchantAddress || !amount || !orderId) return
@@ -79,19 +81,21 @@ export function PaymentInterface() {
 
       {/* Payment Form */}
       <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-6">
-        <div className="space-y-4">
+        <div className="space-y-4" role="form" aria-label="Payment form">
           {/* Merchant Address */}
           <div>
-            <label className="text-sm text-gray-400 mb-2 block">Merchant Address</label>
+            <label htmlFor="merchant-address" className="text-sm text-gray-400 mb-2 block">Merchant Address</label>
             <input
+              id="merchant-address"
               type="text"
               value={merchantAddress}
               onChange={(e) => setMerchantAddress(e.target.value)}
               placeholder="0x..."
+              aria-describedby="merchant-status"
               className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
             />
             {merchantAddress && (
-              <div className="mt-2">
+              <div className="mt-2" id="merchant-status" role="status">
                 {isAddress(merchantAddress) ? (
                   merchantInfo.isMerchant ? (
                     merchantInfo.isSuspended ? (
@@ -121,29 +125,35 @@ export function PaymentInterface() {
           {/* Amount */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="text-sm text-gray-400">Amount (VFIDE)</label>
+              <label htmlFor="payment-amount" className="text-sm text-gray-400">Amount (VFIDE)</label>
               <button
-                onClick={() => setAmount('1000')}
+                type="button"
+                onClick={() => setAmount(vaultBalance || '0')}
                 className="text-xs text-blue-400 hover:text-blue-300 font-bold"
+                aria-label="Set maximum available balance"
               >
                 MAX
               </button>
             </div>
             <input
+              id="payment-amount"
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
               step="0.01"
               min="0"
+              aria-describedby="amount-hint"
               className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
             />
+            <span id="amount-hint" className="sr-only">Enter the amount of VFIDE to send</span>
           </div>
 
           {/* Order ID */}
           <div>
-            <label className="text-sm text-gray-400 mb-2 block">Order ID / Reference</label>
+            <label htmlFor="order-id" className="text-sm text-gray-400 mb-2 block">Order ID / Reference</label>
             <input
+              id="order-id"
               type="text"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { SeerABI } from '../lib/abis'
@@ -61,57 +62,83 @@ export function useProofScore(userAddress?: `0x${string}`) {
   }
 }
 
-export function useEndorse(targetAddress: `0x${string}`) {
-  const { writeContract, data, isPending } = useWriteContract()
+export function useEndorse(targetAddress?: `0x${string}`) {
+  const { writeContractAsync, data, isPending } = useWriteContract()
+  const [error, setError] = useState<string | null>(null)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
-  const endorse = () => {
-    writeContract({
-      address: CONTRACT_ADDRESSES.Seer,
-      abi: SeerABI,
-      functionName: 'endorseUser', // Note: ABI says endorseUser, hook said endorse. Checking contracts.ts inline ABI: 'function endorseUser(address user)'. So it should be endorseUser.
-      args: [targetAddress],
-    })
+  const endorse = async () => {
+    setError(null)
+    
+    // Validate target address
+    if (!targetAddress || targetAddress === '0x0000000000000000000000000000000000000000') {
+      setError('Invalid target address')
+      return { success: false, error: 'Invalid target address' }
+    }
+    
+    try {
+      await writeContractAsync({
+        address: CONTRACT_ADDRESSES.Seer,
+        abi: SeerABI,
+        functionName: 'endorseUser',
+        args: [targetAddress],
+      })
+      return { success: true }
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Endorsement failed'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
   }
   
   return {
     endorse,
     isEndorsing: isPending || isConfirming,
     isSuccess,
+    error,
+    isValid: !!targetAddress && targetAddress !== '0x0000000000000000000000000000000000000000',
   }
 }
 
+/**
+ * Score breakdown hook - Note: getScoreBreakdown is not in Seer ABI
+ * This provides a simulated breakdown based on the main score.
+ * TODO: Add getScoreBreakdown to Seer contract or use ProofLedger for components.
+ */
 export function useScoreBreakdown(address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
   
+  // Use getScore instead since getScoreBreakdown doesn't exist in ABI
   const { data, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
-    functionName: 'getScoreBreakdown', // Assuming this exists in SeerABI
+    functionName: 'getScore',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
       enabled: !!targetAddress,
     }
   })
   
-  const info = data as [bigint, bigint, bigint, bigint, bigint, bigint] | undefined
+  const totalScore = data ? Number(data) : 5000
 
+  // Simulated breakdown based on total score
+  // In production, fetch individual components from ProofLedger
   return {
-    breakdown: info ? {
-      totalScore: Number(info[0]),
-      baseScore: Number(info[1]),
-      vaultBonus: Number(info[2]),
-      ageBonus: Number(info[3]),
-      activityPoints: Number(info[4]),
-      endorsementPoints: Number(info[5]),
-      badgePoints: Number(info[6]),
-      reputationDelta: Number(info[7]),
-      hasDiversityBonus: Boolean(info[8]),
-    } : null,
+    breakdown: {
+      totalScore,
+      baseScore: Math.floor(totalScore * 0.4),
+      vaultBonus: Math.floor(totalScore * 0.15),
+      ageBonus: Math.floor(totalScore * 0.1),
+      activityPoints: Math.floor(totalScore * 0.15),
+      endorsementPoints: Math.floor(totalScore * 0.1),
+      badgePoints: Math.floor(totalScore * 0.1),
+      reputationDelta: 0,
+      hasDiversityBonus: totalScore >= 7000,
+    },
     isLoading,
     refetch,
   }

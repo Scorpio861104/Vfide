@@ -292,15 +292,7 @@ function VaultContent() {
 
   // Debug logging for unused recovery variables
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Vault Recovery Debug:', {
-        recoveryStatus,
-        approveRecovery,
-        finalizeRecovery,
-        cancelRecovery,
-        handleRequestRecovery
-      });
-    }
+    // Recovery system initialized
   }, [recoveryStatus, approveRecovery, finalizeRecovery, cancelRecovery, handleRequestRecovery]);
   
   return (

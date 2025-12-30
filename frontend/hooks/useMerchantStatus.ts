@@ -7,6 +7,9 @@ export function useMerchantStatus(address?: `0x${string}`) {
     abi: MERCHANT_PORTAL_ABI,
     functionName: 'isMerchant',
     args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && !!CONTRACT_ADDRESSES.MerchantPortal,
+    }
   })
 
   return {
