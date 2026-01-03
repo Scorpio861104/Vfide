@@ -210,18 +210,45 @@ function VaultContent() {
   const {
     vaultOwner,
     guardianCount,
+    guardians,
     isUserGuardian,
+    isUserGuardianMature,
+    nextOfKin,
     recoveryStatus,
+    inheritanceStatus,
     isWritePending,
+    setNextOfKinAddress,
     addGuardian,
     requestRecovery,
     approveRecovery,
     finalizeRecovery,
     cancelRecovery,
+    requestInheritance,
+    approveInheritance,
+    denyInheritance,
+    finalizeInheritance,
   } = useVaultRecovery(vaultAddress);
   
   const [newGuardianAddress, setNewGuardianAddress] = useState("");
   const [recoveryAddress, setRecoveryAddress] = useState("");
+  const [newNextOfKinAddress, setNewNextOfKinAddress] = useState("");
+  
+  const hasNextOfKin = nextOfKin && nextOfKin !== '0x0000000000000000000000000000000000000000';
+  
+  const handleSetNextOfKin = async () => {
+    if (!isAddress(newNextOfKinAddress)) {
+      showToast("Invalid address format", "error");
+      return;
+    }
+    try {
+      await setNextOfKinAddress(newNextOfKinAddress as `0x${string}`);
+      setNewNextOfKinAddress("");
+      showToast("Next of Kin set successfully!", "success");
+    } catch (error) {
+      devLog.error('Failed to set Next of Kin:', error);
+      showToast("Failed to set Next of Kin", "error");
+    }
+  };
   
   const handleAddGuardian = async () => {
     if (!isAddress(newGuardianAddress)) {
@@ -509,12 +536,53 @@ function VaultContent() {
                     </div>
                   </div>
                   
+                  {/* Current Next of Kin Display */}
                   <div className="p-4 bg-white/5 border border-white/10 rounded-xl mb-4">
-                    <div>
-                      <div className="text-amber-400 font-bold text-sm mb-3">⚠️ Next of Kin Not Available</div>
-                      <div className="text-white/40 text-sm">This feature is not available in the current vault version.</div>
-                    </div>
+                    {hasNextOfKin ? (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-emerald-400 font-bold text-sm mb-1">✓ Next of Kin Configured</div>
+                          <div className="font-mono text-white/80 text-sm">
+                            {nextOfKin?.slice(0, 6)}...{nextOfKin?.slice(-4)}
+                          </div>
+                        </div>
+                        {inheritanceStatus.isActive && (
+                          <div className="px-3 py-1 bg-amber-500/20 border border-amber-500/30 rounded-lg">
+                            <div className="text-amber-400 text-xs font-bold">
+                              Claim Active ({inheritanceStatus.daysRemaining} days left)
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-amber-400 text-sm text-center py-2">
+                        ⚠️ No Next of Kin set. Set one to enable inheritance.
+                      </div>
+                    )}
                   </div>
+
+                  {/* Set Next of Kin (Owner Only) */}
+                  {address === vaultOwner && (
+                    <div className="space-y-3 mb-4">
+                      <input
+                        type="text"
+                        placeholder="Next of Kin address (0x...)"
+                        value={newNextOfKinAddress}
+                        onChange={(e) => setNewNextOfKinAddress(e.target.value)}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-amber-500/50"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleSetNextOfKin}
+                        disabled={isWritePending || !newNextOfKinAddress}
+                        className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        <Heart size={18} />
+                        {isWritePending ? "Processing..." : hasNextOfKin ? "Update Next of Kin" : "Set Next of Kin"}
+                      </motion.button>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 bg-white/5 rounded-xl">

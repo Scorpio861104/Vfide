@@ -1,39 +1,22 @@
 import { useAccount, useWriteContract, useReadContract, useWatchContractEvent } from 'wagmi';
 import { useState, useEffect } from 'react';
-import { parseAbi } from 'viem';
+import { USER_VAULT_ABI } from '@/lib/contracts';
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-
-const VAULT_ABI = parseAbi([
-  // Read functions
-  'function owner() view returns (address)',
-  'function guardianCount() view returns (uint8)',
-  'function isGuardian(address) view returns (bool)',
-  
-  // Recovery state reads - UserVaultLite/VaultHubLite
-  'function recoveryCandidate() view returns (address)',
-  'function recoveryApprovals() view returns (uint8)',
-  'function recoveryExpiry() view returns (uint64)',
-  'function hasApprovedRecovery(address) view returns (bool)',
-  
-  // Write functions - VaultHubLite signatures
-  'function setGuardian(uint8 slot, address guardian) external',
-  'function startRecovery(address candidate) external',
-  'function approveRecovery() external',
-  'function executeRecovery() external',
-  'function cancelRecovery() external',
-  
-  // Events - VaultHubLite events
-  'event GuardianSet(address indexed guardian, uint8 slot, bool active)',
-  'event RecoveryStarted(address indexed candidate)',
-  'event RecoveryApproved(address indexed guardian)',
-  'event RecoveryExecuted(address indexed newOwner)',
-]);
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 interface RecoveryStatus {
   isActive: boolean;
   proposedOwner: string | null;
   approvals: number;
+  expiryTime: number | null;
+  daysRemaining: number | null;
+}
+
+interface InheritanceStatus {
+  isActive: boolean;
+  claimant: string | null;
+  guardianApprovals: number;
+  guardianDenials: number;
   expiryTime: number | null;
   daysRemaining: number | null;
 }
@@ -48,11 +31,19 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     expiryTime: null,
     daysRemaining: null,
   });
+  const [inheritanceStatus, setInheritanceStatus] = useState<InheritanceStatus>({
+    isActive: false,
+    claimant: null,
+    guardianApprovals: 0,
+    guardianDenials: 0,
+    expiryTime: null,
+    daysRemaining: null,
+  });
 
   // Read vault owner
   const { data: vaultOwner } = useReadContract({
     address: vaultAddress,
-    abi: VAULT_ABI,
+    abi: USER_VAULT_ABI,
     functionName: 'owner',
     query: { enabled: !!vaultAddress },
   });
@@ -60,7 +51,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   // Read guardian count
   const { data: guardianCount } = useReadContract({
     address: vaultAddress,
-    abi: VAULT_ABI,
+    abi: USER_VAULT_ABI,
     functionName: 'guardianCount',
     query: { enabled: !!vaultAddress },
   });
@@ -68,101 +59,166 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   // Check if user is guardian
   const { data: isUserGuardian } = useReadContract({
     address: vaultAddress,
-    abi: VAULT_ABI,
+    abi: USER_VAULT_ABI,
     functionName: 'isGuardian',
     args: userAddress ? [userAddress] : undefined,
     query: { enabled: !!vaultAddress && !!userAddress },
   });
 
-  // Read recovery state from contract (persists across page refresh)
-  const { data: recoveryCandidate, refetch: refetchCandidate } = useReadContract({
+  // Check if user guardian is mature (7-day waiting period)
+  const { data: isUserGuardianMature } = useReadContract({
     address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'recoveryCandidate',
+    abi: USER_VAULT_ABI,
+    functionName: 'isGuardianMature',
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: !!vaultAddress && !!userAddress && !!isUserGuardian },
+  });
+
+  // Read Next of Kin address
+  const { data: nextOfKin, refetch: refetchNextOfKin } = useReadContract({
+    address: vaultAddress,
+    abi: USER_VAULT_ABI,
+    functionName: 'nextOfKin',
     query: { enabled: !!vaultAddress },
   });
 
-  const { data: contractRecoveryApprovals, refetch: refetchApprovals } = useReadContract({
+  // Read guardians list
+  const { data: guardians, refetch: refetchGuardians } = useReadContract({
     address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'recoveryApprovals',
+    abi: USER_VAULT_ABI,
+    functionName: 'getGuardians',
     query: { enabled: !!vaultAddress },
   });
 
-  const { data: recoveryExpiry, refetch: refetchExpiry } = useReadContract({
+  // Read recovery status from contract
+  const { data: recoveryData, refetch: refetchRecoveryStatus } = useReadContract({
     address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'recoveryExpiry',
+    abi: USER_VAULT_ABI,
+    functionName: 'getRecoveryStatus',
+    query: { enabled: !!vaultAddress },
+  });
+
+  // Read inheritance status from contract
+  const { data: inheritanceData, refetch: refetchInheritanceStatus } = useReadContract({
+    address: vaultAddress,
+    abi: USER_VAULT_ABI,
+    functionName: 'getInheritanceStatus',
     query: { enabled: !!vaultAddress },
   });
 
   // Initialize recovery status from contract state
   useEffect(() => {
-    const candidate = recoveryCandidate as `0x${string}` | undefined;
-    const approvals = contractRecoveryApprovals as number | undefined;
-    const expiry = recoveryExpiry as bigint | undefined;
+    // recoveryData returns: [candidate, approvals, expiry, isActive]
+    const data = recoveryData as [string, number, bigint, boolean] | undefined;
     
-    const computeStatus = () => {
-      if (candidate && candidate !== ZERO_ADDRESS && expiry) {
-        const expiryMs = Number(expiry) * 1000;
-        const now = Date.now();
-        const daysRemaining = Math.max(0, Math.ceil((expiryMs - now) / (24 * 60 * 60 * 1000)));
-        return {
-          isActive: expiryMs > now,
-          proposedOwner: candidate,
-          approvals: approvals || 0,
-          expiryTime: expiryMs,
-          daysRemaining,
-        } as const;
-      }
-      return {
+    if (data) {
+      const [candidate, approvals, expiry, isActive] = data;
+      const expiryMs = Number(expiry) * 1000;
+      const now = Date.now();
+      const daysRemaining = Math.max(0, Math.ceil((expiryMs - now) / (24 * 60 * 60 * 1000)));
+      
+      setRecoveryStatus({
+        isActive: isActive && candidate !== ZERO_ADDRESS,
+        proposedOwner: candidate !== ZERO_ADDRESS ? candidate : null,
+        approvals: approvals || 0,
+        expiryTime: expiryMs > 0 ? expiryMs : null,
+        daysRemaining: expiryMs > 0 ? daysRemaining : null,
+      });
+    } else {
+      setRecoveryStatus({
         isActive: false,
         proposedOwner: null,
         approvals: 0,
         expiryTime: null,
         daysRemaining: null,
-      } as const;
-    };
+      });
+    }
+  }, [recoveryData]);
 
-    const status = computeStatus();
-    setTimeout(() => setRecoveryStatus(status), 0);
-  }, [recoveryCandidate, contractRecoveryApprovals, recoveryExpiry]);
+  // Initialize inheritance status from contract state
+  useEffect(() => {
+    // inheritanceData returns: [claimant, guardianApprovals, guardianDenials, expiry, isActive]
+    const data = inheritanceData as [string, number, number, bigint, boolean] | undefined;
+    
+    if (data) {
+      const [claimant, guardianApprovals, guardianDenials, expiry, isActive] = data;
+      const expiryMs = Number(expiry) * 1000;
+      const now = Date.now();
+      const daysRemaining = Math.max(0, Math.ceil((expiryMs - now) / (24 * 60 * 60 * 1000)));
+      
+      setInheritanceStatus({
+        isActive: isActive && claimant !== ZERO_ADDRESS,
+        claimant: claimant !== ZERO_ADDRESS ? claimant : null,
+        guardianApprovals: guardianApprovals || 0,
+        guardianDenials: guardianDenials || 0,
+        expiryTime: expiryMs > 0 ? expiryMs : null,
+        daysRemaining: expiryMs > 0 ? daysRemaining : null,
+      });
+    } else {
+      setInheritanceStatus({
+        isActive: false,
+        claimant: null,
+        guardianApprovals: 0,
+        guardianDenials: 0,
+        expiryTime: null,
+        daysRemaining: null,
+      });
+    }
+  }, [inheritanceData]);
 
-  // Watch recovery events to update status in real-time - VaultHubLite events
+  // Watch recovery events to update status in real-time
   useWatchContractEvent({
     address: vaultAddress,
-    abi: VAULT_ABI,
-    eventName: 'RecoveryStarted',
-    onLogs: (logs) => {
-      const latestLog = logs[logs.length - 1];
-      if (latestLog && latestLog.args.candidate) {
-        // Refetch contract state for accuracy
-        refetchCandidate();
-        refetchApprovals();
-        refetchExpiry();
-      }
+    abi: USER_VAULT_ABI,
+    eventName: 'RecoveryRequested',
+    onLogs: () => {
+      refetchRecoveryStatus();
     },
   });
 
   useWatchContractEvent({
     address: vaultAddress,
-    abi: VAULT_ABI,
+    abi: USER_VAULT_ABI,
     eventName: 'RecoveryApproved',
     onLogs: () => {
-      // Refetch contract state for accuracy
-      refetchApprovals();
+      refetchRecoveryStatus();
     },
   });
 
   useWatchContractEvent({
     address: vaultAddress,
-    abi: VAULT_ABI,
-    eventName: 'RecoveryExecuted',
+    abi: USER_VAULT_ABI,
+    eventName: 'RecoveryFinalized',
     onLogs: () => {
-      // Refetch all recovery state
-      refetchCandidate();
-      refetchApprovals();
-      refetchExpiry();
+      refetchRecoveryStatus();
+    },
+  });
+
+  // Watch inheritance events
+  useWatchContractEvent({
+    address: vaultAddress,
+    abi: USER_VAULT_ABI,
+    eventName: 'InheritanceRequested',
+    onLogs: () => {
+      refetchInheritanceStatus();
+    },
+  });
+
+  useWatchContractEvent({
+    address: vaultAddress,
+    abi: USER_VAULT_ABI,
+    eventName: 'InheritanceApproved',
+    onLogs: () => {
+      refetchInheritanceStatus();
+    },
+  });
+
+  useWatchContractEvent({
+    address: vaultAddress,
+    abi: USER_VAULT_ABI,
+    eventName: 'InheritanceFinalized',
+    onLogs: () => {
+      refetchInheritanceStatus();
     },
   });
 
@@ -180,87 +236,195 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     }
   }, [recoveryStatus.expiryTime]);
 
-  // Write functions
-  // NOTE: setNextOfKin not available in VaultHubLite
-  const setNextOfKinAddress = async () => {
-    throw new Error('Next of kin feature not available in VaultHubLite');
-  };
-
-  // VaultHubLite uses slot-based guardians
-  const setGuardian = async (slot: number, guardianAddress: `0x${string}`) => {
+  // ========================
+  // NEXT OF KIN FUNCTIONS
+  // ========================
+  
+  /**
+   * Set the Next of Kin address for inheritance
+   * The Next of Kin can claim the vault assets after a 1-year waiting period
+   */
+  const setNextOfKinAddress = async (nextOfKinAddress: `0x${string}`) => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     return await writeContractAsync({
       address: vaultAddress,
-      abi: VAULT_ABI,
-      functionName: 'setGuardian',
-      args: [slot, guardianAddress],
+      abi: USER_VAULT_ABI,
+      functionName: 'setNextOfKin',
+      args: [nextOfKinAddress],
     });
   };
 
-  // Legacy wrapper for backwards compatibility - adds to first empty slot
+  // ========================
+  // GUARDIAN FUNCTIONS
+  // ========================
+  
+  /**
+   * Set or remove a guardian
+   * Full UserVault uses address-based guardians (not slot-based)
+   */
+  const setGuardian = async (guardianAddress: `0x${string}`, active: boolean) => {
+    if (!vaultAddress) throw new Error('Vault address not provided');
+    
+    return await writeContractAsync({
+      address: vaultAddress,
+      abi: USER_VAULT_ABI,
+      functionName: 'setGuardian',
+      args: [guardianAddress, active],
+    });
+  };
+
+  /**
+   * Add a guardian (convenience wrapper)
+   */
   const addGuardian = async (guardianAddress: `0x${string}`) => {
-    // In VaultHubLite, we use slot 0 by default
-    return setGuardian(0, guardianAddress);
+    return setGuardian(guardianAddress, true);
   };
 
-  const removeGuardian = async (slot: number) => {
+  /**
+   * Remove a guardian (convenience wrapper)
+   */
+  const removeGuardian = async (guardianAddress: `0x${string}`) => {
+    return setGuardian(guardianAddress, false);
+  };
+
+  // ========================
+  // RECOVERY FUNCTIONS
+  // ========================
+  
+  /**
+   * Request account recovery (by a guardian)
+   * The candidate becomes the proposed new owner
+   */
+  const requestRecovery = async (candidateAddress: `0x${string}`) => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     return await writeContractAsync({
       address: vaultAddress,
-      abi: VAULT_ABI,
-      functionName: 'setGuardian',
-      args: [slot, '0x0000000000000000000000000000000000000000'],
-    });
-  };
-
-  // VaultHubLite uses startRecovery, not requestRecovery
-  const startRecovery = async (candidateAddress: `0x${string}`) => {
-    if (!vaultAddress) throw new Error('Vault address not provided');
-    
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: VAULT_ABI,
-      functionName: 'startRecovery',
+      abi: USER_VAULT_ABI,
+      functionName: 'requestRecovery',
       args: [candidateAddress],
     });
   };
 
-  // Legacy alias for backwards compatibility
-  const requestRecovery = startRecovery;
-
+  /**
+   * Approve the current recovery request (by a mature guardian)
+   */
   const approveRecovery = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     return await writeContractAsync({
       address: vaultAddress,
-      abi: VAULT_ABI,
+      abi: USER_VAULT_ABI,
       functionName: 'approveRecovery',
     });
   };
 
-  // VaultHubLite uses executeRecovery, not finalizeRecovery
-  const executeRecovery = async () => {
+  /**
+   * Finalize the recovery after sufficient approvals
+   */
+  const finalizeRecovery = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     return await writeContractAsync({
       address: vaultAddress,
-      abi: VAULT_ABI,
-      functionName: 'executeRecovery',
+      abi: USER_VAULT_ABI,
+      functionName: 'finalizeRecovery',
     });
   };
 
-  // Legacy alias for backwards compatibility
-  const finalizeRecovery = executeRecovery;
-
+  /**
+   * Cancel a pending recovery (by owner)
+   */
   const cancelRecovery = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     return await writeContractAsync({
       address: vaultAddress,
-      abi: VAULT_ABI,
+      abi: USER_VAULT_ABI,
       functionName: 'cancelRecovery',
+    });
+  };
+
+  // ========================
+  // INHERITANCE FUNCTIONS
+  // ========================
+  
+  /**
+   * Request inheritance claim (by Next of Kin)
+   */
+  const requestInheritance = async () => {
+    if (!vaultAddress) throw new Error('Vault address not provided');
+    
+    return await writeContractAsync({
+      address: vaultAddress,
+      abi: USER_VAULT_ABI,
+      functionName: 'requestInheritance',
+    });
+  };
+
+  /**
+   * Approve inheritance claim (by a guardian)
+   */
+  const approveInheritance = async () => {
+    if (!vaultAddress) throw new Error('Vault address not provided');
+    
+    return await writeContractAsync({
+      address: vaultAddress,
+      abi: USER_VAULT_ABI,
+      functionName: 'approveInheritance',
+    });
+  };
+
+  /**
+   * Deny inheritance claim (by a guardian)
+   */
+  const denyInheritance = async () => {
+    if (!vaultAddress) throw new Error('Vault address not provided');
+    
+    return await writeContractAsync({
+      address: vaultAddress,
+      abi: USER_VAULT_ABI,
+      functionName: 'denyInheritance',
+    });
+  };
+
+  /**
+   * Finalize inheritance (after waiting period + approvals)
+   */
+  const finalizeInheritance = async () => {
+    if (!vaultAddress) throw new Error('Vault address not provided');
+    
+    return await writeContractAsync({
+      address: vaultAddress,
+      abi: USER_VAULT_ABI,
+      functionName: 'finalizeInheritance',
+    });
+  };
+
+  /**
+   * Cancel inheritance claim (by owner)
+   */
+  const cancelInheritance = async () => {
+    if (!vaultAddress) throw new Error('Vault address not provided');
+    
+    return await writeContractAsync({
+      address: vaultAddress,
+      abi: USER_VAULT_ABI,
+      functionName: 'cancelInheritance',
+    });
+  };
+
+  /**
+   * Cancel inheritance claim (by a guardian)
+   */
+  const guardianCancelInheritance = async () => {
+    if (!vaultAddress) throw new Error('Vault address not provided');
+    
+    return await writeContractAsync({
+      address: vaultAddress,
+      abi: USER_VAULT_ABI,
+      functionName: 'guardianCancelInheritance',
     });
   };
 
@@ -268,27 +432,40 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     // State
     vaultOwner,
     guardianCount: guardianCount ? Number(guardianCount) : 0,
+    guardians: guardians as `0x${string}`[] | undefined,
     isUserGuardian: !!isUserGuardian,
+    isUserGuardianMature: !!isUserGuardianMature,
+    nextOfKin: nextOfKin as `0x${string}` | undefined,
     recoveryStatus,
+    inheritanceStatus,
     isWritePending,
     
-    // Actions - VaultHubLite aligned
-    setNextOfKinAddress,   // Throws - not available in VaultHubLite
-    setGuardian,           // Slot-based guardian management
-    addGuardian,           // Legacy wrapper
-    removeGuardian,        // Slot-based
-    startRecovery,         // VaultHubLite name
-    requestRecovery,       // Legacy alias
+    // Next of Kin
+    setNextOfKinAddress,
+    
+    // Guardian management
+    setGuardian,
+    addGuardian,
+    removeGuardian,
+    
+    // Recovery
+    requestRecovery,
     approveRecovery,
-    executeRecovery,       // VaultHubLite name
-    finalizeRecovery,      // Legacy alias
+    finalizeRecovery,
     cancelRecovery,
     
+    // Inheritance
+    requestInheritance,
+    approveInheritance,
+    denyInheritance,
+    finalizeInheritance,
+    cancelInheritance,
+    guardianCancelInheritance,
+    
     // Refetch functions
-    refetchRecoveryState: () => {
-      refetchCandidate();
-      refetchApprovals();
-      refetchExpiry();
-    },
+    refetchRecoveryState: refetchRecoveryStatus,
+    refetchInheritanceState: refetchInheritanceStatus,
+    refetchNextOfKin,
+    refetchGuardians,
   };
 }

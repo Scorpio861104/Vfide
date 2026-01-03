@@ -7,6 +7,7 @@ import StablecoinRegistryABI from './StablecoinRegistry.json'
 import VaultInfrastructureABI from './VaultInfrastructure.json'
 import VaultHubLiteABI from './VaultHubLite.json'
 import UserVaultLiteABI from './UserVaultLite.json'
+import UserVaultABI from './UserVault.json'
 import SeerABI from './Seer.json'
 import VFIDEBadgeNFTABI from './VFIDEBadgeNFT.json'
 import DAOABI from './DAO.json'
@@ -22,13 +23,18 @@ import ProofScoreBurnRouterABI from './ProofScoreBurnRouter.json'
 import ProofLedgerABI from './ProofLedger.json'
 import CommerceEscrowABI from './CommerceEscrow.json'
 
+// VaultHub ABI - use VaultInfrastructure for full features
+const VaultHubABI = VaultInfrastructureABI
+
 export {
   VFIDETokenABI,
   VFIDEPresaleABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
+  VaultHubABI,
   VaultHubLiteABI,
   UserVaultLiteABI,
+  UserVaultABI,
   SeerABI,
   VFIDEBadgeNFTABI,
   DAOABI,

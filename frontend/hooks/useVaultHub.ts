@@ -118,8 +118,8 @@ export function useVaultHub() {
   const vaultAddressHex = vaultAddress as `0x${string}` | undefined;
   const hasVault = !!vaultAddressHex && vaultAddressHex !== '0x0000000000000000000000000000000000000000';
 
-  // Create vault for user
-  // Note: VaultHubLite uses createVault() with no args
+  // Create vault for user using ensureVault()
+  // VaultInfrastructure uses ensureVault() which creates if doesn't exist
   const createVault = async () => {
     if (!isValidVaultHubAddress || !userAddress) {
       throw new Error('VaultHub not configured or wallet not connected');
@@ -138,8 +138,8 @@ export function useVaultHub() {
       const result = await writeContractAsync({
         address: VAULT_HUB_ADDRESS,
         abi: PARSED_VAULT_HUB_ABI,
-        // VaultHubLite uses createVault() with no args
-        functionName: 'createVault',
+        // VaultInfrastructure uses ensureVault() which creates if doesn't exist
+        functionName: 'ensureVault',
         args: [],
         chainId: EXPECTED_CHAIN_ID,
       });

@@ -10,6 +10,8 @@ import {
   VFIDEPresaleABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
+  VaultHubABI,
+  UserVaultABI,
   SeerABI,
   VFIDEBadgeNFTABI,
   DAOABI,
@@ -86,13 +88,18 @@ export const CONTRACT_ADDRESSES = {
 export const MERCHANT_PORTAL_ABI = MerchantPortalABI;
 export const SEER_ABI = SeerABI;
 export const VFIDE_TOKEN_ABI = VFIDETokenABI;
-export const VAULT_HUB_ABI = VaultHubLiteABI;
+// Use full VaultHub (VaultInfrastructure) instead of VaultHubLite for all features
+export const VAULT_HUB_ABI = VaultHubABI;
+// UserVault ABI for individual vault operations (Next of Kin, guardians, inheritance)
+export const USER_VAULT_ABI = UserVaultABI;
 
 export {
   VFIDETokenABI,
   VFIDEPresaleABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
+  VaultHubABI,
+  UserVaultABI,
   SeerABI,
   VFIDEBadgeNFTABI,
   DAOABI,
