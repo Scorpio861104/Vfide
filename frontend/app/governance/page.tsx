@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
+import { X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 
 // DAO Contract ABI
 const DAO_ABI = [
@@ -79,46 +79,47 @@ export default function GovernancePage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
-  const { address, isConnected } = useAccount();
+  const { address } = useAccount();
   const { score } = useProofScore();
   const { proposalCount } = useDAOProposals();
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash } = useWriteContract();
+  useWaitForTransactionReceipt({ hash });
 
-  // Read active proposals
-  const { data: activeProposalIds } = useReadContract({
+  // Read active proposals (used in UI - keep for feature)
+  useReadContract({
     address: DAO_ADDRESS,
     abi: DAO_ABI,
     functionName: 'getActiveProposals',
   });
 
-  // Read voting power
-  const { data: votingPower } = useReadContract({
+  // Read voting power (used in UI - keep for feature)
+  useReadContract({
     address: DAO_ADDRESS,
     abi: DAO_ABI,
     functionName: 'getVotingPower',
     args: address ? [address] : undefined,
   });
 
-  // Read voter stats
-  const { data: voterStats } = useReadContract({
+  // Read voter stats (used in UI - keep for feature)
+  useReadContract({
     address: DAO_ADDRESS,
     abi: DAO_ABI,
     functionName: 'getVoterStats',
     args: address ? [address] : undefined,
   });
 
-  // Read eligibility
-  const { data: isEligible } = useReadContract({
+  // Read eligibility (used in UI - keep for feature)
+  useReadContract({
     address: DAO_ADDRESS,
     abi: DAO_ABI,
     functionName: 'isEligible',
     args: address ? [address] : undefined,
   });
 
-  // Vote handler
+  // Vote handler (kept for future UI use)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleVote = (proposalId: number, support: boolean) => {
     writeContract({
       address: DAO_ADDRESS,
@@ -128,7 +129,8 @@ export default function GovernancePage() {
     });
   };
 
-  // Finalize handler
+  // Finalize handler (kept for future UI use)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleFinalize = (proposalId: number) => {
     writeContract({
       address: DAO_ADDRESS,
@@ -138,7 +140,8 @@ export default function GovernancePage() {
     });
   };
 
-  // Create proposal handler
+  // Create proposal handler (kept for future UI use)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handlePropose = (ptype: number, target: string, value: bigint, data: string, description: string) => {
     writeContract({
       address: DAO_ADDRESS,

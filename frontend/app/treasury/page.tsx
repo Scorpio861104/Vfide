@@ -16,9 +16,7 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Sparkles,
-  Coins,
-  Building2
+  Coins
 } from "lucide-react";
 
 type TabType = 'overview' | 'sanctum' | 'ecosystem' | 'revenue' | 'vesting';

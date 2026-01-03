@@ -13,9 +13,9 @@ import {
   TrendingUp,
   Award,
   Users,
+  Heart,
   Clock,
   Coins,
-  Heart,
   Crown,
   Sparkles
 } from "lucide-react";

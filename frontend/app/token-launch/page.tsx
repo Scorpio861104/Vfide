@@ -4,8 +4,8 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useBalance, useGasPrice } from "wagmi";
-import { parseUnits, formatUnits, isAddress, formatEther } from "viem";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useGasPrice } from "wagmi";
+import { parseUnits, isAddress, formatEther } from "viem";
 import { Loader2, CheckCircle, Wallet, Fuel, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 

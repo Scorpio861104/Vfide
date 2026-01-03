@@ -4,22 +4,18 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-import { formatUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, 
-  Award, 
   DollarSign, 
   Clock, 
   Shield, 
   Vote,
   AlertTriangle,
   CheckCircle,
-  XCircle,
   Calendar,
   TrendingUp,
   Crown,
-  Loader2,
   Sparkles
 } from "lucide-react";
 

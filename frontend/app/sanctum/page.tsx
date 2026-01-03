@@ -4,9 +4,9 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-import { parseUnits, formatUnits, isAddress } from "viem";
+import { parseUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Shield, DollarSign, Users, CheckCircle, Clock, AlertTriangle, ExternalLink, Loader2, Sparkles } from "lucide-react";
+import { Heart, Shield, DollarSign, Users, CheckCircle, Clock, AlertTriangle, ExternalLink, Sparkles } from "lucide-react";
 
 // SanctumVault ABI
 const SANCTUM_VAULT_ABI = [

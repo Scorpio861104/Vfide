@@ -1,0 +1,157 @@
+/**
+ * Real DAO Hooks Tests
+ * Tests for useDAOHooks to increase coverage
+ */
+
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { renderHook } from '@testing-library/react'
+
+// Mock wagmi
+const mockUseReadContract = vi.fn()
+const mockUseWriteContract = vi.fn()
+const mockUseWaitForTransactionReceipt = vi.fn()
+
+vi.mock('wagmi', () => ({
+  useReadContract: (args: unknown) => mockUseReadContract(args),
+  useWriteContract: () => mockUseWriteContract(),
+  useWaitForTransactionReceipt: () => mockUseWaitForTransactionReceipt(),
+}))
+
+// Mock contracts
+vi.mock('../../lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    DAO: '0x1234567890123456789012345678901234567890',
+  },
+}))
+
+// Mock ABIs
+vi.mock('../../lib/abis', () => ({
+  DAOABI: [],
+}))
+
+// Import hooks after mocks
+import {
+  useDAOProposals,
+  useVote,
+} from '../../hooks/useDAOHooks'
+
+describe('useDAOProposals', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns proposal count', () => {
+    mockUseReadContract.mockReturnValue({
+      data: BigInt(10),
+    })
+    
+    const { result } = renderHook(() => useDAOProposals())
+    
+    expect(result.current.proposalCount).toBe(10)
+  })
+
+  it('returns 0 when no data', () => {
+    mockUseReadContract.mockReturnValue({
+      data: undefined,
+    })
+    
+    const { result } = renderHook(() => useDAOProposals())
+    
+    expect(result.current.proposalCount).toBe(0)
+  })
+
+  it('converts bigint to number', () => {
+    mockUseReadContract.mockReturnValue({
+      data: BigInt(25),
+    })
+    
+    const { result } = renderHook(() => useDAOProposals())
+    
+    expect(typeof result.current.proposalCount).toBe('number')
+  })
+})
+
+describe('useVote', () => {
+  const mockWriteContract = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockUseWriteContract.mockReturnValue({
+      writeContract: mockWriteContract,
+      data: undefined,
+      isPending: false,
+    })
+    mockUseWaitForTransactionReceipt.mockReturnValue({
+      isLoading: false,
+      isSuccess: false,
+    })
+  })
+
+  it('provides vote function', () => {
+    const { result } = renderHook(() => useVote(BigInt(1), true))
+    
+    expect(typeof result.current.vote).toBe('function')
+  })
+
+  it('returns isVoting false when not pending', () => {
+    const { result } = renderHook(() => useVote(BigInt(1), true))
+    
+    expect(result.current.isVoting).toBe(false)
+  })
+
+  it('returns isVoting true when pending', () => {
+    mockUseWriteContract.mockReturnValue({
+      writeContract: mockWriteContract,
+      data: undefined,
+      isPending: true,
+    })
+    
+    const { result } = renderHook(() => useVote(BigInt(1), true))
+    
+    expect(result.current.isVoting).toBe(true)
+  })
+
+  it('returns isVoting true when confirming', () => {
+    mockUseWaitForTransactionReceipt.mockReturnValue({
+      isLoading: true,
+      isSuccess: false,
+    })
+    
+    const { result } = renderHook(() => useVote(BigInt(1), true))
+    
+    expect(result.current.isVoting).toBe(true)
+  })
+
+  it('returns isSuccess when confirmed', () => {
+    mockUseWaitForTransactionReceipt.mockReturnValue({
+      isLoading: false,
+      isSuccess: true,
+    })
+    
+    const { result } = renderHook(() => useVote(BigInt(1), true))
+    
+    expect(result.current.isSuccess).toBe(true)
+  })
+
+  it('calls writeContract when vote is called', () => {
+    const { result } = renderHook(() => useVote(BigInt(5), true))
+    
+    result.current.vote()
+    
+    expect(mockWriteContract).toHaveBeenCalledWith(expect.objectContaining({
+      functionName: 'vote',
+      args: [BigInt(5), true],
+    }))
+  })
+
+  it('calls with support=false', () => {
+    const { result } = renderHook(() => useVote(BigInt(3), false))
+    
+    result.current.vote()
+    
+    expect(mockWriteContract).toHaveBeenCalledWith(expect.objectContaining({
+      functionName: 'vote',
+      args: [BigInt(3), false],
+    }))
+  })
+})

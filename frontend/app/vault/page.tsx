@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Shield, AlertTriangle, Lock, Clock, Plus, UserPlus, Users, Key, 
   Heart, ArrowDownToLine, ArrowUpFromLine, RefreshCw, CheckCircle2,
-  Sparkles, Zap, ChevronRight, DollarSign, TrendingUp
+  Zap, DollarSign, TrendingUp
 } from "lucide-react";
 
 // Animation variants
@@ -59,7 +59,7 @@ function GlassCard({ children, className = "", hover = true, gradient }: {
 function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
   const quarantineData = useQuarantineStatus(vaultAddress || undefined);
   const panicData = useCanSelfPanic();
-  const { selfPanic, isPanicking, isSuccess, isAvailable: isPanicAvailable } = useSelfPanic();
+  const { selfPanic, isPanicking, isAvailable: isPanicAvailable } = useSelfPanic();
   
   const [showPanicConfirm, setShowPanicConfirm] = useState(false);
   const [panicDuration, setPanicDuration] = useState(24);
@@ -210,27 +210,15 @@ function VaultContent() {
   const {
     vaultOwner,
     guardianCount,
-    guardians,
     isUserGuardian,
-    isUserGuardianMature,
     nextOfKin,
-    recoveryStatus,
     inheritanceStatus,
     isWritePending,
     setNextOfKinAddress,
     addGuardian,
-    requestRecovery,
-    approveRecovery,
-    finalizeRecovery,
-    cancelRecovery,
-    requestInheritance,
-    approveInheritance,
-    denyInheritance,
-    finalizeInheritance,
   } = useVaultRecovery(vaultAddress);
   
   const [newGuardianAddress, setNewGuardianAddress] = useState("");
-  const [recoveryAddress, setRecoveryAddress] = useState("");
   const [newNextOfKinAddress, setNewNextOfKinAddress] = useState("");
   
   const hasNextOfKin = nextOfKin && nextOfKin !== '0x0000000000000000000000000000000000000000';
@@ -262,21 +250,6 @@ function VaultContent() {
     } catch (error) {
       devLog.error('Failed to add guardian:', error);
       showToast("Failed to add guardian", "error");
-    }
-  };
-  
-  const handleRequestRecovery = async () => {
-    if (!isAddress(recoveryAddress)) {
-      showToast("Invalid address format", "error");
-      return;
-    }
-    try {
-      await requestRecovery(recoveryAddress as `0x${string}`);
-      setRecoveryAddress("");
-      showToast("Recovery requested!", "success");
-    } catch (error) {
-      devLog.error('Failed to request recovery:', error);
-      showToast("Failed to request recovery", "error");
     }
   };
   

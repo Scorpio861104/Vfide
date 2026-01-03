@@ -7,7 +7,7 @@
 import { motion } from 'framer-motion'
 import { useProofScore, useIsMentor, useBecomeMentor, useMentorInfo } from '@/lib/vfide-hooks'
 import { useAccount } from 'wagmi'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 export function BecomeMentorCard() {
   const { isConnected } = useAccount()

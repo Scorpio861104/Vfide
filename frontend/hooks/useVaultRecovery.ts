@@ -1,5 +1,5 @@
 import { useAccount, useWriteContract, useReadContract, useWatchContractEvent } from 'wagmi';
-import { useState, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { USER_VAULT_ABI } from '@/lib/contracts';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
@@ -24,21 +24,9 @@ interface InheritanceStatus {
 export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const { address: userAddress } = useAccount();
   const { writeContractAsync, isPending: isWritePending } = useWriteContract();
-  const [recoveryStatus, setRecoveryStatus] = useState<RecoveryStatus>({
-    isActive: false,
-    proposedOwner: null,
-    approvals: 0,
-    expiryTime: null,
-    daysRemaining: null,
-  });
-  const [inheritanceStatus, setInheritanceStatus] = useState<InheritanceStatus>({
-    isActive: false,
-    claimant: null,
-    guardianApprovals: 0,
-    guardianDenials: 0,
-    expiryTime: null,
-    daysRemaining: null,
-  });
+  
+  // State only for time-based updates (countdown timer)
+  const [now, setNow] = useState(() => Date.now());
 
   // Read vault owner
   const { data: vaultOwner } = useReadContract({
@@ -106,65 +94,72 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     query: { enabled: !!vaultAddress },
   });
 
-  // Initialize recovery status from contract state
-  useEffect(() => {
+  // Derive recovery status from contract data using useMemo (not useState + useEffect)
+  const recoveryStatus: RecoveryStatus = useMemo(() => {
     // recoveryData returns: [candidate, approvals, expiry, isActive]
     const data = recoveryData as [string, number, bigint, boolean] | undefined;
     
     if (data) {
       const [candidate, approvals, expiry, isActive] = data;
       const expiryMs = Number(expiry) * 1000;
-      const now = Date.now();
       const daysRemaining = Math.max(0, Math.ceil((expiryMs - now) / (24 * 60 * 60 * 1000)));
       
-      setRecoveryStatus({
+      return {
         isActive: isActive && candidate !== ZERO_ADDRESS,
         proposedOwner: candidate !== ZERO_ADDRESS ? candidate : null,
         approvals: approvals || 0,
         expiryTime: expiryMs > 0 ? expiryMs : null,
         daysRemaining: expiryMs > 0 ? daysRemaining : null,
-      });
-    } else {
-      setRecoveryStatus({
-        isActive: false,
-        proposedOwner: null,
-        approvals: 0,
-        expiryTime: null,
-        daysRemaining: null,
-      });
+      };
     }
-  }, [recoveryData]);
+    return {
+      isActive: false,
+      proposedOwner: null,
+      approvals: 0,
+      expiryTime: null,
+      daysRemaining: null,
+    };
+  }, [recoveryData, now]);
 
-  // Initialize inheritance status from contract state
-  useEffect(() => {
+  // Derive inheritance status from contract data using useMemo
+  const inheritanceStatus: InheritanceStatus = useMemo(() => {
     // inheritanceData returns: [claimant, guardianApprovals, guardianDenials, expiry, isActive]
     const data = inheritanceData as [string, number, number, bigint, boolean] | undefined;
     
     if (data) {
       const [claimant, guardianApprovals, guardianDenials, expiry, isActive] = data;
       const expiryMs = Number(expiry) * 1000;
-      const now = Date.now();
       const daysRemaining = Math.max(0, Math.ceil((expiryMs - now) / (24 * 60 * 60 * 1000)));
       
-      setInheritanceStatus({
+      return {
         isActive: isActive && claimant !== ZERO_ADDRESS,
         claimant: claimant !== ZERO_ADDRESS ? claimant : null,
         guardianApprovals: guardianApprovals || 0,
         guardianDenials: guardianDenials || 0,
         expiryTime: expiryMs > 0 ? expiryMs : null,
         daysRemaining: expiryMs > 0 ? daysRemaining : null,
-      });
-    } else {
-      setInheritanceStatus({
-        isActive: false,
-        claimant: null,
-        guardianApprovals: 0,
-        guardianDenials: 0,
-        expiryTime: null,
-        daysRemaining: null,
-      });
+      };
     }
-  }, [inheritanceData]);
+    return {
+      isActive: false,
+      claimant: null,
+      guardianApprovals: 0,
+      guardianDenials: 0,
+      expiryTime: null,
+      daysRemaining: null,
+    };
+  }, [inheritanceData, now]);
+
+  // Update time every minute for countdown calculations
+  useEffect(() => {
+    const hasActiveStatus = recoveryStatus.expiryTime || inheritanceStatus.expiryTime;
+    if (!hasActiveStatus) return;
+    
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [recoveryStatus.expiryTime, inheritanceStatus.expiryTime]);
 
   // Watch recovery events to update status in real-time
   useWatchContractEvent({
@@ -221,20 +216,6 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
       refetchInheritanceStatus();
     },
   });
-
-  // Calculate days remaining
-  useEffect(() => {
-    if (recoveryStatus.expiryTime) {
-      const interval = setInterval(() => {
-        const now = Date.now();
-        const remaining = recoveryStatus.expiryTime! - now;
-        const daysRemaining = Math.ceil(remaining / (24 * 60 * 60 * 1000));
-        setRecoveryStatus(prev => ({ ...prev, daysRemaining }));
-      }, 60000); // Update every minute
-
-      return () => clearInterval(interval);
-    }
-  }, [recoveryStatus.expiryTime]);
 
   // ========================
   // NEXT OF KIN FUNCTIONS

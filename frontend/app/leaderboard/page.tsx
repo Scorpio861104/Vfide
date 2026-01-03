@@ -2,7 +2,7 @@
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
-import { PageWrapper, PageHeader, Section, GlassCard, TabNavigation, StatsGrid } from '@/components/ui/PageLayout'
+import { GlassCard } from '@/components/ui/PageLayout'
 import { Badge } from '@/components/ui/FormElements'
 import { Counter } from '@/components/ui/Animations'
 import { useState } from 'react'
@@ -19,7 +19,6 @@ import {
   ChevronDown,
   Minus,
   Sparkles,
-  Target,
   Award
 } from 'lucide-react'
 
@@ -86,6 +85,8 @@ const getChangeIndicator = (change: number) => {
   return <Minus className="w-4 h-4 text-[#6A6A6F]" />
 }
 
+// Podium card for top 3 display (ready for use when live data available)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PodiumCard({ 
   entry, 
   place, 
@@ -157,6 +158,8 @@ function PodiumCard({
   )
 }
 
+// Table row for leaderboard entries (ready for use when live data available)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function LeaderboardRow({ entry, index }: { entry: typeof mockLeaderboard[0]; index: number }) {
   const tierStyle = tierColors[entry.tier] || tierColors['NEUTRAL']
   

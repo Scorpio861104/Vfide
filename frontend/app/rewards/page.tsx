@@ -3,7 +3,7 @@
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { formatUnits, parseUnits } from 'viem'
 import {
@@ -13,16 +13,13 @@ import {
   Droplets,
   GraduationCap,
   Users,
-  Target,
   Star,
   Zap,
-  TrendingUp,
   CheckCircle2,
   Clock,
   Lock,
   Coins,
   RefreshCw,
-  Loader2,
   Sparkles
 } from 'lucide-react'
 

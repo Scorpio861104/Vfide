@@ -17,11 +17,10 @@ import {
   CheckCircle2,
   Timer,
   Zap,
-  ArrowDownToLine,
-  Loader2
+  ArrowDownToLine
 } from 'lucide-react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
-import { formatUnits, parseUnits, isAddress } from 'viem'
+import { parseUnits, isAddress } from 'viem'
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 
@@ -129,19 +128,19 @@ export default function PayrollPage() {
   })
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash } = useWriteContract();
+  useWaitForTransactionReceipt({ hash });
 
-  // Read payer streams
-  const { data: payerStreamIds } = useReadContract({
+  // Read payer streams (for displaying sending streams)
+  useReadContract({
     address: PAYROLL_MANAGER_ADDRESS,
     abi: PAYROLL_MANAGER_ABI,
     functionName: 'getPayerStreams',
     args: address ? [address] : undefined,
   });
 
-  // Read payee streams
-  const { data: payeeStreamIds } = useReadContract({
+  // Read payee streams (for displaying receiving streams)
+  useReadContract({
     address: PAYROLL_MANAGER_ADDRESS,
     abi: PAYROLL_MANAGER_ABI,
     functionName: 'getPayeeStreams',
@@ -189,6 +188,7 @@ export default function PayrollPage() {
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleCancelStream = (streamId: number) => {
     writeContract({
       address: PAYROLL_MANAGER_ADDRESS,

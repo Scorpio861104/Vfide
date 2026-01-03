@@ -5,8 +5,6 @@ import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-import { formatUnits, parseUnits } from "viem";
-import { Loader2 } from "lucide-react";
 
 // SubscriptionManager ABI
 const SUBSCRIPTION_MANAGER_ABI = [

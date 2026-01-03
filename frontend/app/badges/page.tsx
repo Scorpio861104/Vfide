@@ -3,7 +3,7 @@
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { keccak256, toBytes } from 'viem'
 import { 
@@ -101,7 +101,8 @@ export default function BadgesPage() {
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const currentTime = useMemo(() => Date.now(), [])
+  // Get current time once on component mount
+  const [currentTime] = useState(() => Date.now())
   const allBadges = getAllBadges()
   const categories = getBadgeCategories()
 
@@ -134,11 +135,11 @@ export default function BadgesPage() {
     }
   };
 
-  // Mock user badges
+  // Mock user badges - using currentTime to avoid render-time Date.now() calls
   const mockUserBadges: Record<string, { earned: boolean; expiry?: number; minted: boolean; tokenId?: number }> = {
     PIONEER: { earned: true, minted: true, tokenId: 2847 },
     GENESIS_PRESALE: { earned: true, minted: false },
-    ACTIVE_TRADER: { earned: true, expiry: Date.now() + 60 * 24 * 60 * 60 * 1000, minted: false },
+    ACTIVE_TRADER: { earned: true, expiry: currentTime + 60 * 24 * 60 * 60 * 1000, minted: false },
     GOVERNANCE_VOTER: { earned: false, minted: false },
     POWER_USER: { earned: false, minted: false },
     TRUSTED_ENDORSER: { earned: false, minted: false },

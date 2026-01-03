@@ -19,9 +19,11 @@ export default function AddressPage() {
   // Validate address format
   const isValidAddress = address && address.startsWith('0x') && address.length === 42
   
-  const { score: _score, tier, canVote, canMerchant, isLoading } = useProofScore(
+  const { score, tier, canVote, canMerchant, isLoading } = useProofScore(
     isValidAddress ? address : undefined
   )
+  // Suppress unused variable warning - score is part of returned data structure
+  void score
 
   const copyAddress = () => {
     navigator.clipboard.writeText(address)
