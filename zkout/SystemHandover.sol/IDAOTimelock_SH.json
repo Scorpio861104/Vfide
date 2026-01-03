@@ -1,1 +1,0 @@
-{"abi":[{"type":"function","name":"setAdmin","inputs":[{"name":"_admin","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"}],"storageLayout":{"storage":[],"types":{}},"userdoc":{},"devdoc":{},"methodIdentifiers":{},"factoryDependencies":{},"factoryDependenciesUnlinked":[],"id":26}
