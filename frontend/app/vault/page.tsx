@@ -105,6 +105,28 @@ import { isAddress } from "viem";
                 </motion.div>
               </motion.div>
             )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EmergencyCard() {
+  const { address } = useAccount();
+  const { data: isQuarantined } = useReadContract({
+    address: EMERGENCY_CONTROL_ADDRESS as `0x${string}`,
+    abi: EmergencyControlABI,
+    functionName: 'quarantinedVaults',
+    args: address ? [address as `0x${string}`] : undefined,
+  });
+
+  const remainingTime = 0;
+  const remainingHours = Math.floor(remainingTime / 3600);
+  const remainingMinutes = Math.floor((remainingTime % 3600) / 60);
+
+  const { writeContract: initiateQuarantine } = useWriteContract();
+  const { writeContract: finalizeRecovery } = useWriteContract();
 
   return (
     <section className="py-8">

@@ -183,10 +183,8 @@ export default function CouncilPage() {
             badge="Governance Council"
             badgeIcon={<Crown className="w-4 h-4" />}
             title={<span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Council Management</span>}
-            subtitle="
-              Governance council operations, member management, and salary distribution
-            </p>
-          </motion.div>
+            subtitle="Governance council operations, member management, and salary distribution"
+          />
 
           {/* Tab Navigation */}
           <motion.div 

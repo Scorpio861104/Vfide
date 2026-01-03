@@ -199,11 +199,6 @@ export default function PayrollPage() {
                                   <p className={`font-semibold ${isLowRunway && role === 'employer' ? 'text-red-400' : 'text-white'}`}>{formatRunway(runway)}</p>
                                 </div>
                               </div>
-    return {
-      symbol: token.toLowerCase() === VFIDE_TOKEN_ADDRESS.toLowerCase() ? 'VFIDE' : 'TOKEN',
-      decimals: 18,
-    }
-  }
 
   const streams: StreamData[] = useMemo(() => {
     if (!streamIds.length || !streamDetails) return emptyStreams
