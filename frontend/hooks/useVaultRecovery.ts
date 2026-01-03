@@ -2,32 +2,32 @@ import { useAccount, useWriteContract, useReadContract, useWatchContractEvent } 
 import { useState, useEffect } from 'react';
 import { parseAbi } from 'viem';
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
 const VAULT_ABI = parseAbi([
   // Read functions
   'function owner() view returns (address)',
   'function guardianCount() view returns (uint8)',
   'function isGuardian(address) view returns (bool)',
-  'function isGuardianMature(address) view returns (bool)',
-  'function nextOfKin() view returns (address)',
-  'function guardianAddTime(address) view returns (uint64)',
   
-  // Recovery state (note: _recovery is private, we need to track via events)
+  // Recovery state reads - UserVaultLite/VaultHubLite
+  'function recoveryCandidate() view returns (address)',
+  'function recoveryApprovals() view returns (uint8)',
+  'function recoveryExpiry() view returns (uint64)',
+  'function hasApprovedRecovery(address) view returns (bool)',
   
-  // Write functions
-  'function setNextOfKin(address kin) external',
-  'function setGuardian(address g, bool active) external',
-  'function requestRecovery(address proposedOwner) external',
-  'function guardianApproveRecovery() external',
-  'function finalizeRecovery() external',
+  // Write functions - VaultHubLite signatures
+  'function setGuardian(uint8 slot, address guardian) external',
+  'function startRecovery(address candidate) external',
+  'function approveRecovery() external',
+  'function executeRecovery() external',
   'function cancelRecovery() external',
   
-  // Events
-  'event NextOfKinSet(address indexed kin)',
-  'event GuardianSet(address indexed guardian, bool active)',
-  'event RecoveryRequested(address indexed proposedOwner)',
-  'event RecoveryApproved(address indexed guardian, address indexed proposedOwner, uint8 approvals)',
-  'event RecoveryCancelled(address indexed cancelledBy)',
-  'event RecoveryFinalized(address indexed newOwner)',
+  // Events - VaultHubLite events
+  'event GuardianSet(address indexed guardian, uint8 slot, bool active)',
+  'event RecoveryStarted(address indexed candidate)',
+  'event RecoveryApproved(address indexed guardian)',
+  'event RecoveryExecuted(address indexed newOwner)',
 ]);
 
 interface RecoveryStatus {
@@ -74,38 +74,72 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     query: { enabled: !!vaultAddress && !!userAddress },
   });
 
-  // Check if guardian is mature
-  const { data: isGuardianMature } = useReadContract({
+  // Read recovery state from contract (persists across page refresh)
+  const { data: recoveryCandidate, refetch: refetchCandidate } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
-    functionName: 'isGuardianMature',
-    args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!vaultAddress && !!userAddress && !!isUserGuardian },
-  });
-
-  // Read Next of Kin
-  const { data: nextOfKin } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'nextOfKin',
+    functionName: 'recoveryCandidate',
     query: { enabled: !!vaultAddress },
   });
 
-  // Watch recovery events to track status
+  const { data: contractRecoveryApprovals, refetch: refetchApprovals } = useReadContract({
+    address: vaultAddress,
+    abi: VAULT_ABI,
+    functionName: 'recoveryApprovals',
+    query: { enabled: !!vaultAddress },
+  });
+
+  const { data: recoveryExpiry, refetch: refetchExpiry } = useReadContract({
+    address: vaultAddress,
+    abi: VAULT_ABI,
+    functionName: 'recoveryExpiry',
+    query: { enabled: !!vaultAddress },
+  });
+
+  // Initialize recovery status from contract state
+  useEffect(() => {
+    const candidate = recoveryCandidate as `0x${string}` | undefined;
+    const approvals = contractRecoveryApprovals as number | undefined;
+    const expiry = recoveryExpiry as bigint | undefined;
+    
+    const computeStatus = () => {
+      if (candidate && candidate !== ZERO_ADDRESS && expiry) {
+        const expiryMs = Number(expiry) * 1000;
+        const now = Date.now();
+        const daysRemaining = Math.max(0, Math.ceil((expiryMs - now) / (24 * 60 * 60 * 1000)));
+        return {
+          isActive: expiryMs > now,
+          proposedOwner: candidate,
+          approvals: approvals || 0,
+          expiryTime: expiryMs,
+          daysRemaining,
+        } as const;
+      }
+      return {
+        isActive: false,
+        proposedOwner: null,
+        approvals: 0,
+        expiryTime: null,
+        daysRemaining: null,
+      } as const;
+    };
+
+    const status = computeStatus();
+    setTimeout(() => setRecoveryStatus(status), 0);
+  }, [recoveryCandidate, contractRecoveryApprovals, recoveryExpiry]);
+
+  // Watch recovery events to update status in real-time - VaultHubLite events
   useWatchContractEvent({
     address: vaultAddress,
     abi: VAULT_ABI,
-    eventName: 'RecoveryRequested',
+    eventName: 'RecoveryStarted',
     onLogs: (logs) => {
       const latestLog = logs[logs.length - 1];
-      if (latestLog && latestLog.args.proposedOwner) {
-        setRecoveryStatus({
-          isActive: true,
-          proposedOwner: latestLog.args.proposedOwner as string,
-          approvals: 0,
-          expiryTime: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days from now
-          daysRemaining: 30,
-        });
+      if (latestLog && latestLog.args.candidate) {
+        // Refetch contract state for accuracy
+        refetchCandidate();
+        refetchApprovals();
+        refetchExpiry();
       }
     },
   });
@@ -114,44 +148,21 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: VAULT_ABI,
     eventName: 'RecoveryApproved',
-    onLogs: (logs) => {
-      const latestLog = logs[logs.length - 1];
-      if (latestLog && latestLog.args.approvals !== undefined) {
-        setRecoveryStatus(prev => ({
-          ...prev,
-          approvals: Number(latestLog.args.approvals),
-        }));
-      }
+    onLogs: () => {
+      // Refetch contract state for accuracy
+      refetchApprovals();
     },
   });
 
   useWatchContractEvent({
     address: vaultAddress,
     abi: VAULT_ABI,
-    eventName: 'RecoveryFinalized',
+    eventName: 'RecoveryExecuted',
     onLogs: () => {
-      setRecoveryStatus({
-        isActive: false,
-        proposedOwner: null,
-        approvals: 0,
-        expiryTime: null,
-        daysRemaining: null,
-      });
-    },
-  });
-
-  useWatchContractEvent({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    eventName: 'RecoveryCancelled',
-    onLogs: () => {
-      setRecoveryStatus({
-        isActive: false,
-        proposedOwner: null,
-        approvals: 0,
-        expiryTime: null,
-        daysRemaining: null,
-      });
+      // Refetch all recovery state
+      refetchCandidate();
+      refetchApprovals();
+      refetchExpiry();
     },
   });
 
@@ -170,49 +181,54 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   }, [recoveryStatus.expiryTime]);
 
   // Write functions
-  const setNextOfKinAddress = async (kinAddress: `0x${string}`) => {
+  // NOTE: setNextOfKin not available in VaultHubLite
+  const setNextOfKinAddress = async () => {
+    throw new Error('Next of kin feature not available in VaultHubLite');
+  };
+
+  // VaultHubLite uses slot-based guardians
+  const setGuardian = async (slot: number, guardianAddress: `0x${string}`) => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     return await writeContractAsync({
       address: vaultAddress,
       abi: VAULT_ABI,
-      functionName: 'setNextOfKin',
-      args: [kinAddress],
+      functionName: 'setGuardian',
+      args: [slot, guardianAddress],
     });
   };
 
+  // Legacy wrapper for backwards compatibility - adds to first empty slot
   const addGuardian = async (guardianAddress: `0x${string}`) => {
+    // In VaultHubLite, we use slot 0 by default
+    return setGuardian(0, guardianAddress);
+  };
+
+  const removeGuardian = async (slot: number) => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     return await writeContractAsync({
       address: vaultAddress,
       abi: VAULT_ABI,
       functionName: 'setGuardian',
-      args: [guardianAddress, true],
+      args: [slot, '0x0000000000000000000000000000000000000000'],
     });
   };
 
-  const removeGuardian = async (guardianAddress: `0x${string}`) => {
+  // VaultHubLite uses startRecovery, not requestRecovery
+  const startRecovery = async (candidateAddress: `0x${string}`) => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     return await writeContractAsync({
       address: vaultAddress,
       abi: VAULT_ABI,
-      functionName: 'setGuardian',
-      args: [guardianAddress, false],
+      functionName: 'startRecovery',
+      args: [candidateAddress],
     });
   };
 
-  const requestRecovery = async (newOwnerAddress: `0x${string}`) => {
-    if (!vaultAddress) throw new Error('Vault address not provided');
-    
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: VAULT_ABI,
-      functionName: 'requestRecovery',
-      args: [newOwnerAddress],
-    });
-  };
+  // Legacy alias for backwards compatibility
+  const requestRecovery = startRecovery;
 
   const approveRecovery = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
@@ -220,19 +236,23 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     return await writeContractAsync({
       address: vaultAddress,
       abi: VAULT_ABI,
-      functionName: 'guardianApproveRecovery',
+      functionName: 'approveRecovery',
     });
   };
 
-  const finalizeRecovery = async () => {
+  // VaultHubLite uses executeRecovery, not finalizeRecovery
+  const executeRecovery = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     return await writeContractAsync({
       address: vaultAddress,
       abi: VAULT_ABI,
-      functionName: 'finalizeRecovery',
+      functionName: 'executeRecovery',
     });
   };
+
+  // Legacy alias for backwards compatibility
+  const finalizeRecovery = executeRecovery;
 
   const cancelRecovery = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
@@ -249,18 +269,26 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     vaultOwner,
     guardianCount: guardianCount ? Number(guardianCount) : 0,
     isUserGuardian: !!isUserGuardian,
-    isGuardianMature: !!isGuardianMature,
-    nextOfKin,
     recoveryStatus,
     isWritePending,
     
-    // Actions
-    setNextOfKinAddress,
-    addGuardian,
-    removeGuardian,
-    requestRecovery,
+    // Actions - VaultHubLite aligned
+    setNextOfKinAddress,   // Throws - not available in VaultHubLite
+    setGuardian,           // Slot-based guardian management
+    addGuardian,           // Legacy wrapper
+    removeGuardian,        // Slot-based
+    startRecovery,         // VaultHubLite name
+    requestRecovery,       // Legacy alias
     approveRecovery,
-    finalizeRecovery,
+    executeRecovery,       // VaultHubLite name
+    finalizeRecovery,      // Legacy alias
     cancelRecovery,
+    
+    // Refetch functions
+    refetchRecoveryState: () => {
+      refetchCandidate();
+      refetchApprovals();
+      refetchExpiry();
+    },
   };
 }

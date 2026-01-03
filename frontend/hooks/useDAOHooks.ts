@@ -20,14 +20,14 @@ export function useDAOProposals() {
   }
 }
 
-export function useVote(proposalId: bigint, support: boolean) {
+export function useVote() {
   const { writeContract, data, isPending } = useWriteContract()
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
-  const vote = () => {
+  const vote = (proposalId: bigint, support: boolean) => {
     writeContract({
       address: CONTRACT_ADDRESSES.DAO,
       abi: DAOABI,

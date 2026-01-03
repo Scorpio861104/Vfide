@@ -1,7 +1,7 @@
 'use client'
 
 import { getAllBadges, type BadgeMetadata } from '@/lib/badge-registry'
-import { useUserBadges, useProofScore } from '@/lib/vfide-hooks'
+import { useBadgeNFTs, useProofScore } from '@/lib/vfide-hooks'
 import { BadgeDisplay } from './BadgeDisplay'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,10 +18,10 @@ interface BadgeWithProgress extends BadgeMetadata {
 }
 
 export function BadgeProgress({ address, maxItems = 5 }: BadgeProgressProps) {
-  const { badgeIds } = useUserBadges(address)
+  const { tokenIds } = useBadgeNFTs(address)
   const { score } = useProofScore(address)
   
-  const earnedSet = new Set(badgeIds)
+  const earnedSet = new Set(tokenIds.map(id => id.toString()))
   
   // Calculate progress for each badge
   const badgesWithProgress: BadgeWithProgress[] = getAllBadges()

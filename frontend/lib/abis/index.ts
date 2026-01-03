@@ -6,6 +6,7 @@ import VFIDEPresaleABI from './VFIDEPresale.json'
 import StablecoinRegistryABI from './StablecoinRegistry.json'
 import VaultInfrastructureABI from './VaultInfrastructure.json'
 import VaultHubLiteABI from './VaultHubLite.json'
+import UserVaultLiteABI from './UserVaultLite.json'
 import SeerABI from './Seer.json'
 import VFIDEBadgeNFTABI from './VFIDEBadgeNFT.json'
 import DAOABI from './DAO.json'
@@ -27,6 +28,7 @@ export {
   StablecoinRegistryABI,
   VaultInfrastructureABI,
   VaultHubLiteABI,
+  UserVaultLiteABI,
   SeerABI,
   VFIDEBadgeNFTABI,
   DAOABI,

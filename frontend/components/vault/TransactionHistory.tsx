@@ -32,9 +32,12 @@ interface TransactionHistoryProps {
 export function TransactionHistory({ transactions = [], loading = false }: TransactionHistoryProps) {
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Track whether we're showing demo data
+  const isShowingDemoData = transactions.length === 0;
 
-  // Mock data for demonstration
-  const mockTransactions: Transaction[] = transactions.length > 0 ? transactions : [
+  // Mock data for demonstration - only shown when no real transactions exist
+  const mockTransactions: Transaction[] = transactions.length ? transactions : [
     {
       id: '1',
       type: 'receive',
@@ -139,9 +142,16 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
   return (
     <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8]">
-          Transaction History
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8]">
+            Transaction History
+          </h2>
+          {isShowingDemoData && (
+            <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-900/30 text-yellow-400 border border-yellow-500/30 rounded-full">
+              DEMO
+            </span>
+          )}
+        </div>
         
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Search */}
@@ -253,7 +263,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
         </div>
       )}
       
-      {filteredTransactions.length > 0 && (
+      {filteredTransactions.length && (
         <div className="mt-4 text-center">
           <button className="text-[#00F0FF] text-sm hover:underline">
             Load More →

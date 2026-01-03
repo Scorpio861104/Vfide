@@ -4,6 +4,7 @@ import { useState, useEffect, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { X, ArrowRight, ArrowLeft, Check, Sparkles, DollarSign, Zap, Shield, Star, Store, Vote, Rocket } from "lucide-react";
+import { safeLocalStorage } from "@/lib/utils";
 
 interface TourStep {
   id: string;
@@ -127,13 +128,13 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
 
   const handleSkip = () => {
     setIsVisible(false);
-    localStorage.setItem("vfide_tour_completed", "skipped");
+    safeLocalStorage.setItem("vfide_tour_completed", "skipped");
     onComplete();
   };
 
   const handleComplete = () => {
     setIsVisible(false);
-    localStorage.setItem("vfide_tour_completed", "true");
+    safeLocalStorage.setItem("vfide_tour_completed", "true");
     onComplete();
   };
 

@@ -5,11 +5,13 @@
 
 'use client'
 
-import { useProofScore, useUserBadges, useScoreBreakdown } from '@/lib/vfide-hooks'
+import { useProofScore, useBadgeNFTs, useScoreBreakdown } from '@/lib/vfide-hooks'
 import { getBadgeById } from '@/lib/badge-registry'
 import { motion, useSpring } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { BadgeDisplay } from '../badge/BadgeDisplay'
+import { EndorsementStats } from './EndorsementStats'
+import { EndorsementCard } from './EndorsementCard'
 
 interface ProofScoreVisualizerProps {
   address?: `0x${string}`
@@ -17,6 +19,8 @@ interface ProofScoreVisualizerProps {
   showDetails?: boolean
   showBadges?: boolean
   showBreakdown?: boolean
+  showEndorsements?: boolean
+  showEndorsementCard?: boolean
 }
 
 export function ProofScoreVisualizer({ 
@@ -25,9 +29,11 @@ export function ProofScoreVisualizer({
   showDetails = true,
   showBadges = true,
   showBreakdown = false,
+  showEndorsements = true,
+  showEndorsementCard = false,
 }: ProofScoreVisualizerProps) {
   const { score, tier, burnFee, color, canVote, canMerchant, isElite, isLoading } = useProofScore(address)
-  const { badgeIds } = useUserBadges(address)
+  const { tokenIds } = useBadgeNFTs(address)
   const { breakdown } = useScoreBreakdown(address)
   
   // Smooth animated score counter
@@ -73,6 +79,11 @@ export function ProofScoreVisualizer({
   
   return (
     <div className="flex flex-col items-center gap-4">
+      {/* Endorsement stats - shown above when enabled */}
+      {showEndorsements && (
+        <EndorsementStats address={address} size={size === 'small' ? 'small' : 'medium'} />
+      )}
+      
       {/* Circular Score Display */}
       <motion.div
         className="relative"
@@ -220,7 +231,7 @@ export function ProofScoreVisualizer({
       )}
       
       {/* Badge Display Section */}
-      {showBadges && badgeIds.length > 0 && (
+      {showBadges && tokenIds.length && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -228,31 +239,32 @@ export function ProofScoreVisualizer({
           className="mt-6 space-y-3"
         >
           <div className={`text-center ${detailSizes[size]} text-[#F5F3E8]/70`}>
-            {badgeIds.length} Badge{badgeIds.length !== 1 ? 's' : ''} Earned
+            {tokenIds.length} Badge{tokenIds.length !== 1 ? 's' : ''} Earned
           </div>
           
           {/* Top 3 Badges */}
           <div className="flex gap-2 justify-center">
-            {badgeIds.slice(0, 3).map((badgeId, idx) => {
-              const badge = getBadgeById(badgeId)
+            {tokenIds.slice(0, 3).map((badgeId, idx) => {
+              const badgeIdHex = `0x${BigInt(badgeId).toString(16)}` as `0x${string}`
+              const badge = getBadgeById(badgeIdHex)
               if (!badge) return null
               
               return (
                 <motion.div
-                  key={badgeId}
+                  key={badgeId.toString()}
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ delay: 0.6 + idx * 0.1 }}
                 >
-                  <BadgeDisplay badgeId={badgeId} size="sm" />
+                  <BadgeDisplay badgeId={badgeIdHex} size="sm" />
                 </motion.div>
               )
             })}
           </div>
           
-          {badgeIds.length > 3 && (
+          {tokenIds.length > 3 && (
             <div className={`text-center ${detailSizes[size]} text-[#F5F3E8]/50`}>
-              +{badgeIds.length - 3} more
+              +{tokenIds.length - 3} more
             </div>
           )}
         </motion.div>
@@ -331,6 +343,14 @@ export function ProofScoreVisualizer({
             </div>
           </div>
         </motion.div>
+      )}
+
+      {/* Endorsement Card - shown in profile/detailed view */}
+      {showEndorsementCard && address && (
+        <EndorsementCard 
+          targetAddress={address} 
+          endorserScore={score}
+        />
       )}
     </div>
   )

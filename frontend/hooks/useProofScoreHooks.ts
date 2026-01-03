@@ -70,21 +70,18 @@ export function useEndorse(targetAddress?: `0x${string}`) {
     hash: data,
   })
   
-  const endorse = async () => {
+  const endorse = async (reason = 'endorsement') => {
     setError(null)
-    
-    // Validate target address
-    if (!targetAddress || targetAddress === '0x0000000000000000000000000000000000000000') {
+    if (!targetAddress || targetAddress === ZERO_ADDRESS) {
       setError('Invalid target address')
       return { success: false, error: 'Invalid target address' }
     }
-    
     try {
       await writeContractAsync({
         address: CONTRACT_ADDRESSES.Seer,
         abi: SeerABI,
-        functionName: 'endorseUser',
-        args: [targetAddress],
+        functionName: 'endorse',
+        args: [targetAddress, reason],
       })
       return { success: true }
     } catch (err: unknown) {
@@ -99,20 +96,19 @@ export function useEndorse(targetAddress?: `0x${string}`) {
     isEndorsing: isPending || isConfirming,
     isSuccess,
     error,
-    isValid: !!targetAddress && targetAddress !== '0x0000000000000000000000000000000000000000',
+    isValid: !!targetAddress && targetAddress !== ZERO_ADDRESS,
+    isAvailable: !!targetAddress,
   }
 }
 
 /**
- * Score breakdown hook - Note: getScoreBreakdown is not in Seer ABI
- * This provides a simulated breakdown based on the main score.
- * TODO: Add getScoreBreakdown to Seer contract or use ProofLedger for components.
+/**
+ * Score breakdown hook - Breakdown of a user's proof score components
  */
-export function useScoreBreakdown(address?: `0x${string}`) {
+export function useScoreBreakdown(userAddress?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
-  const targetAddress = address || connectedAddress
+  const targetAddress = userAddress || connectedAddress
   
-  // Use getScore instead since getScoreBreakdown doesn't exist in ABI
   const { data, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
@@ -131,11 +127,12 @@ export function useScoreBreakdown(address?: `0x${string}`) {
     breakdown: {
       totalScore,
       baseScore: Math.floor(totalScore * 0.4),
-      vaultBonus: Math.floor(totalScore * 0.15),
+      activityBonus: Math.floor(totalScore * 0.3),
       ageBonus: Math.floor(totalScore * 0.1),
       activityPoints: Math.floor(totalScore * 0.15),
       endorsementPoints: Math.floor(totalScore * 0.1),
-      badgePoints: Math.floor(totalScore * 0.1),
+      vaultBonus: 0,
+      badgePoints: 0,
       reputationDelta: 0,
       hasDiversityBonus: totalScore >= 7000,
     },

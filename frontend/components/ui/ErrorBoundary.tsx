@@ -27,7 +27,14 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    // Log to error reporting service in production
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+      // H-9: Error tracking deferred - integrate Sentry or similar in future release
+      // Track issue: https://github.com/VFIDE-DAO/vfide-frontend/issues/new?labels=enhancement
+    }
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error caught by boundary:', error, errorInfo);
+    }
   }
 
   handleReset = () => {

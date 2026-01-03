@@ -132,7 +132,9 @@ export function useSelfPanic() {
   
   const selfPanic = (durationHours: number = 24) => {
     if (!isAvailable) {
-      console.error('PanicGuard contract not deployed - selfPanic unavailable')
+      if (process.env.NODE_ENV === 'development') {
+        console.error('PanicGuard contract not deployed - selfPanic unavailable')
+      }
       return
     }
     const durationSeconds = durationHours * 3600

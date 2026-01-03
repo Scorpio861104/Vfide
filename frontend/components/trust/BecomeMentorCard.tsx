@@ -13,23 +13,15 @@ export function BecomeMentorCard() {
   const { isConnected } = useAccount()
   const { score, canEndorse } = useProofScore()
   const { isMentor } = useIsMentor()
-  const { canBecomeMentor, mentorEligibleAt } = useMentorInfo()
+  const { canBecomeMentor } = useMentorInfo()
   const { becomeMentor, isLoading, isSuccess } = useBecomeMentor()
   const [showDetails, setShowDetails] = useState(false)
-  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000))
-
-  // Update time every minute for accurate countdown
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 60000)
-    return () => clearInterval(interval)
-  }, [])
 
   if (!isConnected || isMentor) return null
 
   const meetsScoreRequirement = canEndorse // score >= 8000
-  const daysUntilMentor = mentorEligibleAt ? Math.max(0, Math.ceil((mentorEligibleAt - now) / (24 * 60 * 60))) : null
-  const meetsTimeRequirement = canBecomeMentor && (daysUntilMentor === null || daysUntilMentor <= 0)
-  const canRegister = meetsScoreRequirement && meetsTimeRequirement
+  const meetsTimeRequirement = canBecomeMentor
+  const canRegister = meetsScoreRequirement && canBecomeMentor
 
   return (
     <motion.div
@@ -72,11 +64,6 @@ export function BecomeMentorCard() {
           </div>
           <div className="flex-1">
             <div className="text-sm font-medium">Maintain 8,000+ for 30 Days</div>
-            {daysUntilMentor !== null && daysUntilMentor > 0 && (
-              <div className="text-xs text-[#F5F3E8]/50">
-                {daysUntilMentor} days remaining
-              </div>
-            )}
             {!canBecomeMentor && (
               <div className="text-xs text-[#F5F3E8]/50">
                 Reach 8,000 to start cooldown

@@ -8,6 +8,8 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadCont
 import { parseUnits, formatUnits, isAddress, formatEther } from "viem";
 import { Loader2, CheckCircle, Wallet, Fuel, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { useEthPrice } from "@/hooks/useEthPrice";
+import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 
 // VFIDEPresale ABI
 const PRESALE_ABI = [
@@ -136,8 +138,8 @@ const ERC20_ABI = [
   }
 ] as const;
 
-// Contract addresses from environment - Base Sepolia deployment
-const PRESALE_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '0x89aefb047B6CB2bB302FE2734DDa452985eF1658') as `0x${string}`;
+// Contract address (centralized in lib/contracts)
+const PRESALE_ADDRESS = CONTRACT_ADDRESSES.VFIDEPresale as `0x${string}`;
 // Note: USDC/USDT are not available on Base Sepolia testnet
 // Users must use ETH for testnet purchases
 const STABLECOINS_AVAILABLE = false; // Set to true when stablecoins are deployed
@@ -171,10 +173,11 @@ export default function TokenLaunchPage() {
   // Gas price for fee estimate
   const { data: gasPrice } = useGasPrice();
   const { data: ethBalance } = useBalance({ address });
+  const { ethPrice } = useEthPrice();
   const estimatedGas = BigInt(150000); // Typical presale tx gas
   const gasCostWei = gasPrice ? estimatedGas * gasPrice : BigInt(0);
   const gasCostEth = parseFloat(formatEther(gasCostWei));
-  const gasCostUsd = gasCostEth * 2500; // Rough ETH price
+  const gasCostUsd = gasCostEth * ethPrice; // Live ETH price
 
   // Read tier availability
   const { data: foundingRemaining } = useReadContract({

@@ -14,7 +14,10 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/vault", label: "Vault" },
   { href: "/merchant", label: "Merchant" },
+  { href: "/payroll", label: "Payroll" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/endorsements", label: "Endorsements" },
+  { href: "/appeals", label: "Appeals" },
   { href: "/governance", label: "Governance" },
   { href: "/token-launch", label: "Launch", accent: true },
   { href: "/docs", label: "Docs" },
@@ -78,7 +81,7 @@ export function GlobalNav() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const isActive = pathname?.startsWith(link.href);
               return (
                 <Link 
                   key={link.href}

@@ -72,7 +72,7 @@ This document tracks **every discrepancy** between the VFIDE Ecosystem Overview 
 ## AUDIT STATUS
 
 **Sections Verified:**
-- ✅ Token Supply Constants (200M/40M/75M) - PERFECT MATCH
+- ✅ Token Supply Constants (200M/50M/50M) - PERFECT MATCH
 - ✅ Presale Pricing (0.03/0.05/0.07) - PERFECT MATCH  
 - ✅ Referral Bonuses (100bps/200bps) - PERFECT MATCH
 - ✅ ProofScore Thresholds (350/700/540/560) - PERFECT MATCH

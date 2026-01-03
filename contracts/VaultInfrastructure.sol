@@ -1044,8 +1044,9 @@ contract VaultInfrastructure is Ownable {
     // Recovery Timelock with Multi-Sig (H-5 Fix)
     mapping(address => uint64) public recoveryUnlockTime;
     mapping(address => address) public recoveryProposedOwner;
-    mapping(address => mapping(address => bool)) public recoveryApprovals;
+    mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals; // C-2 Fix: nonce-based
     mapping(address => uint8) public recoveryApprovalCount;
+    mapping(address => uint256) public recoveryNonce; // C-2 Fix: Nonce to invalidate old approvals
     uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     mapping(address => bool) public isRecoveryApprover;
@@ -1157,9 +1158,12 @@ contract VaultInfrastructure is Ownable {
         require(current != address(0), "unknown vault");
         require(vaultOf[newOwner] == address(0), "target has vault");
         
-        // Record approval
-        if (!recoveryApprovals[vault][msg.sender]) {
-            recoveryApprovals[vault][msg.sender] = true;
+        // C-2 Fix: Use nonce to prevent stale approval reuse
+        uint256 nonce = recoveryNonce[vault];
+        
+        // Record approval for current nonce
+        if (!recoveryApprovals[vault][msg.sender][nonce]) {
+            recoveryApprovals[vault][msg.sender][nonce] = true;
             recoveryApprovalCount[vault]++;
             _log("recovery_approval_cast");
         }
@@ -1217,7 +1221,9 @@ contract VaultInfrastructure is Ownable {
         delete recoveryProposedOwner[vault];
         delete recoveryUnlockTime[vault];
         delete recoveryApprovalCount[vault];
-        // Note: recoveryApprovals mapping entries will remain but are harmless
+        // C-2 Fix: Clear all approvals for this vault to prevent stale votes
+        // Note: We clear by incrementing a nonce rather than iterating (gas efficient)
+        recoveryNonce[vault]++;
 
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");

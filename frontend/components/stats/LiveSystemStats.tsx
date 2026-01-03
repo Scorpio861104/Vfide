@@ -127,10 +127,7 @@ export function LiveSystemStats() {
           <div className="w-2 h-2 bg-[#00FF88] rounded-full" />
           Live updates every 5 seconds
         </motion.div>
-      </div>
-      
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
         <StatCard
           label="Total Value Locked"
           value={`$${(totalValueLocked / 1000000).toFixed(2)}M`}

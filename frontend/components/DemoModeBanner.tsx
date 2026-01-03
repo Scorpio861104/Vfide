@@ -1,7 +1,7 @@
 "use client";
 
 import { useAccount } from "wagmi";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 
 export function DemoModeBanner() {
   const { address, chain } = useAccount();
@@ -18,7 +18,14 @@ export function DemoModeBanner() {
         <AlertCircle className="w-4 h-4" />
         <span>
           {!address && "DEMO MODE - Connect wallet to see real data"}
-          {address && isTestnet && `TESTNET MODE - Connected to ${chain?.name || 'testnet'}`}
+          {address && isTestnet && (
+            <>
+              TESTNET MODE - Connected to {chain?.name || 'testnet'}
+              <span className="mx-2 opacity-75">|</span>
+              <Info className="w-3.5 h-3.5 inline" />
+              <span className="ml-1 opacity-90">Gas estimates may appear high - mainnet costs are ~$0.01</span>
+            </>
+          )}
         </span>
       </div>
     </div>

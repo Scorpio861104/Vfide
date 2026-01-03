@@ -11,7 +11,7 @@ I have reviewed the VFIDE Ecosystem Overview document and compared it with all s
 ### 1. **VFIDEToken.sol** 
 - ✅ Total supply: 200M VFIDE (18 decimals)
 - ✅ Dev reserve: 50M pre-minted to DevReserveVestingVault
-- ✅ Presale mint cap: 75M (only presale can mint within cap)
+- ✅ Presale allocation: 50M (35M base + 15M bonus pool)
 - ✅ Vault-only transfer rule enforcement
 - ✅ System exemptions for infrastructure contracts
 - ✅ ProofScore-aware fees via BurnRouter
@@ -145,7 +145,7 @@ I have reviewed the VFIDE Ecosystem Overview document and compared it with all s
 | Overview Component | Contract | Status | Notes |
 |-------------------|----------|--------|-------|
 | **1. Base Asset Layer** | | | |
-| VFIDE Token | VFIDEToken.sol | ✅ Aligned | 200M supply, 50M dev, 75M presale |
+| VFIDE Token | VFIDEToken.sol | ✅ Aligned | 200M supply, 50M dev, 50M presale |
 | Presale System | VFIDEPresale.sol | ✅ Aligned | 3 tiers, vault-only, referrals |
 | Dev Vesting | DevReserveVestingVault.sol | ✅ Aligned | 50M tokens, 3mo cliff, 36mo vesting |
 | Vault System | VaultInfrastructure.sol | ✅ Aligned | Create2 factory, registry |

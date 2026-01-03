@@ -49,8 +49,8 @@ function calculateFee(address from, address to, uint256 amount)
 ### Key State Variables
 ```solidity
 uint256 public constant MAX_SUPPLY = 200_000_000 * 10**18;
-uint256 public constant DEV_RESERVE_CAP = 40_000_000 * 10**18;
-uint256 public constant NODE_REWARD_CAP = 75_000_000 * 10**18;
+uint256 public constant DEV_RESERVE_CAP = 50_000_000 * 10**18;
+uint256 public constant PRESALE_CAP = 50_000_000 * 10**18;
 
 bool public circuitBreaker = false;
 bool public policyLocked = false;
@@ -74,55 +74,74 @@ event PolicyLocked();
 
 ---
 
-## VaultInfrastructure.sol
+## VaultInfrastructure.sol / VaultHubLite.sol
 
 ### Purpose
 Non-custodial smart contract vaults with guardian recovery.
 
-### Key Functions
+> **Note:** VaultInfrastructure.sol exceeds the 24KB contract size limit.
+> VaultHubLite.sol is the deployed lightweight alternative on Base Sepolia.
+
+### Key Functions (VaultHubLite)
 
 #### Create Vault
 ```solidity
-function createVault(address[] memory guardians) external returns (address vaultAddress) {
-    require(guardians.length >= 3, "Minimum 3 guardians");
-    // Deploy vault contract
-    // Set owner and guardians
-    // Register with token contract
+// VaultHubLite - simplified, no args
+function createVault() external nonReentrant returns (address vault) {
+    if (vaultOf[msg.sender] != address(0)) revert AlreadyHasVault();
+    // Deploy vault contract via CREATE2
+    // Set owner
+    // Register with hub
 }
 ```
 
-#### Guardian Recovery
+#### Set Guardian (Slot-based)
 ```solidity
-function initiateRecovery(address vaultAddress, address newOwner) external {
-    require(isGuardian[msg.sender], "Not guardian");
-    // Start recovery proposal
-    // Requires 2-of-3 guardian approval
+// VaultHubLite uses slot-based guardian system (max 3 slots)
+function setGuardian(uint8 slot, address guardian) external onlyOwner {
+    if (slot > 2) revert InvalidSlot();
+    // If removing (guardian = 0), decrease count
+    // If adding new, increase count
+    guardians[slot] = guardian;
+}
+```
+
+#### Start Recovery
+```solidity
+// VaultHubLite uses startRecovery (not initiateRecovery)
+function startRecovery(address candidate) external {
+    if (!isGuardian(msg.sender)) revert NotGuardian();
+    if (candidate == address(0)) revert InvalidAddress();
+    // Reset recovery state
+    // Starter counts as first approval
+    recoveryApprovals = 1;
+    recoveryExpiry = uint64(block.timestamp + 7 days);
 }
 ```
 
 ### Vault Structure
 ```solidity
-struct Vault {
-    address owner;
-    address[] guardians;
-    uint256 createdAt;
-    bool frozen;
-    uint256 recoveryThreshold; // Default: 2
-}
+// UserVaultLite structure
+address public immutable hub;
+address public immutable vfideToken;
+address public owner;
 
-struct Guardian {
-    address guardianAddress;
-    bool isActive;
-    uint256 addedAt;
-    bytes32 nameHash;
-}
+// Simple guardian system (max 3 slots)
+address[3] public guardians;
+uint8 public guardianCount;
+
+// Recovery state
+address public recoveryCandidate;
+uint8 public recoveryApprovals;
+mapping(address => bool) public hasApprovedRecovery;
+uint64 public recoveryExpiry; // 7 days
 ```
 
-### Guardian Recovery Process
-1. Guardian A calls `initiateRecovery(vault, newOwner)`
-2. Guardian B calls `approveRecovery(vault)`
-3. After 2-of-3 approval + 7-day timelock → ownership transfers
-4. Old owner can cancel within timelock period
+### Guardian Recovery Process (VaultHubLite)
+1. Guardian A calls `startRecovery(candidate)` - counts as 1st approval
+2. Guardian B calls `approveRecovery()` - 2nd approval triggers execution
+3. With 2-of-3 approval, ownership transfers immediately
+4. Owner can call `cancelRecovery()` to abort
 
 ---
 
@@ -148,26 +167,33 @@ struct ProofScoreComponents {
 
 #### Get ProofScore
 ```solidity
-function getProofScore(address user) public view returns (uint256) {
-    ProofScoreComponents memory components = scores[user];
-    uint256 total = components.capitalStability 
-                  + components.behavioralConsistency
-                  + components.socialEndorsements
-                  + components.credentials
-                  + components.activityLevel
-                  + components.fixedBonus;
-    return min(total, 10000); // 10x scale: 10000 = 100%
+function getScore(address subject) external view returns (uint16) {
+    uint16 raw = _score[subject];
+    if (raw == 0) return NEUTRAL; // 5000 (50%)
+    return raw;
 }
 ```
 
-#### Endorse User
+#### Reward/Punish (Authorized Operators Only)
 ```solidity
-function endorseUser(address user) external {
-    uint256 myScore = getProofScore(msg.sender);
-    require(myScore >= 5000, "Insufficient score to endorse"); // 50% = 5000
-    require(endorsementStake >= MIN_ENDORSEMENT_STAKE, "Stake required");
-    // Apply endorsement
-    // Decay over time if user misbehaves
+function reward(address subject, uint16 points, string calldata reason) external onlyDAOOrOperator {
+    // Increase user's score (capped at MAX_SCORE = 10000)
+    _applyDelta(subject, int32(int16(points)), reason);
+}
+
+function punish(address subject, uint16 points, string calldata reason) external onlyDAOOrOperator {
+    // Decrease user's score (floored at MIN_SCORE = 10)
+    _applyDelta(subject, -int32(int16(points)), reason);
+}
+```
+
+#### Award Badge (DAO Only)
+```solidity
+function awardBadge(address user, bytes32 badge, uint256 duration) external onlyDAO {
+    hasBadge[user][badge] = true;
+    if (duration > 0) {
+        badgeExpiry[user][badge] = block.timestamp + duration;
+    }
 }
 ```
 

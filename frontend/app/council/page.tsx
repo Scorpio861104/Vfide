@@ -1,8 +1,7 @@
 "use client";
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
-import { Footer } from "@/components/layout/Footer";
-import { useState, useEffect } from "react";
+import { Footer } from "@/components/layout/Footer";import { ZERO_ADDRESS } from '@/lib/constants';import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { formatUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,14 +44,14 @@ const COUNCIL_SALARY_ABI = [
 ] as const;
 
 // Contract addresses from environment (CouncilElection and CouncilSalary not deployed to testnet yet)
-const COUNCIL_ELECTION_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const COUNCIL_SALARY_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const COUNCIL_ELECTION_ADDRESS = CONTRACT_ADDRESSES.CouncilElection;
+const COUNCIL_SALARY_ADDRESS = CONTRACT_ADDRESSES.CouncilSalary;
 
 // Check if contracts are deployed (not zero address)
-const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== '0x0000000000000000000000000000000000000000';
-const IS_COUNCIL_SALARY_DEPLOYED = COUNCIL_SALARY_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== ZERO_ADDRESS;
+const IS_COUNCIL_SALARY_DEPLOYED = COUNCIL_SALARY_ADDRESS !== ZERO_ADDRESS;
 
-type TabType = 'overview' | 'members' | 'salary' | 'voting';
+type TabType = 'overview' | 'candidates' | 'members' | 'salary' | 'voting';
 
 export default function CouncilPage() {
   const { address, isConnected } = useAccount();
@@ -180,25 +179,11 @@ export default function CouncilPage() {
       >
         <div className="container mx-auto px-4">
           {/* Header */}
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
-          >
-            <motion.div 
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 rounded-full mb-4"
-            >
-              <Crown className="w-4 h-4 text-indigo-400" />
-              <span className="text-indigo-400 text-sm font-medium">Governance Council</span>
-            </motion.div>
-            <h1 className="text-4xl md:text-5xl font-black mb-4">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-                Council Management
-              </span>
-            </h1>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+          <SectionHeading
+            badge="Governance Council"
+            badgeIcon={<Crown className="w-4 h-4" />}
+            title={<span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Council Management</span>}
+            subtitle="
               Governance council operations, member management, and salary distribution
             </p>
           </motion.div>
@@ -418,7 +403,7 @@ function MembersTab({
       status: 'active'
     })) : [];
 
-  const displayMembers = realMembers.length > 0 ? realMembers : [
+  const displayMembers = realMembers.length ? realMembers : [
     { 
       address: '0x1234...5678', 
       name: 'Council Member 1',
@@ -619,7 +604,7 @@ function MembersTab({
       </motion.div>
 
       {/* Candidates List (if any) */}
-      {Array.isArray(candidates) && candidates.length > 0 && (
+      {Array.isArray(candidates) && candidates.length && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -854,7 +839,7 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
       >
         <h3 className="text-xl font-bold text-white mb-6">Active Removal Votes</h3>
-        {removalVotes.length > 0 ? (
+        {removalVotes.length ? (
           <div className="space-y-4">
             {removalVotes.map((vote, idx) => (
               <div key={idx} className="p-4 bg-red-500/10 rounded-xl border border-red-500/30">

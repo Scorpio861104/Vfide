@@ -86,19 +86,43 @@ module.exports = {
     zkLocal: {
       url: "http://127.0.0.1:8011",
       ethNetwork: "http://127.0.0.1:8545",
-      zksync: true
+      zksync: true,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     },
     zkSyncSepoliaTestnet: {
       url: "https://sepolia.era.zksync.dev",
       ethNetwork: "sepolia",
       zksync: true,
-      verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
+      verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification',
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     },
     zkSyncMainnet: {
       url: "https://mainnet.era.zksync.io",
       ethNetwork: "mainnet",
       zksync: true,
-      verifyURL: 'https://zksync2-mainnet-explorer.zksync.io/contract_verification'
+      verifyURL: 'https://zksync2-mainnet-explorer.zksync.io/contract_verification',
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+    },
+    // H-12 Fix: Add Base and Polygon networks for Hardhat parity
+    baseSepolia: {
+      url: "https://sepolia.base.org",
+      chainId: 84532,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+    },
+    base: {
+      url: "https://mainnet.base.org",
+      chainId: 8453,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+    },
+    polygon: {
+      url: "https://polygon-rpc.com",
+      chainId: 137,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+    },
+    polygonAmoy: {
+      url: "https://rpc-amoy.polygon.technology",
+      chainId: 80002,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     }
   },
   defaultNetwork: "hardhat",

@@ -15,16 +15,21 @@ import {
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { Users, Plus, X, Shield, AlertTriangle, Clock } from 'lucide-react'
-import { isAddress } from 'viem'
+import { isAddress, zeroAddress } from 'viem'
+
+const ZERO_ADDRESS = zeroAddress
 
 export function GuardianManagementPanel() {
-  useAccount() // For wallet connection context
+  const { address: userAddress } = useAccount()
   const { vaultAddress } = useUserVault()
   const guardians = useVaultGuardians(vaultAddress || undefined)
   
   const [newGuardian, setNewGuardian] = useState('')
   const [removeAddress, setRemoveAddress] = useState('')
   const [newThreshold, setNewThreshold] = useState(3)
+  const [addError, setAddError] = useState<string | null>(null)
+  const [removeError, setRemoveError] = useState<string | null>(null)
+  const [thresholdError, setThresholdError] = useState<string | null>(null)
   
   const { writeContract: addGuardian, data: addHash, isPending: isAdding } = useWriteContract()
   const { writeContract: removeGuardian, data: removeHash, isPending: isRemoving } = useWriteContract()
@@ -44,8 +49,25 @@ export function GuardianManagementPanel() {
   }
 
   const handleAddGuardian = () => {
+    setAddError(null)
+    
     if (!isAddress(newGuardian)) {
-      alert('Invalid address')
+      setAddError('Invalid Ethereum address format')
+      return
+    }
+    
+    if (newGuardian.toLowerCase() === ZERO_ADDRESS.toLowerCase()) {
+      setAddError('Cannot add zero address as guardian')
+      return
+    }
+    
+    if (userAddress && newGuardian.toLowerCase() === userAddress.toLowerCase()) {
+      setAddError('Cannot add yourself as a guardian')
+      return
+    }
+    
+    if (vaultAddress && newGuardian.toLowerCase() === vaultAddress.toLowerCase()) {
+      setAddError('Cannot add vault address as guardian')
       return
     }
     
@@ -69,8 +91,15 @@ export function GuardianManagementPanel() {
   }
 
   const handleRemoveGuardian = () => {
+    setRemoveError(null)
+    
     if (!isAddress(removeAddress)) {
-      alert('Invalid address')
+      setRemoveError('Invalid Ethereum address format')
+      return
+    }
+    
+    if (removeAddress.toLowerCase() === ZERO_ADDRESS.toLowerCase()) {
+      setRemoveError('Invalid address')
       return
     }
     
@@ -94,8 +123,10 @@ export function GuardianManagementPanel() {
   }
 
   const handleSetThreshold = () => {
+    setThresholdError(null)
+    
     if (newThreshold < 1 || newThreshold > guardians.guardianCount) {
-      alert(`Threshold must be between 1 and ${guardians.guardianCount}`)
+      setThresholdError(`Threshold must be between 1 and ${guardians.guardianCount}`)
       return
     }
     
@@ -150,13 +181,28 @@ export function GuardianManagementPanel() {
         </div>
         
         <div className="space-y-3">
-          <input
-            type="text"
-            value={newGuardian}
-            onChange={(e) => setNewGuardian(e.target.value)}
-            placeholder="0x... guardian address"
-            className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
-          />
+          <div>
+            <input
+              type="text"
+              value={newGuardian}
+              onChange={(e) => {
+                setNewGuardian(e.target.value)
+                setAddError(null)
+              }}
+              placeholder="0x... guardian address"
+              aria-label="Guardian address to add"
+              aria-describedby={addError ? "add-guardian-error" : undefined}
+              className={`w-full bg-black/40 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none ${
+                addError ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-purple-500'
+              }`}
+            />
+            {addError && (
+              <div id="add-guardian-error" className="mt-2 text-sm text-red-400 flex items-center gap-2" role="alert">
+                <AlertTriangle className="w-4 h-4" />
+                {addError}
+              </div>
+            )}
+          </div>
           
           <button
             onClick={handleAddGuardian}
@@ -190,13 +236,28 @@ export function GuardianManagementPanel() {
         </div>
         
         <div className="space-y-3">
-          <input
-            type="text"
-            value={removeAddress}
-            onChange={(e) => setRemoveAddress(e.target.value)}
-            placeholder="0x... guardian address to remove"
-            className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-red-500 focus:outline-none"
-          />
+          <div>
+            <input
+              type="text"
+              value={removeAddress}
+              onChange={(e) => {
+                setRemoveAddress(e.target.value)
+                setRemoveError(null)
+              }}
+              placeholder="0x... guardian address to remove"
+              aria-label="Guardian address to remove"
+              aria-describedby={removeError ? "remove-guardian-error" : undefined}
+              className={`w-full bg-black/40 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none ${
+                removeError ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-red-500'
+              }`}
+            />
+            {removeError && (
+              <div id="remove-guardian-error" className="mt-2 text-sm text-red-400 flex items-center gap-2" role="alert">
+                <AlertTriangle className="w-4 h-4" />
+                {removeError}
+              </div>
+            )}
+          </div>
           
           <button
             onClick={handleRemoveGuardian}
@@ -239,12 +300,22 @@ export function GuardianManagementPanel() {
               min="1"
               max={Math.max(guardians.guardianCount, 1)}
               value={newThreshold}
-              onChange={(e) => setNewThreshold(Number(e.target.value))}
+              onChange={(e) => {
+                setNewThreshold(Number(e.target.value))
+                setThresholdError(null)
+              }}
+              aria-label="Guardian threshold for locking vault"
               className="w-full"
             />
             <div className="text-center text-white font-bold mt-2">
               {newThreshold} / {guardians.guardianCount} guardians
             </div>
+            {thresholdError && (
+              <div className="mt-2 text-sm text-red-400 flex items-center justify-center gap-2" role="alert">
+                <AlertTriangle className="w-4 h-4" />
+                {thresholdError}
+              </div>
+            )}
           </div>
           
           <button

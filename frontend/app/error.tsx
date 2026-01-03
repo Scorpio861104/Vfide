@@ -14,7 +14,13 @@ export default function Error({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error("Application error:", error);
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+      // H-9: Error tracking deferred - integrate Sentry or similar in future release
+      // Track issue: https://github.com/VFIDE-DAO/vfide-frontend/issues/new?labels=enhancement
+    }
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Application error:", error);
+    }
   }, [error]);
 
   return (

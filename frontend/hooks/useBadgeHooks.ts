@@ -2,30 +2,29 @@
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
-import { VFIDEBadgeNFTABI, SeerABI } from '../lib/abis'
+import { VFIDEBadgeNFTABI } from '../lib/abis'
 
 // ============================================
 // BADGE HOOKS - Badge system integration
 // ============================================
 
-export function useUserBadges(address?: `0x${string}`) {
-  const { address: connectedAddress } = useAccount()
-  const targetAddress = address || connectedAddress
-  
-  const { data: badgeIds, isLoading, refetch } = useReadContract({
-    address: CONTRACT_ADDRESSES.Seer,
-    abi: SeerABI,
-    functionName: 'getUserBadges',
-    args: targetAddress ? [targetAddress] : undefined,
-    query: {
-      enabled: !!targetAddress,
-    }
-  })
+/**
+ * Get user badges - uses Seer hasBadge for checking specific badges
+ * Note: Seer doesn't have getUserBadges - use useBadgeNFTs for NFT-based badges
+ * or check specific badges with useHasBadge
+ */
+export function useUserBadges(_address?: `0x${string}`) {
+ 
+  // Seer doesn't have getUserBadges function
+  // Instead, use useBadgeNFTs for NFT badges or check known badge IDs
+  // This hook returns an empty array - use useBadgeNFTs instead
+  // Note: This is a deprecated hook, use useBadgeNFTs for actual badge data
   
   return {
-    badgeIds: (badgeIds as `0x${string}`[]) || [],
-    isLoading,
-    refetch,
+    badgeIds: [] as `0x${string}`[],
+    isLoading: false,
+    refetch: () => Promise.resolve(),
+    isAvailable: false, // Flag that this hook is not functional
   }
 }
 

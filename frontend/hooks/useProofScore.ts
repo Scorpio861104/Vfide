@@ -1,5 +1,6 @@
 import { useReadContract, useAccount } from 'wagmi'
 import { CONTRACT_ADDRESSES, SEER_ABI } from '@/lib/contracts'
+import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS } from '@/lib/constants'
 
 /**
  * Hook to fetch user's ProofScore from the Seer contract
@@ -21,8 +22,8 @@ export function useProofScore(userAddress?: `0x${string}`) {
 
   const scoreNum = data ? Number(data) : 5000 // Default neutral score (10x scale)
   
-  // Calculate tier (matches vfide-hooks)
-  const tier = getScoreTier(scoreNum)
+  // Get current tier from unified constants
+  const currentTier = getScoreTierObject(scoreNum)
   
   // Calculate burn fee based on ProofScore
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
@@ -32,22 +33,17 @@ export function useProofScore(userAddress?: `0x${string}`) {
     scoreNum >= 5000 ? 2.0 :
     scoreNum >= 4000 ? 3.5 :
     5.0
-  
-  // Color based on trust level
-  const color = 
-    scoreNum >= 8000 ? '#00FF88' : // Elite green
-    scoreNum >= 7000 ? '#00F0FF' : // High trust cyan
-    scoreNum >= 5000 ? '#FFD700' : // Neutral gold
-    scoreNum >= 3500 ? '#FFA500' : '#FF4444' // Low/Risky orange/red
 
   return {
     score: scoreNum,
-    tier,
+    tier: currentTier,
+    tierName: currentTier.label,
+    tierColor: currentTier.color,
     burnFee,
-    color,
-    canVote: scoreNum >= 5400,
-    canMerchant: scoreNum >= 5600,
-    canCouncil: scoreNum >= 7000,
+    color: getTierColor(scoreNum),
+    canVote: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
+    canMerchant: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
+    canCouncil: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_COUNCIL,
     canEndorse: scoreNum >= 8000,
     isElite: scoreNum >= 8000,
     isError,
@@ -57,15 +53,33 @@ export function useProofScore(userAddress?: `0x${string}`) {
 }
 
 /**
- * Get tier name from ProofScore value
+ * Get tier object from ProofScore value with all tier details
+ */
+export function getScoreTierObject(score: number) {
+  for (const tier of Object.values(PROOF_SCORE_TIERS)) {
+    if (score >= tier.min && score < tier.max) {
+      return tier
+    }
+  }
+  return PROOF_SCORE_TIERS.ELITE
+}
+
+/**
+ * Get tier name from ProofScore value (legacy helper)
  */
 export function getScoreTier(score: number): string {
-  // Contract uses 0-10000 scale (10x precision)
-  if (score >= 8000) return 'Elite'
-  if (score >= 7000) return 'High Trust'
-  if (score >= 5000) return 'Neutral'
-  if (score >= 3500) return 'Low Trust'
-  return 'Risky'
+  return getScoreTierObject(score).label
+}
+
+/**
+ * Get tier color from ProofScore value
+ */
+function getTierColor(score: number): string {
+  if (score >= 8000) return '#00FF88' // Elite green
+  if (score >= 7000) return '#00F0FF' // High trust cyan
+  if (score >= 5000) return '#FFD700' // Neutral gold
+  if (score >= 3500) return '#FFA500' // Low trust orange
+  return '#FF4444' // Risky red
 }
 
 /**
@@ -97,9 +111,9 @@ export function useSeerThresholds() {
   })
 
   return {
-    minForGovernance: minForGovernance ? Number(minForGovernance) : 5400,
-    minForMerchant: minForMerchant ? Number(minForMerchant) : 5600,
-    lowTrustThreshold: lowTrustThreshold ? Number(lowTrustThreshold) : 4000,
+    minForGovernance: minForGovernance ? Number(minForGovernance) : PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
+    minForMerchant: minForMerchant ? Number(minForMerchant) : PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
+    lowTrustThreshold: lowTrustThreshold ? Number(lowTrustThreshold) : 3500,
     highTrustThreshold: highTrustThreshold ? Number(highTrustThreshold) : 8000,
   }
 }

@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useAccount } from 'wagmi'
 import { useIsMerchant } from '@/lib/vfide-hooks'
@@ -43,8 +43,13 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   const copyPaymentLink = () => {
     navigator.clipboard.writeText(paymentUrl)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
+
+  useEffect(() => {
+    if (!copied) return
+    const timer = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(timer)
+  }, [copied])
 
   const downloadQR = () => {
     const svg = document.getElementById('payment-qr-code')

@@ -52,11 +52,6 @@ interface IVaultRegistry {
     function searchByRecoveryId(string calldata recoveryId) external view returns (address);
 }
 
-interface IGuardianNodeManager {
-    function isActiveGuardian(address node) external view returns (bool);
-    function getGuardianStake(address node) external view returns (uint256);
-}
-
 contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
@@ -69,7 +64,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     uint64 public constant GUARDIAN_VOTE_WINDOW = 14 days; // Time for guardians to vote
     uint64 public constant CLAIM_EXPIRY = 30 days;         // Max time for claim process
     uint8 public constant MIN_GUARDIAN_APPROVALS = 2;      // Minimum guardian approvals needed
-    uint8 public constant MIN_NODE_VOTES = 3;              // Minimum guardian node votes
+    uint8 public constant MIN_VERIFIER_VOTES = 3;          // Minimum trusted verifier votes
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // STORAGE
@@ -77,7 +72,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     
     IVaultInfrastructure public vaultHub;
     IVaultRegistry public vaultRegistry;
-    IGuardianNodeManager public guardianNodeManager;
     
     enum ClaimStatus {
         None,
@@ -99,7 +93,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         uint64 expiresAt;           // When claim expires entirely
         ClaimStatus status;
         uint8 guardianApprovals;    // Count of personal guardian approvals
-        uint8 nodeVotes;            // Count of guardian node votes
+        uint8 verifierVotes;        // Count of trusted verifier votes
         bytes32 evidenceHash;       // Hash of identity evidence provided
         string claimReason;         // User's explanation
     }
@@ -114,8 +108,8 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // claimId => guardian => voted
     mapping(uint256 => mapping(address => bool)) public guardianVoted;
     
-    // claimId => guardian node => voted
-    mapping(uint256 => mapping(address => bool)) public nodeVoted;
+    // claimId => trusted verifier => voted
+    mapping(uint256 => mapping(address => bool)) public verifierVoted;
     
     // claimId => guardian => approved (true) or rejected (false)
     mapping(uint256 => mapping(address => bool)) public guardianApproval;
@@ -142,9 +136,9 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         uint8 totalApprovals
     );
     
-    event NodeVoteCast(
+    event VerifierVoteCast(
         uint256 indexed claimId,
-        address indexed node,
+        address indexed verifier,
         bool approved,
         uint8 totalVotes
     );
@@ -190,7 +184,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     error NoActiveClaim();
     error NotClaimant();
     error NotGuardian();
-    error NotGuardianNode();
+    error NotTrustedVerifier();
     error AlreadyVoted();
     error ClaimNotPending();
     error ChallengePeriodActive();
@@ -208,13 +202,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     
     constructor(
         address _vaultHub,
-        address _vaultRegistry,
-        address _guardianNodeManager
+        address _vaultRegistry
     ) Ownable(msg.sender) {
         if (_vaultHub == address(0)) revert ZeroAddress();
         vaultHub = IVaultInfrastructure(_vaultHub);
         vaultRegistry = IVaultRegistry(_vaultRegistry);
-        guardianNodeManager = IGuardianNodeManager(_guardianNodeManager);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -297,7 +289,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             expiresAt: uint64(block.timestamp + CLAIM_EXPIRY),
             status: ClaimStatus.Pending,
             guardianApprovals: 0,
-            nodeVotes: 0,
+            verifierVotes: 0,
             evidenceHash: evidenceHash,
             claimReason: reason
         });
@@ -366,39 +358,38 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // GUARDIAN NODE VOTING (Community Verification)
+    // TRUSTED VERIFIER VOTING (Community Verification)
     // ═══════════════════════════════════════════════════════════════════════════════
     
     /**
-     * @notice Guardian node votes on a recovery claim
+     * @notice Trusted verifier votes on a recovery claim
      * @dev Used when vault has no personal guardians, or as additional verification
      * @param claimId The claim ID
      * @param approve True to approve claim
      */
-    function nodeVote(uint256 claimId, bool approve) external nonReentrant {
+    function verifierVote(uint256 claimId, bool approve) external nonReentrant {
         RecoveryClaim storage claim = claims[claimId];
         
         if (claim.status != ClaimStatus.Pending && claim.status != ClaimStatus.GuardianApproved) {
             revert ClaimNotPending();
         }
         if (block.timestamp > claim.expiresAt) revert ClaimHasExpired();
-        if (nodeVoted[claimId][msg.sender]) revert AlreadyVoted();
+        if (verifierVoted[claimId][msg.sender]) revert AlreadyVoted();
         
-        // C-1 FIX: Require guardianNodeManager to be set to prevent anyone from voting
-        require(address(guardianNodeManager) != address(0), "Guardian node manager not set");
-        if (!guardianNodeManager.isActiveGuardian(msg.sender)) revert NotGuardianNode();
+        // Only trusted verifiers can vote
+        if (!trustedVerifier[msg.sender]) revert NotTrustedVerifier();
         
-        nodeVoted[claimId][msg.sender] = true;
+        verifierVoted[claimId][msg.sender] = true;
         
         if (approve) {
-            claim.nodeVotes++;
+            claim.verifierVotes++;
         }
         
-        emit NodeVoteCast(claimId, msg.sender, approve, claim.nodeVotes);
+        emit VerifierVoteCast(claimId, msg.sender, approve, claim.verifierVotes);
         
-        // If vault has no guardians, node votes can approve directly
+        // If vault has no guardians, verifier votes can approve directly
         IUserVault userVault = IUserVault(claim.vault);
-        if (userVault.guardianCount() == 0 && claim.nodeVotes >= MIN_NODE_VOTES) {
+        if (userVault.guardianCount() == 0 && claim.verifierVotes >= MIN_VERIFIER_VOTES) {
             claim.status = ClaimStatus.GuardianApproved;
             claim.challengeEndsAt = uint64(block.timestamp + CHALLENGE_PERIOD);
         }
@@ -627,10 +618,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     
     function setVaultRegistry(address _vaultRegistry) external onlyOwner {
         vaultRegistry = IVaultRegistry(_vaultRegistry);
-    }
-    
-    function setGuardianNodeManager(address _guardianNodeManager) external onlyOwner {
-        guardianNodeManager = IGuardianNodeManager(_guardianNodeManager);
     }
     
     function setTrustedVerifier(address verifier, bool trusted) external onlyOwner {

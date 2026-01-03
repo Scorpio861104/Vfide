@@ -136,6 +136,8 @@ interface ISeer {
     function setThresholds(uint16 low, uint16 high, uint16 minGov, uint16 minMerch) external;
     function reward(address subject, uint16 delta, string calldata reason) external;
     function punish(address subject, uint16 delta, string calldata reason) external;
+    function endorse(address subject, string calldata reason) external;
+    function getEndorsementStats(address subject) external view returns (uint16, uint16, uint16);
 }
 
 interface IEcosystemVault {

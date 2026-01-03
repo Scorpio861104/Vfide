@@ -2,106 +2,109 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
+import { ZERO_ADDRESS, PRESALE_REFERENCE_PRICE, MILLISECONDS_PER_MINUTE } from '@/lib/constants';
 import { useVaultRecovery } from "@/hooks/useVaultRecovery";
 import { useVaultHub } from "@/hooks/useVaultHub";
 import { TransactionHistory } from "@/components/vault/TransactionHistory";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { SectionHeading, SurfaceCard, AccentBadge } from "@/components/ui/primitives";
 import { useAccount } from "wagmi";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { isAddress } from "viem";
-import { devLog } from "@/lib/utils";
-import { useVaultBalance, useSelfPanic, useQuarantineStatus, useCanSelfPanic, useProofScore } from "@/lib/vfide-hooks";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Shield, AlertTriangle, Lock, Clock, Plus, UserPlus, Users, Key, 
-  Heart, ArrowDownToLine, ArrowUpFromLine, RefreshCw, CheckCircle2,
-  Zap, ChevronRight, DollarSign, TrendingUp
-} from "lucide-react";
+            {/* Recovery Actions */}
+            {hasVault && (
+              <motion.div
+                className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+              >
+                <motion.div variants={itemVariants}>
+                  <SurfaceCard className="p-5 h-full">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-3 rounded-xl bg-amber-500/20">
+                        <RefreshCw className="w-6 h-6 text-amber-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-white">Request Recovery</h4>
+                        <p className="text-white/60 text-sm">Initiate vault recovery process</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={recoveryAddress}
+                        onChange={(e) => setRecoveryAddress(e.target.value)}
+                        placeholder="Recovery address"
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                      <button
+                        onClick={handleRequestRecovery}
+                        className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold"
+                      >
+                        Request Recovery
+                      </button>
+                    </div>
+                  </SurfaceCard>
+                </motion.div>
 
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
+                <motion.div variants={itemVariants}>
+                  <SurfaceCard className="p-5 h-full">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-3 rounded-xl bg-cyan-500/20">
+                        <CheckCircle2 className="w-6 h-6 text-cyan-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-white">Approve Recovery</h4>
+                        <p className="text-white/60 text-sm">Guardians can approve recovery requests</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-white/60 text-sm">Pending recovery address:</p>
+                      <p className="font-mono text-white break-all">{recoveryAddress || 'Not requested'}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => approveRecovery()}
+                          className="px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => cancelRecovery()}
+                          className="px-4 py-3 rounded-xl bg-white/10 text-white font-bold"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  </SurfaceCard>
+                </motion.div>
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
-};
-
-// Glassmorphism card
-function GlassCard({ children, className = "", hover = true, gradient }: { 
-  children: React.ReactNode; 
-  className?: string;
-  hover?: boolean;
-  gradient?: "cyan" | "gold" | "red" | "green";
-}) {
-  const gradientMap = {
-    cyan: "from-cyan-500/20 to-blue-500/10",
-    gold: "from-amber-500/20 to-orange-500/10",
-    red: "from-red-500/20 to-red-500/5",
-    green: "from-emerald-500/20 to-emerald-500/5"
-  };
-  
-  return (
-    <motion.div
-      whileHover={hover ? { scale: 1.01, y: -2 } : {}}
-      transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient ? gradientMap[gradient] : 'from-white/[0.08] to-white/[0.02]'} backdrop-blur-xl border border-white/10 ${className}`}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-// Compact security section with Panic Button
-function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
-  const { toast } = useToast();
-  const quarantineData = useQuarantineStatus(vaultAddress || undefined);
-  const panicData = useCanSelfPanic();
-  const { selfPanic, isPanicking, isSuccess, isAvailable: isPanicAvailable } = useSelfPanic();
-  
-  const [showPanicConfirm, setShowPanicConfirm] = useState(false);
-  const [panicDuration, setPanicDuration] = useState(24);
-  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
-  
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const successHandled = useRef(false);
-
-  useEffect(() => {
-    if (isSuccess && !successHandled.current) {
-      setTimeout(() => setShowPanicConfirm(false), 0);
-      toast({
-        title: "Panic Mode Activated",
-        description: "Your vault has been locked for security.",
-        variant: "destructive",
-      });
-      successHandled.current = true;
-    } else if (!isSuccess) {
-      successHandled.current = false;
-    }
-  }, [isSuccess, toast]);
-  
-  const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now);
-  const isQuarantined = quarantineRemaining > 0;
-  const remainingHours = Math.floor(quarantineRemaining / 3600);
-  const remainingMinutes = Math.floor((quarantineRemaining % 3600) / 60);
-  
-  const cooldownRemaining = Math.max(0, (panicData.lastPanicTime + panicData.cooldownSeconds) - now);
-  const canPanic = isPanicAvailable && cooldownRemaining === 0 && !isQuarantined;
-  
-  const handlePanic = () => {
-    if (!isPanicAvailable) return;
-    selfPanic(panicDuration);
-    setShowPanicConfirm(false);
-  };
-
-  if (!vaultAddress) return null;
+                <motion.div variants={itemVariants}>
+                  <SurfaceCard className="p-5 h-full">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-3 rounded-xl bg-emerald-500/20">
+                        <Key className="w-6 h-6 text-emerald-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-white">Finalize Recovery</h4>
+                        <p className="text-white/60 text-sm">Complete the recovery process</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-white/60 text-sm">After required approvals</p>
+                      <button
+                        onClick={() => finalizeRecovery()}
+                        className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 text-white font-bold"
+                      >
+                        Finalize Recovery
+                      </button>
+                    </div>
+                  </SurfaceCard>
+                </motion.div>
+              </motion.div>
+            )}
 
   return (
     <section className="py-8">
@@ -222,15 +225,12 @@ function VaultContent() {
   const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault } = useVaultHub();
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
   const { score: proofScore, tier, burnFee, color: scoreColor, isLoading: scoreLoading } = useProofScore(address);
-  const PRESALE_REFERENCE_PRICE = 0.07;
   const usdValue = (parseFloat(vaultBalance) * PRESALE_REFERENCE_PRICE).toFixed(2);
   
   const {
     vaultOwner,
     guardianCount,
     isUserGuardian,
-    isGuardianMature,
-    nextOfKin,
     recoveryStatus,
     isWritePending,
     setNextOfKinAddress,
@@ -240,6 +240,12 @@ function VaultContent() {
     finalizeRecovery,
     cancelRecovery,
   } = useVaultRecovery(vaultAddress);
+
+  // Type-safe recovery status access
+  type RecoveryStatusType = { isGuardianMature?: boolean; nextOfKin?: `0x${string}` };
+  const recoveryStatusTyped = recoveryStatus as RecoveryStatusType | undefined;
+  const isGuardianMature = recoveryStatusTyped?.isGuardianMature ?? false;
+  const nextOfKin = recoveryStatusTyped?.nextOfKin;
   
   const [newKinAddress, setNewKinAddress] = useState("");
   const [newGuardianAddress, setNewGuardianAddress] = useState("");
@@ -307,26 +313,35 @@ function VaultContent() {
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
         </div>
 
-        {<div className="relative py-12 border-b border-white/5">
+        <div className="relative py-12 border-b border-white/5">
           <div className="container mx-auto px-4 max-w-6xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 flex items-center gap-3">
-                Vault Manager
+              <div className="flex items-start gap-4">
                 <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}>
                   <Shield className="text-emerald-400" size={40} />
                 </motion.span>
-              </h1>
-              <p className="text-xl text-white/60 mb-2">
-                Non-custodial storage with dual protection: recovery + inheritance
-              </p>
-              <a href="/vault/recover" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm transition-colors">
-                <Key size={16} />
-                Lost your wallet? Recover your vault here
-                <ChevronRight size={16} />
-              </a>
+                <div className="flex-1">
+                  <SectionHeading
+                    badge="Security layer"
+                    title="Vault Manager"
+                    subtitle="Non-custodial storage with dual protection: recovery + inheritance"
+                    badgeColor="emerald"
+                    align="left"
+                  />
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <AccentBadge label="ProofScore-aware" color="cyan" />
+                    <AccentBadge label="Recovery + Inheritance" color="emerald" />
+                  </div>
+                  <a href="/vault/recover" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm transition-colors mt-4">
+                    <Key size={16} />
+                    Lost your wallet? Recover your vault here
+                    <ChevronRight size={16} />
+                  </a>
+                </div>
+              </div>
             </motion.div>
             
             {/* No Vault - Create One */}
@@ -335,7 +350,7 @@ function VaultContent() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
-                <GlassCard className="p-6 border-amber-500/30" gradient="gold" hover={false}>
+                <SurfaceCard variant="glow" interactive={false} className="p-6 border-amber-500/30">
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="p-4 rounded-2xl bg-amber-500/20">
@@ -365,12 +380,12 @@ function VaultContent() {
                       {isCreatingVault ? "Creating..." : "Create Vault"}
                     </motion.button>
                   </div>
-                </GlassCard>
+                </SurfaceCard>
               </motion.div>
             )}
             
             {isLoadingVault && (
-              <GlassCard className="p-6" hover={false}>
+              <SurfaceCard variant="muted" interactive={false} className="p-6">
                 <div className="flex items-center justify-center gap-3 py-4">
                   <motion.div
                     animate={{ rotate: 360 }}
@@ -379,16 +394,16 @@ function VaultContent() {
                   />
                   <p className="text-white/60">Loading vault information...</p>
                 </div>
-              </GlassCard>
+              </SurfaceCard>
             )}
             
             {!address && (
-              <GlassCard className="p-6 border-red-500/30" gradient="red" hover={false}>
+              <SurfaceCard variant="muted" interactive={false} className="p-6 border-red-500/30 bg-gradient-to-br from-red-500/20 to-red-500/5">
                 <div className="text-center py-4">
                   <p className="text-red-400 font-bold mb-2">Wallet Not Connected</p>
                   <p className="text-white/60">Please connect your wallet to view your vault</p>
                 </div>
-              </GlassCard>
+              </SurfaceCard>
             )}
             
             {/* Feature Cards */}
@@ -424,38 +439,38 @@ function VaultContent() {
               </motion.div>
             )}
           </div>
-        </div>}
+        </div>
 
-        {hasVault && (
-          <>
-            {/* Vault Overview Stats */}
-            <section className="py-8 relative z-10">
-              <div className="container mx-auto px-4 max-w-6xl">
-                <motion.div 
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="show"
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-                >
-                  <motion.div variants={itemVariants}>
-                    <GlassCard className="p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-white/60 text-sm">Total Balance</span>
-                        <div className="p-2 rounded-xl bg-cyan-500/20">
-                          <DollarSign className="text-cyan-400" size={18} />
-                        </div>
-                      </div>
-                      {isLoadingBalance ? (
-                        <>
-                          <Skeleton height={40} className="w-48 mb-1 bg-white/10" />
-                          <Skeleton height={16} className="w-32 bg-white/5" />
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-3xl font-bold text-white mb-1">
-                            {parseFloat(vaultBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
-                          </div>
-                          <div className="text-white/40 text-sm">≈ ${parseFloat(usdValue).toLocaleString()} USD</div>
+            {hasVault && (
+              <motion.div
+                className="mt-10"
+                variants={itemVariants}
+                initial="hidden"
+                animate="show"
+              >
+                <SurfaceCard className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 rounded-xl bg-cyan-500/20">
+                      <ArrowUpFromLine className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Deposit to Vault</h3>
+                      <p className="text-white/60 text-sm">Add funds to your secure vault</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      type="number"
+                      placeholder="Amount in VFIDE"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                    <button className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold">
+                      Deposit
+                    </button>
+                  </div>
+                </SurfaceCard>
+              </motion.div>
+            )}
                         </>
                       )}
                     </GlassCard>
@@ -580,7 +595,7 @@ function VaultContent() {
                   </div>
                   
                   <div className="p-4 bg-white/5 border border-white/10 rounded-xl mb-4">
-                    {nextOfKin && nextOfKin !== "0x0000000000000000000000000000000000000000" ? (
+                    {nextOfKin && nextOfKin !== ZERO_ADDRESS ? (
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-white/40 text-xs mb-1">Designated Heir</div>
@@ -716,19 +731,25 @@ function VaultContent() {
                     <TrendingUp className="text-cyan-400" size={24} />
                     Transaction History
                   </h2>
-                  <TransactionHistory />
-                </GlassCard>
-              </div>
-            </section>
-          </>
-        )}
-      </main>
-
-      <Footer />
-    </>
-  );
-}
-
-export default function VaultPage() {
-  return <VaultContent />;
-}
+                  {/* Transaction History */}
+                  {hasVault && (
+                    <motion.div
+                      className="mt-10"
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="show"
+                    >
+                      <SurfaceCard className="p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-3 rounded-xl bg-white/10">
+                            <ArrowDownToLine className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-white">Transaction History</h3>
+                            <p className="text-white/60 text-sm">All vault activity and recovery attempts</p>
+                          </div>
+                        </div>
+                        <TransactionHistory vaultAddress={vaultAddress || undefined} />
+                      </SurfaceCard>
+                    </motion.div>
+                  )}

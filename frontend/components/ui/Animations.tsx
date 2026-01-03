@@ -202,7 +202,7 @@ export function Confetti({ trigger, colors = ["#00F0FF", "#00FF88", "#FFD700", "
         rotation: Math.random() * 360,
         scale: Math.random() * 0.5 + 0.5
       }));
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Confetti particles must be generated immediately on trigger
       setParticles(newParticles);
       
       const timeout = setTimeout(() => setParticles([]), 2000);
@@ -267,7 +267,7 @@ export function Counter({ value, duration = 1500, prefix = "", suffix = "", clas
     };
     
     requestAnimationFrame(animate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Animation should only restart when value or duration changes
   }, [value, duration]);
   
   return (

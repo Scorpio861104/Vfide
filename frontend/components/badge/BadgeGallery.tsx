@@ -1,6 +1,6 @@
 'use client'
 
-import { useUserBadges, useBadgeNFTs } from '@/lib/vfide-hooks'
+import { useBadgeNFTs } from '@/lib/vfide-hooks'
 import { getBadgeById, getAllBadges, getBadgesByCategory, getBadgeCategories } from '@/lib/badge-registry'
 import { BadgeDisplay } from './BadgeDisplay'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -13,15 +13,20 @@ export interface BadgeGalleryProps {
 }
 
 export function BadgeGallery({ address, showAll = false, compact = false }: BadgeGalleryProps) {
-  const { badgeIds, isLoading: loadingBadges } = useUserBadges(address)
-  const { count: nftCount } = useBadgeNFTs(address)
+  const { tokenIds, isLoading: loadingBadges } = useBadgeNFTs(address)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   
   const categories = getBadgeCategories()
   
   // Get badges to display
   const allBadges = getAllBadges()
-  const earnedBadges = badgeIds.map(id => getBadgeById(id)).filter(Boolean)
+  const earnedBadges = tokenIds
+    .map(id => {
+      const badgeIdHex = `0x${BigInt(id).toString(16)}` as `0x${string}`;
+      return getBadgeById(badgeIdHex);
+    })
+    .filter(Boolean)
+  const nftCount = tokenIds.length
   
   const badgesToDisplay = showAll 
     ? selectedCategory === 'all' 
@@ -29,7 +34,7 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
       : getBadgesByCategory(selectedCategory)
     : earnedBadges
   
-  const earnedSet = new Set(badgeIds)
+  const earnedSet = new Set(tokenIds.map(id => `0x${BigInt(id).toString(16)}`))
   
   if (loadingBadges) {
     return (

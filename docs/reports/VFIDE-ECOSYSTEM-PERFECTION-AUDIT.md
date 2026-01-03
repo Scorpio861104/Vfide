@@ -587,7 +587,7 @@ constructor(
 1. ✅ Total supply capped at 200M
 2. ✅ No mint function after deployment
 3. ✅ Dev tokens locked in vesting vault
-4. ✅ Presale cap enforced (75M max)
+4. ✅ Presale cap enforced (50M max - 35M base + 15M bonus)
 5. ✅ All allocations on-chain
 6. ✅ Burns are permanent
 7. ✅ Sanctum flows tracked

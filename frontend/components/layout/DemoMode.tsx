@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "react-confetti";
 import { DollarSign, TrendingUp, Rocket, PartyPopper } from "lucide-react";
@@ -56,16 +56,25 @@ export function DemoMode() {
     } else if (currentStep === 2) {
       setDemoBalance(10);
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
+      const confettiTimer = setTimeout(() => setShowConfetti(false), 3000);
+      return () => clearTimeout(confettiTimer);
     } else if (currentStep === 3) {
       setShowDemo(false);
       // Trigger real onboarding
     }
 
     if (currentStep < steps.length - 1) {
-      setTimeout(() => setCurrentStep(currentStep + 1), 1000);
+      const stepTimer = setTimeout(() => setCurrentStep(currentStep + 1), 1000);
+      return () => clearTimeout(stepTimer);
     }
   };
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup any pending timers when component unmounts
+    };
+  }, []);
 
   return (
     <>

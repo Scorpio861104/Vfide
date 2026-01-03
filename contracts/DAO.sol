@@ -54,6 +54,8 @@ contract DAO is ReentrancyGuard {
         uint256 againstVotes;  // Score-weighted
         uint256 voterCount;    // FLOW-2 FIX: Track unique voter count
         mapping(address => bool) hasVoted;
+        // H-5 Fix: Store score snapshot at vote time to prevent mid-vote gaming
+        mapping(address => uint256) scoreSnapshot;
     }
     uint256 public proposalCount;
     mapping(uint256 => Proposal) public proposals;
@@ -157,9 +159,15 @@ contract DAO is ReentrancyGuard {
         // Track voter history
         voterProposals[voter].push(id);
         
-        // Score-Weighted Voting (Proof of Trust)
-        // Higher score = more voting power.
-        uint256 weight = uint256(seer.getScore(voter));
+        // H-5 Fix: Score-Weighted Voting with snapshot protection
+        // Snapshot score on first vote to prevent mid-proposal score manipulation
+        uint256 weight;
+        if (p.scoreSnapshot[voter] == 0) {
+            weight = uint256(seer.getScore(voter));
+            p.scoreSnapshot[voter] = weight;
+        } else {
+            weight = p.scoreSnapshot[voter];
+        }
 
         // Governance Fatigue: Reduce weight if voting too frequently
         VoterInfo storage info = voterInfo[voter];

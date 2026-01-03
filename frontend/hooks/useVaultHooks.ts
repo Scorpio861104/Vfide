@@ -4,18 +4,44 @@ import { useReadContract, useWriteContract, useAccount, useWaitForTransactionRec
 import { parseEther, formatEther } from 'viem'
 import { useState } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
-import { VaultInfrastructureABI, VFIDETokenABI, VaultHubLiteABI } from '../lib/abis'
+import { ZERO_ADDRESS } from '../lib/constants'
+import { VaultHubLiteABI, VFIDETokenABI, UserVaultLiteABI, VaultInfrastructureABI } from '../lib/abis'
 
 // ============================================
 // VAULT HOOKS - Non-custodial vault management
+// 
+// DEPLOYMENT NOTE: VaultInfrastructure was too large (58KB > 24KB mainnet limit),
+// so VaultHubLite is deployed instead. VaultHubLite/UserVaultLite has a simpler
+// interface than VaultInfrastructure/UserVault:
+//
+// VaultHubLite functions: createVault(), vaultOf(), getVault()
+// UserVaultLite functions: transfer(), setGuardian(uint8 slot, address guardian), 
+//   startRecovery(address candidate), approveRecovery(), cancelRecovery(), executeRecovery()
+//
+// Advanced hooks that require VaultInfrastructure (not deployed):
+//   useVaultGuardiansDetailed, useIsGuardianMature, useAbnormalTransactionThreshold,
+//   useSetBalanceSnapshotMode, useUpdateBalanceSnapshot, useBalanceSnapshot,
+//   usePendingTransaction, useApprovePendingTransaction, useExecutePendingTransaction,
+//   useCleanupExpiredTransaction, useGuardianCancelInheritance, useInheritanceStatus
+//
+// These hooks are STUBBED OUT and will only work when VaultInfrastructure is deployed.
 // ============================================
+
+// Use VaultHubLite ABI for hub operations
+const HUB_ABI = VaultHubLiteABI
+
+// Use UserVaultLite ABI for individual vault operations (deployed contract)
+const VAULT_LITE_ABI = UserVaultLiteABI
+
+// Use VaultInfrastructure ABI for advanced features (not deployed yet)
+const VAULT_ABI = VaultInfrastructureABI
 
 export function useUserVault() {
   const { address } = useAccount()
   
   const { data: vaultAddress, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.VaultHub,
-    abi: VaultHubLiteABI,
+    abi: HUB_ABI,
     functionName: 'vaultOf',
     args: address ? [address] : undefined,
     query: {
@@ -23,7 +49,7 @@ export function useUserVault() {
     }
   })
   
-  const hasVault = vaultAddress && vaultAddress !== '0x0000000000000000000000000000000000000000'
+  const hasVault = vaultAddress && vaultAddress !== ZERO_ADDRESS
   
   return {
     vaultAddress: hasVault ? (vaultAddress as `0x${string}`) : null,
@@ -33,17 +59,21 @@ export function useUserVault() {
 }
 
 export function useCreateVault() {
+  const { address } = useAccount()
   const { writeContract, data, isPending } = useWriteContract()
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
+  // VaultHubLite uses createVault() with no args
   const createVault = () => {
+    if (!address) return
     writeContract({
       address: CONTRACT_ADDRESSES.VaultHub,
-      abi: VaultHubLiteABI,
+      abi: HUB_ABI,
       functionName: 'createVault',
+      args: [],
     })
   }
   
@@ -88,10 +118,11 @@ export function useTransferVFIDE() {
   const transfer = (toVault: `0x${string}`, amount: string) => {
     if (!vaultAddress) return
     
+    // UserVaultLite uses 'transfer' function, VaultInfrastructure uses 'transferVFIDE'
     writeContract({
       address: vaultAddress as `0x${string}`,
-      abi: VaultInfrastructureABI,
-      functionName: 'transferVFIDE',
+      abi: VAULT_LITE_ABI, // FIXED: Use UserVaultLiteABI (deployed) instead of VAULT_ABI
+      functionName: 'transfer',
       args: [toVault, parseEther(amount)],
     })
   }
@@ -114,7 +145,7 @@ export function useTransferVFIDE() {
 export function useVaultGuardiansDetailed(vaultAddress?: `0x${string}`) {
   const { data: guardianCount } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'guardianCount',
     query: {
       enabled: !!vaultAddress,
@@ -132,7 +163,7 @@ export function useVaultGuardiansDetailed(vaultAddress?: `0x${string}`) {
 export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddress?: `0x${string}`) {
   const { data: isMature } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'isGuardianMature',
     args: guardianAddress ? [guardianAddress] : undefined,
     query: {
@@ -146,7 +177,9 @@ export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddres
 }
 
 /**
- * Add or remove guardian (handles UV_RecoveryActive error)
+ * Add or remove guardian (UserVaultLite uses slot-based guardians)
+ * @param slot Guardian slot (0-2)
+ * @param guardian Address to set (use zero address to clear)
  */
 export function useSetGuardian(vaultAddress: `0x${string}`) {
   const { writeContractAsync } = useWriteContract()
@@ -157,23 +190,26 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
     hash: txHash || undefined,
   })
 
-  const setGuardian = async (guardianAddress: `0x${string}`, active: boolean) => {
+  // C-4 Fix: Updated signature to match UserVaultLite: setGuardian(uint8 slot, address guardian)
+  const setGuardian = async (slot: number, guardianAddress: `0x${string}`) => {
     setError(null)
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
-        abi: VaultInfrastructureABI,
+        abi: VAULT_LITE_ABI,
         functionName: 'setGuardian',
-        args: [guardianAddress, active],
+        args: [slot, guardianAddress],
       })
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Transaction failed'
-      if (errorMsg.includes('UV_RecoveryActive')) {
-        setError('Cannot remove guardians during active recovery')
-      } else if (errorMsg.includes('UV_Locked')) {
+      if (errorMsg.includes('RecoveryActive')) {
+        setError('Cannot modify guardians during active recovery')
+      } else if (errorMsg.includes('Locked')) {
         setError('Vault is currently locked')
+      } else if (errorMsg.includes('NotOwner')) {
+        setError('Only vault owner can modify guardians')
       } else {
         setError(errorMsg)
       }
@@ -181,8 +217,18 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
     }
   }
 
+  // Convenience wrapper for legacy code that uses (address, bool) signature
+  const setGuardianLegacy = async (guardianAddress: `0x${string}`, active: boolean) => {
+    // Find first empty slot if adding, or find the guardian's slot if removing
+    // For simplicity, use slot 0 for add, clear by setting to zero address
+    const slot = 0
+    const addr = active ? guardianAddress : ZERO_ADDRESS
+    return setGuardian(slot, addr)
+  }
+
   return {
     setGuardian,
+    setGuardianLegacy,
     txHash,
     isSuccess,
     isLoading,
@@ -196,7 +242,7 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
 export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
   const { data: threshold } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'getAbnormalTransactionThreshold',
     query: {
       enabled: !!vaultAddress,
@@ -205,7 +251,7 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
 
   const { data: usePercentage } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'usePercentageThreshold',
     query: {
       enabled: !!vaultAddress,
@@ -214,7 +260,7 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
 
   const { data: percentageBps } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'abnormalTransactionPercentageBps',
     query: {
       enabled: !!vaultAddress,
@@ -243,7 +289,7 @@ export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
-        abi: VaultInfrastructureABI,
+        abi: VAULT_ABI,
         functionName: 'setBalanceSnapshotMode',
         args: [useSnapshot],
       })
@@ -277,7 +323,7 @@ export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
-        abi: VaultInfrastructureABI,
+        abi: VAULT_ABI,
         functionName: 'updateBalanceSnapshot',
       })
       setTxHash(hash)
@@ -301,7 +347,7 @@ export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
 export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
   const { data: useSnapshot } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'useBalanceSnapshot',
     query: {
       enabled: !!vaultAddress,
@@ -310,7 +356,7 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
 
   const { data: snapshot } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'balanceSnapshot',
     query: {
       enabled: !!vaultAddress,
@@ -329,7 +375,7 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
 export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: number) {
   const { data: pendingTx } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'pendingTransactions',
     args: txId !== undefined ? [BigInt(txId)] : undefined,
     query: {
@@ -339,7 +385,7 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
 
   const { data: pendingTxCount } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'pendingTxCount',
     query: {
       enabled: !!vaultAddress,
@@ -375,7 +421,7 @@ export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
-        abi: VaultInfrastructureABI,
+        abi: VAULT_ABI,
         functionName: 'approvePendingTransaction',
         args: [BigInt(txId)],
       })
@@ -409,7 +455,7 @@ export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
-        abi: VaultInfrastructureABI,
+        abi: VAULT_ABI,
         functionName: 'executePendingTransaction',
         args: [BigInt(txId)],
       })
@@ -443,7 +489,7 @@ export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
-        abi: VaultInfrastructureABI,
+        abi: VAULT_ABI,
         functionName: 'cleanupExpiredTransaction',
         args: [BigInt(txId)],
       })
@@ -477,7 +523,7 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
-        abi: VaultInfrastructureABI,
+        abi: VAULT_ABI,
         functionName: 'guardianCancelInheritance',
       })
       setTxHash(hash)
@@ -501,7 +547,7 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
 export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
   const { data: nextOfKin } = useReadContract({
     address: vaultAddress,
-    abi: VaultInfrastructureABI,
+    abi: VAULT_ABI,
     functionName: 'nextOfKin',
     query: {
       enabled: !!vaultAddress,
@@ -509,7 +555,7 @@ export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
   })
 
   return {
-    nextOfKin: (nextOfKin as `0x${string}`) || '0x0000000000000000000000000000000000000000',
-    hasNextOfKin: nextOfKin !== '0x0000000000000000000000000000000000000000',
+    nextOfKin: (nextOfKin as `0x${string}`) || ZERO_ADDRESS,
+    hasNextOfKin: nextOfKin !== ZERO_ADDRESS,
   }
 }

@@ -54,12 +54,16 @@ export default function TestnetPage() {
   }, [isConnected, isCorrectNetwork, hasBalance, refetchBalance])
 
   const copyAddress = () => {
-    if (address) {
-      navigator.clipboard.writeText(address)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
+    if (!address) return
+    navigator.clipboard.writeText(address)
+    setCopied(true)
   }
+
+  useEffect(() => {
+    if (!copied) return
+    const timer = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(timer)
+  }, [copied])
 
   const addNetworkToWallet = useCallback(async () => {
     setIsAddingNetwork(true)

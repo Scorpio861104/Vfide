@@ -28,6 +28,7 @@ import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { useToast } from '@/components/ui/toast'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { SurfaceCard, AccentBadge, SectionHeading } from '@/components/ui/primitives'
 
 // EscrowManager ABI
 const ESCROW_MANAGER_ABI = [
@@ -40,6 +41,8 @@ const ESCROW_MANAGER_ABI = [
   { name: 'escrows', type: 'function', stateMutability: 'view', inputs: [{ name: 'id', type: 'uint256' }], outputs: [{ name: 'buyer', type: 'address' }, { name: 'seller', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'deadline', type: 'uint256' }, { name: 'state', type: 'uint8' }] },
   { name: 'nextId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
 ] as const;
+
+import { ZERO_ADDRESS } from '@/lib/constants';
 
 // Contract addresses from centralized config
 const ESCROW_MANAGER_ADDRESS = CONTRACT_ADDRESSES.VFIDECommerce;
@@ -80,44 +83,11 @@ interface EscrowData {
   orderId: string
 }
 
-// Demo escrows - ONLY shown in demo mode when contracts not deployed
-const DEMO_MODE = !CONTRACT_ADDRESSES.VFIDECommerce || CONTRACT_ADDRESSES.VFIDECommerce === '0x0000000000000000000000000000000000000000'
+// Demo mode flag: when contract not deployed, disable actions and show empty state
+const DEMO_MODE = !CONTRACT_ADDRESSES.VFIDECommerce || CONTRACT_ADDRESSES.VFIDECommerce === ZERO_ADDRESS
 
-const demoEscrows: EscrowData[] = DEMO_MODE ? [
-  {
-    id: 1,
-    buyer: '0x1234...5678',
-    merchant: '0x8765...4321',
-    token: 'VFIDE',
-    amount: BigInt(5000 * 1e18),
-    createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-    releaseTime: Date.now() + 5 * 24 * 60 * 60 * 1000,
-    state: EscrowState.CREATED,
-    orderId: 'DEMO-001'
-  },
-  {
-    id: 2,
-    buyer: '0x1234...5678',
-    merchant: '0xABCD...EFGH',
-    token: 'VFIDE',
-    amount: BigInt(1500 * 1e18),
-    createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
-    releaseTime: Date.now() - 2 * 24 * 60 * 60 * 1000,
-    state: EscrowState.RELEASED,
-    orderId: 'DEMO-002'
-  },
-  {
-    id: 3,
-    buyer: '0x1234...5678',
-    merchant: '0x9999...1111',
-    token: 'VFIDE',
-    amount: BigInt(12000 * 1e18),
-    createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
-    releaseTime: Date.now() + 13 * 24 * 60 * 60 * 1000,
-    state: EscrowState.DISPUTED,
-    orderId: 'DEMO-003'
-  }
-] : []
+// No demo escrows; we show an empty state when contract is missing
+const demoEscrows: EscrowData[] = []
 
 type TabId = 'active' | 'completed' | 'disputed'
 
@@ -271,13 +241,13 @@ export default function EscrowPage() {
     }
   })
 
-  // Stats
-  const totalInEscrow = mockEscrows
+  // Stats - use demoEscrows (defined above with demo data)
+  const totalInEscrow = demoEscrows
     .filter(e => e.state === EscrowState.CREATED)
     .reduce((sum, e) => sum + e.amount, BigInt(0))
-  const activeCount = mockEscrows.filter(e => e.state === EscrowState.CREATED).length
-  const completedCount = mockEscrows.filter(e => e.state === EscrowState.RELEASED || e.state === EscrowState.REFUNDED).length
-  const disputedCount = mockEscrows.filter(e => e.state === EscrowState.DISPUTED).length
+  const activeCount = demoEscrows.filter(e => e.state === EscrowState.CREATED).length
+  const completedCount = demoEscrows.filter(e => e.state === EscrowState.RELEASED || e.state === EscrowState.REFUNDED).length
+  const disputedCount = demoEscrows.filter(e => e.state === EscrowState.DISPUTED).length
 
   const formatAmount = (amount: bigint): string => {
     return parseFloat(formatUnits(amount, 18)).toLocaleString()
@@ -317,32 +287,17 @@ export default function EscrowPage() {
         {/* Hero */}
         <section className="relative py-12 overflow-hidden">
           <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center max-w-4xl mx-auto"
-            >
-              <motion.div 
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 rounded-full mb-6"
-              >
-                <Shield className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm font-medium text-cyan-300">Safe Buy Protection</span>
-              </motion.div>
-              
-              <h1 className="text-4xl md:text-5xl font-black mb-4">
-                <span className="text-white">Buyer Protection </span>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400">
-                  Escrow
-                </span>
-              </h1>
-              
-              <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                Secure your transactions with smart contract escrow. Funds are held safely 
-                until delivery is confirmed, with dispute resolution backed by the DAO.
+            <SectionHeading
+              badge="Safe Buy Protection"
+              badgeIcon={<Shield className="w-4 h-4" />}
+              title={<>Buyer Protection <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400">Escrow</span></>}
+              subtitle="Secure your transactions with smart contract escrow. Funds are held safely until delivery is confirmed, with dispute resolution backed by the DAO."
+            />
+            {DEMO_MODE && (
+              <p className="mt-3 text-amber-300 text-sm font-semibold text-center">
+                Escrow contract is not deployed in this environment. Actions are disabled until deployment.
               </p>
-            </motion.div>
+            )}
           
             {/* Stats */}
             <motion.div 
@@ -352,26 +307,29 @@ export default function EscrowPage() {
               className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-12 max-w-5xl mx-auto"
             >
               {[
-                { label: 'Total Escrows', value: nextId ? nextId.toString() : '0', icon: <Hash className="w-5 h-5" />, gradient: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
-                { label: 'Total Value', value: `${formatAmount(totalInEscrow)} VFIDE`, icon: <DollarSign className="w-5 h-5" />, gradient: 'from-cyan-500/20 to-teal-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
-                { label: 'Active', value: activeCount.toString(), icon: <Clock className="w-5 h-5" />, gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-                { label: 'Completed', value: completedCount.toString(), icon: <CheckCircle2 className="w-5 h-5" />, gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
-                { label: 'Disputed', value: disputedCount.toString(), icon: <Scale className="w-5 h-5" />, gradient: 'from-red-500/20 to-rose-500/10', border: 'border-red-500/20', text: 'text-red-400' },
+                { label: 'Total Escrows', value: nextId ? nextId.toString() : '0', icon: <Hash className="w-5 h-5" />, color: 'purple' as const },
+                { label: 'Total Value', value: `${formatAmount(totalInEscrow)} VFIDE`, icon: <DollarSign className="w-5 h-5" />, color: 'cyan' as const },
+                { label: 'Active', value: activeCount.toString(), icon: <Clock className="w-5 h-5" />, color: 'amber' as const },
+                { label: 'Completed', value: completedCount.toString(), icon: <CheckCircle2 className="w-5 h-5" />, color: 'emerald' as const },
+                { label: 'Disputed', value: disputedCount.toString(), icon: <Scale className="w-5 h-5" />, color: 'red' as const },
               ].map((stat, idx) => (
-              <motion.div
+              <SurfaceCard
                 key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.02, y: -2 }}
-                transition={{ delay: idx * 0.1 }}
-                className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4`}
+                interactive
+                className="p-4"
               >
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-3`}>
-                  <div className={stat.text}>{stat.icon}</div>
-                </div>
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                <p className="text-sm text-gray-400">{stat.label}</p>
-              </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center mb-3">
+                    <AccentBadge color={stat.color} className="w-5 h-5">{stat.icon}</AccentBadge>
+                  </div>
+                  <p className="text-2xl font-bold text-white">{stat.value}</p>
+                  <p className="text-sm text-gray-400">{stat.label}</p>
+                </motion.div>
+              </SurfaceCard>
             ))}
             </motion.div>
           </div>
@@ -456,23 +414,26 @@ export default function EscrowPage() {
                   className="space-y-4"
                 >
                   {filteredEscrows.map((escrow, idx) => (
-                    <motion.div
+                    <SurfaceCard
                       key={escrow.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      whileHover={{ scale: 1.005, y: -2 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
+                      interactive
+                      className="p-6"
                     >
-                      <div className="p-6">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                      >
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                           {/* Left: Order Info */}
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-3">
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${stateColors[escrow.state]}`}>
+                                <AccentBadge 
+                                  color={escrow.state === EscrowState.CREATED ? 'amber' : escrow.state === EscrowState.RELEASED ? 'emerald' : escrow.state === EscrowState.REFUNDED ? 'cyan' : 'red'}
+                                >
                                   {stateLabels[escrow.state]}
-                                </span>
+                                </AccentBadge>
                                 <span className="text-gray-500 text-sm flex items-center gap-1">
                                   <Hash className="w-3 h-3" />
                                   {escrow.orderId}
@@ -600,8 +561,8 @@ export default function EscrowPage() {
                             </div>
                           )}
                         </div>
-                      </div>
-                    </motion.div>
+                      </motion.div>
+                    </SurfaceCard>
                   ))}
                 </motion.div>
               )}
@@ -653,30 +614,30 @@ export default function EscrowPage() {
                 text: 'text-amber-400'
               }
             ].map((step, idx) => (
-              <motion.div
+              <SurfaceCard
                 key={step.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.02, y: -4 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.15 }}
-                className={`text-center bg-gradient-to-br ${step.gradient} backdrop-blur-xl border ${step.border} rounded-2xl p-6`}
+                interactive
+                className="text-center p-6"
               >
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${step.gradient} border ${step.border} flex items-center justify-center mx-auto mb-4`}>
-                  <div className={step.text}>{step.icon}</div>
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
-                <p className="text-gray-400 text-sm">{step.description}</p>
-              </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.15 }}
+                >
+                  <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
+                    <div className={step.text}>{step.icon}</div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
+                  <p className="text-gray-400 text-sm">{step.description}</p>
+                </motion.div>
+              </SurfaceCard>
             ))}
           </div>
           
           {/* Trust-based release times */}
           <div className="mt-16 max-w-3xl mx-auto">
-            <motion.div 
-              whileHover={{ scale: 1.01, y: -2 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
-            >
+            <SurfaceCard interactive className="p-6">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
                   <Lock className="w-5 h-5 text-cyan-400" />
@@ -702,7 +663,7 @@ export default function EscrowPage() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </SurfaceCard>
           </div>
         </div>
       </section>
@@ -717,13 +678,12 @@ export default function EscrowPage() {
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowCreateModal(false)}
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={e => e.stopPropagation()}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
-            >
+            <SurfaceCard className="max-w-lg w-full p-6" onClick={e => e.stopPropagation()}>
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+              >
               <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-emerald-400">Create Escrow</h2>
               
               <div className="space-y-4">
@@ -787,7 +747,8 @@ export default function EscrowPage() {
                   )}
                 </motion.button>
               </div>
-            </motion.div>
+              </motion.div>
+            </SurfaceCard>
           </motion.div>
         )}
       </AnimatePresence>

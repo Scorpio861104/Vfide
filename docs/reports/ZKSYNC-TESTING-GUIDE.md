@@ -193,7 +193,7 @@ contract EchidnaVFIDEToken {
     }
     
     function echidna_presale_cap() public view returns (bool) {
-        // Presale minted tokens <= 75M
+        // Presale minted tokens <= 50M
         return true; // Implement check
     }
     

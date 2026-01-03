@@ -171,11 +171,32 @@ export function PaymentInterface() {
             {isPaying ? 'Processing...' : !trustScore.eligible ? 'Vault Locked or Missing' : `Pay ${amount || '0'} VFIDE`}
           </button>
 
+          {/* Error Display */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-red-900/20 border-2 border-red-500 rounded-xl p-4"
+              role="alert"
+            >
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-8 h-8 text-red-400 flex-shrink-0" />
+                <div>
+                  <div className="text-red-400 font-bold">Payment Failed</div>
+                  <div className="text-sm text-gray-400 mt-1">
+                    {error || 'An error occurred during payment'}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {isSuccess && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-green-900/20 border-2 border-green-500 rounded-xl p-4 text-center"
+              role="status"
             >
               <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-2" />
               <div className="text-green-400 font-bold text-lg">Payment Successful!</div>

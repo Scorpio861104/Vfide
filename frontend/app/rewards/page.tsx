@@ -2,6 +2,7 @@
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
+import { SurfaceCard, AccentBadge, SectionHeading } from '@/components/ui/primitives'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
@@ -26,8 +27,8 @@ import {
 
 import { useToast } from "@/components/ui/toast"
 
-// Contract ABIs
-const LIQUIDITY_INCENTIVES_ABI = [
+// Staking Rewards ABI
+const STAKING_REWARDS_ABI = [
   { name: 'stake', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'lpToken', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [] },
   { name: 'unstake', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'lpToken', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [] },
   { name: 'claimRewards', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'lpToken', type: 'address' }], outputs: [] },
@@ -55,16 +56,16 @@ const PROMOTIONAL_TREASURY_ABI = [
 ] as const;
 
 // Contract addresses from environment (these contracts not deployed to testnet yet)
-const LIQUIDITY_INCENTIVES_ADDRESS = (process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const DUTY_DISTRIBUTOR_ADDRESS = (process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const PROMOTIONAL_TREASURY_ADDRESS = (process.env.NEXT_PUBLIC_PROMOTIONAL_TREASURY_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const LIQUIDITY_INCENTIVES_ADDRESS = CONTRACT_ADDRESSES.LiquidityIncentives;
+const DUTY_DISTRIBUTOR_ADDRESS = CONTRACT_ADDRESSES.DutyDistributor;
+const PROMOTIONAL_TREASURY_ADDRESS = CONTRACT_ADDRESSES.PromotionalTreasury;
 
 // Check if contracts are deployed (not zero address)
-const IS_LIQUIDITY_DEPLOYED = LIQUIDITY_INCENTIVES_ADDRESS !== '0x0000000000000000000000000000000000000000';
-const IS_DUTY_DEPLOYED = DUTY_DISTRIBUTOR_ADDRESS !== '0x0000000000000000000000000000000000000000';
-const IS_PROMO_DEPLOYED = PROMOTIONAL_TREASURY_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_LIQUIDITY_DEPLOYED = LIQUIDITY_INCENTIVES_ADDRESS !== ZERO_ADDRESS;
+const IS_DUTY_DEPLOYED = DUTY_DISTRIBUTOR_ADDRESS !== ZERO_ADDRESS;
+const IS_PROMO_DEPLOYED = PROMOTIONAL_TREASURY_ADDRESS !== ZERO_ADDRESS;
 
-type TabId = 'overview' | 'duty' | 'promotional' | 'liquidity' | 'referral'
+type TabId = 'overview' | 'duty' | 'promotional' | 'liquidity' | 'referral';
 
 export default function RewardsPage() {
   const { address, isConnected } = useAccount()
@@ -142,7 +143,7 @@ export default function RewardsPage() {
   // Read LP pools
   const { data: allPools } = useReadContract({
     address: LIQUIDITY_INCENTIVES_ADDRESS,
-    abi: LIQUIDITY_INCENTIVES_ABI,
+    abi: STAKING_REWARDS_ABI,
     functionName: 'getAllPools',
     query: { enabled: IS_LIQUIDITY_DEPLOYED },
   });
@@ -191,7 +192,7 @@ export default function RewardsPage() {
     setClaimingId(`stake-${lpToken}`);
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
+      abi: STAKING_REWARDS_ABI,
       functionName: 'stake',
       args: [lpToken as `0x${string}`, parseUnits(amount, 18)],
     });
@@ -201,7 +202,7 @@ export default function RewardsPage() {
     setClaimingId(`unstake-${lpToken}`);
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
+      abi: STAKING_REWARDS_ABI,
       functionName: 'unstake',
       args: [lpToken as `0x${string}`, parseUnits(amount, 18)],
     });
@@ -211,7 +212,7 @@ export default function RewardsPage() {
     setClaimingId(`claim-${lpToken}`);
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
+      abi: STAKING_REWARDS_ABI,
       functionName: 'claimRewards',
       args: [lpToken as `0x${string}`],
     });
@@ -221,7 +222,7 @@ export default function RewardsPage() {
     setClaimingId(`compound-${lpToken}`);
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
+      abi: STAKING_REWARDS_ABI,
       functionName: 'compound',
       args: [lpToken as `0x${string}`],
     });
@@ -300,54 +301,33 @@ export default function RewardsPage() {
         <motion.section 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="py-12 border-b border-white/10 backdrop-blur-xl bg-white/[0.02]"
+          className="py-12 border-b border-white/10"
         >
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <motion.div 
-                    animate={{ rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                    className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-amber-500/30"
-                  >
-                    <Gift className="w-8 h-8 text-white" />
-                  </motion.div>
-                  <div>
-                    <h1 className="text-4xl md:text-5xl font-black">
-                      <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400">
-                        Rewards Center
-                      </span>
-                    </h1>
-                    <p className="text-xl text-gray-400">
-                      Earn rewards for active participation in the VFIDE ecosystem
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <SectionHeading
+                badge="Ecosystem Participation"
+                badgeIcon={<Gift className="w-4 h-4" />}
+                title={<span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400">Rewards Center</span>}
+                subtitle="Earn rewards for active participation in the VFIDE ecosystem"
+              />
               
               {isConnected && (
                 <div className="flex gap-4">
-                  <motion.div 
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 min-w-[160px]"
-                  >
+                  <SurfaceCard interactive className="p-4 min-w-[160px]">
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-emerald-400" />
                       Total Claimable
                     </div>
                     <div className="text-2xl font-bold text-emerald-400">{totalClaimable.toLocaleString()} VFIDE</div>
-                  </motion.div>
-                  <motion.div 
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 min-w-[160px]"
-                  >
+                  </SurfaceCard>
+                  <SurfaceCard interactive className="p-4 min-w-[160px]">
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-amber-400" />
                       Total Earned
                     </div>
                     <div className="text-2xl font-bold text-amber-400">{totalEarned.toLocaleString()} VFIDE</div>
-                  </motion.div>
+                  </SurfaceCard>
                 </div>
               )}
             </div>
@@ -477,14 +457,17 @@ function OverviewTab({ isConnected, totalClaimable, onClaim, claimingId }: {
       {/* Reward Sources Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {rewardSources.map((source, idx) => (
-          <motion.div
+          <SurfaceCard
             key={source.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6"
+            interactive
+            className="p-6"
           >
-            <div className="flex items-start justify-between mb-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div 
                   className="w-12 h-12 rounded-xl flex items-center justify-center"
@@ -517,7 +500,8 @@ function OverviewTab({ isConnected, totalClaimable, onClaim, claimingId }: {
                 {claimingId === source.id ? 'Claiming...' : 'Claim'}
               </button>
             </div>
-          </motion.div>
+            </motion.div>
+          </SurfaceCard>
         ))}
       </div>
 
@@ -579,22 +563,17 @@ function DutyRewardsTab({ isConnected, onClaim, claimingId }: {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-          <div className="text-[#A0A0A5] text-sm mb-1">Total Points</div>
-          <div className="text-2xl font-bold text-[#00F0FF]">{dutyStats.totalPoints}</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-          <div className="text-[#A0A0A5] text-sm mb-1">Claimable</div>
-          <div className="text-2xl font-bold text-[#50C878]">{dutyStats.claimable} VFIDE</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-          <div className="text-[#A0A0A5] text-sm mb-1">Votes (Month)</div>
-          <div className="text-2xl font-bold text-[#F5F3E8]">{dutyStats.votesThisMonth}</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-          <div className="text-[#A0A0A5] text-sm mb-1">Participation</div>
-          <div className="text-2xl font-bold text-[#FFD700]">{dutyStats.participationRate}%</div>
-        </div>
+        {[
+          { label: 'Total Points', value: dutyStats.totalPoints, color: 'cyan' as const },
+          { label: 'Claimable', value: `${dutyStats.claimable} VFIDE`, color: 'emerald' as const },
+          { label: 'Votes (Month)', value: dutyStats.votesThisMonth, color: 'white' as const },
+          { label: 'Participation', value: `${dutyStats.participationRate}%`, color: 'amber' as const },
+        ].map((stat, idx) => (
+          <SurfaceCard key={idx} className="p-4">
+            <div className="text-gray-400 text-sm mb-1">{stat.label}</div>
+            <div className={`text-2xl font-bold ${stat.color === 'cyan' ? 'text-cyan-400' : stat.color === 'emerald' ? 'text-emerald-400' : stat.color === 'amber' ? 'text-amber-400' : 'text-white'}`}>{stat.value}</div>
+          </SurfaceCard>
+        ))}
       </div>
 
       {/* Claim Section */}
@@ -864,8 +843,8 @@ function LiquidityTab({ isConnected, onClaim, claimingId, onStake, onUnstake, on
                 {pool.yourStake > 0 && (
                   <button 
                     onClick={() => {
-                      const poolAddress = contractPools?.[0] || '0x0000000000000000000000000000000000000000';
-                      onUnstake(poolAddress, '0'); // TODO: Add amount input for unstaking
+                      const poolAddress = contractPools?.[0] || ZERO_ADDRESS;
+                      onUnstake(poolAddress, '0'); // H-9: Full amount unstake - partial amounts deferred to future release
                     }}
                     className="px-4 py-2 border border-[#A0A0A5] text-[#A0A0A5] rounded-lg font-bold hover:border-[#F5F3E8] hover:text-[#F5F3E8] transition-colors"
                   >
@@ -986,9 +965,6 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
           </button>
           <button 
             onClick={() => {
-              const qrData = `https://vfide.app/join?ref=${referralStats.code}`;
-              // Open QR code modal or generate inline
-              // QR code generated
               alert('QR Code feature coming soon!');
             }}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] hover:border-[#A78BFA] transition-colors"

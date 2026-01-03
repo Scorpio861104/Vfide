@@ -2,6 +2,7 @@
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
@@ -27,8 +28,8 @@ const SEER_ABI = [
   { name: 'score', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-const BADGE_NFT_ADDRESS = (process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const SEER_ADDRESS = (process.env.NEXT_PUBLIC_SEER_ADDRESS || '0xD22944d47bAD4Bd5fF1A366393c4bdbc9250fd8E') as `0x${string}`;
+const BADGE_NFT_ADDRESS = CONTRACT_ADDRESSES.BadgeNFT;
+const SEER_ADDRESS = CONTRACT_ADDRESSES.Seer;
 
 // Category icons and colors
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -213,11 +214,52 @@ export default function BadgesPage() {
             </motion.div>
 
             {/* Stats Row */}
+            {/* XP Progress Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="mt-8 max-w-2xl mx-auto"
+            >
+              <GlassCard className="p-6" hover={false}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/30 to-blue-500/20 rounded-xl flex items-center justify-center border border-cyan-500/30">
+                      <Zap className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div>
+                      <div className="text-white font-bold text-lg">Level {Math.floor(totalPoints / 100)}</div>
+                      <div className="text-white/40 text-sm">{totalPoints} XP</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-white/60 text-sm">Next Level</div>
+                    <div className="text-white font-bold">{Math.ceil((Math.floor(totalPoints / 100) + 1) * 100 - totalPoints)} XP</div>
+                  </div>
+                </div>
+                
+                {/* XP Progress Bar */}
+                <div className="relative h-3 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(totalPoints % 100)}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between mt-2 text-xs text-white/40">
+                  <span>{Math.floor(totalPoints / 100) * 100} XP</span>
+                  <span>{(Math.floor(totalPoints / 100) + 1) * 100} XP</span>
+                </div>
+              </GlassCard>
+            </motion.div>
+
             <motion.div 
               variants={containerVariants}
               initial="hidden"
               animate="show"
-              className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 max-w-4xl mx-auto"
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 max-w-4xl mx-auto"
             >
               {[
                 { label: 'Total Badges', value: allBadges.length, icon: Trophy, color: 'amber' },
@@ -374,14 +416,25 @@ export default function BadgesPage() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleMintBadge(badge.name)}
                             disabled={mintingBadge === badge.name}
-                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25"
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-shadow relative overflow-hidden group"
                           >
                             {mintingBadge === badge.name ? (
-                              <Loader2 className="animate-spin" size={18} />
+                              <>
+                                <Loader2 className="animate-spin" size={18} />
+                                <span>Minting...</span>
+                              </>
                             ) : (
-                              <Gem size={18} />
+                              <>
+                                <Gem size={18} className="group-hover:scale-110 transition-transform" />
+                                <span>Mint as NFT</span>
+                              </>
                             )}
-                            {mintingBadge === badge.name ? 'Minting...' : 'Mint as NFT'}
+                            <motion.div
+                              className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                              initial={{ x: '-100%' }}
+                              whileHover={{ x: '100%' }}
+                              transition={{ duration: 0.5 }}
+                            />
                           </motion.button>
                         )}
 

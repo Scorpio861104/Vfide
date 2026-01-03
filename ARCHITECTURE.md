@@ -8,7 +8,7 @@ VFIDE is a trust-based payment protocol built as a multi-chain solution on Base,
 
 ### 1. VFIDEToken (Core Asset)
 - **Purpose:** ERC20 token with vault-only transfer enforcement
-- **Supply:** 200M max, 50M dev reserve, 75M presale cap
+- **Supply:** 200M max, 50M dev reserve, 50M presale (35M base + 15M bonus)
 - **Transfers:** Only between vaults (not direct wallet-to-wallet)
 - **Fees:** 0.25%-5% on transfers (NOT on payments), ProofScore-adjusted
 - **File:** `contracts/VFIDEToken.sol` (466 lines)

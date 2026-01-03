@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useChainId } from 'wagmi';
 
 const EXPLORER_URLS: Record<number, string> = {
@@ -42,8 +42,6 @@ export function EtherscanLink({
   const explorerUrl = EXPLORER_URLS[chainId] || EXPLORER_URLS[11155111];
   const value = txHash || address;
 
-  if (!value) return null;
-
   const path = type === 'tx' ? 'tx' : type === 'token' ? 'token' : 'address';
   const href = `${explorerUrl}/${path}/${value}`;
 
@@ -54,8 +52,15 @@ export function EtherscanLink({
     e.stopPropagation();
     await navigator.clipboard.writeText(value);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  if (!value) return null;
 
   return (
     <span className={`inline-flex items-center gap-1.5 ${className}`}>

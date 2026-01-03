@@ -66,7 +66,7 @@ export function NetworkSwitchOverlay() {
     if (autoSwitch && isWrongNetwork && !isPending && !dismissed) {
       handleSwitch(true)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on network mismatch, not on function reference changes
   }, [isWrongNetwork])
 
   // Show success animation briefly
@@ -148,7 +148,9 @@ export function NetworkSwitchOverlay() {
         setDismissed(true)
       }, 1500)
     } catch (err) {
-      console.error('Add network failed:', err)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Add network failed:', err)
+      }
       const error = err as { code?: number; message?: string }
       if (error.code === 4001) {
         setAddNetworkError('You rejected the request. Try again when ready.')
@@ -170,7 +172,9 @@ export function NetworkSwitchOverlay() {
     try {
       switchChain({ chainId: expectedChainId as 84532 | 8453 })
     } catch (e) {
-      console.error('Switch failed:', e)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Switch failed:', e)
+      }
     }
   }, [switchChain, expectedChainId])
 

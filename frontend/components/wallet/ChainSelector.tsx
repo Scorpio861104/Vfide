@@ -22,7 +22,7 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
     for (const chain of chains) {
       const network = IS_TESTNET ? chain.testnet : chain.mainnet
       if (network.id === chainId) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional state update on prop change to sync selected chain
         setSelectedChain(prev => prev !== chain.id ? chain.id : prev)
         break
       }
@@ -41,7 +41,9 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
         // Type assertion needed for wagmi's strict chain ID typing
         await switchChain({ chainId: network.id as 84532 | 8453 | 300 | 80002 | 137 | 324 })
       } catch (error) {
-        console.error('Failed to switch chain:', error)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to switch chain:', error)
+        }
       }
     }
     

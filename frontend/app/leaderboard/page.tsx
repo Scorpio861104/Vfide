@@ -2,8 +2,13 @@
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
-import { useState } from 'react'
+import { ActivityFeed } from '@/components/gamification/ActivityFeed'
+import { SurfaceCard, AccentBadge, SectionHeading } from '@/components/ui/primitives'
+import Link from 'next/link'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
+import { useReadContract } from 'wagmi'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { 
   Trophy, 
   Medal, 
@@ -14,27 +19,14 @@ import {
   Shield,
   ChevronUp,
   ChevronDown,
-  Minus
+  Minus,
+  Activity
 } from 'lucide-react'
 
-// Mock leaderboard data - in production this would come from contract events or indexer
-const mockLeaderboard = [
-  { rank: 1, address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8bEb1', score: 8500, tier: 'CHAMPION', change: 2, badges: 12 },
-  { rank: 2, address: '0x8ba1f109551bD432803012645Ac136ddd64DBA72', score: 8350, tier: 'CHAMPION', change: -1, badges: 10 },
-  { rank: 3, address: '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B', score: 8200, tier: 'CHAMPION', change: 0, badges: 11 },
-  { rank: 4, address: '0x1234567890123456789012345678901234567890', score: 7890, tier: 'GUARDIAN', change: 3, badges: 9 },
-  { rank: 5, address: '0xDead000000000000000000000000000000000000', score: 7650, tier: 'GUARDIAN', change: -2, badges: 8 },
-  { rank: 6, address: '0xBeeF000000000000000000000000000000000000', score: 7400, tier: 'GUARDIAN', change: 1, badges: 8 },
-  { rank: 7, address: '0xCafe000000000000000000000000000000000000', score: 7100, tier: 'DELEGATE', change: 0, badges: 7 },
-  { rank: 8, address: '0xFeed000000000000000000000000000000000000', score: 6950, tier: 'DELEGATE', change: 4, badges: 6 },
-  { rank: 9, address: '0xBabe000000000000000000000000000000000000', score: 6800, tier: 'DELEGATE', change: -1, badges: 7 },
-  { rank: 10, address: '0xFace000000000000000000000000000000000000', score: 6650, tier: 'DELEGATE', change: 0, badges: 5 },
-  { rank: 11, address: '0xAce0000000000000000000000000000000000000', score: 6500, tier: 'ADVOCATE', change: 2, badges: 5 },
-  { rank: 12, address: '0xBed0000000000000000000000000000000000000', score: 6350, tier: 'ADVOCATE', change: -3, badges: 4 },
-  { rank: 13, address: '0xDad0000000000000000000000000000000000000', score: 6200, tier: 'ADVOCATE', change: 1, badges: 4 },
-  { rank: 14, address: '0xEgg0000000000000000000000000000000000000', score: 6050, tier: 'ADVOCATE', change: 0, badges: 3 },
-  { rank: 15, address: '0xFog0000000000000000000000000000000000000', score: 5900, tier: 'MERCHANT', change: 5, badges: 3 },
-]
+// Minimal ABI extension to fetch batch scores from Seer
+const SEER_BATCH_ABI = [
+  { name: 'getScores', type: 'function', stateMutability: 'view', inputs: [{ name: 'subjects', type: 'address[]' }], outputs: [{ type: 'uint16[]' }] },
+] as const;
 
 const tierColors: Record<string, { gradient: string; text: string; glow: string; bg: string; border: string }> = {
   'CHAMPION': { gradient: 'from-[#FFD700] to-[#FFA500]', text: 'text-[#FFD700]', glow: 'shadow-[#FFD700]/30', bg: 'bg-[#FFD700]/20', border: 'border-[#FFD700]/30' },
@@ -83,10 +75,51 @@ const getChangeIndicator = (change: number) => {
 export default function LeaderboardPage() {
   const [timeframe, setTimeframe] = useState<'all' | 'month' | 'week'>('all')
 
-  // Stats
-  const totalParticipants = 12847
-  const avgScore = 5420
-  const topScore = mockLeaderboard[0]?.score || 0
+  const configuredAddresses = useMemo(() => {
+    const raw = process.env.NEXT_PUBLIC_LEADERBOARD_ADDRESSES || ''
+    return raw
+      .split(',')
+      .map((a) => a.trim())
+      .filter((a): a is `0x${string}` => a.startsWith('0x') && a.length === 42)
+  }, [])
+
+  const { data: scoreData } = useReadContract({
+    address: CONTRACT_ADDRESSES.Seer,
+    abi: SEER_BATCH_ABI,
+    functionName: 'getScores',
+    args: [configuredAddresses],
+    query: { enabled: configuredAddresses.length },
+  })
+
+  const leaderboard = useMemo(() => {
+    if (!configuredAddresses.length) return [] as { rank: number; address: `0x${string}`; score: number; tier: string; change: number; badges: number; xp: number; level: number }[]
+    const scores = scoreData ?? []
+    const entries = configuredAddresses.map((addr, idx) => {
+      const score = Number(scores[idx] ?? 0)
+      // Estimate XP from score (simplified: 1 point = 1 XP)
+      const xp = Math.max(0, (score - 540) * 10)
+      const level = Math.floor(xp / 100)
+      return {
+        rank: idx + 1,
+        address: addr,
+        score,
+        tier: 'NEUTRAL',
+        change: 0,
+        badges: 0,
+        xp,
+        level,
+      }
+    })
+    return entries
+      .sort((a, b) => b.score - a.score)
+      .map((entry, idx) => ({ ...entry, rank: idx + 1 }))
+  }, [configuredAddresses, scoreData])
+
+  const totalParticipants = leaderboard.length
+  const avgScore = totalParticipants
+    ? Math.round(leaderboard.reduce((acc, cur) => acc + cur.score, 0) / totalParticipants)
+    : 0
+  const topScore = leaderboard[0]?.score || 0
 
   return (
     <>
@@ -96,35 +129,26 @@ export default function LeaderboardPage() {
         {/* Header */}
         <section className="py-12 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
           <div className="container mx-auto px-4 max-w-5xl">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#FFD700] to-[#FFA500] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Trophy className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
-                ProofScore Leaderboard
-              </h1>
-              <p className="text-xl text-[#A0A0A5] font-[family-name:var(--font-body)]">
-                Top contributors in the VFIDE ecosystem
-              </p>
-            </div>
+            <SectionHeading
+              badge="Top Contributors"
+              badgeIcon={<Trophy className="w-4 h-4" />}
+              title="ProofScore Leaderboard"
+              subtitle="Top contributors in the VFIDE ecosystem"
+            />
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 text-center">
-                <Users className="w-6 h-6 mx-auto mb-2 text-[#00F0FF]" />
-                <div className="text-2xl font-bold text-[#F5F3E8]">{totalParticipants.toLocaleString()}</div>
-                <div className="text-sm text-[#A0A0A5]">Total Participants</div>
-              </div>
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 text-center">
-                <TrendingUp className="w-6 h-6 mx-auto mb-2 text-[#50C878]" />
-                <div className="text-2xl font-bold text-[#F5F3E8]">{avgScore.toLocaleString()}</div>
-                <div className="text-sm text-[#A0A0A5]">Average Score</div>
-              </div>
-              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 text-center">
-                <Crown className="w-6 h-6 mx-auto mb-2 text-[#FFD700]" />
-                <div className="text-2xl font-bold text-[#FFD700]">{topScore.toLocaleString()}</div>
-                <div className="text-sm text-[#A0A0A5]">Top Score</div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+              {[
+                { icon: Users, label: 'Total Participants', value: totalParticipants.toLocaleString(), color: 'cyan' as const },
+                { icon: TrendingUp, label: 'Average Score', value: avgScore.toLocaleString(), color: 'emerald' as const },
+                { icon: Crown, label: 'Top Score', value: topScore.toLocaleString(), color: 'amber' as const },
+              ].map((stat, idx) => (
+                <SurfaceCard key={idx} className="p-4 text-center">
+                  <stat.icon className={`w-6 h-6 mx-auto mb-2 ${stat.color === 'cyan' ? 'text-cyan-400' : stat.color === 'emerald' ? 'text-emerald-400' : 'text-amber-400'}`} />
+                  <div className="text-2xl font-bold text-white">{stat.value}</div>
+                  <div className="text-sm text-gray-400">{stat.label}</div>
+                </SurfaceCard>
+              ))}
             </div>
           </div>
         </section>
@@ -164,8 +188,8 @@ export default function LeaderboardPage() {
               >
                 <Medal className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 text-[#C0C0C0]" />
                 <div className="text-2xl md:text-3xl font-bold text-[#F5F3E8] mb-1">2nd</div>
-                <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{mockLeaderboard[1]?.address.slice(0, 6)}...</div>
-                <div className="text-lg md:text-xl font-bold text-[#C0C0C0] mt-2">{mockLeaderboard[1]?.score.toLocaleString()}</div>
+                <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{leaderboard[1]?.address.slice(0, 6)}...</div>
+                <div className="text-lg md:text-xl font-bold text-[#C0C0C0] mt-2">{leaderboard[1]?.score.toLocaleString() || '0'}</div>
               </motion.div>
 
               {/* 1st Place */}
@@ -176,11 +200,11 @@ export default function LeaderboardPage() {
               >
                 <Crown className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 text-[#FFD700]" />
                 <div className="text-3xl md:text-4xl font-bold text-[#FFD700] mb-1">1st</div>
-                <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{mockLeaderboard[0]?.address.slice(0, 6)}...</div>
-                <div className="text-xl md:text-2xl font-bold text-[#FFD700] mt-2">{mockLeaderboard[0]?.score.toLocaleString()}</div>
+                <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{leaderboard[0]?.address.slice(0, 6)}...</div>
+                <div className="text-xl md:text-2xl font-bold text-[#FFD700] mt-2">{leaderboard[0]?.score.toLocaleString() || '0'}</div>
                 <div className="hidden md:flex items-center justify-center gap-1 mt-2">
                   <Star className="w-4 h-4 text-[#FFD700]" />
-                  <span className="text-xs text-[#A0A0A5]">{mockLeaderboard[0]?.badges} badges</span>
+                  <span className="text-xs text-[#A0A0A5]">{leaderboard[0]?.badges ?? 0} badges</span>
                 </div>
               </motion.div>
 
@@ -193,8 +217,8 @@ export default function LeaderboardPage() {
               >
                 <Medal className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 text-[#CD7F32]" />
                 <div className="text-2xl md:text-3xl font-bold text-[#F5F3E8] mb-1">3rd</div>
-                <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{mockLeaderboard[2]?.address.slice(0, 6)}...</div>
-                <div className="text-lg md:text-xl font-bold text-[#CD7F32] mt-2">{mockLeaderboard[2]?.score.toLocaleString()}</div>
+                <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{leaderboard[2]?.address.slice(0, 6)}...</div>
+                <div className="text-lg md:text-xl font-bold text-[#CD7F32] mt-2">{leaderboard[2]?.score.toLocaleString() || '0'}</div>
               </motion.div>
             </div>
 
@@ -203,15 +227,17 @@ export default function LeaderboardPage() {
               {/* Table Header - Hidden on mobile */}
               <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-[#1A1A1D] border-b border-[#3A3A3F] text-sm text-[#A0A0A5] font-bold">
                 <div className="col-span-1">Rank</div>
-                <div className="col-span-5">Address</div>
+                <div className="col-span-4">Address</div>
+                <div className="col-span-1 text-center">Level</div>
                 <div className="col-span-2 text-center">Score</div>
-                <div className="col-span-2 text-center">Tier</div>
+                <div className="col-span-1 text-center">Tier</div>
                 <div className="col-span-1 text-center">Badges</div>
+                <div className="col-span-1 text-center">XP</div>
                 <div className="col-span-1 text-center">Change</div>
               </div>
 
               {/* Table Body */}
-              {mockLeaderboard.map((entry, index) => {
+              {leaderboard.map((entry, index) => {
                 const tierStyle = tierColors[entry.tier] || tierColors['NEUTRAL']
                 return (
                   <motion.div
@@ -224,7 +250,7 @@ export default function LeaderboardPage() {
                     }`}
                   >
                     {/* Mobile Layout */}
-                    <div className="md:hidden flex items-center justify-between px-3 py-3">
+                    <Link href={`/explorer/${entry.address}`} className="md:hidden flex items-center justify-between px-3 py-3 hover:bg-[#3A3A3F]/50 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="w-8">{getRankIcon(entry.rank)}</div>
                         <div className="flex flex-col">
@@ -238,22 +264,28 @@ export default function LeaderboardPage() {
                         <span className="text-[#00F0FF] font-bold">{entry.score.toLocaleString()}</span>
                         {getChangeIndicator(entry.change)}
                       </div>
-                    </div>
+                    </Link>
 
                     {/* Desktop Layout */}
-                    <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-4">
+                    <Link href={`/explorer/${entry.address}`} className="hidden md:grid grid-cols-12 gap-4 px-4 py-4 hover:bg-[#3A3A3F]/50 transition-colors">
                       <div className="col-span-1 flex items-center">
                         {getRankIcon(entry.rank)}
                       </div>
-                      <div className="col-span-5 flex items-center">
+                      <div className="col-span-4 flex items-center">
                         <span className="font-mono text-[#F5F3E8] text-sm truncate">
                           {entry.address.slice(0, 10)}...{entry.address.slice(-8)}
                         </span>
                       </div>
+                      <div className="col-span-1 flex items-center justify-center">
+                        <div className="flex items-center gap-1 px-2 py-1 rounded bg-cyan-500/20 border border-cyan-500/30">
+                          <Star className="w-3 h-3 text-cyan-400" />
+                          <span className="text-cyan-400 font-bold text-sm">{entry.level}</span>
+                        </div>
+                      </div>
                       <div className="col-span-2 flex items-center justify-center">
                         <span className="text-[#00F0FF] font-bold">{entry.score.toLocaleString()}</span>
                       </div>
-                      <div className="col-span-2 flex items-center justify-center">
+                      <div className="col-span-1 flex items-center justify-center">
                         <span className={`px-2 py-1 rounded text-xs font-bold ${tierStyle.bg} ${tierStyle.text} border ${tierStyle.border}`}>
                           {entry.tier}
                         </span>
@@ -263,9 +295,12 @@ export default function LeaderboardPage() {
                         <span className="text-[#F5F3E8]">{entry.badges}</span>
                       </div>
                       <div className="col-span-1 flex items-center justify-center">
+                        <span className="text-[#00F0FF] text-sm font-medium">{entry.xp.toLocaleString()}</span>
+                      </div>
+                      <div className="col-span-1 flex items-center justify-center">
                         {getChangeIndicator(entry.change)}
                       </div>
-                    </div>
+                    </Link>
                   </motion.div>
                 )
               })}
@@ -277,6 +312,17 @@ export default function LeaderboardPage() {
                 Load More
               </button>
             </div>
+          </div>
+        </section>
+
+        {/* Recent Activity */}
+        <section className="py-8 border-t border-[#3A3A3F]">
+          <div className="container mx-auto px-4 max-w-5xl">
+            <div className="flex items-center gap-3 mb-6">
+              <Activity className="w-6 h-6 text-[#00F0FF]" />
+              <h3 className="text-2xl font-bold text-[#F5F3E8]">Recent Activity</h3>
+            </div>
+            <ActivityFeed limit={10} />
           </div>
         </section>
 

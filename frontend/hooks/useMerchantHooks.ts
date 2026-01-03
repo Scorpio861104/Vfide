@@ -161,6 +161,10 @@ export function usePayMerchant() {
   }
 }
 
+// Type matches MerchantPortal.sol getCustomerTrustScore return:
+// (uint16 score, bool highTrust, bool lowTrust, bool eligible)
+type CustomerTrustInfo = [bigint, boolean, boolean, boolean]
+
 /**
  * Get customer trust assessment for merchants
  */
@@ -175,13 +179,13 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
     }
   })
   
-  const info = data as any[] | undefined
+  const info = data as CustomerTrustInfo | undefined
   
   return {
-    score: info?.[0] ? Number(info[0]) : 5000,
-    highTrust: info?.[1] || false,
-    lowTrust: info?.[2] || false,
-    eligible: info?.[3] || false,
+    score: info?.[0] !== undefined ? Number(info[0]) : 5000,
+    highTrust: info?.[1] ?? false,
+    lowTrust: info?.[2] ?? false,
+    eligible: info?.[3] ?? false,
     isLoading,
   }
 }

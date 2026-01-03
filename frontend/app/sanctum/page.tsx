@@ -2,6 +2,8 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
+import { ZERO_ADDRESS } from '@/lib/constants';
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { useState, useEffect, useRef } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { parseUnits, formatUnits } from "viem";
@@ -24,18 +26,17 @@ const SANCTUM_VAULT_ABI = [
   { name: 'nextProposalId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// SanctumVault not deployed on Base Sepolia testnet yet
-// Contract addresses will be populated after mainnet deployment
-const SANCTUM_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
+// Contract addresses
+const SANCTUM_VAULT_ADDRESS = CONTRACT_ADDRESSES.SanctumVault;
+const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
 
 // Check if contracts are deployed
-const IS_SANCTUM_DEPLOYED = SANCTUM_VAULT_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_SANCTUM_DEPLOYED = SANCTUM_VAULT_ADDRESS !== ZERO_ADDRESS;
 
 type TabType = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history';
 
 export default function SanctumPage() {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [donateAmount, setDonateAmount] = useState('');
@@ -431,6 +432,7 @@ function DisbursementsTab({ isConnected, onApprove, onExecute, nextProposalId }:
   onExecute: (id: number) => void;
   nextProposalId?: bigint;
 }) {
+  const nextIdLabel = typeof nextProposalId === 'bigint' ? Number(nextProposalId) : undefined;
   const disbursements = [
     { id: 1, charity: 'Save the Children', amount: 5000, status: 'executed', approvals: '3/3', date: '2025-12-15' },
     { id: 2, charity: 'Doctors Without Borders', amount: 3000, status: 'pending', approvals: '2/3', date: '2025-12-18' },
@@ -442,11 +444,16 @@ function DisbursementsTab({ isConnected, onApprove, onExecute, nextProposalId }:
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-[#F5F3E8]">Disbursement Proposals</h2>
-        {isConnected && (
-          <button className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-bold transition-colors">
-            + New Proposal
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {typeof nextIdLabel === 'number' && (
+            <span className="text-sm text-[#A0A0A5]">Next ID: {nextIdLabel}</span>
+          )}
+          {isConnected && (
+            <button className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-bold transition-colors">
+              + New Proposal
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-4">

@@ -89,8 +89,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     
     // Sanctions / Compliance
     mapping(address => bool) public isBlacklisted;
-    // L-1 Fix: Enhanced BlacklistSet event with caller for audit trail
+    // C-1 Fix: Freeze-before-blacklist to prevent front-running
+    mapping(address => bool) public isFrozen;
+    mapping(address => uint64) public freezeTime;
+    uint64 public constant FREEZE_DELAY = 1 hours; // Time frozen before blacklist allowed
+    
+    // L-1 Fix: Enhanced events with caller for audit trail
     event BlacklistSet(address indexed user, bool status, address indexed setBy);
+    event FrozenSet(address indexed user, bool frozen, address indexed setBy);
 
     // EIP-2612 Permit
     bytes32 public DOMAIN_SEPARATOR;
@@ -359,8 +365,39 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         return true;
     }
 
+    /**
+     * @notice Freeze an address before blacklisting (prevents front-running)
+     * @param user Address to freeze
+     * @param frozen True to freeze, false to unfreeze
+     */
+    function setFrozen(address user, bool frozen) external onlyOwner {
+        isFrozen[user] = frozen;
+        if (frozen) {
+            freezeTime[user] = uint64(block.timestamp);
+        } else {
+            freezeTime[user] = 0;
+        }
+        emit FrozenSet(user, frozen, msg.sender);
+    }
+    
+    /**
+     * @notice Blacklist an address (must be frozen for FREEZE_DELAY first)
+     * @dev C-1 Fix: Requires freeze period to prevent front-running
+     * @param user Address to blacklist
+     * @param status True to blacklist, false to remove
+     */
     function setBlacklist(address user, bool status) external onlyOwner {
+        if (status) {
+            // To add to blacklist, must be frozen first for FREEZE_DELAY
+            require(isFrozen[user], "VF: must freeze first");
+            require(block.timestamp >= freezeTime[user] + FREEZE_DELAY, "VF: freeze delay not met");
+        }
         isBlacklisted[user] = status;
+        // Auto-unfreeze when blacklisting
+        if (status) {
+            isFrozen[user] = false;
+            freezeTime[user] = 0;
+        }
         emit BlacklistSet(user, status, msg.sender);
     }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, X } from 'lucide-react';
 import { ReactNode } from 'react';
@@ -51,6 +52,20 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   const styles = variantStyles[variant];
 
+  // Handle Escape key to close modal
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && !isLoading) {
+      onClose();
+    }
+  }, [onClose, isLoading]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, handleKeyDown]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -71,6 +86,7 @@ export function ConfirmModal({
             {/* Close button */}
             <button
               onClick={onClose}
+              aria-label="Close modal"
               className="absolute top-4 right-4 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
             >
               <X size={20} />

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lightbulb } from "lucide-react";
+import { safeLocalStorage } from "@/lib/utils";
 
 interface FeatureTooltipProps {
   id: string;
@@ -30,7 +31,7 @@ export function FeatureTooltip({
   useEffect(() => {
     // Check if this tooltip has been dismissed before
     const dismissedTooltips = JSON.parse(
-      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+      safeLocalStorage.getItem("vfide_dismissed_tooltips") || "[]"
     );
 
     if (!dismissedTooltips.includes(id) && autoShow) {
@@ -46,11 +47,11 @@ export function FeatureTooltip({
     
     // Save to localStorage
     const dismissedTooltips = JSON.parse(
-      localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+      safeLocalStorage.getItem("vfide_dismissed_tooltips") || "[]"
     );
     if (!dismissedTooltips.includes(id)) {
       dismissedTooltips.push(id);
-      localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(dismissedTooltips));
+      safeLocalStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(dismissedTooltips));
     }
     
     onClose?.();
@@ -122,7 +123,7 @@ export function useFeatureTooltip(id: string) {
     const timer = setTimeout(() => {
       try {
         const dismissedTooltips = JSON.parse(
-          localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+          safeLocalStorage.getItem("vfide_dismissed_tooltips") || "[]"
         );
         setIsVisible(!dismissedTooltips.includes(id));
       } catch {
@@ -136,11 +137,11 @@ export function useFeatureTooltip(id: string) {
     setIsVisible(false);
     try {
       const dismissedTooltips = JSON.parse(
-        localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+        safeLocalStorage.getItem("vfide_dismissed_tooltips") || "[]"
       );
       if (!dismissedTooltips.includes(id)) {
         dismissedTooltips.push(id);
-        localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(dismissedTooltips));
+        safeLocalStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(dismissedTooltips));
       }
     } catch {
       // Ignore localStorage errors (private browsing mode)

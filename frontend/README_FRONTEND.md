@@ -54,7 +54,7 @@ frontend/
 │   ├── pay/                 # Payment checkout
 │   ├── trust/               # Trust explorer
 │   ├── vault/               # Vault manager
-│   ├── guardians/           # Guardian nodes
+│   ├── guardians/           # Personal guardians management
 │   ├── governance/          # DAO governance
 │   ├── treasury/            # Treasury dashboard
 │   ├── subscriptions/       # Subscription manager
@@ -189,11 +189,11 @@ function MyComponent() {
 - Security features
 - Transaction history
 
-### Guardian Nodes (`/guardians`)
-- Three node tiers (Sentinel, Guardian, Validator)
-- Staking information
-- Rewards and benefits
-- Active node stats
+### Guardians (`/guardians`)
+- Personal guardian management (trusted contacts for vault recovery)
+- Next of Kin designation
+- Recovery chain setup
+- Pending guardian actions
 
 ### DAO Governance (`/governance`)
 - Voting power display

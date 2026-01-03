@@ -602,6 +602,114 @@
     "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "endorse",
+    "inputs": [
+      {
+        "name": "subject",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "reason",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getEndorsementStats",
+    "inputs": [
+      {
+        "name": "subject",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "activeEndorsers",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "activeBonus",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "endorsementsYouGave",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pruneEndorsements",
+    "inputs": [
+      {
+        "name": "subject",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setEndorsementPolicy",
+    "inputs": [
+      {
+        "name": "baseValue",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "maxPerEndorser",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "bonusCap",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "maxPerSubject",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "maxGiven",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "validity",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "cooldown",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "minScore",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
     "type": "event",
     "name": "DecentralizationUpdated",
     "inputs": [
@@ -747,8 +855,60 @@
     "anonymous": false
   },
   {
+    "type": "event",
+    "name": "UserEndorsed",
+    "inputs": [
+      {
+        "name": "endorser",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "subject",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "weight",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      },
+      {
+        "name": "expiry",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "reason",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "error",
     "name": "TRUST_Bounds",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TRUST_EndorseExists",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TRUST_EndorseLimit",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TRUST_InvalidEndorse",
     "inputs": []
   },
   {

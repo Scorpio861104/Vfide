@@ -115,9 +115,11 @@ export function useVaultHub() {
   const isContractConfigured = vfideTokenAddress && vfideTokenAddress !== '0x0000000000000000000000000000000000000000';
 
   // Check if vault exists (not zero address)
-  const hasVault = vaultAddress && vaultAddress !== '0x0000000000000000000000000000000000000000';
+  const vaultAddressHex = vaultAddress as `0x${string}` | undefined;
+  const hasVault = !!vaultAddressHex && vaultAddressHex !== '0x0000000000000000000000000000000000000000';
 
   // Create vault for user
+  // Note: VaultHubLite uses createVault() with no args
   const createVault = async () => {
     if (!isValidVaultHubAddress || !userAddress) {
       throw new Error('VaultHub not configured or wallet not connected');
@@ -136,6 +138,7 @@ export function useVaultHub() {
       const result = await writeContractAsync({
         address: VAULT_HUB_ADDRESS,
         abi: PARSED_VAULT_HUB_ABI,
+        // VaultHubLite uses createVault() with no args
         functionName: 'createVault',
         args: [],
         chainId: EXPECTED_CHAIN_ID,
@@ -149,7 +152,7 @@ export function useVaultHub() {
   };
 
   return {
-    vaultAddress: hasVault ? (vaultAddress as `0x${string}`) : undefined,
+    vaultAddress: hasVault ? vaultAddressHex : undefined,
     hasVault,
     isLoadingVault,
     isCreatingVault,

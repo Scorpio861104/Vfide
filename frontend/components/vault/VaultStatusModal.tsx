@@ -53,6 +53,20 @@ export function VaultStatusModal() {
     }
   }, [hasVault, isCreating]);
 
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showModal && !isCreatingVault && !isCreating) {
+        setShowModal(false);
+      }
+    };
+
+    if (showModal) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [showModal, isCreatingVault, isCreating]);
+
   const handleCreateVault = async () => {
     try {
       setIsCreating(true);

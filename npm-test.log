@@ -1,0 +1,386 @@
+
+> frontend@0.1.0 test
+> jest --runInBand --watch=false
+
+FAIL hooks/__tests__/useVaultHooks.test.ts
+  ● useSetGuardian › handles UV_RecoveryActive error
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Cannot remove guardians during active recovery"
+    Received: "Cannot modify guardians during active recovery"
+
+      512 |     })
+      513 |
+    > 514 |     expect(result.current.error).toBe('Cannot remove guardians during active recovery')
+          |                                  ^
+      515 |   })
+      516 |
+      517 |   it('handles UV_Locked error', async () => {
+
+      at Object.toBe (hooks/__tests__/useVaultHooks.test.ts:514:34)
+
+FAIL hooks/__tests__/useProofScore.test.ts
+  ● getScoreTier › returns High Trust for scores >= 7000
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "High Trust"
+    Received: "Council"
+
+      230 |
+      231 |   it('returns High Trust for scores >= 7000', () => {
+    > 232 |     expect(getScoreTier(7000)).toBe('High Trust')
+          |                                ^
+      233 |     expect(getScoreTier(7999)).toBe('High Trust')
+      234 |   })
+      235 |
+
+      at Object.toBe (hooks/__tests__/useProofScore.test.ts:232:32)
+
+  ● getScoreTier › returns Neutral for scores >= 5000
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Neutral"
+    Received: "Trusted"
+
+      236 |   it('returns Neutral for scores >= 5000', () => {
+      237 |     expect(getScoreTier(5000)).toBe('Neutral')
+    > 238 |     expect(getScoreTier(6999)).toBe('Neutral')
+          |                                ^
+      239 |   })
+      240 |
+      241 |   it('returns Low Trust for scores >= 3500', () => {
+
+      at Object.toBe (hooks/__tests__/useProofScore.test.ts:238:32)
+
+  ● useSeerThresholds › returns default values when no data
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 4000
+    Received: 3500
+
+      265 |     expect(result.current.minForGovernance).toBe(5400)
+      266 |     expect(result.current.minForMerchant).toBe(5600)
+    > 267 |     expect(result.current.lowTrustThreshold).toBe(4000)
+          |                                              ^
+      268 |     expect(result.current.highTrustThreshold).toBe(8000)
+      269 |   })
+      270 |
+
+      at Object.toBe (hooks/__tests__/useProofScore.test.ts:267:46)
+
+FAIL __tests__/e2e-smoke-tests.test.tsx
+  ● E2E Smoke Tests - Critical User Journeys › 🚀 Journey 1: New User Onboarding › should complete full onboarding flow
+
+    expect(received).toMatch(expected)
+
+    Expected pattern: /^0x[a-fA-F0-9]{40}$/
+    Received string:  "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+
+      18 |
+      19 |       // Step 1: Connect wallet
+    > 20 |       expect(user.address).toMatch(/^0x[a-fA-F0-9]{40}$/);
+         |                            ^
+      21 |       const isConnected = !!user.address;
+      22 |       expect(isConnected).toBe(true);
+      23 |
+
+      at Object.toMatch (__tests__/e2e-smoke-tests.test.tsx:20:28)
+
+  ● E2E Smoke Tests - Critical User Journeys › 🏛️ Journey 4: DAO Governance Participation › should create and pass proposal
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 5000
+    Received:    3900
+
+      239 |       const passed = quorumMet && proposal.forVotes > proposal.againstVotes;
+      240 |
+    > 241 |       expect(totalVotes).toBeGreaterThanOrEqual(proposal.quorum);
+          |                          ^
+      242 |       expect(quorumMet).toBe(true);
+      243 |       expect(passed).toBe(true);
+      244 |
+
+      at Object.toBeGreaterThanOrEqual (__tests__/e2e-smoke-tests.test.tsx:241:26)
+
+FAIL __tests__/governance-enhanced.test.tsx
+  ● Governance Enhanced Features › Proposal Templates › should provide structured default content
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected substring: "Budget"
+    Received string:    "## Purpose
+    Describe what these funds will be used for"
+
+      45 |       const treasuryTemplate = PROPOSAL_TEMPLATES.find(t => t.type === 'treasury');
+      46 |       expect(treasuryTemplate?.defaultDescription).toContain('Purpose');
+    > 47 |       expect(treasuryTemplate?.defaultDescription).toContain('Budget');
+         |                                                    ^
+      48 |     });
+      49 |   });
+      50 |
+
+      at Object.toContain (__tests__/governance-enhanced.test.tsx:47:52)
+
+  ● Governance Enhanced Features › Form Validation › should validate Ethereum addresses
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      75 |       };
+      76 |
+    > 77 |       expect(validateAddress('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb')).toBe(true);
+         |                                                                            ^
+      78 |       expect(validateAddress('invalid')).toBe(false);
+      79 |       expect(validateAddress('0x123')).toBe(false);
+      80 |     });
+
+      at Object.toBe (__tests__/governance-enhanced.test.tsx:77:76)
+
+FAIL hooks/__tests__/useMerchantStatus.test.ts
+  ● useMerchantStatus › returns merchant status true
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      24 |     )
+      25 |
+    > 26 |     expect(result.current.isMerchant).toBe(true)
+         |                                       ^
+      27 |     expect(result.current.isError).toBe(false)
+      28 |     expect(result.current.isLoading).toBe(false)
+      29 |   })
+
+      at Object.toBe (hooks/__tests__/useMerchantStatus.test.ts:26:39)
+
+FAIL __tests__/governance-integration.test.tsx
+  ● Governance End-to-End Flow › Complete Proposal Lifecycle › should flow from creation to execution
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 5195
+    Received: 5695
+
+      84 |       const quorumMet = totalVotes >= 5000;
+      85 |
+    > 86 |       expect(totalVotes).toBe(5195);
+         |                          ^
+      87 |       expect(quorumMet).toBe(true);
+      88 |
+      89 |       // 6. Voting period ends
+
+      at Object.toBe (__tests__/governance-integration.test.tsx:86:26)
+
+PASS components/ui/__tests__/dialog.test.tsx
+PASS components/ui/__tests__/DashboardCards.test.tsx
+PASS components/ui/__tests__/tabs.test.tsx
+PASS components/ui/__tests__/ProgressSteps.test.tsx
+PASS components/ui/__tests__/Skeleton.test.tsx
+PASS components/ui/__tests__/EmptyState.test.tsx
+PASS components/ui/__tests__/card.test.tsx
+PASS components/ui/__tests__/button.test.tsx
+PASS lib/__tests__/utils.test.ts
+PASS hooks/__tests__/useVFIDEBalance.test.ts
+PASS components/ui/__tests__/alert.test.tsx
+PASS components/__tests__/DemoModeBanner.test.tsx
+PASS components/ui/__tests__/progress.test.tsx
+PASS __tests__/app-pages-coverage.test.ts
+PASS __tests__/comprehensive-coverage.test.ts
+PASS __tests__/gamification.test.tsx
+PASS __tests__/integration-coverage.test.ts
+PASS lib/__tests__/price-utils.test.ts
+PASS __tests__/gamification-integration.test.tsx
+PASS __tests__/payroll-token-selection.test.tsx
+
+Summary of all failing tests
+FAIL hooks/__tests__/useVaultHooks.test.ts
+  ● useSetGuardian › handles UV_RecoveryActive error
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Cannot remove guardians during active recovery"
+    Received: "Cannot modify guardians during active recovery"
+
+      512 |     })
+      513 |
+    > 514 |     expect(result.current.error).toBe('Cannot remove guardians during active recovery')
+          |                                  ^
+      515 |   })
+      516 |
+      517 |   it('handles UV_Locked error', async () => {
+
+      at Object.toBe (hooks/__tests__/useVaultHooks.test.ts:514:34)
+
+FAIL hooks/__tests__/useProofScore.test.ts
+  ● getScoreTier › returns High Trust for scores >= 7000
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "High Trust"
+    Received: "Council"
+
+      230 |
+      231 |   it('returns High Trust for scores >= 7000', () => {
+    > 232 |     expect(getScoreTier(7000)).toBe('High Trust')
+          |                                ^
+      233 |     expect(getScoreTier(7999)).toBe('High Trust')
+      234 |   })
+      235 |
+
+      at Object.toBe (hooks/__tests__/useProofScore.test.ts:232:32)
+
+  ● getScoreTier › returns Neutral for scores >= 5000
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Neutral"
+    Received: "Trusted"
+
+      236 |   it('returns Neutral for scores >= 5000', () => {
+      237 |     expect(getScoreTier(5000)).toBe('Neutral')
+    > 238 |     expect(getScoreTier(6999)).toBe('Neutral')
+          |                                ^
+      239 |   })
+      240 |
+      241 |   it('returns Low Trust for scores >= 3500', () => {
+
+      at Object.toBe (hooks/__tests__/useProofScore.test.ts:238:32)
+
+  ● useSeerThresholds › returns default values when no data
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 4000
+    Received: 3500
+
+      265 |     expect(result.current.minForGovernance).toBe(5400)
+      266 |     expect(result.current.minForMerchant).toBe(5600)
+    > 267 |     expect(result.current.lowTrustThreshold).toBe(4000)
+          |                                              ^
+      268 |     expect(result.current.highTrustThreshold).toBe(8000)
+      269 |   })
+      270 |
+
+      at Object.toBe (hooks/__tests__/useProofScore.test.ts:267:46)
+
+FAIL __tests__/e2e-smoke-tests.test.tsx
+  ● E2E Smoke Tests - Critical User Journeys › �� Journey 1: New User Onboarding › should complete full onboarding flow
+
+    expect(received).toMatch(expected)
+
+    Expected pattern: /^0x[a-fA-F0-9]{40}$/
+    Received string:  "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+
+      18 |
+      19 |       // Step 1: Connect wallet
+    > 20 |       expect(user.address).toMatch(/^0x[a-fA-F0-9]{40}$/);
+         |                            ^
+      21 |       const isConnected = !!user.address;
+      22 |       expect(isConnected).toBe(true);
+      23 |
+
+      at Object.toMatch (__tests__/e2e-smoke-tests.test.tsx:20:28)
+
+  ● E2E Smoke Tests - Critical User Journeys › ��️ Journey 4: DAO Governance Participation › should create and pass proposal
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 5000
+    Received:    3900
+
+      239 |       const passed = quorumMet && proposal.forVotes > proposal.againstVotes;
+      240 |
+    > 241 |       expect(totalVotes).toBeGreaterThanOrEqual(proposal.quorum);
+          |                          ^
+      242 |       expect(quorumMet).toBe(true);
+      243 |       expect(passed).toBe(true);
+      244 |
+
+      at Object.toBeGreaterThanOrEqual (__tests__/e2e-smoke-tests.test.tsx:241:26)
+
+FAIL __tests__/governance-enhanced.test.tsx
+  ● Governance Enhanced Features › Proposal Templates › should provide structured default content
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected substring: "Budget"
+    Received string:    "## Purpose
+    Describe what these funds will be used for"
+
+      45 |       const treasuryTemplate = PROPOSAL_TEMPLATES.find(t => t.type === 'treasury');
+      46 |       expect(treasuryTemplate?.defaultDescription).toContain('Purpose');
+    > 47 |       expect(treasuryTemplate?.defaultDescription).toContain('Budget');
+         |                                                    ^
+      48 |     });
+      49 |   });
+      50 |
+
+      at Object.toContain (__tests__/governance-enhanced.test.tsx:47:52)
+
+  ● Governance Enhanced Features › Form Validation › should validate Ethereum addresses
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      75 |       };
+      76 |
+    > 77 |       expect(validateAddress('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb')).toBe(true);
+         |                                                                            ^
+      78 |       expect(validateAddress('invalid')).toBe(false);
+      79 |       expect(validateAddress('0x123')).toBe(false);
+      80 |     });
+
+      at Object.toBe (__tests__/governance-enhanced.test.tsx:77:76)
+
+FAIL hooks/__tests__/useMerchantStatus.test.ts
+  ● useMerchantStatus › returns merchant status true
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      24 |     )
+      25 |
+    > 26 |     expect(result.current.isMerchant).toBe(true)
+         |                                       ^
+      27 |     expect(result.current.isError).toBe(false)
+      28 |     expect(result.current.isLoading).toBe(false)
+      29 |   })
+
+      at Object.toBe (hooks/__tests__/useMerchantStatus.test.ts:26:39)
+
+FAIL __tests__/governance-integration.test.tsx
+  ● Governance End-to-End Flow › Complete Proposal Lifecycle › should flow from creation to execution
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 5195
+    Received: 5695
+
+      84 |       const quorumMet = totalVotes >= 5000;
+      85 |
+    > 86 |       expect(totalVotes).toBe(5195);
+         |                          ^
+      87 |       expect(quorumMet).toBe(true);
+      88 |
+      89 |       // 6. Voting period ends
+
+      at Object.toBe (__tests__/governance-integration.test.tsx:86:26)
+
+
+Test Suites: 6 failed, 20 passed, 26 total
+Tests:       10 failed, 596 passed, 606 total
+Snapshots:   0 total
+Time:        4.913 s, estimated 5 s
+Ran all test suites.

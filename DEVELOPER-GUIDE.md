@@ -100,7 +100,7 @@ export const VFIDE_CONTRACTS = {
   DevReserveVestingVault: '0x...', // Team vesting
   
   // Token Sale
-  GuardianNodeSale: '0x...', // Commitment-based presale
+  VFIDEPresale: '0x...', // 3-tier presale (Founding/Oath/Public)
   
   // Infrastructure
   VFIDESecurity: '0x...', // SecurityHub (locks, circuit breakers)

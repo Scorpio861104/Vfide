@@ -26,6 +26,9 @@ error TRUST_Bounds();
 error TRUST_AlreadySet();
 error TRUST_NotSet();
 error TRUST_Paused();
+error TRUST_InvalidEndorse();
+error TRUST_EndorseLimit();
+error TRUST_EndorseExists();
 
 /// ────────────────────────── ProofLedger
 contract ProofLedger {
@@ -83,6 +86,14 @@ contract Seer {
     event OperatorSet(address indexed operator, bool authorized);
     event DecayApplied(address indexed subject, uint16 oldScore, uint16 newScore, uint256 inactiveDays);
     event Paused(bool isPaused);
+    event UserEndorsed(address indexed endorser, address indexed subject, uint16 weight, uint64 expiry, string reason);
+    event MentorRegistered(address indexed mentor);
+    event MentorRevoked(address indexed mentor);
+    event MenteeSponsored(address indexed mentor, address indexed mentee);
+    event MenteeRemoved(address indexed mentor, address indexed mentee);
+    event MentorConfigUpdated(uint16 minScore, uint16 maxMentees);
+    event AppealFiled(address indexed subject, string reason);
+    event AppealResolved(address indexed subject, bool approved, string resolution);
 
     address public dao;
     ProofLedger public ledger;
@@ -94,6 +105,41 @@ contract Seer {
     // Badge system for VFIDEBadgeNFT integration
     mapping(address => mapping(bytes32 => bool)) public hasBadge;
     mapping(address => mapping(bytes32 => uint256)) public badgeExpiry;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ENDORSEMENTS - Social proof with decay/limits
+    // ═══════════════════════════════════════════════════════════════════════
+    struct Endorsement {
+        uint64 expiry;
+        uint16 weight;
+        uint64 timestamp;
+    }
+
+    mapping(address => mapping(address => Endorsement)) public endorsements; // subject => endorser => endorsement
+    mapping(address => address[]) private endorsersOf;                       // subject => list of endorsers
+    mapping(address => uint16) public endorsementsReceived;                 // active endorsements per subject
+    mapping(address => uint16) public endorsementsGiven;                    // active endorsements given by user
+    mapping(address => uint64) public lastEndorseTime;                      // cooldown tracker per endorser
+
+    uint16 public endorsementBaseValue = 40;        // 0.40% boost per endorsement (10x scale)
+    uint16 public endorsementMaxPerEndorser = 80;   // clamp per endorsement
+    uint16 public endorsementBonusCap = 1500;       // total endorsement bonus cap (15% on 10x scale)
+    uint16 public maxEndorsersPerSubject = 25;      // keep loops bounded
+    uint16 public maxActiveGivenPerUser = 50;       // prevent spam endorsing
+    uint64 public endorsementValidity = 90 days;    // endorsements expire and must be renewed
+    uint64 public endorsementCooldown = 1 days;     // per-endorser cooldown
+    uint16 public minScoreToEndorse = 7000;         // high-trust minimum
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MENTORSHIP - Peer onboarding and sponsorship
+    // ═══════════════════════════════════════════════════════════════════════
+
+    mapping(address => bool) public mentors;        // mentor status
+    mapping(address => address) public mentorOf;    // mentee => mentor
+    mapping(address => address[]) private menteesOf; // mentor => mentees
+
+    uint16 public minScoreToMentor = 7200;          // default high score requirement
+    uint16 public maxMenteesPerMentor = 50;         // bound mentee list size
     
     // ═══════════════════════════════════════════════════════════════════════
     // OPERATOR SYSTEM - Allows authorized contracts to call reward/punish
@@ -412,6 +458,9 @@ contract Seer {
         // Badge bonuses - badges grant ProofScore boosts
         // These are additive and create a visible reputation ladder
         score += _calculateBadgeBonus(subject);
+
+        // Social endorsements - time-limited boosts that decay automatically
+        score += _calculateEndorsementBonus(subject);
         
         // Clamp to valid range
         if (score > MAX_SCORE) score = MAX_SCORE;
@@ -499,6 +548,39 @@ contract Seer {
         // Full badge listing is available in BadgeRegistry
         
         return bonus;
+    }
+
+    function _calculateEndorsementBonus(address subject) internal view returns (uint256 bonus) {
+        address[] storage endorsers = endorsersOf[subject];
+        uint256 len = endorsers.length;
+        for (uint256 i = 0; i < len; i++) {
+            Endorsement storage e = endorsements[subject][endorsers[i]];
+            if (e.weight > 0 && e.expiry > block.timestamp) {
+                bonus += e.weight;
+            }
+        }
+        if (bonus > endorsementBonusCap) {
+            bonus = endorsementBonusCap;
+        }
+    }
+
+    function _pruneExpiredEndorsements(address subject) internal {
+        address[] storage endorsers = endorsersOf[subject];
+        uint256 i = 0;
+        while (i < endorsers.length) {
+            address endorser = endorsers[i];
+            Endorsement storage e = endorsements[subject][endorser];
+            if (e.expiry > 0 && e.expiry <= block.timestamp) {
+                delete endorsements[subject][endorser];
+                if (endorsementsReceived[subject] > 0) endorsementsReceived[subject]--;
+                if (endorsementsGiven[endorser] > 0) endorsementsGiven[endorser]--;
+                endorsers[i] = endorsers[endorsers.length - 1];
+                endorsers.pop();
+                continue; // re-check swapped index
+            }
+            i++;
+        }
+        endorsementsReceived[subject] = uint16(endorsers.length);
     }
     
     /**
@@ -651,6 +733,244 @@ contract Seer {
         }
         _logEv(address(this), active ? "badge_batch_granted" : "badge_batch_revoked", len, "");
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //                         ENDORSEMENTS (SOCIAL)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function setEndorsementPolicy(
+        uint16 baseValue,
+        uint16 maxPerEndorser,
+        uint16 bonusCap,
+        uint16 maxPerSubject,
+        uint16 maxGiven,
+        uint64 validity,
+        uint64 cooldown,
+        uint16 minScore
+    ) external onlyDAO {
+        require(baseValue > 0 && baseValue <= 200, "SEER: base out of range");
+        require(maxPerEndorser >= baseValue && maxPerEndorser <= 300, "SEER: max per endorser");
+        require(bonusCap >= baseValue, "SEER: bonus cap low");
+        require(maxPerSubject > 0 && maxPerSubject <= 50, "SEER: subject cap");
+        require(maxGiven > 0 && maxGiven <= 200, "SEER: given cap");
+        require(validity >= 7 days && validity <= 365 days, "SEER: validity range");
+        require(cooldown >= 10 minutes && cooldown <= 7 days, "SEER: cooldown range");
+        require(minScore >= MIN_SCORE && minScore <= MAX_SCORE, "SEER: min score range");
+
+        endorsementBaseValue = baseValue;
+        endorsementMaxPerEndorser = maxPerEndorser;
+        endorsementBonusCap = bonusCap;
+        maxEndorsersPerSubject = maxPerSubject;
+        maxActiveGivenPerUser = maxGiven;
+        endorsementValidity = validity;
+        endorsementCooldown = cooldown;
+        minScoreToEndorse = minScore;
+        _logSystem("endorsement_policy_set");
+    }
+
+    function endorse(address subject, string calldata reason) external onlyNotPaused {
+        if (subject == address(0) || subject == msg.sender) revert TRUST_InvalidEndorse();
+        if (bytes(reason).length > 160) revert TRUST_Bounds();
+
+        // Rate limit endorsers
+        if (endorsementCooldown > 0) {
+            require(block.timestamp >= lastEndorseTime[msg.sender] + endorsementCooldown, "SEER: endorse cooldown");
+        }
+
+        uint16 endorserScore = getScore(msg.sender);
+        if (endorserScore < minScoreToEndorse) revert TRUST_EndorseLimit();
+
+        _pruneExpiredEndorsements(subject);
+
+        Endorsement storage existing = endorsements[subject][msg.sender];
+        if (existing.expiry > block.timestamp) revert TRUST_EndorseExists();
+
+        uint16 activeReceived = uint16(endorsersOf[subject].length);
+        if (activeReceived >= maxEndorsersPerSubject) revert TRUST_EndorseLimit();
+        if (endorsementsGiven[msg.sender] >= maxActiveGivenPerUser) revert TRUST_EndorseLimit();
+
+        uint16 weight = endorsementBaseValue;
+        if (endorserScore >= highTrustThreshold) weight += 10;
+        if (_checkActiveBadge(msg.sender, keccak256("TRUSTED_ENDORSER"))) weight += 10;
+        if (weight > endorsementMaxPerEndorser) weight = endorsementMaxPerEndorser;
+
+        uint256 currentBonus = _calculateEndorsementBonus(subject);
+        require(currentBonus + weight <= endorsementBonusCap, "SEER: endorsement cap");
+
+        uint64 expiry = uint64(block.timestamp + endorsementValidity);
+
+        endorsements[subject][msg.sender] = Endorsement({
+            expiry: expiry,
+            weight: weight,
+            timestamp: uint64(block.timestamp)
+        });
+        endorsersOf[subject].push(msg.sender);
+        endorsementsReceived[subject] = activeReceived + 1;
+        endorsementsGiven[msg.sender] += 1;
+        lastEndorseTime[msg.sender] = uint64(block.timestamp);
+        lastActivity[subject] = uint64(block.timestamp);
+
+        emit UserEndorsed(msg.sender, subject, weight, expiry, reason);
+        _logEv(subject, "endorsement", weight, reason);
+    }
+
+    function pruneEndorsements(address subject) external onlyNotPaused {
+        _pruneExpiredEndorsements(subject);
+    }
+
+    function getEndorsementStats(address subject) external view returns (
+        uint16 activeEndorsers,
+        uint16 activeBonus,
+        uint16 endorsementsYouGave
+    ) {
+        address[] storage endorsers = endorsersOf[subject];
+        uint256 len = endorsers.length;
+        for (uint256 i = 0; i < len; i++) {
+            Endorsement storage e = endorsements[subject][endorsers[i]];
+            if (e.expiry > block.timestamp && e.weight > 0) {
+                activeEndorsers++;
+            }
+        }
+        activeBonus = uint16(_calculateEndorsementBonus(subject));
+        endorsementsYouGave = endorsementsGiven[subject];
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //                             MENTORSHIP
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function setMentorConfig(uint16 minScore, uint16 maxMentees) external onlyDAO {
+        require(minScore >= 5000 && minScore <= MAX_SCORE, "SEER: mentor min out of range");
+        require(maxMentees >= 1 && maxMentees <= 200, "SEER: mentor max out of range");
+        minScoreToMentor = minScore;
+        maxMenteesPerMentor = maxMentees;
+        emit MentorConfigUpdated(minScore, maxMentees);
+    }
+
+    function becomeMentor() external onlyNotPaused {
+        require(!mentors[msg.sender], "SEER: already mentor");
+        require(getScore(msg.sender) >= minScoreToMentor, "SEER: score too low");
+        mentors[msg.sender] = true;
+        emit MentorRegistered(msg.sender);
+        _logSystem("mentor_registered");
+    }
+
+    function revokeMentor(address mentor) external {
+        if (msg.sender != mentor) _checkDAO();
+        mentors[mentor] = false;
+        emit MentorRevoked(mentor);
+        _logSystem("mentor_revoked");
+    }
+
+    function sponsorMentee(address mentee) external onlyNotPaused {
+        require(mentors[msg.sender], "SEER: not mentor");
+        require(mentee != address(0) && mentee != msg.sender, "SEER: invalid mentee");
+        require(mentorOf[mentee] == address(0), "SEER: mentee has mentor");
+        require(menteesOf[msg.sender].length < maxMenteesPerMentor, "SEER: max mentees");
+        require(getScore(msg.sender) >= minScoreToMentor, "SEER: mentor score too low");
+
+        mentorOf[mentee] = msg.sender;
+        menteesOf[msg.sender].push(mentee);
+
+        emit MenteeSponsored(msg.sender, mentee);
+        _logEv(mentee, "mentee_sponsored", 0, "");
+    }
+
+    function removeMentee(address mentee) external {
+        address mentor = mentorOf[mentee];
+        require(mentor != address(0), "SEER: no mentor");
+        if (msg.sender != mentor) _checkDAO();
+        _removeMentee(mentor, mentee);
+    }
+
+    function _removeMentee(address mentor, address mentee) internal {
+        address[] storage list = menteesOf[mentor];
+        uint256 len = list.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (list[i] == mentee) {
+                list[i] = list[len - 1];
+                list.pop();
+                break;
+            }
+        }
+        mentorOf[mentee] = address(0);
+        emit MenteeRemoved(mentor, mentee);
+        _logEv(mentee, "mentee_removed", 0, "");
+    }
+
+    function getMentees(address mentor) external view returns (address[] memory) {
+        return menteesOf[mentor];
+    }
+
+    function getMentorInfo(address subject) external view returns (
+        bool isMentorUser,
+        address mentor,
+        uint16 menteeCount,
+        bool hasMentor,
+        bool canBecome,
+        uint16 minScore,
+        uint16 currentScore
+    ) {
+        currentScore = getScore(subject);
+        minScore = minScoreToMentor;
+        isMentorUser = mentors[subject];
+        mentor = mentorOf[subject];
+        hasMentor = mentor != address(0);
+        menteeCount = uint16(menteesOf[subject].length);
+        canBecome = !isMentorUser && currentScore >= minScoreToMentor;
+    }
+
+    /**
+     * @notice Return active endorsements for a subject
+     * @dev Filters out expired or zero-weight endorsements to keep UI simple
+     */
+    function getActiveEndorsements(address subject) external view returns (
+        address[] memory endorsers,
+        uint16[] memory weights,
+        uint64[] memory expiries,
+        uint64[] memory timestamps
+    ) {
+        address[] storage stored = endorsersOf[subject];
+        uint256 len = stored.length;
+        uint256 activeCount;
+
+        // First pass: count active endorsements
+        for (uint256 i = 0; i < len; i++) {
+            Endorsement storage e = endorsements[subject][stored[i]];
+            if (e.expiry > block.timestamp && e.weight > 0) {
+                activeCount++;
+            }
+        }
+
+        endorsers = new address[](activeCount);
+        weights = new uint16[](activeCount);
+        expiries = new uint64[](activeCount);
+        timestamps = new uint64[](activeCount);
+
+        uint256 idx;
+        for (uint256 i = 0; i < len; i++) {
+            Endorsement storage e = endorsements[subject][stored[i]];
+            if (e.expiry > block.timestamp && e.weight > 0) {
+                endorsers[idx] = stored[i];
+                weights[idx] = e.weight;
+                expiries[idx] = e.expiry;
+                timestamps[idx] = e.timestamp;
+                idx++;
+            }
+        }
+    }
+
+    /**
+     * @notice Batch fetch scores for a list of addresses (returns NEUTRAL for unset)
+     */
+    function getScores(address[] calldata subjects) external view returns (uint16[] memory scores) {
+        uint256 len = subjects.length;
+        scores = new uint16[](len);
+        for (uint256 i = 0; i < len; i++) {
+            uint16 s = _score[subjects[i]];
+            scores[i] = s == 0 ? NEUTRAL : s;
+        }
+    }
     
     // ═══════════════════════════════════════════════════════════════════════
     //                         USABILITY IMPROVEMENTS
@@ -667,6 +987,19 @@ contract Seer {
     
     mapping(address => ScoreDispute) public scoreDisputes;
     uint256 public pendingDisputeCount;
+
+    // Appeals: lightweight channel for contesting flags/decisions outside score disputes
+    struct Appeal {
+        address requester;
+        string reason;
+        uint64 timestamp;
+        bool resolved;
+        bool approved;
+        string resolution;
+    }
+
+    mapping(address => Appeal) public appeals;
+    uint256 public pendingAppealCount;
     
     event ScoreDisputeRequested(address indexed subject, string reason);
     event ScoreDisputeResolved(address indexed subject, bool approved, int256 adjustment);
@@ -721,9 +1054,46 @@ contract Seer {
         if (pendingDisputeCount > 0) {
             pendingDisputeCount--;
         }
-        
+
         emit ScoreDisputeResolved(subject, approved, adjustment);
         _logEv(subject, "score_dispute_resolved", approved ? 1 : 0, "");
+    }
+
+    // ───────────────── Appeals (general-purpose)
+    function fileAppeal(string calldata reason) external {
+        require(bytes(reason).length > 0 && bytes(reason).length <= 500, "SEER: invalid reason length");
+        Appeal storage existing = appeals[msg.sender];
+        require(existing.timestamp == 0 || existing.resolved, "SEER: appeal pending");
+
+        appeals[msg.sender] = Appeal({
+            requester: msg.sender,
+            reason: reason,
+            timestamp: uint64(block.timestamp),
+            resolved: false,
+            approved: false,
+            resolution: ""
+        });
+
+        pendingAppealCount++;
+        emit AppealFiled(msg.sender, reason);
+        _logEv(msg.sender, "appeal_filed", 0, reason);
+    }
+
+    function resolveAppeal(address subject, bool approved, string calldata resolution) external onlyDAO {
+        Appeal storage appeal = appeals[subject];
+        require(appeal.timestamp > 0, "SEER: no appeal");
+        require(!appeal.resolved, "SEER: appeal resolved");
+
+        appeal.resolved = true;
+        appeal.approved = approved;
+        appeal.resolution = resolution;
+
+        if (pendingAppealCount > 0) {
+            pendingAppealCount--;
+        }
+
+        emit AppealResolved(subject, approved, resolution);
+        _logEv(subject, "appeal_resolved", 0, resolution);
     }
     
     /**

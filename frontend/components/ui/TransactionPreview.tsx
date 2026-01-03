@@ -2,7 +2,9 @@
 
 import { useGasPrice } from 'wagmi';
 import { formatEther } from 'viem';
-import { Fuel } from 'lucide-react';
+import { Fuel, AlertTriangle } from 'lucide-react';
+import { useEthPrice } from '@/hooks/useEthPrice';
+import { IS_TESTNET } from '@/lib/testnet';
 
 interface TransactionPreviewProps {
   /** Label for the transaction type */
@@ -28,6 +30,7 @@ export function TransactionPreview({
   show = true,
 }: TransactionPreviewProps) {
   const { data: gasPrice } = useGasPrice();
+  const { ethPrice } = useEthPrice();
 
   if (!show) return null;
 
@@ -36,8 +39,7 @@ export function TransactionPreview({
   const gasCostWei = gasPrice ? estimatedGas * gasPrice : BigInt(0);
   const gasCostEth = parseFloat(formatEther(gasCostWei));
   
-  // Approximate USD (Base gas is very cheap, ~$0.001-0.01)
-  const ethPrice = 2500; // Rough ETH price - could be fetched from oracle
+  // Convert to USD using live ETH price
   const gasCostUsd = gasCostEth * ethPrice;
 
   // Calculate burn fee if amount provided
@@ -91,6 +93,16 @@ export function TransactionPreview({
         <div className="w-2 h-2 bg-green-500 rounded-full" />
         <span>~2 sec confirmation on Base</span>
       </div>
+
+      {/* Testnet gas warning */}
+      {IS_TESTNET && (
+        <div className="flex items-start gap-2 text-xs bg-amber-900/20 border border-amber-800/50 rounded-md p-2 mt-2">
+          <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
+          <span className="text-amber-300/80">
+            Testnet gas estimates may appear higher than mainnet. Real mainnet costs are typically &lt;$0.01 on Base.
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -100,11 +112,12 @@ export function TransactionPreview({
  */
 export function GasEstimate({ gasEstimate }: { gasEstimate?: bigint }) {
   const { data: gasPrice } = useGasPrice();
+  const { ethPrice } = useEthPrice();
 
   const estimatedGas = gasEstimate || BigInt(100000);
   const gasCostWei = gasPrice ? estimatedGas * gasPrice : BigInt(0);
   const gasCostEth = parseFloat(formatEther(gasCostWei));
-  const gasCostUsd = gasCostEth * 2500;
+  const gasCostUsd = gasCostEth * ethPrice;
 
   return (
     <span className="text-xs text-zinc-500">

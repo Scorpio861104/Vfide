@@ -1,5 +1,5 @@
 import { connectorsForWallets } from '@rainbow-me/rainbowkit'
-import { walletConnectWallet, metaMaskWallet } from '@rainbow-me/rainbowkit/wallets'
+import { walletConnectWallet, metaMaskWallet, coinbaseWallet } from '@rainbow-me/rainbowkit/wallets'
 import { createConfig, http, createStorage } from 'wagmi'
 import { 
   base, 
@@ -12,16 +12,20 @@ import {
 import { IS_TESTNET } from './chains'
 
 // Create noopStorage for SSR to avoid hydration mismatches
+// SSR-safe storage implementation - parameters required by Storage interface
 const noopStorage = {
-  getItem: (_key: string) => null, // eslint-disable-line @typescript-eslint/no-unused-vars
-  setItem: (_key: string, _value: string) => {}, // eslint-disable-line @typescript-eslint/no-unused-vars
-  removeItem: (_key: string) => {}, // eslint-disable-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by Storage interface, unused in SSR context
+  getItem: (_key: string) => null,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by Storage interface, unused in SSR context
+  setItem: (_key: string, _value: string) => {},
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by Storage interface, unused in SSR context
+  removeItem: (_key: string) => {},
 }
 
 // WalletConnect Project ID - required for WalletConnect v2
 // Get your free project ID at https://cloud.walletconnect.com
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
-if (!projectId) {
+if (!projectId && process.env.NODE_ENV === 'development') {
   console.error('[VFIDE] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is required. Get one at https://cloud.walletconnect.com')
 }
 
@@ -85,6 +89,7 @@ const connectors = connectorsForWallets(
       groupName: 'Recommended',
       wallets: [
         walletConnectWallet,
+        coinbaseWallet,
       ],
     },
     {

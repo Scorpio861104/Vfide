@@ -36,7 +36,8 @@ export default function SetupPage() {
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
     setCopiedField(field)
-    setTimeout(() => setCopiedField(null), 2000)
+    const timer = setTimeout(() => setCopiedField(null), 2000)
+    return () => clearTimeout(timer)
   }
 
   // Direct MetaMask add network
@@ -93,7 +94,9 @@ export default function SetupPage() {
       setAddSuccess(true)
     } catch (err) {
       const error = err as { code?: number; message?: string }
-      console.error('Add network error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Add network error:', error)
+      }
       if (error.code === 4001) {
         setAddError('You rejected the request. Click the button again when ready.')
       } else {

@@ -25,7 +25,8 @@ export function FaucetButton() {
     if (address) {
       navigator.clipboard.writeText(address);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      const timer = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timer);
     }
   };
 

@@ -230,9 +230,13 @@ contract EscrowManager is ReentrancyGuard {
     
     // 6. Resolve Dispute (Arbiter decides, DAO for high-value)
     // C-4 Fix: Add nonReentrant modifier
+    // H-6 Fix: Add conflict of interest check
     function resolveDispute(uint256 id, bool refundBuyer) external nonReentrant {
         Escrow storage e = escrows[id];
         require(e.state == State.DISPUTED, "not disputed");
+        
+        // H-6 Fix: Prevent arbiter from resolving disputes where they are a party
+        require(msg.sender != e.buyer && msg.sender != e.merchant, "ES: conflict of interest");
         
         // C-5: High-value disputes require DAO, normal disputes require arbiter
         if (e.amount > HIGH_VALUE_THRESHOLD) {

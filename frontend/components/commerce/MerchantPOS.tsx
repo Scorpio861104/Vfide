@@ -296,7 +296,7 @@ export function MerchantPOS() {
               <div className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#00F0FF]/20">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold text-[#F5F3E8]">Cart</h2>
-                  {cart.length > 0 && (
+                  {cart.length && (
                     <button
                       onClick={clearCart}
                       className="text-sm text-[#FF4444] hover:text-[#FF6666]"

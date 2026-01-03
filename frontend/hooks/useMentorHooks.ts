@@ -1,123 +1,132 @@
 'use client'
 
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES } from '../lib/contracts'
-import { SeerABI } from '../lib/abis'
+import { useMemo } from 'react'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 
-// ============================================
-// MENTOR SYSTEM HOOKS - Help new users succeed
-// ============================================
+const SEER_MENTOR_ABI = [
+  {
+    name: 'getMentorInfo',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'subject', type: 'address' }],
+    outputs: [
+      { type: 'bool' },   // isMentorUser
+      { type: 'address' },// mentor
+      { type: 'uint16' }, // menteeCount
+      { type: 'bool' },   // hasMentor
+      { type: 'bool' },   // canBecome
+      { type: 'uint16' }, // minScore
+      { type: 'uint16' }, // currentScore
+    ],
+  },
+  {
+    name: 'getMentees',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'mentor', type: 'address' }],
+    outputs: [{ type: 'address[]' }],
+  },
+  { name: 'becomeMentor', type: 'function', stateMutability: 'nonpayable', inputs: [], outputs: [] },
+  { name: 'sponsorMentee', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'mentee', type: 'address' }], outputs: [] },
+  { name: 'removeMentee', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'mentee', type: 'address' }], outputs: [] },
+] as const
+
+type MentorInfo = {
+  isMentor: boolean
+  mentor?: `0x${string}`
+  menteeCount: number
+  hasMentor: boolean
+  canBecomeMentor: boolean
+  minScoreToMentor: number
+  currentScore: number
+  mentees?: `0x${string}`[]
+}
+
+export function useMentorInfo(address?: `0x${string}`) {
+  const { data, isLoading, error, refetch } = useReadContract({
+    address: CONTRACT_ADDRESSES.Seer,
+    abi: SEER_MENTOR_ABI,
+    functionName: 'getMentorInfo',
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) },
+  })
+
+  const { data: menteesData } = useReadContract({
+    address: CONTRACT_ADDRESSES.Seer,
+    abi: SEER_MENTOR_ABI,
+    functionName: 'getMentees',
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) },
+  })
+
+  const parsed = useMemo<MentorInfo>(() => {
+    const tuple = data as
+      | readonly [boolean, `0x${string}`, bigint, boolean, boolean, bigint, bigint]
+      | undefined
+
+    return {
+      isMentor: tuple?.[0] ?? false,
+      mentor: tuple?.[1],
+      menteeCount: Number(tuple?.[2] ?? 0n),
+      hasMentor: tuple?.[3] ?? false,
+      canBecomeMentor: tuple?.[4] ?? false,
+      minScoreToMentor: Number(tuple?.[5] ?? 0n),
+      currentScore: Number(tuple?.[6] ?? 0n),
+      mentees: (menteesData as `0x${string}`[] | undefined) ?? [],
+    }
+  }, [data, menteesData])
+
+  return {
+    ...parsed,
+    isLoading,
+    error,
+    refetch,
+    isAvailable: true,
+  }
+}
 
 export function useIsMentor(address?: `0x${string}`) {
-  const { address: connectedAddress } = useAccount()
-  const targetAddress = address || connectedAddress
-  
-  const { data: isMentor, isLoading } = useReadContract({
-    address: CONTRACT_ADDRESSES.Seer,
-    abi: SeerABI,
-    functionName: 'isMentor',
-    args: targetAddress ? [targetAddress] : undefined,
-    query: {
-      enabled: !!targetAddress,
-    }
-  })
-  
+  const info = useMentorInfo(address)
   return {
-    isMentor: !!isMentor,
-    isLoading,
+    isMentor: info.isMentor,
+    isLoading: info.isLoading,
+    isAvailable: info.isAvailable,
   }
 }
 
 export function useBecomeMentor() {
-  const { writeContract, data, isPending } = useWriteContract()
-  
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: data,
-  })
-  
+  const { address } = useAccount()
+  const { writeContract, data: hash, isPending } = useWriteContract()
+  const { isLoading: isConfirming, isSuccess, error } = useWaitForTransactionReceipt({ hash })
+
   const becomeMentor = () => {
+    if (!address) return
     writeContract({
       address: CONTRACT_ADDRESSES.Seer,
-      abi: SeerABI,
+      abi: SEER_MENTOR_ABI,
       functionName: 'becomeMentor',
+      args: [],
     })
   }
-  
-  return {
-    becomeMentor,
-    isLoading: isPending || isConfirming,
-    isSuccess,
-  }
+
+  return { becomeMentor, isLoading: isPending || isConfirming, isSuccess, error, isAvailable: true }
 }
 
-export function useSponsorMentee(menteeAddress: `0x${string}`) {
-  const { writeContract, data, isPending } = useWriteContract()
-  
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: data,
-  })
-  
+export function useSponsorMentee(menteeAddress?: `0x${string}`) {
+  const { address } = useAccount()
+  const { writeContract, data: hash, isPending } = useWriteContract()
+  const { isLoading: isConfirming, isSuccess, error } = useWaitForTransactionReceipt({ hash })
+
   const sponsorMentee = () => {
+    if (!address || !menteeAddress) return
     writeContract({
       address: CONTRACT_ADDRESSES.Seer,
-      abi: SeerABI,
+      abi: SEER_MENTOR_ABI,
       functionName: 'sponsorMentee',
       args: [menteeAddress],
     })
   }
-  
-  return {
-    sponsorMentee,
-    isSponsoring: isPending || isConfirming,
-    isSuccess,
-  }
-}
 
-export function useMentorInfo(address?: `0x${string}`) {
-  const { address: connectedAddress } = useAccount()
-  const targetAddress = address || connectedAddress
-  
-  const { data: mentorAddress } = useReadContract({
-    address: CONTRACT_ADDRESSES.Seer,
-    abi: SeerABI,
-    functionName: 'mentorOf',
-    args: targetAddress ? [targetAddress] : undefined,
-    query: {
-      enabled: !!targetAddress,
-    }
-  })
-  
-  const { data: menteeCount } = useReadContract({
-    address: CONTRACT_ADDRESSES.Seer,
-    abi: SeerABI,
-    functionName: 'menteeCount',
-    args: targetAddress ? [targetAddress] : undefined,
-    query: {
-      enabled: !!targetAddress,
-    }
-  })
-  
-  const { data: highScoreAchievedAt } = useReadContract({
-    address: CONTRACT_ADDRESSES.Seer,
-    abi: SeerABI,
-    functionName: 'highScoreFirstAchievedAt',
-    args: targetAddress ? [targetAddress] : undefined,
-    query: {
-      enabled: !!targetAddress,
-    }
-  })
-  
-  const canBecomeMentor = highScoreAchievedAt && Number(highScoreAchievedAt) > 0
-  // Return raw timestamp - component should calculate remaining days using useEffect
-  const highScoreTimestamp = highScoreAchievedAt ? Number(highScoreAchievedAt) : null
-  const mentorEligibleAt = highScoreTimestamp ? highScoreTimestamp + 30 * 24 * 60 * 60 : null
-  
-  return {
-    mentorAddress: mentorAddress as `0x${string}` | undefined,
-    hasMentor: mentorAddress && mentorAddress !== '0x0000000000000000000000000000000000000000',
-    menteeCount: menteeCount ? Number(menteeCount) : 0,
-    canBecomeMentor,
-    highScoreTimestamp,
-    mentorEligibleAt, // Component should compare this to current time
-  }
+  return { sponsorMentee, isSponsoring: isPending || isConfirming, isSuccess, error, isAvailable: true }
 }

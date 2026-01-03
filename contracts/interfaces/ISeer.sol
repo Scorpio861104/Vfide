@@ -6,4 +6,6 @@ interface ISeer {
     function minForGovernance() external view returns (uint16);
     function flag(address user, uint8 severity, string calldata reason) external;
     function adjustScore(address user, uint16 delta, bool increase, string calldata reason) external;
+    function endorse(address subject, string calldata reason) external;
+    function getEndorsementStats(address subject) external view returns (uint16, uint16, uint16);
 }

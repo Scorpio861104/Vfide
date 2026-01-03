@@ -24,7 +24,8 @@ import {
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
   CommerceEscrowABI,
-  VaultHubLiteABI
+  VaultHubLiteABI,
+  UserVaultLiteABI
 } from './abis'
 
 // Zero address placeholder for missing contracts
@@ -37,13 +38,15 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
  */
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
   if (!address) {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       console.warn(`[VFIDE] Missing contract address: ${name}`)
     }
     return ZERO_ADDRESS
   }
   if (!isAddress(address)) {
-    console.warn(`[VFIDE] Invalid contract address for ${name}: ${address}`)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[VFIDE] Invalid contract address for ${name}: ${address}`)
+    }
     return ZERO_ADDRESS
   }
   return address as `0x${string}`
@@ -66,22 +69,25 @@ export const CONTRACT_ADDRESSES = {
   GuardianLock: validateContractAddress(process.env.NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS, 'GuardianLock'),
   PanicGuard: validateContractAddress(process.env.NEXT_PUBLIC_PANIC_GUARD_ADDRESS, 'PanicGuard'),
   EmergencyBreaker: validateContractAddress(process.env.NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS, 'EmergencyBreaker'),
-} as const
+  // Additional contracts
+  BurnRouter: validateContractAddress(process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS, 'BurnRouter'),
+  LiquidityIncentives: validateContractAddress(process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS, 'LiquidityIncentives'),
+  DutyDistributor: validateContractAddress(process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS, 'DutyDistributor'),
+  PromotionalTreasury: validateContractAddress(process.env.NEXT_PUBLIC_PROMOTIONAL_TREASURY_ADDRESS, 'PromotionalTreasury'),
+  PayrollManager: validateContractAddress(process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS, 'PayrollManager'),
+  CouncilElection: validateContractAddress(process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS, 'CouncilElection'),
+  CouncilSalary: validateContractAddress(process.env.NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS, 'CouncilSalary'),
+  SubscriptionManager: validateContractAddress(process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS, 'SubscriptionManager'),
+  SanctumVault: validateContractAddress(process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS, 'SanctumVault'),
+  DevReserveVesting: validateContractAddress(process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS, 'DevReserveVesting'),
+}
 
-// ==============================================================================
-// ABI EXPORTS
-// Aliased to match legacy usage while using the full JSON source of truth.
-// ==============================================================================
+// Legacy ABI alias names for compatibility with existing hooks
+export const MERCHANT_PORTAL_ABI = MerchantPortalABI;
+export const SEER_ABI = SeerABI;
+export const VFIDE_TOKEN_ABI = VFIDETokenABI;
+export const VAULT_HUB_ABI = VaultHubLiteABI;
 
-export const VFIDE_TOKEN_ABI = VFIDETokenABI
-export const SEER_ABI = SeerABI
-export const MERCHANT_PORTAL_ABI = MerchantPortalABI
-export const VAULT_HUB_ABI = VaultHubLiteABI
-export const BADGE_NFT_ABI = VFIDEBadgeNFTABI
-export const PRESALE_ABI = VFIDEPresaleABI
-export const STABLECOIN_REGISTRY_ABI = StablecoinRegistryABI
-
-// Export all other ABIs directly
 export {
   VFIDETokenABI,
   VFIDEPresaleABI,
@@ -101,5 +107,6 @@ export {
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
   CommerceEscrowABI,
-  VaultHubLiteABI
+  VaultHubLiteABI,
+  UserVaultLiteABI
 }
