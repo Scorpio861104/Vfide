@@ -20,6 +20,7 @@ interface ITokenLike_Trust { function balanceOf(address) external view returns (
 interface ISecurityHub_Trust { function isLocked(address vault) external view returns (bool); }
 interface ISeerSocial { function calculateEndorsementBonus(address subject) external view returns (uint256); }
 interface ISeerAutonomous { function onScoreChange(address subject, uint16 oldScore, uint16 newScore) external; }
+interface ISeerAutonomousRead { function getViolationScore(address subject) external view returns (uint16); }
 
 /// ────────────────────────── Errors
 error TRUST_NotDAO();
@@ -592,11 +593,32 @@ contract Seer {
         // Fallback: calculate from local state (for backward compatibility)
         address[] storage endorsers = endorsersOf[subject];
         uint256 len = endorsers.length;
+        uint256 subjectPenalty = 0;
+        if (seerAutonomous != address(0)) {
+            try ISeerAutonomousRead(seerAutonomous).getViolationScore(subject) returns (uint16 vscore) {
+                subjectPenalty = vscore; // scale in loop below
+            } catch {}
+        }
         for (uint256 i = 0; i < len; i++) {
             Endorsement storage e = endorsements[subject][endorsers[i]];
             if (e.weight > 0 && e.expiry > block.timestamp) {
-                bonus += e.weight;
+                uint256 weight = e.weight;
+                // Down-weight endorsements from violators
+                if (seerAutonomous != address(0)) {
+                    try ISeerAutonomousRead(seerAutonomous).getViolationScore(endorsers[i]) returns (uint16 endorserV) {
+                        if (endorserV > 0) {
+                            uint256 damp = endorserV > 500 ? 500 : endorserV; // cap
+                            weight = weight * (1000 - damp) / 1000; // reduce up to 50%
+                        }
+                    } catch {}
+                }
+                bonus += weight;
             }
+        }
+        // Apply subject-level penalty (small dampener if subject has violations)
+        if (subjectPenalty > 0 && bonus > 0) {
+            uint256 dampSubject = subjectPenalty > 800 ? 800 : subjectPenalty; // cap
+            bonus = bonus * (1000 - dampSubject) / 1000;
         }
         if (bonus > endorsementBonusCap) {
             bonus = endorsementBonusCap;

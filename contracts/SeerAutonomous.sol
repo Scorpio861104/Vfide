@@ -45,6 +45,12 @@ interface ISeer_Auto {
     function NEUTRAL() external view returns (uint16);
 }
 
+/// @notice Optional risk oracle for off-chain anomaly scoring
+interface IRiskOracle_Auto {
+    /// @dev Bounded to 0-100 (percentage risk)
+    function getRiskScore(address subject) external view returns (uint8);
+}
+
 interface IProofLedger_Auto {
     function logSystemEvent(address who, string calldata action, address by) external;
 }
@@ -82,6 +88,8 @@ contract SeerAutonomous {
     event RestrictionApplied(address indexed subject, RestrictionLevel level, uint64 duration, string reason);
     event RestrictionLifted(address indexed subject, RestrictionLevel oldLevel);
     event DAOOverride(address indexed subject, string reason);
+    event ChallengeCreated(address indexed subject, RestrictionLevel target, uint64 deadline, string reason);
+    event ChallengeResolved(address indexed subject, bool upheld, string reason);
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              ENUMS
@@ -139,6 +147,7 @@ contract SeerAutonomous {
     address public dao;
     ISeer_Auto public seer;
     IProofLedger_Auto public ledger;
+    IRiskOracle_Auto public riskOracle;
     
     // Operator permissions (trusted contracts that can trigger checks)
     mapping(address => bool) public operators;
@@ -151,6 +160,14 @@ contract SeerAutonomous {
     mapping(address => uint64) public restrictionExpiry;
     mapping(address => bool) public daoOverridden;
     mapping(address => string) public restrictionReason;
+
+    struct PendingChallenge {
+        uint64 deadline;
+        RestrictionLevel targetLevel;
+        string reason;
+        bool exists;
+    }
+    mapping(address => PendingChallenge) public pendingChallenge;
     
     // ─────────────────────────────────────────────────────────────────
     //                    ACTIVITY TRACKING (for patterns)
@@ -184,6 +201,7 @@ contract SeerAutonomous {
     uint16 public autoLiftThreshold = 5000;        // Score above = lift
     uint16 public rateLimitThreshold = 4000;       // Score below = rate limit
     uint16 public patternSensitivity = 50;         // 0-100 sensitivity
+    uint64 public challengeWindow = 1 days;        // Time to contest severe actions
     
     // Network health metrics (for dynamic adjustment)
     uint256 public networkViolationCount;
@@ -215,6 +233,11 @@ contract SeerAutonomous {
         if (msg.sender != dao && !operators[msg.sender]) revert SA_NotAuthorized();
         _;
     }
+
+    modifier onlyOracle() {
+        if (msg.sender != address(riskOracle)) revert SA_NotAuthorized();
+        _;
+    }
     
     // ═══════════════════════════════════════════════════════════════════════
     //                          CONSTRUCTOR
@@ -230,6 +253,11 @@ contract SeerAutonomous {
         _initializeRateLimits();
         
         emit ModulesSet(_seer, _dao, _ledger);
+    }
+
+    /// @notice Set optional risk oracle (DAO only)
+    function setRiskOracle(address _oracle) external onlyDAO {
+        riskOracle = IRiskOracle_Auto(_oracle);
     }
     
     function _initializeRateLimits() internal {
@@ -281,6 +309,9 @@ contract SeerAutonomous {
         if (daoOverridden[subject]) {
             return EnforcementResult.Allowed;
         }
+
+        // If a severe restriction is pending challenge and window passed, finalize
+        _maybeFinalizeChallenge(subject);
         
         // 2. Check restriction level and rate limits
         result = _checkRestrictions(subject, action);
@@ -296,6 +327,19 @@ contract SeerAutonomous {
         if (pattern != PatternType.None) {
             result = _handlePattern(subject, pattern);
             emit PatternDetected(subject, pattern, uint8(restrictionLevel[subject]));
+        }
+
+        // Incorporate oracle risk score as an additional soft signal
+        if (address(riskOracle) != address(0)) {
+            uint8 risk = riskOracle.getRiskScore(subject);
+            if (risk > 80) {
+                // High risk: escalate to at least Restricted for a short period
+                _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk");
+                result = EnforcementResult.Delayed;
+            } else if (risk > 50 && restrictionLevel[subject] < RestrictionLevel.Limited) {
+                _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "oracle_medium_risk");
+                if (result == EnforcementResult.Allowed) result = EnforcementResult.Warned;
+            }
         }
         
         // 4. Check score and auto-adjust restrictions
@@ -493,6 +537,15 @@ contract SeerAutonomous {
         else if (pattern == PatternType.SybilActivity) severity = 100;
         
         totalViolationScore[subject] += severity;
+
+        // Blend oracle risk if available
+        if (address(riskOracle) != address(0)) {
+            uint8 risk = riskOracle.getRiskScore(subject);
+            if (risk > 0) {
+                totalViolationScore[subject] += risk; // bounded by uint16 per design
+                severity += risk > 50 ? 20 : 0; // bump severity for high risk
+            }
+        }
         
         // Escalating response based on violation count
         if (count >= 5) {
@@ -562,14 +615,27 @@ contract SeerAutonomous {
     ) internal {
         // Only escalate, never downgrade automatically
         if (level <= restrictionLevel[subject]) return;
-        
         RestrictionLevel oldLevel = restrictionLevel[subject];
+
+        // Severe restrictions go through a challenge window first
+        if (level >= RestrictionLevel.Suspended) {
+            PendingChallenge storage ch = pendingChallenge[subject];
+            if (!ch.exists) {
+                ch.targetLevel = level;
+                ch.deadline = uint64(block.timestamp + challengeWindow);
+                ch.reason = reason;
+                ch.exists = true;
+                emit ChallengeCreated(subject, level, ch.deadline, reason);
+                return; // wait for challenge window to pass
+            }
+        }
+
         restrictionLevel[subject] = level;
         restrictionExpiry[subject] = uint64(block.timestamp) + duration;
         restrictionReason[subject] = reason;
-        
+
         emit RestrictionApplied(subject, level, duration, reason);
-        
+
         // Higher restrictions = score penalty
         if (level >= RestrictionLevel.Restricted) {
             _punish(subject, 50, reason);
@@ -579,12 +645,20 @@ contract SeerAutonomous {
     function _liftRestriction(address subject) internal {
         RestrictionLevel old = restrictionLevel[subject];
         if (old == RestrictionLevel.None) return;
-        
-        restrictionLevel[subject] = RestrictionLevel.None;
-        restrictionExpiry[subject] = 0;
-        restrictionReason[subject] = "";
-        
-        emit RestrictionLifted(subject, old);
+
+        // Progressive unfreeze: step down one level at a time
+        if (old > RestrictionLevel.None) {
+            RestrictionLevel next = RestrictionLevel(uint8(old) - 1);
+            restrictionLevel[subject] = next;
+            restrictionExpiry[subject] = uint64(block.timestamp + 1 days);
+            restrictionReason[subject] = "progressive_unfreeze";
+            emit RestrictionApplied(subject, next, 1 days, "progressive_unfreeze");
+        } else {
+            restrictionLevel[subject] = RestrictionLevel.None;
+            restrictionExpiry[subject] = 0;
+            restrictionReason[subject] = "";
+            emit RestrictionLifted(subject, old);
+        }
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -614,6 +688,40 @@ contract SeerAutonomous {
         // Reset counters for next period
         networkViolationCount = 0;
         networkActionCount = 0;
+    }
+
+    /// @notice Finalize a pending challenge if window has elapsed
+    function _maybeFinalizeChallenge(address subject) internal {
+        PendingChallenge storage ch = pendingChallenge[subject];
+        if (!ch.exists) return;
+        if (block.timestamp < ch.deadline) return;
+
+        // Apply the target restriction now
+        restrictionLevel[subject] = ch.targetLevel;
+        restrictionExpiry[subject] = uint64(block.timestamp + 7 days);
+        restrictionReason[subject] = ch.reason;
+        emit RestrictionApplied(subject, ch.targetLevel, 7 days, ch.reason);
+        delete pendingChallenge[subject];
+    }
+
+    /**
+     * @notice DAO resolves a pending challenge explicitly
+     * @param subject The user under challenge
+     * @param uphold True to apply restriction, false to dismiss
+     */
+    function resolveChallenge(address subject, bool uphold) external onlyDAO {
+        PendingChallenge storage ch = pendingChallenge[subject];
+        require(ch.exists, "SA: no challenge");
+
+        if (uphold) {
+            restrictionLevel[subject] = ch.targetLevel;
+            restrictionExpiry[subject] = uint64(block.timestamp + 7 days);
+            restrictionReason[subject] = ch.reason;
+            emit RestrictionApplied(subject, ch.targetLevel, 7 days, ch.reason);
+        } else {
+            emit ChallengeResolved(subject, false, ch.reason);
+        }
+        delete pendingChallenge[subject];
     }
     
     function _adjustThreshold(ThresholdType ttype, bool increase, uint16 delta) internal {
@@ -762,6 +870,11 @@ contract SeerAutonomous {
             restrictionReason[subject],
             totalViolationScore[subject]
         );
+    }
+
+    /// @notice Get the aggregate violation score for weighting endorsements
+    function getViolationScore(address subject) external view returns (uint16) {
+        return totalViolationScore[subject];
     }
     
     function getActivitySummary(address subject) external view returns (
