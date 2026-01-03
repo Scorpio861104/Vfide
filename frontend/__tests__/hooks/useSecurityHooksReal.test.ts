@@ -38,7 +38,7 @@ vi.mock('../../lib/abis', () => ({
   GuardianRegistryABI: [],
   GuardianLockABI: [],
   EmergencyBreakerABI: [],
-  VaultHubLiteABI: [],
+  VaultHubABI: [],
 }))
 
 // Import hooks after mocks are set up

@@ -8,7 +8,7 @@ import {
   GuardianRegistryABI, 
   GuardianLockABI, 
   EmergencyBreakerABI,
-  VaultHubLiteABI 
+  VaultHubABI 
 } from '../lib/abis'
 
 // ============================================
@@ -74,7 +74,7 @@ export function useCanSelfPanic() {
   
   const { data: vaultAddress } = useReadContract({
     address: CONTRACT_ADDRESSES.VaultHub,
-    abi: VaultHubLiteABI,
+    abi: VaultHubABI,
     functionName: 'vaultOf',
     args: address ? [address] : undefined,
     query: { enabled: !!address }

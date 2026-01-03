@@ -69,8 +69,8 @@ describe('useVaultHub - Extended Tests', () => {
   async function getUseVaultHub() {
     // Clear the module cache to get fresh imports
     vi.resetModules()
-    const module = await import('../useVaultHub')
-    return module.useVaultHub
+    const vaultHubModule = await import('../useVaultHub')
+    return vaultHubModule.useVaultHub
   }
 
   // Helper to setup mocks for contract error tests

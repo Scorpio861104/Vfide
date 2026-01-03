@@ -5,36 +5,23 @@ import { parseEther, formatEther } from 'viem'
 import { useState } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
-import { VaultHubLiteABI, VFIDETokenABI, UserVaultLiteABI, VaultInfrastructureABI } from '../lib/abis'
+import { VaultHubABI, VFIDETokenABI, UserVaultABI, VaultInfrastructureABI } from '../lib/abis'
 
 // ============================================
 // VAULT HOOKS - Non-custodial vault management
 // 
-// DEPLOYMENT NOTE: VaultInfrastructure was too large (58KB > 24KB mainnet limit),
-// so VaultHubLite is deployed instead. VaultHubLite/UserVaultLite has a simpler
-// interface than VaultInfrastructure/UserVault:
-//
-// VaultHubLite functions: createVault(), vaultOf(), getVault()
-// UserVaultLite functions: transfer(), setGuardian(uint8 slot, address guardian), 
-//   startRecovery(address candidate), approveRecovery(), cancelRecovery(), executeRecovery()
-//
-// Advanced hooks that require VaultInfrastructure (not deployed):
-//   useVaultGuardiansDetailed, useIsGuardianMature, useAbnormalTransactionThreshold,
-//   useSetBalanceSnapshotMode, useUpdateBalanceSnapshot, useBalanceSnapshot,
-//   usePendingTransaction, useApprovePendingTransaction, useExecutePendingTransaction,
-//   useCleanupExpiredTransaction, useGuardianCancelInheritance, useInheritanceStatus
-//
-// These hooks are STUBBED OUT and will only work when VaultInfrastructure is deployed.
+// Uses full VaultInfrastructure (VaultHubABI) for all vault features including:
+// - Guardian management with maturity periods
+// - Next of Kin (inheritance) functionality  
+// - Recovery mechanisms
+// - Balance snapshots and pending transactions
 // ============================================
 
-// Use VaultHubLite ABI for hub operations
-const HUB_ABI = VaultHubLiteABI
+// Use VaultHub (VaultInfrastructure) ABI for hub operations
+const HUB_ABI = VaultHubABI
 
-// Use UserVaultLite ABI for individual vault operations (deployed contract)
-const VAULT_LITE_ABI = UserVaultLiteABI
-
-// Use VaultInfrastructure ABI for advanced features (not deployed yet)
-const VAULT_ABI = VaultInfrastructureABI
+// Use UserVault ABI for individual vault operations
+const VAULT_ABI = UserVaultABI
 
 export function useUserVault() {
   const { address } = useAccount()
@@ -66,7 +53,7 @@ export function useCreateVault() {
     hash: data,
   })
   
-  // VaultHubLite uses createVault() with no args
+  // VaultHub createVault() with no args
   const createVault = () => {
     if (!address) return
     writeContract({
@@ -118,10 +105,10 @@ export function useTransferVFIDE() {
   const transfer = (toVault: `0x${string}`, amount: string) => {
     if (!vaultAddress) return
     
-    // UserVaultLite uses 'transfer' function, VaultInfrastructure uses 'transferVFIDE'
+    // UserVault uses 'transfer' function
     writeContract({
       address: vaultAddress as `0x${string}`,
-      abi: VAULT_LITE_ABI, // FIXED: Use UserVaultLiteABI (deployed) instead of VAULT_ABI
+      abi: VAULT_ABI,
       functionName: 'transfer',
       args: [toVault, parseEther(amount)],
     })
@@ -177,7 +164,7 @@ export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddres
 }
 
 /**
- * Add or remove guardian (UserVaultLite uses slot-based guardians)
+ * Add or remove guardian (UserVault uses slot-based guardians)
  * @param slot Guardian slot (0-2)
  * @param guardian Address to set (use zero address to clear)
  */
@@ -190,13 +177,13 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
     hash: txHash || undefined,
   })
 
-  // C-4 Fix: Updated signature to match UserVaultLite: setGuardian(uint8 slot, address guardian)
+  // C-4 Fix: Updated signature to match UserVault: setGuardian(uint8 slot, address guardian)
   const setGuardian = async (slot: number, guardianAddress: `0x${string}`) => {
     setError(null)
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
-        abi: VAULT_LITE_ABI,
+        abi: VAULT_ABI,
         functionName: 'setGuardian',
         args: [slot, guardianAddress],
       })

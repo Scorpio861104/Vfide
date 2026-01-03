@@ -17,7 +17,7 @@ vi.mock('@/lib/abis', () => ({
   VaultInfrastructureABI: [],
   VFIDETokenABI: [],
   VaultHubABI: [],
-  VaultHubLiteABI: [],
+  UserVaultABI: [],
 }))
 
 // Mock contracts

@@ -28,12 +28,14 @@ jest.mock('@/lib/contracts')
 jest.mock('../../lib/abis', () => ({
   VaultInfrastructureABI: [],
   VFIDETokenABI: [],
-  VaultHubLiteABI: [],
+  VaultHubABI: [],
+  UserVaultABI: [],
 }))
 jest.mock('@/lib/abis', () => ({
   VaultInfrastructureABI: [],
   VFIDETokenABI: [],
-  VaultHubLiteABI: [],
+  VaultHubABI: [],
+  UserVaultABI: [],
 }))
 
 const mockAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
