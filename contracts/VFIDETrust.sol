@@ -19,6 +19,7 @@ interface IVaultHub_Trust { function vaultOf(address owner) external view return
 interface ITokenLike_Trust { function balanceOf(address) external view returns (uint256); }
 interface ISecurityHub_Trust { function isLocked(address vault) external view returns (bool); }
 interface ISeerSocial { function calculateEndorsementBonus(address subject) external view returns (uint256); }
+interface ISeerAutonomous { function onScoreChange(address subject, uint16 oldScore, uint16 newScore) external; }
 
 /// ────────────────────────── Errors
 error TRUST_NotDAO();
@@ -97,6 +98,7 @@ contract Seer {
     event AppealFiled(address indexed subject, string reason);
     event AppealResolved(address indexed subject, bool approved, string resolution);
     event SeerSocialSet(address indexed seerSocial);
+    event SeerAutonomousSet(address indexed seerAutonomous);
 
     address public dao;
     ProofLedger public ledger;
@@ -104,6 +106,9 @@ contract Seer {
     
     // Reference to SeerSocial extension for endorsement bonus calculation
     address public seerSocial;
+    
+    // Reference to SeerAutonomous for automatic enforcement cascading
+    address public seerAutonomous;
 
     // 0 == uninitialized → treated as NEUTRAL = 5000 (50% on 0-10000 scale)
     mapping(address => uint16) private _score;
@@ -256,6 +261,15 @@ contract Seer {
     function setSeerSocial(address _seerSocial) external onlyDAO {
         seerSocial = _seerSocial;
         emit SeerSocialSet(_seerSocial);
+    }
+    
+    /**
+     * @notice Set the SeerAutonomous contract for automatic enforcement
+     * @param _seerAutonomous The SeerAutonomous contract address
+     */
+    function setSeerAutonomous(address _seerAutonomous) external onlyDAO {
+        seerAutonomous = _seerAutonomous;
+        emit SeerAutonomousSet(_seerAutonomous);
     }
     
     /**
@@ -684,6 +698,11 @@ contract Seer {
         
         emit ScoreSet(subject, cur, newScore, reason);
         _logEv(subject, "seer_score_delta", uint256(int256(d < 0 ? -d : d)), reason);
+        
+        // CASCADE: Notify SeerAutonomous for automatic enforcement
+        if (seerAutonomous != address(0)) {
+            try ISeerAutonomous(seerAutonomous).onScoreChange(subject, cur, newScore) {} catch {}
+        }
     }
     
     function _recordHistory(address subject, uint16 oldScore, uint16 newScore, string calldata reason) internal {
