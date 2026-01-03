@@ -11,12 +11,14 @@ pragma solidity 0.8.30;
  * - No external token wiring required yet (we won't touch VFIDEToken).
  * - Security (PanicGuard/GuardianLock) will be provided in VFIDESecurity.sol.
  * - DAO is the only privileged role; later this DAO will be your Governance Hub.
+ * - Social features (endorsements, mentorship, appeals) are handled by SeerSocial extension.
  */
 
 /// ────────────────────────── Interfaces
 interface IVaultHub_Trust { function vaultOf(address owner) external view returns (address); }
 interface ITokenLike_Trust { function balanceOf(address) external view returns (uint256); }
 interface ISecurityHub_Trust { function isLocked(address vault) external view returns (bool); }
+interface ISeerSocial { function calculateEndorsementBonus(address subject) external view returns (uint256); }
 
 /// ────────────────────────── Errors
 error TRUST_NotDAO();
@@ -94,10 +96,14 @@ contract Seer {
     event MentorConfigUpdated(uint16 minScore, uint16 maxMentees);
     event AppealFiled(address indexed subject, string reason);
     event AppealResolved(address indexed subject, bool approved, string resolution);
+    event SeerSocialSet(address indexed seerSocial);
 
     address public dao;
     ProofLedger public ledger;
     IVaultHub_Trust public vaultHub;
+    
+    // Reference to SeerSocial extension for endorsement bonus calculation
+    address public seerSocial;
 
     // 0 == uninitialized → treated as NEUTRAL = 5000 (50% on 0-10000 scale)
     mapping(address => uint16) private _score;
@@ -241,6 +247,15 @@ contract Seer {
         vaultHub = IVaultHub_Trust(_hub);
         emit LedgerSet(_ledger);
         emit HubSet(_hub);
+    }
+    
+    /**
+     * @notice Set the SeerSocial extension contract for endorsement calculations
+     * @param _seerSocial The SeerSocial contract address
+     */
+    function setSeerSocial(address _seerSocial) external onlyDAO {
+        seerSocial = _seerSocial;
+        emit SeerSocialSet(_seerSocial);
     }
     
     /**
@@ -551,6 +566,16 @@ contract Seer {
     }
 
     function _calculateEndorsementBonus(address subject) internal view returns (uint256 bonus) {
+        // If SeerSocial is set, delegate to it for endorsement bonus calculation
+        if (seerSocial != address(0)) {
+            try ISeerSocial(seerSocial).calculateEndorsementBonus(subject) returns (uint256 socialBonus) {
+                return socialBonus;
+            } catch {
+                // Fall through to local calculation if SeerSocial fails
+            }
+        }
+        
+        // Fallback: calculate from local state (for backward compatibility)
         address[] storage endorsers = endorsersOf[subject];
         uint256 len = endorsers.length;
         for (uint256 i = 0; i < len; i++) {

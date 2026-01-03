@@ -130,6 +130,40 @@ contract UserVault is ReentrancyGuard {
     error UV_RecoveryActive();
     error UV_AlreadyInitialized();
 
+    /**
+     * @notice Constructor for CREATE2 deployment via VaultHub
+     * @param _hub The VaultHub address
+     * @param _vfide The VFIDE token address
+     * @param _owner The vault owner
+     * @param _securityHub The SecurityHub address
+     * @param _ledger The ProofLedger address
+     */
+    constructor(
+        address _hub,
+        address _vfide,
+        address _owner,
+        address _securityHub,
+        address _ledger
+    ) {
+        require(_hub != address(0) && _vfide != address(0) && _owner != address(0), "UV:zero");
+        hub = _hub;
+        vfideToken = _vfide;
+        owner = _owner;
+        securityHub = ISecurityHub(_securityHub);
+        ledger = IProofLedger(_ledger);
+        
+        // Set defaults
+        withdrawalCooldown = 24 hours;
+        largeTransferThreshold = 10000 * 1e18;
+        executeCooldown = 1 hours;
+        maxExecuteValue = 1 ether;
+        abnormalTransactionThreshold = 50000 * 1e18;
+        abnormalTransactionPercentageBps = 5000;
+        
+        _logSys("vault_created");
+        emit OwnerSet(_owner);
+    }
+
     modifier onlyOwner() {
         _checkOwner();
         _;
