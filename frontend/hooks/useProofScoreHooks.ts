@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { SeerABI } from '../lib/abis'
+import { ZERO_ADDRESS } from '../lib/constants'
 
 // ============================================
 // PROOFSCORE HOOKS - Live reputation tracking

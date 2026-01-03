@@ -40,17 +40,17 @@ export function EtherscanLink({
   const [copied, setCopied] = useState(false);
 
   const explorerUrl = EXPLORER_URLS[chainId] || EXPLORER_URLS[11155111];
-  const value = txHash || address;
+  const value = txHash || address || '';
 
   const path = type === 'tx' ? 'tx' : type === 'token' ? 'token' : 'address';
   const href = `${explorerUrl}/${path}/${value}`;
 
-  const displayValue = label || `${value.slice(0, 6)}...${value.slice(-4)}`;
+  const displayValue = label || (value ? `${value.slice(0, 6)}...${value.slice(-4)}` : '');
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    await navigator.clipboard.writeText(value);
+    if (value) await navigator.clipboard.writeText(value);
     setCopied(true);
   };
 

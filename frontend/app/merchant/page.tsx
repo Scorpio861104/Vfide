@@ -6,7 +6,6 @@ import { Footer } from '@/components/layout/Footer';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
-import { SectionHeading, SurfaceCard, AccentBadge } from '@/components/ui/primitives';
 import { 
   Store, 
   CreditCard, 
@@ -72,19 +71,21 @@ function FeatureCard({
   const c = colorClasses[color] || colorClasses.blue;
 
   return (
-    <motion.div variants={scaleVariants}>
-      <SurfaceCard
-        variant="muted"
-        className={`group relative overflow-hidden bg-gradient-to-br ${c.bg} ${c.border} ${c.glow}`}
-      >
-        <div className="relative z-10 text-center">
-          <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} flex items-center justify-center`}>
-            <Icon className={`w-8 h-8 ${c.text}`} />
-          </div>
-          <h3 className={`font-bold text-lg mb-2 ${c.text}`}>{title}</h3>
-          <p className="text-sm text-gray-300 leading-relaxed">{description}</p>
+    <motion.div
+      variants={scaleVariants}
+      whileHover={{ y: -5, scale: 1.02 }}
+      className={`group relative p-6 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} backdrop-blur-xl transition-all duration-300 hover:shadow-xl ${c.glow}`}
+    >
+      {/* Glow effect */}
+      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${c.bg} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
+      
+      <div className="relative z-10 text-center">
+        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} flex items-center justify-center`}>
+          <Icon className={`w-8 h-8 ${c.text}`} />
         </div>
-      </SurfaceCard>
+        <h3 className={`font-bold text-lg mb-2 ${c.text}`}>{title}</h3>
+        <p className="text-sm text-gray-400 leading-relaxed">{description}</p>
+      </div>
     </motion.div>
   );
 }
@@ -165,6 +166,7 @@ export default function MerchantPage() {
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Hero Header */}
           <motion.div variants={itemVariants} className="text-center mb-16">
+            {/* Floating icon */}
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -172,16 +174,36 @@ export default function MerchantPage() {
             >
               <Store className="w-12 h-12 text-white" />
             </motion.div>
-            <SectionHeading
-              badge="VFIDE Merchant"
-              title="Merchant Portal"
-              subtitle="Accept VFIDE with 0% protocol fees. Choose direct or escrow modes with optional STABLE-PAY auto-conversion."
-              badgeColor="purple"
-            />
-            <div className="flex flex-wrap justify-center gap-3 mt-8">
-              <AccentBadge label="Non-Custodial" color="emerald" />
-              <AccentBadge label="Instant Settlement" color="cyan" />
-              <AccentBadge label="Zero Fees*" color="amber" />
+
+            <h1 className="text-5xl md:text-6xl font-black mb-6">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400">
+                Merchant Portal
+              </span>
+            </h1>
+
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+              Accept VFIDE payments with <span className="text-emerald-400 font-semibold">0% protocol fees</span> • 
+              Direct or Escrow modes • Optional <span className="text-blue-400 font-semibold">STABLE-PAY</span> auto-conversion
+            </p>
+
+            {/* Trust badges */}
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
+              {[
+                { icon: Shield, text: 'Non-Custodial' },
+                { icon: Zap, text: 'Instant Settlement' },
+                { icon: Sparkles, text: 'Zero Fees' }
+              ].map((badge, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + i * 0.1 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300"
+                >
+                  <badge.icon className="w-4 h-4 text-emerald-400" />
+                  {badge.text}
+                </motion.div>
+              ))}
             </div>
           </motion.div>
 
@@ -189,53 +211,49 @@ export default function MerchantPage() {
           <motion.div variants={containerVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
             {/* Merchant Dashboard Section */}
             <motion.div variants={itemVariants}>
-              <SurfaceCard>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20">
-                    <Store className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <h2 className="text-xl font-bold text-white">Merchant Dashboard</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20">
+                  <Store className="w-5 h-5 text-purple-400" />
                 </div>
-                <MerchantDashboard />
-              </SurfaceCard>
+                <h2 className="text-xl font-bold text-white">Merchant Dashboard</h2>
+              </div>
+              <MerchantDashboard />
             </motion.div>
 
             {/* Payment Interface Section */}
             <motion.div variants={itemVariants}>
-              <SurfaceCard>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20">
-                    <CreditCard className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <h2 className="text-xl font-bold text-white">Make Payment</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20">
+                  <CreditCard className="w-5 h-5 text-blue-400" />
                 </div>
-                <PaymentInterface />
-              </SurfaceCard>
+                <h2 className="text-xl font-bold text-white">Make Payment</h2>
+              </div>
+              <PaymentInterface />
             </motion.div>
           </motion.div>
 
           {/* QR Code Section */}
           <motion.div variants={itemVariants} className="mb-16">
-            <SurfaceCard>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
-                  <QrCode className="w-5 h-5 text-cyan-400" />
-                </div>
-                <h2 className="text-xl font-bold text-white">Generate Payment QR Code</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
+                <QrCode className="w-5 h-5 text-cyan-400" />
               </div>
-              <PaymentQR />
-            </SurfaceCard>
+              <h2 className="text-xl font-bold text-white">Generate Payment QR Code</h2>
+            </div>
+            <PaymentQR />
           </motion.div>
 
           {/* Features Section */}
           <motion.section variants={containerVariants} className="mb-16">
             <motion.div variants={itemVariants} className="text-center mb-10">
-              <SectionHeading
-                badge="Commerce engine"
-                title="Why Choose VFIDE?"
-                subtitle="Revolutionary payment infrastructure built for the future of commerce"
-                badgeColor="cyan"
-              />
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+                  Why Choose VFIDE?
+                </span>
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Revolutionary payment infrastructure built for the future of commerce
+              </p>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -269,81 +287,79 @@ export default function MerchantPage() {
           {/* Comparison Table */}
           <motion.section 
             variants={containerVariants}
-            className="mb-16"
+            className="mb-16 p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-xl"
           >
-            <SurfaceCard variant="default" interactive={false} className="p-8">
-              <motion.div variants={itemVariants} className="text-center mb-8">
-                <SectionHeading
-                  badge="Proof over processors"
-                  title="vs Traditional Processors"
-                  subtitle="See how VFIDE compares to traditional payment solutions"
-                  badgeColor="emerald"
-                />
-              </motion.div>
+            <motion.div variants={itemVariants} className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+                  vs Traditional Processors
+                </span>
+              </h2>
+              <p className="text-gray-400">See how VFIDE compares to traditional payment solutions</p>
+            </motion.div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-4 px-4 text-gray-400 font-medium">Feature</th>
-                      <th className="text-center py-4 px-4">
-                        <AccentBadge label="VFIDE" color="emerald" />
-                      </th>
-                      <th className="text-center py-4 px-4 text-gray-500 font-medium">Stripe</th>
-                      <th className="text-center py-4 px-4 text-gray-500 font-medium">Square</th>
-                      <th className="text-center py-4 px-4 text-gray-500 font-medium">PayPal</th>
-                    </tr>
-                  </thead>
-                  <motion.tbody variants={containerVariants}>
-                    <ComparisonRow feature="Processing Fee" vfide="0%*" stripe="2.9% + $0.30" square="2.6% + $0.10" paypal="2.9% + $0.30" />
-                    <ComparisonRow feature="Settlement Time" vfide="Instant" stripe="2-7 days" square="1-2 days" paypal="1-3 days" />
-                    <ComparisonRow feature="Chargebacks" vfide="None" stripe="Yes ($15 fee)" square="Yes" paypal="Yes" />
-                    <ComparisonRow feature="Trust Scoring" vfide="Yes" stripe="Basic" square="Basic" paypal="Basic" />
-                    <ComparisonRow feature="Auto-Conversion" vfide="Yes" stripe="No" square="No" paypal="No" isLast />
-                  </motion.tbody>
-                </table>
-              </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left py-4 px-4 text-gray-400 font-medium">Feature</th>
+                    <th className="text-center py-4 px-4">
+                      <span className="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                        VFIDE
+                      </span>
+                    </th>
+                    <th className="text-center py-4 px-4 text-gray-500 font-medium">Stripe</th>
+                    <th className="text-center py-4 px-4 text-gray-500 font-medium">Square</th>
+                    <th className="text-center py-4 px-4 text-gray-500 font-medium">PayPal</th>
+                  </tr>
+                </thead>
+                <motion.tbody variants={containerVariants}>
+                  <ComparisonRow feature="Processing Fee" vfide="0%*" stripe="2.9% + $0.30" square="2.6% + $0.10" paypal="2.9% + $0.30" />
+                  <ComparisonRow feature="Settlement Time" vfide="Instant" stripe="2-7 days" square="1-2 days" paypal="1-3 days" />
+                  <ComparisonRow feature="Chargebacks" vfide="None" stripe="Yes ($15 fee)" square="Yes" paypal="Yes" />
+                  <ComparisonRow feature="Trust Scoring" vfide="Yes" stripe="Basic" square="Basic" paypal="Basic" />
+                  <ComparisonRow feature="Auto-Conversion" vfide="Yes" stripe="No" square="No" paypal="No" isLast />
+                </motion.tbody>
+              </table>
+            </div>
 
-              <motion.p variants={itemVariants} className="text-xs text-gray-500 mt-6 text-center">
-                *0% processing fees. Network burn fees (0.25-5% based on buyer ProofScore) are separate and go to deflationary burn.
-              </motion.p>
-            </SurfaceCard>
+            <motion.p variants={itemVariants} className="text-xs text-gray-500 mt-6 text-center">
+              *0% processing fees. Network burn fees (0.25-5% based on buyer ProofScore) are separate and go to deflationary burn.
+            </motion.p>
           </motion.section>
 
           {/* Getting Started */}
           <motion.section
             variants={containerVariants}
-            className=""
+            className="p-8 rounded-3xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl"
           >
-            <SurfaceCard variant="glow" interactive={false} className="p-8">
-              <motion.div variants={itemVariants} className="flex items-center gap-3 mb-8">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-white">Getting Started</h2>
-                <span className="ml-auto text-sm text-blue-300 flex items-center gap-1">
-                  3 simple steps <ArrowRight className="w-4 h-4" />
-                </span>
-              </motion.div>
-
-              <div className="space-y-6">
-                <Step
-                  number={1}
-                  title="Register Your Business"
-                  description="Achieve ProofScore ≥5,600 and register your business details (takes 2 minutes)"
-                />
-                <Step
-                  number={2}
-                  title="Configure Settings"
-                  description="Enable STABLE-PAY if you want automatic stablecoin conversion for received payments"
-                />
-                <Step
-                  number={3}
-                  title="Start Accepting Payments"
-                  description="Share your merchant address, generate QR codes, or integrate our API/widget"
-                />
+            <motion.div variants={itemVariants} className="flex items-center gap-3 mb-8">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
-            </SurfaceCard>
+              <h2 className="text-2xl font-bold text-white">Getting Started</h2>
+              <span className="ml-auto text-sm text-blue-400 flex items-center gap-1">
+                3 simple steps <ArrowRight className="w-4 h-4" />
+              </span>
+            </motion.div>
+
+            <div className="space-y-6">
+              <Step
+                number={1}
+                title="Register Your Business"
+                description="Achieve ProofScore ≥5,600 and register your business details (takes 2 minutes)"
+              />
+              <Step
+                number={2}
+                title="Configure Settings"
+                description="Enable STABLE-PAY if you want automatic stablecoin conversion for received payments"
+              />
+              <Step
+                number={3}
+                title="Start Accepting Payments"
+                description="Share your merchant address, generate QR codes, or integrate our API/widget"
+              />
+            </div>
           </motion.section>
         </div>
       </motion.div>

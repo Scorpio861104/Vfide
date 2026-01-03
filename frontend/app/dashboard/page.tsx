@@ -17,18 +17,16 @@ import { useState, useMemo } from "react";
 import { useAccount } from "wagmi";
 import { BadgeGallery } from "@/components/badge/BadgeGallery";
 import { BadgeProgress } from "@/components/badge/BadgeProgress";
-import { useBadgeNFTs, useVaultBalance, useProofScore } from "@/lib/vfide-hooks";
+import { useUserBadges, useVaultBalance, useProofScore } from "@/lib/vfide-hooks";
 import { EXPLORER_URL } from "@/lib/testnet";
-import { PRESALE_REFERENCE_PRICE, LOW_TRUST_THRESHOLD, HIGH_TRUST_THRESHOLD } from "@/lib/constants";
 import Link from "next/link";
-import { SectionHeading, SurfaceCard, AccentBadge } from "@/components/ui/primitives";
 
 type TabType = 'overview' | 'fee-simulator' | 'score-simulator' | 'badges';
 
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
+} as const;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -41,13 +39,13 @@ function GlassCard({ children, className = "", hover = true }: {
   hover?: boolean;
 }) {
   return (
-    <SurfaceCard
-      variant="muted"
-      interactive={hover}
-      className={className}
+    <motion.div
+      whileHover={hover ? { scale: 1.02, y: -4 } : {}}
+      transition={{ type: "spring", stiffness: 400 }}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
-    </SurfaceCard>
+    </motion.div>
   );
 }
 
@@ -148,19 +146,19 @@ export default function DashboardPage() {
   
   const walletAddress = address || "";
   const walletBalance = vaultLoading ? "Loading..." : vaultBalanceRaw;
+  const PRESALE_REFERENCE_PRICE = 0.01;
   const usdValue = vaultLoading ? "..." : (parseFloat(vaultBalanceRaw) * PRESALE_REFERENCE_PRICE).toFixed(2);
   
   const copyAddress = () => {
     navigator.clipboard.writeText(walletAddress);
     setCopiedAddress(true);
-    const timer = setTimeout(() => setCopiedAddress(false), 2000);
-    return () => clearTimeout(timer);
+    setTimeout(() => setCopiedAddress(false), 2000);
   };
 
   const currentFeeRate = useMemo(() => {
-    if (proofscore <= LOW_TRUST_THRESHOLD) return 5.00;
-    if (proofscore >= HIGH_TRUST_THRESHOLD) return 0.25;
-    return 5.00 - ((proofscore - LOW_TRUST_THRESHOLD) * 4.75 / LOW_TRUST_THRESHOLD);
+    if (proofscore <= 4000) return 5.00;
+    if (proofscore >= 8000) return 0.25;
+    return 5.00 - ((proofscore - 4000) * 4.75 / 4000);
   }, [proofscore]);
 
   if (!isConnected) {
@@ -217,12 +215,12 @@ export default function DashboardPage() {
               className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8"
             >
               <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <h1 className="text-3xl md:text-4xl font-bold text-white">Dashboard</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 flex items-center gap-3">
+                  Dashboard
                   <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}>
                     <Sparkles className="text-amber-400" size={28} />
                   </motion.span>
-                </div>
+                </h1>
                 <div className="flex items-center gap-3 flex-wrap">
                   <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -245,8 +243,16 @@ export default function DashboardPage() {
                     </a>
                   </motion.div>
                   
-                  <AccentBadge label={`ProofScore ${proofscore}`} color="cyan" />
-                  <AccentBadge label={`${currentFeeRate.toFixed(2)}% fee`} color="emerald" />
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
+                    <span className="text-cyan-400 font-bold text-sm flex items-center gap-2">
+                      <Zap size={14} />
+                      ProofScore {proofscore}
+                    </span>
+                  </motion.div>
+                  
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
+                    <span className="text-emerald-400 font-bold text-sm">{currentFeeRate.toFixed(2)}% fee</span>
+                  </motion.div>
                 </div>
               </div>
               <SimpleWalletConnect />
@@ -441,7 +447,7 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
             ))}
           </div>
           <div className="mt-4 text-center">
-            <Link href="/vault" className="text-cyan-400 hover:text-cyan-300 text-sm font-medium inline-flex items-center gap-1">
+            <Link href="/history" className="text-cyan-400 hover:text-cyan-300 text-sm font-medium inline-flex items-center gap-1">
               View All Activity <ChevronRight size={14} />
             </Link>
           </div>
@@ -456,9 +462,9 @@ function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
   const [simulatedScore, setSimulatedScore] = useState(currentScore);
   
   const calculateFee = (score: number) => {
-    if (score <= LOW_TRUST_THRESHOLD) return 5.00;
-    if (score >= HIGH_TRUST_THRESHOLD) return 0.25;
-    return 5.00 - ((score - LOW_TRUST_THRESHOLD) * 4.75 / LOW_TRUST_THRESHOLD);
+    if (score <= 4000) return 5.00;
+    if (score >= 8000) return 0.25;
+    return 5.00 - ((score - 4000) * 4.75 / 4000);
   };
   
   const feePercent = calculateFee(simulatedScore);
@@ -512,7 +518,7 @@ function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
             <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
               <p className="text-cyan-400 text-sm">
                 💡 <strong>Tip:</strong> Your current score of {currentScore} gives you a {calculateFee(currentScore).toFixed(2)}% fee rate.
-                {currentScore < HIGH_TRUST_THRESHOLD && ` Increase your score to ${HIGH_TRUST_THRESHOLD.toLocaleString()} to unlock the minimum 0.25% rate!`}
+                {currentScore < 8000 && ` Increase your score to 8000 to unlock the minimum 0.25% rate!`}
               </p>
             </div>
           </div>
@@ -591,7 +597,7 @@ function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
             </div>
           </div>
           
-          {projectedScore >= HIGH_TRUST_THRESHOLD && (
+          {projectedScore >= 8000 && (
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="mt-6 p-4 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center gap-3">
               <CheckCircle2 className="text-emerald-400" size={24} />
               <span className="text-emerald-400">🎉 You will unlock the minimum 0.25% fee rate!</span>
@@ -604,7 +610,7 @@ function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 }
 
 function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
-  const { isLoading } = useBadgeNFTs(address);
+  const { badgeIds, isLoading } = useUserBadges(address);
   
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">

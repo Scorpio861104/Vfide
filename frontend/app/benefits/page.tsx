@@ -197,48 +197,40 @@ function OverviewTab() {
         <Gift className="w-16 h-16 text-purple-400 mx-auto mb-4" />
         <h2 className="text-3xl font-bold text-[#F5F3E8] mb-4">Active Participation Benefits</h2>
         <p className="text-[#A0A0A5] max-w-2xl mx-auto">
-          VFIDE rewards active participation through governance voting, merchant transactions, and community engagement. Build your ProofScore through positive actions to unlock fee discounts.
+          VFIDE rewards active participation through governance voting, merchant transactions,
+          and community engagement. Build your ProofScore through positive actions to unlock fee discounts.
         </p>
       </div>
 
       {/* Benefits Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {benefits.map((benefit, idx) => (
-          <GlassCard key={idx} className="p-6" gradient="from-white/[0.05] to-white/[0.01]">
-            <div className="flex items-start gap-4">
-              <div 
-                className="p-3 rounded-xl bg-white/5"
-                style={{ color: benefit.color }}
-              >
-                <benefit.icon className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">{benefit.title}</h3>
-                <p className="text-sm text-gray-400">{benefit.description}</p>
-              </div>
-            </div>
-          </GlassCard>
+          <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#00F0FF]/30 transition-colors">
+            <benefit.icon size={32} style={{ color: benefit.color }} className="mb-4" />
+            <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{benefit.title}</h3>
+            <p className="text-[#A0A0A5] text-sm">{benefit.description}</p>
+          </div>
         ))}
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <GlassCard className="p-6 text-center">
+        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-[#00F0FF]">5</div>
           <div className="text-sm text-[#A0A0A5]">Membership Tiers</div>
-        </GlassCard>
-        <GlassCard className="p-6 text-center">
+        </div>
+        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-green-400">12</div>
           <div className="text-sm text-[#A0A0A5]">Reward Types</div>
-        </GlassCard>
-        <GlassCard className="p-6 text-center">
+        </div>
+        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-yellow-400">1.2M</div>
           <div className="text-sm text-[#A0A0A5]">VFIDE Distributed</div>
-        </GlassCard>
-        <GlassCard className="p-6 text-center">
+        </div>
+        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-purple-400">8,432</div>
           <div className="text-sm text-[#A0A0A5]">Active Members</div>
-        </GlassCard>
+        </div>
       </div>
     </div>
   );

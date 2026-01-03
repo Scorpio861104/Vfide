@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Shield, 
@@ -14,21 +14,20 @@ import {
   Scale,
   FileCheck,
   Wallet,
+  Info,
   DollarSign,
   User,
   Calendar,
   Hash,
   Eye,
   Lock,
+  AlertCircle,
   Loader2
 } from 'lucide-react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { parseUnits, formatUnits, isAddress } from 'viem'
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
-import { useToast } from '@/components/ui/toast'
-import { CONTRACT_ADDRESSES } from '@/lib/contracts'
-import { SurfaceCard, AccentBadge, SectionHeading } from '@/components/ui/primitives'
 
 // EscrowManager ABI
 const ESCROW_MANAGER_ABI = [
@@ -42,11 +41,9 @@ const ESCROW_MANAGER_ABI = [
   { name: 'nextId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-import { ZERO_ADDRESS } from '@/lib/constants';
-
-// Contract addresses from centralized config
-const ESCROW_MANAGER_ADDRESS = CONTRACT_ADDRESSES.VFIDECommerce;
-const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
+// Contract addresses from environment
+const ESCROW_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS || '0x2167C57dDfcd1bD2a6aDDB2bf510a05c48e7aC15') as `0x${string}`;
+const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
 
 // Escrow States (from contract)
 enum EscrowState {
@@ -64,13 +61,13 @@ const stateLabels: Record<EscrowState, string> = {
 }
 
 const stateColors: Record<EscrowState, string> = {
-  [EscrowState.CREATED]: 'text-amber-400 bg-amber-500/20 border-amber-500/30',
-  [EscrowState.RELEASED]: 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30',
-  [EscrowState.REFUNDED]: 'text-blue-400 bg-blue-500/20 border-blue-500/30',
-  [EscrowState.DISPUTED]: 'text-red-400 bg-red-500/20 border-red-500/30'
+  [EscrowState.CREATED]: 'text-amber-400 bg-amber-500/20',
+  [EscrowState.RELEASED]: 'text-emerald-400 bg-emerald-500/20',
+  [EscrowState.REFUNDED]: 'text-blue-400 bg-blue-500/20',
+  [EscrowState.DISPUTED]: 'text-red-400 bg-red-500/20'
 }
 
-// Escrow data interface
+// Mock escrow data
 interface EscrowData {
   id: number
   buyer: string
@@ -83,21 +80,49 @@ interface EscrowData {
   orderId: string
 }
 
-// Demo mode flag: when contract not deployed, disable actions and show empty state
-const DEMO_MODE = !CONTRACT_ADDRESSES.VFIDECommerce || CONTRACT_ADDRESSES.VFIDECommerce === ZERO_ADDRESS
-
-// No demo escrows; we show an empty state when contract is missing
-const demoEscrows: EscrowData[] = []
+const mockEscrows: EscrowData[] = [
+  {
+    id: 1,
+    buyer: '0x1234...5678',
+    merchant: '0x8765...4321',
+    token: 'VFIDE',
+    amount: BigInt(5000 * 1e18),
+    createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    releaseTime: Date.now() + 5 * 24 * 60 * 60 * 1000,
+    state: EscrowState.CREATED,
+    orderId: 'ORD-2024-001'
+  },
+  {
+    id: 2,
+    buyer: '0x1234...5678',
+    merchant: '0xABCD...EFGH',
+    token: 'VFIDE',
+    amount: BigInt(1500 * 1e18),
+    createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
+    releaseTime: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    state: EscrowState.RELEASED,
+    orderId: 'ORD-2024-002'
+  },
+  {
+    id: 3,
+    buyer: '0x1234...5678',
+    merchant: '0x9999...1111',
+    token: 'VFIDE',
+    amount: BigInt(12000 * 1e18),
+    createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
+    releaseTime: Date.now() + 13 * 24 * 60 * 60 * 1000,
+    state: EscrowState.DISPUTED,
+    orderId: 'ORD-2024-003'
+  }
+]
 
 type TabId = 'active' | 'completed' | 'disputed'
 
 export default function EscrowPage() {
-  const { isConnected } = useAccount()
-  const { toast } = useToast()
+  const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('active')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [lastAction, setLastAction] = useState<string>('')
   
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -108,48 +133,19 @@ export default function EscrowPage() {
   })
 
   // Contract write hooks
-  const { writeContract, data: hash } = useWriteContract();
-  const { isSuccess } = useWaitForTransactionReceipt({ hash });
-
-  useEffect(() => {
-    if (isSuccess && lastAction) {
-      const actionMessages: Record<string, { title: string; description: string }> = {
-        'create': { title: 'Escrow Created', description: 'Your escrow has been created successfully.' },
-        'release': { title: 'Funds Released', description: 'Funds have been released to the seller.' },
-        'refund': { title: 'Refund Processed', description: 'Funds have been refunded to the buyer.' },
-        'dispute': { title: 'Dispute Raised', description: 'Your dispute has been submitted for review.' },
-        'timeout': { title: 'Timeout Claimed', description: 'Funds have been returned due to timeout.' },
-      }
-      const message = actionMessages[lastAction] || { title: 'Transaction Successful', description: 'Your transaction has been confirmed.' }
-      toast({
-        title: message.title,
-        description: message.description,
-        variant: "default",
-      });
-      setActionLoading(null);
-      setLastAction('');
-    }
-  }, [isSuccess, toast, lastAction]);
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Read next escrow ID
   const { data: nextId } = useReadContract({
     address: ESCROW_MANAGER_ADDRESS,
     abi: ESCROW_MANAGER_ABI,
     functionName: 'nextId',
-    query: {
-      enabled: !DEMO_MODE,
-    }
   });
 
   // Contract action handlers
   const handleCreateEscrow = () => {
-    if (DEMO_MODE) {
-      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
-      return;
-    }
     if (!isAddress(createForm.merchant)) return;
-    setActionLoading('create');
-    setLastAction('create');
     const amount = parseUnits(createForm.amount, 18);
     const timeout = BigInt(parseInt(createForm.timeout) * 24 * 60 * 60);
     
@@ -162,12 +158,6 @@ export default function EscrowPage() {
   };
 
   const handleRelease = (id: number) => {
-    if (DEMO_MODE) {
-      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
-      return;
-    }
-    setActionLoading(`release-${id}`);
-    setLastAction('release');
     writeContract({
       address: ESCROW_MANAGER_ADDRESS,
       abi: ESCROW_MANAGER_ABI,
@@ -177,12 +167,6 @@ export default function EscrowPage() {
   };
 
   const handleRefund = (id: number) => {
-    if (DEMO_MODE) {
-      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
-      return;
-    }
-    setActionLoading(`refund-${id}`);
-    setLastAction('refund');
     writeContract({
       address: ESCROW_MANAGER_ADDRESS,
       abi: ESCROW_MANAGER_ABI,
@@ -192,12 +176,6 @@ export default function EscrowPage() {
   };
 
   const handleDispute = (id: number) => {
-    if (DEMO_MODE) {
-      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
-      return;
-    }
-    setActionLoading(`dispute-${id}`);
-    setLastAction('dispute');
     writeContract({
       address: ESCROW_MANAGER_ADDRESS,
       abi: ESCROW_MANAGER_ABI,
@@ -207,12 +185,6 @@ export default function EscrowPage() {
   };
 
   const handleClaimTimeout = (id: number) => {
-    if (DEMO_MODE) {
-      toast({ title: 'Demo Mode', description: 'Escrow contract not deployed yet.', variant: 'destructive' });
-      return;
-    }
-    setActionLoading(`timeout-${id}`);
-    setLastAction('timeout');
     writeContract({
       address: ESCROW_MANAGER_ADDRESS,
       abi: ESCROW_MANAGER_ABI,
@@ -228,7 +200,7 @@ export default function EscrowPage() {
   ]
 
   // Filter escrows based on tab
-  const filteredEscrows = demoEscrows.filter(e => {
+  const filteredEscrows = mockEscrows.filter(e => {
     switch (activeTab) {
       case 'active':
         return e.state === EscrowState.CREATED
@@ -241,16 +213,16 @@ export default function EscrowPage() {
     }
   })
 
-  // Stats - use demoEscrows (defined above with demo data)
-  const totalInEscrow = demoEscrows
+  // Stats
+  const totalInEscrow = mockEscrows
     .filter(e => e.state === EscrowState.CREATED)
     .reduce((sum, e) => sum + e.amount, BigInt(0))
-  const activeCount = demoEscrows.filter(e => e.state === EscrowState.CREATED).length
-  const completedCount = demoEscrows.filter(e => e.state === EscrowState.RELEASED || e.state === EscrowState.REFUNDED).length
-  const disputedCount = demoEscrows.filter(e => e.state === EscrowState.DISPUTED).length
+  const activeCount = mockEscrows.filter(e => e.state === EscrowState.CREATED).length
+  const completedCount = mockEscrows.filter(e => e.state === EscrowState.RELEASED || e.state === EscrowState.REFUNDED).length
+  const disputedCount = mockEscrows.filter(e => e.state === EscrowState.DISPUTED).length
 
   const formatAmount = (amount: bigint): string => {
-    return parseFloat(formatUnits(amount, 18)).toLocaleString()
+    return (Number(amount) / 1e18).toLocaleString()
   }
 
   const formatTimeRemaining = (releaseTime: number): string => {
@@ -287,49 +259,60 @@ export default function EscrowPage() {
         {/* Hero */}
         <section className="relative py-12 overflow-hidden">
           <div className="container mx-auto px-4 relative z-10">
-            <SectionHeading
-              badge="Safe Buy Protection"
-              badgeIcon={<Shield className="w-4 h-4" />}
-              title={<>Buyer Protection <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400">Escrow</span></>}
-              subtitle="Secure your transactions with smart contract escrow. Funds are held safely until delivery is confirmed, with dispute resolution backed by the DAO."
-            />
-            {DEMO_MODE && (
-              <p className="mt-3 text-amber-300 text-sm font-semibold text-center">
-                Escrow contract is not deployed in this environment. Actions are disabled until deployment.
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center max-w-4xl mx-auto"
+            >
+              <motion.div 
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 rounded-full mb-6"
+              >
+                <Shield className="w-4 h-4 text-cyan-400" />
+                <span className="text-sm font-medium text-cyan-300">Safe Buy Protection</span>
+              </motion.div>
+              
+              <h1 className="text-4xl md:text-5xl font-black mb-4">
+                <span className="text-white">Buyer Protection </span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400">
+                  Escrow
+                </span>
+              </h1>
+              
+              <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                Secure your transactions with smart contract escrow. Funds are held safely 
+                until delivery is confirmed, with dispute resolution backed by the DAO.
               </p>
-            )}
+            </motion.div>
           
             {/* Stats */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-12 max-w-5xl mx-auto"
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-4xl mx-auto"
             >
               {[
-                { label: 'Total Escrows', value: nextId ? nextId.toString() : '0', icon: <Hash className="w-5 h-5" />, color: 'purple' as const },
-                { label: 'Total Value', value: `${formatAmount(totalInEscrow)} VFIDE`, icon: <DollarSign className="w-5 h-5" />, color: 'cyan' as const },
-                { label: 'Active', value: activeCount.toString(), icon: <Clock className="w-5 h-5" />, color: 'amber' as const },
-                { label: 'Completed', value: completedCount.toString(), icon: <CheckCircle2 className="w-5 h-5" />, color: 'emerald' as const },
-                { label: 'Disputed', value: disputedCount.toString(), icon: <Scale className="w-5 h-5" />, color: 'red' as const },
+                { label: 'Total in Escrow', value: `${formatAmount(totalInEscrow)} VFIDE`, icon: <DollarSign className="w-5 h-5" />, gradient: 'from-cyan-500/20 to-teal-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
+                { label: 'Active Escrows', value: activeCount.toString(), icon: <Clock className="w-5 h-5" />, gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
+                { label: 'Completed', value: completedCount.toString(), icon: <CheckCircle2 className="w-5 h-5" />, gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+                { label: 'In Dispute', value: disputedCount.toString(), icon: <Scale className="w-5 h-5" />, gradient: 'from-red-500/20 to-rose-500/10', border: 'border-red-500/20', text: 'text-red-400' }
               ].map((stat, idx) => (
-              <SurfaceCard
+              <motion.div
                 key={stat.label}
-                interactive
-                className="p-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                transition={{ delay: idx * 0.1 }}
+                className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4`}
               >
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center mb-3">
-                    <AccentBadge color={stat.color} className="w-5 h-5">{stat.icon}</AccentBadge>
-                  </div>
-                  <p className="text-2xl font-bold text-white">{stat.value}</p>
-                  <p className="text-sm text-gray-400">{stat.label}</p>
-                </motion.div>
-              </SurfaceCard>
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-3`}>
+                  <div className={stat.text}>{stat.icon}</div>
+                </div>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                <p className="text-sm text-gray-400">{stat.label}</p>
+              </motion.div>
             ))}
             </motion.div>
           </div>
@@ -414,34 +397,31 @@ export default function EscrowPage() {
                   className="space-y-4"
                 >
                   {filteredEscrows.map((escrow, idx) => (
-                    <SurfaceCard
+                    <motion.div
                       key={escrow.id}
-                      interactive
-                      className="p-6"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      whileHover={{ scale: 1.005, y: -2 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
                     >
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                      >
+                      <div className="p-6">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                           {/* Left: Order Info */}
                           <div className="flex-1">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-3">
-                                <AccentBadge 
-                                  color={escrow.state === EscrowState.CREATED ? 'amber' : escrow.state === EscrowState.RELEASED ? 'emerald' : escrow.state === EscrowState.REFUNDED ? 'cyan' : 'red'}
-                                >
-                                  {stateLabels[escrow.state]}
-                                </AccentBadge>
-                                <span className="text-gray-500 text-sm flex items-center gap-1">
-                                  <Hash className="w-3 h-3" />
-                                  {escrow.orderId}
-                                </span>
-                              </div>
-                              <button className="p-2 hover:bg-white/5 rounded-lg transition-colors group" title="View Details">
-                                <Eye className="w-4 h-4 text-gray-400 group-hover:text-white" />
-                              </button>
+                            <div className="flex items-center gap-3 mb-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                                escrow.state === EscrowState.CREATED ? 'text-amber-400 bg-amber-500/20 border-amber-500/30' :
+                                escrow.state === EscrowState.RELEASED ? 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30' :
+                                escrow.state === EscrowState.REFUNDED ? 'text-blue-400 bg-blue-500/20 border-blue-500/30' :
+                                'text-red-400 bg-red-500/20 border-red-500/30'
+                              }`}>
+                                {stateLabels[escrow.state]}
+                              </span>
+                              <span className="text-gray-500 text-sm flex items-center gap-1">
+                                <Hash className="w-3 h-3" />
+                                {escrow.orderId}
+                              </span>
                             </div>
                         
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
@@ -485,63 +465,30 @@ export default function EscrowPage() {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => handleRelease(escrow.id)}
-                                disabled={!!actionLoading}
+                                disabled={actionLoading === `release-${escrow.id}`}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50"
                               >
                                 {actionLoading === `release-${escrow.id}` ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  <RefreshCw className="w-4 h-4 animate-spin" />
                                 ) : (
                                   <CheckCircle2 className="w-4 h-4" />
                                 )}
-                                Release
+                                Release Funds
                               </motion.button>
-                              
-                              <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => handleRefund(escrow.id)}
-                                disabled={!!actionLoading}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-blue-400 rounded-xl font-medium border border-blue-500/30 hover:bg-blue-500/10 transition-all disabled:opacity-50"
-                              >
-                                {actionLoading === `refund-${escrow.id}` ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <RefreshCw className="w-4 h-4" />
-                                )}
-                                Refund
-                              </motion.button>
-
                               <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => handleDispute(escrow.id)}
-                                disabled={!!actionLoading}
+                                disabled={actionLoading === `dispute-${escrow.id}`}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-red-400 rounded-xl font-medium border border-red-500/30 hover:bg-red-500/10 transition-all disabled:opacity-50"
                               >
                                 {actionLoading === `dispute-${escrow.id}` ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  <RefreshCw className="w-4 h-4 animate-spin" />
                                 ) : (
                                   <AlertTriangle className="w-4 h-4" />
                                 )}
-                                Dispute
+                                Raise Dispute
                               </motion.button>
-
-                              {escrow.releaseTime <= Date.now() && (
-                                <motion.button
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  onClick={() => handleClaimTimeout(escrow.id)}
-                                  disabled={!!actionLoading}
-                                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-amber-400 rounded-xl font-medium border border-amber-500/30 hover:bg-amber-500/10 transition-all disabled:opacity-50"
-                                >
-                                  {actionLoading === `timeout-${escrow.id}` ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <Clock className="w-4 h-4" />
-                                  )}
-                                  Timeout
-                                </motion.button>
-                              )}
                             </div>
                           )}
                       
@@ -561,8 +508,8 @@ export default function EscrowPage() {
                             </div>
                           )}
                         </div>
-                      </motion.div>
-                    </SurfaceCard>
+                      </div>
+                    </motion.div>
                   ))}
                 </motion.div>
               )}
@@ -614,33 +561,33 @@ export default function EscrowPage() {
                 text: 'text-amber-400'
               }
             ].map((step, idx) => (
-              <SurfaceCard
+              <motion.div
                 key={step.step}
-                interactive
-                className="text-center p-6"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.15 }}
+                className={`text-center bg-gradient-to-br ${step.gradient} backdrop-blur-xl border ${step.border} rounded-2xl p-6`}
               >
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.15 }}
-                >
-                  <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
-                    <div className={step.text}>{step.icon}</div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
-                  <p className="text-gray-400 text-sm">{step.description}</p>
-                </motion.div>
-              </SurfaceCard>
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${step.gradient} border ${step.border} flex items-center justify-center mx-auto mb-4`}>
+                  <div className={step.text}>{step.icon}</div>
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
+                <p className="text-gray-400 text-sm">{step.description}</p>
+              </motion.div>
             ))}
           </div>
           
           {/* Trust-based release times */}
           <div className="mt-16 max-w-3xl mx-auto">
-            <SurfaceCard interactive className="p-6">
+            <motion.div 
+              whileHover={{ scale: 1.01, y: -2 }}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+            >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
-                  <Lock className="w-5 h-5 text-cyan-400" />
+                  <Info className="w-5 h-5 text-cyan-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">Dynamic Release Times</h3>
@@ -663,7 +610,7 @@ export default function EscrowPage() {
                   </div>
                 </div>
               </div>
-            </SurfaceCard>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -678,12 +625,13 @@ export default function EscrowPage() {
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowCreateModal(false)}
           >
-            <SurfaceCard className="max-w-lg w-full p-6" onClick={e => e.stopPropagation()}>
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-              >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
+            >
               <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-emerald-400">Create Escrow</h2>
               
               <div className="space-y-4">
@@ -747,8 +695,7 @@ export default function EscrowPage() {
                   )}
                 </motion.button>
               </div>
-              </motion.div>
-            </SurfaceCard>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

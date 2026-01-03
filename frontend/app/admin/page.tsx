@@ -5,8 +5,6 @@ import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatEther } from 'viem';
-import { ZERO_ADDRESS } from '@/lib/constants';
-import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 
 // Transaction history type
 type AdminTransaction = {
@@ -283,12 +281,12 @@ const TOKEN_ABI = [
   },
 ] as const;
 
-const TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
-const BURN_ROUTER_ADDRESS = CONTRACT_ADDRESSES.BurnRouter;
+const TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const BURN_ROUTER_ADDRESS = (process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 
 // Check if contracts are deployed (not zero address)
-const IS_TOKEN_DEPLOYED = TOKEN_ADDRESS !== ZERO_ADDRESS;
-const IS_BURN_ROUTER_DEPLOYED = BURN_ROUTER_ADDRESS !== ZERO_ADDRESS;
+const IS_TOKEN_DEPLOYED = TOKEN_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_BURN_ROUTER_DEPLOYED = BURN_ROUTER_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 // BurnRouter ABI
 const BURN_ROUTER_ABI = [
@@ -743,7 +741,7 @@ export default function AdminPanel() {
   };
 
   // Track transaction for history - integrate with write functions
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Reserved for future transaction tracking feature
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const addToHistory = (hash: string, action: string, params?: string) => {
     const newTx: AdminTransaction = {
       hash,
@@ -756,7 +754,7 @@ export default function AdminPanel() {
   };
 
   // Update transaction status - integrate with useWaitForTransactionReceipt
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Reserved for future transaction status updates
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const updateTxStatus = (hash: string, status: 'success' | 'failed') => {
     setTxHistory(prev =>
       prev.map(tx =>
@@ -1585,7 +1583,7 @@ export default function AdminPanel() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-300 text-sm">VaultHub</span>
-                      {vaultHubAddress && vaultHubAddress !== ZERO_ADDRESS ? (
+                      {vaultHubAddress && vaultHubAddress !== '0x0000000000000000000000000000000000000000' ? (
                         <span className="text-green-400 text-sm">✅ Connected</span>
                       ) : (
                         <span className="text-red-400 text-sm">❌ Not Set</span>
@@ -1593,7 +1591,7 @@ export default function AdminPanel() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-300 text-sm">SecurityHub</span>
-                      {securityHubAddress && securityHubAddress !== ZERO_ADDRESS ? (
+                      {securityHubAddress && securityHubAddress !== '0x0000000000000000000000000000000000000000' ? (
                         <span className="text-green-400 text-sm">✅ Connected</span>
                       ) : (
                         <span className="text-red-400 text-sm">❌ Not Set</span>
@@ -1601,7 +1599,7 @@ export default function AdminPanel() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-300 text-sm">ProofLedger</span>
-                      {ledgerAddress && ledgerAddress !== ZERO_ADDRESS ? (
+                      {ledgerAddress && ledgerAddress !== '0x0000000000000000000000000000000000000000' ? (
                         <span className="text-green-400 text-sm">✅ Connected</span>
                       ) : (
                         <span className="text-red-400 text-sm">❌ Not Set</span>
@@ -1609,7 +1607,7 @@ export default function AdminPanel() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-300 text-sm">BurnRouter</span>
-                      {burnRouterAddress && burnRouterAddress !== ZERO_ADDRESS ? (
+                      {burnRouterAddress && burnRouterAddress !== '0x0000000000000000000000000000000000000000' ? (
                         <span className="text-green-400 text-sm">✅ Connected</span>
                       ) : (
                         <span className="text-red-400 text-sm">❌ Not Set</span>
@@ -1689,10 +1687,10 @@ export default function AdminPanel() {
               <div className="bg-black/30 rounded-lg p-4 border border-purple-500/30">
                 <h3 className="text-purple-400 text-sm font-bold mb-3">Overall System Status</h3>
                 <div className="flex items-center gap-4">
-                  {vaultHubAddress && vaultHubAddress !== ZERO_ADDRESS &&
-                  securityHubAddress && securityHubAddress !== ZERO_ADDRESS &&
-                  ledgerAddress && ledgerAddress !== ZERO_ADDRESS &&
-                  burnRouterAddress && burnRouterAddress !== ZERO_ADDRESS ? (
+                  {vaultHubAddress && vaultHubAddress !== '0x0000000000000000000000000000000000000000' &&
+                  securityHubAddress && securityHubAddress !== '0x0000000000000000000000000000000000000000' &&
+                  ledgerAddress && ledgerAddress !== '0x0000000000000000000000000000000000000000' &&
+                  burnRouterAddress && burnRouterAddress !== '0x0000000000000000000000000000000000000000' ? (
                     <>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
@@ -1789,7 +1787,7 @@ export default function AdminPanel() {
           )}
 
           {/* Transaction History */}
-          {showTxHistory && txHistory.length && (
+          {showTxHistory && txHistory.length > 0 && (
             <div className="bg-gradient-to-br from-gray-900/30 to-gray-700/20 rounded-lg p-6 border border-gray-500 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-400">📜 Transaction History</h2>

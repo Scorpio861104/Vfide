@@ -92,6 +92,7 @@ export const MINUTE_UPDATE_INTERVAL_MS = 60000; // Update every minute (e.g., co
 export const MIN_PROOF_SCORE = 0;
 export const MAX_PROOF_SCORE = 10000;
 export const GOVERNANCE_MIN_SCORE = 5400;    // 54% minimum for governance voting
+export const GOVERNANCE_QUORUM_VOTES = 5000; // Minimum votes required for DAO proposal quorum
 export const MERCHANT_MIN_SCORE = 5600;      // 56% minimum for merchant listing
 export const HIGH_TRUST_THRESHOLD = 8000;    // 80% - reduced fee tier
 export const LOW_TRUST_THRESHOLD = 4000;     // 40% - higher fee tier

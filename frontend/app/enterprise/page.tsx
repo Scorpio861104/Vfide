@@ -2,7 +2,6 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
-import { SurfaceCard, AccentBadge, SectionHeading } from '@/components/ui/primitives';
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { 
@@ -12,6 +11,8 @@ import {
   Shield, 
   Globe,
   Zap,
+  CheckCircle,
+  Clock,
   FileText,
   TrendingUp
 } from "lucide-react";
@@ -35,11 +36,14 @@ export default function EnterprisePage() {
       <main className="min-h-screen bg-[#0D0D0F] pt-24 pb-16">
         <div className="container mx-auto px-4">
           {/* Header */}
-          <SectionHeading
-            badge="Business Solutions"
-            title="Enterprise Solutions"
-            subtitle="Enterprise-grade payment processing, fiat integration, and treasury management"
-          />
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-4">
+              Enterprise Solutions
+            </h1>
+            <p className="text-[#A0A0A5] text-lg max-w-2xl mx-auto">
+              Enterprise-grade payment processing, fiat integration, and treasury management
+            </p>
+          </div>
 
           {/* Tab Navigation */}
           <div className="flex flex-wrap justify-center gap-2 mb-8">
@@ -118,34 +122,38 @@ function OverviewTab() {
       {/* Features Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {features.map((feature, idx) => (
-          <SurfaceCard key={idx} interactive className="p-6">
+          <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
             <div className="flex items-start justify-between mb-4">
               <feature.icon size={32} style={{ color: feature.color }} />
-              <AccentBadge color={feature.status === 'Active' ? 'emerald' : 'amber'}>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                feature.status === 'Active' 
+                  ? 'bg-green-500/20 text-green-400' 
+                  : 'bg-yellow-500/20 text-yellow-400'
+              }`}>
                 {feature.status}
-              </AccentBadge>
+              </span>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-            <p className="text-gray-400">{feature.description}</p>
-          </SurfaceCard>
+            <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{feature.title}</h3>
+            <p className="text-[#A0A0A5]">{feature.description}</p>
+          </div>
         ))}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <SurfaceCard className="p-6 text-center">
-          <div className="text-3xl font-bold text-cyan-400">0%</div>
-          <div className="text-sm text-gray-400">Protocol Fees</div>
-        </SurfaceCard>
-        <SurfaceCard className="p-6 text-center">
-          <div className="text-3xl font-bold text-emerald-400">&lt;2s</div>
-          <div className="text-sm text-gray-400">Settlement Time</div>
-        </SurfaceCard>
-        <SurfaceCard className="p-6 text-center">
+        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
+          <div className="text-3xl font-bold text-[#00F0FF]">0%</div>
+          <div className="text-sm text-[#A0A0A5]">Protocol Fees</div>
+        </div>
+        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
+          <div className="text-3xl font-bold text-green-400">&lt;2s</div>
+          <div className="text-sm text-[#A0A0A5]">Settlement Time</div>
+        </div>
+        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-purple-400">99.9%</div>
           <div className="text-sm text-[#A0A0A5]">Uptime SLA</div>
-        </SurfaceCard>
-        <SurfaceCard className="p-6 text-center">
+        </div>
+        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-yellow-400">24/7</div>
           <div className="text-sm text-[#A0A0A5]">Operations</div>
         </div>
@@ -268,8 +276,6 @@ function FiatTab({ isConnected }: { isConnected: boolean }) {
     { name: 'Wire Transfer', fee: '0.1%', time: '1-2 days', status: 'Coming Soon' },
   ];
 
-  const connectionNote = isConnected ? 'Wallet connected' : 'Connect wallet to access fiat ramp.';
-
   return (
     <div className="space-y-8">
       {/* Fiat Overview */}
@@ -279,7 +285,6 @@ function FiatTab({ isConnected }: { isConnected: boolean }) {
           <div>
             <h2 className="text-2xl font-bold text-[#F5F3E8]">Fiat On/Off Ramp</h2>
             <p className="text-[#A0A0A5]">Convert between fiat currencies and VFIDE</p>
-            <p className="text-[#A0A0A5] text-sm mt-1">{connectionNote}</p>
           </div>
         </div>
         <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-4">

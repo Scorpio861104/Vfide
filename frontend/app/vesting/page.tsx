@@ -2,7 +2,6 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
-import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatUnits } from "viem";
@@ -10,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Lock, 
   Unlock, 
+  Clock, 
   TrendingUp,
   CheckCircle,
   Calendar,
@@ -98,8 +98,8 @@ const DEV_RESERVE_VESTING_ABI = [
   }
 ] as const;
 
-// Contract address
-const DEV_RESERVE_VESTING_ADDRESS = CONTRACT_ADDRESSES.DevReserveVesting;
+// Contract address from environment
+const DEV_RESERVE_VESTING_ADDRESS = (process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS || '0xFd26e4b02b55baA45A2421fFf0D47107CCE1D5E6') as `0x${string}`;
 
 type TabType = 'overview' | 'schedule' | 'claim';
 
@@ -374,7 +374,7 @@ function ScheduleTab({ schedule }: { schedule?: readonly Milestone[] }) {
     >
       <h2 className="text-2xl font-bold text-white mb-6">Vesting Schedule</h2>
       
-      {schedule && schedule.length ? (
+      {schedule && schedule.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

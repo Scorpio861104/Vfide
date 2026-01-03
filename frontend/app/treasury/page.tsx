@@ -2,7 +2,6 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
-import { SurfaceCard, AccentBadge, SectionHeading } from '@/components/ui/primitives';
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,7 +16,9 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Coins
+  Sparkles,
+  Coins,
+  Building2
 } from "lucide-react";
 
 type TabType = 'overview' | 'sanctum' | 'ecosystem' | 'revenue' | 'vesting';
@@ -73,11 +74,24 @@ export default function TreasuryPage() {
       >
         <div className="container mx-auto px-4">
           {/* Header */}
-          <SectionHeading
-            badge="Protocol Finances"
-            title={<span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400">Treasury Dashboard</span>}
-            subtitle="View protocol treasury allocations, charity distributions, and ecosystem funding"
-          />
+          <motion.div variants={itemVariants} className="text-center mb-12">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-sm text-emerald-300 mb-4"
+            >
+              <Coins className="w-4 h-4" />
+              Protocol Finances
+            </motion.div>
+            <h1 className="text-4xl md:text-5xl font-black mb-4">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400">
+                Treasury Dashboard
+              </span>
+            </h1>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              View protocol treasury allocations, charity distributions, and ecosystem funding
+            </p>
+          </motion.div>
 
           {/* Tab Navigation */}
           <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-2 mb-8">

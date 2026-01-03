@@ -2,19 +2,20 @@
 
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
-import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { keccak256, toBytes } from 'viem'
 import { 
-  Award, Shield, Star, CheckCircle, 
-  Lock, Trophy, Zap, Heart,
-  ShoppingBag, Crown, Gem, Loader2, Search
+  Award, Shield, Star, TrendingUp, CheckCircle, 
+  Clock, Lock, Sparkles, Trophy, Target, Zap, Heart,
+  ShoppingBag, Crown, Gem, Loader2, Search, Filter
 } from 'lucide-react'
 import { 
+  BADGE_REGISTRY, 
   getBadgeCategories, 
-  getAllBadges
+  getAllBadges,
+  type BadgeMetadata 
 } from '@/lib/badge-registry'
 
 // Contract ABIs
@@ -28,8 +29,8 @@ const SEER_ABI = [
   { name: 'score', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-const BADGE_NFT_ADDRESS = CONTRACT_ADDRESSES.BadgeNFT;
-const SEER_ADDRESS = CONTRACT_ADDRESSES.Seer;
+const BADGE_NFT_ADDRESS = (process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const SEER_ADDRESS = (process.env.NEXT_PUBLIC_SEER_ADDRESS || '0xD22944d47bAD4Bd5fF1A366393c4bdbc9250fd8E') as `0x${string}`;
 
 // Category icons and colors
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -42,8 +43,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
   'Education & Contribution': <Star className="w-5 h-5" />,
 }
 
-// Category color mappings (used in badge display)
-const _categoryColors: Record<string, string> = {
+const categoryColors: Record<string, string> = {
   'Pioneer & Foundation': 'amber',
   'Activity & Participation': 'cyan',
   'Trust & Community': 'pink',
@@ -52,7 +52,6 @@ const _categoryColors: Record<string, string> = {
   'Achievements & Milestones': 'orange',
   'Education & Contribution': 'blue',
 }
-void _categoryColors // Silence unused warning - reserved for future use
 
 const rarityColors: Record<string, { bg: string; border: string; text: string; glow: string }> = {
   Common: { bg: 'bg-gray-500/20', border: 'border-gray-500/30', text: 'text-gray-400', glow: '' },
@@ -93,15 +92,16 @@ function GlassCard({ children, className = "", hover = true }: {
 type TabId = 'all' | 'earned' | 'available' | 'minted'
 
 export default function BadgesPage() {
-  const { address } = useAccount()
+  const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('all')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [mintingBadge, setMintingBadge] = useState<string | null>(null)
 
   const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  const currentTime = useMemo(() => Date.now(), [])
   const allBadges = getAllBadges()
   const categories = getBadgeCategories()
 
@@ -112,8 +112,7 @@ export default function BadgesPage() {
     args: address ? [address] : undefined,
   });
 
-  // ProofScore check - reserved for badge eligibility checks
-  useReadContract({
+  const { data: proofScore } = useReadContract({
     address: SEER_ADDRESS,
     abi: SEER_ABI,
     functionName: 'score',
@@ -135,12 +134,11 @@ export default function BadgesPage() {
     }
   };
 
-  // Mock user badges - using static timestamp for demo
-  const mockExpiryTime = 1735689600000 // Jan 1, 2025 - static value for SSR
+  // Mock user badges
   const mockUserBadges: Record<string, { earned: boolean; expiry?: number; minted: boolean; tokenId?: number }> = {
     PIONEER: { earned: true, minted: true, tokenId: 2847 },
     GENESIS_PRESALE: { earned: true, minted: false },
-    ACTIVE_TRADER: { earned: true, expiry: mockExpiryTime + 60 * 24 * 60 * 60 * 1000, minted: false },
+    ACTIVE_TRADER: { earned: true, expiry: Date.now() + 60 * 24 * 60 * 60 * 1000, minted: false },
     GOVERNANCE_VOTER: { earned: false, minted: false },
     POWER_USER: { earned: false, minted: false },
     TRUSTED_ENDORSER: { earned: false, minted: false },
@@ -214,52 +212,11 @@ export default function BadgesPage() {
             </motion.div>
 
             {/* Stats Row */}
-            {/* XP Progress Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mt-8 max-w-2xl mx-auto"
-            >
-              <GlassCard className="p-6" hover={false}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/30 to-blue-500/20 rounded-xl flex items-center justify-center border border-cyan-500/30">
-                      <Zap className="w-6 h-6 text-cyan-400" />
-                    </div>
-                    <div>
-                      <div className="text-white font-bold text-lg">Level {Math.floor(totalPoints / 100)}</div>
-                      <div className="text-white/40 text-sm">{totalPoints} XP</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-white/60 text-sm">Next Level</div>
-                    <div className="text-white font-bold">{Math.ceil((Math.floor(totalPoints / 100) + 1) * 100 - totalPoints)} XP</div>
-                  </div>
-                </div>
-                
-                {/* XP Progress Bar */}
-                <div className="relative h-3 bg-white/5 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(totalPoints % 100)}%` }}
-                    transition={{ duration: 1, ease: 'easeOut' }}
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between mt-2 text-xs text-white/40">
-                  <span>{Math.floor(totalPoints / 100) * 100} XP</span>
-                  <span>{(Math.floor(totalPoints / 100) + 1) * 100} XP</span>
-                </div>
-              </GlassCard>
-            </motion.div>
-
             <motion.div 
               variants={containerVariants}
               initial="hidden"
               animate="show"
-              className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 max-w-4xl mx-auto"
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 max-w-4xl mx-auto"
             >
               {[
                 { label: 'Total Badges', value: allBadges.length, icon: Trophy, color: 'amber' },
@@ -416,25 +373,14 @@ export default function BadgesPage() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleMintBadge(badge.name)}
                             disabled={mintingBadge === badge.name}
-                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-shadow relative overflow-hidden group"
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25"
                           >
                             {mintingBadge === badge.name ? (
-                              <>
-                                <Loader2 className="animate-spin" size={18} />
-                                <span>Minting...</span>
-                              </>
+                              <Loader2 className="animate-spin" size={18} />
                             ) : (
-                              <>
-                                <Gem size={18} className="group-hover:scale-110 transition-transform" />
-                                <span>Mint as NFT</span>
-                              </>
+                              <Gem size={18} />
                             )}
-                            <motion.div
-                              className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
-                              initial={{ x: '-100%' }}
-                              whileHover={{ x: '100%' }}
-                              transition={{ duration: 0.5 }}
-                            />
+                            {mintingBadge === badge.name ? 'Minting...' : 'Mint as NFT'}
                           </motion.button>
                         )}
 

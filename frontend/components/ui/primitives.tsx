@@ -23,7 +23,7 @@ export function SurfaceCard({
 
   const Comp = interactive ? motion.div : "div";
   const motionProps = interactive
-    ? { whileHover: { y: -4, scale: 1.01 }, transition: { type: "spring", stiffness: 350, damping: 28 } }
+    ? { whileHover: { y: -4, scale: 1.01 }, transition: { type: "spring" as const, stiffness: 350, damping: 28 } }
     : {};
 
   return (

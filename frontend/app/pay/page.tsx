@@ -5,10 +5,9 @@ import { Footer } from "@/components/layout/Footer";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useToast } from "@/components/ui/toast";
-import { SectionHeading, SurfaceCard, AccentBadge } from "@/components/ui/primitives";
 import { useAccount } from "wagmi";
 import { motion } from "framer-motion";
-import { Shield, Sparkles, Loader2 } from "lucide-react";
+import { Shield, Sparkles, CreditCard, Loader2 } from "lucide-react";
 
 function PayContent() {
   const searchParams = useSearchParams();
@@ -29,7 +28,7 @@ function PayContent() {
       // Payment will be processed via smart contract
       showToast('Payment initiated - please confirm in your wallet', 'info');
       // Actual payment logic will use VFIDECommerce contract
-    } catch {
+    } catch (error) {
       showToast('Payment failed. Please try again.', 'error');
     } finally {
       setIsProcessing(false);
@@ -51,25 +50,39 @@ function PayContent() {
       {/* Header */}
       <section className="py-12 relative z-10">
         <div className="container mx-auto px-4 text-center">
-          <SectionHeading
-            badge="Secure Checkout"
-            title="Complete Payment"
-            subtitle="Secure checkout powered by VFIDE"
-            badgeColor="cyan"
-          />
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full mb-4"
+          >
+            <CreditCard className="w-4 h-4 text-cyan-400" />
+            <span className="text-cyan-400 text-sm font-medium">Secure Checkout</span>
+          </motion.div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
+            Complete <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Payment</span>
+          </h1>
+          <p className="text-xl text-gray-400">
+            Secure checkout powered by VFIDE
+          </p>
         </div>
       </section>
 
       {/* Payment Form */}
       <section className="py-12 relative z-10">
         <div className="container mx-auto px-4 max-w-2xl">
-          <SurfaceCard variant="default" interactive={false} className="relative overflow-hidden">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-8"
+          >
             {/* Merchant Info */}
             <div className="mb-8 pb-8 border-b border-white/10">
               <div className="text-gray-400 text-sm mb-2">Paying to</div>
               <div className="text-2xl font-bold text-white font-mono">{merchant}</div>
               <div className="flex items-center gap-2 mt-2">
-                <AccentBadge label="TRUSTED • ProofScore 845" />
+                <div className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-lg text-cyan-400 text-sm font-bold">
+                  TRUSTED • ProofScore 845
+                </div>
               </div>
             </div>
 
@@ -151,7 +164,12 @@ function PayContent() {
             </motion.button>
 
             {/* Security Notice */}
-            <SurfaceCard variant="muted" interactive={false} className="mt-6 p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl"
+            >
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-emerald-500/20">
                   <Shield className="w-5 h-5 text-emerald-400" />
@@ -163,8 +181,8 @@ function PayContent() {
                   </div>
                 </div>
               </div>
-            </SurfaceCard>
-          </SurfaceCard>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
     </motion.main>
