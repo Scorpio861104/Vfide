@@ -334,12 +334,16 @@ export default function DocsPage() {
                 {/* Lessons */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {lessons.find(l => l.level === selectedLevel)?.items.map((lesson, idx) => (
-                    <motion.div
+                    <motion.button
                       key={lesson.title}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="bg-[#2A2A2F] rounded-xl p-6 border border-[#3A3A3F] hover:border-[#00F0FF]/50 transition-all cursor-pointer group"
+                      onClick={() => {
+                        // Show a toast or modal with lesson content (placeholder for now)
+                        alert(`Lesson: ${lesson.title}\n\n${lesson.description}\n\nDuration: ${lesson.duration}\n\nFull lesson content coming soon!`);
+                      }}
+                      className="bg-[#2A2A2F] rounded-xl p-6 border border-[#3A3A3F] hover:border-[#00F0FF]/50 transition-all cursor-pointer group text-left w-full"
                     >
                       <div className="w-12 h-12 mb-4 flex items-center justify-center bg-[#00F0FF]/10 rounded-lg border border-[#00F0FF]/30">
                         <Book className="w-6 h-6 text-[#00F0FF]" />
@@ -352,7 +356,7 @@ export default function DocsPage() {
                         <Clock className="w-3 h-3" />
                         <span>{lesson.duration}</span>
                       </div>
-                    </motion.div>
+                    </motion.button>
                   ))}
                 </div>
               </motion.div>
