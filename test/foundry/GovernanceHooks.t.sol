@@ -18,7 +18,7 @@ contract GovernanceHooksTest is Test {
     address public voter1 = address(0x201);
     address public voter2 = address(0x202);
     
-    event ModulesSet(address ledger, address seer);
+    event ModulesSet(address ledger, address seer, address guardian);
     
     function setUp() public {
         ledger = new MockProofLedger();
@@ -51,15 +51,15 @@ contract GovernanceHooksTest is Test {
         MockSeer newSeer = new MockSeer();
         
         vm.expectEmit(false, false, false, true);
-        emit ModulesSet(address(newLedger), address(newSeer));
-        hooks.setModules(address(newLedger), address(newSeer));
+        emit ModulesSet(address(newLedger), address(newSeer), address(0));
+        hooks.setModules(address(newLedger), address(newSeer), address(0));
         
         assertEq(address(hooks.ledger()), address(newLedger));
         assertEq(address(hooks.seer()), address(newSeer));
     }
     
     function test_SetModulesToZero() public {
-        hooks.setModules(address(0), address(0));
+        hooks.setModules(address(0), address(0), address(0));
         assertEq(address(hooks.ledger()), address(0));
         assertEq(address(hooks.seer()), address(0));
     }
@@ -81,7 +81,7 @@ contract GovernanceHooksTest is Test {
     }
     
     function test_OnProposalQueuedWithoutLedger() public {
-        hooks.setModules(address(0), address(seer));
+        hooks.setModules(address(0), address(seer), address(0));
         hooks.onProposalQueued(1, dao, 1000 ether);
         // Should not revert
     }
@@ -98,7 +98,7 @@ contract GovernanceHooksTest is Test {
     }
     
     function test_OnVoteCastWithoutLedger() public {
-        hooks.setModules(address(0), address(seer));
+        hooks.setModules(address(0), address(seer), address(0));
         hooks.onVoteCast(1, voter1, true);
         // Should not revert
     }
@@ -119,7 +119,7 @@ contract GovernanceHooksTest is Test {
     }
     
     function test_OnFinalizedWithoutLedger() public {
-        hooks.setModules(address(0), address(seer));
+        hooks.setModules(address(0), address(seer), address(0));
         hooks.onFinalized(1, true);
         // Should not revert
     }
@@ -182,4 +182,6 @@ contract MockProofLedger {
 contract MockSeer {
     function punish(address, uint16, string calldata) external pure {}
     function reward(address, uint16, string calldata) external pure {}
+    function getScore(address) external pure returns (uint16) { return 7000; }
+    function minForGovernance() external pure returns (uint16) { return 5400; }
 }

@@ -3,6 +3,13 @@ pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
 
+/// @notice SeerGuardian interface for mutual DAO/Seer oversight
+interface ISeerGuardian_DAO {
+    function isProposalBlocked(uint256 proposalId) external view returns (bool blocked, string memory reason);
+    function canParticipateInGovernance(address subject) external view returns (bool);
+    function autoCheckProposer(uint256 proposalId, address proposer) external;
+}
+
 error DAO_NotAdmin();
 error DAO_Zero();
 error DAO_NotEligible();
@@ -10,6 +17,7 @@ error DAO_UnknownProposal();
 error DAO_AlreadyVoted();
 error DAO_VoteEnded();
 error DAO_VoteNotStarted();
+error DAO_ProposalFlagged(string reason);
 
 contract DAO is ReentrancyGuard {
     enum ProposalType { Generic, Financial, ProtocolChange, SecurityAction }
@@ -33,6 +41,7 @@ contract DAO is ReentrancyGuard {
     IVaultHub public vaultHub;
     IGovernanceHooks public hooks; // optional callbacks (logs/penalties)
     IProofLedger public ledger; // optional via hooks
+    ISeerGuardian_DAO public guardian; // SeerGuardian for mutual oversight
 
     uint64 public votingPeriod = 3 days;
     uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
@@ -94,6 +103,11 @@ contract DAO is ReentrancyGuard {
         timelock=IDAOTimelock(_timelock); seer=ISeer(_seer); vaultHub=IVaultHub(_hub); hooks=IGovernanceHooks(_hooks);
         emit ModulesSet(_timelock,_seer,_hub,_hooks,address(0));
     }
+    
+    /// @notice Set the SeerGuardian for mutual DAO/Seer oversight
+    function setGuardian(address _guardian) external onlyAdmin {
+        guardian = ISeerGuardian_DAO(_guardian);
+    }
 
     function setAdmin(address _admin) external onlyAdmin { require(_admin!=address(0),"zero"); admin=_admin; emit AdminSet(_admin); }
     function setParams(uint64 _period, uint256 _minVotes) external onlyAdmin {
@@ -117,6 +131,10 @@ contract DAO is ReentrancyGuard {
         // L-8 Fix: Cache external calls to save gas
         address vault = vaultHub.vaultOf(a);
         if (vault == address(0)) return false;
+        // Check SeerGuardian restrictions (Seer keeps DAO in check)
+        if (address(guardian) != address(0)) {
+            if (!guardian.canParticipateInGovernance(a)) return false;
+        }
         return seer.getScore(a) >= seer.minForGovernance();
     }
 
@@ -136,6 +154,11 @@ contract DAO is ReentrancyGuard {
         // Flash loan protection: voting starts after votingDelay
         p.start=uint64(block.timestamp) + votingDelay; p.end=p.start+votingPeriod;
         emit ProposalCreated(id,msg.sender,ptype,target,value,data,description);
+        
+        // Auto-check proposer via SeerGuardian (may flag for extra scrutiny)
+        if (address(guardian) != address(0)) {
+            try guardian.autoCheckProposer(id, msg.sender) {} catch {}
+        }
     }
 
     // function delegateVote(address delegate) external { ... } // Removed
@@ -216,6 +239,12 @@ contract DAO is ReentrancyGuard {
         if(p.end==0 || p.start==0) revert DAO_UnknownProposal();
         require(block.timestamp>=p.end,"early");
         require(!p.executed&&!p.queued,"done");
+        
+        // SEER OVERSIGHT: Check if proposal is flagged/blocked by SeerGuardian
+        if (address(guardian) != address(0)) {
+            (bool blocked, string memory reason) = guardian.isProposalBlocked(id);
+            if (blocked) revert DAO_ProposalFlagged(reason);
+        }
         
         uint256 total = p.forVotes + p.againstVotes;
         // Quorum is interpreted as absolute number of vote-points required
