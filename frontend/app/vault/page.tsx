@@ -13,6 +13,7 @@ import { isAddress } from "viem";
 import { devLog } from "@/lib/utils";
 import { useVaultBalance, useSelfPanic, useQuarantineStatus, useCanSelfPanic } from "@/lib/vfide-hooks";
 import { motion, AnimatePresence } from "framer-motion";
+import { SectionErrorBoundary } from "@/components/ErrorBoundary";
 import { 
   Shield, AlertTriangle, Lock, Clock, Plus, UserPlus, Users, Key, 
   Heart, ArrowDownToLine, ArrowUpFromLine, RefreshCw, CheckCircle2,

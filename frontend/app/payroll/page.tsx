@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { safeBigIntToNumber, safeParseFloat } from '@/lib/validation'
+import { SectionErrorBoundary } from '@/components/ErrorBoundary'
 import { 
   Banknote, 
   Play, 
