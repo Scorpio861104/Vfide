@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
+import { sanitizeString } from "@/lib/validation";
 import { 
   Users, 
   DollarSign, 
@@ -750,6 +751,7 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
               <textarea
                 placeholder="Describe why this member should be removed..."
                 rows={3}
+                maxLength={500}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none resize-none transition-colors"
               />
             </div>

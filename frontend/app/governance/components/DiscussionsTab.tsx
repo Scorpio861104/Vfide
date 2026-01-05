@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useAccount } from "wagmi"
+import { sanitizeString } from "@/lib/validation"
 
 interface Discussion {
   id: number
@@ -248,6 +249,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
               onChange={(e) => setNewReply(e.target.value)}
               placeholder="Share your thoughts..."
               rows={4}
+              maxLength={1000}
               className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none mb-4"
             />
             <button
@@ -317,6 +319,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
                   onChange={(e) => setNewThread({ ...newThread, content: e.target.value })}
                   placeholder="What would you like to discuss?"
                   rows={5}
+                  maxLength={2000}
                   className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none"
                 />
               </div>

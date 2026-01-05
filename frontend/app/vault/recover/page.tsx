@@ -4,6 +4,7 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
+import { sanitizeString } from "@/lib/validation";
 import { 
   Search, Shield, Key, Mail, User, Users,
   AlertCircle, ChevronRight, Clock, CheckCircle2, XCircle,
@@ -682,6 +683,7 @@ function ClaimFlowModal({
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Explain why you need to recover (lost device, seed phrase destroyed, etc.)"
                     rows={3}
+                    maxLength={500}
                     className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors resize-none"
                   />
                 </div>

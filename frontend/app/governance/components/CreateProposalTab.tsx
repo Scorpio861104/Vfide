@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useAccount } from "wagmi"
+import { sanitizeString } from "@/lib/validation"
 
 interface CreateProposalTabProps {
   DAO_DEPLOYED: boolean
@@ -172,6 +173,7 @@ export function CreateProposalTab({
                     onChange={(e) => updateProposal("description", e.target.value)}
                     placeholder="Describe the problem, proposed solution, and impact..."
                     rows={8}
+                    maxLength={2000}
                     className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none"
                   />
                   <div className="text-xs text-[#A0A0A5] mt-1">

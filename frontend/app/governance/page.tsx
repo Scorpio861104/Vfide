@@ -1801,6 +1801,7 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
               onChange={(e) => setNewReply(e.target.value)}
               placeholder="Share your thoughts..."
               rows={4}
+              maxLength={1000}
               className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none mb-4"
             />
             <button
@@ -1873,6 +1874,7 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
                   onChange={(e) => setNewThread({ ...newThread, content: e.target.value })}
                   placeholder="What would you like to discuss?"
                   rows={5}
+                  maxLength={2000}
                   className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none"
                 />
               </div>
@@ -2078,6 +2080,7 @@ function CreateProposalTab() {
                 placeholder="Describe the proposal in detail. Include motivation, expected impact, and any relevant data..."
                 required
                 rows={6}
+                maxLength={2000}
                 className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none resize-none"
               />
             </div>
@@ -2385,6 +2388,7 @@ function CouncilTab() {
                       onChange={(e) => setCandidateStatement(e.target.value)}
                       placeholder="Why should voters choose you? What will you focus on as a council member?"
                       rows={4}
+                      maxLength={500}
                       className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#FFD700] focus:outline-none resize-none"
                     />
                     <p className="text-xs text-[#8A8A8F] mt-1">{candidateStatement.length}/500 characters</p>
