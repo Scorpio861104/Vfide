@@ -5,6 +5,8 @@ import { useReadContract, useWriteContract, useAccount, useWaitForTransactionRec
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { SeerABI } from '../lib/abis'
 import { ZERO_ADDRESS } from '../lib/constants'
+import { parseContractError, logError } from '@/lib/errorHandling';
+import { safeBigIntToNumber } from '@/lib/validation';
 
 // ============================================
 // PROOFSCORE HOOKS - Live reputation tracking
@@ -24,7 +26,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
     }
   })
   
-  const scoreNum = score ? Number(score) : 5000 // Default neutral score (10x scale)
+  const scoreNum = score ? safeBigIntToNumber(score, 0) : 5000 // Default neutral score (10x scale)
   
   // Calculate tier and benefits (updated for 10x scale: 0-10000)
   const tier = 
@@ -86,7 +88,9 @@ export function useEndorse(targetAddress?: `0x${string}`) {
       })
       return { success: true }
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Endorsement failed'
+      logError('endorse', err);
+      const parsed = parseContractError(err);
+      const errorMsg = `Failed to endorse: ${parsed.userMessage}`;
       setError(errorMsg)
       return { success: false, error: errorMsg }
     }

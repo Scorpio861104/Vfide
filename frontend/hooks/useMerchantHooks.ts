@@ -5,6 +5,8 @@ import { parseEther, formatEther } from 'viem'
 import { useState } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { MerchantPortalABI } from '../lib/abis'
+import { parseContractError, logError } from '@/lib/errorHandling';
+import { safeBigIntToNumber } from '@/lib/validation';
 
 // ============================================
 // MERCHANT HOOKS - No processor fees (burn + gas apply)
@@ -35,9 +37,9 @@ export function useIsMerchant(address?: `0x${string}`) {
     isSuspended: info?.[1] || false,
     businessName: info?.[2] || '',
     category: info?.[3] || '',
-    registeredAt: info?.[4] ? Number(info[4]) : 0,
+    registeredAt: info?.[4] ? safeBigIntToNumber(info[4], 0) : 0,
     totalVolume: info?.[5] ? formatEther(info[5]) : '0',
-    txCount: info?.[6] ? Number(info[6]) : 0,
+    txCount: info?.[6] ? safeBigIntToNumber(info[6], 0) : 0,
     isLoading,
     refetch,
   }
@@ -62,7 +64,9 @@ export function useRegisterMerchant() {
       })
       return { success: true }
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Transaction failed'
+      logError('registerMerchant', err);
+      const parsed = parseContractError(err);
+      const errorMsg = `Failed to register merchant: ${parsed.userMessage}`;
       setError(errorMsg)
       return { success: false, error: errorMsg }
     }
@@ -104,7 +108,9 @@ export function useProcessPayment() {
       })
       return { success: true }
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Transaction failed'
+      logError('processPayment', err);
+      const parsed = parseContractError(err);
+      const errorMsg = `Failed to process payment: ${parsed.userMessage}`;
       setError(errorMsg)
       return { success: false, error: errorMsg }
     }
@@ -146,7 +152,9 @@ export function usePayMerchant() {
       })
       return { success: true }
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Transaction failed'
+      logError('payMerchant', err);
+      const parsed = parseContractError(err);
+      const errorMsg = `Failed to pay merchant: ${parsed.userMessage}`;
       setError(errorMsg)
       return { success: false, error: errorMsg }
     }
@@ -182,7 +190,7 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
   const info = data as CustomerTrustInfo | undefined
   
   return {
-    score: info?.[0] !== undefined ? Number(info[0]) : 5000,
+    score: info?.[0] !== undefined ? safeBigIntToNumber(info[0], 0) : 5000,
     highTrust: info?.[1] ?? false,
     lowTrust: info?.[2] ?? false,
     eligible: info?.[3] ?? false,

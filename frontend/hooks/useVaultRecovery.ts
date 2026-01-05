@@ -1,6 +1,7 @@
 import { useAccount, useWriteContract, useReadContract, useWatchContractEvent } from 'wagmi';
 import { useMemo, useEffect, useState } from 'react';
 import { USER_VAULT_ABI } from '@/lib/contracts';
+import { parseContractError, logError } from '@/lib/errorHandling';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
@@ -228,12 +229,18 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const setNextOfKinAddress = async (nextOfKinAddress: `0x${string}`) => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'setNextOfKin',
-      args: [nextOfKinAddress],
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'setNextOfKin',
+        args: [nextOfKinAddress],
+      });
+    } catch (error) {
+      logError('setNextOfKinAddress', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to set Next of Kin: ${parsed.userMessage}`);
+    }
   };
 
   // ========================
@@ -247,12 +254,18 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const setGuardian = async (guardianAddress: `0x${string}`, active: boolean) => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'setGuardian',
-      args: [guardianAddress, active],
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'setGuardian',
+        args: [guardianAddress, active],
+      });
+    } catch (error) {
+      logError('setGuardian', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to ${active ? 'add' : 'remove'} guardian: ${parsed.userMessage}`);
+    }
   };
 
   /**
@@ -280,12 +293,18 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const requestRecovery = async (candidateAddress: `0x${string}`) => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'requestRecovery',
-      args: [candidateAddress],
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'requestRecovery',
+        args: [candidateAddress],
+      });
+    } catch (error) {
+      logError('requestRecovery', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to request recovery: ${parsed.userMessage}`);
+    }
   };
 
   /**
@@ -294,11 +313,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const approveRecovery = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'approveRecovery',
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'approveRecovery',
+      });
+    } catch (error) {
+      logError('approveRecovery', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to approve recovery: ${parsed.userMessage}`);
+    }
   };
 
   /**
@@ -307,11 +332,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const finalizeRecovery = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'finalizeRecovery',
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'finalizeRecovery',
+      });
+    } catch (error) {
+      logError('finalizeRecovery', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to finalize recovery: ${parsed.userMessage}`);
+    }
   };
 
   /**
@@ -320,11 +351,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const cancelRecovery = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'cancelRecovery',
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'cancelRecovery',
+      });
+    } catch (error) {
+      logError('cancelRecovery', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to cancel recovery: ${parsed.userMessage}`);
+    }
   };
 
   // ========================
@@ -337,11 +374,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const requestInheritance = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'requestInheritance',
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'requestInheritance',
+      });
+    } catch (error) {
+      logError('requestInheritance', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to request inheritance: ${parsed.userMessage}`);
+    }
   };
 
   /**
@@ -350,11 +393,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const approveInheritance = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'approveInheritance',
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'approveInheritance',
+      });
+    } catch (error) {
+      logError('approveInheritance', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to approve inheritance: ${parsed.userMessage}`);
+    }
   };
 
   /**
@@ -363,11 +412,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const denyInheritance = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'denyInheritance',
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'denyInheritance',
+      });
+    } catch (error) {
+      logError('denyInheritance', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to deny inheritance: ${parsed.userMessage}`);
+    }
   };
 
   /**
@@ -376,11 +431,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const finalizeInheritance = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'finalizeInheritance',
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'finalizeInheritance',
+      });
+    } catch (error) {
+      logError('finalizeInheritance', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to finalize inheritance: ${parsed.userMessage}`);
+    }
   };
 
   /**
@@ -389,11 +450,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const cancelInheritance = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'cancelInheritance',
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'cancelInheritance',
+      });
+    } catch (error) {
+      logError('cancelInheritance', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to cancel inheritance: ${parsed.userMessage}`);
+    }
   };
 
   /**
@@ -402,11 +469,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const guardianCancelInheritance = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
-    return await writeContractAsync({
-      address: vaultAddress,
-      abi: USER_VAULT_ABI,
-      functionName: 'guardianCancelInheritance',
-    });
+    try {
+      return await writeContractAsync({
+        address: vaultAddress,
+        abi: USER_VAULT_ABI,
+        functionName: 'guardianCancelInheritance',
+      });
+    } catch (error) {
+      logError('guardianCancelInheritance', error);
+      const parsed = parseContractError(error);
+      throw new Error(`Failed to cancel inheritance as guardian: ${parsed.userMessage}`);
+    }
   };
 
   return {

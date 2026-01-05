@@ -7,6 +7,7 @@ import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI, UserVaultABI, VaultInfrastructureABI } from '../lib/abis'
 import { validateAddress } from '../lib/validation'
+import { parseContractError, logError } from '@/lib/errorHandling';
 
 // ============================================
 // VAULT HOOKS - Non-custodial vault management
@@ -205,17 +206,10 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Transaction failed'
-      if (errorMsg.includes('RecoveryActive')) {
-        setError('Cannot modify guardians during active recovery')
-      } else if (errorMsg.includes('Locked')) {
-        setError('Vault is currently locked')
-      } else if (errorMsg.includes('NotOwner')) {
-        setError('Only vault owner can modify guardians')
-      } else {
-        setError(errorMsg)
-      }
-      return { success: false, error: errorMsg }
+      logError('setGuardian', err);
+      const parsed = parseContractError(err);
+      setError(parsed.userMessage);
+      return { success: false, error: parsed.userMessage }
     }
   }
 
@@ -298,7 +292,9 @@ export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : 'Transaction failed' }
+      logError('setSnapshotMode', err);
+      const parsed = parseContractError(err);
+      return { success: false, error: parsed.userMessage }
     }
   }
 
@@ -331,7 +327,9 @@ export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : 'Transaction failed' }
+      logError('updateSnapshot', err);
+      const parsed = parseContractError(err);
+      return { success: false, error: parsed.userMessage }
     }
   }
 
@@ -430,7 +428,9 @@ export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : 'Transaction failed' }
+      logError('approvePendingTransaction', err);
+      const parsed = parseContractError(err);
+      return { success: false, error: parsed.userMessage }
     }
   }
 
@@ -464,7 +464,9 @@ export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : 'Transaction failed' }
+      logError('executePendingTransaction', err);
+      const parsed = parseContractError(err);
+      return { success: false, error: parsed.userMessage }
     }
   }
 
@@ -498,7 +500,9 @@ export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : 'Transaction failed' }
+      logError('cleanupExpiredTransaction', err);
+      const parsed = parseContractError(err);
+      return { success: false, error: parsed.userMessage }
     }
   }
 
