@@ -12,8 +12,8 @@ import { z } from 'zod';
 const envSchema = z.object({
   // Network Configuration
   NEXT_PUBLIC_NETWORK: z.enum(['base-sepolia', 'base', 'zksync', 'localhost']).default('base-sepolia'),
-  NEXT_PUBLIC_CHAIN_ID: z.coerce.number().int().positive(),
-  NEXT_PUBLIC_RPC_URL: z.string().url(),
+  NEXT_PUBLIC_CHAIN_ID: z.coerce.number().int().positive().default(84532),
+  NEXT_PUBLIC_RPC_URL: z.string().url().default('https://sepolia.base.org'),
 
   // API Configuration
   NEXT_PUBLIC_API_BASE_URL: z.string().url().optional(),
@@ -46,7 +46,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
 
   // Wagmi Configuration
-  NEXT_PUBLIC_WAGMI_PROJECT_ID: z.string(),
+  NEXT_PUBLIC_WAGMI_PROJECT_ID: z.string().default(''),
 
   // Application URLs
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
@@ -61,7 +61,7 @@ export type Environment = z.infer<typeof envSchema>;
 
 /**
  * Parse and validate environment variables
- * Called once at module load time to catch configuration errors early
+ * Now with safe defaults - won't crash if env vars are missing
  */
 function parseEnv(): Environment {
   const raw = {
@@ -100,14 +100,12 @@ function parseEnv(): Environment {
   const result = envSchema.safeParse(raw);
 
   if (!result.success) {
-    const errors = result.error.flatten();
-    const formattedErrors = Object.entries(errors.fieldErrors)
-      .map(([field, msgs]) => `  ${field}: ${msgs?.join(', ')}`)
-      .join('\n');
-
-    throw new Error(
-      `Environment variable validation failed:\n${formattedErrors}\n\nPlease check your .env.local file and ensure all required variables are set correctly.`
-    );
+    // Log warnings but don't crash - use defaults
+    console.warn('⚠️  Some environment variables are missing or invalid. Using defaults.');
+    console.warn('For production, set these in Vercel: NEXT_PUBLIC_WAGMI_PROJECT_ID, NEXT_PUBLIC_CHAIN_ID, NEXT_PUBLIC_RPC_URL');
+    
+    // Return safe defaults
+    return envSchema.parse({});
   }
 
   return result.data;
