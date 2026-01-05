@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronRight, Clock, FileText, Sparkles, Users } from 'lucide-react'
 import { useAccount } from 'wagmi'
+import { safeBigIntToNumber } from '@/lib/validation';
 
 import { useCountdown } from './useCountdown'
 
@@ -22,11 +23,11 @@ export function OverviewTab({
 }) {
   const { address } = useAccount()
   const votingPowerTuple = votingPowerData as readonly [bigint, bigint, bigint] | undefined
-  const votingPower = votingPowerTuple?.[2] ? Number(votingPowerTuple[2]) : score || 0
+  const votingPower = votingPowerTuple?.[2] ? safeBigIntToNumber(votingPowerTuple[2], 0) : score || 0
   const isEligibleBool = (isEligible as boolean) || false
 
   const voterStatsTuple = voterStats as readonly [bigint, bigint] | undefined
-  const votesCast = voterStatsTuple?.[0] ? Number(voterStatsTuple[0]) : 0
+  const votesCast = voterStatsTuple?.[0] ? safeBigIntToNumber(voterStatsTuple[0], 0) : 0
 
   return (
     <>

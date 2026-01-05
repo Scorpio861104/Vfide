@@ -309,7 +309,7 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
             <span className="text-gray-400">Next Unlock</span>
             <span className="text-white font-bold">
               {vestingStatus && vestingStatus[5] > 0n 
-                ? new Date(Number(vestingStatus[5]) * 1000).toLocaleDateString()
+                ? new Date(safeBigIntToNumber(vestingStatus[5], 0) * 1000).toLocaleDateString()
                 : 'Complete'}
             </span>
           </div>

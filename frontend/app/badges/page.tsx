@@ -17,6 +17,7 @@ import {
   getAllBadges,
   type BadgeMetadata 
 } from '@/lib/badge-registry'
+import { safeParseInt } from '@/lib/validation';
 
 // Contract ABIs
 const BADGE_NFT_ABI = [
@@ -166,7 +167,7 @@ export default function BadgesPage() {
   })
 
   const earnedCount = allBadges.filter(b => mockUserBadges[b.name]?.earned).length
-  const mintedCount = Number(nftBalance ?? 0) || allBadges.filter(b => mockUserBadges[b.name]?.minted).length
+  const mintedCount = safeParseInt(nftBalance?.toString(), 0) || allBadges.filter(b => mockUserBadges[b.name]?.minted).length
   const totalPoints = allBadges.filter(b => mockUserBadges[b.name]?.earned).reduce((sum, b) => sum + b.points, 0)
 
   const tabs: { id: TabId; label: string; count: number }[] = [
