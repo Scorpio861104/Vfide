@@ -481,7 +481,7 @@ export default function EnhancedDashboardAnalytics() {
               { value: 'stake', label: 'Staking' },
             ]}
             value={transactionFilter}
-            onChange={(value) => setTransactionFilter(value)}
+            onChange={(e) => setTransactionFilter(e.target.value)}
           />
 
           <MobileSelect
@@ -493,7 +493,7 @@ export default function EnhancedDashboardAnalytics() {
               { value: 'all', label: 'All time' },
             ]}
             value={timeFilter}
-            onChange={(value) => setTimeFilter(value)}
+            onChange={(e) => setTimeFilter(e.target.value)}
           />
         </div>
 
