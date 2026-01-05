@@ -15,7 +15,7 @@ export default function AddressPage() {
   const params = useParams()
   const { address: connectedAddress } = useAccount()
   const address = params.id as `0x${string}`
-  const { copied, copyToClipboard } = useCopyToClipboard()
+  const { copied, copy } = useCopyToClipboard()
   
   // Validate address format
   const isValidAddress = address && address.startsWith('0x') && address.length === 42
@@ -26,7 +26,7 @@ export default function AddressPage() {
   // Suppress unused variable warning - score is part of returned data structure
   void score
 
-  const copyAddress = () => copyToClipboard(address)
+  const copyAddress = () => copy(address)
 
   if (!isValidAddress) {
     return (

@@ -175,4 +175,6 @@ export function getContractAddress(contractName: string): `0x${string}` {
   return (address as `0x${string}`) || ('0x0000000000000000000000000000000000000000' as const);
 }
 
-export default getEnv();
+// Export the function itself (lazy evaluation)
+// This prevents execution during module load/build time
+export default getEnv;
