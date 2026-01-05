@@ -588,7 +588,6 @@ function BulkPaymentsSection({
           />
           <label htmlFor="csv-upload">
             <MobileButton
-              as="span"
               fullWidth
               disabled={uploading}
               className="cursor-pointer"

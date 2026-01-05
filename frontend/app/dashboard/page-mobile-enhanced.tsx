@@ -10,13 +10,6 @@ import { MobileDrawer } from '@/components/mobile/MobileDrawer';
 import { MobileButton } from '@/components/mobile/MobileForm';
 import { RESPONSIVE_GRIDS, ResponsiveContainer } from '@/lib/mobile';
 
-// Dashboard Sections
-import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
-import { PortfolioChart } from '@/components/dashboard/PortfolioChart';
-import { ProofScoreCard } from '@/components/dashboard/ProofScoreCard';
-import { TransactionHistory } from '@/components/dashboard/TransactionHistory';
-import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
-
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');

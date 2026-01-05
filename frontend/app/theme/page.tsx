@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export default function ThemeManagementPage() {
-  const { settings, currentTheme, setTheme, setMode, exportTheme, importTheme, resetToDefaults } =
+  const { settings, currentTheme, setTheme, setMode, exportTheme, importTheme, resetToDefault } =
     useThemeManager();
 
   const [activeTab, setActiveTab] = useState<'presets' | 'customizer' | 'preview' | 'advanced'>('presets');
@@ -35,7 +35,7 @@ export default function ThemeManagementPage() {
     return {
       name: preset?.name || 'Default',
       description: preset?.description || 'No description',
-      colors: preset?.colors || {},
+      colors: preset?.preview || { primary: '#00F0FF', secondary: '#A78BFA', accent: '#FF6B9D' },
     };
   }, [currentTheme]);
 
@@ -110,7 +110,7 @@ export default function ThemeManagementPage() {
                 </motion.button>
 
                 <motion.button
-                  onClick={resetToDefaults}
+                  onClick={resetToDefault}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-white transition-colors"
@@ -426,7 +426,7 @@ export default function ThemeManagementPage() {
                   Resetting to defaults will remove all customizations and restore the original theme.
                 </p>
                 <motion.button
-                  onClick={resetToDefaults}
+                  onClick={resetToDefault}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"

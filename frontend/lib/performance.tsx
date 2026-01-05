@@ -2,8 +2,8 @@
  * Web Vitals Monitoring & Optimization
  */
 
-import { useEffect } from 'react';
-import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
+import React, { useEffect } from 'react';
+import { onCLS, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
 
 interface WebVitalsMetrics {
   CLS: number; // Cumulative Layout Shift
@@ -16,7 +16,7 @@ interface WebVitalsMetrics {
 /**
  * Send metrics to analytics service
  */
-export function sendMetricsToAnalytics(metric: any) {
+export function sendMetricsToAnalytics(metric: Metric) {
   const body = JSON.stringify(metric);
   
   // Use navigator.sendBeacon if available (doesn't block page unload)
@@ -40,11 +40,11 @@ export function sendMetricsToAnalytics(metric: any) {
 export function useWebVitals() {
   useEffect(() => {
     try {
-      getCLS(sendMetricsToAnalytics);
-      getFID(sendMetricsToAnalytics);
-      getFCP(sendMetricsToAnalytics);
-      getLCP(sendMetricsToAnalytics);
-      getTTFB(sendMetricsToAnalytics);
+      onCLS(sendMetricsToAnalytics);
+      onFCP(sendMetricsToAnalytics);
+      onLCP(sendMetricsToAnalytics);
+      onTTFB(sendMetricsToAnalytics);
+      onINP(sendMetricsToAnalytics);
     } catch (error) {
       console.error('Error monitoring Web Vitals:', error);
     }
@@ -174,7 +174,7 @@ export const ResourceHints = {
   /**
    * Preload critical resources
    */
-  preload: (href: string, as: string, crossOrigin?: string) => (
+  preload: (href: string, as: string, crossOrigin?: 'anonymous' | 'use-credentials') => (
     <link
       rel="preload"
       href={href}
@@ -193,7 +193,7 @@ export const ResourceHints = {
   /**
    * Preconnect to external services
    */
-  preconnect: (href: string, crossOrigin?: string) => (
+  preconnect: (href: string, crossOrigin?: 'anonymous' | 'use-credentials') => (
     <link
       rel="preconnect"
       href={href}
@@ -244,11 +244,12 @@ export function measurePerformance(label: string) {
 export function detectMemoryLeaks() {
   if (typeof window === 'undefined') return;
 
-  const initialMemory = performance.memory?.usedJSHeapSize || 0;
+  const perfWithMemory = performance as Performance & { memory?: { usedJSHeapSize: number } };
+  const initialMemory = perfWithMemory.memory?.usedJSHeapSize ?? 0;
 
   return {
     check: () => {
-      const currentMemory = performance.memory?.usedJSHeapSize || 0;
+      const currentMemory = perfWithMemory.memory?.usedJSHeapSize ?? 0;
       const diff = currentMemory - initialMemory;
       
       if (diff > 10 * 1024 * 1024) { // 10MB threshold

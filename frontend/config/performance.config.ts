@@ -143,30 +143,26 @@ export function getImageProps(src: string, alt: string) {
 // Font Optimization
 // ============================================
 
-/*
+// Example font optimization (reference only)
 // next.config.js
-const withTM = require('next-transpile-modules')(['geist']);
-
-module.exports = withTM({
-  // ... other config
-  experimental: {
-    fontLoaders: [
-      { loader: 'next/font/google', options: { subsets: ['latin'] } },
-    ],
-  },
-});
-
+// const withTM = require('next-transpile-modules')(['geist']);
+// module.exports = withTM({
+//   experimental: {
+//     fontLoaders: [
+//       { loader: 'next/font/google', options: { subsets: ['latin'] } },
+//     ],
+//   },
+// });
+//
 // app layout
-import { Geist, GeistMono } from 'geist/font';
-
-export default function RootLayout() {
-  return (
-    <html className={`${Geist.variable} ${GeistMono.variable}`}>
-      {/* ... */}
-    </html>
-  );
-}
-*/
+// import { Geist, GeistMono } from 'geist/font';
+// export default function RootLayout() {
+//   return (
+//     <html className={`${Geist.variable} ${GeistMono.variable}`}>
+//       {/* ... */}
+//     </html>
+//   );
+// }
 
 // ============================================
 // Service Worker Registration (Offline Support)
@@ -201,28 +197,27 @@ useEffect(() => {
 // Script Loading Strategy
 // ============================================
 
-/*
+// Example _document setup (reference only)
 // pages/_document.tsx
-import Document, { Html, Head, Main, NextScript } from 'next/document';
-
-export default class MyDocument extends Document {
-  render() {
-    return (
-      <Html lang="en">
-        <Head>
-          {/* Critical styles */}
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    );
-  }
-}
-*/
+// import Document, { Html, Head, Main, NextScript } from 'next/document';
+//
+// export default class MyDocument extends Document {
+//   render() {
+//     return (
+//       <Html lang="en">
+//         <Head>
+//           {/* Critical styles */}
+//           <link rel="preconnect" href="https://fonts.googleapis.com" />
+//           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+//         </Head>
+//         <body>
+//           <Main />
+//           <NextScript />
+//         </body>
+//       </Html>
+//     );
+//   }
+// }
 
 // ============================================
 // Performance Budgets

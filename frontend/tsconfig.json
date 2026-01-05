@@ -43,6 +43,10 @@
     "playwright/**",
     "vitest.config.ts",
     "vitest.setup.ts",
-    "__tests__/**"
+    "__tests__/**",
+    "hooks/__tests__/**",
+    "**/*.stories.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

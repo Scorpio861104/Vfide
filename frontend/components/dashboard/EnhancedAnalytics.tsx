@@ -198,7 +198,7 @@ export function PortfolioValueChart({ data }: { data: PortfolioDataPoint[] }) {
           <YAxis 
             stroke="#9ca3af"
             style={{ fontSize: '12px' }}
-            tickFormatter={(value) => `$${value.toLocaleString()}`}
+            tickFormatter={(value: number) => `$${value.toLocaleString()}`}
           />
           <Tooltip
             contentStyle={{
@@ -229,14 +229,14 @@ export function AssetAllocationChart({ allocations }: { allocations: AssetAlloca
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={allocations}
+            data={allocations as any}
             cx="50%"
             cy="50%"
             innerRadius={60}
             outerRadius={100}
             paddingAngle={2}
             dataKey="value"
-            label={({ name, percentage }) => `${name} ${percentage}%`}
+            labelLine={false}
           >
             {allocations.map((entry) => (
               <Cell key={`cell-${entry.name}`} fill={entry.color} />
@@ -481,7 +481,7 @@ export default function EnhancedDashboardAnalytics() {
               { value: 'stake', label: 'Staking' },
             ]}
             value={transactionFilter}
-            onChange={(value) => setTransactionFilter(value)}
+            onChange={(e) => setTransactionFilter(e.target.value)}
           />
 
           <MobileSelect
@@ -493,7 +493,7 @@ export default function EnhancedDashboardAnalytics() {
               { value: 'all', label: 'All time' },
             ]}
             value={timeFilter}
-            onChange={(value) => setTimeFilter(value)}
+            onChange={(e) => setTimeFilter(e.target.value)}
           />
         </div>
 

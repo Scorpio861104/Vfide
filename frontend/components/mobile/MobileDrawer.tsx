@@ -29,8 +29,9 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
   const navRef = useRef<HTMLElement | null>(null);
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
   const childContent = useMemo(() => {
-    if (React.isValidElement(children) && (children as React.ReactElement).type === 'nav') {
-      return (children as React.ReactElement).props.children;
+    if (React.isValidElement(children) && children.type === 'nav') {
+      const navElement = children as React.ReactElement<{ children?: React.ReactNode }>;
+      return navElement.props.children;
     }
     return children;
   }, [children]);

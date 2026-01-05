@@ -62,6 +62,18 @@ export const responsiveGrids = {
 };
 
 /**
+ * Legacy/compat grid helpers used across dashboards and docs
+ */
+export const RESPONSIVE_GRIDS = {
+  // Card layouts: 1 col mobile, 2 col tablet, 3 col desktop with gap baked in
+  cards: `grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4`,
+  // 3-column responsive template
+  grid3: responsiveGrids.balanced,
+  // 4-column responsive template
+  grid4: responsiveGrids.auto,
+};
+
+/**
  * Safe area padding for notched devices
  */
 export const safeArea = {

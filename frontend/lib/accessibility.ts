@@ -4,6 +4,7 @@
  */
 
 import { render } from '@testing-library/react';
+// @ts-expect-error - jest-axe lacks type definitions but provides runtime functionality
 import { axe, toHaveNoViolations } from 'jest-axe';
 
 expect.extend(toHaveNoViolations);
