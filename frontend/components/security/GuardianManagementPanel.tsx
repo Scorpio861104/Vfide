@@ -16,6 +16,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagm
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { Users, Plus, X, Shield, AlertTriangle, Clock } from 'lucide-react'
 import { isAddress, zeroAddress } from 'viem'
+import { safeParseInt } from '@/lib/validation'
 
 const ZERO_ADDRESS = zeroAddress
 
@@ -301,7 +302,7 @@ export function GuardianManagementPanel() {
               max={Math.max(guardians.guardianCount, 1)}
               value={newThreshold}
               onChange={(e) => {
-                setNewThreshold(Number(e.target.value))
+                setNewThreshold(safeParseInt(e.target.value, 1, { min: 1, max: guardians.guardianCount }))
                 setThresholdError(null)
               }}
               aria-label="Guardian threshold for locking vault"

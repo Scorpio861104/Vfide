@@ -20,6 +20,7 @@
 import React, { useState, useEffect } from 'react';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
+import { safeParseFloat } from '@/lib/validation';
 
 // ==================== TYPES ====================
 
@@ -260,7 +261,7 @@ function shortenAddress(address: string): string {
 }
 
 function formatBalance(balance: string, decimals: number = 18): string {
-  const num = parseFloat(balance) / Math.pow(10, decimals);
+  const num = safeParseFloat(balance, 0) / Math.pow(10, decimals);
   if (num < 0.01) return '< 0.01';
   if (num < 1) return num.toFixed(4);
   if (num < 1000) return num.toFixed(2);

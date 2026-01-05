@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Users, TrendingUp, Clock } from 'lucide-react'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { SeerABI } from '@/lib/abis'
+import { safeBigIntToNumber } from '@/lib/validation'
 
 interface EndorsementStatsProps {
   address?: `0x${string}`
@@ -30,7 +31,7 @@ export function EndorsementStats({
 
   const stats = statsData as readonly [bigint, bigint, bigint] | undefined
   const [activeEndorsers = 0, activeBonus = 0, youGave = 0] = stats ? 
-    [Number(stats[0]), Number(stats[1]), Number(stats[2])] : 
+    [safeBigIntToNumber(stats[0], 0), safeBigIntToNumber(stats[1], 0), safeBigIntToNumber(stats[2], 0)] : 
     [0, 0, 0]
 
   const sizeClasses = size === 'small' ? 'text-sm' : 'text-base'

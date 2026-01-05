@@ -16,6 +16,7 @@
 import React, { useState } from 'react';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
+import { safeParseFloat } from '@/lib/validation';
 
 // ==================== TYPES ====================
 
@@ -207,7 +208,7 @@ export default function MerchantPortal() {
     if (newRequest.amount && newRequest.email && newRequest.description) {
       const request: PaymentRequest = {
         id: `pr-${Date.now()}`,
-        amount: parseFloat(newRequest.amount),
+        amount: safeParseFloat(newRequest.amount, 0),
         currency: newRequest.currency,
         description: newRequest.description,
         recipientEmail: newRequest.email,

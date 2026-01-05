@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 import { IS_TESTNET, FAUCET_URLS } from '@/lib/testnet';
 import { Droplets, ExternalLink, Copy, Check } from 'lucide-react';
+import { safeParseFloat } from '@/lib/validation';
+import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard';
 
 /**
  * Faucet button for testnet - shows "Get ETH" when balance is low
@@ -11,24 +13,17 @@ import { Droplets, ExternalLink, Copy, Check } from 'lucide-react';
  */
 export function FaucetButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const { copied, copyToClipboard } = useCopyToClipboard();
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
 
   // Only show on testnet when connected
   if (!IS_TESTNET || !isConnected) return null;
 
-  const ethBalance = balance ? parseFloat(balance.formatted) : 0;
+  const ethBalance = balance ? safeParseFloat(balance.formatted, 0) : 0;
   const isLowBalance = ethBalance < 0.01;
 
-  const copyAddress = () => {
-    if (address) {
-      navigator.clipboard.writeText(address);
-      setCopied(true);
-      const timer = setTimeout(() => setCopied(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  };
+  const copyAddress = () => address && copyToClipboard(address);
 
   return (
     <div className="relative">

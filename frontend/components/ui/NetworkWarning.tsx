@@ -6,6 +6,7 @@ import { baseSepolia, base } from 'wagmi/chains';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IS_TESTNET, CURRENT_CHAIN_ID } from '@/lib/testnet';
+import { safeParseInt } from '@/lib/validation';
 
 const DISMISS_KEY = 'vfide-network-warning-dismissed';
 const DISMISS_DURATION = 1000 * 60 * 60; // 1 hour
@@ -28,7 +29,7 @@ export function NetworkWarning() {
   useEffect(() => {
     const timer = setTimeout(() => {
       const dismissedUntil = localStorage.getItem(DISMISS_KEY);
-      if (dismissedUntil && Date.now() < parseInt(dismissedUntil)) {
+      if (dismissedUntil && Date.now() < safeParseInt(dismissedUntil, 0)) {
         setDismissed(prev => prev !== true ? true : prev);
       } else {
         setDismissed(prev => prev !== false ? false : prev);
