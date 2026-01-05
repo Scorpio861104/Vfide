@@ -1185,10 +1185,14 @@ function SuggestionsTab() {
   const handleSubmit = () => {
     if (!newSuggestion.title.trim() || !newSuggestion.description.trim()) return;
     
+    // Sanitize user inputs to prevent XSS
+    const sanitizedTitle = sanitizeString(newSuggestion.title, 100);
+    const sanitizedDescription = sanitizeString(newSuggestion.description, 2000);
+    
     const suggestion: Suggestion = {
       id: suggestions.length + 1,
-      title: newSuggestion.title,
-      description: newSuggestion.description,
+      title: sanitizedTitle,
+      description: sanitizedDescription,
       category: newSuggestion.category,
       author: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Anonymous',
       authorScore: 500,
@@ -1682,9 +1686,13 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
   const handleNewThread = () => {
     if (!newThread.title.trim() || !newThread.content.trim()) return;
     
+    // Sanitize user inputs to prevent XSS
+    const sanitizedTitle = sanitizeString(newThread.title, 100);
+    const sanitizedContent = sanitizeString(newThread.content, 2000);
+    
     const thread: Discussion = {
       id: discussions.length + 1,
-      title: newThread.title,
+      title: sanitizedTitle,
       author: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Anonymous',
       authorScore: 500,
       timestamp: 'Just now',
@@ -1693,7 +1701,7 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
       lastReply: '-',
       isPinned: false,
       category: newThread.category as Discussion['category'],
-      preview: newThread.content.slice(0, 150) + '...'
+      preview: sanitizedContent.slice(0, 150) + '...'
     };
     
     setDiscussions([thread, ...discussions]);
@@ -1704,11 +1712,14 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
   const handleReply = () => {
     if (!newReply.trim()) return;
     
+    // Sanitize reply content to prevent XSS
+    const sanitizedReply = sanitizeString(newReply, 1000);
+    
     const reply: Reply = {
       id: replies.length + 1,
       author: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Anonymous',
       authorScore: 500,
-      content: newReply,
+      content: sanitizedReply,
       timestamp: 'Just now',
       likes: 0
     };
@@ -1979,8 +1990,13 @@ function CreateProposalTab() {
     e.preventDefault();
     if (!canCreate || !isConnected) return;
     
+    // Sanitize form data to prevent XSS
+    const sanitizedTitle = sanitizeString(formData.title, 100);
+    const sanitizedDescription = sanitizeString(formData.description, 2000);
+    
     setIsSubmitting(true);
-    // In production: call DAO.propose(targets, values, calldatas, description)
+    // In production: call DAO.propose with sanitized data
+    // DAO.propose(targets, values, calldatas, sanitizedDescription)
     await new Promise(r => setTimeout(r, 2000));
     setIsSubmitting(false);
     alert('Proposal submitted! It will appear in Active Proposals after confirmation.');
@@ -2214,8 +2230,12 @@ function CouncilTab() {
 
   const handleRegister = async () => {
     if (!canRun || !candidateStatement) return;
+    
+    // Sanitize candidate statement to prevent XSS
+    const sanitizedStatement = sanitizeString(candidateStatement, 500);
+    
     setIsRegistering(true);
-    // In production: call CouncilElection.register(statement)
+    // In production: call CouncilElection.register(sanitizedStatement)
     await new Promise(r => setTimeout(r, 2000));
     setIsRegistering(false);
     alert('Registration submitted! You are now a council candidate.');

@@ -70,6 +70,10 @@ export function CreateProposalTab({
   const handleSubmit = () => {
     if (!isValid || !canPropose || isCreating || !onPropose) return
 
+    // Sanitize user inputs to prevent XSS
+    const sanitizedTitle = sanitizeString(proposal.title, 100)
+    const sanitizedDescription = sanitizeString(proposal.description, 2000)
+
     const targets: `0x${string}`[] = proposal.targetContract
       ? [proposal.targetContract as `0x${string}`]
       : []
@@ -82,7 +86,7 @@ export function CreateProposalTab({
       ? [(proposal.calldata as `0x${string}`) || "0x"]
       : []
 
-    const fullDescription = `# ${proposal.title}\n\n${proposal.description}\n\n---\nCategory: ${proposal.category}\nDuration: ${proposal.duration} days`
+    const fullDescription = `# ${sanitizedTitle}\n\n${sanitizedDescription}\n\n---\nCategory: ${proposal.category}\nDuration: ${proposal.duration} days`
 
     onPropose(targets, values, calldatas, fullDescription)
   }

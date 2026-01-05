@@ -187,10 +187,15 @@ export function SuggestionsTab() {
 
   const handleSubmit = () => {
     if (!newSuggestion.title.trim() || !newSuggestion.description.trim()) return
+    
+    // Sanitize user inputs to prevent XSS
+    const sanitizedTitle = sanitizeString(newSuggestion.title, 100)
+    const sanitizedDescription = sanitizeString(newSuggestion.description, 2000)
+    
     const suggestion: Suggestion = {
       id: suggestions.length + 1,
-      title: newSuggestion.title,
-      description: newSuggestion.description,
+      title: sanitizedTitle,
+      description: sanitizedDescription,
       category: newSuggestion.category,
       author: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Anonymous",
       authorScore: 500,
