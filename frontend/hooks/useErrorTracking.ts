@@ -31,8 +31,10 @@ const MAX_ERRORS = 500;
 export function useErrorTracking(): UseErrorTrackingResult {
   const [errors, setErrors] = useState<ErrorLog[]>([]);
 
-  // Load errors from localStorage on mount
+  // Load errors from localStorage on mount with SSR safety
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -44,8 +46,10 @@ export function useErrorTracking(): UseErrorTrackingResult {
     }
   }, []);
 
-  // Save errors to localStorage whenever they change
+  // Save errors to localStorage whenever they change with SSR safety
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(errors));
     } catch (e) {

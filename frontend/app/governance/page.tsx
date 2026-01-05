@@ -85,7 +85,17 @@ export default function GovernancePage() {
 
   // Contract write hooks
   const { writeContract, data: hash } = useWriteContract();
-  useWaitForTransactionReceipt({ hash });
+  const { isSuccess } = useWaitForTransactionReceipt({ hash });
+  const [lastAction, setLastAction] = useState('');
+
+  // Handle transaction success without setState in effect
+  useEffect(() => {
+    if (isSuccess && lastAction) {
+      // Action succeeded, clear after a delay
+      const timer = setTimeout(() => setLastAction(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, lastAction]);
 
   // Read active proposals (used in UI - keep for feature)
   useReadContract({

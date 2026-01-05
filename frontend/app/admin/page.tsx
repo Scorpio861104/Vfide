@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatEther } from 'viem';
+import { safeParseInt, safeBigIntToNumber } from '@/lib/validation';
 
 // Transaction history type
 type AdminTransaction = {
@@ -784,7 +785,7 @@ export default function AdminPanel() {
         circuitBreaker,
       },
       supply: {
-        totalSupply: totalSupply ? Number(totalSupply) / 1e18 : 0,
+        totalSupply: totalSupply ? safeBigIntToNumber(totalSupply as bigint, 18) : 0,
         maxSupply: 200000000,
       },
     };
@@ -799,12 +800,12 @@ export default function AdminPanel() {
 
   const handleUpdateBurnPolicy = () => {
     const params = {
-      baseBurnBps: parseInt(burnParams.baseBurnBps) || Number(baseBurnBps) || 0,
-      baseSanctumBps: parseInt(burnParams.baseSanctumBps) || Number(baseSanctumBps) || 0,
-      baseEcosystemBps: parseInt(burnParams.baseEcosystemBps) || Number(baseEcosystemBps) || 0,
-      highTrustReduction: parseInt(burnParams.highTrustReduction) || Number(highTrustReduction) || 0,
-      lowTrustPenalty: parseInt(burnParams.lowTrustPenalty) || Number(lowTrustPenalty) || 0,
-      maxTotalBps: parseInt(burnParams.maxTotalBps) || Number(maxTotalBps) || 0,
+      baseBurnBps: safeParseInt(burnParams.baseBurnBps, safeParseInt(baseBurnBps, 0), { min: 0, max: 10000 }),
+      baseSanctumBps: safeParseInt(burnParams.baseSanctumBps, safeParseInt(baseSanctumBps, 0), { min: 0, max: 10000 }),
+      baseEcosystemBps: safeParseInt(burnParams.baseEcosystemBps, safeParseInt(baseEcosystemBps, 0), { min: 0, max: 10000 }),
+      highTrustReduction: safeParseInt(burnParams.highTrustReduction, safeParseInt(highTrustReduction, 0), { min: 0, max: 10000 }),
+      lowTrustPenalty: safeParseInt(burnParams.lowTrustPenalty, safeParseInt(lowTrustPenalty, 0), { min: 0, max: 10000 }),
+      maxTotalBps: safeParseInt(burnParams.maxTotalBps, safeParseInt(maxTotalBps, 0), { min: 0, max: 10000 }),
     };
 
     // Validation

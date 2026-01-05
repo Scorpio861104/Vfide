@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { formatUnits, parseUnits } from 'viem'
+import { safeBigIntToNumber, safeParseFloat } from '@/lib/validation'
 import {
   Gift,
   Trophy,
@@ -129,15 +130,15 @@ export default function RewardsPage() {
     query: { enabled: IS_LIQUIDITY_DEPLOYED },
   });
 
-  // Calculate totals from contract data
+  // Calculate totals from contract data with safe conversions
   const dutyClaimable = dutyPoints && rewardPerPoint && dutyClaimed
-    ? Number(formatUnits((dutyPoints * rewardPerPoint) - dutyClaimed, 18))
+    ? safeParseFloat(formatUnits((dutyPoints * rewardPerPoint) - dutyClaimed, 18), 0)
     : 0;
 
-  const promoTotalClaimed = userPromoStats ? Number(formatUnits(userPromoStats[4], 18)) : 0;
+  const promoTotalClaimed = userPromoStats ? safeParseFloat(formatUnits(userPromoStats[4], 18), 0) : 0;
 
   const totalClaimable = dutyClaimable; // Add other claimable amounts
-  const totalEarned = promoTotalClaimed + (dutyClaimed ? Number(formatUnits(dutyClaimed, 18)) : 0);
+  const totalEarned = promoTotalClaimed + (dutyClaimed ? safeParseFloat(formatUnits(dutyClaimed, 18), 0) : 0);
 
   // Claim handlers
   const handleClaimDuty = () => {

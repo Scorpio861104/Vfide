@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { safeParseInt, validateAddress } from '@/lib/validation'
 import { 
   Shield, 
   Package, 
@@ -141,9 +142,16 @@ export default function EscrowPage() {
 
   // Contract action handlers
   const handleCreateEscrow = () => {
-    if (!isAddress(createForm.merchant)) return;
+    // Validate merchant address
+    const validation = validateAddress(createForm.merchant);
+    if (!validation.valid) {
+      alert(`Invalid merchant address: ${validation.error}`);
+      return;
+    }
+    
     const amount = parseUnits(createForm.amount, 18);
-    const timeout = BigInt(parseInt(createForm.timeout) * 24 * 60 * 60);
+    const timeoutDays = safeParseInt(createForm.timeout, 7, { min: 1, max: 365 });
+    const timeout = BigInt(timeoutDays * 24 * 60 * 60);
     
     writeContract({
       address: ESCROW_MANAGER_ADDRESS,

@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI, UserVaultABI, VaultInfrastructureABI } from '../lib/abis'
+import { validateAddress } from '../lib/validation'
 
 // ============================================
 // VAULT HOOKS - Non-custodial vault management
@@ -105,6 +106,12 @@ export function useTransferVFIDE() {
   const transfer = (toVault: `0x${string}`, amount: string) => {
     if (!vaultAddress) return
     
+    // Validate recipient address
+    const validation = validateAddress(toVault)
+    if (!validation.valid) {
+      throw new Error(validation.error || 'Invalid recipient vault address')
+    }
+    
     // UserVault uses 'transfer' function
     writeContract({
       address: vaultAddress as `0x${string}`,
@@ -180,6 +187,14 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
   // C-4 Fix: Updated signature to match UserVault: setGuardian(uint8 slot, address guardian)
   const setGuardian = async (slot: number, guardianAddress: `0x${string}`) => {
     setError(null)
+    
+    // Validate guardian address
+    const addressValidation = validateAddress(guardianAddress)
+    if (!addressValidation.valid) {
+      setError(addressValidation.error || 'Invalid guardian address')
+      return { success: false, error: addressValidation.error }
+    }
+    
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,

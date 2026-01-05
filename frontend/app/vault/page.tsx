@@ -66,8 +66,14 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   
   useEffect(() => {
-    const interval = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 60000);
-    return () => clearInterval(interval);
+    // Update time every minute for countdown
+    const interval = setInterval(() => {
+      setNow(Math.floor(Date.now() / 1000));
+    }, 60000);
+    
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
   
   const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now);

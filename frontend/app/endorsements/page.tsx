@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { formatDistanceToNow } from 'date-fns'
+import { safeBigIntToNumber, ensureArray } from '@/lib/validation'
 
 const SEER_ENDORSEMENTS_ABI = [
   {
@@ -58,16 +59,16 @@ export default function EndorsementsPage() {
 
   const activeEndorsements = useMemo(
     () => {
-      const endorsers = endorsementsTuple?.[0] ?? []
-      const weights = endorsementsTuple?.[1] ?? []
-      const expiries = endorsementsTuple?.[2] ?? []
-      const timestamps = endorsementsTuple?.[3] ?? []
+      const endorsers = ensureArray(endorsementsTuple?.[0])
+      const weights = ensureArray(endorsementsTuple?.[1])
+      const expiries = ensureArray(endorsementsTuple?.[2])
+      const timestamps = ensureArray(endorsementsTuple?.[3])
 
       return endorsers.map((endorser, idx) => ({
         endorser: endorser as `0x${string}`,
-        weight: Number(weights[idx] ?? 0n),
-        expiry: Number(expiries[idx] ?? 0n) * 1000,
-        timestamp: Number(timestamps[idx] ?? 0n) * 1000,
+        weight: safeBigIntToNumber(weights[idx] ?? 0n, 0),
+        expiry: safeBigIntToNumber(expiries[idx] ?? 0n, 0) * 1000,
+        timestamp: safeBigIntToNumber(timestamps[idx] ?? 0n, 0) * 1000,
       }))
     },
     [endorsementsTuple]
@@ -91,9 +92,9 @@ export default function EndorsementsPage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             {[
-              { value: Number(stats?.[0] || 0), label: 'Total Endorsements', color: 'red' as const },
+              { value: safeBigIntToNumber(stats?.[0], 0), label: 'Total Endorsements', color: 'red' as const },
               { value: activeEndorsements.length, label: 'Active Endorsements', color: 'cyan' as const },
-              { value: Number(stats?.[1] || 0), label: 'Active Bonus', color: 'amber' as const },
+              { value: safeBigIntToNumber(stats?.[1], 0), label: 'Active Bonus', color: 'amber' as const },
             ].map((stat, idx) => (
               <SurfaceCard key={idx} interactive className="p-4">
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}>

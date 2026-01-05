@@ -586,15 +586,13 @@ function BulkPaymentsSection({
             className="hidden"
             id="csv-upload"
           />
-          <label htmlFor="csv-upload">
-            <MobileButton
-              as="span"
-              fullWidth
-              disabled={uploading}
-              className="cursor-pointer"
-            >
-              {uploading ? '⏳ Uploading...' : '📤 Choose File'}
-            </MobileButton>
+          <label htmlFor="csv-upload" className={`
+            block w-full min-h-[48px] text-base font-semibold rounded-lg
+            transition-all active:scale-95 cursor-pointer text-center
+            px-4 py-3 bg-[#00F0FF] text-[#1A1A1D] hover:bg-[#00D4FF]
+            ${uploading ? 'opacity-60 cursor-not-allowed' : ''}
+          `}>
+            {uploading ? '⏳ Uploading...' : '📤 Choose File'}
           </label>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
             CSV format: email, amount, currency, description

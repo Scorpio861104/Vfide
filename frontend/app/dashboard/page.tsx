@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { ProofScoreRing } from "@/components/ui/ProofScoreRing";
 import { PageWrapper } from "@/components/ui/PageLayout";
 import { motion, AnimatePresence } from "framer-motion";
+import { safeParseFloat, safeParseInt } from "@/lib/validation";
 import { 
   Wallet, ArrowUpRight, ArrowDownLeft, Shield, ExternalLink, Copy, 
   CheckCircle2, TrendingUp, Activity, Trophy, Star, Award,
@@ -147,7 +148,8 @@ export default function DashboardPage() {
   const walletAddress = address || "";
   const walletBalance = vaultLoading ? "Loading..." : vaultBalanceRaw;
   const PRESALE_REFERENCE_PRICE = 0.01;
-  const usdValue = vaultLoading ? "..." : (parseFloat(vaultBalanceRaw) * PRESALE_REFERENCE_PRICE).toFixed(2);
+  const balanceValue = safeParseFloat(vaultBalanceRaw, 0);
+  const usdValue = vaultLoading ? "..." : (balanceValue * PRESALE_REFERENCE_PRICE).toFixed(2);
   
   const copyAddress = () => {
     navigator.clipboard.writeText(walletAddress);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { safeBigIntToNumber, safeParseFloat } from '@/lib/validation'
 import { 
   Banknote, 
   Play, 
@@ -259,7 +260,12 @@ export default function PayrollPage() {
   // Calculate runway
   const calculateRunway = (stream: StreamData): number => {
     if (stream.ratePerSecond === BigInt(0)) return Infinity
-    return Number(stream.depositBalance / stream.ratePerSecond)
+    // Safe conversion for runway calculation
+    try {
+      return safeBigIntToNumber(stream.depositBalance / stream.ratePerSecond, 0)
+    } catch {
+      return Infinity // Value too large
+    }
   }
 
   // Stats
@@ -275,12 +281,12 @@ export default function PayrollPage() {
   const pausedStreamCount = filteredStreams.filter(s => s.paused).length
 
   const formatAmount = (amount: bigint): string => {
-    return (Number(amount) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })
+    return safeBigIntToNumber(amount, 18).toLocaleString(undefined, { maximumFractionDigits: 2 })
   }
 
   const formatRate = (ratePerSecond: bigint): string => {
     // Convert to monthly rate for readability
-    const monthlyRate = Number(ratePerSecond) * 30 * 24 * 60 * 60 / 1e18
+    const monthlyRate = safeBigIntToNumber(ratePerSecond, 0) * 30 * 24 * 60 * 60 / 1e18
     return monthlyRate.toLocaleString(undefined, { maximumFractionDigits: 0 })
   }
 
