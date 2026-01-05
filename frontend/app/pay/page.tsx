@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAccount } from "wagmi";
 import { motion } from "framer-motion";
 import { Shield, Sparkles, CreditCard, Loader2 } from "lucide-react";
+import { safeParseFloat } from "@/lib/validation";
 
 function PayContent() {
   const searchParams = useSearchParams();
@@ -90,7 +91,7 @@ function PayContent() {
             <div className="mb-8">
               <div className="text-gray-400 text-sm mb-2">Amount</div>
               <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-2">${amount}</div>
-              <div className="text-gray-400">≈ {(parseFloat(amount) * 2).toFixed(0)} VFIDE</div>
+              <div className="text-gray-400">≈ {(safeParseFloat(amount, 0) * 2).toFixed(0)} VFIDE</div>
             </div>
 
             {/* Payment Method */}
@@ -136,12 +137,12 @@ function PayContent() {
               </div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-gray-400">Burn Fee (3% avg)</span>
-                <span className="text-white">${(parseFloat(amount) * 0.03).toFixed(2)}</span>
+                <span className="text-white">${(safeParseFloat(amount, 0) * 0.03).toFixed(2)}</span>
               </div>
               <div className="border-t border-white/10 my-3" />
               <div className="flex justify-between items-center">
                 <span className="text-white font-bold">Total</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-xl">${(parseFloat(amount) * 1.03).toFixed(2)}</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-xl">${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}</span>
               </div>
             </div>
 
@@ -159,7 +160,7 @@ function PayContent() {
                   Processing...
                 </>
               ) : (
-                `Pay $${(parseFloat(amount) * 1.03).toFixed(2)}`
+                `Pay $${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}`
               )}
             </motion.button>
 

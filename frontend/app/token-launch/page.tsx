@@ -8,6 +8,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadCont
 import { parseUnits, isAddress, formatEther } from "viem";
 import { Loader2, CheckCircle, Wallet, Fuel, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { safeParseFloat } from "@/lib/validation";
 
 // VFIDEPresale ABI
 const PRESALE_ABI = [
@@ -166,7 +167,7 @@ export default function TokenLaunchPage() {
   const { data: gasPrice } = useGasPrice();
   const estimatedGas = BigInt(150000); // Typical presale tx gas
   const gasCostWei = gasPrice ? estimatedGas * gasPrice : BigInt(0);
-  const gasCostEth = parseFloat(formatEther(gasCostWei));
+  const gasCostEth = safeParseFloat(formatEther(gasCostWei), 0);
   const gasCostUsd = gasCostEth * 2500; // Rough ETH price
 
   // Read tier availability
@@ -363,7 +364,7 @@ export default function TokenLaunchPage() {
 
   const calculateTotal = () => {
     if (!selectedTier || !amount) return 0;
-    const numAmount = parseFloat(amount);
+    const numAmount = safeParseFloat(amount, 0);
     if (isNaN(numAmount)) return 0;
     return numAmount * tiers[selectedTier].price;
   };

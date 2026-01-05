@@ -8,6 +8,7 @@ import {
 import { useAccount, useChainId, useBalance } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
+import { safeParseFloat } from '@/lib/validation';
 
 // Base Sepolia network details - ALWAYS VISIBLE
 const NETWORK_CONFIG = {
@@ -30,8 +31,8 @@ export default function SetupPage() {
   const [addSuccess, setAddSuccess] = useState(false)
 
   const isCorrectNetwork = chainId === CURRENT_CHAIN_ID
-  const hasBalance = balance && parseFloat(balance.formatted) > 0.001
-  const ethBalance = balance ? parseFloat(balance.formatted) : 0
+  const hasBalance = balance && safeParseFloat(balance.formatted, 0) > 0.001
+  const ethBalance = balance ? safeParseFloat(balance.formatted, 0) : 0
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)

@@ -18,6 +18,7 @@ import {
   Heart, ArrowDownToLine, ArrowUpFromLine, RefreshCw, CheckCircle2,
   Zap, DollarSign, TrendingUp
 } from "lucide-react";
+import { safeParseFloat, safeParseInt } from "@/lib/validation";
 
 // Animation variants
 const containerVariants = {
@@ -211,7 +212,7 @@ function VaultContent() {
   const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault } = useVaultHub();
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
   const PRESALE_REFERENCE_PRICE = 0.07;
-  const usdValue = (parseFloat(vaultBalance) * PRESALE_REFERENCE_PRICE).toFixed(2);
+  const usdValue = (safeParseFloat(vaultBalance, 0) * PRESALE_REFERENCE_PRICE).toFixed(2);
   
   const {
     vaultOwner,
@@ -413,9 +414,9 @@ function VaultContent() {
                       ) : (
                         <>
                           <div className="text-3xl font-bold text-white mb-1">
-                            {parseFloat(vaultBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
+                            {safeParseFloat(vaultBalance, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
                           </div>
-                          <div className="text-white/40 text-sm">≈ ${parseFloat(usdValue).toLocaleString()} USD</div>
+                          <div className="text-white/40 text-sm">≈ ${safeParseFloat(usdValue, 0).toLocaleString()} USD</div>
                         </>
                       )}
                     </GlassCard>

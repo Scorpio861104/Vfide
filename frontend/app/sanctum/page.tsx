@@ -7,6 +7,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadCont
 import { parseUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Shield, DollarSign, Users, CheckCircle, Clock, AlertTriangle, ExternalLink, Sparkles } from "lucide-react";
+import { safeParseFloat } from "@/lib/validation";
 
 // SanctumVault ABI
 const SANCTUM_VAULT_ABI = [
@@ -71,7 +72,7 @@ export default function SanctumPage() {
   // Handlers
   const handleDonate = () => {
     if (!IS_SANCTUM_DEPLOYED) return;
-    if (!donateAmount || parseFloat(donateAmount) <= 0) return;
+    if (!donateAmount || safeParseFloat(donateAmount, 0) <= 0) return;
     writeContract({
       address: SANCTUM_VAULT_ADDRESS,
       abi: SANCTUM_VAULT_ABI,
@@ -499,10 +500,10 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
           </div>
 
           <button
-            disabled={!amount || parseFloat(amount) <= 0}
+            disabled={!amount || safeParseFloat(amount, 0) <= 0}
             className="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 disabled:from-gray-600 disabled:to-gray-600 text-white font-bold rounded-lg transition-all"
           >
-            Donate {amount ? `${parseFloat(amount).toLocaleString()} VFIDE` : ''}
+            Donate {amount ? `${safeParseFloat(amount, 0).toLocaleString()} VFIDE` : ''}
           </button>
 
           <div className="bg-pink-500/10 border border-pink-500/30 rounded-lg p-4">
