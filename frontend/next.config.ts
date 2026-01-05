@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
   
   // Turbopack configuration (Next.js 16 default)
   turbopack: {
+    // Explicitly set workspace root to avoid multiple lockfile warning
+    root: __dirname,
     resolveAlias: {
       // Handle Node.js modules that aren't available in browser
       fs: { browser: '' },

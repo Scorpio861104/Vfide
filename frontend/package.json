@@ -10,7 +10,16 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --coverage --ci"
+    "test:ci": "jest --coverage --ci",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:debug": "playwright test --debug",
+    "test:a11y": "jest --testPathPatterns=a11y",
+    "test:a11y:watch": "jest --testPathPatterns=a11y --watch",
+    "test:visual": "percy exec -- npm run test:e2e",
+    "storybook": "storybook dev -p 6006",
+    "build:storybook": "storybook build"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -36,6 +45,9 @@
     "wagmi": "^2.19.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.8.0",
+    "@percy/cli": "^1.27.6",
+    "@playwright/test": "^1.48.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
@@ -44,9 +56,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "axe-core": "^4.8.0",
     "eslint": "^9",
     "eslint-config-next": "^16.1.1",
     "jest": "^30.2.0",
+    "jest-axe": "^8.0.0",
     "jest-environment-jsdom": "^30.2.0",
     "minimatch": "^10.1.1",
     "tailwindcss": "^4",

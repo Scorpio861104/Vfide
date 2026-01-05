@@ -1,0 +1,15 @@
+.percy.yml
+# Percy configuration for visual regression testing
+version: 2
+static:
+  cleanUrls: true
+  include:
+    - '/**/*.html'
+discovery:
+  network-idle-timeout: 750
+  allowed-hosts:
+    - localhost
+    - '*.local'
+  auth:
+    username: env.PERCY_AUTH_USER
+    password: env.PERCY_AUTH_PASS

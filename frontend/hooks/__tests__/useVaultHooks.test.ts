@@ -603,6 +603,26 @@ describe('useSetGuardian', () => {
     expect(response!.error).toBe('Transaction failed')
   })
 
+  it('handles UV_NotOwner error', async () => {
+    const mockWriteContractAsync = jest.fn().mockRejectedValue(new Error('UV_NotOwner'))
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContractAsync: mockWriteContractAsync,
+    })
+    ;(wagmi.useWaitForTransactionReceipt as jest.Mock).mockReturnValue({
+      isSuccess: false,
+      isLoading: false,
+    })
+
+    const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
+    const guardianAddress = '0xguardian1234567890guardian1234567890ab' as `0x${string}`
+
+    await act(async () => {
+      await result.current.setGuardian(0, guardianAddress)
+    })
+
+    expect(result.current.error).toBe('Only vault owner can modify guardians')
+  })
+
   it('returns loading state while transaction is pending', () => {
     ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
       writeContractAsync: jest.fn(),

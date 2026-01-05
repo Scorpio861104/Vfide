@@ -156,7 +156,7 @@ function OverviewTab() {
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-yellow-400">24/7</div>
           <div className="text-sm text-[#A0A0A5]">Operations</div>
-        </div>
+        </SurfaceCard>
       </div>
     </div>
   );
