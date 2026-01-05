@@ -6,6 +6,7 @@ import { useThemeManager } from '@/hooks/useThemeManager';
 import { ThemeSelector } from '@/components/theme/ThemeSelector';
 import { ThemeCustomizer } from '@/components/theme/ThemeCustomizer';
 import { ThemeName, THEME_PRESETS, ThemeMode } from '@/config/theme-manager';
+import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard';
 import {
   Palette,
   Moon,
@@ -25,7 +26,7 @@ export default function ThemeManagementPage() {
     useThemeManager();
 
   const [activeTab, setActiveTab] = useState<'presets' | 'customizer' | 'preview' | 'advanced'>('presets');
-  const [copied, setCopied] = useState(false);
+  const { copied, copyToClipboard } = useCopyToClipboard();
 
   const isDarkMode = settings.mode === ThemeMode.DARK;
 
@@ -74,11 +75,9 @@ export default function ThemeManagementPage() {
     reader.readAsText(file);
   };
 
-  const handleCopyTheme = async () => {
+  const handleCopyTheme = () => {
     const json = exportTheme();
-    await navigator.clipboard.writeText(json);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    copyToClipboard(json);
   };
 
   return (

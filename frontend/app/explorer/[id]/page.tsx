@@ -2,19 +2,20 @@
 
 import { useParams } from 'next/navigation'
 import { useAccount } from 'wagmi'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ArrowLeft, Copy, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
 import { BadgeGallery } from '@/components/badge/BadgeGallery'
 import { EndorsementStats } from '@/components/trust/EndorsementStats'
 import { useProofScore } from '@/lib/vfide-hooks'
+import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 
 export default function AddressPage() {
   const params = useParams()
   const { address: connectedAddress } = useAccount()
   const address = params.id as `0x${string}`
-  const [copied, setCopied] = useState(false)
+  const { copied, copyToClipboard } = useCopyToClipboard()
   
   // Validate address format
   const isValidAddress = address && address.startsWith('0x') && address.length === 42
@@ -25,16 +26,7 @@ export default function AddressPage() {
   // Suppress unused variable warning - score is part of returned data structure
   void score
 
-  const copyAddress = () => {
-    navigator.clipboard.writeText(address)
-    setCopied(true)
-  }
-
-  useEffect(() => {
-    if (!copied) return
-    const timer = setTimeout(() => setCopied(false), 2000)
-    return () => clearTimeout(timer)
-  }, [copied])
+  const copyAddress = () => copyToClipboard(address)
 
   if (!isValidAddress) {
     return (

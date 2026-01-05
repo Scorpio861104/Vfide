@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { formatUnits, parseUnits } from 'viem'
 import { safeBigIntToNumber, safeParseFloat } from '@/lib/validation'
+import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 import {
   Gift,
   Trophy,
@@ -70,6 +71,7 @@ export default function RewardsPage() {
   const [stakeAmount, setStakeAmount] = useState('')
   const [selectedPool, setSelectedPool] = useState<string | null>(null)
   const [claimingId, setClaimingId] = useState<string | null>(null)
+  const { copied, copyToClipboard } = useCopyToClipboard()
 
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
@@ -837,12 +839,10 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
             />
             <div className="flex gap-2">
               <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(`https://vfide.app/join?ref=${referralStats.code}`);
-                }}
+                onClick={() => copyToClipboard(`https://vfide.app/join?ref=${referralStats.code}`)}
                 className="flex-1 md:flex-none px-4 py-2 bg-[#A78BFA] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#9061F9] transition-colors text-sm"
               >
-                📋 Copy Link
+                📋 {copied ? 'Copied!' : 'Copy Link'}
               </button>
             </div>
           </div>

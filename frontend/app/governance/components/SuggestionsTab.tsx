@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useAccount } from "wagmi"
 import { sanitizeString } from "@/lib/validation"
+import { useCopyWithId } from "@/lib/hooks/useCopyToClipboard"
 
 const PROMOTION_THRESHOLD = 50
 
@@ -54,7 +55,7 @@ export function SuggestionsTab() {
   const [searchQuery, setSearchQuery] = useState("")
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [newComment, setNewComment] = useState("")
-  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const { copiedId, copyWithId } = useCopyWithId()
   const [newSuggestion, setNewSuggestion] = useState({
     title: "",
     description: "",
@@ -149,11 +150,7 @@ export function SuggestionsTab() {
   }
 
   const handleShare = (s: Suggestion) => {
-    if (navigator?.clipboard) {
-      navigator.clipboard.writeText(`Suggestion #${s.id}: ${s.title}`)
-      setCopiedId(s.id)
-      setTimeout(() => setCopiedId(null), 1500)
-    }
+    copyWithId(`Suggestion #${s.id}: ${s.title}`, s.id)
   }
 
   const handleAddComment = (id: number) => {

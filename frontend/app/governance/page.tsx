@@ -8,6 +8,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadCont
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
+import { useCopyWithId } from "@/lib/hooks/useCopyToClipboard";
 
 // DAO Contract ABI
 const DAO_ABI = [
@@ -1105,7 +1106,7 @@ function SuggestionsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [newComment, setNewComment] = useState('');
-  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const { copiedId, copyWithId } = useCopyWithId();
   const [newSuggestion, setNewSuggestion] = useState({
     title: '',
     description: '',
@@ -1251,16 +1252,9 @@ function SuggestionsTab() {
     setNewComment('');
   };
 
-  const handleShare = async (suggestion: Suggestion) => {
+  const handleShare = (suggestion: Suggestion) => {
     const shareUrl = `${window.location.origin}/governance?suggestion=${suggestion.id}`;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopiedId(suggestion.id);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch {
-      // Fallback for older browsers - open share dialog
-      window.open(shareUrl, '_blank');
-    }
+    copyWithId(shareUrl, suggestion.id);
   };
 
   const filteredSuggestions = suggestions

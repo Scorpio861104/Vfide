@@ -9,6 +9,7 @@ import { useAccount, useChainId, useBalance } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
 import { safeParseFloat } from '@/lib/validation';
+import { useCopyWithId } from '@/lib/hooks/useCopyToClipboard';
 
 // Base Sepolia network details - ALWAYS VISIBLE
 const NETWORK_CONFIG = {
@@ -25,7 +26,7 @@ export default function SetupPage() {
   const chainId = useChainId()
   const { data: balance } = useBalance({ address })
   
-  const [copiedField, setCopiedField] = useState<string | null>(null)
+  const { copiedId: copiedField, copyWithId: copyToClipboard } = useCopyWithId()
   const [addingNetwork, setAddingNetwork] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
   const [addSuccess, setAddSuccess] = useState(false)
@@ -33,12 +34,6 @@ export default function SetupPage() {
   const isCorrectNetwork = chainId === CURRENT_CHAIN_ID
   const hasBalance = balance && safeParseFloat(balance.formatted, 0) > 0.001
   const ethBalance = balance ? safeParseFloat(balance.formatted, 0) : 0
-
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedField(field)
-    setTimeout(() => setCopiedField(null), 2000)
-  }
 
   // Direct MetaMask add network
   const addToMetaMask = useCallback(async () => {
