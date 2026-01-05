@@ -598,13 +598,14 @@ export default function GovernanceUI() {
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="w-full"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="passed">Passed</option>
-              <option value="failed">Failed</option>
-              <option value="executed">Executed</option>
-            </MobileSelect>
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'passed', label: 'Passed' },
+                { value: 'failed', label: 'Failed' },
+                { value: 'executed', label: 'Executed' },
+              ]}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -614,13 +615,14 @@ export default function GovernanceUI() {
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
               className="w-full"
-            >
-              <option value="all">All Categories</option>
-              <option value="governance">Governance</option>
-              <option value="treasury">Treasury</option>
-              <option value="technical">Technical</option>
-              <option value="parameter">Parameter</option>
-            </MobileSelect>
+              options={[
+                { value: 'all', label: 'All Categories' },
+                { value: 'governance', label: 'Governance' },
+                { value: 'treasury', label: 'Treasury' },
+                { value: 'technical', label: 'Technical' },
+                { value: 'parameter', label: 'Parameter' },
+              ]}
+            />
           </div>
         </div>
       </div>
