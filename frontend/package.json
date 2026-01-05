@@ -66,5 +66,13 @@
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"
+  },
+  "overrides": {
+    "valtio": {
+      "use-sync-external-store": "^1.2.2"
+    },
+    "use-sync-external-store": {
+      "react": "^19.2.3"
+    }
   }
 }
