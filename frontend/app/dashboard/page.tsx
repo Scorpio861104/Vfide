@@ -152,8 +152,6 @@ export default function DashboardPage() {
   const balanceValue = safeParseFloat(vaultBalanceRaw, 0);
   const usdValue = vaultLoading ? "..." : (balanceValue * PRESALE_REFERENCE_PRICE).toFixed(2);
   
-  const { copied: copiedAddress, copy } = useCopyToClipboard();
-  
   const copyAddress = () => {
     copy(walletAddress);
   };
