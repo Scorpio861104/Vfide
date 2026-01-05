@@ -7,10 +7,11 @@ import { useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { IS_TESTNET, FAUCET_URLS } from '@/lib/testnet'
 import { GlobalNav } from '@/components/layout/GlobalNav'
+import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 
 export default function TestnetPage() {
   const router = useRouter()
-  const [copied, setCopied] = useState(false)
+  const { copied, copy } = useCopyToClipboard()
   const { address } = useAccount()
 
   // Redirect to home if not testnet mode
@@ -22,9 +23,7 @@ export default function TestnetPage() {
 
   const copyAddress = () => {
     if (address) {
-      navigator.clipboard.writeText(address)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      copy(address)
     }
   }
 

@@ -21,6 +21,7 @@ import { BadgeProgress } from "@/components/badge/BadgeProgress";
 import { useUserBadges, useVaultBalance, useProofScore } from "@/lib/vfide-hooks";
 import { EXPLORER_URL } from "@/lib/testnet";
 import Link from "next/link";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 
 type TabType = 'overview' | 'fee-simulator' | 'score-simulator' | 'badges';
 
@@ -140,7 +141,7 @@ function QuickAction({
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [copiedAddress, setCopiedAddress] = useState(false);
+  const { copied: copiedAddress, copy } = useCopyToClipboard();
   
   const { balance: vaultBalanceRaw, isLoading: vaultLoading } = useVaultBalance();
   const { score: proofscore, tier, isLoading: scoreLoading } = useProofScore(address);
@@ -151,10 +152,10 @@ export default function DashboardPage() {
   const balanceValue = safeParseFloat(vaultBalanceRaw, 0);
   const usdValue = vaultLoading ? "..." : (balanceValue * PRESALE_REFERENCE_PRICE).toFixed(2);
   
+  const { copied: copiedAddress, copy } = useCopyToClipboard();
+  
   const copyAddress = () => {
-    navigator.clipboard.writeText(walletAddress);
-    setCopiedAddress(true);
-    setTimeout(() => setCopiedAddress(false), 2000);
+    copy(walletAddress);
   };
 
   const currentFeeRate = useMemo(() => {

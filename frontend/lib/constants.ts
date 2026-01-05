@@ -87,6 +87,9 @@ export const CONFETTI_DURATION_MS = 3000;    // Confetti animation duration
 export const STEP_TRANSITION_MS = 1000;      // Demo step transition delay
 export const AUTO_REFRESH_INTERVAL_MS = 5000;  // Auto-refresh interval (e.g., faucet status)
 export const MINUTE_UPDATE_INTERVAL_MS = 60000; // Update every minute (e.g., countdown timers)
+export const COPY_RESET_DELAY_MS = 2000;     // Reset "copied" state after 2 seconds
+export const CLIPBOARD_FEEDBACK_MS = 1500;   // Short feedback duration for clipboard actions
+export const TRANSACTION_SIMULATE_MS = 2000; // Mock transaction delay for testing
 
 // ProofScore ranges
 export const MIN_PROOF_SCORE = 0;
