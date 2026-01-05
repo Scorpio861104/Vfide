@@ -7,6 +7,7 @@ import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
+import { sanitizeString } from "@/lib/validation";
 
 // DAO Contract ABI
 const DAO_ABI = [
@@ -1227,13 +1228,17 @@ function SuggestionsTab() {
 
   const handleAddComment = (suggestionId: number) => {
     if (!newComment.trim()) return;
+    
+    // Sanitize comment input to prevent XSS
+    const sanitizedComment = sanitizeString(newComment, 500);
+    
     setSuggestions(suggestions.map(s => {
       if (s.id !== suggestionId) return s;
       const comment: SuggestionComment = {
         id: s.comments.length + 1,
         author: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Anonymous',
         authorScore: 500,
-        content: newComment,
+        content: sanitizedComment,
         timestamp: 'Just now',
         likes: 0
       };
@@ -1533,6 +1538,7 @@ function SuggestionsTab() {
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                             placeholder="Add a comment..."
+                            maxLength={500}
                             className="flex-1 px-3 py-2 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none text-sm"
                             onKeyDown={(e) => e.key === 'Enter' && handleAddComment(suggestion.id)}
                           />

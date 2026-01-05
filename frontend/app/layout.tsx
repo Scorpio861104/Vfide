@@ -9,6 +9,7 @@ import { TestnetCornerBadge } from "@/components/ui/TestnetBadge";
 import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
 import { DemoModeBanner } from "@/components/DemoModeBanner";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const inter = Inter({
   variable: "--font-body",
@@ -77,17 +78,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${spaceGrotesk.variable} font-[family-name:var(--font-body)] antialiased bg-[#0F0F12]`}>
-        <Web3Provider>
-          <ToastProvider>
-            <DemoModeBanner />
-            <NetworkSwitchOverlay />
-            <TestnetCornerBadge />
-            {children}
-            <MobileBottomNav />
-            <OnboardingManager />
-            <HelpCenter />
-          </ToastProvider>
-        </Web3Provider>
+        <ErrorBoundary>
+          <Web3Provider>
+            <ToastProvider>
+              <DemoModeBanner />
+              <NetworkSwitchOverlay />
+              <TestnetCornerBadge />
+              {children}
+              <MobileBottomNav />
+              <OnboardingManager />
+              <HelpCenter />
+            </ToastProvider>
+          </Web3Provider>
+        </ErrorBoundary>
       </body>
     </html>
   );
