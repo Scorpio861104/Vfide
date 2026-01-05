@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { MobileDrawer } from '@/components/mobile/MobileDrawer';
 import { MobileButton } from '@/components/mobile/MobileForm';
-import { RESPONSIVE_GRIDS, ResponsiveContainer } from '@/lib/mobile';
+import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 
 // Dashboard Sections
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
@@ -154,7 +154,7 @@ export default function DashboardPage() {
             {isLoading && (
               <div className="space-y-4">
                 <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                <div className={RESPONSIVE_GRIDS.cards}>
+                <div className={`grid ${responsiveGrids.balanced} gap-4`}>
                   {[...Array(4)].map((_, i) => (
                     <div
                       key={i}
@@ -181,7 +181,7 @@ export default function DashboardPage() {
                 {activeTab === 'overview' && (
                   <div className="space-y-6">
                     {/* Key Metrics */}
-                    <div className={RESPONSIVE_GRIDS.cards}>
+                    <div className={`grid ${responsiveGrids.balanced} gap-4`}>
                       <DashboardOverview />
                       <ProofScoreCard />
                       <PortfolioChart />

@@ -17,7 +17,7 @@
 
 import React, { useState } from 'react';
 import { MobileButton } from '@/components/mobile/MobileForm';
-import { RESPONSIVE_GRIDS, ResponsiveContainer } from '@/lib/mobile';
+import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 
 // ==================== TYPES ====================
 
@@ -514,7 +514,7 @@ export default function ProofScoreDashboard() {
         <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4">
           Quick Stats
         </h2>
-        <div className={`grid ${RESPONSIVE_GRIDS.grid4} gap-4`}>
+        <div className={`grid ${responsiveGrids.auto} gap-4`}>
           <StatBox
             label="Current Score"
             value={currentScore}
@@ -647,7 +647,7 @@ export default function ProofScoreDashboard() {
         Your Badges ({badges.length})
       </h2>
 
-      <div className={`grid ${RESPONSIVE_GRIDS.grid3} gap-4`}>
+      <div className={`grid ${responsiveGrids.balanced} gap-4`}>
         {badges.map((badge) => (
           <BadgeCard key={badge.id} badge={badge} />
         ))}

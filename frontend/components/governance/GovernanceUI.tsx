@@ -16,7 +16,7 @@
 
 import React, { useState } from 'react';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
-import { RESPONSIVE_GRIDS, ResponsiveContainer } from '@/lib/mobile';
+import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 
 // ==================== TYPES ====================
 
@@ -760,7 +760,7 @@ export default function GovernanceUI() {
         </div>
 
         {/* Statistics */}
-        <div className={`grid ${RESPONSIVE_GRIDS.grid4} gap-4 mb-8`}>
+        <div className={`grid ${responsiveGrids.auto} gap-4 mb-8`}>
           <StatCard
             label="Total Proposals"
             value={stats.totalProposals}

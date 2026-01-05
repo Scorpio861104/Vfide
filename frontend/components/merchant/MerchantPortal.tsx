@@ -15,7 +15,7 @@
 
 import React, { useState } from 'react';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
-import { RESPONSIVE_GRIDS, ResponsiveContainer } from '@/lib/mobile';
+import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 
 // ==================== TYPES ====================
 
@@ -278,7 +278,7 @@ export default function MerchantPortal() {
       </div>
 
       {/* Key Metrics */}
-      <div className={RESPONSIVE_GRIDS.cards}>
+      <div className={`grid ${responsiveGrids.balanced} gap-4`}>
         <MetricCard
           label="Total Revenue (30d)"
           value={totalRevenue}
@@ -468,7 +468,7 @@ function RevenueSection({ data }: { data: RevenueData[] }) {
       </div>
 
       {/* Revenue Stats */}
-      <div className={RESPONSIVE_GRIDS.cards}>
+      <div className={`grid ${responsiveGrids.balanced} gap-4`}>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <p className="text-sm md:text-base font-medium text-gray-600 dark:text-gray-400 mb-2">
             Total Revenue

@@ -33,7 +33,7 @@ import {
   PieChart as PiechartComponent,
 } from 'recharts';
 import { MobileInput, MobileButton, MobileSelect } from '@/components/mobile/MobileForm';
-import { RESPONSIVE_GRIDS } from '@/lib/mobile';
+import { responsiveGrids } from '@/lib/mobile';
 
 // ==================== DATA TYPES ====================
 
@@ -384,7 +384,7 @@ export default function EnhancedDashboardAnalytics() {
       </div>
 
       {/* Charts Grid */}
-      <div className={RESPONSIVE_GRIDS.cards}>
+      <div className={`grid ${responsiveGrids.balanced} gap-4`}>
         {/* Portfolio Value Chart */}
         <div className="md:col-span-2 bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
