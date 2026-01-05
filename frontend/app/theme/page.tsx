@@ -35,7 +35,7 @@ export default function ThemeManagementPage() {
     return {
       name: preset?.name || 'Default',
       description: preset?.description || 'No description',
-      colors: preset?.colors || {},
+      palette: preset?.palette || {},
     };
   }, [currentTheme]);
 
@@ -297,7 +297,7 @@ export default function ThemeManagementPage() {
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-slate-400 mb-4 uppercase">Color Palette</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {Object.entries(themeInfo.colors).slice(0, 8).map(([name, color]) => (
+                    {Object.entries(themeInfo.palette).slice(0, 8).map(([name, color]) => (
                       <div key={name} className="space-y-2">
                         <div
                           className="h-24 rounded-lg border border-slate-700"
