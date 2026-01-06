@@ -74,7 +74,7 @@ export default function RewardsPage() {
   const [claimingId, setClaimingId] = useState<string | null>(null)
   
   // Clipboard functionality for referral links
-  const { copied, copy } = useCopyToClipboard()
+  const { copied, copy: copyToClipboard } = useCopyToClipboard()
 
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
@@ -842,7 +842,7 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
             />
             <div className="flex gap-2">
               <button 
-                onClick={() => copy(`https://vfide.app/join?ref=${referralStats.code}`)}
+                onClick={() => copyToClipboard(`https://vfide.app/join?ref=${referralStats.code}`)}
                 className="flex-1 md:flex-none px-4 py-2 bg-[#A78BFA] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#9061F9] transition-colors text-sm"
               >
                 📋 {copied ? 'Copied!' : 'Copy Link'}
