@@ -72,6 +72,8 @@ export default function RewardsPage() {
   const [stakeAmount, setStakeAmount] = useState('')
   const [selectedPool, setSelectedPool] = useState<string | null>(null)
   const [claimingId, setClaimingId] = useState<string | null>(null)
+  
+  // Clipboard functionality for referral links
   const { copied, copy } = useCopyToClipboard()
 
   // Contract write hooks
