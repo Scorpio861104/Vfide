@@ -2,7 +2,7 @@
  * Web Vitals Monitoring & Optimization
  */
 
-import { useEffect } from 'react';
+import * as React from 'react';
 import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
 
 interface WebVitalsMetrics {
@@ -38,7 +38,7 @@ export function sendMetricsToAnalytics(metric: any) {
  * Hook to monitor Web Vitals
  */
 export function useWebVitals() {
-  useEffect(() => {
+  React.useEffect(() => {
     try {
       getCLS(sendMetricsToAnalytics);
       getFID(sendMetricsToAnalytics);
@@ -54,12 +54,19 @@ export function useWebVitals() {
 /**
  * Performance optimization utilities
  */
+export function useOptimizeRendering(callback: () => void, deps: any[] = []) {
+  React.useEffect(() => {
+    // Use requestAnimationFrame for smoother rendering
+    const rafId = requestAnimationFrame(callback)
+    return () => cancelAnimationFrame(rafId)
+  }, deps)
+}
 
 /**
  * Lazy load an image with intersection observer
  */
 export function useLazyImage(ref: React.RefObject<HTMLImageElement>) {
-  useEffect(() => {
+  React.useEffect(() => {
     if (!ref.current) return;
 
     const observer = new IntersectionObserver(
@@ -174,39 +181,33 @@ export const ResourceHints = {
   /**
    * Preload critical resources
    */
-  preload: (href: string, as: string, crossOrigin?: string) => (
-    <link
-      rel="preload"
-      href={href}
-      as={as}
-      crossOrigin={crossOrigin}
-    />
-  ),
+  preload: (href: string, as: string, crossOrigin?: string) =>
+    React.createElement('link', {
+      rel: 'preload',
+      href,
+      as,
+      crossOrigin,
+    }),
 
   /**
    * Prefetch likely-to-be-needed resources
    */
-  prefetch: (href: string) => (
-    <link rel="prefetch" href={href} />
-  ),
+  prefetch: (href: string) => React.createElement('link', { rel: 'prefetch', href }),
 
   /**
    * Preconnect to external services
    */
-  preconnect: (href: string, crossOrigin?: string) => (
-    <link
-      rel="preconnect"
-      href={href}
-      crossOrigin={crossOrigin}
-    />
-  ),
+  preconnect: (href: string, crossOrigin?: string) =>
+    React.createElement('link', {
+      rel: 'preconnect',
+      href,
+      crossOrigin,
+    }),
 
   /**
    * DNS prefetch for external domains
    */
-  dnsPrefetch: (href: string) => (
-    <link rel="dns-prefetch" href={href} />
-  ),
+  dnsPrefetch: (href: string) => React.createElement('link', { rel: 'dns-prefetch', href }),
 };
 
 /**

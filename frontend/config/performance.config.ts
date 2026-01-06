@@ -142,31 +142,7 @@ export function getImageProps(src: string, alt: string) {
 // ============================================
 // Font Optimization
 // ============================================
-
-/*
-// next.config.js
-const withTM = require('next-transpile-modules')(['geist']);
-
-module.exports = withTM({
-  // ... other config
-  experimental: {
-    fontLoaders: [
-      { loader: 'next/font/google', options: { subsets: ['latin'] } },
-    ],
-  },
-});
-
-// app layout
-import { Geist, GeistMono } from 'geist/font';
-
-export default function RootLayout() {
-  return (
-    <html className={`${Geist.variable} ${GeistMono.variable}`}>
-      {/* ... */}
-    </html>
-  );
-}
-*/
+// (Example snippet removed: nested JSX comments inside /* */ break TS parsing)
 
 // ============================================
 // Service Worker Registration (Offline Support)
@@ -200,29 +176,7 @@ useEffect(() => {
 // ============================================
 // Script Loading Strategy
 // ============================================
-
-/*
-// pages/_document.tsx
-import Document, { Html, Head, Main, NextScript } from 'next/document';
-
-export default class MyDocument extends Document {
-  render() {
-    return (
-      <Html lang="en">
-        <Head>
-          {/* Critical styles */}
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    );
-  }
-}
-*/
+// (Example snippet removed: nested JSX comments inside /* */ break TS parsing)
 
 // ============================================
 // Performance Budgets
