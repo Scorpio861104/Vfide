@@ -59,10 +59,10 @@ export default function EndorsementsPage() {
 
   const activeEndorsements = useMemo(
     () => {
-      const endorsers = ensureArray(endorsementsTuple?.[0])
-      const weights = ensureArray(endorsementsTuple?.[1])
-      const expiries = ensureArray(endorsementsTuple?.[2])
-      const timestamps = ensureArray(endorsementsTuple?.[3])
+      const endorsers = ensureArray(endorsementsTuple?.[0] ? [...endorsementsTuple[0]] : null)
+      const weights = ensureArray(endorsementsTuple?.[1] ? [...endorsementsTuple[1]] : null)
+      const expiries = ensureArray(endorsementsTuple?.[2] ? [...endorsementsTuple[2]] : null)
+      const timestamps = ensureArray(endorsementsTuple?.[3] ? [...endorsementsTuple[3]] : null)
 
       return endorsers.map((endorser, idx) => ({
         endorser: endorser as `0x${string}`,
