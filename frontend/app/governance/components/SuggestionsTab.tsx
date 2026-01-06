@@ -150,7 +150,7 @@ export function SuggestionsTab() {
   }
 
   const handleShare = (s: Suggestion) => {
-    copyWithId(`Suggestion #${s.id}: ${s.title}`, String(s.id))
+    copyWithId(String(s.id), `Suggestion #${s.id}: ${s.title}`)
   }
 
   const handleAddComment = (id: number) => {

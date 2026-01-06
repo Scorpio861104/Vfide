@@ -26,7 +26,7 @@ export default function ThemeManagementPage() {
     useThemeManager();
 
   const [activeTab, setActiveTab] = useState<'presets' | 'customizer' | 'preview' | 'advanced'>('presets');
-  const { copied, copyToClipboard } = useCopyToClipboard();
+  const { copied, copy } = useCopyToClipboard();
 
   const isDarkMode = settings.mode === ThemeMode.DARK;
 
@@ -77,7 +77,7 @@ export default function ThemeManagementPage() {
 
   const handleCopyTheme = () => {
     const json = exportTheme();
-    copyToClipboard(json);
+    copy(json);
   };
 
   return (
