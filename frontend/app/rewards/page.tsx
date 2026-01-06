@@ -841,12 +841,45 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
   onClaim: (id: string) => void;
   claimingId: string | null;
 }) {
+  const [copied, setCopied] = useState(false)
+
   const referralStats = {
     code: 'VFIDE-X7K9M2',
     totalReferrals: 12,
     activeReferrals: 8,
     earned: 1450.00,
     claimable: 350.00,
+  }
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+      return
+    } catch {
+      // Ignore and try fallback
+    }
+
+    try {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.setAttribute('readonly', '')
+      textarea.style.position = 'fixed'
+      textarea.style.top = '-9999px'
+      textarea.style.left = '-9999px'
+      document.body.appendChild(textarea)
+      textarea.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(textarea)
+
+      if (ok) {
+        setCopied(true)
+        window.setTimeout(() => setCopied(false), 2000)
+      }
+    } catch {
+      // If copying fails, do nothing.
+    }
   }
 
   if (!isConnected) {
