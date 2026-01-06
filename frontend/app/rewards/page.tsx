@@ -75,8 +75,7 @@ export default function RewardsPage() {
 
   
 
-  // Clipboard functionality for referral links
-  const [copied, setCopied] = useState(false)
+
   
 
   // Contract write hooks
@@ -222,36 +221,6 @@ export default function RewardsPage() {
     }
   };
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-      return
-    } catch {
-      // Ignore and try fallback
-    }
-
-    try {
-      const textarea = document.createElement('textarea')
-      textarea.value = text
-      textarea.setAttribute('readonly', '')
-      textarea.style.position = 'fixed'
-      textarea.style.top = '-9999px'
-      textarea.style.left = '-9999px'
-      document.body.appendChild(textarea)
-      textarea.select()
-      const ok = document.execCommand('copy')
-      document.body.removeChild(textarea)
-
-      if (ok) {
-        setCopied(true)
-        window.setTimeout(() => setCopied(false), 2000)
-      }
-    } catch {
-      // If copying fails, do nothing.
-    }
-  }
 
   return (
     <>
