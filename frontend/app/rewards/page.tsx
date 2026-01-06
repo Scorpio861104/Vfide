@@ -8,7 +8,7 @@ import { motion } from 'framer-motion'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { formatUnits, parseUnits } from 'viem'
 import { safeBigIntToNumber, safeParseFloat } from '@/lib/validation'
-import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
+import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard' // Clipboard hook for referral links
 import {
   Gift,
   Trophy,
