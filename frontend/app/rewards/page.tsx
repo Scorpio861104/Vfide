@@ -1,5 +1,6 @@
 'use client'
 
+// Rewards & Staking Management System
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { useState } from 'react'
