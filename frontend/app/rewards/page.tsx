@@ -73,8 +73,12 @@ export default function RewardsPage() {
   const [selectedPool, setSelectedPool] = useState<string | null>(null)
   const [claimingId, setClaimingId] = useState<string | null>(null)
   
+
+  
+
   // Clipboard functionality for referral links
   const { copied, copy: copyToClipboard } = useCopyToClipboard()
+  
 
   // Contract write hooks
   const { writeContract, data: hash, isPending } = useWriteContract();
