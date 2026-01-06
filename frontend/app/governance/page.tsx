@@ -1254,7 +1254,7 @@ function SuggestionsTab() {
 
   const handleShare = (suggestion: Suggestion) => {
     const shareUrl = `${window.location.origin}/governance?suggestion=${suggestion.id}`;
-    copyWithId(shareUrl, suggestion.id);
+    copyWithId(shareUrl, String(suggestion.id));
   };
 
   const filteredSuggestions = suggestions
