@@ -3,11 +3,11 @@
  */
 
 import * as React from 'react';
-import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
+import { onCLS, onINP, onFCP, onLCP, onTTFB } from 'web-vitals';
 
 interface WebVitalsMetrics {
   CLS: number; // Cumulative Layout Shift
-  FID: number; // First Input Delay
+  INP: number; // Interaction to Next Paint
   FCP: number; // First Contentful Paint
   LCP: number; // Largest Contentful Paint
   TTFB: number; // Time to First Byte
@@ -40,11 +40,11 @@ export function sendMetricsToAnalytics(metric: any) {
 export function useWebVitals() {
   React.useEffect(() => {
     try {
-      getCLS(sendMetricsToAnalytics);
-      getFID(sendMetricsToAnalytics);
-      getFCP(sendMetricsToAnalytics);
-      getLCP(sendMetricsToAnalytics);
-      getTTFB(sendMetricsToAnalytics);
+      onCLS(sendMetricsToAnalytics);
+      onINP(sendMetricsToAnalytics);
+      onFCP(sendMetricsToAnalytics);
+      onLCP(sendMetricsToAnalytics);
+      onTTFB(sendMetricsToAnalytics);
     } catch (error) {
       console.error('Error monitoring Web Vitals:', error);
     }
@@ -245,11 +245,12 @@ export function measurePerformance(label: string) {
 export function detectMemoryLeaks() {
   if (typeof window === 'undefined') return;
 
-  const initialMemory = performance.memory?.usedJSHeapSize || 0;
+  const perfWithMemory = performance as Performance & { memory?: { usedJSHeapSize: number } };
+  const initialMemory = perfWithMemory.memory?.usedJSHeapSize ?? 0;
 
   return {
     check: () => {
-      const currentMemory = performance.memory?.usedJSHeapSize || 0;
+      const currentMemory = perfWithMemory.memory?.usedJSHeapSize ?? 0;
       const diff = currentMemory - initialMemory;
       
       if (diff > 10 * 1024 * 1024) { // 10MB threshold

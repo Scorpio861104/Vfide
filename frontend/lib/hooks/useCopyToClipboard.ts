@@ -60,7 +60,7 @@ export function useCopyToClipboard(
   const { resetDelay = 2000, onSuccess, onError } = options;
   
   const [copied, setCopied] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -75,7 +75,7 @@ export function useCopyToClipboard(
     setCopied(false);
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
-      timeoutRef.current = undefined;
+      timeoutRef.current = null;
     }
   }, []);
 
@@ -115,7 +115,7 @@ export function useCopyToClipboard(
         // Auto-reset after delay
         timeoutRef.current = setTimeout(() => {
           setCopied(false);
-          timeoutRef.current = undefined;
+          timeoutRef.current = null;
         }, resetDelay);
 
         return true;
@@ -155,7 +155,7 @@ export function useCopyWithId<T = string | number>(
   const { resetDelay = 2000, onSuccess, onError } = options;
   
   const [copiedId, setCopiedId] = useState<T | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
@@ -169,7 +169,7 @@ export function useCopyWithId<T = string | number>(
     setCopiedId(null);
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
-      timeoutRef.current = undefined;
+      timeoutRef.current = null;
     }
   }, []);
 
@@ -203,7 +203,7 @@ export function useCopyWithId<T = string | number>(
 
         timeoutRef.current = setTimeout(() => {
           setCopiedId(null);
-          timeoutRef.current = undefined;
+          timeoutRef.current = null;
         }, resetDelay);
 
         return true;

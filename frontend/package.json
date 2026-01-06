@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --cache --cache-location .eslintcache \"app/**/*.{js,jsx,ts,tsx}\" \"components/**/*.{js,jsx,ts,tsx}\" \"hooks/**/*.{js,jsx,ts,tsx}\" \"lib/**/*.{js,jsx,ts,tsx}\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -43,7 +44,8 @@
     "recharts": "^2.15.0",
     "tailwind-merge": "^3.4.0",
     "viem": "^2.41.2",
-    "wagmi": "^2.19.5"
+    "wagmi": "^2.19.5",
+    "web-vitals": "^4.2.4"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.8.0",

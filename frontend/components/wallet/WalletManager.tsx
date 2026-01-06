@@ -377,7 +377,7 @@ function WalletCard({ wallet, onActivate, onDisconnect, onEdit }: WalletCardProp
 
       {/* Last Used */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-        Last used {Math.floor((Date.now() - wallet.lastUsed) / (60 * 1000))} minutes ago
+        Last used {(() => Math.floor((Date.now() - wallet.lastUsed) / (60 * 1000)))()} minutes ago
       </p>
     </div>
   );

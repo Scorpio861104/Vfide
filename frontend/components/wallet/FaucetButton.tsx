@@ -13,7 +13,7 @@ import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard';
  */
 export function FaucetButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const { copied, copyToClipboard } = useCopyToClipboard();
+  const { copied, copy } = useCopyToClipboard();
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
 
@@ -23,7 +23,7 @@ export function FaucetButton() {
   const ethBalance = balance ? safeParseFloat(balance.formatted, 0) : 0;
   const isLowBalance = ethBalance < 0.01;
 
-  const copyAddress = () => address && copyToClipboard(address);
+  const copyAddress = () => address && copy(address);
 
   return (
     <div className="relative">

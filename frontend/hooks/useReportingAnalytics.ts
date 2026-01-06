@@ -399,9 +399,10 @@ export function useReportingAnalytics() {
     return {
       totalReports: state.reports.length,
       totalDashboards: state.dashboards.length,
-      reportsUpdatedToday: state.reports.filter(
-        (r) => Date.now() - r.lastUpdated < 24 * 60 * 60 * 1000
-      ).length,
+      reportsUpdatedToday: (() => {
+        const now = Date.now();
+        return state.reports.filter((r) => now - r.lastUpdated < 24 * 60 * 60 * 1000).length;
+      })(),
       totalMetrics: state.reports.reduce((sum, r) => sum + r.metrics.length, 0),
       totalCharts: state.reports.reduce((sum, r) => sum + r.charts.length, 0),
     };

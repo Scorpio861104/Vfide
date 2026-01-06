@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
+import { safeBigIntToNumber } from "@/lib/validation";
 import { 
   Lock, 
   Unlock, 

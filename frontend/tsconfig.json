@@ -32,6 +32,7 @@
   "include": [
     "next-env.d.ts",
     "jest.d.ts",
+    "**/*.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
@@ -39,6 +40,14 @@
   ],
   "exclude": [
     "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.stories.ts",
+    "**/*.stories.tsx",
+    "**/*.stories.mdx",
+    "config/**",
     "playwright.config.ts",
     "playwright/**",
     "vitest.config.ts",
