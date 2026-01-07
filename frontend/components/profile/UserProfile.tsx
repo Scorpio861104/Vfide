@@ -20,6 +20,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
+import { AvatarUploadCompact } from './AvatarUpload';
 
 // ==================== TYPES ====================
 
@@ -410,9 +411,10 @@ const UserProfile: React.FC = () => {
     setPrivacySettings((prev) => ({ ...prev, [field]: value }));
   }, []);
 
-  const handleAvatarUpload = useCallback(() => {
-    // In real app: Open file picker and upload
-    alert('Avatar upload would open here');
+  const handleAvatarUpload = useCallback((avatarUrl: string) => {
+    // Update profile with new avatar
+    setProfile((prev) => ({ ...prev, avatar: avatarUrl }));
+    setEditedProfile((prev) => ({ ...prev, avatar: avatarUrl }));
   }, []);
 
   // Computed values
@@ -434,13 +436,21 @@ const UserProfile: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Avatar */}
           <div className="flex flex-col items-center">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-6xl mb-4">
-              {profile.avatar || '👤'}
-            </div>
-            {isEditing && (
-              <MobileButton variant="secondary" onClick={handleAvatarUpload} className="text-sm">
-                Change Avatar
-              </MobileButton>
+            {isEditing ? (
+              <AvatarUploadCompact
+                currentAvatar={profile.avatar}
+                onUploadComplete={handleAvatarUpload}
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-6xl">
+                {profile.avatar ? (
+                  typeof profile.avatar === 'string' && profile.avatar.startsWith('http') ? (
+                    <img src={profile.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    profile.avatar
+                  )
+                ) : '👤'}
+              </div>
             )}
           </div>
 
