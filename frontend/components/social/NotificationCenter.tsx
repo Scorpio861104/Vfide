@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
@@ -22,47 +22,74 @@ export function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isClient, setIsClient] = useState(false);
+
+  // Handle SSR
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Load notifications
   useEffect(() => {
-    if (!address) return;
+    if (!address || !isClient || typeof window === 'undefined') return;
     
-    const stored = localStorage.getItem(`vfide_notifications_${address}`);
-    if (stored) {
-      try {
+    try {
+      const stored = localStorage.getItem(`vfide_notifications_${address}`);
+      if (stored) {
         const notifs: Notification[] = JSON.parse(stored);
         setNotifications(notifs);
         setUnreadCount(notifs.filter(n => !n.read).length);
-      } catch (e) {
-        console.error('Failed to load notifications:', e);
       }
+    } catch (e) {
+      console.error('Failed to load notifications:', e);
+      setNotifications([]);
     }
-  }, [address]);
+  }, [address, isClient]);
 
   // Save notifications
   useEffect(() => {
-    if (!address || notifications.length === 0) return;
-    localStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
-    setUnreadCount(notifications.filter(n => !n.read).length);
-  }, [address, notifications]);
+    if (!address || notifications.length === 0 || !isClient || typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
+      setUnreadCount(notifications.filter(n => !n.read).length);
+    } catch (e) {
+      console.error('Failed to save notifications:', e);
+    }
+  }, [address, notifications, isClient]);
 
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(n => 
+  // Add event listener cleanup for custom events
+  useEffect(() => {
+    if (!isClient || typeof window === 'undefined') return;
+
+    const handleCustomNotification = (event: CustomEvent) => {
+      const notification = event.detail as Notification;
+      setNotifications(prev => [notification, ...prev]);
+    };
+
+    window.addEventListener('vfide-notification', handleCustomNotification as EventListener);
+    
+    return () => {
+      window.removeEventListener('vfide-notification', handleCustomNotification as EventListener);
+    };
+  }, [isClient]);
+
+  const markAsRead = useCallback((id: string) => {
+    setNotifications(prev => prev.map(n => 
       n.id === id ? { ...n, read: true } : n
     ));
-  };
+  }, []);
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-  };
+  const markAllAsRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }, []);
 
-  const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter(n => n.id !== id));
-  };
+  const deleteNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setNotifications([]);
-  };
+  }, []);
 
   const getIcon = (type: Notification['type']) => {
     const iconMap = {
@@ -235,25 +262,31 @@ export function NotificationCenter() {
 
 // Helper function to add notifications
 export function addNotification(address: string, notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) {
-  const stored = localStorage.getItem(`vfide_notifications_${address}`);
-  const notifications: Notification[] = stored ? JSON.parse(stored) : [];
+  if (typeof window === 'undefined') return;
   
-  const newNotif: Notification = {
-    ...notification,
-    id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    timestamp: Date.now(),
-    read: false,
-  };
-  
-  notifications.unshift(newNotif);
-  
-  // Keep only last 50 notifications
-  if (notifications.length > 50) {
-    notifications.splice(50);
+  try {
+    const stored = localStorage.getItem(`vfide_notifications_${address}`);
+    const notifications: Notification[] = stored ? JSON.parse(stored) : [];
+    
+    const newNotif: Notification = {
+      ...notification,
+      id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: Date.now(),
+      read: false,
+    };
+    
+    notifications.unshift(newNotif);
+    
+    // Keep only last 50 notifications
+    if (notifications.length > 50) {
+      notifications.splice(50);
+    }
+    
+    localStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
+    
+    // Trigger custom event for real-time updates
+    window.dispatchEvent(new CustomEvent('vfide-notification', { detail: newNotif }));
+  } catch (error) {
+    console.error('Failed to add notification:', error);
   }
-  
-  localStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
-  
-  // Trigger custom event for real-time updates
-  window.dispatchEvent(new CustomEvent('vfide-notification', { detail: newNotif }));
 }

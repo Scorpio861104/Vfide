@@ -29,38 +29,46 @@ export function GroupMessaging() {
   const [newMessage, setNewMessage] = useState('');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Handle SSR
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Load groups
   useEffect(() => {
-    if (!address) return;
+    if (!address || !isClient || typeof window === 'undefined') return;
     
-    const stored = localStorage.getItem(`vfide_groups_${address}`);
-    if (stored) {
-      try {
+    try {
+      const stored = localStorage.getItem(`vfide_groups_${address}`);
+      if (stored) {
         const groupsData: Group[] = JSON.parse(stored);
         setGroups(groupsData.sort((a, b) => b.lastActivity - a.lastActivity));
-      } catch (e) {
-        console.error('Failed to load groups:', e);
       }
+    } catch (e) {
+      console.error('Failed to load groups:', e);
+      setGroups([]);
     }
-  }, [address]);
+  }, [address, isClient]);
 
   // Load messages for selected group
   useEffect(() => {
-    if (!selectedGroup) return;
+    if (!selectedGroup || !isClient || typeof window === 'undefined') return;
     
-    const stored = localStorage.getItem(`vfide_group_messages_${selectedGroup.id}`);
-    if (stored) {
-      try {
+    try {
+      const stored = localStorage.getItem(`vfide_group_messages_${selectedGroup.id}`);
+      if (stored) {
         setMessages(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to load group messages:', e);
+      } else {
+        setMessages([]);
       }
-    } else {
+    } catch (e) {
+      console.error('Failed to load group messages:', e);
       setMessages([]);
     }
-  }, [selectedGroup]);
+  }, [selectedGroup, isClient]);
 
   // Auto-scroll to bottom
   useEffect(() => {

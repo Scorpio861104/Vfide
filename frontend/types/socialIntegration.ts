@@ -33,5 +33,5 @@ export interface Notification {
   timestamp: number;
   read: boolean;
   actionUrl?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }

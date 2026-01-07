@@ -15,8 +15,19 @@ interface MutualFriendsProps {
 export function MutualFriends({ userAddress, currentUserAddress }: MutualFriendsProps) {
   const [mutualFriends, setMutualFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  // Handle SSR
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    if (!isClient || typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+
     const findMutualFriends = () => {
       try {
         // Load current user's friends
@@ -37,13 +48,14 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
         setMutualFriends(mutual);
       } catch (error) {
         console.error('Failed to find mutual friends:', error);
+        setMutualFriends([]);
       } finally {
         setLoading(false);
       }
     };
 
     findMutualFriends();
-  }, [userAddress, currentUserAddress]);
+  }, [userAddress, currentUserAddress, isClient]);
 
   if (loading) {
     return (

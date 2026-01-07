@@ -47,12 +47,20 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
     innovative: 0,
     collaborative: 0,
   });
+  const [isClient, setIsClient] = useState(false);
+
+  // Handle SSR
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    if (!userAddress || !isClient || typeof window === 'undefined') return;
+    
     // Load endorsements from localStorage
-    const storedEndorsements = localStorage.getItem(`vfide_endorsements_${userAddress}`);
-    if (storedEndorsements) {
-      try {
+    try {
+      const storedEndorsements = localStorage.getItem(`vfide_endorsements_${userAddress}`);
+      if (storedEndorsements) {
         const endorsementsData: Endorsement[] = JSON.parse(storedEndorsements);
         setEndorsements(endorsementsData);
         
@@ -70,21 +78,23 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
         });
         
         setEndorsementStats(stats);
-      } catch (e) {
-        console.error('Failed to load endorsements:', e);
       }
+    } catch (e) {
+      console.error('Failed to load endorsements:', e);
+      setEndorsements([]);
     }
 
     // Load badges
-    const storedBadges = localStorage.getItem(`vfide_badges_${userAddress}`);
-    if (storedBadges) {
-      try {
+    try {
+      const storedBadges = localStorage.getItem(`vfide_badges_${userAddress}`);
+      if (storedBadges) {
         setBadges(JSON.parse(storedBadges));
-      } catch (e) {
-        console.error('Failed to load badges:', e);
       }
+    } catch (e) {
+      console.error('Failed to load badges:', e);
+      setBadges([]);
     }
-  }, [userAddress]);
+  }, [userAddress, isClient]);
 
   const getCategoryColor = (category: Endorsement['category']) => {
     const colors = {

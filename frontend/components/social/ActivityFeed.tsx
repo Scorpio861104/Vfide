@@ -21,7 +21,7 @@ interface ActivityItem {
   user: string;
   content: string;
   timestamp: number;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 interface ActivityFeedProps {
@@ -31,18 +31,26 @@ interface ActivityFeedProps {
 export function ActivityFeed({ userAddress }: ActivityFeedProps) {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [filter, setFilter] = useState<'all' | ActivityItem['type']>('all');
+  const [isClient, setIsClient] = useState(false);
+
+  // Handle SSR
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
-    // Load activities from localStorage
-    const stored = localStorage.getItem(`vfide_activity_feed_${userAddress}`);
-    if (stored) {
-      try {
+    if (!userAddress || !isClient || typeof window === 'undefined') return;
+    
+    try {
+      const stored = localStorage.getItem(`vfide_activity_feed_${userAddress}`);
+      if (stored) {
         setActivities(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to load activity feed:', e);
       }
+    } catch (e) {
+      console.error('Failed to load activity feed:', e);
+      setActivities([]);
     }
-  }, [userAddress]);
+  }, [userAddress, isClient]);
 
   const getIcon = (type: ActivityItem['type']) => {
     const iconMap = {
@@ -183,21 +191,27 @@ export function addActivity(
   userAddress: string,
   activity: Omit<ActivityItem, 'id' | 'timestamp'>
 ) {
-  const stored = localStorage.getItem(`vfide_activity_feed_${userAddress}`);
-  const activities: ActivityItem[] = stored ? JSON.parse(stored) : [];
+  if (typeof window === 'undefined') return;
   
-  const newActivity: ActivityItem = {
-    ...activity,
-    id: `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    timestamp: Date.now(),
-  };
-  
-  activities.unshift(newActivity);
-  
-  // Keep only last 100 activities
-  if (activities.length > 100) {
-    activities.splice(100);
+  try {
+    const stored = localStorage.getItem(`vfide_activity_feed_${userAddress}`);
+    const activities: ActivityItem[] = stored ? JSON.parse(stored) : [];
+    
+    const newActivity: ActivityItem = {
+      ...activity,
+      id: `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: Date.now(),
+    };
+    
+    activities.unshift(newActivity);
+    
+    // Keep only last 100 activities
+    if (activities.length > 100) {
+      activities.splice(100);
+    }
+    
+    localStorage.setItem(`vfide_activity_feed_${userAddress}`, JSON.stringify(activities));
+  } catch (error) {
+    console.error('Failed to add activity:', error);
   }
-  
-  localStorage.setItem(`vfide_activity_feed_${userAddress}`, JSON.stringify(activities));
 }
