@@ -32,6 +32,20 @@ export default function SocialPage() {
   const [selectedGroup, setSelectedGroup] = useState<Group | undefined>();
   const [friends, setFriends] = useState<Friend[]>([]);
 
+  // Load friends from localStorage
+  React.useEffect(() => {
+    if (!address) return;
+    
+    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
+    if (stored) {
+      try {
+        setFriends(JSON.parse(stored));
+      } catch (e) {
+        console.error('Failed to load friends:', e);
+      }
+    }
+  }, [address]);
+
   // Accept friend request handler
   const handleAcceptRequest = (request: FriendRequest) => {
     if (!address) return;
@@ -190,7 +204,11 @@ export default function SocialPage() {
                 {/* Groups Tab */}
                 {activeTab === 'groups' && (
                   <div className="max-w-6xl mx-auto">
-                    <GroupsManager />
+                    <GroupsManager 
+                      friends={friends}
+                      onSelectGroup={setSelectedGroup}
+                      selectedGroup={selectedGroup}
+                    />
                   </div>
                 )}
 
