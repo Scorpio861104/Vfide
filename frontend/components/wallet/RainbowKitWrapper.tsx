@@ -20,11 +20,11 @@ export function RainbowKitWrapper({ children }: { children: ReactNode }) {
       })}
       appInfo={{
         appName: 'VFIDE',
-        learnMoreUrl: 'https://vfide.io/docs',
+        learnMoreUrl: '/docs',
         disclaimer: ({ Text, Link }) => (
           <Text>
             On mobile? Use WalletConnect to stay in your browser.{' '}
-            <Link href="https://vfide.io/docs">Learn more</Link>
+            <Link href="/docs">Learn more</Link>
           </Text>
         ),
       }}
