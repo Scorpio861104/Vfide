@@ -569,7 +569,12 @@ function HistoryTab() {
                   </td>
                   <td className="px-6 py-4 text-[#A0A0A5]">{tx.date}</td>
                   <td className="px-6 py-4">
-                    <a href="#" className="text-[#00F0FF] hover:underline text-sm">
+                    <a 
+                      href={`https://basescan.org/tx/${tx.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#00F0FF] hover:underline text-sm"
+                    >
                       {tx.txHash}
                     </a>
                   </td>

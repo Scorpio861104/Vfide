@@ -339,6 +339,7 @@ export default function DocsPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
+                      onClick={() => alert(`Interactive lesson "${lesson.title}" coming soon! For now, check out the FAQ tab for detailed information.`)}
                       className="bg-[#2A2A2F] rounded-xl p-6 border border-[#3A3A3F] hover:border-[#00F0FF]/50 transition-all cursor-pointer group"
                     >
                       <div className="w-12 h-12 mb-4 flex items-center justify-center bg-[#00F0FF]/10 rounded-lg border border-[#00F0FF]/30">
