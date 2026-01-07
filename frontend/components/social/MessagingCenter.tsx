@@ -29,6 +29,7 @@ import { addNotification } from './NotificationCenter';
 import { addActivity } from './ActivityFeed';
 import { VaultInfoTooltip } from '../ui/VaultInfoTooltip';
 import { analytics } from '@/lib/socialAnalytics';
+import { PresenceIndicator, LastSeenText } from './PresenceIndicator';
 
 interface MessagingCenterProps {
   friend: Friend;
@@ -184,20 +185,23 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold text-sm">
                 {friend.alias ? friend.alias[0].toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
               </div>
-              {friend.isOnline && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#50C878] rounded-full border-2 border-[#1A1A2E]" />
-              )}
             </div>
 
             {/* Info */}
             <div>
-              <h3 className="text-sm font-bold text-[#F5F3E8]">
-                {friend.alias || formatAddress(friend.address)}
-              </h3>
-              <p className="text-xs text-[#6B6B78] flex items-center gap-1">
-                <Lock className="w-3 h-3" />
-                End-to-end encrypted
-              </p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[#F5F3E8]">
+                  {friend.alias || formatAddress(friend.address)}
+                </h3>
+                <PresenceIndicator address={friend.address} size="sm" showLabel />
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-[#6B6B78] flex items-center gap-1">
+                  <Lock className="w-3 h-3" />
+                  End-to-end encrypted
+                </p>
+                <LastSeenText address={friend.address} />
+              </div>
             </div>
           </div>
 

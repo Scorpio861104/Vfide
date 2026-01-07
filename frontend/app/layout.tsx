@@ -10,6 +10,7 @@ import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
 import { DemoModeBanner } from "@/components/DemoModeBanner";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PresenceManager } from "@/components/social/PresenceManager";
 
 const inter = Inter({
   variable: "--font-body",
@@ -86,6 +87,7 @@ export default function RootLayout({
           <ErrorBoundary>
             <Web3Provider>
               <ToastProvider>
+                <PresenceManager />
                 <DemoModeBanner />
                 <NetworkSwitchOverlay />
                 <TestnetCornerBadge />

@@ -17,6 +17,8 @@ import {
 import { useAccount } from 'wagmi';
 import { Friend } from '@/types/messaging';
 import { formatAddress, STORAGE_KEYS } from '@/lib/messageEncryption';
+import { PresenceDot } from './PresenceIndicator';
+import { useBulkPresence } from '@/lib/presence';
 
 interface FriendsListProps {
   onSelectFriend: (friend: Friend) => void;
@@ -31,6 +33,10 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
   const [newFriendAddress, setNewFriendAddress] = useState('');
   const [newFriendAlias, setNewFriendAlias] = useState('');
   const [filter, setFilter] = useState<'all' | 'favorites' | 'online'>('all');
+  
+  // Get presence for all friends
+  const friendAddresses = friends.map(f => f.address);
+  const presenceMap = useBulkPresence(friendAddresses);
 
   // Load friends from localStorage
   useEffect(() => {
@@ -103,7 +109,10 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
     
     // Filter by type
     if (filter === 'favorites') return friend.isFavorite;
-    if (filter === 'online') return friend.isOnline;
+    if (filter === 'online') {
+      const presence = presenceMap.get(friend.address);
+      return presence?.status === 'online';
+    }
     
     return true;
   });
@@ -237,9 +246,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold text-sm">
                       {friend.alias ? friend.alias[0].toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
                     </div>
-                    {friend.isOnline && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#50C878] rounded-full border-2 border-[#1A1A2E]" />
-                    )}
+                    <PresenceDot address={friend.address} position="bottom-right" />
                   </div>
 
                   {/* Info */}
