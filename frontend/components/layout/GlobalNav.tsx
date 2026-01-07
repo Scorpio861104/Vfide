@@ -14,6 +14,7 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/vault", label: "Vault" },
   { href: "/social-messaging", label: "Messages", highlight: true },
+  { href: "/achievements", label: "Achievements", accent: true },
   { href: "/merchant", label: "Merchant" },
   { href: "/payroll", label: "Payroll" },
   { href: "/leaderboard", label: "Leaderboard" },
