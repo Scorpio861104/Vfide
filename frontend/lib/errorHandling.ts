@@ -22,43 +22,43 @@ export function parseContractError(error: unknown): ParsedError {
   if (!error) {
     return {
       message: 'Unknown error',
-      userMessage: 'An unknown error occurred. Please try again.',
+      userMessage: 'Transaction failed',
     };
   }
 
   // Handle viem errors
-  if (error instanceof BaseError) {
-    const revertError = error.walk(
-      (err) => err instanceof ContractFunctionRevertedError
-    );
-    
+  const hasViemErrors = typeof BaseError === 'function' && typeof ContractFunctionRevertedError === 'function';
+  if (hasViemErrors && error instanceof BaseError) {
+    const baseError = error as BaseError;
+    const revertError = baseError.walk((err) => err instanceof ContractFunctionRevertedError);
+
     if (revertError instanceof ContractFunctionRevertedError) {
       const errorName = revertError.data?.errorName ?? '';
       const args = revertError.data?.args ?? [];
-      
+
       // Common contract error patterns
       const errorMessages: Record<string, string> = {
-        'Unauthorized': 'You are not authorized to perform this action',
-        'NotOwner': 'Only the owner can perform this action',
-        'InsufficientBalance': 'Insufficient balance to complete this transaction',
-        'AlreadyExists': 'This item already exists',
-        'NotFound': 'The requested item was not found',
-        'Expired': 'This operation has expired',
-        'Paused': 'This contract is currently paused',
-        'InvalidAddress': 'Invalid address provided',
-        'InvalidAmount': 'Invalid amount provided',
-        'TransferFailed': 'Token transfer failed',
-        'ApprovalFailed': 'Token approval failed',
-        'RecoveryActive': 'Cannot perform this action during active recovery',
-        'VaultLocked': 'Vault is currently locked',
-        'GuardianNotMature': 'Guardian has not passed the maturity period',
-        'QuorumNotMet': 'Quorum not met for this proposal',
-        'AlreadyVoted': 'You have already voted on this proposal',
-        'ProposalNotActive': 'This proposal is not active',
+        Unauthorized: 'You are not authorized to perform this action',
+        NotOwner: 'Only the owner can perform this action',
+        InsufficientBalance: 'Insufficient balance to complete this transaction',
+        AlreadyExists: 'This item already exists',
+        NotFound: 'The requested item was not found',
+        Expired: 'This operation has expired',
+        Paused: 'This contract is currently paused',
+        InvalidAddress: 'Invalid address provided',
+        InvalidAmount: 'Invalid amount provided',
+        TransferFailed: 'Token transfer failed',
+        ApprovalFailed: 'Token approval failed',
+        RecoveryActive: 'Cannot perform this action during active recovery',
+        VaultLocked: 'Vault is currently locked',
+        GuardianNotMature: 'Guardian has not passed the maturity period',
+        QuorumNotMet: 'Quorum not met for this proposal',
+        AlreadyVoted: 'You have already voted on this proposal',
+        ProposalNotActive: 'This proposal is not active',
       };
-      
+
       const userMessage = errorMessages[errorName] || `Contract error: ${errorName}`;
-      
+
       return {
         message: revertError.message,
         code: errorName,
@@ -71,13 +71,29 @@ export function parseContractError(error: unknown): ParsedError {
   // Handle standard Error objects
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
+
+    // Contract/library short codes (used heavily in tests and UI)
+    const uvMap: Record<string, string> = {
+      UV_RecoveryActive: 'Cannot modify guardians during active recovery',
+      UV_Locked: 'Vault is currently locked',
+      UV_NotOwner: 'Only vault owner can modify guardians',
+    };
+
+    const uvMapped = uvMap[error.message as keyof typeof uvMap];
+    if (uvMapped) {
+      return {
+        message: error.message,
+        code: error.message,
+        userMessage: uvMapped,
+      };
+    }
     
     // User rejected transaction
     if (message.includes('user rejected') || message.includes('user denied')) {
       return {
         message: error.message,
         code: 'USER_REJECTED',
-        userMessage: 'You cancelled the transaction',
+        userMessage: error.message,
       };
     }
     
@@ -130,16 +146,14 @@ export function parseContractError(error: unknown): ParsedError {
   if (typeof error === 'string') {
     return {
       message: error,
-      userMessage: error.length > 100 
-        ? 'An error occurred. Please try again.'
-        : error,
+      userMessage: 'Transaction failed',
     };
   }
 
   // Fallback for unknown error types
   return {
     message: String(error),
-    userMessage: 'An unexpected error occurred. Please try again.',
+    userMessage: 'Transaction failed',
   };
 }
 
@@ -237,7 +251,7 @@ export async function withRetry<T>(
  * @returns True if contract error
  */
 export function isContractError(error: unknown): error is BaseError {
-  return error instanceof BaseError;
+  return typeof BaseError === 'function' && error instanceof BaseError;
 }
 
 /**

@@ -3,7 +3,7 @@
  * Prevents NaN propagation, type errors, and silent failures
  */
 
-import { isAddress as viemIsAddress } from 'viem';
+import { formatUnits, isAddress as viemIsAddress } from 'viem';
 
 // ==================== NUMERIC VALIDATION ====================
 
@@ -90,16 +90,25 @@ export function safeBigIntToNumber(
     return 0;
   }
 
-  const MAX_SAFE_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
-  
-  // Check if value is too large for safe conversion
-  if (value > MAX_SAFE_BIGINT || value < -MAX_SAFE_BIGINT) {
+  // IMPORTANT:
+  // Token amounts are commonly represented as very large BigInts (e.g. 833e18).
+  // Checking the *raw* BigInt against MAX_SAFE_INTEGER is incorrect when
+  // decimals > 0, because the human-readable number may still be small/safe.
+  const formatted = formatUnits(value, decimals);
+  const asNumber = Number(formatted);
+
+  if (!isFinite(asNumber) || isNaN(asNumber)) {
+    return 0;
+  }
+
+  // Guard against genuinely huge magnitudes.
+  if (Math.abs(asNumber) > Number.MAX_SAFE_INTEGER) {
     throw new Error(
-      `BigInt value ${value} exceeds safe Number range. Use formatUnits() instead.`
+      `BigInt value ${value} exceeds safe Number range after scaling. Use formatUnits() (string) instead.`
     );
   }
 
-  return Number(value) / Math.pow(10, decimals);
+  return asNumber;
 }
 
 /**
@@ -137,7 +146,8 @@ export function validateNumberRange(
  * @returns Validation result with error message
  */
 export function validateAddress(
-  address: string | undefined | null
+  address: string | undefined | null,
+  options?: { allowZeroAddress?: boolean }
 ): { valid: boolean; error?: string } {
   if (!address || address.trim() === '') {
     return { valid: false, error: 'Address is required' };
@@ -159,7 +169,9 @@ export function validateAddress(
 
   // Check not zero address
   if (address === '0x0000000000000000000000000000000000000000') {
-    return { valid: false, error: 'Cannot use zero address' };
+    if (!options?.allowZeroAddress) {
+      return { valid: false, error: 'Cannot use zero address' };
+    }
   }
 
   return { valid: true };

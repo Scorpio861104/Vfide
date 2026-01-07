@@ -22,15 +22,11 @@ const noopStorage = {
   removeItem: (_key: string) => {},
 }
 
-// WalletConnect Project ID - required for WalletConnect v2
-// Get your free project ID at https://cloud.walletconnect.com
+// WalletConnect Project ID (optional for local/dev/test runs).
+// When missing, we fully disable the WalletConnect connector to keep env-less
+// builds/tests deterministic and avoid remote registry/config fetches.
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
-if (!projectId && process.env.NODE_ENV === 'development') {
-  console.error('[VFIDE] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is required. Get one at https://cloud.walletconnect.com')
-}
-
-// Use empty string if not set - will show connection error to user
-const safeProjectId = projectId || ''
+const hasWalletConnect = typeof projectId === 'string' && projectId.length > 0
 
 // App metadata for wallet connections
 const appName = 'VFIDE'
@@ -87,21 +83,18 @@ const connectors = connectorsForWallets(
   [
     {
       groupName: 'Recommended',
-      wallets: [
-        walletConnectWallet,
-        coinbaseWallet,
-      ],
+      wallets: hasWalletConnect ? [walletConnectWallet, coinbaseWallet] : [coinbaseWallet],
     },
     {
       groupName: 'Others',
-      wallets: [
-        metaMaskWallet,
-      ],
+      wallets: [metaMaskWallet],
     },
   ],
   {
     appName,
-    projectId: safeProjectId,
+    // RainbowKit expects a string here; it is only used when the WalletConnect
+    // wallet is present.
+    projectId: projectId || '00000000000000000000000000000000',
   }
 )
 

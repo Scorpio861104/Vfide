@@ -23,6 +23,17 @@
 # misc
 .DS_Store
 *.pem
+.eslintcache
+
+# Playwright / Storybook outputs
+/playwright-report/
+/test-results/
+/storybook-static/
+
+# Local logs
+*.log
+/_next_*.log
+/_dev*.log
 
 # debug
 npm-debug.log*

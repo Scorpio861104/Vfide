@@ -753,7 +753,7 @@ export default function ProofScoreDashboard() {
                 Achievement Unlocked!
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                You've reached a new tier and unlocked amazing benefits!
+                You&apos;ve reached a new tier and unlocked amazing benefits!
               </p>
               <MobileButton
                 onClick={() => setShowCelebration(false)}

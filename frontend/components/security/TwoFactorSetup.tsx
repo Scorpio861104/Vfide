@@ -222,7 +222,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">📝 Save Backup Codes</h3>
               <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
-                Keep these codes in a safe place. You'll need them if you lose access to your authenticator app.
+                Keep these codes in a safe place. You&apos;ll need them if you lose access to your authenticator app.
               </p>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {totpSetup.backupCodes.slice(0, 6).map((code, i) => (

@@ -93,7 +93,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 Oops! Something went wrong
               </h1>
               <p className="text-gray-400 mb-6">
-                We encountered an unexpected error. This has been logged and we'll look into it.
+                We encountered an unexpected error. This has been logged and we&apos;ll look into it.
               </p>
 
               {/* Error Details (Development Only) */}
@@ -191,7 +191,7 @@ export class SectionErrorBoundary extends Component<Props, State> {
                 Section Error
               </h3>
               <p className="text-red-400/80 text-sm mb-3">
-                This section encountered an error and couldn't be displayed.
+                This section encountered an error and couldn&apos;t be displayed.
               </p>
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <p className="text-red-400 text-xs font-mono mb-3 break-all">

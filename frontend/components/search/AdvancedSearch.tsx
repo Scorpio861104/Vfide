@@ -387,7 +387,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ item, onReuse, onDelete }) =>
       <div className="flex-1 cursor-pointer" onClick={() => onReuse(item)}>
         <div className="flex items-center space-x-2 mb-1">
           <span className="text-sm font-medium text-gray-900 dark:text-white">
-            "{item.query}"
+            &quot;{item.query}&quot;
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             • {item.resultsCount} results

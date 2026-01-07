@@ -35,7 +35,7 @@ describe("GovernanceHooks", function () {
       const contract = await GovernanceHooks.deploy(await ledger.getAddress(), await seer.getAddress(), dao.address);
       await expect(contract.deploymentTransaction())
         .to.emit(contract, "ModulesSet")
-        .withArgs(await ledger.getAddress(), await seer.getAddress());
+        .withArgs(await ledger.getAddress(), await seer.getAddress(), ethers.ZeroAddress);
     });
 
     it("should deploy with zero address ledger (optional)", async function () {
@@ -61,20 +61,20 @@ describe("GovernanceHooks", function () {
   describe("setModules", function () {
     it("should update ledger address", async function () {
       const newLedger = ethers.Wallet.createRandom().address;
-      await hooks.setModules(newLedger, await seer.getAddress());
+      await hooks.setModules(newLedger, await seer.getAddress(), ethers.ZeroAddress);
       expect(await hooks.ledger()).to.equal(newLedger);
     });
 
     it("should update seer address", async function () {
       const newSeer = ethers.Wallet.createRandom().address;
-      await hooks.setModules(ledger.target, newSeer);
+      await hooks.setModules(ledger.target, newSeer, ethers.ZeroAddress);
       expect(await hooks.seer()).to.equal(newSeer);
     });
 
     it("should update both addresses", async function () {
       const newLedger = ethers.Wallet.createRandom().address;
       const newSeer = ethers.Wallet.createRandom().address;
-      await hooks.setModules(newLedger, newSeer);
+      await hooks.setModules(newLedger, newSeer, ethers.ZeroAddress);
       expect(await hooks.ledger()).to.equal(newLedger);
       expect(await hooks.seer()).to.equal(newSeer);
     });
@@ -82,13 +82,13 @@ describe("GovernanceHooks", function () {
     it("should emit ModulesSet", async function () {
       const newLedger = ethers.Wallet.createRandom().address;
       const newSeer = ethers.Wallet.createRandom().address;
-      await expect(hooks.setModules(newLedger, newSeer))
+      await expect(hooks.setModules(newLedger, newSeer, ethers.ZeroAddress))
         .to.emit(hooks, "ModulesSet")
-        .withArgs(newLedger, newSeer);
+        .withArgs(newLedger, newSeer, ethers.ZeroAddress);
     });
 
     it("should allow setting zero addresses", async function () {
-      await hooks.setModules(ethers.ZeroAddress, ethers.ZeroAddress);
+      await hooks.setModules(ethers.ZeroAddress, ethers.ZeroAddress, ethers.ZeroAddress);
       expect(await hooks.ledger()).to.equal(ethers.ZeroAddress);
       expect(await hooks.seer()).to.equal(ethers.ZeroAddress);
     });
@@ -96,7 +96,7 @@ describe("GovernanceHooks", function () {
     it("should revert if non-owner tries to setModules", async function () {
       const newLedger = ethers.Wallet.createRandom().address;
       await expect(
-        hooks.connect(voter).setModules(newLedger, await seer.getAddress())
+        hooks.connect(voter).setModules(newLedger, await seer.getAddress(), ethers.ZeroAddress)
       ).to.be.revertedWith("not owner");
     });
   });
@@ -113,7 +113,7 @@ describe("GovernanceHooks", function () {
     });
 
     it("should not revert when ledger is zero address", async function () {
-      await hooks.setModules(ethers.ZeroAddress, await seer.getAddress());
+      await hooks.setModules(ethers.ZeroAddress, await seer.getAddress(), ethers.ZeroAddress);
       await expect(hooks.onProposalQueued(1, dao.address, 1000))
         .to.not.be.reverted;
     });
@@ -152,7 +152,7 @@ describe("GovernanceHooks", function () {
     });
 
     it("should not revert when ledger is zero address", async function () {
-      await hooks.setModules(ethers.ZeroAddress, await seer.getAddress());
+      await hooks.setModules(ethers.ZeroAddress, await seer.getAddress(), ethers.ZeroAddress);
       await expect(hooks.onVoteCast(1, voter.address, true))
         .to.not.be.reverted;
     });
@@ -191,7 +191,7 @@ describe("GovernanceHooks", function () {
     });
 
     it("should not revert when ledger is zero address", async function () {
-      await hooks.setModules(ethers.ZeroAddress, await seer.getAddress());
+      await hooks.setModules(ethers.ZeroAddress, await seer.getAddress(), ethers.ZeroAddress);
       await expect(hooks.onFinalized(1, true))
         .to.not.be.reverted;
     });
@@ -228,7 +228,7 @@ describe("GovernanceHooks", function () {
     });
 
     it("should work with ledger logging disabled", async function () {
-      await hooks.setModules(ethers.ZeroAddress, await seer.getAddress());
+      await hooks.setModules(ethers.ZeroAddress, await seer.getAddress(), ethers.ZeroAddress);
       
       await hooks.onProposalQueued(1, dao.address, 1000);
       await hooks.onVoteCast(1, voter.address, true);
@@ -261,7 +261,7 @@ describe("GovernanceHooks", function () {
       
       // Use a valid contract address (seer) to avoid "no code" issues if any
       const newLedger = await seer.getAddress();
-      await hooks.setModules(newLedger, await seer.getAddress());
+      await hooks.setModules(newLedger, await seer.getAddress(), ethers.ZeroAddress);
       
       await hooks.onVoteCast(1, voter.address, true);
       await hooks.onFinalized(1, true);

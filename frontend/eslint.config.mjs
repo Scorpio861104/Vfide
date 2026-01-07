@@ -27,6 +27,8 @@ const eslintConfig = defineConfig([
     "__tests__/**",
     "**/*.test.*",
     "**/*.spec.*",
+    "**/*.stories.*",
+    "**/*.stories.mdx",
     "e2e/**",
     "playwright/**",
   ]),

@@ -1,13 +1,9 @@
 "use client";
-
-import '@rainbow-me/rainbowkit/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
-import { base, baseSepolia } from 'wagmi/chains';
 import { config } from '@/lib/wagmi';
-import { IS_TESTNET } from '@/lib/chains';
 import { useState, type ReactNode } from 'react';
+import { RainbowKitWrapper } from './RainbowKitWrapper';
 
 /**
  * Web3 Provider with Wallet Connection
@@ -33,29 +29,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={config} reconnectOnMount={true}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider 
-          initialChain={IS_TESTNET ? baseSepolia : base}
-          modalSize="compact"
-          theme={darkTheme({
-            accentColor: '#00F0FF',
-            accentColorForeground: '#1A1A1D',
-            borderRadius: 'medium',
-            fontStack: 'system',
-            overlayBlur: 'small',
-          })}
-          appInfo={{
-            appName: 'VFIDE',
-            learnMoreUrl: 'https://vfide.io/docs',
-            disclaimer: ({ Text, Link }) => (
-              <Text>
-                On mobile? Use WalletConnect to stay in your browser.{' '}
-                <Link href="https://vfide.io/docs">Learn more</Link>
-              </Text>
-            ),
-          }}
-        >
-          {children}
-        </RainbowKitProvider>
+        <RainbowKitWrapper>{children}</RainbowKitWrapper>
       </QueryClientProvider>
     </WagmiProvider>
   );

@@ -190,7 +190,7 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
     setError(null)
     
     // Validate guardian address
-    const addressValidation = validateAddress(guardianAddress)
+    const addressValidation = validateAddress(guardianAddress, { allowZeroAddress: true })
     if (!addressValidation.valid) {
       setError(addressValidation.error || 'Invalid guardian address')
       return { success: false, error: addressValidation.error }

@@ -75,22 +75,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isE2E = process.env.E2E === '1'
+
   return (
     <html lang="en">
       <body className={`${inter.variable} ${spaceGrotesk.variable} font-[family-name:var(--font-body)] antialiased bg-[#0F0F12]`}>
-        <ErrorBoundary>
-          <Web3Provider>
-            <ToastProvider>
-              <DemoModeBanner />
-              <NetworkSwitchOverlay />
-              <TestnetCornerBadge />
-              {children}
-              <MobileBottomNav />
-              <OnboardingManager />
-              <HelpCenter />
-            </ToastProvider>
-          </Web3Provider>
-        </ErrorBoundary>
+        {isE2E ? (
+          children
+        ) : (
+          <ErrorBoundary>
+            <Web3Provider>
+              <ToastProvider>
+                <DemoModeBanner />
+                <NetworkSwitchOverlay />
+                <TestnetCornerBadge />
+                {children}
+                <MobileBottomNav />
+                <OnboardingManager />
+                <HelpCenter />
+              </ToastProvider>
+            </Web3Provider>
+          </ErrorBoundary>
+        )}
       </body>
     </html>
   );

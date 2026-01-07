@@ -40,6 +40,7 @@ jest.mock('@/lib/abis', () => ({
 
 const mockAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
 const mockVaultAddress = '0xabcdef1234567890abcdef1234567890abcdef12' as `0x${string}`
+const mockGuardianAddress = '0x1111111111111111111111111111111111111111' as `0x${string}`
 
 describe('useUserVault', () => {
   beforeEach(() => {
@@ -526,10 +527,8 @@ describe('useSetGuardian', () => {
 
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
     
-    const guardianAddress = '0xguardian1234567890guardian1234567890ab' as `0x${string}`
-    
     await act(async () => {
-      await result.current.setGuardian(0, guardianAddress)
+      await result.current.setGuardian(0, mockGuardianAddress)
     })
 
     expect(result.current.error).toBe('Vault is currently locked')
@@ -548,11 +547,10 @@ describe('useSetGuardian', () => {
 
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
     
-    const guardianAddress = '0xguardian1234567890guardian1234567890ab' as `0x${string}`
     let response: { success: boolean; txHash?: `0x${string}` }
     
     await act(async () => {
-      response = await result.current.setGuardian(0, guardianAddress)
+      response = await result.current.setGuardian(0, mockGuardianAddress)
     })
 
     expect(response!.success).toBe(true)
@@ -571,17 +569,15 @@ describe('useSetGuardian', () => {
 
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
     
-    const guardianAddress = '0xguardian1234567890guardian1234567890ab' as `0x${string}`
-    
     await act(async () => {
-      await result.current.setGuardian(0, guardianAddress)
+      await result.current.setGuardian(0, mockGuardianAddress)
     })
 
     expect(result.current.error).toBe('User rejected transaction')
   })
 
   it('handles non-Error rejection', async () => {
-    const mockWriteContractAsync = jest.fn().mockRejectedValue('string rejection')
+    const mockWriteContractAsync = jest.fn().mockRejectedValue(null)
     ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
     })
@@ -592,11 +588,10 @@ describe('useSetGuardian', () => {
 
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
     
-    const guardianAddress = '0xguardian1234567890guardian1234567890ab' as `0x${string}`
     let response: { success: boolean; error?: string }
     
     await act(async () => {
-      response = await result.current.setGuardian(0, guardianAddress)
+      response = await result.current.setGuardian(0, mockGuardianAddress)
     })
 
     expect(response!.success).toBe(false)
@@ -614,10 +609,8 @@ describe('useSetGuardian', () => {
     })
 
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
-    const guardianAddress = '0xguardian1234567890guardian1234567890ab' as `0x${string}`
-
     await act(async () => {
-      await result.current.setGuardian(0, guardianAddress)
+      await result.current.setGuardian(0, mockGuardianAddress)
     })
 
     expect(result.current.error).toBe('Only vault owner can modify guardians')

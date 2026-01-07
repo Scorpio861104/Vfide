@@ -226,14 +226,16 @@ describe('DAOTimelock Contract Tests', function () {
     });
 
     it('should handle different delays', async function () {
-      await timelock.connect(admin).setDelay(1 * 60 * 60); // 1 hour
+      // DAOTimelock enforces a minimum delay (security hardening)
+      const minDelay = await timelock.MIN_DELAY();
+      await timelock.connect(admin).setDelay(minDelay);
 
       const tx = await timelock.connect(admin).queueTx(user1.address, 0, '0x');
       const receipt = await tx.wait();
       const event = receipt.logs.find(log => log.fragment?.name === 'Queued');
       const txId = event.args[0];
 
-      await ethers.provider.send('evm_increaseTime', [1 * 60 * 60 + 1]);
+      await ethers.provider.send('evm_increaseTime', [Number(minDelay) + 1]);
       await ethers.provider.send('evm_mine');
 
       await expect(timelock.connect(admin).execute(txId))

@@ -73,19 +73,19 @@ describe('Seer Contract Tests', function () {
   describe('Threshold Configuration', function () {
     it('should allow DAO to set thresholds', async function () {
       // low, high, minGov, minMerch
-      await expect(seer.connect(dao).setThresholds(300, 800, 600, 600))
+      await expect(seer.connect(dao).setThresholds(1000, 9000, 3000, 3000))
         .to.emit(seer, 'ThresholdsSet')
-        .withArgs(300, 800, 600, 600);
+        .withArgs(1000, 9000, 3000, 3000);
 
-      expect(await seer.lowTrustThreshold()).to.equal(300);
-      expect(await seer.highTrustThreshold()).to.equal(800);
-      expect(await seer.minForGovernance()).to.equal(600);
-      expect(await seer.minForMerchant()).to.equal(600);
+      expect(await seer.lowTrustThreshold()).to.equal(1000);
+      expect(await seer.highTrustThreshold()).to.equal(9000);
+      expect(await seer.minForGovernance()).to.equal(3000);
+      expect(await seer.minForMerchant()).to.equal(3000);
     });
 
     it('should revert if non-DAO tries to set thresholds', async function () {
       await expect(
-        seer.connect(user1).setThresholds(300, 800, 600, 600)
+        seer.connect(user1).setThresholds(1000, 9000, 3000, 3000)
       ).to.be.revertedWithCustomError(seer, 'TRUST_NotDAO');
     });
     
@@ -136,16 +136,19 @@ describe('Seer Contract Tests', function () {
     
     it('should clamp score to max', async function () {
       await seer.connect(dao).setScore(user1.address, 9900, "High");
+      // Allow a large single delta in tests (subject to contract caps)
+      await seer.connect(dao).setOperatorLimits(500, 1000);
       await seer.connect(dao).reward(user1.address, 500, "Overflow");
       // Score should be clamped to MAX_SCORE (10000)
-      expect(await seer.getScore(user1.address)).to.be.lte(10000);
+      expect(await seer.getScore(user1.address)).to.equal(10000);
     });
     
     it('should clamp score to min', async function () {
       await seer.connect(dao).setScore(user1.address, 100, "Low");
+      await seer.connect(dao).setOperatorLimits(500, 1000);
       await seer.connect(dao).punish(user1.address, 500, "Underflow");
       // Score should be clamped to MIN_SCORE (10)
-      expect(await seer.getScore(user1.address)).to.be.gte(10);
+      expect(await seer.getScore(user1.address)).to.equal(10);
     });
   });
 });
