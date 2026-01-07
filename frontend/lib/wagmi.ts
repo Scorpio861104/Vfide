@@ -112,7 +112,6 @@ const testnetConfig = createConfig({
   },
   ssr: true,
   storage: wagmiStorage,
-  syncConnectedChain: true, // Enable automatic chain sync when MetaMask switches
   multiInjectedProviderDiscovery: false, // Disable auto-discovery to avoid duplicates
 })
 
@@ -126,7 +125,6 @@ const mainnetConfig = createConfig({
   },
   ssr: true,
   storage: wagmiStorage,
-  syncConnectedChain: true, // Enable automatic chain sync when MetaMask switches
   multiInjectedProviderDiscovery: false,
 })
 
