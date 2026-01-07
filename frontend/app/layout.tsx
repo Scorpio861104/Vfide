@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PresenceManager } from "@/components/social/PresenceManager";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { PerformanceProvider } from "@/components/performance/PerformanceProvider";
+import { ErrorMonitoringProvider, DevErrorConsole } from "@/components/monitoring/ErrorMonitoringProvider";
 
 const inter = Inter({
   variable: "--font-body",
@@ -91,7 +92,9 @@ export default function RootLayout({
               <ToastProvider>
                 <SecurityProvider />
                 <PerformanceProvider />
+                <ErrorMonitoringProvider />
                 <PresenceManager />
+                <DevErrorConsole />
                 <DemoModeBanner />
                 <NetworkSwitchOverlay />
                 <TestnetCornerBadge />
