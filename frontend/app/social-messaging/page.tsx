@@ -13,6 +13,7 @@ import {
   Lock,
   UserPlus,
   Circle as CircleIcon,
+  User,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { FriendsList } from '@/components/social/FriendsList';
@@ -21,11 +22,12 @@ import { GroupsManager } from '@/components/social/GroupsManager';
 import { FriendRequestsPanel } from '@/components/social/FriendRequestsPanel';
 import { PrivacySettings } from '@/components/social/PrivacySettings';
 import { FriendCirclesManager } from '@/components/social/FriendCirclesManager';
+import { AccountSettings } from '@/components/settings/AccountSettings';
 import { Friend, Group } from '@/types/messaging';
 import { FriendRequest } from '@/types/friendRequests';
 import { STORAGE_KEYS } from '@/lib/messageEncryption';
 
-type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'privacy' | 'analytics';
+type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'privacy' | 'analytics';
 
 export default function SocialPage() {
   const { address } = useAccount();
@@ -76,6 +78,7 @@ export default function SocialPage() {
     { id: 'requests' as const, label: 'Requests', icon: UserPlus, color: '#FFD700' },
     { id: 'circles' as const, label: 'Circles', icon: CircleIcon, color: '#FF8C42' },
     { id: 'groups' as const, label: 'Groups', icon: Users, color: '#A78BFA' },
+    { id: 'account' as const, label: 'Account', icon: User, color: '#00F0FF' },
     { id: 'privacy' as const, label: 'Privacy', icon: Shield, color: '#FF6B9D' },
     { id: 'analytics' as const, label: 'Analytics', icon: BarChart3, color: '#50C878' },
   ];
@@ -295,6 +298,20 @@ export default function SocialPage() {
                       </div>
                     </div>
                   )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Account Tab */}
+            {activeTab === 'account' && (
+              <motion.div
+                key="account"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <div className="max-w-4xl mx-auto">
+                  <AccountSettings />
                 </div>
               </motion.div>
             )}
