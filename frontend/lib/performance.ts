@@ -1,9 +1,12 @@
 /**
- * Web Vitals Monitoring & Optimization
+ * Web Vitals Monitoring & Performance Optimization
+ * 
+ * Comprehensive performance tracking with Web Vitals, custom metrics,
+ * navigation timing, and resource monitoring.
  */
 
 import * as React from 'react';
-import { onCLS, onINP, onFCP, onLCP, onTTFB } from 'web-vitals';
+import { onCLS, onINP, onFCP, onLCP, onTTFB, onFID, Metric } from 'web-vitals';
 
 interface WebVitalsMetrics {
   CLS: number; // Cumulative Layout Shift
@@ -11,43 +14,255 @@ interface WebVitalsMetrics {
   FCP: number; // First Contentful Paint
   LCP: number; // Largest Contentful Paint
   TTFB: number; // Time to First Byte
+  FID: number; // First Input Delay
+}
+
+export interface PerformanceMetric {
+  name: string;
+  value: number;
+  rating: 'good' | 'needs-improvement' | 'poor';
+  delta?: number;
+  id?: string;
+  navigationType?: string;
+}
+
+// Metrics store
+const metricsStore: PerformanceMetric[] = [];
+const MAX_METRICS = 1000;
+
+/**
+ * Get performance rating
+ */
+function getRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
+  const thresholds = {
+    LCP: [2500, 4000],
+    FID: [100, 300],
+    CLS: [0.1, 0.25],
+    FCP: [1800, 3000],
+    TTFB: [800, 1800],
+    INP: [200, 500],
+  };
+
+  const [good, poor] = thresholds[name as keyof typeof thresholds] || [0, 0];
+  if (value <= good) return 'good';
+  if (value <= poor) return 'needs-improvement';
+  return 'poor';
 }
 
 /**
- * Send metrics to analytics service
+ * Send metric to backend
  */
-export function sendMetricsToAnalytics(metric: any) {
-  const body = JSON.stringify(metric);
-  
-  // Use navigator.sendBeacon if available (doesn't block page unload)
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon('/api/metrics', body);
-  } else {
-    // Fallback to fetch
-    fetch('/api/metrics', {
-      method: 'POST',
-      body,
-      keepalive: true,
-    }).catch((error) => {
-      console.warn('Failed to send metrics:', error);
-    });
+async function sendMetric(metric: PerformanceMetric) {
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Performance]', metric);
+  }
+
+  metricsStore.push(metric);
+  if (metricsStore.length > MAX_METRICS) {
+    metricsStore.shift();
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      await fetch('/api/performance/metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          metric,
+          timestamp: Date.now(),
+          url: window.location.href,
+        }),
+        keepalive: true,
+      });
+    } catch (error) {
+      console.error('Failed to send performance metric:', error);
+    }
   }
 }
 
 /**
- * Hook to monitor Web Vitals
+ * Handle Web Vitals metric
+ */
+function handleMetric({ name, value, rating, delta, id, navigationType }: Metric) {
+  const metric: PerformanceMetric = {
+    name,
+    value,
+    rating: rating as 'good' | 'needs-improvement' | 'poor',
+    delta,
+    id,
+    navigationType,
+  };
+  sendMetric(metric);
+}
+
+/**
+ * Initialize Web Vitals tracking
+ */
+export function initWebVitals() {
+  if (typeof window === 'undefined') return;
+
+  onCLS(handleMetric);
+  onFID(handleMetric);
+  onINP(handleMetric);
+  onFCP(handleMetric);
+  onLCP(handleMetric);
+  onTTFB(handleMetric);
+}
+
+/**
+ * Track custom metric
+ */
+export function trackMetric(name: string, value: number) {
+  const metric: PerformanceMetric = {
+    name,
+    value,
+    rating: getRating(name, value),
+  };
+  sendMetric(metric);
+}
+
+/**
+ * Measure component render time
+ */
+export function measureComponentRender(componentName: string) {
+  const startTime = performance.now();
+  return () => {
+    const renderTime = performance.now() - startTime;
+    trackMetric(`component-render-${componentName}`, renderTime);
+  };
+}
+
+/**
+ * Measure API call
+ */
+export async function measureAPICall<T>(
+  name: string,
+  apiCall: () => Promise<T>
+): Promise<T> {
+  const startTime = performance.now();
+  try {
+    const result = await apiCall();
+    trackMetric(`api-${name}`, performance.now() - startTime);
+    return result;
+  } catch (error) {
+    trackMetric(`api-${name}-error`, performance.now() - startTime);
+    throw error;
+  }
+}
+
+/**
+ * Get navigation metrics
+ */
+export function getNavigationMetrics() {
+  if (typeof window === 'undefined' || !performance.getEntriesByType) {
+    return null;
+  }
+
+  const [navigation] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+  if (!navigation) return null;
+
+  return {
+    dns: navigation.domainLookupEnd - navigation.domainLookupStart,
+    tcp: navigation.connectEnd - navigation.connectStart,
+    request: navigation.responseStart - navigation.requestStart,
+    response: navigation.responseEnd - navigation.responseStart,
+    domProcessing: navigation.domComplete - navigation.domInteractive,
+    total: navigation.loadEventEnd - navigation.fetchStart,
+  };
+}
+
+/**
+ * Get memory usage
+ */
+export function getMemoryUsage() {
+  if (typeof window === 'undefined') return null;
+  
+  const memory = (performance as any).memory;
+  if (!memory) return null;
+
+  return {
+    usedJSHeapSize: memory.usedJSHeapSize,
+    totalJSHeapSize: memory.totalJSHeapSize,
+    jsHeapSizeLimit: memory.jsHeapSizeLimit,
+    percentUsed: (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100,
+  };
+}
+
+/**
+ * Observe long tasks
+ */
+export function observeLongTasks(callback: (duration: number) => void) {
+  if (typeof window === 'undefined' || !('PerformanceObserver' in window)) {
+    return () => {};
+  }
+
+  try {
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (entry.duration > 50) {
+          callback(entry.duration);
+          trackMetric('long-task', entry.duration);
+        }
+      }
+    });
+
+    observer.observe({ entryTypes: ['longtask'] });
+    return () => observer.disconnect();
+  } catch (error) {
+    console.error('Long tasks observation not supported:', error);
+    return () => {};
+  }
+}
+
+/**
+ * Get performance summary
+ */
+export function getPerformanceSummary() {
+  const grouped = metricsStore.reduce((acc, metric) => {
+    if (!acc[metric.name]) {
+      acc[metric.name] = [];
+    }
+    acc[metric.name].push(metric.value);
+    return acc;
+  }, {} as Record<string, number[]>);
+
+  const summary: Record<string, {
+    count: number;
+    avg: number;
+    min: number;
+    max: number;
+  }> = {};
+
+  for (const [name, values] of Object.entries(grouped)) {
+    summary[name] = {
+      count: values.length,
+      avg: values.reduce((a, b) => a + b, 0) / values.length,
+      min: Math.min(...values),
+      max: Math.max(...values),
+    };
+  }
+
+  return summary;
+}
+
+/**
+ * Export metrics
+ */
+export function exportMetrics() {
+  return {
+    metrics: [...metricsStore],
+    summary: getPerformanceSummary(),
+    navigation: getNavigationMetrics(),
+    memory: getMemoryUsage(),
+  };
+}
+
+/**
+ * Hook to monitor Web Vitals (legacy)
  */
 export function useWebVitals() {
   React.useEffect(() => {
-    try {
-      onCLS(sendMetricsToAnalytics);
-      onINP(sendMetricsToAnalytics);
-      onFCP(sendMetricsToAnalytics);
-      onLCP(sendMetricsToAnalytics);
-      onTTFB(sendMetricsToAnalytics);
-    } catch (error) {
-      console.error('Error monitoring Web Vitals:', error);
-    }
+    initWebVitals();
   }, []);
 }
 
