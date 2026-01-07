@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/vault", label: "Vault" },
+  { href: "/social-messaging", label: "Messages", highlight: true },
   { href: "/merchant", label: "Merchant" },
   { href: "/payroll", label: "Payroll" },
   { href: "/leaderboard", label: "Leaderboard" },
