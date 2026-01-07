@@ -22,6 +22,9 @@ export interface Message {
   read: boolean;
   verified: boolean;
   type: 'direct' | 'group';
+  editedAt?: number; // Timestamp of last edit
+  deletedAt?: number; // Soft delete timestamp
+  reactions?: Record<string, string[]>; // emoji -> addresses
 }
 
 export interface Conversation {

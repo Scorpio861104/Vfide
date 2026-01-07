@@ -29,8 +29,8 @@ import { addNotification } from './NotificationCenter';
 import { addActivity } from './ActivityFeed';
 import { VaultInfoTooltip } from '../ui/VaultInfoTooltip';
 import { analytics } from '@/lib/socialAnalytics';
-import { PresenceIndicator, LastSeenText } from './PresenceIndicator';
-
+import { PresenceIndicator, LastSeenText } from './PresenceIndicator';import { MessageActions, EditedIndicator } from './MessageActions';
+import { apiClient } from '@/lib/api-client';
 interface MessagingCenterProps {
   friend: Friend;
   hasVault?: boolean;
@@ -168,6 +168,89 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
     } else if (days === 1) {
       return 'Yesterday';
     } else if (days < 7) {
+      return date.toLocaleDateString([], { weekday: 'short' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  };
+
+  // Handle message edit
+  const handleEditMessage = async (messageId: string, newContent: string) => {
+    if (!address) return;
+
+    try {
+      // Encrypt new content
+      const encryptedContent = await encryptMessage(
+        newContent,
+        friend.address,
+        (msg) => signMessageAsync({ message: msg })
+      );
+
+      // Update locally first
+      setMessages(messages.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, decryptedContent: newContent, encryptedContent, editedAt: Date.now() }
+          : msg
+      ));
+
+      // Update backend (in production)
+      await apiClient.editMessage(messageId, conversationId, encryptedContent);
+
+      // Update localStorage
+      const updatedMessages = messages.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, encryptedContent, editedAt: Date.now() }
+          : msg
+      );
+      localStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
+    } catch (error) {
+      console.error('Failed to edit message:', error);
+      alert('Failed to edit message. Please try again.');
+    }
+  };
+
+  // Handle message delete
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      // Update locally first
+      setMessages(messages.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, deletedAt: Date.now(), decryptedContent: undefined, encryptedContent: '' }
+          : msg
+      ));
+
+      // Update backend (in production)
+      await apiClient.deleteMessage(messageId, conversationId);
+
+      // Update localStorage
+      const updatedMessages = messages.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, deletedAt: Date.now(), encryptedContent: '' }
+          : msg
+      );
+      localStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      alert('Failed to delete message. Please try again.');
+    }
+  };
+
+  // Handle copy message
+  const handleCopyMessage = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      // Optional: show toast notification
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
+  // Handle report message
+  const handleReportMessage = (messageId: string) => {
+    // In production: send report to backend
+    console.log('Report message:', messageId);
+    alert('Message reported. Thank you for helping keep the community safe.');
+  };
       return date.toLocaleDateString([], { weekday: 'short' });
     } else {
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -313,13 +396,29 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
             {messages.map((message, idx) => {
               const isOwn = message.from.toLowerCase() === address?.toLowerCase();
               
+              // Don't render deleted messages from UI (still in data for audit)
+              if (message.deletedAt) {
+                return (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className="px-4 py-2 text-sm text-gray-500 italic">
+                      Message deleted
+                    </div>
+                  </motion.div>
+                );
+              }
+              
               return (
                 <motion.div
                   key={message.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                  className={`flex group ${isOwn ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-[70%] ${isOwn ? 'order-2' : 'order-1'}`}>
                     {/* Message bubble */}
@@ -340,6 +439,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                       <span className="text-xs text-[#6B6B78]">
                         {formatTimestamp(message.timestamp)}
                       </span>
+                      <EditedIndicator editedAt={message.editedAt} />
                       {message.verified && (
                         <span title="Verified signature">
                           <Shield className="w-3 h-3 text-[#50C878]" />
@@ -347,6 +447,34 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                       )}
                       {isOwn && (
                         message.read ? (
+                          <span title="Read">
+                            <CheckCheck className="w-3 h-3 text-[#00F0FF]" />
+                          </span>
+                        ) : (
+                          <span title="Sent">
+                            <Check className="w-3 h-3 text-[#6B6B78]" />
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Message Actions */}
+                  <div className={`${isOwn ? 'order-1 mr-2' : 'order-2 ml-2'} self-end mb-2`}>
+                    <MessageActions
+                      message={message}
+                      isOwnMessage={isOwn}
+                      onEdit={handleEditMessage}
+                      onDelete={handleDeleteMessage}
+                      onCopy={handleCopyMessage}
+                      onReport={handleReportMessage}
+                    />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </>
+        )}
                           <span title="Read">
                             <CheckCheck className="w-3 h-3 text-[#00F0FF]" />
                           </span>

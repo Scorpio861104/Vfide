@@ -153,6 +153,27 @@ export class APIClient {
     });
   }
 
+  async editMessage(messageId: string, conversationId: string, newEncryptedContent: string) {
+    return this.request<{ success: boolean; message: any }>('/messages/edit', {
+      method: 'PATCH',
+      body: JSON.stringify({ messageId, conversationId, encryptedContent: newEncryptedContent }),
+    });
+  }
+
+  async deleteMessage(messageId: string, conversationId: string) {
+    return this.request<{ success: boolean; message: any }>('/messages/delete', {
+      method: 'DELETE',
+      body: JSON.stringify({ messageId, conversationId }),
+    });
+  }
+
+  async addReaction(messageId: string, conversationId: string, emoji: string, userAddress: string) {
+    return this.request<{ success: boolean; message: any }>('/messages/reaction', {
+      method: 'POST',
+      body: JSON.stringify({ messageId, conversationId, emoji, userAddress }),
+    });
+  }
+
   // ============ Users ============
 
   async getUser(address: string) {
