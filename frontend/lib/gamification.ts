@@ -442,6 +442,60 @@ class GamificationEngine {
 export const gamification = new GamificationEngine();
 
 /**
+ * Get all user progress for leaderboard
+ */
+export function getAllUserProgress(): Array<UserProgress & { address: string; alias?: string; totalXP: number; unlockedAchievements: Achievement[] }> {
+  if (typeof window === 'undefined') return [];
+
+  const allProgress: Array<UserProgress & { address: string; alias?: string; totalXP: number; unlockedAchievements: Achievement[] }> = [];
+
+  // Iterate through localStorage to find all gamification entries
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith('vfide_gamification_')) {
+      try {
+        const address = key.replace('vfide_gamification_', '');
+        const data = localStorage.getItem(key);
+        if (data) {
+          const progress: UserProgress = JSON.parse(data);
+          
+          // Get user alias if available
+          let alias: string | undefined;
+          try {
+            const profileData = localStorage.getItem(`vfide_profile_${address}`);
+            if (profileData) {
+              const profile = JSON.parse(profileData);
+              alias = profile.alias;
+            }
+          } catch (e) {
+            // Ignore profile errors
+          }
+
+          allProgress.push({
+            ...progress,
+            address,
+            alias,
+            totalXP: progress.xp,
+            unlockedAchievements: progress.achievements.map(id => ACHIEVEMENTS[id]),
+          });
+        }
+      } catch (e) {
+        console.error('Failed to parse gamification data:', e);
+      }
+    }
+  }
+
+  return allProgress;
+}
+
+/**
+ * Get user's progress by address
+ */
+export function getProgress(address: string): UserProgress {
+  return gamification.getProgress(address);
+}
+
+/**
  * React hook for gamification
  */
 export function useGamification(userAddress: string | undefined) {

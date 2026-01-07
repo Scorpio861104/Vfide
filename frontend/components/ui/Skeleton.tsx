@@ -105,3 +105,94 @@ export function SkeletonTable({ rows = 5, cols = 4, className = '' }: { rows?: n
     </div>
   );
 }
+
+/**
+ * Skeleton for message list
+ */
+export function MessageListSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-4 p-4">
+      {Array.from({ length: count }).map((_, i) => {
+        const isRight = i % 2 === 0;
+        return (
+          <div key={i} className={`flex ${isRight ? 'justify-end' : 'justify-start'}`}>
+            <div className="max-w-[70%] space-y-2">
+              <Skeleton 
+                height={60} 
+                width={Math.random() * 150 + 150}
+                rounded="lg"
+              />
+              <Skeleton height={12} width={100} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Skeleton for friend list
+ */
+export function FriendListSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="space-y-2 p-4">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 p-3 bg-[#0F0F14] rounded-lg">
+          <Skeleton width={40} height={40} rounded="full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton height={16} className="w-3/5" />
+            <Skeleton height={12} className="w-2/5" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Skeleton for group list
+ */
+export function GroupListSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="space-y-3 p-4">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="p-4 bg-[#0F0F14] border border-[#2A2A2F] rounded-xl">
+          <div className="flex items-start gap-3">
+            <Skeleton width={48} height={48} rounded="full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton height={18} className="w-4/5" />
+              <Skeleton height={14} className="w-2/5" />
+              <div className="flex gap-2 mt-2">
+                <Skeleton width={60} height={20} rounded="md" />
+                <Skeleton width={80} height={20} rounded="md" />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Skeleton for achievement list
+ */
+export function AchievementListSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="p-4 bg-[#0F0F14] border border-[#2A2A2F] rounded-xl">
+          <div className="flex items-start gap-3">
+            <Skeleton width={48} height={48} rounded="full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton height={16} className="w-4/5" />
+              <Skeleton height={12} className="w-full" />
+              <Skeleton width={120} height={20} rounded="md" className="mt-2" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
