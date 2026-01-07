@@ -32,7 +32,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
   const [newFriendAlias, setNewFriendAlias] = useState('');
   const [filter, setFilter] = useState<'all' | 'favorites' | 'online'>('all');
 
-  // Load friends from localStorage
+  // Load friends, privacy settings, and blocked users from localStorage
   useEffect(() => {
     if (!address) return;
     
@@ -42,6 +42,24 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
         setFriends(JSON.parse(stored));
       } catch (e) {
         console.error('Failed to load friends:', e);
+      }
+    }
+
+    const storedPrivacy = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_privacy_${address}`);
+    if (storedPrivacy) {
+      try {
+        setPrivacySettings(JSON.parse(storedPrivacy));
+      } catch (e) {
+        console.error('Failed to load privacy settings:', e);
+      }
+    }
+
+    const storedBlocked = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`);
+    if (storedBlocked) {
+      try {
+        setBlockedUsers(JSON.parse(storedBlocked));
+      } catch (e) {
+        console.error('Failed to load blocked users:', e);
       }
     }
   }, [address]);
