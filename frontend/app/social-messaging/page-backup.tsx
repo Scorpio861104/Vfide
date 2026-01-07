@@ -11,21 +11,14 @@ import {
   BarChart3,
   Shield,
   Lock,
-  UserPlus,
-  Circle as CircleIcon,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { FriendsList } from '@/components/social/FriendsList';
 import { MessagingCenter } from '@/components/social/MessagingCenter';
 import { GroupsManager } from '@/components/social/GroupsManager';
-import { FriendRequestsPanel } from '@/components/social/FriendRequestsPanel';
-import { PrivacySettings } from '@/components/social/PrivacySettings';
-import { FriendCirclesManager } from '@/components/social/FriendCirclesManager';
 import { Friend, Group } from '@/types/messaging';
-import { FriendRequest } from '@/types/friendRequests';
-import { STORAGE_KEYS } from '@/lib/messageEncryption';
 
-type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'privacy' | 'analytics';
+type TabType = 'messages' | 'groups' | 'analytics';
 
 export default function SocialPage() {
   const { address } = useAccount();
@@ -34,49 +27,9 @@ export default function SocialPage() {
   const [selectedGroup, setSelectedGroup] = useState<Group | undefined>();
   const [friends, setFriends] = useState<Friend[]>([]);
 
-  // Load friends from localStorage
-  React.useEffect(() => {
-    if (!address) return;
-    
-    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
-    if (stored) {
-      try {
-        setFriends(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to load friends:', e);
-      }
-    }
-  }, [address]);
-
-  // Accept friend request handler
-  const handleAcceptRequest = (request: FriendRequest) => {
-    if (!address) return;
-    
-    const newFriend: Friend = {
-      address: request.from,
-      alias: request.fromAlias,
-      addedDate: Date.now(),
-      isFavorite: false,
-      proofScore: request.fromProofScore || 0,
-    };
-
-    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
-    const existingFriends: Friend[] = stored ? JSON.parse(stored) : [];
-    const updated = [...existingFriends, newFriend];
-    setFriends(updated);
-    localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(updated));
-  };
-
-  const handleRejectRequest = (request: FriendRequest) => {
-    console.log('Rejected request from:', request.from);
-  };
-
   const tabs = [
     { id: 'messages' as const, label: 'Messages', icon: MessageCircle, color: '#00F0FF' },
-    { id: 'requests' as const, label: 'Requests', icon: UserPlus, color: '#FFD700' },
-    { id: 'circles' as const, label: 'Circles', icon: CircleIcon, color: '#FF8C42' },
     { id: 'groups' as const, label: 'Groups', icon: Users, color: '#A78BFA' },
-    { id: 'privacy' as const, label: 'Privacy', icon: Shield, color: '#FF6B9D' },
     { id: 'analytics' as const, label: 'Analytics', icon: BarChart3, color: '#50C878' },
   ];
 
@@ -204,37 +157,6 @@ export default function SocialPage() {
               </motion.div>
             )}
 
-            {/* Requests Tab */}
-            {activeTab === 'requests' && (
-              <motion.div
-                key="requests"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <div className="max-w-4xl mx-auto">
-                  <FriendRequestsPanel
-                    onAccept={handleAcceptRequest}
-                    onReject={handleRejectRequest}
-                  />
-                </div>
-              </motion.div>
-            )}
-
-            {/* Circles Tab */}
-            {activeTab === 'circles' && (
-              <motion.div
-                key="circles"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <div className="max-w-7xl mx-auto">
-                  <FriendCirclesManager friends={friends} />
-                </div>
-              </motion.div>
-            )}
-
             {/* Groups Tab */}
             {activeTab === 'groups' && (
               <motion.div
@@ -295,20 +217,6 @@ export default function SocialPage() {
                       </div>
                     </div>
                   )}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Privacy Tab */}
-            {activeTab === 'privacy' && (
-              <motion.div
-                key="privacy"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <div className="max-w-6xl mx-auto">
-                  <PrivacySettings />
                 </div>
               </motion.div>
             )}
