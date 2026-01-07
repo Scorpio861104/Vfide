@@ -19,6 +19,8 @@ import {
   Award,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useHasVault } from '@/hooks/useHasVault';
 import { FriendsList } from '@/components/social/FriendsList';
 import { MessagingCenter } from '@/components/social/MessagingCenter';
 import { GroupMessaging } from '@/components/social/GroupMessaging';
@@ -37,7 +39,8 @@ import { STORAGE_KEYS } from '@/lib/messageEncryption';
 type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'privacy' | 'discover' | 'activity';
 
 export default function SocialPage() {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { hasVault, vaultAddress } = useHasVault();
   const [activeTab, setActiveTab] = useState<TabType>('messages');
   const [selectedFriend, setSelectedFriend] = useState<Friend | undefined>();
   const [selectedGroup, setSelectedGroup] = useState<Group | undefined>();
@@ -97,7 +100,54 @@ export default function SocialPage() {
 
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20">
+          {/* Wallet Connection Guard */}
+          {!isConnected && (
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-2xl p-8 md:p-12 text-center"
+              >
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center">
+                  <MessageCircle className="w-10 h-10 text-[#0A0A0F]" />
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-[#F5F3E8] mb-4">
+                  Connect Your Wallet
+                </h2>
+                <p className="text-lg text-[#A0A0A5] mb-8 max-w-2xl mx-auto">
+                  Access encrypted messaging, friend connections, and social features.
+                  Your wallet is your identity—no email or signup required.
+                </p>
+                
+                {/* Features Grid */}
+                <div className="grid md:grid-cols-3 gap-4 mb-8 max-w-3xl mx-auto">
+                  <div className="p-4 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]">
+                    <MessageCircle className="w-6 h-6 text-[#00F0FF] mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-[#F5F3E8]">Encrypted Messaging</p>
+                    <p className="text-xs text-[#6B6B78] mt-1">End-to-end encryption</p>
+                  </div>
+                  <div className="p-4 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]">
+                    <Users className="w-6 h-6 text-[#A78BFA] mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-[#F5F3E8]">Groups & Friends</p>
+                    <p className="text-xs text-[#6B6B78] mt-1">Build your network</p>
+                  </div>
+                  <div className="p-4 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]">
+                    <Award className="w-6 h-6 text-[#FFD700] mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-[#F5F3E8]">Endorsements</p>
+                    <p className="text-xs text-[#6B6B78] mt-1">Build reputation</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-center">
+                  <ConnectButton />
+                </div>
+              </motion.div>
+            </div>
+          )}
+
           {/* Header */}
+          {isConnected && (
+          <React.Fragment>
           <motion.section
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -119,14 +169,22 @@ export default function SocialPage() {
               {/* Connection Status & Notifications */}
               {address && (
                 <div className="flex items-center gap-2 md:gap-3">
-                  <div className="flex items-center gap-2 md:gap-3 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg px-3 md:px-4 py-2 md:py-3">
-                    <div className="w-2 h-2 md:w-3 md:h-3 bg-[#50C878] rounded-full animate-pulse" />
-                    <div>
-                      <div className="text-xs text-[#A0A0A5]">Connected</div>
-                      <div className="text-xs md:text-sm font-medium text-[#F5F3E8]">
-                        {address.slice(0, 6)}...{address.slice(-4)}
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg px-3 md:px-4 py-2 md:py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 md:w-3 md:h-3 bg-[#50C878] rounded-full animate-pulse" />
+                      <div>
+                        <div className="text-xs text-[#A0A0A5]">Connected</div>
+                        <div className="text-xs md:text-sm font-medium text-[#F5F3E8]">
+                          {address.slice(0, 6)}...{address.slice(-4)}
+                        </div>
                       </div>
                     </div>
+                    {hasVault && (
+                      <div className="flex items-center gap-1 px-2 py-1 bg-[#00F0FF]/10 border border-[#00F0FF]/30 rounded-full">
+                        <Lock className="w-3 h-3 text-[#00F0FF]" />
+                        <span className="text-xs text-[#00F0FF] font-semibold">Vault Active</span>
+                      </div>
+                    )}
                   </div>
                   <div className="relative">
                     <NotificationCenter />
@@ -227,7 +285,7 @@ export default function SocialPage() {
                 {/* Messaging Center */}
                 <div className="lg:col-span-2">
                   {selectedFriend ? (
-                    <MessagingCenter friend={selectedFriend} />
+                    <MessagingCenter friend={selectedFriend} hasVault={hasVault} />
                   ) : (
                     <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col items-center justify-center p-12 text-center">
                       <div className="w-24 h-24 rounded-full bg-[#00F0FF]/10 flex items-center justify-center mb-6">
@@ -389,6 +447,8 @@ export default function SocialPage() {
               </div>
             </div>
           </motion.div>
+          </React.Fragment>
+          )}
         </main>
 
         <Footer />

@@ -30,9 +30,10 @@ import { addActivity } from './ActivityFeed';
 
 interface MessagingCenterProps {
   friend: Friend;
+  hasVault?: boolean;
 }
 
-export function MessagingCenter({ friend }: MessagingCenterProps) {
+export function MessagingCenter({ friend, hasVault = false }: MessagingCenterProps) {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -218,11 +219,12 @@ export function MessagingCenter({ friend }: MessagingCenterProps) {
         </div>
       </div>
 
-      {/* Transaction Buttons */}
+      {/* Transaction Buttons - Only show if user has vault */}
       <div className="px-4 pb-4 border-b border-[#3A3A4F]">
-        <TransactionButtons
-          friend={friend}
-          onPaymentRequest={(amount, message, token) => {
+        {hasVault ? (
+          <TransactionButtons
+            friend={friend}
+            onPaymentRequest={(amount, message, token) => {
             if (address) {
               addNotification(friend.address, {
                 type: 'payment_request',
@@ -254,7 +256,26 @@ export function MessagingCenter({ friend }: MessagingCenterProps) {
             }
             alert(`Payment sent: ${amount} ${token} (Will integrate with Vault)`);
           }}
-        />
+          />
+        ) : (
+          <div className="p-3 bg-[#0A0A0F] border border-[#2A2A2F] rounded-lg">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center flex-shrink-0">
+                <Lock className="w-5 h-5 text-[#0A0A0F]" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-[#F5F3E8] mb-1">Enable Payments</p>
+                <p className="text-xs text-[#A0A0A5] mb-2">Create a vault to send and request crypto payments in messages.</p>
+                <a
+                  href="/vault"
+                  className="inline-flex items-center gap-1 text-xs text-[#00F0FF] hover:underline"
+                >
+                  Create Vault →
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Mutual Friends */}
