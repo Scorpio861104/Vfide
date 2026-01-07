@@ -88,7 +88,7 @@ export const lessonContentData: Record<string, LessonContent> = {
   "Understanding Your Vault": {
     title: "Understanding Your Vault",
     duration: "4 min",
-    description: "Wallet = key, Vault = safe. Auto-created on first token receipt.",
+    description: "Wallet = key, Vault = safe. Auto-created on first token deposit.",
     sections: [
       {
         heading: "Wallet vs Vault: What's the Difference?",
@@ -97,7 +97,7 @@ export const lessonContentData: Record<string, LessonContent> = {
           "Wallet: Your personal key (you control it)",
           "Vault: Your secure storage (smart contract with rules)",
           "Vaults are non-custodial - only YOU can access your funds",
-          "Vaults add security features wallets don't have"
+          "Vaults add security features that wallets don't have"
         ]
       },
       {
@@ -185,7 +185,7 @@ export const lessonContentData: Record<string, LessonContent> = {
         heading: "What is ProofScore?",
         content: "ProofScore is VFIDE's reputation system. Unlike credit scores that favor the wealthy, ProofScore measures trustworthy behavior and ecosystem participation.",
         points: [
-          "Score ranges from 0 to 1,000 points",
+          "Score ranges from 0 to 10,000 points (displayed as 0-100%)",
           "Higher scores unlock benefits and privileges",
           "Score is calculated on-chain and transparent",
           "Cannot be bought - only earned through actions"
@@ -195,34 +195,34 @@ export const lessonContentData: Record<string, LessonContent> = {
         heading: "How to Earn ProofScore",
         content: "ProofScore rewards positive actions that benefit the VFIDE ecosystem.",
         points: [
-          "Making payments: Consistent usage shows trust",
+          "Making payments: Consistent usage builds trust",
           "Receiving payments: Others trusting you increases score",
-          "Holding tokens: Long-term commitment is valued",
           "Voting in governance: Active participation matters",
           "Setting up guardians: Security-conscious users are rewarded",
-          "Completing KYC: Optional but boosts score significantly"
+          "Earning badges: Achievements contribute to your score",
+          "Avoiding disputes: Clean record maintains high score"
         ]
       },
       {
         heading: "ProofScore Tiers & Benefits",
         content: "Your score determines your tier, which unlocks specific benefits:",
         points: [
-          "Citizen (0-199): Basic access",
-          "Trusted (200-399): Lower transaction limits, voting power",
-          "Seer (400-599): Governance proposal rights, special badges",
-          "Guardian (600-799): Priority support, higher limits",
-          "Custodian (800-1000): Maximum privileges, council eligibility"
+          "Quarantined (0-9%): Suspected fraud, most actions blocked",
+          "Restricted (10-39%): Maximum fees, limited functionality",
+          "Monitored (40-53%): Elevated fees, reduced privileges",
+          "Standard (54-79%): Normal fees, governance eligible",
+          "Elite (80-100%): Lowest fees, full privileges, council eligibility"
         ]
       },
       {
         heading: "Why ProofScore Matters",
-        content: "ProofScore creates a meritocracy where trust is earned, not bought. This protects the ecosystem from bad actors while rewarding good behavior."
+        content: "ProofScore creates a meritocracy where trust is earned, not bought. This protects the ecosystem from bad actors while rewarding good behavior. Your score directly affects your transaction fees - higher trust means lower costs."
       }
     ],
     keyTakeaways: [
-      "ProofScore measures trust through actions, not wealth",
+      "ProofScore measures trust through actions, not wealth (0-100% scale)",
       "Earn points by using VFIDE, voting, and securing your account",
-      "Higher tiers unlock better benefits and governance power",
+      "Higher scores unlock lower fees and greater privileges",
       "Your score is transparent and verifiable on-chain"
     ]
   },
@@ -269,7 +269,7 @@ export const lessonContentData: Record<string, LessonContent> = {
         content: "Guardian selection is critical. Choose wisely:",
         points: [
           "Pick people you trust who won't collude against you",
-          "Use a mix: family, friends, and hardware wallets",
+          "Use a mix: family, friends, or hardware wallets",
           "Don't tell guardians who the other guardians are (prevents collusion)",
           "Update guardians if relationships change",
           "Consider geographic distribution for disaster resilience"
@@ -417,28 +417,27 @@ export const lessonContentData: Record<string, LessonContent> = {
     sections: [
       {
         heading: "ProofScore Algorithm Deep Dive",
-        content: "ProofScore is calculated using a weighted formula that considers multiple factors:",
+        content: "ProofScore is calculated using a weighted formula that considers multiple factors. The score ranges from 0-10,000 (displayed as 0-100%).",
         points: [
-          "Transaction Volume (20%): Total value sent + received",
-          "Transaction Frequency (15%): Consistent usage over time",
-          "Network Age (15%): Days since first transaction",
-          "Governance Participation (15%): Voting and proposal activity",
-          "Security Posture (15%): Guardian setup, 2FA, KYC",
-          "Token Holdings (10%): Amount held (sqrt to diminish whale advantage)",
-          "Badge Collection (10%): Special achievements and milestones"
+          "Transaction Activity (40%): Successful payments, transfers, commerce",
+          "Community Endorsements (30%): Badges and peer recognition",
+          "Good Behavior (20%): No disputes, fraud, or suspicious activity",
+          "Wallet Age (10%): Time since first transaction",
+          "Base Score: Everyone starts at 5,000 (50%) - neutral position",
+          "Capital held contributes 0% - trust is earned, not bought"
         ]
       },
       {
         heading: "Optimization Strategies",
         content: "Strategic users can maximize their ProofScore through intentional actions:",
         points: [
-          "Make regular transactions, even if small",
-          "Set up all security features (guardians, 2FA)",
+          "Make regular transactions, even if small amounts",
+          "Set up all security features (guardians, vault)",
           "Vote on every governance proposal",
-          "Hold tokens long-term rather than frequent trading",
-          "Complete optional KYC verification (up to +100 points)",
-          "Earn special badges through ecosystem participation",
-          "Avoid penalties: don't spam, attempt fraud, or violate terms"
+          "Earn badges through ecosystem participation",
+          "Maintain clean record - avoid disputes and refunds",
+          "Stay active - scores decay with inactivity",
+          "Engage with the community for endorsements"
         ]
       },
       {
@@ -467,11 +466,11 @@ export const lessonContentData: Record<string, LessonContent> = {
         heading: "Benefits by Tier (Detailed)",
         content: "Each tier unlocks specific privileges:",
         points: [
-          "Citizen (0-199): Basic platform access",
-          "Trusted (200-399): Increased transaction limits, voting rights",
-          "Seer (400-599): Create proposals, lower fees, special badge",
-          "Guardian (600-799): Council eligibility, priority support, exclusive features",
-          "Custodian (800-1000): Maximum limits, governance weight multiplier"
+          "Quarantined (0-9%): Suspected fraud, most actions blocked",
+          "Restricted (10-39%): Maximum fees (5%), limited functionality",
+          "Monitored (40-53%): Elevated fees (2.5-5%), reduced privileges",
+          "Standard (54-79%): Normal fees (~2.5%), governance voting eligible",
+          "Elite (80-100%): Minimum fees (0.25%), full privileges, council eligibility"
         ]
       }
     ],

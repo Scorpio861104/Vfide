@@ -22,15 +22,15 @@ const faqs = [
     questions: [
       {
         q: "Who pays the fees? Is it really 0% for customers?",
-        a: "YES - Payment processing is 0% for both customers AND merchants. Only network gas applies (~$0.01-0.10 on Base). HOWEVER: When you TRANSFER VFIDE tokens, there's a ProofScore-based fee that scales from 0.25% (score ≥8000 / 80%) to 5% (score ≤4000 / 40%). Payments are FREE. Token transfers fund the ecosystem through burn + Sanctum charity + ecosystem allocations."
+        a: "YES - Payment processing is 0% for both customers AND merchants. Only network gas applies (~$0.01-0.10 on Base). HOWEVER: When you TRANSFER VFIDE tokens (wallet-to-wallet), there's a ProofScore-based fee that scales from 0.25% (score ≥80%) to 5% (score ≤40%). Payments are FREE. Token transfers fund the ecosystem through burn + Sanctum charity + ecosystem allocations."
       },
       {
         q: "What are the VFIDE token transfer fees?",
-        a: "Fees scale DYNAMICALLY based on your ProofScore using a linear curve: Score ≤4000 (40%) pays 5% (max), Score ≥8000 (80%) pays 0.25% (min). Between 4000-8000, fees interpolate linearly. Example: Score 6000 pays ~2.63%. Higher reputation = lower fees. Fee split: 40% burn (deflationary), 10% Sanctum (charity), 50% ecosystem (staking, council, incentives)."
+        a: "Fees scale DYNAMICALLY based on your ProofScore using a linear curve: Score ≤40% pays 5% (max), Score ≥80% pays 0.25% (min). Between 40-80%, fees interpolate linearly. Example: Score 60% pays ~2.63%. Higher reputation = lower fees. Fee split: 40% burn (deflationary), 10% Sanctum (charity), 50% ecosystem (staking, council, incentives)."
       },
       {
         q: "How does this compare to traditional processors?",
-        a: "Stripe charges 2.9% + 30¢. VFIDE merchant payments: 0%. VFIDE token transfers: 0.25-5% burn fee (deflationary). Stablecoin payments = 0%. Be a merchant = FREE."
+        a: "Stripe charges 2.9% + 30¢ per transaction. VFIDE merchant payments: 0% processing fee. VFIDE token transfers: 0.25-5% behavioral fee (deflationary, funds ecosystem). For merchants accepting payments, VFIDE is free. For peer-to-peer transfers, fees reward trust."
       }
     ]
   },
@@ -39,7 +39,7 @@ const faqs = [
     questions: [
       {
         q: "Who controls my funds? Can VFIDE freeze my account?",
-        a: "YOU control 100%. Your vault is a smart contract with withdrawal functions that ONLY accept calls from YOUR wallet address. VFIDE cannot pause, freeze, or access vaults - the code doesn't allow it. True non-custodial."
+        a: "YOU control 100%. Your vault is a smart contract with withdrawal functions that ONLY accept calls from YOUR wallet address. VFIDE cannot pause, freeze, or access individual user vaults - the code doesn't allow it. True non-custodial. (Note: Emergency Breaker can halt the entire protocol in existential threats, but requires DAO approval.)"
       },
       {
         q: "What is a 'vault' and how is it different from a wallet?",
@@ -56,7 +56,7 @@ const faqs = [
     questions: [
       {
         q: "What is ProofScore and why does it matter?",
-        a: "💎 ProofScore (0-10000 scale) measures trust through ACTIONS and INTEGRITY, not wealth. Calculated from: Transaction activity (40%), Community endorsements (30%), Good behavior & badges (20%), Wallet age (10%). Capital held contributes 0%."
+        a: "💎 ProofScore (0-100% scale, internally 0-10000) measures trust through ACTIONS and INTEGRITY, not wealth. Calculated from: Transaction activity (40%), Community endorsements (30%), Good behavior & badges (20%), Wallet age (10%). Capital held contributes 0%. Higher scores = lower fees and greater privileges."
       },
       {
         q: "How do I increase my ProofScore?",
@@ -64,7 +64,7 @@ const faqs = [
       },
       {
         q: "What are the ProofScore tiers?",
-        a: "ProofScore ranges 0-10000. Fees scale LINEARLY: ≤4000 (40%) = 5% fee (max), ≥8000 (80%) = 0.25% fee (min). Between these, fees decrease proportionally as score increases. At 6000 you'd pay ~2.63%. No fixed tiers - your exact score determines your exact fee. Governance requires 5400+ (54%), merchant listing requires 5600+ (56%)."
+        a: "ProofScore ranges 0-100% (0-10000 internally). Fees scale LINEARLY: ≤40% = 5% fee (max), ≥80% = 0.25% fee (min). Between these, fees decrease proportionally as score increases. At 60% you'd pay ~2.63%. No fixed tiers for fees - your exact score determines your exact fee. Governance requires ≥54%, merchant listing requires ≥56%, council eligibility requires ≥70%."
       }
     ]
   },

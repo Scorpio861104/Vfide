@@ -327,7 +327,7 @@ export default function Home() {
                 className="text-xl text-[#A8A8B3] mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
               >
                 The first payment protocol where merchants pay <strong className="text-[#F8F8FC]">zero processing fees</strong>. 
-                Build trust, lower network fees, own your funds.
+                Token transfers have behavioral fees (0.25-5%) that reward trust. Own your funds.
               </motion.p>
               
               <motion.div
@@ -457,7 +457,7 @@ export default function Home() {
             <FeatureCard
               icon={<TrendingDown className="w-7 h-7" />}
               title="Zero Processing Fees"
-              description="No merchant processing fees like Stripe (2.9%). Network burn fees (0.25-5%) based on your trust score."
+              description="No merchant processing fees like Stripe (2.9%). Token transfers have behavioral fees (0.25-5% based on your ProofScore) that fund ecosystem growth."
               color="#00F0FF"
               delay={0}
             />
@@ -477,15 +477,15 @@ export default function Home() {
             />
             <FeatureCard
               icon={<Shield className="w-7 h-7" />}
-              title="ProofScore Trust"
-              description="Build reputation through actions, not wealth. Higher trust scores unlock lower fees."
+              title="ProofScore Trust System"
+              description="Build reputation through actions, not wealth. Higher trust scores (0-100%) unlock lower fees and greater privileges."
               color="#A78BFA"
               delay={0.3}
             />
             <FeatureCard
               icon={<Users className="w-7 h-7" />}
               title="Community Governed"
-              description="Vote on protocol changes using your ProofScore. True decentralized governance."
+              description="Vote on protocol changes using your tokens and ProofScore. True decentralized governance."
               color="#00F0FF"
               delay={0.4}
             />
