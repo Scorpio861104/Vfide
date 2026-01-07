@@ -14,20 +14,27 @@ import {
   UserPlus,
   Circle as CircleIcon,
   User,
+  Search,
+  Activity,
+  Award,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { FriendsList } from '@/components/social/FriendsList';
 import { MessagingCenter } from '@/components/social/MessagingCenter';
-import { GroupsManager } from '@/components/social/GroupsManager';
+import { GroupMessaging } from '@/components/social/GroupMessaging';
 import { FriendRequestsPanel } from '@/components/social/FriendRequestsPanel';
 import { PrivacySettings } from '@/components/social/PrivacySettings';
 import { FriendCirclesManager } from '@/components/social/FriendCirclesManager';
 import { AccountSettings } from '@/components/settings/AccountSettings';
+import { NotificationCenter } from '@/components/social/NotificationCenter';
+import { GlobalUserSearch } from '@/components/social/GlobalUserSearch';
+import { ActivityFeed } from '@/components/social/ActivityFeed';
+import { EndorsementsBadges } from '@/components/social/EndorsementsBadges';
 import { Friend, Group } from '@/types/messaging';
 import { FriendRequest } from '@/types/friendRequests';
 import { STORAGE_KEYS } from '@/lib/messageEncryption';
 
-type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'privacy' | 'analytics';
+type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'privacy' | 'discover' | 'activity';
 
 export default function SocialPage() {
   const { address } = useAccount();
@@ -78,9 +85,10 @@ export default function SocialPage() {
     { id: 'requests' as const, label: 'Requests', icon: UserPlus, color: '#FFD700' },
     { id: 'circles' as const, label: 'Circles', icon: CircleIcon, color: '#FF8C42' },
     { id: 'groups' as const, label: 'Groups', icon: Users, color: '#A78BFA' },
+    { id: 'discover' as const, label: 'Discover', icon: Search, color: '#00D5E0' },
+    { id: 'activity' as const, label: 'Activity', icon: Activity, color: '#50C878' },
     { id: 'account' as const, label: 'Account', icon: User, color: '#00F0FF' },
     { id: 'privacy' as const, label: 'Privacy', icon: Shield, color: '#FF6B9D' },
-    { id: 'analytics' as const, label: 'Analytics', icon: BarChart3, color: '#50C878' },
   ];
 
   return (
@@ -107,15 +115,20 @@ export default function SocialPage() {
                 </p>
               </div>
 
-              {/* Connection Status */}
+              {/* Connection Status & Notifications */}
               {address && (
-                <div className="flex items-center gap-3 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg px-4 py-3">
-                  <div className="w-3 h-3 bg-[#50C878] rounded-full animate-pulse" />
-                  <div>
-                    <div className="text-xs text-[#A0A0A5]">Connected</div>
-                    <div className="text-sm font-medium text-[#F5F3E8]">
-                      {address.slice(0, 6)}...{address.slice(-4)}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg px-4 py-3">
+                    <div className="w-3 h-3 bg-[#50C878] rounded-full animate-pulse" />
+                    <div>
+                      <div className="text-xs text-[#A0A0A5]">Connected</div>
+                      <div className="text-sm font-medium text-[#F5F3E8]">
+                        {address.slice(0, 6)}...{address.slice(-4)}
+                      </div>
                     </div>
+                  </div>
+                  <div className="relative">
+                    <NotificationCenter />
                   </div>
                 </div>
               )}
@@ -245,60 +258,8 @@ export default function SocialPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="grid lg:grid-cols-3 gap-6"
-                style={{ minHeight: '600px' }}
               >
-                {/* Groups Manager */}
-                <div className="lg:col-span-1">
-                  <GroupsManager
-                    friends={friends}
-                    onSelectGroup={(group) => {
-                      setSelectedGroup(group);
-                      setSelectedFriend(undefined);
-                    }}
-                    selectedGroup={selectedGroup}
-                  />
-                </div>
-
-                {/* Group Chat */}
-                <div className="lg:col-span-2">
-                  {selectedGroup ? (
-                    <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col items-center justify-center p-12 text-center">
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center mb-6 text-4xl font-bold text-[#F5F3E8]">
-                        {selectedGroup.name[0].toUpperCase()}
-                      </div>
-                      <h3 className="text-2xl font-bold text-[#F5F3E8] mb-3">
-                        {selectedGroup.name}
-                      </h3>
-                      <p className="text-[#A0A0A5] max-w-md mb-4">
-                        {selectedGroup.description || 'No description'}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-[#6B6B78] mb-6">
-                        <Users className="w-4 h-4" />
-                        <span>{selectedGroup.members.length} members</span>
-                      </div>
-                      <div className="text-sm text-[#FFD700]">
-                        Group messaging coming soon! 🎉
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col items-center justify-center p-12 text-center">
-                      <div className="w-24 h-24 rounded-full bg-[#A78BFA]/10 flex items-center justify-center mb-6">
-                        <Users className="w-12 h-12 text-[#A78BFA]" />
-                      </div>
-                      <h3 className="text-2xl font-bold text-[#F5F3E8] mb-3">
-                        Create or Join a Group
-                      </h3>
-                      <p className="text-[#A0A0A5] max-w-md mb-6">
-                        Start group conversations with your friends. All group messages are encrypted for all members.
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-[#6B6B78]">
-                        <Shield className="w-4 h-4 text-[#50C878]" />
-                        <span>Group encryption • Secure • Private</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <GroupMessaging />
               </motion.div>
             )}
 
@@ -310,8 +271,14 @@ export default function SocialPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-4xl mx-auto space-y-6">
                   <AccountSettings />
+                  {address && (
+                    <EndorsementsBadges 
+                      userAddress={address}
+                      showGiveEndorsement={false}
+                    />
+                  )}
                 </div>
               </motion.div>
             )}
@@ -330,25 +297,30 @@ export default function SocialPage() {
               </motion.div>
             )}
 
-            {/* Analytics Tab */}
-            {activeTab === 'analytics' && (
+            {/* Discover Tab */}
+            {activeTab === 'discover' && (
               <motion.div
-                key="analytics"
+                key="discover"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-12 text-center">
-                  <div className="w-24 h-24 rounded-full bg-[#50C878]/10 flex items-center justify-center mx-auto mb-6">
-                    <BarChart3 className="w-12 h-12 text-[#50C878]" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-[#F5F3E8] mb-3">
-                    Social Analytics Coming Soon
-                  </h3>
-                  <p className="text-[#A0A0A5] max-w-md mx-auto">
-                    Track your social influence, engagement metrics, and community growth.
-                    Analytics dashboard will be available in the next update.
-                  </p>
+                <div className="max-w-4xl mx-auto">
+                  <GlobalUserSearch />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Activity Tab */}
+            {activeTab === 'activity' && address && (
+              <motion.div
+                key="activity"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <div className="max-w-4xl mx-auto">
+                  <ActivityFeed userAddress={address} />
                 </div>
               </motion.div>
             )}

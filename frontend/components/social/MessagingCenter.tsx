@@ -22,6 +22,11 @@ import {
   getConversationId,
   STORAGE_KEYS 
 } from '@/lib/messageEncryption';
+import { TransactionButtons } from './TransactionButtons';
+import { EndorsementsBadges } from './EndorsementsBadges';
+import { MutualFriends } from './MutualFriends';
+import { addNotification } from './NotificationCenter';
+import { addActivity } from './ActivityFeed';
 
 interface MessagingCenterProps {
   friend: Friend;
@@ -168,29 +173,30 @@ export function MessagingCenter({ friend }: MessagingCenterProps) {
   return (
     <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col">
       {/* Chat Header */}
-      <div className="p-4 border-b border-[#3A3A4F] flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {/* Avatar */}
-          <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold text-sm">
-              {friend.alias ? friend.alias[0].toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
+      <div className="border-b border-[#3A3A4F]">
+        <div className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* Avatar */}
+            <div className="relative">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold text-sm">
+                {friend.alias ? friend.alias[0].toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
+              </div>
+              {friend.isOnline && (
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#50C878] rounded-full border-2 border-[#1A1A2E]" />
+              )}
             </div>
-            {friend.isOnline && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#50C878] rounded-full border-2 border-[#1A1A2E]" />
-            )}
-          </div>
 
-          {/* Info */}
-          <div>
-            <h3 className="text-sm font-bold text-[#F5F3E8]">
-              {friend.alias || formatAddress(friend.address)}
-            </h3>
-            <p className="text-xs text-[#6B6B78] flex items-center gap-1">
-              <Lock className="w-3 h-3" />
-              End-to-end encrypted
-            </p>
+            {/* Info */}
+            <div>
+              <h3 className="text-sm font-bold text-[#F5F3E8]">
+                {friend.alias || formatAddress(friend.address)}
+              </h3>
+              <p className="text-xs text-[#6B6B78] flex items-center gap-1">
+                <Lock className="w-3 h-3" />
+                End-to-end encrypted
+              </p>
+            </div>
           </div>
-        </div>
 
         {/* Status indicator */}
         <div className="flex items-center gap-2">
@@ -211,6 +217,53 @@ export function MessagingCenter({ friend }: MessagingCenterProps) {
           </button>
         </div>
       </div>
+
+      {/* Transaction Buttons */}
+      <div className="px-4 pb-4 border-b border-[#3A3A4F]">
+        <TransactionButtons
+          friend={friend}
+          onPaymentRequest={(amount, message, token) => {
+            if (address) {
+              addNotification(friend.address, {
+                type: 'payment_request',
+                from: address,
+                title: 'Payment Request',
+                message: `Requesting ${amount} ${token}${message ? `: ${message}` : ''}`,
+              });
+              addActivity(address, {
+                type: 'payment',
+                user: address,
+                content: `Requested ${amount} ${token} from ${friend.alias || formatAddress(friend.address)}`,
+              });
+            }
+            alert(`Payment request sent: ${amount} ${token}`);
+          }}
+          onPaymentSend={(amount, message, token) => {
+            if (address) {
+              addNotification(friend.address, {
+                type: 'payment_received',
+                from: address,
+                title: 'Payment Received',
+                message: `Received ${amount} ${token}${message ? `: ${message}` : ''}`,
+              });
+              addActivity(address, {
+                type: 'payment',
+                user: address,
+                content: `Sent ${amount} ${token} to ${friend.alias || formatAddress(friend.address)}`,
+              });
+            }
+            alert(`Payment sent: ${amount} ${token} (Will integrate with Vault)`);
+          }}
+        />
+      </div>
+
+      {/* Mutual Friends */}
+      {address && (
+        <div className="px-4 pb-4 border-b border-[#3A3A4F]">
+          <MutualFriends userAddress={friend.address} currentUserAddress={address} />
+        </div>
+      )}
+    </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -257,13 +310,19 @@ export function MessagingCenter({ friend }: MessagingCenterProps) {
                         {formatTimestamp(message.timestamp)}
                       </span>
                       {message.verified && (
-                        <Shield className="w-3 h-3 text-[#50C878]" title="Verified signature" />
+                        <span title="Verified signature">
+                          <Shield className="w-3 h-3 text-[#50C878]" />
+                        </span>
                       )}
                       {isOwn && (
                         message.read ? (
-                          <CheckCheck className="w-3 h-3 text-[#00F0FF]" title="Read" />
+                          <span title="Read">
+                            <CheckCheck className="w-3 h-3 text-[#00F0FF]" />
+                          </span>
                         ) : (
-                          <Check className="w-3 h-3 text-[#6B6B78]" title="Sent" />
+                          <span title="Sent">
+                            <Check className="w-3 h-3 text-[#6B6B78]" />
+                          </span>
                         )
                       )}
                     </div>
