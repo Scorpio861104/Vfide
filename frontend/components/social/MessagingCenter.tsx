@@ -29,8 +29,12 @@ import { addNotification } from './NotificationCenter';
 import { addActivity } from './ActivityFeed';
 import { VaultInfoTooltip } from '../ui/VaultInfoTooltip';
 import { analytics } from '@/lib/socialAnalytics';
-import { PresenceIndicator, LastSeenText } from './PresenceIndicator';import { MessageActions, EditedIndicator } from './MessageActions';
+import { PresenceIndicator, LastSeenText } from './PresenceIndicator';
+import { MessageActions, EditedIndicator } from './MessageActions';
 import { apiClient } from '@/lib/api-client';
+import { PaymentButton } from '../crypto/PaymentButton';
+import { useAnnounce } from '@/lib/accessibility';
+import { rewardTokens } from '@/lib/crypto';
 interface MessagingCenterProps {
   friend: Friend;
   hasVault?: boolean;
@@ -45,7 +49,6 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   const [encryptionStatus, setEncryptionStatus] = useState<'idle' | 'encrypting' | 'decrypting' | 'error'>('idle');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationId = address && friend ? getConversationId(address, friend.address) : '';
-  const { announce } = useAnnounce();
 
   // Load conversation messages
   useEffect(() => {
@@ -145,6 +148,11 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       setMessages([...messages, newMessage]);
       setInputMessage('');
       setEncryptionStatus('idle');
+      
+      // Reward tokens for sending message
+      if (address) {
+        await rewardTokens(address, 'message_sent', '10');
+      }
       
       // Announce message sent
       announce('Message sent', 'polite');
@@ -445,7 +453,18 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                     </div>
 
                     {/* Metadata */}
-                    <div className={`flex items-center gap-1 mt-1 px-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex items-center gap-2 mt-1 px-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                      {/* Tip button for received messages */}
+                      {!isOwn && address && (
+                        <PaymentButton
+                          recipientAddress={message.from}
+                          recipientName={friend.alias || formatAddress(friend.address)}
+                          messageId={message.id}
+                          conversationId={conversationId}
+                          variant="tip"
+                          compact
+                        />
+                      )}
                       <span className="text-xs text-[#6B6B78]">
                         {formatTimestamp(message.timestamp)}
                       </span>
@@ -506,6 +525,19 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
 
       {/* Input */}
       <div className="p-4 border-t border-[#3A3A4F]">
+        {/* Payment Button Above Input */}
+        {address && (
+          <div className="mb-3 flex items-center gap-2">
+            <PaymentButton
+              recipientAddress={friend.address}
+              recipientName={friend.alias || formatAddress(friend.address)}
+              conversationId={conversationId}
+              variant="send"
+            />
+            <span className="text-xs text-gray-500">Send crypto payment or request money</span>
+          </div>
+        )}
+        
         <div className="flex items-end gap-2">
           <button className="p-2 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors">
             <Smile className="w-5 h-5" />
