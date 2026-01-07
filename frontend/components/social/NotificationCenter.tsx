@@ -124,7 +124,7 @@ export function NotificationCenter() {
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="absolute right-0 top-12 w-96 max-h-[600px] bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl shadow-2xl z-50 flex flex-col"
+              className="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-16 sm:top-12 w-auto sm:w-96 max-h-[80vh] sm:max-h-[600px] bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl shadow-2xl z-50 flex flex-col"
             >
               {/* Header */}
               <div className="p-4 border-b border-[#2A2A2F] flex items-center justify-between">
