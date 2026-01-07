@@ -9,10 +9,10 @@ const usersStore = new Map<string, any>();
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const { address } = params;
+    const { address } = await params;
 
     if (!address) {
       return NextResponse.json(
@@ -46,10 +46,11 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
+  const resolvedParams = await params;
   try {
-    const { address } = params;
+    const { address } = resolvedParams;
     const body = await request.json();
 
     if (!address) {
@@ -94,10 +95,11 @@ export async function PUT(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
+  const resolvedParams = await params;
   try {
-    const { address } = params;
+    const { address } = resolvedParams;
     
     // Get form data
     const formData = await request.formData();

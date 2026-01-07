@@ -11,6 +11,7 @@ import { DemoModeBanner } from "@/components/DemoModeBanner";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PresenceManager } from "@/components/social/PresenceManager";
+import { SecurityProvider } from "@/components/security/SecurityProvider";
 
 const inter = Inter({
   variable: "--font-body",
@@ -87,6 +88,7 @@ export default function RootLayout({
           <ErrorBoundary>
             <Web3Provider>
               <ToastProvider>
+                <SecurityProvider />
                 <PresenceManager />
                 <DemoModeBanner />
                 <NetworkSwitchOverlay />
