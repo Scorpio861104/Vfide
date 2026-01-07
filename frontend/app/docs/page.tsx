@@ -10,6 +10,8 @@ import {
   GraduationCap, ChevronDown, ChevronRight, Lock,
   Search, Clock
 } from "lucide-react";
+import LessonModal, { LessonContent } from "@/components/LessonModal";
+import { lessonContentData } from "@/data/lessonContent";
 
 type DocTab = "overview" | "learn" | "faq" | "security";
 
@@ -190,6 +192,8 @@ export default function DocsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<"beginner" | "intermediate" | "advanced">("beginner");
+  const [selectedLesson, setSelectedLesson] = useState<LessonContent | null>(null);
+  const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
 
   const tabs: { id: DocTab; label: string; icon: React.ReactNode }[] = [
     { id: "overview", label: "Documentation", icon: <Book className="w-4 h-4" /> },
@@ -339,6 +343,13 @@ export default function DocsPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
+                      onClick={() => {
+                        const lessonContent = lessonContentData[lesson.title];
+                        if (lessonContent) {
+                          setSelectedLesson(lessonContent);
+                          setIsLessonModalOpen(true);
+                        }
+                      }}
                       className="bg-[#2A2A2F] rounded-xl p-6 border border-[#3A3A3F] hover:border-[#00F0FF]/50 transition-all cursor-pointer group"
                     >
                       <div className="w-12 h-12 mb-4 flex items-center justify-center bg-[#00F0FF]/10 rounded-lg border border-[#00F0FF]/30">
@@ -525,6 +536,15 @@ export default function DocsPage() {
           </AnimatePresence>
         </div>
       </main>
+
+      <LessonModal
+        isOpen={isLessonModalOpen}
+        onClose={() => {
+          setIsLessonModalOpen(false);
+          setSelectedLesson(null);
+        }}
+        lesson={selectedLesson}
+      />
 
       <Footer />
     </>
