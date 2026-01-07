@@ -19,6 +19,7 @@ import { MessagingCenter } from '@/components/social/MessagingCenter';
 import { GroupsManager } from '@/components/social/GroupsManager';
 import { FriendRequestsPanel } from '@/components/social/FriendRequestsPanel';
 import { PrivacySettings } from '@/components/social/PrivacySettings';
+import { FriendCircles } from '@/components/social/FriendCircles';
 import { Friend, Group } from '@/types/messaging';
 import { FriendRequest } from '@/types/friendRequests';
 import { STORAGE_KEYS } from '@/lib/messageEncryption';
@@ -31,6 +32,7 @@ export default function SocialPage() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | undefined>();
   const [selectedGroup, setSelectedGroup] = useState<Group | undefined>();
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [selectedCircle, setSelectedCircle] = useState<string | null>(null);
 
   // Load friends from localStorage
   React.useEffect(() => {
@@ -45,6 +47,17 @@ export default function SocialPage() {
       }
     }
   }, [address]);
+
+  // Calculate friend counts per circle
+  const friendCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    friends.forEach(friend => {
+      if (friend.circle) {
+        counts[friend.circle] = (counts[friend.circle] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [friends]);
 
   // Accept friend request handler
   const handleAcceptRequest = (request: FriendRequest) => {
@@ -76,6 +89,7 @@ export default function SocialPage() {
   const tabs = [
     { id: 'messages' as const, label: 'Messages', icon: MessageCircle, color: '#00F0FF' },
     { id: 'requests' as const, label: 'Requests', icon: UserPlus, color: '#FFD700' },
+    { id: 'circles' as const, label: 'Circles', icon: CircleIcon, color: '#FF8C42' },
     { id: 'groups' as const, label: 'Groups', icon: Users, color: '#A78BFA' },
     { id: 'privacy' as const, label: 'Privacy', icon: Shield, color: '#FF6B9D' },
     { id: 'analytics' as const, label: 'Analytics', icon: BarChart3, color: '#50C878' },
@@ -170,11 +184,22 @@ export default function SocialPage() {
               >
                 {/* Messages Tab */}
                 {activeTab === 'messages' && (
-                  <div className="grid lg:grid-cols-[400px_1fr] gap-6 h-[calc(100vh-400px)]">
+                  <div className="grid lg:grid-cols-[280px_400px_1fr] gap-6 h-[calc(100vh-400px)]">
+                    {/* Friend Circles Sidebar */}
+                    <FriendCircles
+                      onSelectCircle={setSelectedCircle}
+                      selectedCircle={selectedCircle}
+                      friendCounts={friendCounts}
+                    />
+                    
+                    {/* Friends List */}
                     <FriendsList
                       onSelectFriend={setSelectedFriend}
                       selectedFriend={selectedFriend}
+                      selectedCircle={selectedCircle}
                     />
+                    
+                    {/* Messaging Center */}
                     <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl overflow-hidden">
                       {selectedFriend ? (
                         <MessagingCenter friend={selectedFriend} />
@@ -198,6 +223,13 @@ export default function SocialPage() {
                       onAccept={handleAcceptRequest}
                       onReject={handleRejectRequest}
                     />
+                  </div>
+                )}
+
+                {/* Friend Circles Tab */}
+                {activeTab === 'circles' && (
+                  <div className="max-w-7xl mx-auto">
+                    <FriendCirclesManager friends={friends} />
                   </div>
                 )}
 
