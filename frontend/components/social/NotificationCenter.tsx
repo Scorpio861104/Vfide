@@ -91,6 +91,20 @@ export function NotificationCenter() {
     setNotifications([]);
   }, []);
 
+  // Keyboard navigation
+  useEffect(() => {
+    if (!showNotifications) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showNotifications]);
+
   const getIcon = (type: Notification['type']) => {
     const iconMap = {
       message: MessageCircle,
@@ -124,10 +138,16 @@ export function NotificationCenter() {
       <button
         onClick={() => setShowNotifications(!showNotifications)}
         className="relative p-2 hover:bg-[#2A2A3F] rounded-lg transition-colors"
+        aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
+        aria-expanded={showNotifications}
+        aria-haspopup="dialog"
       >
-        <Bell className="w-5 h-5 text-[#F5F3E8]" />
+        <Bell className="w-5 h-5 text-[#F5F3E8]" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B9D] text-[#F5F3E8] text-xs font-bold rounded-full flex items-center justify-center">
+          <span 
+            className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B9D] text-[#F5F3E8] text-xs font-bold rounded-full flex items-center justify-center"
+            aria-label={`${unreadCount} unread`}
+          >
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -152,6 +172,9 @@ export function NotificationCenter() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
               className="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-16 sm:top-12 w-auto sm:w-96 max-h-[80vh] sm:max-h-[600px] bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl shadow-2xl z-50 flex flex-col"
+              role="dialog"
+              aria-label="Notifications panel"
+              aria-modal="false"
             >
               {/* Header */}
               <div className="p-4 border-b border-[#2A2A2F] flex items-center justify-between">

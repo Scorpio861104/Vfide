@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -77,9 +77,12 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
     return colorMap[type];
   };
 
-  const filteredActivities = filter === 'all' 
-    ? activities 
-    : activities.filter(a => a.type === filter);
+  const filteredActivities = useMemo(() => {
+    const filtered = filter === 'all' 
+      ? activities 
+      : activities.filter(a => a.type === filter);
+    return filtered.sort((a, b) => b.timestamp - a.timestamp);
+  }, [activities, filter]);
 
   const filterOptions: Array<{ value: 'all' | ActivityItem['type']; label: string }> = [
     { value: 'all', label: 'All' },
@@ -132,9 +135,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredActivities
-            .sort((a, b) => b.timestamp - a.timestamp)
-            .map((activity) => {
+          {filteredActivities.map((activity) => {
               const color = getColor(activity.type);
               return (
                 <motion.div
@@ -185,6 +186,9 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
     </div>
   );
 }
+
+// Export memoized version for better performance
+export default React.memo(ActivityFeed);
 
 // Helper function to add activity
 export function addActivity(

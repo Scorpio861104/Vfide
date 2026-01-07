@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Award,
@@ -40,13 +40,6 @@ interface EndorsementsBadgesProps {
 export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEndorsement }: EndorsementsBadgesProps) {
   const [endorsements, setEndorsements] = useState<Endorsement[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
-  const [endorsementStats, setEndorsementStats] = useState({
-    technical: 0,
-    trustworthy: 0,
-    helpful: 0,
-    innovative: 0,
-    collaborative: 0,
-  });
   const [isClient, setIsClient] = useState(false);
 
   // Handle SSR
@@ -63,21 +56,6 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
       if (storedEndorsements) {
         const endorsementsData: Endorsement[] = JSON.parse(storedEndorsements);
         setEndorsements(endorsementsData);
-        
-        // Calculate stats
-        const stats = {
-          technical: 0,
-          trustworthy: 0,
-          helpful: 0,
-          innovative: 0,
-          collaborative: 0,
-        };
-        
-        endorsementsData.forEach(e => {
-          stats[e.category]++;
-        });
-        
-        setEndorsementStats(stats);
       }
     } catch (e) {
       console.error('Failed to load endorsements:', e);
@@ -95,6 +73,23 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
       setBadges([]);
     }
   }, [userAddress, isClient]);
+
+  // Memoize stats calculation for performance
+  const endorsementStats = useMemo(() => {
+    const stats = {
+      technical: 0,
+      trustworthy: 0,
+      helpful: 0,
+      innovative: 0,
+      collaborative: 0,
+    };
+    
+    endorsements.forEach(e => {
+      stats[e.category]++;
+    });
+    
+    return stats;
+  }, [endorsements]);
 
   const getCategoryColor = (category: Endorsement['category']) => {
     const colors = {
