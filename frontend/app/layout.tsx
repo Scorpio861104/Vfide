@@ -14,6 +14,7 @@ import { PresenceManager } from "@/components/social/PresenceManager";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { PerformanceProvider } from "@/components/performance/PerformanceProvider";
 import { ErrorMonitoringProvider, DevErrorConsole } from "@/components/monitoring/ErrorMonitoringProvider";
+import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 
 const inter = Inter({
   variable: "--font-body",
@@ -88,14 +89,15 @@ export default function RootLayout({
           children
         ) : (
           <ErrorBoundary>
-            <Web3Provider>
-              <ToastProvider>
-                <SecurityProvider />
-                <PerformanceProvider />
-                <ErrorMonitoringProvider />
-                <PresenceManager />
-                <DevErrorConsole />
-                <DemoModeBanner />
+            <AccessibilityProvider>
+              <Web3Provider>
+                <ToastProvider>
+                  <SecurityProvider />
+                  <PerformanceProvider />
+                  <ErrorMonitoringProvider />
+                  <PresenceManager />
+                  <DevErrorConsole />
+                  <DemoModeBanner />
                 <NetworkSwitchOverlay />
                 <TestnetCornerBadge />
                 {children}

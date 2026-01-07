@@ -45,6 +45,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   const [encryptionStatus, setEncryptionStatus] = useState<'idle' | 'encrypting' | 'decrypting' | 'error'>('idle');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationId = address && friend ? getConversationId(address, friend.address) : '';
+  const { announce } = useAnnounce();
 
   // Load conversation messages
   useEffect(() => {
@@ -145,6 +146,9 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       setInputMessage('');
       setEncryptionStatus('idle');
       
+      // Announce message sent
+      announce('Message sent', 'polite');
+      
       // In production, send to backend/IPFS/blockchain here
       // await sendToBackend(newMessage);
       
@@ -193,6 +197,9 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           : msg
       ));
 
+      // Announce edit
+      announce('Message edited', 'polite');
+
       // Update backend (in production)
       await apiClient.editMessage(messageId, conversationId, encryptedContent);
 
@@ -218,6 +225,9 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           ? { ...msg, deletedAt: Date.now(), decryptedContent: undefined, encryptedContent: '' }
           : msg
       ));
+
+      // Announce deletion
+      announce('Message deleted', 'polite');
 
       // Update backend (in production)
       await apiClient.deleteMessage(messageId, conversationId);

@@ -1,272 +1,343 @@
 /**
- * Accessibility Testing & Utilities
- * Tests and utilities for WCAG 2.1 AA compliance
+ * Accessibility Utilities
+ * 
+ * Comprehensive accessibility support including ARIA attributes,
+ * screen reader announcements, and keyboard navigation helpers.
  */
 
-import { render } from '@testing-library/react';
-import { axe, toHaveNoViolations } from 'jest-axe';
+'use client';
 
-expect.extend(toHaveNoViolations);
+import { useEffect, useRef, useState } from 'react';
 
 /**
- * Test accessibility of a component
- * @param component React component to test
- * @returns AxeResults
+ * Live region for screen reader announcements
  */
-export async function testAccessibility(component: React.ReactElement) {
-  const { container } = render(component);
-  const results = await axe(container);
-  return results;
-}
+let liveRegion: HTMLDivElement | null = null;
 
-/**
- * Check color contrast ratio (WCAG AA compliance)
- * @param foreground RGB color value
- * @param background RGB color value
- * @returns contrast ratio
- */
-export function getContrastRatio(foreground: string, background: string): number {
-  const fg = hexToRgb(foreground);
-  const bg = hexToRgb(background);
-
-  const fgLuminance = getLuminance(fg);
-  const bgLuminance = getLuminance(bg);
-
-  const lighter = Math.max(fgLuminance, bgLuminance);
-  const darker = Math.min(fgLuminance, bgLuminance);
-
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-function hexToRgb(hex: string): [number, number, number] {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
-    : [0, 0, 0];
-}
-
-function getLuminance([r, g, b]: [number, number, number]): number {
-  const [rs, gs, bs] = [r, g, b].map((c) => {
-    c = c / 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+function ensureLiveRegion(): HTMLDivElement {
+  if (!liveRegion && typeof document !== 'undefined') {
+    liveRegion = document.createElement('div');
+    liveRegion.setAttribute('role', 'status');
+    liveRegion.setAttribute('aria-live', 'polite');
+    liveRegion.setAttribute('aria-atomic', 'true');
+    liveRegion.className = 'sr-only';
+    document.body.appendChild(liveRegion);
+  }
+  return liveRegion!;
 }
 
 /**
- * Accessibility checklist
+ * Announce message to screen readers
  */
-export const A11Y_CHECKLIST = {
-  // Keyboard Navigation
-  keyboardNavigation: {
-    description: 'All interactive elements keyboard accessible',
-    wcagLevel: 'A',
-    tests: [
-      'Tab navigation works in logical order',
-      'Escape key closes modals/popovers',
-      'Enter key activates buttons',
-      'Space key activates buttons',
-      'Arrow keys work in lists/menus',
-    ],
-  },
+export function announce(message: string, priority: 'polite' | 'assertive' = 'polite') {
+  if (typeof window === 'undefined') return;
 
-  // Focus Management
-  focusManagement: {
-    description: 'Focus is visible and properly managed',
-    wcagLevel: 'A',
-    tests: [
-      'Focus indicator is visible (not display: none)',
-      'Focus order follows visual hierarchy',
-      'Focus is trapped in modals',
-      'Focus returns to trigger on close',
-      'Focus is not lost on dynamic updates',
-    ],
-  },
+  const region = ensureLiveRegion();
+  region.setAttribute('aria-live', priority);
+  
+  // Clear and set message
+  region.textContent = '';
+  setTimeout(() => {
+    region.textContent = message;
+  }, 100);
+}
 
-  // Color Contrast
-  colorContrast: {
-    description: 'All text meets WCAG AA contrast ratios',
-    wcagLevel: 'AA',
-    tests: [
-      'Normal text: 4.5:1 contrast ratio',
-      'Large text: 3:1 contrast ratio',
-      'UI components: 3:1 contrast ratio',
-      'Focus indicators: 3:1 contrast ratio',
-      'Disabled state distinguishable',
-    ],
-  },
+/**
+ * React hook for screen reader announcements
+ */
+export function useAnnounce() {
+  return {
+    announce: (message: string, priority?: 'polite' | 'assertive') => 
+      announce(message, priority),
+    announcePolite: (message: string) => announce(message, 'polite'),
+    announceAssertive: (message: string) => announce(message, 'assertive'),
+  };
+}
 
-  // Semantic HTML
-  semanticHtml: {
-    description: 'Use semantic HTML elements',
-    wcagLevel: 'A',
-    tests: [
-      'Buttons use <button> element',
-      'Links use <a> element',
-      'Form controls use proper labels',
-      'Headings use <h1>-<h6>',
-      'Lists use <ul>/<ol>/<li>',
-      'Navigation uses <nav>',
-      'Sections use <section>/<article>',
-    ],
-  },
+/**
+ * Focus trap for modals and dialogs
+ */
+export function useFocusTrap(isActive: boolean = true) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  // ARIA
-  ariaLabeling: {
-    description: 'Proper ARIA labels for accessibility',
-    wcagLevel: 'A',
-    tests: [
-      'Icon buttons have aria-label',
-      'Form inputs have associated labels',
-      'Live regions have aria-live',
-      'Buttons have aria-pressed/expanded',
-      'Menus have aria-expanded/haspopup',
-      'Custom widgets have proper roles',
-      'Dialog has aria-labelledby/describedby',
-    ],
-  },
+  useEffect(() => {
+    if (!isActive || !containerRef.current) return;
 
-  // Images & Icons
-  imagesAndIcons: {
-    description: 'Images and icons are accessible',
-    wcagLevel: 'A',
-    tests: [
-      'Images have descriptive alt text',
-      'Decorative images have empty alt=""',
-      'Icon buttons have labels',
-      'SVGs have title/desc or aria-label',
-    ],
-  },
+    const container = containerRef.current;
+    previousFocusRef.current = document.activeElement as HTMLElement;
 
-  // Forms
-  forms: {
-    description: 'Forms are accessible and usable',
-    wcagLevel: 'A',
-    tests: [
-      'All form inputs have labels',
-      'Error messages are announced',
-      'Required fields are marked',
-      'Help text is associated',
-      'Placeholder is not used as label',
-      'Form can be submitted with keyboard',
-    ],
-  },
+    // Get all focusable elements
+    const getFocusableElements = (): HTMLElement[] => {
+      const selector = [
+        'a[href]',
+        'button:not([disabled])',
+        'textarea:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])',
+      ].join(',');
 
-  // Motion & Animation
-  motionAndAnimation: {
-    description: 'Motion respects user preferences',
-    wcagLevel: 'A',
-    tests: [
-      'Animations respect prefers-reduced-motion',
-      'No flashing/blinking > 3 per second',
-      'No auto-playing audio > 3 seconds',
-    ],
-  },
+      return Array.from(container.querySelectorAll(selector));
+    };
 
-  // Color Dependency
-  colorNotAlone: {
-    description: 'Information not conveyed by color alone',
-    wcagLevel: 'A',
-    tests: [
-      'Status messages use text + color',
-      'Error states use text + icon',
-      'Charts use patterns + colors',
-      'Links are underlined or styled',
-    ],
-  },
+    // Focus first element
+    const focusableElements = getFocusableElements();
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus();
+    }
 
-  // Text Sizing
-  textSizing: {
-    description: 'Text is readable and resizable',
-    wcagLevel: 'AA',
-    tests: [
-      'Body text is at least 14px',
-      'Text can be resized to 200%',
-      'No content cut off when zoomed',
-      'Line height at least 1.5x',
-      'Letter spacing at least 0.12em',
-    ],
-  },
+    // Handle tab navigation
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
 
-  // Language
-  language: {
-    description: 'Page language is properly declared',
-    wcagLevel: 'A',
-    tests: [
-      'HTML lang attribute set',
-      'Language changes are marked with lang',
-      'Text direction is correct',
-    ],
+      const elements = getFocusableElements();
+      const firstElement = elements[0];
+      const lastElement = elements[elements.length - 1];
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    container.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup
+    return () => {
+      container.removeEventListener('keydown', handleKeyDown);
+      
+      // Restore focus
+      if (previousFocusRef.current) {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, [isActive]);
+
+  return containerRef;
+}
+
+/**
+ * Skip to content link
+ */
+export function SkipToContent() {
+  return (
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg"
+    >
+      Skip to main content
+    </a>
+  );
+}
+
+/**
+ * ARIA label helpers
+ */
+export const aria = {
+  label: (label: string) => ({ 'aria-label': label }),
+  labelledby: (id: string) => ({ 'aria-labelledby': id }),
+  describedby: (id: string) => ({ 'aria-describedby': id }),
+  hidden: (hidden: boolean = true) => ({ 'aria-hidden': hidden }),
+  expanded: (expanded: boolean) => ({ 'aria-expanded': expanded }),
+  selected: (selected: boolean) => ({ 'aria-selected': selected }),
+  checked: (checked: boolean) => ({ 'aria-checked': checked }),
+  disabled: (disabled: boolean) => ({ 'aria-disabled': disabled }),
+  current: (current: boolean | 'page' | 'step' | 'location') => 
+    ({ 'aria-current': current }),
+  live: (live: 'off' | 'polite' | 'assertive') => ({ 'aria-live': live }),
+  busy: (busy: boolean) => ({ 'aria-busy': busy }),
+  invalid: (invalid: boolean) => ({ 'aria-invalid': invalid }),
+  required: (required: boolean) => ({ 'aria-required': required }),
+  hasPopup: (hasPopup: boolean | 'menu' | 'dialog' | 'listbox' | 'tree' | 'grid') => 
+    ({ 'aria-haspopup': hasPopup }),
+  controls: (id: string) => ({ 'aria-controls': id }),
+  owns: (id: string) => ({ 'aria-owns': id }),
+  valueNow: (value: number) => ({ 'aria-valuenow': value }),
+  valueMin: (value: number) => ({ 'aria-valuemin': value }),
+  valueMax: (value: number) => ({ 'aria-valuemax': value }),
+  valueText: (text: string) => ({ 'aria-valuetext': text }),
+};
+
+/**
+ * Keyboard navigation helpers
+ */
+export const keyboard = {
+  isEnter: (e: React.KeyboardEvent) => e.key === 'Enter',
+  isSpace: (e: React.KeyboardEvent) => e.key === ' ',
+  isEscape: (e: React.KeyboardEvent) => e.key === 'Escape',
+  isArrowUp: (e: React.KeyboardEvent) => e.key === 'ArrowUp',
+  isArrowDown: (e: React.KeyboardEvent) => e.key === 'ArrowDown',
+  isArrowLeft: (e: React.KeyboardEvent) => e.key === 'ArrowLeft',
+  isArrowRight: (e: React.KeyboardEvent) => e.key === 'ArrowRight',
+  isTab: (e: React.KeyboardEvent) => e.key === 'Tab',
+  
+  handleActivation: (e: React.KeyboardEvent, callback: () => void) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      callback();
+    }
   },
 };
 
 /**
- * WCAG AA Compliance Checklist for VFIDE
+ * Focus management hook
  */
-export const VFIDE_A11Y_FIXES = {
-  globalFixes: [
-    {
-      issue: 'Missing lang attribute on html',
-      fix: '<html lang="en">',
-      wcagCriteria: '3.1.1 Language of Page (Level A)',
-      status: 'pending',
-    },
-    {
-      issue: 'Low color contrast in secondary text',
-      fix: 'Change #A0A0A5 on #1A1A1D from 3.8:1 to 5:1 ratio',
-      wcagCriteria: '1.4.3 Contrast (Minimum) (Level AA)',
-      status: 'pending',
-    },
-    {
-      issue: 'Reduced motion not respected in animations',
-      fix: 'Add @media (prefers-reduced-motion: reduce) queries',
-      wcagCriteria: '2.3.3 Animation from Interactions (Level AAA)',
-      status: 'pending',
-    },
-  ],
+export function useFocusManagement() {
+  const focusElement = (selector: string | HTMLElement) => {
+    if (typeof selector === 'string') {
+      const element = document.querySelector(selector) as HTMLElement;
+      element?.focus();
+    } else {
+      selector?.focus();
+    }
+  };
 
-  componentFixes: {
-    Button: [
-      {
-        issue: 'Icon buttons missing aria-label',
-        fix: 'Add aria-label={tooltipText} to icon buttons',
-        wcagCriteria: '1.1.1 Non-text Content (Level A)',
-        status: 'pending',
-      },
-      {
-        issue: 'Focus indicator not visible',
-        fix: 'Add outline or box-shadow on focus',
-        wcagCriteria: '2.4.7 Focus Visible (Level AA)',
-        status: 'pending',
-      },
-    ],
-    Dialog: [
-      {
-        issue: 'Missing focus trap',
-        fix: 'Implement focus trap with FocusScope',
-        wcagCriteria: '2.1.2 No Keyboard Trap (Level A)',
-        status: 'pending',
-      },
-      {
-        issue: 'Dialog not announced to screen readers',
-        fix: 'Add role="dialog" and aria-labelledby/describedby',
-        wcagCriteria: '4.1.2 Name, Role, Value (Level A)',
-        status: 'pending',
-      },
-    ],
-    Forms: [
-      {
-        issue: 'Input labels not associated',
-        fix: 'Add htmlFor on label and id on input',
-        wcagCriteria: '1.3.1 Info and Relationships (Level A)',
-        status: 'pending',
-      },
-      {
-        issue: 'Error messages not announced',
-        fix: 'Add aria-live="polite" and aria-describedby',
-        wcagCriteria: '3.3.1 Error Identification (Level A)',
-        status: 'pending',
-      },
-    ],
-  },
-};
+  const focusFirst = (container: HTMLElement | null) => {
+    if (!container) return;
+    
+    const firstFocusable = container.querySelector(
+      'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ) as HTMLElement;
+    
+    firstFocusable?.focus();
+  };
+
+  const focusLast = (container: HTMLElement | null) => {
+    if (!container) return;
+    
+    const focusableElements = container.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    
+    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+    lastElement?.focus();
+  };
+
+  return { focusElement, focusFirst, focusLast };
+}
+
+/**
+ * Visually hidden but accessible to screen readers
+ */
+export function VisuallyHidden({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="sr-only">
+      {children}
+    </span>
+  );
+}
+
+/**
+ * Loading announcement
+ */
+export function useLoadingAnnouncement(isLoading: boolean, message: string = 'Loading') {
+  const { announce } = useAnnounce();
+  const previousLoading = useRef(isLoading);
+
+  useEffect(() => {
+    if (isLoading && !previousLoading.current) {
+      announce(message, 'polite');
+    } else if (!isLoading && previousLoading.current) {
+      announce('Loading complete', 'polite');
+    }
+    previousLoading.current = isLoading;
+  }, [isLoading, message, announce]);
+}
+
+/**
+ * Route change announcement
+ */
+export function useRouteAnnouncement(pathname: string) {
+  const { announce } = useAnnounce();
+  const previousPath = useRef(pathname);
+
+  useEffect(() => {
+    if (pathname !== previousPath.current) {
+      // Extract page name from pathname
+      const pageName = pathname
+        .split('/')
+        .filter(Boolean)
+        .pop() || 'home';
+      
+      announce(`Navigated to ${pageName} page`, 'assertive');
+      previousPath.current = pathname;
+    }
+  }, [pathname, announce]);
+}
+
+/**
+ * Focus visible class management
+ */
+export function useFocusVisible() {
+  const [focusVisible, setFocusVisible] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        setFocusVisible(true);
+      }
+    };
+
+    const handleMouseDown = () => {
+      setFocusVisible(false);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleMouseDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, []);
+
+  return focusVisible;
+}
+
+// Add sr-only styles to global CSS
+if (typeof document !== 'undefined' && !document.getElementById('sr-only-styles')) {
+  const style = document.createElement('style');
+  style.id = 'sr-only-styles';
+  style.textContent = `
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+    
+    .sr-only:focus,
+    .sr-only:active {
+      position: static;
+      width: auto;
+      height: auto;
+      padding: inherit;
+      margin: inherit;
+      overflow: visible;
+      clip: auto;
+      white-space: normal;
+    }
+    
+    /* Focus visible styles */
+    body.user-is-tabbing *:focus {
+      outline: 2px solid #3b82f6 !important;
+      outline-offset: 2px !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
