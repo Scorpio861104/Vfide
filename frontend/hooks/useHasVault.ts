@@ -15,7 +15,9 @@ const VAULT_HUB_ABI = [
 ] as const;
 
 // VaultHub address (from deployment)
-const VAULT_HUB_ADDRESS = '0x...' as `0x${string}`; // Will be populated from deployment
+// Base: 0x090014f269f642656394E2FEaB038b92387B4db3
+// Base Sepolia: 0x090014f269f642656394E2FEaB038b92387B4db3
+const VAULT_HUB_ADDRESS = (process.env.NEXT_PUBLIC_VAULTHUB_ADDRESS || '0x090014f269f642656394E2FEaB038b92387B4db3') as `0x${string}`;
 
 /**
  * Hook to check if the connected user has a vault
@@ -24,13 +26,15 @@ const VAULT_HUB_ADDRESS = '0x...' as `0x${string}`; // Will be populated from de
 export function useHasVault() {
   const { address, isConnected } = useAccount();
 
-  const { data: vaultAddress, isLoading } = useReadContract({
+  const { data: vaultAddress, isLoading, isError, error } = useReadContract({
     address: VAULT_HUB_ADDRESS,
     abi: VAULT_HUB_ABI,
     functionName: 'userVaults',
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && isConnected,
+      retry: 3,
+      retryDelay: 1000,
     },
   });
 
@@ -39,10 +43,16 @@ export function useHasVault() {
     return vaultAddress !== '0x0000000000000000000000000000000000000000';
   }, [vaultAddress]);
 
+  // Log errors for debugging
+  if (isError && error) {
+    console.error('Error checking vault status:', error);
+  }
+
   return {
     hasVault,
     vaultAddress: hasVault ? vaultAddress : null,
     isLoading,
+    isError,
     isConnected,
   };
 }

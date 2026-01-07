@@ -27,6 +27,8 @@ import { EndorsementsBadges } from './EndorsementsBadges';
 import { MutualFriends } from './MutualFriends';
 import { addNotification } from './NotificationCenter';
 import { addActivity } from './ActivityFeed';
+import { VaultInfoTooltip } from '../ui/VaultInfoTooltip';
+import { analytics } from '@/lib/socialAnalytics';
 
 interface MessagingCenterProps {
   friend: Friend;
@@ -264,11 +266,15 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                 <Lock className="w-5 h-5 text-[#0A0A0F]" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-[#F5F3E8] mb-1">Enable Payments</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm font-semibold text-[#F5F3E8]">Enable Payments</p>
+                  <VaultInfoTooltip trigger="click" />
+                </div>
                 <p className="text-xs text-[#A0A0A5] mb-2">Create a vault to send and request crypto payments in messages.</p>
                 <a
                   href="/vault"
                   className="inline-flex items-center gap-1 text-xs text-[#00F0FF] hover:underline"
+                  onClick={() => analytics.trackVaultFunnel('clicked_create')}
                 >
                   Create Vault →
                 </a>

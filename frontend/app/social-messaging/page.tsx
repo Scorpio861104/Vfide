@@ -32,15 +32,17 @@ import { NotificationCenter } from '@/components/social/NotificationCenter';
 import { GlobalUserSearch } from '@/components/social/GlobalUserSearch';
 import { ActivityFeed } from '@/components/social/ActivityFeed';
 import { EndorsementsBadges } from '@/components/social/EndorsementsBadges';
+import { FirstTimeUserBanner } from '@/components/ui/FirstTimeUserBanner';
 import { Friend, Group } from '@/types/messaging';
 import { FriendRequest } from '@/types/friendRequests';
 import { STORAGE_KEYS } from '@/lib/messageEncryption';
+import { analytics } from '@/lib/socialAnalytics';
 
 type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'privacy' | 'discover' | 'activity';
 
 export default function SocialPage() {
   const { address, isConnected } = useAccount();
-  const { hasVault, vaultAddress } = useHasVault();
+  const { hasVault, vaultAddress, isLoading: isLoadingVault } = useHasVault();
   const [activeTab, setActiveTab] = useState<TabType>('messages');
   const [selectedFriend, setSelectedFriend] = useState<Friend | undefined>();
   const [selectedGroup, setSelectedGroup] = useState<Group | undefined>();
@@ -59,6 +61,20 @@ export default function SocialPage() {
       }
     }
   }, [address]);
+
+  // Track wallet connection
+  React.useEffect(() => {
+    if (isConnected && address) {
+      analytics.track('wallet_connected', { userAddress: address });
+    }
+  }, [isConnected, address]);
+
+  // Track vault status
+  React.useEffect(() => {
+    if (hasVault && address) {
+      analytics.track('vault_created', { userAddress: address, hasVault: true });
+    }
+  }, [hasVault, address]);
 
   // Accept friend request handler
   const handleAcceptRequest = (request: FriendRequest) => {
@@ -179,12 +195,17 @@ export default function SocialPage() {
                         </div>
                       </div>
                     </div>
-                    {hasVault && (
+                    {isLoadingVault ? (
+                      <div className="flex items-center gap-1 px-2 py-1 bg-[#6B6B78]/10 border border-[#6B6B78]/30 rounded-full">
+                        <div className="w-3 h-3 border-2 border-[#6B6B78] border-t-transparent rounded-full animate-spin" />
+                        <span className="text-xs text-[#6B6B78] font-semibold">Checking...</span>
+                      </div>
+                    ) : hasVault ? (
                       <div className="flex items-center gap-1 px-2 py-1 bg-[#00F0FF]/10 border border-[#00F0FF]/30 rounded-full">
                         <Lock className="w-3 h-3 text-[#00F0FF]" />
                         <span className="text-xs text-[#00F0FF] font-semibold">Vault Active</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                   <div className="relative">
                     <NotificationCenter />
@@ -193,6 +214,22 @@ export default function SocialPage() {
               )}
             </div>
           </motion.section>
+
+          {/* First-time user banner */}
+          {isConnected && (
+            <div className="px-4 sm:px-6 lg:px-8">
+              <FirstTimeUserBanner
+                storageKey={`vfide_social_welcome_${address}`}
+                message={
+                  hasVault 
+                    ? "✨ Your vault is active! You can now send and request payments directly in messages."
+                    : "👋 Welcome to VFIDE Social! Start messaging friends securely. Create a vault to unlock payment features."
+                }
+                actionText={hasVault ? undefined : "Create Vault"}
+                onAction={hasVault ? undefined : () => window.location.href = '/vault'}
+              />
+            </div>
+          )}
 
           {/* Tab Navigation */}
           <motion.div
