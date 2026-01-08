@@ -126,6 +126,51 @@ const helpTopics: HelpTopic[] = [
       "Anyone can submit proposals for community review",
       "Current fee rate (0%) was voted on by the community"
     ]
+  },
+  {
+    id: "streaming-payroll",
+    title: "Streaming Payroll",
+    icon: <Droplets size={24} />,
+    description: "Get paid every second - Revolutionary salary system",
+    content: [
+      "🌊 What is Streaming Payroll?",
+      "Instead of waiting for payday, your salary streams into your wallet every single second. Work one hour, get paid for one hour - instantly!",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "💼 For Employees:",
+      "• Watch your earned wages grow in real-time",
+      "• Withdraw earned amount anytime (no minimum wait)",
+      "• No more waiting 2 weeks for payday",
+      "• Perfect for emergency expenses",
+      "• Example: $5,000/month = $0.0019/second continuously",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "🏢 For Employers:",
+      "• No large upfront payroll costs",
+      "• Pause streams during disputes (funds stay safe)",
+      "• Top-up anytime to extend runway",
+      "• Cancel and recover unused balance",
+      "• Attract top talent with instant wage access",
+      "• Zero custody - funds go direct to employee",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "🎯 How It Works:",
+      "1. Employer creates stream (sets rate + deposits tokens)",
+      "2. Tokens stream per-second to employee",
+      "3. Employee withdraws earned amount anytime",
+      "4. No intermediaries, no custody, 100% transparent",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "💡 Use Cases:",
+      "• Full-time salaries",
+      "• Contractor payments",
+      "• Freelancer retainers",
+      "• Recurring payments",
+      "• Subscription services",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "🚀 Benefits:",
+      "✅ Instant wage access (financial wellness)",
+      "✅ No payday lending needed",
+      "✅ Transparent & verifiable on-chain",
+      "✅ Lower fees than traditional payroll",
+      "✅ Multi-token support (VFIDE, USDC, USDT, DAI, WETH)"
+    ]
   }
 ];
 
