@@ -28,16 +28,18 @@ const formatTimestamp = (timestamp: number): string => {
 };
 
 interface MessageRowProps {
+  ariaAttributes: {
+    'aria-posinset': number;
+    'aria-setsize': number;
+    role: 'listitem';
+  };
   index: number;
   style: React.CSSProperties;
-  data: {
-    messages: Message[];
-    currentUserAddress: string;
-  };
+  messages: Message[];
+  currentUserAddress: string;
 }
 
-const MessageRow: React.FC<MessageRowProps> = ({ index, style, data }) => {
-  const { messages, currentUserAddress } = data;
+const MessageRow = ({ index, style, messages, currentUserAddress }: MessageRowProps): React.ReactElement => {
   const message = messages[index];
   const isOwn = message.from.toLowerCase() === currentUserAddress.toLowerCase();
   
@@ -102,7 +104,7 @@ export function VirtualMessageList({
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (listRef.current && messages.length > 0) {
-      listRef.current.scrollToRow(messages.length - 1);
+      listRef.current.scrollToRow({ index: messages.length - 1, align: 'end' });
     }
   }, [messages.length]);
 
@@ -111,14 +113,13 @@ export function VirtualMessageList({
   }
 
   return (
-    <List
+    <List<{ messages: Message[]; currentUserAddress: string }>
       listRef={listRef}
       defaultHeight={height}
       rowCount={messages.length}
       rowHeight={100}
+      rowComponent={MessageRow}
       rowProps={{ messages, currentUserAddress }}
-    >
-      {MessageRow}
-    </List>
+    />
   );
 }

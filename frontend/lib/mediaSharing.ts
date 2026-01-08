@@ -270,7 +270,7 @@ export function useMediaUpload() {
   const [uploads, setUploads] = React.useState<Map<string, UploadProgress>>(new Map());
   const [isUploading, setIsUploading] = React.useState(false);
 
-  const uploadFile = React.useCallback(async (file: File, userAddress: string): Promise<MediaAttachment> => {
+  const handleUploadFile = React.useCallback(async (file: File, userAddress: string): Promise<MediaAttachment> => {
     const uploadId = `upload_${Date.now()}_${Math.random()}`;
     
     // Add to uploads map
@@ -287,22 +287,23 @@ export function useMediaUpload() {
     setIsUploading(true);
 
     try {
-      const attachment: MediaAttachment = await uploadFile(
-        file,
-        (progress: number) => {
-          setUploads((prev) => {
-            const next = new Map(prev);
-            const upload = next.get(uploadId);
-            if (upload) {
-              next.set(uploadId, {
-                ...upload,
-                progress,
-              });
-            }
-            return next;
-          });
-        }
-      );
+      const onProgressCallback = (progress: number): void => {
+        setUploads((prev) => {
+          const next = new Map(prev);
+          const upload = next.get(uploadId);
+          if (upload) {
+            next.set(uploadId, {
+              ...upload,
+              progress,
+            });
+          }
+          return next;
+        });
+      };
+
+      const attachment: MediaAttachment = await (async function() {
+        return uploadFile(file, onProgressCallback);
+      })();
 
       // Set uploader
       attachment.uploadedBy = userAddress;
@@ -362,7 +363,7 @@ export function useMediaUpload() {
   return {
     uploads: Array.from(uploads.entries()).map(([id, upload]) => ({ id, ...upload })),
     isUploading,
-    uploadFile,
+    uploadFile: handleUploadFile,
     clearUpload,
     clearCompleted,
   };
