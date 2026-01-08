@@ -33,7 +33,7 @@ export function InfoTooltip({ content, children, position = "top" }: InfoTooltip
       
       {isVisible && (
         <div
-          className={`absolute z-50 px-4 py-3 bg-[#2A2A2F] border-2 border-[#00F0FF] rounded-lg shadow-lg min-w-[250px] max-w-[350px] ${positionClasses[position]}`}
+          className={`absolute z-50 px-4 py-3 bg-[#2A2A2F] border-2 border-[#00F0FF] rounded-lg shadow-lg w-[calc(100vw-2rem)] min-w-[250px] max-w-[350px] sm:w-auto ${positionClasses[position]}`}
           role="tooltip"
         >
           <div className="text-sm text-[#F5F3E8] font-[family-name:var(--font-body)] leading-relaxed">

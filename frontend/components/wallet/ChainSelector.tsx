@@ -82,7 +82,7 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
               className="fixed inset-0 z-40" 
               onClick={() => setIsOpen(false)} 
             />
-            <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 rounded-xl border border-gray-700 shadow-xl overflow-hidden min-w-[200px]">
+            <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 rounded-xl border border-gray-700 shadow-xl overflow-hidden min-w-[200px] max-w-[calc(100vw-2rem)]">
               {chainList.map((chain) => {
                 const ready = isChainReady(chain.id)
                 return (

@@ -85,7 +85,7 @@ export function DevErrorConsole() {
 
       {/* Error Console */}
       {isOpen && (
-        <div className="absolute bottom-14 right-0 w-[600px] max-h-[500px] bg-gray-900 border border-gray-700 rounded-lg shadow-2xl overflow-hidden">
+        <div className="absolute bottom-14 right-0 w-full sm:w-[600px] max-w-[calc(100vw-1rem)] max-h-[500px] bg-gray-900 border border-gray-700 rounded-lg shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="bg-gray-800 px-4 py-3 border-b border-gray-700 flex items-center justify-between">
             <div>
