@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { FixedSizeList } from 'react-window';
+import { FixedSizeList as List } from 'react-window';
+import type { FixedSizeList } from 'react-window';
 import { motion } from 'framer-motion';
 import { Shield, CheckCheck, Check } from 'lucide-react';
 import { Message } from '@/types/messaging';
@@ -111,7 +112,7 @@ export function VirtualMessageList({
   }
 
   return (
-    <FixedSizeList
+    <List
       ref={listRef}
       height={height}
       itemCount={messages.length}
@@ -120,6 +121,6 @@ export function VirtualMessageList({
       itemData={{ messages, currentUserAddress }}
     >
       {MessageRow}
-    </FixedSizeList>
+    </List>
   );
 }
