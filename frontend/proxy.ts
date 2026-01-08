@@ -49,7 +49,7 @@ function checkRateLimit(key: string): { allowed: boolean; remaining: number; res
   };
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Apply rate limiting to API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const key = getRateLimitKey(request);

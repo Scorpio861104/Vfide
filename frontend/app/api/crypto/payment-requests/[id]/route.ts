@@ -9,10 +9,10 @@ const requestsStore = new Map<string, any>();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const paymentRequest = requestsStore.get(id);
 
     if (!paymentRequest) {
@@ -36,10 +36,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const updates = await request.json();
     
     const paymentRequest = requestsStore.get(id);

@@ -10,10 +10,10 @@ const tokenBalances = new Map<string, string>();
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
     const userIdLower = userId.toLowerCase();
     
     const rewards = rewardsStore.get(userIdLower) || [];

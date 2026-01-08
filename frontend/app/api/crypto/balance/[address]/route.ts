@@ -9,10 +9,10 @@ const tokenBalances = new Map<string, string>();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const { address } = params;
+    const { address } = await params;
     
     // In production, query token contract
     const balance = tokenBalances.get(address.toLowerCase()) || '1000';
