@@ -5,10 +5,16 @@
 
 import { validateEthereumAddress, ValidationError } from './cryptoValidation';
 
-// VFIDE Token Contract Address (update with actual deployed address)
+/**
+ * VFIDE Token Contract Address
+ * Read from environment variable or fallback to placeholder
+ */
 export const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x...';
 
-// Maximum uint256 value for unlimited approval
+/**
+ * Maximum uint256 value for unlimited token approval
+ * Allows spender to transfer any amount without re-approval
+ */
 export const MAX_UINT256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
 // ERC-20 ABI (minimal interface for approval and allowance)
@@ -104,6 +110,18 @@ export async function checkTokenAllowance(
 /**
  * Request token approval from user
  */
+/**
+ * Request token approval from user
+ * 
+ * Prompts user to approve token spending for a spender address.
+ * Can request either exact amount or unlimited approval.
+ * 
+ * @param spenderAddress - Address that will be allowed to spend tokens
+ * @param amount - Amount to approve (or MAX_UINT256 for unlimited)
+ * @param unlimited - If true, requests unlimited approval
+ * @returns Promise resolving to transaction hash
+ * @throws ValidationError if address is invalid or approval fails
+ */
 export async function requestTokenApproval(
   spenderAddress: string,
   amount?: string,
@@ -172,6 +190,17 @@ export async function requestTokenApproval(
  * Ensure sufficient token allowance before transfer
  * Automatically requests approval if needed
  */
+/**
+ * Ensure sufficient token allowance exists
+ * 
+ * Checks current allowance and requests approval if insufficient.
+ * Only prompts user if more allowance is needed.
+ * 
+ * @param ownerAddress - Address of the token owner
+ * @param spenderAddress - Address of the spender
+ * @param amount - Required token amount
+ * @returns Promise resolving to approval status
+ */
 export async function ensureTokenAllowance(
   spenderAddress: string,
   requiredAmount: string,
@@ -217,6 +246,13 @@ export async function ensureTokenAllowance(
 /**
  * Get token balance
  */
+/**
+ * Get VFIDE token balance for an address
+ * 
+ * @param address - Wallet address to check balance for
+ * @returns Token balance as string (in wei)
+ * @throws ValidationError if address is invalid
+ */
 export async function getTokenBalance(address: string): Promise<string> {
   try {
     if (!validateEthereumAddress(address)) {
@@ -246,6 +282,16 @@ export async function getTokenBalance(address: string): Promise<string> {
 
 /**
  * Revoke token approval (set allowance to 0)
+ */
+/**
+ * Revoke token approval for a spender
+ * 
+ * Sets allowance to zero, preventing spender from transferring tokens.
+ * Useful for security when approval is no longer needed.
+ * 
+ * @param spenderAddress - Address to revoke approval from
+ * @returns Promise resolving to transaction hash
+ * @throws ValidationError if address is invalid or revocation fails
  */
 export async function revokeTokenApproval(
   spenderAddress: string
@@ -332,6 +378,16 @@ function encodeBalanceOfCall(account: string): string {
 
 /**
  * React hook for managing token approval
+ */
+/**
+ * React hook for managing token approvals
+ * 
+ * Provides approval status and functions to request/revoke approvals.
+ * Automatically checks allowance and refreshes on dependencies change.
+ * 
+ * @param spenderAddress - Address of the spender
+ * @param amount - Required token amount
+ * @returns Object with approval status and control functions
  */
 export function useTokenApproval(spenderAddress: string, amount: string) {
   const [status, setStatus] = React.useState<ApprovalStatus | null>(null);

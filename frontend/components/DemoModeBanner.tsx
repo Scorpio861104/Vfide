@@ -3,6 +3,15 @@
 import { useAccount } from "wagmi";
 import { AlertCircle, Info } from "lucide-react";
 
+/**
+ * Demo Mode Banner Component
+ * 
+ * Displays a prominent banner at the top of the page to indicate:
+ * - Demo mode when wallet is not connected
+ * - Testnet mode when connected to a test network
+ * 
+ * @returns Banner component or null if not in demo/testnet mode
+ */
 export function DemoModeBanner() {
   const { address, chain } = useAccount();
   

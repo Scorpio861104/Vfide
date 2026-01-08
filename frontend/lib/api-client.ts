@@ -271,11 +271,31 @@ export class APIClient {
   }
 }
 
-// Export singleton instance
+/**
+ * Global API client instance for making authenticated HTTP requests
+ * 
+ * Handles all backend communication including:
+ * - Authentication (JWT tokens)
+ * - Messages (send, edit, delete, reactions)
+ * - User management (profiles, avatars)
+ * - Friends system (requests, accept/reject)
+ * - Gamification (XP, achievements, leaderboard)
+ * 
+ * Singleton pattern ensures consistent auth state and token management.
+ */
 export const apiClient = new APIClient();
 
 /**
- * React hook for API client
+ * React hook for accessing the API client
+ * 
+ * Provides convenient access to all API methods with automatic
+ * authentication and error handling.
+ * 
+ * @returns APIClient singleton instance
+ * @example
+ * const api = useAPIClient();
+ * const messages = await api.getMessages(conversationId);
+ * await api.sendMessage({ from, to, encryptedContent });
  */
 export function useAPIClient() {
   return apiClient;
