@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useWebSocket } from './websocket';
+import { useWebSocket, WSMessage } from './websocket';
 
 export type PresenceStatus = 'online' | 'offline' | 'away' | 'busy';
 
@@ -113,7 +113,13 @@ export function formatLastSeen(timestamp: number): string {
  * Hook for managing user presence
  */
 export function usePresence(userAddress?: string) {
-  const { isConnected, send, subscribe } = useWebSocket();
+  const config = {
+    url: typeof window !== 'undefined' ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws` : '',
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 5,
+    heartbeatInterval: 30000,
+  };
+  const { isConnected, send, subscribe } = useWebSocket(config, userAddress);
   const [lastActivity, setLastActivity] = useState(Date.now());
   const [status, setStatus] = useState<PresenceStatus>('online');
 
@@ -165,18 +171,26 @@ export function usePresence(userAddress?: string) {
     if (!userAddress || !isConnected) return;
 
     // Send initial presence
-    send('presence', {
-      address: userAddress,
-      status,
-      timestamp: Date.now(),
+    send({
+      type: 'presence',
+      from: userAddress,
+      data: {
+        address: userAddress,
+        status,
+        timestamp: Date.now(),
+      },
     });
 
     // Broadcast periodically
     const interval = setInterval(() => {
-      send('presence', {
-        address: userAddress,
-        status,
-        timestamp: Date.now(),
+      send({
+        type: 'presence',
+        from: userAddress,
+        data: {
+          address: userAddress,
+          status,
+          timestamp: Date.now(),
+        },
       });
     }, PRESENCE_BROADCAST_INTERVAL);
 
@@ -187,7 +201,9 @@ export function usePresence(userAddress?: string) {
   useEffect(() => {
     if (!isConnected) return;
 
-    const unsubscribe = subscribe('presence', (data: PresenceUpdate) => {
+    const unsubscribe = subscribe('presence', (message: WSMessage) => {
+      if (message.type !== 'presence') return;
+      const data = message.data as PresenceUpdate;
       updatePresence(data.address, {
         status: data.status,
         lastSeen: data.timestamp,
@@ -206,10 +222,14 @@ export function usePresence(userAddress?: string) {
       if (document.hidden) {
         setStatus('away');
         updatePresence(userAddress, { status: 'away' });
-        send('presence', {
-          address: userAddress,
-          status: 'away',
-          timestamp: Date.now(),
+        send({
+          type: 'presence',
+          from: userAddress,
+          data: {
+            address: userAddress,
+            status: 'away',
+            timestamp: Date.now(),
+          },
         });
       } else {
         setStatus('online');
@@ -218,10 +238,14 @@ export function usePresence(userAddress?: string) {
           status: 'online',
           lastActivity: Date.now(),
         });
-        send('presence', {
-          address: userAddress,
-          status: 'online',
-          timestamp: Date.now(),
+        send({
+          type: 'presence',
+          from: userAddress,
+          data: {
+            address: userAddress,
+            status: 'online',
+            timestamp: Date.now(),
+          },
         });
       }
     };
@@ -243,7 +267,13 @@ export function usePresence(userAddress?: string) {
  * Hook for tracking another user's presence
  */
 export function useUserPresence(address: string) {
-  const { isConnected, subscribe } = useWebSocket();
+  const config = {
+    url: typeof window !== 'undefined' ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws` : '',
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 5,
+    heartbeatInterval: 30000,
+  };
+  const { isConnected, subscribe } = useWebSocket(config, address);
   const [presence, setPresence] = useState<UserPresence | null>(() => getPresence(address));
 
   useEffect(() => {
@@ -256,7 +286,9 @@ export function useUserPresence(address: string) {
     if (!isConnected) return;
 
     // Subscribe to updates for this user
-    const unsubscribe = subscribe('presence', (data: PresenceUpdate) => {
+    const unsubscribe = subscribe('presence', (message: WSMessage) => {
+      if (message.type !== 'presence') return;
+      const data = message.data as PresenceUpdate;
       if (data.address === address) {
         const updated = getPresence(address);
         setPresence(updated);
@@ -273,7 +305,13 @@ export function useUserPresence(address: string) {
  * Hook for tracking multiple users' presence
  */
 export function useBulkPresence(addresses: string[]) {
-  const { isConnected, subscribe } = useWebSocket();
+  const config = {
+    url: typeof window !== 'undefined' ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws` : '',
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 5,
+    heartbeatInterval: 30000,
+  };
+  const { isConnected, subscribe } = useWebSocket(config, addresses[0]);
   const [presenceMap, setPresenceMap] = useState<Map<string, UserPresence>>(() => 
     getBulkPresence(addresses)
   );
@@ -285,7 +323,9 @@ export function useBulkPresence(addresses: string[]) {
     if (!isConnected) return;
 
     // Subscribe to updates
-    const unsubscribe = subscribe('presence', (data: PresenceUpdate) => {
+    const unsubscribe = subscribe('presence', (message: WSMessage) => {
+      if (message.type !== 'presence') return;
+      const data = message.data as PresenceUpdate;
       if (addresses.includes(data.address)) {
         setPresenceMap(getBulkPresence(addresses));
       }

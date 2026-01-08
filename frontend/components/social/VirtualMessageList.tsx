@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import { FixedSizeList } from 'react-window';
 import { motion } from 'framer-motion';
 import { Shield, CheckCheck, Check } from 'lucide-react';
 import { Message } from '@/types/messaging';
@@ -97,7 +97,7 @@ export function VirtualMessageList({
   height,
   width,
 }: VirtualMessageListProps) {
-  const listRef = useRef<List>(null);
+  const listRef = useRef<FixedSizeList>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -111,7 +111,7 @@ export function VirtualMessageList({
   }
 
   return (
-    <List
+    <FixedSizeList
       ref={listRef}
       height={height}
       itemCount={messages.length}
@@ -120,6 +120,6 @@ export function VirtualMessageList({
       itemData={{ messages, currentUserAddress }}
     >
       {MessageRow}
-    </List>
+    </FixedSizeList>
   );
 }

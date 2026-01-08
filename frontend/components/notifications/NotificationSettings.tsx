@@ -319,12 +319,13 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
                 <label className="text-sm text-gray-400 mb-2 block">Start Time</label>
                 <input
                   type="time"
-                  value={preferences.quietHours.start}
+                  value={preferences.quietHours?.start || '22:00'}
                   onChange={(e) => 
                     updatePreferences({
                       quietHours: {
-                        ...preferences.quietHours,
+                        enabled: preferences.quietHours?.enabled ?? true,
                         start: e.target.value,
+                        end: preferences.quietHours?.end || '08:00',
                       },
                     })
                   }
@@ -335,11 +336,12 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
                 <label className="text-sm text-gray-400 mb-2 block">End Time</label>
                 <input
                   type="time"
-                  value={preferences.quietHours.end}
+                  value={preferences.quietHours?.end || '08:00'}
                   onChange={(e) => 
                     updatePreferences({
                       quietHours: {
-                        ...preferences.quietHours,
+                        enabled: preferences.quietHours?.enabled ?? true,
+                        start: preferences.quietHours?.start || '22:00',
                         end: e.target.value,
                       },
                     })

@@ -5,6 +5,15 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import {
+  validateEthereumAddress,
+  validateAmount,
+  validateMemo,
+  checkSufficientBalance,
+  estimateGas,
+  parseTransactionData,
+  ValidationError,
+} from './cryptoValidation';
 
 // ============================================================================
 // Types & Interfaces

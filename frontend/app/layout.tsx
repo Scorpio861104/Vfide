@@ -106,6 +106,7 @@ export default function RootLayout({
                 <HelpCenter />
               </ToastProvider>
             </Web3Provider>
+          </AccessibilityProvider>
           </ErrorBoundary>
         )}
       </body>

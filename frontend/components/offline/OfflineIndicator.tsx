@@ -33,7 +33,9 @@ export function OfflineIndicator() {
   const handleSync = async () => {
     try {
       const result = await sync();
-      announce(`Synced ${result.synced} items, ${result.failed} failed`, 'polite');
+      if (result) {
+        announce(`Synced ${result.synced} items, ${result.failed} failed`, 'polite');
+      }
     } catch (error) {
       announce('Sync failed', 'assertive');
     }

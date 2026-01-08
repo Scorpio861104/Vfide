@@ -11,12 +11,12 @@ export interface InviteLink {
   id: string;
   groupId: string;
   code: string;
-  createdBy: string;
+  createdBy?: string; // Optional for backward compatibility
   createdAt: number;
   expiresAt?: number;
   maxUses?: number;
   currentUses: number;
-  isActive: boolean;
+  isActive?: boolean; // Optional for backward compatibility
   metadata?: {
     description?: string;
     allowedEmails?: string[];
@@ -85,7 +85,7 @@ export function isInviteLinkMaxedOut(link: InviteLink): boolean {
  */
 export function isInviteLinkValid(link: InviteLink): boolean {
   return (
-    link.isActive &&
+    (link.isActive ?? true) &&
     !isInviteLinkExpired(link) &&
     !isInviteLinkMaxedOut(link)
   );

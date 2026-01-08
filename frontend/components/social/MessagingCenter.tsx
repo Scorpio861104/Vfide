@@ -43,6 +43,7 @@ interface MessagingCenterProps {
 export function MessagingCenter({ friend, hasVault = false }: MessagingCenterProps) {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
+  const { announce } = useAnnounce();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -269,11 +270,6 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
     console.log('Report message:', messageId);
     alert('Message reported. Thank you for helping keep the community safe.');
   };
-      return date.toLocaleDateString([], { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
-  };
 
   return (
     <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col">
@@ -498,22 +494,6 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                       onCopy={handleCopyMessage}
                       onReport={handleReportMessage}
                     />
-                  </div>
-                </motion.div>
-              );
-            })}
-          </>
-        )}
-                          <span title="Read">
-                            <CheckCheck className="w-3 h-3 text-[#00F0FF]" />
-                          </span>
-                        ) : (
-                          <span title="Sent">
-                            <Check className="w-3 h-3 text-[#6B6B78]" />
-                          </span>
-                        )
-                      )}
-                    </div>
                   </div>
                 </motion.div>
               );
