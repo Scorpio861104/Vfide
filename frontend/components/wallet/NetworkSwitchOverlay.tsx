@@ -166,7 +166,7 @@ export function NetworkSwitchOverlay() {
     setAddNetworkError(null)
     
     if (remember) {
-      localStorage.setItem(AUTO_SWITCH_KEY, 'true')
+      safeLocalStorage.setItem(AUTO_SWITCH_KEY, 'true')
     }
 
     try {
@@ -180,7 +180,7 @@ export function NetworkSwitchOverlay() {
 
   const handleDismiss = () => {
     setDismissed(true)
-    localStorage.removeItem(AUTO_SWITCH_KEY)
+    safeLocalStorage.removeItem(AUTO_SWITCH_KEY)
   }
 
   const shouldShow = isWrongNetwork && !dismissed
@@ -336,7 +336,7 @@ export function NetworkSwitchOverlay() {
                       if (e.target.checked) {
                         handleSwitch(true)
                       } else {
-                        localStorage.removeItem(AUTO_SWITCH_KEY)
+                        safeLocalStorage.removeItem(AUTO_SWITCH_KEY)
                       }
                     }}
                     className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-0"
