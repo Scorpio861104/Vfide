@@ -28,7 +28,7 @@ jobs:
       - name: Aggregate
         run: npm run aggregate || true
       - name: Upload reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: reports
           path: reports/latest
@@ -47,7 +47,7 @@ jobs:
       - name: Run security scripts
         run: bash scripts/security-run.sh
       - name: Upload security artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: security-reports
           path: reports/latest
@@ -68,7 +68,7 @@ jobs:
           for f in contracts/*.sol; do myth analyze "$f" -o text > "mythril-$(basename $f .sol).txt" || true; done
           mkdir -p reports/latest; cp mythril-*.txt reports/latest/ || true
       - name: Upload nightly artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: mythril-nightly
           path: reports/latest

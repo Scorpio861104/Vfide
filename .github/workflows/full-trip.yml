@@ -40,7 +40,7 @@ jobs:
           bash scripts/full-trip.sh
 
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: full-trip-coverage
           path: |
@@ -49,28 +49,28 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload diff outputs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: full-trip-diff
           path: diff-out
           if-no-files-found: ignore
 
       - name: Upload gas report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: full-trip-gas
           path: gas-report.txt
           if-no-files-found: ignore
 
       - name: Upload surya graph
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: full-trip-surya
           path: surya-graph.png
           if-no-files-found: ignore
 
       - name: Upload docs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: full-trip-docs
           path: docs

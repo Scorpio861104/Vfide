@@ -46,7 +46,7 @@ jobs:
         run: |
           npm run coverage || echo "coverage failed"
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: solidity-coverage
           path: |
@@ -63,7 +63,7 @@ jobs:
         run: |
           npm run diff:evm || echo "diff:evm failed"
       - name: Upload diff (EVM)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: diff-out-hardhat
           path: diff-out/hardhat.json
@@ -85,7 +85,7 @@ jobs:
             echo "Skipping diff:compare (zk capture missing)"
           fi
       - name: Upload diff (zk) optional
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: diff-out-zk
           path: diff-out/zkSyncSepoliaTestnet.json
