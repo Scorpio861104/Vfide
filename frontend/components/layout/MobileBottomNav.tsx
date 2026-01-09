@@ -20,6 +20,8 @@ const navItems = [
 ]
 
 const moreItems = [
+  { href: '/social', label: 'Social', emoji: '👥' },
+  { href: '/social-messaging', label: 'Messages', emoji: '💬' },
   { href: '/token-launch', label: 'Token Launch', emoji: '🚀' },
   { href: '/leaderboard', label: 'Leaderboard', emoji: '🏆' },
   { href: '/rewards', label: 'Rewards', emoji: '🎁' },
