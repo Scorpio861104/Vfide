@@ -2,12 +2,12 @@
  * PageLayout Tests
  * Tests for PageLayout UI components (20% coverage)
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onClick, whileHover, whileTap, layoutId, ...props }: any) => (
       <div className={className} style={style} onClick={onClick} {...props}>{children}</div>
@@ -258,11 +258,11 @@ describe('GlassCard', () => {
   it('applies gradient when enabled', () => {
     const { container } = render(<GlassCard gradient>Content</GlassCard>)
     
-    expect(container.firstChild).toHaveClass('bg-gradient-to-br')
+    expect(container.firstChild).toHaveClass('bg-linear-to-br')
   })
 
   it('handles click events', () => {
-    const onClick = vi.fn()
+    const onClick = jest.fn()
     render(<GlassCard onClick={onClick}>Clickable</GlassCard>)
     
     fireEvent.click(screen.getByText('Clickable'))
@@ -300,7 +300,7 @@ describe('TabNavigation', () => {
   })
 
   it('calls onChange when tab is clicked', () => {
-    const onChange = vi.fn()
+    const onChange = jest.fn()
     render(<TabNavigation tabs={testTabs} activeTab="tab1" onChange={onChange} />)
     
     fireEvent.click(screen.getByText('Tab 2'))
@@ -403,7 +403,7 @@ describe('EmptyState', () => {
   })
 
   it('renders action button when provided', () => {
-    const onAction = vi.fn()
+    const onAction = jest.fn()
     
     render(
       <EmptyState

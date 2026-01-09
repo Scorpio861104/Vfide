@@ -1,21 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 
 // Mock wagmi hooks
-vi.mock('wagmi', () => ({
-  useReadContract: vi.fn(() => ({ data: null })),
-  useWriteContract: vi.fn(() => ({ writeContract: vi.fn(), data: null, isPending: false })),
-  useWaitForTransactionReceipt: vi.fn(() => ({ isLoading: false, isSuccess: false })),
+jest.mock('wagmi', () => ({
+  useReadContract: jest.fn(() => ({ data: null })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), data: null, isPending: false })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ isLoading: false, isSuccess: false })),
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     DAO: '0x1234567890123456789012345678901234567890',
   },
 }))
 
 // Mock ABIs
-vi.mock('@/lib/abis', () => ({
+jest.mock('@/lib/abis', () => ({
   DAOABI: [],
 }))
 
@@ -24,7 +24,7 @@ import { useDAOProposals, useVote } from '@/hooks/useDAOHooks'
 
 describe('useDAOHooks', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('useDAOProposals', () => {
@@ -34,7 +34,7 @@ describe('useDAOHooks', () => {
     })
 
     it('returns proposal count', () => {
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: 42n as unknown as undefined,
       } as ReturnType<typeof useReadContract>)
 
@@ -43,7 +43,7 @@ describe('useDAOHooks', () => {
     })
 
     it('handles large proposal counts', () => {
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: 1000n as unknown as undefined,
       } as ReturnType<typeof useReadContract>)
 
@@ -59,8 +59,8 @@ describe('useDAOHooks', () => {
     })
 
     it('calls writeContract when voting', () => {
-      const mockWriteContract = vi.fn()
-      vi.mocked(useWriteContract).mockReturnValue({
+      const mockWriteContract = jest.fn()
+      jest.mocked(useWriteContract).mockReturnValue({
         writeContract: mockWriteContract,
         data: null,
         isPending: false,
@@ -78,8 +78,8 @@ describe('useDAOHooks', () => {
     })
 
     it('supports voting against', () => {
-      const mockWriteContract = vi.fn()
-      vi.mocked(useWriteContract).mockReturnValue({
+      const mockWriteContract = jest.fn()
+      jest.mocked(useWriteContract).mockReturnValue({
         writeContract: mockWriteContract,
         data: null,
         isPending: false,
@@ -96,8 +96,8 @@ describe('useDAOHooks', () => {
     })
 
     it('tracks voting state', () => {
-      vi.mocked(useWriteContract).mockReturnValue({
-        writeContract: vi.fn(),
+      jest.mocked(useWriteContract).mockReturnValue({
+        writeContract: jest.fn(),
         data: null,
         isPending: true,
       } as unknown as ReturnType<typeof useWriteContract>)
@@ -107,7 +107,7 @@ describe('useDAOHooks', () => {
     })
 
     it('tracks confirmation state', () => {
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: true,
         isSuccess: false,
       } as ReturnType<typeof useWaitForTransactionReceipt>)
@@ -117,7 +117,7 @@ describe('useDAOHooks', () => {
     })
 
     it('tracks success state', () => {
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: false,
         isSuccess: true,
       } as ReturnType<typeof useWaitForTransactionReceipt>)

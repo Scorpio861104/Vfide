@@ -19,12 +19,12 @@ interface QueryBuilderProps {
   className?: string;
 }
 
-export const QueryBuilder: React.FC<QueryBuilderProps> = ({
+export function QueryBuilder({
   fields,
   data,
   onQuery,
   className = ''
-}) => {
+}: QueryBuilderProps) {
   const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [aggregations, setAggregations] = useState<AggregationConfig[]>([]);
   const [groupBy, setGroupBy] = useState<string[]>([]);

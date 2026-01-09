@@ -1,25 +1,25 @@
-import { renderHook, act } from '@testing-library/react'
 import { ZERO_ADDRESS } from '@/lib/constants'
-import {
-  useUserVault,
-  useCreateVault,
-  useVaultBalance,
-  useTransferVFIDE,
-  useVaultGuardiansDetailed,
-  useIsGuardianMature,
-  useSetGuardian,
-  useAbnormalTransactionThreshold,
-  useSetBalanceSnapshotMode,
-  useUpdateBalanceSnapshot,
-  useBalanceSnapshot,
-  usePendingTransaction,
-  useApprovePendingTransaction,
-  useExecutePendingTransaction,
-  useCleanupExpiredTransaction,
-  useGuardianCancelInheritance,
-  useInheritanceStatus,
-} from '../useVaultHooks'
+import { act, renderHook } from '@testing-library/react'
 import * as wagmi from 'wagmi'
+import {
+    useAbnormalTransactionThreshold,
+    useApprovePendingTransaction,
+    useBalanceSnapshot,
+    useCleanupExpiredTransaction,
+    useCreateVault,
+    useExecutePendingTransaction,
+    useGuardianCancelInheritance,
+    useInheritanceStatus,
+    useIsGuardianMature,
+    usePendingTransaction,
+    useSetBalanceSnapshotMode,
+    useSetGuardian,
+    useTransferVFIDE,
+    useUpdateBalanceSnapshot,
+    useUserVault,
+    useVaultBalance,
+    useVaultGuardiansDetailed,
+} from '../useVaultHooks'
 
 jest.mock('wagmi')
 jest.mock('@/lib/contracts')
@@ -347,6 +347,39 @@ describe('useTransferVFIDE', () => {
     const toVault = '0x9876543210987654321098765432109876543210' as `0x${string}`
     result.current.transfer(toVault, '100')
 
+    expect(mockWriteContract).not.toHaveBeenCalled()
+  })
+
+  it('throws error for invalid recipient address (line 113)', () => {
+    const mockWriteContract = jest.fn()
+    ;(wagmi.useAccount as jest.Mock).mockReturnValue({
+      address: mockAddress,
+    })
+    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
+      data: mockVaultAddress, // Has vault
+      isLoading: false,
+    })
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContract: mockWriteContract,
+      data: undefined,
+      isPending: false,
+    })
+    ;(wagmi.useWaitForTransactionReceipt as jest.Mock).mockReturnValue({
+      isLoading: false,
+      isSuccess: false,
+    })
+
+    const { result } = renderHook(() => useTransferVFIDE())
+    
+    // Invalid address should throw error (triggers line 113)
+    let errorThrown = false
+    try {
+      result.current.transfer('invalid' as `0x${string}`, '100')
+    } catch (error: any) {
+      errorThrown = true
+      expect(error.message).toBeTruthy()
+    }
+    expect(errorThrown).toBe(true)
     expect(mockWriteContract).not.toHaveBeenCalled()
   })
 
@@ -1293,5 +1326,103 @@ describe('useInheritanceStatus', () => {
     expect(result.current.nextOfKin).toBe('0x0000000000000000000000000000000000000000')
     // Note: hasNextOfKin is true when data is undefined due to the !== check
     expect(result.current.hasNextOfKin).toBe(true)
+  })
+})
+
+describe('useSetGuardian edge cases', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('handles invalid guardian address validation (line 195-196)', async () => {
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContractAsync: jest.fn(),
+    })
+
+    const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
+
+    let response: { success: boolean; error?: string }
+    await act(async () => {
+      // Pass an invalid address to trigger validation error (line 195-196)
+      response = await result.current.setGuardian(0, 'invalid-address' as `0x${string}`)
+    })
+
+    expect(response!.success).toBe(false)
+    expect(response!.error).toBeTruthy()
+  })
+
+  it('uses setGuardianLegacy wrapper (line 220-222)', async () => {
+    const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash' as `0x${string}`)
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContractAsync: mockWriteContract,
+    })
+
+    const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
+
+    await act(async () => {
+      // This calls the legacy wrapper which uses slot 0 (line 220-222)
+      await result.current.setGuardianLegacy(mockGuardianAddress, true)
+    })
+
+    expect(mockWriteContract).toHaveBeenCalledWith({
+      address: mockVaultAddress,
+      abi: expect.any(Array),
+      functionName: 'setGuardian',
+      args: [0, mockGuardianAddress],
+    })
+  })
+
+  it('uses setGuardianLegacy to remove guardian (line 220-222)', async () => {
+    const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash' as `0x${string}`)
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContractAsync: mockWriteContract,
+    })
+
+    const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
+
+    await act(async () => {
+      // This should use ZERO_ADDRESS when active=false (line 220-222)
+      await result.current.setGuardianLegacy(mockGuardianAddress, false)
+    })
+
+    expect(mockWriteContract).toHaveBeenCalledWith({
+      address: mockVaultAddress,
+      abi: expect.any(Array),
+      functionName: 'setGuardian',
+      args: [0, ZERO_ADDRESS],
+    })
+  })
+})
+
+describe('useTransferVFIDE edge cases', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('validates inputs before transfer', () => {
+    const mockWriteContract = jest.fn()
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContract: mockWriteContract,
+      data: null,
+      isPending: false,
+    })
+    ;(wagmi.useAccount as jest.Mock).mockReturnValue({
+      address: mockAddress,
+    })
+    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
+      data: mockVaultAddress,
+    })
+    ;(wagmi.useWaitForTransactionReceipt as jest.Mock).mockReturnValue({
+      isLoading: false,
+      isSuccess: false,
+    })
+
+    const { result } = renderHook(() => useTransferVFIDE())
+    
+    // Verify the hook returns expected interface with 'transfer' method
+    expect(result.current.transfer).toBeDefined()
+    expect(typeof result.current.transfer).toBe('function')
+    expect(result.current.isTransferring).toBe(false)
+    expect(result.current.isSuccess).toBe(false)
   })
 })

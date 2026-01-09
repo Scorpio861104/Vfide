@@ -107,7 +107,7 @@ export function VaultSecurityPanel() {
         {/* Lock Status */}
         <motion.div
           whileHover={{ scale: 1.02 }}
-          className={`bg-gradient-to-br ${
+          className={`bg-linear-to-br ${
             isLocked 
               ? 'from-red-900/20 to-orange-900/20 border-red-500/30' 
               : 'from-green-900/20 to-emerald-900/20 border-green-500/30'
@@ -146,7 +146,7 @@ export function VaultSecurityPanel() {
         {/* Guardian Info */}
         <motion.div
           whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border-2 border-blue-500/30 rounded-xl p-6"
+          className="bg-linear-to-br from-blue-900/20 to-purple-900/20 border-2 border-blue-500/30 rounded-xl p-6"
         >
           <div className="flex items-center gap-3 mb-4">
             <Users className="w-8 h-8 text-blue-400" />
@@ -213,7 +213,7 @@ export function VaultSecurityPanel() {
 
       {/* Self-Panic Button */}
       <motion.div
-        className="bg-gradient-to-br from-red-900/10 to-orange-900/10 border-2 border-red-500/20 rounded-xl p-6"
+        className="bg-linear-to-br from-red-900/10 to-orange-900/10 border-2 border-red-500/20 rounded-xl p-6"
       >
         <div className="flex items-start gap-4 mb-4">
           <Zap className="w-8 h-8 text-orange-400" />
@@ -272,7 +272,7 @@ export function VaultSecurityPanel() {
               <button
                 onClick={() => setShowPanicConfirm(true)}
                 disabled={!canPanic || isPanicking}
-                className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
+                className="w-full bg-linear-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
               >
                 {isPanicking ? 'Activating...' : canPanic ? 'ACTIVATE SELF-PANIC' : 'SELF-PANIC LOCKED'}
               </button>

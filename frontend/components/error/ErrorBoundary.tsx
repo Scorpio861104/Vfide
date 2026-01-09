@@ -1,7 +1,8 @@
 'use client';
 
+import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
 import React, { Component, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -84,7 +85,7 @@ export class ErrorBoundary extends Component<Props, State> {
             
             <h1 className="text-2xl font-bold text-[#F5F3E8] mb-2">Something went wrong</h1>
             <p className="text-sm text-[#6B6B78] mb-6">
-              We encountered an unexpected error. Don't worry, your data is safe.
+              We encountered an unexpected error. Don&apos;t worry, your data is safe.
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
@@ -106,13 +107,13 @@ export class ErrorBoundary extends Component<Props, State> {
                 <RefreshCw className="w-4 h-4" />
                 Try Again
               </button>
-              <a
+              <Link
                 href="/"
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#2A2A3F] hover:bg-[#3A3A4F] text-[#F5F3E8] rounded-lg font-semibold transition-colors"
               >
                 <Home className="w-4 h-4" />
                 Go Home
-              </a>
+              </Link>
             </div>
           </div>
         </div>

@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Inbox: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'inbox-icon' }),
   Search: ({ className }: { className?: string }) => 

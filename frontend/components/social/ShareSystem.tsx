@@ -211,7 +211,7 @@ export function ShareSystem({ userId = 'current_user', onShare }: ShareSystemPro
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
       {/* Hidden Canvas for Certificate Generation */}
       <canvas ref={canvasRef} width={1200} height={800} style={{ display: 'none' }} />
 
@@ -266,7 +266,7 @@ export function ShareSystem({ userId = 'current_user', onShare }: ShareSystemPro
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className={`bg-gradient-to-br rounded-lg p-6 border-2 transition-all group cursor-pointer ${
+                    className={`bg-linear-to-br rounded-lg p-6 border-2 transition-all group cursor-pointer ${
                       selectedAchievement?.id === achievement.id
                         ? 'border-[#00F0FF] from-[#00F0FF]/20 to-transparent'
                         : `border-${
@@ -397,7 +397,7 @@ export function ShareSystem({ userId = 'current_user', onShare }: ShareSystemPro
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className={`bg-gradient-to-r ${tierColors[referral.tier]} border-2 rounded-lg p-8 text-white`}
+                    className={`bg-linear-to-r ${tierColors[referral.tier]} border-2 rounded-lg p-8 text-white`}
                   >
                     <div className="grid md:grid-cols-2 gap-8">
                       {/* Left: Referral Info */}
@@ -513,7 +513,7 @@ export function ShareSystem({ userId = 'current_user', onShare }: ShareSystemPro
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-gradient-to-r from-[#FFD700]/10 via-[#1A1A2E] to-[#0A0A0F] border-2 border-[#FFD700]/30 rounded-lg overflow-hidden"
+                  className="bg-linear-to-r from-[#FFD700]/10 via-[#1A1A2E] to-[#0A0A0F] border-2 border-[#FFD700]/30 rounded-lg overflow-hidden"
                 >
                   {/* Certificate Preview */}
                   <div className="bg-[#1A1A2E] p-8 border-b border-[#FFD700]/20">
@@ -627,7 +627,7 @@ export function ShareSystem({ userId = 'current_user', onShare }: ShareSystemPro
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className={`bg-gradient-to-r ${platformColors[metric.platform]} border rounded-lg p-6`}
+                      className={`bg-linear-to-r ${platformColors[metric.platform]} border rounded-lg p-6`}
                     >
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-[#F5F3E8] capitalize">{metric.platform}</h3>
@@ -642,7 +642,7 @@ export function ShareSystem({ userId = 'current_user', onShare }: ShareSystemPro
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min((metric.clicks / 1000) * 100, 100)}%` }}
                               transition={{ duration: 1, delay: idx * 0.1 + 0.3 }}
-                              className="bg-gradient-to-r from-[#A78BFA] to-[#00F0FF] rounded h-full"
+                              className="bg-linear-to-r from-[#A78BFA] to-[#00F0FF] rounded h-full"
                             />
                           </div>
                           <div className="text-sm font-semibold text-[#F5F3E8] mt-1">{metric.clicks}</div>
@@ -655,7 +655,7 @@ export function ShareSystem({ userId = 'current_user', onShare }: ShareSystemPro
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min((metric.conversions / 50) * 100, 100)}%` }}
                               transition={{ duration: 1, delay: idx * 0.1 + 0.4 }}
-                              className="bg-gradient-to-r from-[#50C878] to-[#00F0FF] rounded h-full"
+                              className="bg-linear-to-r from-[#50C878] to-[#00F0FF] rounded h-full"
                             />
                           </div>
                           <div className="text-sm font-semibold text-[#F5F3E8] mt-1">{metric.conversions}</div>

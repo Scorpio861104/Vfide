@@ -1,0 +1,81 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Run TypeScript check
+        working-directory: ./frontend
+        run: npm run typecheck
+      
+      - name: Run linter
+        working-directory: ./frontend
+        run: npm run lint
+      
+      - name: Run unit tests
+        working-directory: ./frontend
+        run: npm test -- --coverage --maxWorkers=2
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+      
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps chromium
+      
+      - name: Run E2E tests
+        working-directory: ./frontend
+        run: npm run test:e2e:chromium
+      
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+  
+  contract-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      
+      - name: Run Forge tests
+        working-directory: ./
+        run: forge test -vv
+      
+      - name: Run Forge coverage
+        working-directory: ./
+        run: forge coverage

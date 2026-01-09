@@ -125,7 +125,7 @@ export function MobileBottomNav() {
                 {isActive && (
                   <motion.div
                     layoutId="bottomNavIndicator"
-                    className="absolute top-0 w-10 h-1 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
+                    className="absolute top-0 w-10 h-1 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -153,7 +153,7 @@ export function MobileBottomNav() {
             {showMore && (
               <motion.div
                 layoutId="bottomNavIndicator"
-                className="absolute top-0 w-10 h-1 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
+                className="absolute top-0 w-10 h-1 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}

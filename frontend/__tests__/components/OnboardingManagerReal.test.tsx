@@ -3,12 +3,12 @@
  * Tests for actual onboarding components with mocked dependencies
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, act } from '@testing-library/react'
 import React from 'react'
 
 // Mock the OnboardingTour component to avoid complex nested dependencies
-vi.mock('@/components/onboarding/OnboardingTour', () => ({
+jest.mock('@/components/onboarding/OnboardingTour', () => ({
   OnboardingTour: ({ onComplete }: { onComplete: () => void }) => (
     <div data-testid="onboarding-tour">
       <button onClick={onComplete} data-testid="complete-tour">Complete Tour</button>
@@ -20,7 +20,7 @@ import { OnboardingManager } from '@/components/onboarding/OnboardingManager'
 
 describe('OnboardingManager', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('Initial State', () => {

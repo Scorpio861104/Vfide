@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: any) => (
       <div className={className} style={style} {...props}>{children}</div>
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   ArrowUpRight: () => <span>ArrowUpRight</span>,
   ArrowDownLeft: () => <span>ArrowDownLeft</span>,
   Shield: () => <span>Shield</span>,
@@ -34,7 +34,7 @@ vi.mock('lucide-react', () => ({
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
@@ -42,12 +42,12 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
+jest.mock('viem', () => ({
   formatEther: (val: bigint) => (Number(val) / 1e18).toString(),
 }))
 
 // Mock vfide hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   useUserVault: () => ({
     vaultAddress: '0x1234567890123456789012345678901234567890',
   }),
@@ -65,11 +65,11 @@ vi.mock('@/lib/vfide-hooks', () => ({
     snapshot: 0n,
   }),
   useSetBalanceSnapshotMode: () => ({
-    setSnapshotMode: vi.fn(),
+    setSnapshotMode: jest.fn(),
     isLoading: false,
   }),
   useUpdateBalanceSnapshot: () => ({
-    updateSnapshot: vi.fn(),
+    updateSnapshot: jest.fn(),
     isLoading: false,
   }),
   usePendingTransaction: () => ({
@@ -77,15 +77,15 @@ vi.mock('@/lib/vfide-hooks', () => ({
     pendingTx: null,
   }),
   useApprovePendingTransaction: () => ({
-    approve: vi.fn(),
+    approve: jest.fn(),
     isLoading: false,
   }),
   useExecutePendingTransaction: () => ({
-    execute: vi.fn(),
+    execute: jest.fn(),
     isLoading: false,
   }),
   useCleanupExpiredTransaction: () => ({
-    cleanup: vi.fn(),
+    cleanup: jest.fn(),
     isLoading: false,
   }),
 }))

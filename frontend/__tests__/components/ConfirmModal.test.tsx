@@ -1,16 +1,16 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   AlertTriangle: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'alert-icon' }),
   X: () => React.createElement('svg', { 'data-testid': 'close-icon' }),
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, onClick, ...props }: React.PropsWithChildren<{ className?: string; onClick?: () => void }>) =>
       React.createElement('div', { className, onClick, ...props }, children),
@@ -19,7 +19,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock LoadingButton
-vi.mock('@/components/ui/LoadingButton', () => ({
+jest.mock('@/components/ui/LoadingButton', () => ({
   LoadingButton: ({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) =>
     React.createElement('button', { onClick, disabled, 'data-testid': 'confirm-button' }, children),
 }))
@@ -29,14 +29,14 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 describe('ConfirmModal', () => {
   const defaultProps = {
     isOpen: true,
-    onClose: vi.fn(),
-    onConfirm: vi.fn(),
+    onClose: jest.fn(),
+    onConfirm: jest.fn(),
     title: 'Confirm Action',
     message: 'Are you sure you want to proceed?',
   }
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders when open', () => {

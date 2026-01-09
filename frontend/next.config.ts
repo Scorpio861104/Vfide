@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
 
+// Bundle analyzer configuration
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   // Fix for pino/thread-stream compatibility
   serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
@@ -8,6 +13,23 @@ const nextConfig: NextConfig = {
   // Without this, Next may infer the monorepo root (multiple lockfiles) and scan far more files.
   turbopack: {
     root: __dirname,
+  },
+
+  // Production optimizations
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: true,
+
+  // Optimize for production builds
+  reactStrictMode: true,
+
+  // Experimental features for better performance
+  experimental: {
+    optimizePackageImports: [
+      '@radix-ui/react-icons',
+      'lucide-react',
+      'framer-motion',
+    ],
   },
 
   // Image optimization
@@ -101,4 +123,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

@@ -1,8 +1,8 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
+import { Book, ChevronRight, Droplets, Globe, HelpCircle, Shield, Star, Store, Vote, Wallet, X } from "lucide-react";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, X, Book, Wallet, Shield, Store, Star, Vote, ChevronRight, Globe, Droplets } from "lucide-react";
 
 interface HelpTopic {
   id: string;
@@ -183,7 +183,7 @@ export function HelpCenter() {
       {/* Floating Help Button - positioned above mobile nav */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 md:bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-24 md:bottom-6 right-6 z-40 w-14 h-14 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         initial={{ scale: 0 }}
@@ -202,7 +202,7 @@ export function HelpCenter() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90]"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-90"
               onClick={() => {
                 setIsOpen(false);
                 setSelectedTopic(null);
@@ -215,12 +215,12 @@ export function HelpCenter() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25 }}
-              className="fixed right-0 top-0 bottom-0 w-full sm:w-[90vw] md:w-[500px] bg-gradient-to-br from-[#2A2A2F] to-[#1A1A1D] border-l-2 border-[#00F0FF] shadow-2xl z-[91] overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 w-full sm:w-[90vw] md:w-125 bg-linear-to-br from-[#2A2A2F] to-[#1A1A1D] border-l-2 border-[#00F0FF] shadow-2xl z-91 overflow-y-auto"
             >
               {/* Header */}
               <div className="sticky top-0 bg-[#1A1A1D] border-b border-[#3A3A3F] p-6 flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#F5F3E8] font-[family-name:var(--font-display)]">
+                  <h2 className="text-2xl font-bold text-[#F5F3E8]" style={{ fontFamily: 'var(--font-display)' }}>
                     Help Center
                   </h2>
                   <p className="text-sm text-[#A0A0A5]">Learn how to use VFIDE</p>
@@ -248,7 +248,7 @@ export function HelpCenter() {
                         className="w-full p-4 bg-[#1A1A1D] border border-[#3A3A3F] hover:border-[#00F0FF] rounded-lg text-left transition-all group"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="flex-shrink-0 w-12 h-12 bg-[#00F0FF]/20 rounded-lg flex items-center justify-center text-[#00F0FF]">
+                          <div className="shrink-0 w-12 h-12 bg-[#00F0FF]/20 rounded-lg flex items-center justify-center text-[#00F0FF]">
                             {topic.icon}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -315,7 +315,7 @@ export function HelpCenter() {
                         {selectedTopic.icon}
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold text-[#F5F3E8] font-[family-name:var(--font-display)]">
+                        <h3 className="text-2xl font-bold text-[#F5F3E8]" style={{ fontFamily: 'var(--font-display)' }}>
                           {selectedTopic.title}
                         </h3>
                         <p className="text-sm text-[#A0A0A5]">

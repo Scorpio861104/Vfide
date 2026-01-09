@@ -1,31 +1,31 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 
 // Mock all external dependencies first
-vi.mock('@rainbow-me/rainbowkit', () => ({
-  connectorsForWallets: vi.fn(() => []),
+jest.mock('@rainbow-me/rainbowkit', () => ({
+  connectorsForWallets: jest.fn(() => []),
 }))
 
-vi.mock('@rainbow-me/rainbowkit/wallets', () => ({
+jest.mock('@rainbow-me/rainbowkit/wallets', () => ({
   walletConnectWallet: {},
   metaMaskWallet: {},
 }))
 
-vi.mock('wagmi', () => ({
-  createConfig: vi.fn((options) => ({
+jest.mock('wagmi', () => ({
+  createConfig: jest.fn((options) => ({
     chains: options.chains,
     transports: options.transports,
     ssr: options.ssr,
     storage: options.storage,
   })),
-  http: vi.fn((url) => url || 'default-rpc'),
-  createStorage: vi.fn(() => ({
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
+  http: jest.fn((url) => url || 'default-rpc'),
+  createStorage: jest.fn(() => ({
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
   })),
 }))
 
-vi.mock('wagmi/chains', () => ({
+jest.mock('wagmi/chains', () => ({
   base: { id: 8453, name: 'Base' },
   baseSepolia: { id: 84532, name: 'Base Sepolia' },
   polygon: { id: 137, name: 'Polygon' },
@@ -34,7 +34,7 @@ vi.mock('wagmi/chains', () => ({
   zkSyncSepoliaTestnet: { id: 300, name: 'zkSync Sepolia' },
 }))
 
-vi.mock('./chains', () => ({
+jest.mock('./chains', () => ({
   IS_TESTNET: true,
 }))
 

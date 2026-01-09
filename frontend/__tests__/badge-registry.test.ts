@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { getBadgeId, BADGE_REGISTRY, type BadgeMetadata } from '@/lib/badge-registry'
 
 describe('badge-registry', () => {

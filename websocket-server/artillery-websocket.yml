@@ -1,0 +1,115 @@
+config:
+  target: "http://localhost:3001"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 180
+      arrivalRate: 30
+      name: "Sustained load"
+    - duration: 120
+      arrivalRate: 50
+      name: "Peak load"
+    - duration: 60
+      arrivalRate: 10
+      name: "Cool down"
+  
+  socketio:
+    transports: ["websocket"]
+    upgrade: false
+  
+  processor: "./load-test-processor.js"
+
+scenarios:
+  - name: "WebSocket Connection Lifecycle"
+    engine: socketio
+    flow:
+      # Connect to WebSocket server
+      - emit:
+          channel: "auth"
+          data:
+            address: "{{ $randomString() }}"
+            signature: "test_signature"
+            message: "test_message"
+      
+      # Subscribe to governance updates
+      - think: 2
+      - emit:
+          channel: "governance:subscribe"
+      
+      # Subscribe to chat
+      - think: 1
+      - emit:
+          channel: "chat:join"
+          data:
+            room: "general"
+      
+      # Send chat message
+      - think: 3
+      - emit:
+          channel: "chat:message"
+          data:
+            room: "general"
+            content: "Load test message {{ $randomNumber(1, 1000) }}"
+      
+      # Request proposal list
+      - think: 2
+      - emit:
+          channel: "governance:proposals"
+      
+      # Subscribe to notifications
+      - think: 1
+      - emit:
+          channel: "notifications:subscribe"
+      
+      # Keep connection alive
+      - think: 10
+      
+      # Disconnect
+      - emit:
+          channel: "disconnect"
+
+  - name: "High Frequency Chat"
+    engine: socketio
+    flow:
+      - emit:
+          channel: "auth"
+          data:
+            address: "{{ $randomString() }}"
+            signature: "test_signature"
+            message: "test_message"
+      
+      - emit:
+          channel: "chat:join"
+          data:
+            room: "general"
+      
+      # Send multiple messages rapidly
+      - loop:
+        - emit:
+            channel: "chat:message"
+            data:
+              room: "general"
+              content: "Rapid message {{ $randomNumber(1, 1000) }}"
+        - think: 0.5
+        count: 10
+
+  - name: "Governance Monitoring"
+    engine: socketio
+    flow:
+      - emit:
+          channel: "auth"
+          data:
+            address: "{{ $randomString() }}"
+            signature: "test_signature"
+            message: "test_message"
+      
+      - emit:
+          channel: "governance:subscribe"
+      
+      # Poll for proposals
+      - loop:
+        - emit:
+            channel: "governance:proposals"
+        - think: 5
+        count: 6

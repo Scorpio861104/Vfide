@@ -75,7 +75,7 @@ export function ProposalsTab({
 
   return (
     <section className="py-8">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-3 sm:px-4">
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -97,7 +97,7 @@ export function ProposalsTab({
                 >
                   📊 Export CSV
                 </button>
-                <button className="px-6 py-2 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform">
+                <button className="px-6 py-2 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform">
                   Create Proposal
                 </button>
               </div>
@@ -171,7 +171,7 @@ export function ProposalsTab({
                       <div className="w-full h-1.5 bg-[#2A2A2F] rounded-full overflow-hidden">
                         <div
                           className={`h-full transition-all ${
-                            total >= GOVERNANCE_QUORUM_VOTES ? "bg-[#50C878]" : "bg-gradient-to-r from-[#FFD700] to-[#FFA500]"
+                            total >= GOVERNANCE_QUORUM_VOTES ? "bg-[#50C878]" : "bg-linear-to-r from-[#FFD700] to-[#FFA500]"
                           }`}
                           style={{ width: `${Math.min(100, (total / GOVERNANCE_QUORUM_VOTES) * 100)}%` }}
                         />

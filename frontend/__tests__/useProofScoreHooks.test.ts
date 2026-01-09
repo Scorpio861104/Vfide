@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 
 // ============================================
 // PROOFSCORE HOOKS TESTS
@@ -8,24 +8,24 @@ const MOCK_USER = '0x1234567890123456789012345678901234567890'
 const MOCK_MERCHANT = '0x9876543210987654321098765432109876543210'
 const MOCK_ZERO = '0x0000000000000000000000000000000000000000'
 
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
   })),
-  useReadContract: vi.fn(() => ({
+  useReadContract: jest.fn(() => ({
     data: BigInt(5000),
     isLoading: false,
     error: null,
-    refetch: vi.fn(),
+    refetch: jest.fn(),
   })),
-  useWriteContract: vi.fn(() => ({
-    writeContract: vi.fn(),
-    writeContractAsync: vi.fn().mockResolvedValue('0xhash'),
+  useWriteContract: jest.fn(() => ({
+    writeContract: jest.fn(),
+    writeContractAsync: jest.fn().mockResolvedValue('0xhash'),
     data: undefined,
     isPending: false,
   })),
-  useWaitForTransactionReceipt: vi.fn(() => ({
+  useWaitForTransactionReceipt: jest.fn(() => ({
     isLoading: false,
     isSuccess: false,
   })),
@@ -33,7 +33,7 @@ vi.mock('wagmi', () => ({
 
 describe('useProofScoreHooks', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('useProofScore', () => {
@@ -62,13 +62,13 @@ describe('useProofScoreHooks', () => {
 
     it('calculates tier for high score', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: BigInt(7500),
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
       
       const result = useReadContract({
@@ -90,13 +90,13 @@ describe('useProofScoreHooks', () => {
 
     it('calculates tier for elite score', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: BigInt(8500),
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
       
       const result = useReadContract({
@@ -118,13 +118,13 @@ describe('useProofScoreHooks', () => {
 
     it('calculates tier for low score', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: BigInt(3500),
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
       
       const result = useReadContract({
@@ -226,11 +226,11 @@ describe('useProofScoreHooks', () => {
 
     it('handles endorsement pending state', async () => {
       const { useWriteContract } = await import('wagmi')
-      const mockUseWriteContract = useWriteContract as ReturnType<typeof vi.fn>
+      const mockUseWriteContract = useWriteContract as ReturnType<typeof jest.fn>
       
       mockUseWriteContract.mockReturnValueOnce({
-        writeContract: vi.fn(),
-        writeContractAsync: vi.fn(),
+        writeContract: jest.fn(),
+        writeContractAsync: jest.fn(),
         data: undefined,
         isPending: true,
       })
@@ -241,7 +241,7 @@ describe('useProofScoreHooks', () => {
 
     it('handles endorsement success', async () => {
       const { useWaitForTransactionReceipt } = await import('wagmi')
-      const mockUseWaitForTx = useWaitForTransactionReceipt as ReturnType<typeof vi.fn>
+      const mockUseWaitForTx = useWaitForTransactionReceipt as ReturnType<typeof jest.fn>
       
       mockUseWaitForTx.mockReturnValueOnce({
         isLoading: false,

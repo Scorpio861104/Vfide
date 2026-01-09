@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: any) => (
       <div className={className} style={style} {...props}>{children}</div>
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   useIsMentor: () => ({ isMentor: true, isLoading: false }),
   useMentorInfo: () => ({ menteeCount: 5, isLoading: false }),
   useMentorActivityFeed: () => ({
@@ -40,7 +40,7 @@ vi.mock('@/lib/vfide-hooks', () => ({
 }))
 
 // Mock utils
-vi.mock('@/lib/utils', () => ({
+jest.mock('@/lib/utils', () => ({
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
   formatAddress: (addr: string) => addr ? addr.slice(0, 6) + '...' + addr.slice(-4) : '',
   timeUntil: () => '2 days',

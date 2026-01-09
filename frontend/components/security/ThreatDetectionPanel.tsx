@@ -29,7 +29,7 @@ const getRiskScoreColor = (score: number): string => {
   return 'text-green-600 dark:text-green-400';
 };
 
-export const ThreatDetectionPanel: React.FC<ThreatDetectionPanelProps> = ({ className = '' }) => {
+export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelProps) {
   const threat = useThreatDetection();
 
   useEffect(() => {

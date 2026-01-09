@@ -47,7 +47,7 @@ export function BadgeDisplay({
       {/* Badge Icon */}
       <div
         className={cn(
-          'relative flex items-center justify-center rounded-xl bg-gradient-to-br shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl',
+          'relative flex items-center justify-center rounded-xl bg-linear-to-br shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl',
           sizeClasses[size],
           rarityColors[badge.rarity as keyof typeof rarityColors]
         )}

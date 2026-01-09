@@ -1,14 +1,14 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   X: () => React.createElement('svg', { 'data-testid': 'close-icon' }),
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, onClick, ...props }: React.PropsWithChildren<{ className?: string; onClick?: () => void }>) =>
       React.createElement('div', { className, onClick, ...props }, children),
@@ -91,7 +91,7 @@ describe('Modal', () => {
   })
 
   it('calls onClose when close button clicked', () => {
-    const handleClose = vi.fn()
+    const handleClose = jest.fn()
     render(
       <Modal isOpen={true} onClose={handleClose} title="Title">
         <div>Content</div>
@@ -141,7 +141,7 @@ describe('Button', () => {
   })
 
   it('calls onClick when clicked', () => {
-    const handleClick = vi.fn()
+    const handleClick = jest.fn()
     render(<Button onClick={handleClick}>Click me</Button>)
     fireEvent.click(screen.getByRole('button'))
     expect(handleClick).toHaveBeenCalled()
@@ -247,7 +247,7 @@ describe('Input', () => {
   })
 
   it('calls onChange when value changes', () => {
-    const onChange = vi.fn()
+    const onChange = jest.fn()
     render(<Input value="" onChange={onChange} />)
     
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test' } })
@@ -323,7 +323,7 @@ describe('Select', () => {
   })
 
   it('calls onChange when value changes', () => {
-    const onChange = vi.fn()
+    const onChange = jest.fn()
     render(<Select options={options} value="" onChange={onChange} />)
     
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'b' } })

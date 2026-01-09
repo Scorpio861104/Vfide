@@ -129,7 +129,7 @@ export default function SetupPage() {
             <p className="text-zinc-300 mb-4">Connected to Base Sepolia with {ethBalance.toFixed(4)} ETH</p>
             <Link 
               href="/token-launch"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg"
             >
               Start Using VFIDE <ArrowRight size={18} />
             </Link>
@@ -202,7 +202,7 @@ export default function SetupPage() {
                 
                 {addError && (
                   <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-start gap-2">
-                    <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+                    <AlertTriangle size={18} className="shrink-0 mt-0.5" />
                     {addError}
                   </div>
                 )}
@@ -337,7 +337,7 @@ export default function SetupPage() {
                     className="w-full flex items-center justify-between bg-zinc-900 hover:bg-zinc-700 p-3 rounded-lg text-sm font-mono text-zinc-300 transition-colors"
                   >
                     <span className="truncate">{address}</span>
-                    {copiedField === 'address' ? <Check size={16} className="text-green-400 ml-2 flex-shrink-0" /> : <Copy size={16} className="text-zinc-400 ml-2 flex-shrink-0" />}
+                    {copiedField === 'address' ? <Check size={16} className="text-green-400 ml-2 shrink-0" /> : <Copy size={16} className="text-zinc-400 ml-2 shrink-0" />}
                   </button>
                 </div>
               )}

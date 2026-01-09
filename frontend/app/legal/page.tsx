@@ -15,7 +15,7 @@ export default function LegalPage() {
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         <section className="py-12 bg-[#2A2A2F] border-b border-[#3A3A3F]">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2 text-center">
               Legal & Policies
             </h1>
@@ -27,7 +27,7 @@ export default function LegalPage() {
 
         {/* Tab Navigation */}
         <section className="bg-[#1A1A1D] border-b border-[#3A3A3F] sticky top-20 z-40">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="flex gap-1 overflow-x-auto py-2" role="tablist" aria-label="Legal document sections">
               {[
                 { id: 'legal' as const, label: 'Disclaimers', color: '#FF6B6B' },

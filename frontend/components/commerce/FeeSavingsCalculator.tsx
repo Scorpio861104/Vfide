@@ -30,7 +30,7 @@ export function FeeSavingsCalculator() {
       
       {/* Amount Input */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] rounded-xl blur-xl opacity-20" />
+        <div className="absolute inset-0 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-xl blur-xl opacity-20" />
         <div className="relative bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 border border-[#00F0FF]/30">
           <label className="block text-[10px] sm:text-xs md:text-sm text-[#F5F3E8]/70 mb-1 sm:mb-2">
             Payment Amount (USD)
@@ -164,7 +164,7 @@ export function FeeSavingsCalculator() {
         animate={{ opacity: 1, scale: 1 }}
         className="relative"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-[#00FF88] to-[#00F0FF] rounded-xl blur-xl opacity-30" />
+        <div className="absolute inset-0 bg-linear-to-r from-[#00FF88] to-[#00F0FF] rounded-xl blur-xl opacity-30" />
         <div className="relative bg-[#0F0F0F]/90 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 lg:p-8 border-2 border-[#00FF88]/50 text-center space-y-1 sm:space-y-2">
           <div>
             <p className="text-[10px] sm:text-xs md:text-sm text-[#F5F3E8]/60 uppercase tracking-wider">

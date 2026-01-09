@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: any) => (
       <div className={className} style={style}>{children}</div>
@@ -16,13 +16,13 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
   }),
   useWriteContract: () => ({
-    writeContract: vi.fn(),
+    writeContract: jest.fn(),
     data: undefined,
     isPending: false,
   }),
@@ -33,7 +33,7 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock vfide-hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   useUserVault: () => ({
     vaultAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
   }),
@@ -47,7 +47,7 @@ vi.mock('@/lib/vfide-hooks', () => ({
     isLoading: false,
   }),
   useGuardianCancelInheritance: () => ({
-    cancel: vi.fn(),
+    cancel: jest.fn(),
     isPending: false,
   }),
   useInheritanceStatus: () => ({
@@ -57,14 +57,14 @@ vi.mock('@/lib/vfide-hooks', () => ({
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     GuardianRegistry: '0x9999999999999999999999999999999999999999',
   },
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Users: () => <span>UsersIcon</span>,
   Plus: () => <span>PlusIcon</span>,
   X: () => <span>XIcon</span>,
@@ -111,7 +111,7 @@ describe('GuardianManagementPanel - No Vault', () => {
         threshold: 0,
         isLoading: false,
       }),
-      useGuardianCancelInheritance: () => ({ cancel: vi.fn() }),
+      useGuardianCancelInheritance: () => ({ cancel: jest.fn() }),
       useInheritanceStatus: () => ({ isActive: false }),
     }))
     

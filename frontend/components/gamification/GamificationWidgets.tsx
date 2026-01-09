@@ -41,7 +41,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${xpProgress}%` }}
-            className="h-full bg-gradient-to-r from-[#00F0FF] to-[#A78BFA]"
+            className="h-full bg-linear-to-r from-[#00F0FF] to-[#A78BFA]"
           />
         </div>
       </div>
@@ -52,11 +52,11 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-xl p-4"
+      className="bg-linear-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-xl p-4"
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center">
             <Trophy className="w-6 h-6 text-[#0A0A0F]" />
           </div>
           <div>
@@ -79,7 +79,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           initial={{ width: 0 }}
           animate={{ width: `${xpProgress}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#00F0FF] to-[#A78BFA]"
+          className="absolute inset-y-0 left-0 bg-linear-to-r from-[#00F0FF] to-[#A78BFA]"
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-xs font-bold text-[#F5F3E8] drop-shadow-lg">
@@ -151,7 +151,7 @@ export function AchievementsList({ userAddress }: { userAddress: string }) {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
-                className={`relative bg-gradient-to-br ${getRarityColor(achievement.rarity)} p-[2px] rounded-xl overflow-hidden`}
+                className={`relative bg-linear-to-br ${getRarityColor(achievement.rarity)} p-[2px] rounded-xl overflow-hidden`}
               >
                 <div className="bg-[#1A1A2E] rounded-xl p-4">
                   <div className="flex items-start gap-3">
@@ -231,7 +231,7 @@ export function AchievementUnlockNotification({
       exit={{ opacity: 0, x: 50, scale: 0.9 }}
       className="fixed top-20 right-4 z-50 max-w-sm"
     >
-      <div className="bg-gradient-to-br from-[#FFD700] to-[#FFA500] p-[2px] rounded-xl">
+      <div className="bg-linear-to-br from-[#FFD700] to-[#FFA500] p-[2px] rounded-xl">
         <div className="bg-[#1A1A2E] rounded-xl p-4">
           <div className="flex items-start gap-3">
             <div className="text-4xl animate-bounce">{achievement.icon}</div>

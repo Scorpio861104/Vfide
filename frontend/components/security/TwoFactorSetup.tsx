@@ -9,12 +9,12 @@ interface TwoFactorSetupProps {
   className?: string;
 }
 
-export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
+export function TwoFactorSetup({
   userEmail,
   onComplete,
   onCancel,
   className = ''
-}) => {
+}: TwoFactorSetupProps) {
   const twoFactor = useTwoFactorAuth(userEmail);
   const [selectedMethod, setSelectedMethod] = useState<TwoFactorMethod | null>(null);
   const [totpSetup, setTotpSetup] = useState<TOTPSetup | null>(null);

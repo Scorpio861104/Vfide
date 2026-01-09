@@ -81,11 +81,11 @@ export function FeatureTooltip({
           transition={{ duration: 0.2 }}
           className={`absolute ${positionClasses[position]} z-50 w-64`}
         >
-          <div className="relative bg-gradient-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#00F0FF] rounded-lg shadow-2xl p-4">
+          <div className="relative bg-linear-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#00F0FF] rounded-lg shadow-2xl p-4">
             {arrow && <div className={arrowClasses[position]} />}
             
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-[#00F0FF]/20 rounded-full flex items-center justify-center">
+              <div className="shrink-0 w-8 h-8 bg-[#00F0FF]/20 rounded-full flex items-center justify-center">
                 <Lightbulb size={16} className="text-[#00F0FF]" />
               </div>
               
@@ -100,7 +100,7 @@ export function FeatureTooltip({
               
               <button
                 onClick={handleClose}
-                className="flex-shrink-0 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
+                className="shrink-0 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
                 aria-label="Dismiss tooltip"
               >
                 <X size={16} />

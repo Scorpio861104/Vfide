@@ -33,22 +33,22 @@ export function InfoTooltip({ content, children, position = "top" }: InfoTooltip
       
       {isVisible && (
         <div
-          className={`absolute z-50 px-4 py-3 bg-[#2A2A2F] border-2 border-[#00F0FF] rounded-lg shadow-lg w-[calc(100vw-2rem)] min-w-[250px] max-w-[350px] sm:w-auto ${positionClasses[position]}`}
+          className={`absolute z-50 px-4 py-3 bg-[#2A2A2F] border-2 border-[#00F0FF] rounded-lg shadow-lg w-[calc(100vw-2rem)] min-w-62.5 max-w-87.5 sm:w-auto ${positionClasses[position]}`}
           role="tooltip"
         >
-          <div className="text-sm text-[#F5F3E8] font-[family-name:var(--font-body)] leading-relaxed">
+          <div className="text-sm text-[#F5F3E8] leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
             {content}
           </div>
           {/* Tooltip arrow */}
           <div
             className={`absolute w-3 h-3 bg-[#2A2A2F] border-[#00F0FF] transform rotate-45 ${
-              position === "top"
-                ? "bottom-[-7px] left-1/2 -translate-x-1/2 border-b-2 border-r-2"
-                : position === "bottom"
-                ? "top-[-7px] left-1/2 -translate-x-1/2 border-t-2 border-l-2"
-                : position === "left"
-                ? "right-[-7px] top-1/2 -translate-y-1/2 border-t-2 border-r-2"
-                : "left-[-7px] top-1/2 -translate-y-1/2 border-b-2 border-l-2"
+              position === "bottom"
+                ? "-bottom-1.75 left-1/2 -translate-x-1/2 border-b-2 border-r-2"
+                : position === "top"
+                ? "-top-1.75 left-1/2 -translate-x-1/2 border-t-2 border-l-2"
+                : position === "right"
+                ? "-right-1.75 top-1/2 -translate-y-1/2 border-t-2 border-r-2"
+                : "-left-1.75 top-1/2 -translate-y-1/2 border-b-2 border-l-2"
             }`}
           />
         </div>

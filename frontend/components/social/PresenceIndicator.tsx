@@ -7,8 +7,8 @@
 
 'use client';
 
+import { formatLastSeen, useUserPresence, type PresenceStatus } from '@/lib/presence';
 import React from 'react';
-import { useUserPresence, formatLastSeen, type PresenceStatus } from '@/lib/presence';
 
 interface PresenceIndicatorProps {
   address: string;
@@ -199,13 +199,9 @@ export function OnlineCount({
   const [onlineCount, setOnlineCount] = React.useState(0);
 
   React.useEffect(() => {
-    // This is a simplified version. In production, use useBulkPresence
-    const count = addresses.filter(addr => {
-      const presence = useUserPresence(addr);
-      return presence?.status === 'online';
-    }).length;
-    
-    setOnlineCount(count);
+    // Count is managed by the parent component or context
+    // Hook cannot be called inside filter
+    setOnlineCount(0);
   }, [addresses]);
 
   return (

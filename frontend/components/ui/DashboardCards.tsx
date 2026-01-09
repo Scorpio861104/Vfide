@@ -122,7 +122,7 @@ export function QuickAction({ icon, label, href, color, isPrimary = false }: Qui
           relative p-5 rounded-2xl font-semibold flex flex-col items-center gap-3 text-center
           overflow-hidden transition-all duration-300
           ${isPrimary 
-            ? 'bg-gradient-to-br text-[#0A0A0F] shadow-lg'
+            ? 'bg-linear-to-br text-[#0A0A0F] shadow-lg'
             : 'glass-card hover:border-opacity-100'
           }
         `}
@@ -134,7 +134,7 @@ export function QuickAction({ icon, label, href, color, isPrimary = false }: Qui
         }}
       >
         {/* Shimmer effect on hover */}
-        <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full" />
+        <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-500 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full" />
         
         <div 
           className={`relative z-10 ${isPrimary ? '' : ''}`}
@@ -190,7 +190,7 @@ export function NotificationItem({
       )}
       
       <div 
-        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
         style={{ background: `${color}15`, color }}
       >
         {icon}

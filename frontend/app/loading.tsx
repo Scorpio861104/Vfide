@@ -11,7 +11,7 @@ export default function Loading() {
           <div className="absolute inset-0 border-4 border-transparent border-t-[#00F0FF] rounded-full animate-spin" />
           
           {/* Inner glow */}
-          <div className="absolute inset-4 bg-gradient-to-br from-[#00F0FF]/20 to-[#0080FF]/20 rounded-full animate-pulse" />
+          <div className="absolute inset-4 bg-linear-to-br from-[#00F0FF]/20 to-[#0080FF]/20 rounded-full animate-pulse" />
           
           {/* V logo */}
           <div className="absolute inset-0 flex items-center justify-center">

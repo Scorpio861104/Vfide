@@ -1,29 +1,29 @@
 'use client'
 
 // Rewards & Staking Management System
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
-import { useState } from 'react'
+import { GlobalNav } from '@/components/layout/GlobalNav'
+import { safeParseFloat } from '@/lib/validation'
 import { motion } from 'framer-motion'
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { formatUnits, parseUnits } from 'viem'
-import { safeBigIntToNumber, safeParseFloat } from '@/lib/validation'
 import {
-  Gift,
-  Trophy,
-  Vote,
-  Droplets,
-  GraduationCap,
-  Users,
-  Star,
-  Zap,
-  CheckCircle2,
-  Clock,
-  Lock,
-  Coins,
-  RefreshCw,
-  Sparkles
+    CheckCircle2,
+    Clock,
+    Coins,
+    Droplets,
+    Gift,
+    GraduationCap,
+    Lock,
+    RefreshCw,
+    Sparkles,
+    Star,
+    Trophy,
+    Users,
+    Vote,
+    Zap
 } from 'lucide-react'
+import { useState } from 'react'
+import { formatUnits, parseUnits } from 'viem'
+import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 
 // Contract ABIs
 const LIQUIDITY_INCENTIVES_ABI = [
@@ -228,7 +228,7 @@ export default function RewardsPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,215,0,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(80,200,120,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
@@ -241,20 +241,20 @@ export default function RewardsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="py-12 border-b border-white/10 backdrop-blur-xl bg-white/[0.02]"
         >
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               <div>
                 <div className="flex items-center gap-4 mb-2">
                   <motion.div 
                     animate={{ rotate: [0, 5, -5, 0] }}
                     transition={{ duration: 4, repeat: Infinity }}
-                    className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-amber-500/30"
+                    className="w-16 h-16 bg-linear-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-amber-500/30"
                   >
                     <Gift className="w-8 h-8 text-white" />
                   </motion.div>
                   <div>
-                    <h1 className="text-4xl md:text-5xl font-black">
-                      <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black">
+                      <span className="bg-clip-text text-transparent bg-linear-to-r from-amber-400 via-yellow-400 to-orange-400">
                         Rewards Center
                       </span>
                     </h1>
@@ -269,7 +269,7 @@ export default function RewardsPage() {
                 <div className="flex gap-4">
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
-                    className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 min-w-[160px]"
+                    className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 flex-1 min-w-0"
                   >
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-emerald-400" />
@@ -279,7 +279,7 @@ export default function RewardsPage() {
                   </motion.div>
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
-                    className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 min-w-[160px]"
+                    className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 flex-1 min-w-0"
                   >
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-amber-400" />
@@ -295,7 +295,7 @@ export default function RewardsPage() {
 
         {/* Tab Navigation */}
         <section className="border-b border-white/5 backdrop-blur-sm bg-black/20 sticky top-16 z-40">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="flex gap-1 overflow-x-auto py-2 scrollbar-hide">
               {[
                 { id: 'overview' as const, label: 'Overview', icon: Gift, color: 'amber' },
@@ -306,11 +306,11 @@ export default function RewardsPage() {
               ].map(tab => {
                 const isActive = activeTab === tab.id;
                 const colorMap: Record<string, string> = {
-                  amber: isActive ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' : 'hover:bg-amber-500/10 hover:text-amber-400',
-                  purple: isActive ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25' : 'hover:bg-purple-500/10 hover:text-purple-400',
-                  emerald: isActive ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25' : 'hover:bg-emerald-500/10 hover:text-emerald-400',
-                  cyan: isActive ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25' : 'hover:bg-cyan-500/10 hover:text-cyan-400',
-                  pink: isActive ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25' : 'hover:bg-pink-500/10 hover:text-pink-400',
+                  amber: isActive ? 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' : 'hover:bg-amber-500/10 hover:text-amber-400',
+                  purple: isActive ? 'bg-linear-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25' : 'hover:bg-purple-500/10 hover:text-purple-400',
+                  emerald: isActive ? 'bg-linear-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25' : 'hover:bg-emerald-500/10 hover:text-emerald-400',
+                  cyan: isActive ? 'bg-linear-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25' : 'hover:bg-cyan-500/10 hover:text-cyan-400',
+                  pink: isActive ? 'bg-linear-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25' : 'hover:bg-pink-500/10 hover:text-pink-400',
                 };
                 return (
                   <motion.button
@@ -375,7 +375,7 @@ function OverviewTab({ isConnected, totalClaimable, onClaim, claimingId }: {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-[#FFD700]/20 to-[#50C878]/20 border border-[#FFD700]/50 rounded-2xl p-8 text-center"
+        className="bg-linear-to-r from-[#FFD700]/20 to-[#50C878]/20 border border-[#FFD700]/50 rounded-2xl p-8 text-center"
       >
         <h2 className="text-3xl font-bold text-[#F5F3E8] mb-2">Your Rewards Are Ready!</h2>
         <p className="text-[#A0A0A5] mb-6">You have {totalClaimable.toLocaleString()} VFIDE available to claim</p>
@@ -385,7 +385,7 @@ function OverviewTab({ isConnected, totalClaimable, onClaim, claimingId }: {
           className={`px-10 py-4 rounded-xl font-bold text-xl transition-all ${
             claimingId === 'all' 
               ? 'bg-[#3A3A3F] text-[#8A8A8F]' 
-              : 'bg-gradient-to-r from-[#FFD700] to-[#50C878] text-[#1A1A1D] hover:scale-105'
+              : 'bg-linear-to-r from-[#FFD700] to-[#50C878] text-[#1A1A1D] hover:scale-105'
           }`}
         >
           {claimingId === 'all' ? (
@@ -520,7 +520,7 @@ function DutyRewardsTab({ isConnected, onClaim, claimingId }: {
       </div>
 
       {/* Claim Section */}
-      <div className="bg-gradient-to-r from-[#00F0FF]/20 to-[#0080FF]/20 border border-[#00F0FF]/50 rounded-xl p-6">
+      <div className="bg-linear-to-r from-[#00F0FF]/20 to-[#0080FF]/20 border border-[#00F0FF]/50 rounded-xl p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold text-[#F5F3E8] mb-1">Governance Duty Rewards</h3>
@@ -596,7 +596,7 @@ function PromotionalTab({ isConnected, onClaim, claimingId }: {
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <div className="h-3 bg-[#3A3A3F] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#FFD700] to-[#FFA500]" style={{ width: '35%' }} />
+              <div className="h-full bg-linear-to-r from-[#FFD700] to-[#FFA500]" style={{ width: '35%' }} />
             </div>
           </div>
           <div className="text-[#F5F3E8] font-bold">700K / 2M VFIDE distributed</div>
@@ -734,7 +734,7 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-6 text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
                 <div>
                   <div className="text-[#A0A0A5] text-sm">Est. Rate*</div>
                   <div className="text-2xl font-bold text-[#50C878]">{pool.estimatedRate}%</div>
@@ -795,7 +795,7 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
           <button
             onClick={handleStake}
             disabled={isStaking || !stakeAmount}
-            className="px-8 py-3 bg-gradient-to-r from-[#00F0FF] to-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform"
+            className="px-8 py-3 bg-linear-to-r from-[#00F0FF] to-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform"
           >
             {isStaking ? 'Staking...' : 'Stake LP'}
           </button>
@@ -864,7 +864,7 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Referral Link Generator */}
-      <div className="bg-gradient-to-r from-[#A78BFA]/20 to-[#8B5CF6]/20 border border-[#A78BFA] rounded-xl p-6">
+      <div className="bg-linear-to-r from-[#A78BFA]/20 to-[#8B5CF6]/20 border border-[#A78BFA] rounded-xl p-6">
         <h3 className="text-lg font-bold text-[#A78BFA] mb-4 text-center">Your Referral Link</h3>
         
         {/* Full Referral URL */}
@@ -952,7 +952,7 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
           <button
             onClick={() => onClaim('referral')}
             disabled={claimingId === 'referral'}
-            className="px-10 py-4 bg-gradient-to-r from-[#A78BFA] to-[#8B5CF6] text-white rounded-xl font-bold text-xl hover:scale-105 transition-transform"
+            className="px-10 py-4 bg-linear-to-r from-[#A78BFA] to-[#8B5CF6] text-white rounded-xl font-bold text-xl hover:scale-105 transition-transform"
           >
             {claimingId === 'referral' ? 'Claiming...' : `Claim ${referralStats.claimable} VFIDE`}
           </button>

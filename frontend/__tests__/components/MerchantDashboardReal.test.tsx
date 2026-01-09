@@ -3,33 +3,33 @@
  * Tests for actual merchant components with mocked hooks
  */
 
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock all hooks and dependencies before importing components
-vi.mock('@/lib/vfide-hooks', () => ({
-  useIsMerchant: vi.fn(),
-  useRegisterMerchant: vi.fn(),
-  useSetAutoConvert: vi.fn(),
-  useSetPayoutAddress: vi.fn(),
-  useProofScore: vi.fn(),
-  useMerchantPaymentStatus: vi.fn(),
-  useProcessPayment: vi.fn(),
+jest.mock('@/lib/vfide-hooks', () => ({
+  useIsMerchant: jest.fn(),
+  useRegisterMerchant: jest.fn(),
+  useSetAutoConvert: jest.fn(),
+  useSetPayoutAddress: jest.fn(),
+  useProofScore: jest.fn(),
+  useMerchantPaymentStatus: jest.fn(),
+  useProcessPayment: jest.fn(),
 }))
 
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useChainId: vi.fn(() => 1),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useChainId: jest.fn(() => 1),
 }))
 
-vi.mock('viem', () => ({
-  isAddress: vi.fn((addr: string) => addr.startsWith('0x') && addr.length === 42),
-  formatEther: vi.fn((val: bigint) => (Number(val) / 1e18).toString()),
-  parseEther: vi.fn((val: string) => BigInt(Number(val) * 1e18)),
+jest.mock('viem', () => ({
+  isAddress: jest.fn((addr: string) => addr.startsWith('0x') && addr.length === 42),
+  formatEther: jest.fn((val: bigint) => (Number(val) / 1e18).toString()),
+  parseEther: jest.fn((val: string) => BigInt(Number(val) * 1e18)),
 }))
 
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Store: ({ className }: { className?: string }) => <span data-testid="store-icon" className={className} />,
   DollarSign: ({ className }: { className?: string }) => <span data-testid="dollar-icon" className={className} />,
   Settings: ({ className }: { className?: string }) => <span data-testid="settings-icon" className={className} />,
@@ -59,7 +59,7 @@ describe('MerchantDashboard', () => {
   const mockAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     
     // Default mocks
     ;(useAccount as Mock).mockReturnValue({
@@ -74,20 +74,20 @@ describe('MerchantDashboard', () => {
     })
     
     ;(useRegisterMerchant as Mock).mockReturnValue({
-      registerMerchant: vi.fn(),
+      registerMerchant: jest.fn(),
       isRegistering: false,
       isSuccess: false,
       error: null,
     })
     
     ;(useSetAutoConvert as Mock).mockReturnValue({
-      setAutoConvert: vi.fn(),
+      setAutoConvert: jest.fn(),
       isSetting: false,
       isSuccess: false,
     })
     
     ;(useSetPayoutAddress as Mock).mockReturnValue({
-      setPayoutAddress: vi.fn(),
+      setPayoutAddress: jest.fn(),
       isSetting: false,
       isSuccess: false,
     })
@@ -222,7 +222,7 @@ describe('MerchantDashboard', () => {
         totalVolume: '1000',
         txCount: 50,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
       
       ;(useProofScore as Mock).mockReturnValue({
@@ -232,13 +232,13 @@ describe('MerchantDashboard', () => {
       })
       
       ;(useSetAutoConvert as Mock).mockReturnValue({
-        setAutoConvert: vi.fn(),
+        setAutoConvert: jest.fn(),
         isSetting: false,
         isSuccess: false,
       })
       
       ;(useSetPayoutAddress as Mock).mockReturnValue({
-        setPayoutAddress: vi.fn(),
+        setPayoutAddress: jest.fn(),
         isSetting: false,
         isSuccess: false,
       })
@@ -300,7 +300,7 @@ describe('MerchantDashboard - Loading States', () => {
   const mockAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
@@ -322,20 +322,20 @@ describe('MerchantDashboard - Loading States', () => {
     })
     
     ;(useRegisterMerchant as Mock).mockReturnValue({
-      registerMerchant: vi.fn(),
+      registerMerchant: jest.fn(),
       isRegistering: true,
       isSuccess: false,
       error: null,
     })
     
     ;(useSetAutoConvert as Mock).mockReturnValue({
-      setAutoConvert: vi.fn(),
+      setAutoConvert: jest.fn(),
       isSetting: false,
       isSuccess: false,
     })
     
     ;(useSetPayoutAddress as Mock).mockReturnValue({
-      setPayoutAddress: vi.fn(),
+      setPayoutAddress: jest.fn(),
       isSetting: false,
       isSuccess: false,
     })
@@ -354,20 +354,20 @@ describe('MerchantDashboard - Loading States', () => {
     })
     
     ;(useRegisterMerchant as Mock).mockReturnValue({
-      registerMerchant: vi.fn(),
+      registerMerchant: jest.fn(),
       isRegistering: false,
       isSuccess: true,
       error: null,
     })
     
     ;(useSetAutoConvert as Mock).mockReturnValue({
-      setAutoConvert: vi.fn(),
+      setAutoConvert: jest.fn(),
       isSetting: false,
       isSuccess: false,
     })
     
     ;(useSetPayoutAddress as Mock).mockReturnValue({
-      setPayoutAddress: vi.fn(),
+      setPayoutAddress: jest.fn(),
       isSetting: false,
       isSuccess: false,
     })

@@ -1,14 +1,14 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useChainId: vi.fn(() => 84532),
+jest.mock('wagmi', () => ({
+  useChainId: jest.fn(() => 84532),
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Loader2: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'loader-icon' }),
   ExternalLink: ({ className }: { className?: string }) => 
@@ -20,7 +20,7 @@ vi.mock('lucide-react', () => ({
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, onClick, ...props }: React.PropsWithChildren<{ className?: string; onClick?: () => void }>) =>
       React.createElement('div', { className, onClick, ...props }, children),
@@ -102,7 +102,7 @@ describe('TransactionPending', () => {
 
   it('uses correct explorer URL for chain', async () => {
     const { useChainId } = await import('wagmi')
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(8453)
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(8453)
     
     render(
       <TransactionPending 
@@ -116,7 +116,7 @@ describe('TransactionPending', () => {
   })
 
   it('calls onClose when clicking overlay on success', () => {
-    const handleClose = vi.fn()
+    const handleClose = jest.fn()
     render(
       <TransactionPending 
         isOpen={true} 

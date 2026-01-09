@@ -1,15 +1,15 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Loader2: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'loader-icon' }),
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     button: ({ children, className, disabled, onClick, type, ...props }: React.PropsWithChildren<{ 
       className?: string
@@ -59,14 +59,14 @@ describe('LoadingButton', () => {
   })
 
   it('calls onClick when clicked', () => {
-    const handleClick = vi.fn()
+    const handleClick = jest.fn()
     render(<LoadingButton onClick={handleClick}>Submit</LoadingButton>)
     fireEvent.click(screen.getByRole('button'))
     expect(handleClick).toHaveBeenCalled()
   })
 
   it('does not call onClick when disabled', () => {
-    const handleClick = vi.fn()
+    const handleClick = jest.fn()
     render(<LoadingButton onClick={handleClick} disabled>Submit</LoadingButton>)
     fireEvent.click(screen.getByRole('button'))
     expect(handleClick).not.toHaveBeenCalled()
@@ -75,7 +75,7 @@ describe('LoadingButton', () => {
   it('applies primary variant by default', () => {
     render(<LoadingButton>Submit</LoadingButton>)
     const button = screen.getByRole('button')
-    expect(button.className).toContain('bg-gradient-to-r')
+    expect(button.className).toContain('bg-linear-to-r')
   })
 
   it('applies secondary variant', () => {

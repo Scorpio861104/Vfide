@@ -279,7 +279,7 @@ export function SocialInteractions({ currentUserId = 'current_user' }: SocialInt
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -338,7 +338,7 @@ export function SocialInteractions({ currentUserId = 'current_user' }: SocialInt
                   }`}
                 >
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-[#2A2A3E] flex items-center justify-center text-3xl flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-[#2A2A3E] flex items-center justify-center text-3xl shrink-0">
                       {request.from.avatar}
                     </div>
 
@@ -433,7 +433,7 @@ export function SocialInteractions({ currentUserId = 'current_user' }: SocialInt
                     }`}
                   >
                     <div className="flex items-start gap-4 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-2xl flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-2xl shrink-0">
                         {message.from.avatar}
                       </div>
 
@@ -449,7 +449,7 @@ export function SocialInteractions({ currentUserId = 'current_user' }: SocialInt
                       </div>
 
                       {!message.read && !readMessages.has(message.id) && (
-                        <div className="w-3 h-3 rounded-full bg-[#A78BFA] flex-shrink-0 mt-1" />
+                        <div className="w-3 h-3 rounded-full bg-[#A78BFA] shrink-0 mt-1" />
                       )}
                     </div>
 
@@ -501,7 +501,7 @@ export function SocialInteractions({ currentUserId = 'current_user' }: SocialInt
                       <div className="text-3xl font-bold text-[#FFD700] w-16 text-center">{entry.icon}</div>
 
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-xl flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-xl shrink-0">
                           {entry.user.avatar}
                         </div>
 
@@ -514,7 +514,7 @@ export function SocialInteractions({ currentUserId = 'current_user' }: SocialInt
                         </div>
                       </div>
 
-                      <div className="text-right flex-shrink-0">
+                      <div className="text-right shrink-0">
                         <div className="text-2xl font-bold text-[#FFD700]">{entry.score}</div>
                         <div className={`text-xs font-semibold ${entry.change > 0 ? 'text-[#50C878]' : entry.change < 0 ? 'text-[#FF6B9D]' : 'text-[#6B6B78]'}`}>
                           {entry.change > 0 ? '↑' : entry.change < 0 ? '↓' : '='} {Math.abs(entry.change)}
@@ -559,10 +559,10 @@ export function SocialInteractions({ currentUserId = 'current_user' }: SocialInt
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-gradient-to-r from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-lg p-6 hover:border-[#FF6B9D]/50 transition-colors"
+                  className="bg-linear-to-r from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-lg p-6 hover:border-[#FF6B9D]/50 transition-colors"
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-[#2A2A3E] flex items-center justify-center text-3xl flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-[#2A2A3E] flex items-center justify-center text-3xl shrink-0">
                       {streak.avatar}
                     </div>
 
@@ -574,7 +574,7 @@ export function SocialInteractions({ currentUserId = 'current_user' }: SocialInt
                       </div>
                     </div>
 
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                       <div className="text-sm text-[#A0A0A5] mb-1">Personal best</div>
                       <div className="text-2xl font-bold text-[#FFD700]">{streak.longestStreak}</div>
                     </div>

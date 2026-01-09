@@ -51,7 +51,7 @@ export function WalletButton() {
       <button
         onClick={handleConnect}
         disabled={connecting}
-        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {connecting ? (
           <>
@@ -74,7 +74,7 @@ export function WalletButton() {
         onClick={() => setShowDetails(!showDetails)}
         className="flex items-center gap-3 px-4 py-2 bg-[#1A1A1F] border border-[#2A2A2F] hover:border-blue-500/50 rounded-lg transition-colors"
       >
-        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+        <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
           <Wallet className="w-4 h-4 text-white" />
         </div>
         <div className="text-left">
@@ -129,7 +129,7 @@ export function WalletButton() {
 
             {/* Balance */}
             <div className="p-4 space-y-3">
-              <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg p-3">
+              <div className="bg-linear-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg p-3">
                 <div className="text-gray-400 text-xs mb-1">ETH Balance</div>
                 <div className="text-white text-2xl font-bold mb-1">
                   {wallet?.balance} ETH
@@ -139,7 +139,7 @@ export function WalletButton() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-3">
+              <div className="bg-linear-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-gray-400 text-xs">VFIDE Token</span>
                   <TrendingUp className="w-4 h-4 text-green-400" />

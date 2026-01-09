@@ -1,7 +1,7 @@
 /**
  * Comprehensive tests for Button primitive component
  */
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -54,7 +54,7 @@ describe('Button', () => {
   })
 
   it('handles click events', () => {
-    const onClick = vi.fn()
+    const onClick = jest.fn()
     render(<Button onClick={onClick}>Click</Button>)
     fireEvent.click(screen.getByRole('button'))
     expect(onClick).toHaveBeenCalled()

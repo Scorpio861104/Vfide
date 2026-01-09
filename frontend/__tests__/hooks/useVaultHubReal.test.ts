@@ -3,16 +3,16 @@
  * Tests for useVaultHub to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook } from '@testing-library/react'
 
 // Mock wagmi
-const mockUseAccount = vi.fn()
-const mockUseReadContract = vi.fn()
-const mockUseWriteContract = vi.fn()
-const mockUseChainId = vi.fn()
+const mockUseAccount = jest.fn()
+const mockUseReadContract = jest.fn()
+const mockUseWriteContract = jest.fn()
+const mockUseChainId = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
@@ -20,26 +20,26 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
+jest.mock('viem', () => ({
   isAddress: (addr: string) => addr && addr.startsWith('0x') && addr.length === 42,
 }))
 
 // Mock contracts
-vi.mock('../../lib/contracts', () => ({
+jest.mock('../../lib/contracts', () => ({
   VAULT_HUB_ABI: [],
 }))
 
 // Mock utils
-vi.mock('../../lib/utils', () => ({
+jest.mock('../../lib/utils', () => ({
   devLog: {
-    error: vi.fn(),
-    log: vi.fn(),
-    warn: vi.fn(),
+    error: jest.fn(),
+    log: jest.fn(),
+    warn: jest.fn(),
   },
 }))
 
 // Mock testnet
-vi.mock('../../lib/testnet', () => ({
+jest.mock('../../lib/testnet', () => ({
   IS_TESTNET: true,
   CURRENT_CHAIN_ID: 84532,
 }))
@@ -48,11 +48,11 @@ vi.mock('../../lib/testnet', () => ({
 import { useVaultHub } from '../../hooks/useVaultHub'
 
 describe('useVaultHub', () => {
-  const mockWriteContractAsync = vi.fn()
-  const mockRefetch = vi.fn()
+  const mockWriteContractAsync = jest.fn()
+  const mockRefetch = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0xuser123456789012345678901234567890123456' })
     mockUseChainId.mockReturnValue(84532)
     mockUseWriteContract.mockReturnValue({

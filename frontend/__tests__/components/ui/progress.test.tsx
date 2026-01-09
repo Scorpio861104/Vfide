@@ -1,7 +1,7 @@
 /**
  * Comprehensive tests for Progress primitive component
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 import { Progress } from '@/components/ui/progress'

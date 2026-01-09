@@ -2,44 +2,44 @@
  * vfide-hooks Tests
  * Tests for lib/vfide-hooks.ts re-export module (0% coverage)
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 
 // Mock all the sub-hooks
-vi.mock('@/hooks/useVaultHooks', () => ({
-  useVaultHooks: vi.fn(() => ({})),
-  useSimpleVault: vi.fn(() => ({})),
+jest.mock('@/hooks/useVaultHooks', () => ({
+  useVaultHooks: jest.fn(() => ({})),
+  useSimpleVault: jest.fn(() => ({})),
 }))
 
-vi.mock('@/hooks/useProofScoreHooks', () => ({
-  useProofScore: vi.fn(() => ({ score: 500, tier: 'Bronze' })),
+jest.mock('@/hooks/useProofScoreHooks', () => ({
+  useProofScore: jest.fn(() => ({ score: 500, tier: 'Bronze' })),
 }))
 
-vi.mock('@/hooks/useMentorHooks', () => ({
-  useMentorHooks: vi.fn(() => ({})),
-  useIsMentor: vi.fn(() => ({ isMentor: false })),
-  useMentorInfo: vi.fn(() => ({ menteeCount: 0 })),
+jest.mock('@/hooks/useMentorHooks', () => ({
+  useMentorHooks: jest.fn(() => ({})),
+  useIsMentor: jest.fn(() => ({ isMentor: false })),
+  useMentorInfo: jest.fn(() => ({ menteeCount: 0 })),
 }))
 
-vi.mock('@/hooks/useMerchantHooks', () => ({
-  useMerchantHooks: vi.fn(() => ({})),
+jest.mock('@/hooks/useMerchantHooks', () => ({
+  useMerchantHooks: jest.fn(() => ({})),
 }))
 
-vi.mock('@/hooks/useSecurityHooks', () => ({
-  useSecurityHooks: vi.fn(() => ({})),
+jest.mock('@/hooks/useSecurityHooks', () => ({
+  useSecurityHooks: jest.fn(() => ({})),
 }))
 
-vi.mock('@/hooks/useDAOHooks', () => ({
-  useDAOHooks: vi.fn(() => ({})),
+jest.mock('@/hooks/useDAOHooks', () => ({
+  useDAOHooks: jest.fn(() => ({})),
 }))
 
-vi.mock('@/hooks/useBadgeHooks', () => ({
-  useBadgeHooks: vi.fn(() => ({})),
+jest.mock('@/hooks/useBadgeHooks', () => ({
+  useBadgeHooks: jest.fn(() => ({})),
 }))
 
-vi.mock('@/hooks/useUtilityHooks', () => ({
-  useActivityFeed: vi.fn(() => ({ activities: [] })),
-  useSponsorMentee: vi.fn(() => ({
-    sponsorMentee: vi.fn(),
+jest.mock('@/hooks/useUtilityHooks', () => ({
+  useActivityFeed: jest.fn(() => ({ activities: [] })),
+  useSponsorMentee: jest.fn(() => ({
+    sponsorMentee: jest.fn(),
     isSponsoring: false,
     isSuccess: false,
   })),

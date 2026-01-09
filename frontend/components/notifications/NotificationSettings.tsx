@@ -6,31 +6,29 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import { useAnnounce } from '@/lib/accessibility';
+import {
+    NotificationType,
+    showLocalNotification,
+    useNotificationPreferences,
+    usePushNotifications,
+} from '@/lib/pushNotifications';
 import { motion } from 'framer-motion';
 import {
-  Bell,
-  BellOff,
-  Check,
-  X,
-  Loader2,
-  Clock,
-  MessageSquare,
-  AtSign,
-  Heart,
-  Users,
-  Award,
-  Megaphone,
-  AlertCircle,
-  Shield,
+    AlertCircle,
+    AtSign,
+    Award,
+    Bell,
+    BellOff,
+    Clock,
+    Heart,
+    Loader2,
+    Megaphone,
+    MessageSquare,
+    Shield,
+    Users
 } from 'lucide-react';
-import {
-  NotificationType,
-  usePushNotifications,
-  useNotificationPreferences,
-  showLocalNotification,
-} from '@/lib/pushNotifications';
-import { useAnnounce } from '@/lib/accessibility';
+import React, { useState } from 'react';
 
 interface NotificationSettingsProps {
   userId: string;
@@ -142,11 +140,11 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
   if (!isSupported) {
     return (
       <div className="bg-yellow-900/20 border border-yellow-900/30 rounded-xl p-6 flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
         <div>
           <h3 className="text-yellow-400 font-medium mb-1">Notifications Not Supported</h3>
           <p className="text-sm text-yellow-400/80">
-            Your browser doesn't support push notifications. Please use a modern browser like Chrome, Firefox, or Safari.
+            Your browser doesn&apos;t support push notifications. Please use a modern browser like Chrome, Firefox, or Safari.
           </p>
         </div>
       </div>
@@ -194,11 +192,11 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
       {/* Permission Status */}
       {permission === 'denied' && (
         <div className="bg-red-900/20 border border-red-900/30 rounded-xl p-6 flex items-start gap-3">
-          <Shield className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <Shield className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
           <div>
             <h3 className="text-red-400 font-medium mb-1">Notifications Blocked</h3>
             <p className="text-sm text-red-400/80">
-              You've blocked notifications for this site. To enable them, please update your browser settings.
+              You&apos;ve blocked notifications for this site. To enable them, please update your browser settings.
             </p>
           </div>
         </div>

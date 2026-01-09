@@ -1,15 +1,15 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   HelpCircle: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'help-icon' }),
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className }: React.PropsWithChildren<{ className?: string }>) =>
       React.createElement('div', { className }, children),

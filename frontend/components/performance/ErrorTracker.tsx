@@ -218,7 +218,7 @@ export function ErrorTracker({
                     e.stopPropagation();
                     onResolveError(error.id);
                   }}
-                  className="flex items-center gap-1 px-2 py-1 bg-green-600 hover:bg-green-700 rounded text-xs text-white transition-colors flex-shrink-0"
+                  className="flex items-center gap-1 px-2 py-1 bg-green-600 hover:bg-green-700 rounded text-xs text-white transition-colors shrink-0"
                 >
                   <X className="w-3 h-3" />
                   Resolve

@@ -103,7 +103,7 @@ export default function SubscriptionsPage() {
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Header */}
         <section className="py-12 bg-[#2A2A2F] border-b border-[#3A3A3F]">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
               Subscription Manager
             </h1>
@@ -115,13 +115,13 @@ export default function SubscriptionsPage() {
 
         {/* Active Subscriptions */}
         <section className="py-8">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8]">
                   Active Subscriptions
                 </h2>
-                <button className="px-6 py-2 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform">
+                <button className="px-6 py-2 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform">
                   New Subscription
                 </button>
               </div>
@@ -198,7 +198,7 @@ export default function SubscriptionsPage() {
 
         {/* Create Subscription */}
         <section className="py-8">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
               <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
                 Create New Subscription
@@ -249,7 +249,7 @@ export default function SubscriptionsPage() {
                 </div>
               </div>
               
-              <button className="mt-6 w-full px-6 py-3 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform">
+              <button className="mt-6 w-full px-6 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform">
                 Create Subscription
               </button>
             </div>
@@ -258,7 +258,7 @@ export default function SubscriptionsPage() {
 
         {/* How It Works */}
         <section className="py-8">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
               <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
                 How Subscriptions Work
@@ -295,7 +295,7 @@ export default function SubscriptionsPage() {
 
         {/* Payment History */}
         <section className="py-8">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
               <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
                 Payment History

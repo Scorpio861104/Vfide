@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onClick, ...props }: any) => (
       <div className={className} style={style} onClick={onClick}>{children}</div>
@@ -16,12 +16,12 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock react-confetti
-vi.mock('react-confetti', () => ({
+jest.mock('react-confetti', () => ({
   default: () => <div data-testid="confetti" />,
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   DollarSign: () => <span>DollarSign</span>,
   TrendingUp: () => <span>TrendingUp</span>,
   Rocket: () => <span>Rocket</span>,
@@ -36,12 +36,12 @@ vi.mock('lucide-react', () => ({
 }))
 
 // Mock Next.js navigation
-vi.mock('next/navigation', () => ({
+jest.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
 }))
 
 // Mock Next.js Link
-vi.mock('next/link', () => ({
+jest.mock('next/link', () => ({
   default: ({ children, href, onClick }: any) => (
     <a href={href} onClick={onClick}>{children}</a>
   ),

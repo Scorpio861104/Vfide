@@ -81,7 +81,7 @@ export default function ThemeManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-linear-to-b from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
       <div className="border-b border-slate-800">
         <div className="container mx-auto px-4 py-8">
@@ -124,7 +124,7 @@ export default function ThemeManagementPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mt-6 p-6 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg"
+              className="mt-6 p-6 bg-linear-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg"
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -159,7 +159,7 @@ export default function ThemeManagementPage() {
 
       {/* Tab Navigation */}
       <div className="sticky top-20 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4">
           <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
             {tabs.map(({ id, label, icon: Icon }) => (
               <motion.button

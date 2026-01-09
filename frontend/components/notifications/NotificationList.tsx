@@ -63,7 +63,7 @@ export function NotificationList({
         >
           <div className="flex items-start gap-4">
             {/* Icon */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
                 style={{
@@ -81,7 +81,7 @@ export function NotificationList({
                 <h3 className="text-sm font-medium text-white truncate">
                   {notification.title}
                 </h3>
-                <span className="text-xs text-slate-400 flex-shrink-0">
+                <span className="text-xs text-slate-400 shrink-0">
                   {formatTimeAgo(notification.timestamp)}
                 </span>
               </div>

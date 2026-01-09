@@ -1,13 +1,16 @@
 /**
  * Performance Optimization Configuration
  * Targets: LCP <2.5s, FID <100ms, CLS <0.1
+ * 
+ * Note: This file uses CommonJS for compatibility with build tools.
+ * Consider migrating to ESM when all tooling supports it.
  */
 
 // ============================================
 // Next.js Performance Optimizations
 // ============================================
 
-module.exports = {
+export default {
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],

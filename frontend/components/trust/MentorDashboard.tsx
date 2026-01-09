@@ -38,28 +38,28 @@ export function MentorDashboard() {
           <h3 className="text-lg font-bold mb-4">Why Become a Mentor?</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-[#F5F3E8]/70">
             <div className="flex items-start gap-3">
-              <Star className="w-6 h-6 text-[#FFD700] flex-shrink-0" />
+              <Star className="w-6 h-6 text-[#FFD700] shrink-0" />
               <div>
                 <div className="font-medium text-[#F5F3E8]">Help Others Succeed</div>
                 <div className="text-xs">Guide new users through their VFIDE journey</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Gem className="w-6 h-6 text-[#00F0FF] flex-shrink-0" />
+              <Gem className="w-6 h-6 text-[#00F0FF] shrink-0" />
               <div>
                 <div className="font-medium text-[#F5F3E8]">Earn ProofScore Points</div>
                 <div className="text-xs">+50 points for each mentee that reaches 7,000 score</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Trophy className="w-6 h-6 text-[#FFD700] flex-shrink-0" />
+              <Trophy className="w-6 h-6 text-[#FFD700] shrink-0" />
               <div>
                 <div className="font-medium text-[#F5F3E8]">Exclusive Badge</div>
                 <div className="text-xs">Show your commitment to the community</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Rocket className="w-6 h-6 text-[#50C878] flex-shrink-0" />
+              <Rocket className="w-6 h-6 text-[#50C878] shrink-0" />
               <div>
                 <div className="font-medium text-[#F5F3E8]">Build Community</div>
                 <div className="text-xs">Be part of VFIDE&apos;s mission to empower everyone</div>
@@ -80,7 +80,7 @@ export function MentorDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-6 rounded-xl bg-gradient-to-br from-[#00FF88]/10 to-[#00F0FF]/10 border border-[#00FF88]/30 backdrop-blur-xl"
+        className="p-6 rounded-xl bg-linear-to-br from-[#00FF88]/10 to-[#00F0FF]/10 border border-[#00FF88]/30 backdrop-blur-xl"
       >
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -119,7 +119,7 @@ export function MentorDashboard() {
               initial={{ width: 0 }}
               animate={{ width: `${completionRate}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
-              className="h-full bg-gradient-to-r from-[#00FF88] to-[#00F0FF]"
+              className="h-full bg-linear-to-r from-[#00FF88] to-[#00F0FF]"
               style={{
                 boxShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
               }}
@@ -135,7 +135,7 @@ export function MentorDashboard() {
           whileTap={menteeSlotsAvailable > 0 ? { scale: 0.98 } : {}}
           className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
             menteeSlotsAvailable > 0
-              ? 'bg-gradient-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] hover:shadow-lg hover:shadow-[#00FF88]/50'
+              ? 'bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] hover:shadow-lg hover:shadow-[#00FF88]/50'
               : 'bg-[#F5F3E8]/10 text-[#F5F3E8]/30 cursor-not-allowed'
           }`}
         >
@@ -174,21 +174,21 @@ export function MentorDashboard() {
         <h4 className="text-lg font-bold mb-4">Mentor Tips</h4>
         <div className="space-y-3 text-sm text-[#F5F3E8]/70">
           <div className="flex items-start gap-3">
-            <Lightbulb className="w-5 h-5 text-[#FFD700] flex-shrink-0" />
+            <Lightbulb className="w-5 h-5 text-[#FFD700] shrink-0" />
             <div>
               <div className="font-medium text-[#F5F3E8] mb-1">Choose Wisely</div>
               <div className="text-xs">Sponsor users who are actively engaging with VFIDE</div>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <Handshake className="w-5 h-5 text-[#00F0FF] flex-shrink-0" />
+            <Handshake className="w-5 h-5 text-[#00F0FF] shrink-0" />
             <div>
               <div className="font-medium text-[#F5F3E8] mb-1">Stay Connected</div>
               <div className="text-xs">Guide your mentees to activities that earn ProofScore</div>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <TrendingUp className="w-5 h-5 text-[#50C878] flex-shrink-0" />
+            <TrendingUp className="w-5 h-5 text-[#50C878] shrink-0" />
             <div>
               <div className="font-medium text-[#F5F3E8] mb-1">Track Progress</div>
               <div className="text-xs">Celebrate when your mentees reach 7,000 and graduate</div>

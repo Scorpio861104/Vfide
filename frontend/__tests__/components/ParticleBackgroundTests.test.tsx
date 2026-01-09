@@ -2,19 +2,19 @@
  * ParticleBackground Tests
  * Tests for ParticleBackground component (14% coverage)
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
 import { render } from '@testing-library/react'
 import { ParticleBackground } from '@/components/ui/ParticleBackground'
 
 describe('ParticleBackground', () => {
   let mockContext: {
-    clearRect: ReturnType<typeof vi.fn>
-    beginPath: ReturnType<typeof vi.fn>
-    arc: ReturnType<typeof vi.fn>
-    fill: ReturnType<typeof vi.fn>
-    moveTo: ReturnType<typeof vi.fn>
-    lineTo: ReturnType<typeof vi.fn>
-    stroke: ReturnType<typeof vi.fn>
+    clearRect: ReturnType<typeof jest.fn>
+    beginPath: ReturnType<typeof jest.fn>
+    arc: ReturnType<typeof jest.fn>
+    fill: ReturnType<typeof jest.fn>
+    moveTo: ReturnType<typeof jest.fn>
+    lineTo: ReturnType<typeof jest.fn>
+    stroke: ReturnType<typeof jest.fn>
     fillStyle: string
     strokeStyle: string
     lineWidth: number
@@ -22,25 +22,25 @@ describe('ParticleBackground', () => {
 
   beforeEach(() => {
     mockContext = {
-      clearRect: vi.fn(),
-      beginPath: vi.fn(),
-      arc: vi.fn(),
-      fill: vi.fn(),
-      moveTo: vi.fn(),
-      lineTo: vi.fn(),
-      stroke: vi.fn(),
+      clearRect: jest.fn(),
+      beginPath: jest.fn(),
+      arc: jest.fn(),
+      fill: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      stroke: jest.fn(),
       fillStyle: '',
       strokeStyle: '',
       lineWidth: 1,
     }
 
-    HTMLCanvasElement.prototype.getContext = vi.fn(() => mockContext as unknown as CanvasRenderingContext2D)
+    HTMLCanvasElement.prototype.getContext = jest.fn(() => mockContext as unknown as CanvasRenderingContext2D)
     
     // Mock requestAnimationFrame
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+    jest.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
       return 1
     })
-    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+    jest.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
   })
 
   afterEach(() => {

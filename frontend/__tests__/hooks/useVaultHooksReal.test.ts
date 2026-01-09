@@ -3,16 +3,16 @@
  * Tests for actual vault hook implementations to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook } from '@testing-library/react'
 
 // Mock wagmi
-const mockUseAccount = vi.fn()
-const mockUseReadContract = vi.fn()
-const mockUseWriteContract = vi.fn()
-const mockUseWaitForTransactionReceipt = vi.fn()
+const mockUseAccount = jest.fn()
+const mockUseReadContract = jest.fn()
+const mockUseWriteContract = jest.fn()
+const mockUseWaitForTransactionReceipt = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
@@ -20,13 +20,13 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
+jest.mock('viem', () => ({
   parseEther: (value: string) => BigInt(parseFloat(value) * 1e18),
   formatEther: (value: bigint) => (Number(value) / 1e18).toString(),
 }))
 
 // Mock contracts
-vi.mock('../../lib/contracts', () => ({
+jest.mock('../../lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     VaultHub: '0x1234567890123456789012345678901234567890',
     VFIDEToken: '0x0987654321098765432109876543210987654321',
@@ -34,7 +34,7 @@ vi.mock('../../lib/contracts', () => ({
 }))
 
 // Mock ABIs
-vi.mock('../../lib/abis', () => ({
+jest.mock('../../lib/abis', () => ({
   VaultInfrastructureABI: [],
   VFIDETokenABI: [],
   VaultHubABI: [],
@@ -50,7 +50,7 @@ import {
 
 describe('useUserVault', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0x1234' })
     mockUseReadContract.mockReturnValue({
       data: '0x5678',
@@ -103,10 +103,10 @@ describe('useUserVault', () => {
 })
 
 describe('useCreateVault', () => {
-  const mockWriteContract = vi.fn()
+  const mockWriteContract = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,
@@ -180,7 +180,7 @@ describe('useCreateVault', () => {
 
 describe('useVaultBalance', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0x1234' })
   })
 
@@ -193,7 +193,7 @@ describe('useVaultBalance', () => {
         return { 
           data: BigInt('1000000000000000000000'), // 1000 tokens
           isLoading: false,
-          refetch: vi.fn(),
+          refetch: jest.fn(),
         }
       }
       return { data: null, isLoading: false }
@@ -212,7 +212,7 @@ describe('useVaultBalance', () => {
       return { 
         data: null,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       }
     })
     
@@ -231,7 +231,7 @@ describe('useVaultBalance', () => {
         return { 
           data: rawBalance,
           isLoading: false,
-          refetch: vi.fn(),
+          refetch: jest.fn(),
         }
       }
       return { data: null, isLoading: false }
@@ -243,7 +243,7 @@ describe('useVaultBalance', () => {
   })
 
   it('provides refetch function', () => {
-    const mockRefetch = vi.fn()
+    const mockRefetch = jest.fn()
     mockUseReadContract.mockImplementation((args: { functionName: string }) => {
       if (args.functionName === 'vaultOf') {
         return { data: '0x5678', isLoading: false }

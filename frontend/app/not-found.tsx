@@ -19,7 +19,7 @@ export default function NotFound() {
           transition={{ type: "spring", delay: 0.1 }}
           className="mb-8"
         >
-          <div className="text-[150px] md:text-[200px] font-bold leading-none bg-gradient-to-r from-[#00F0FF] to-[#0080FF] bg-clip-text text-transparent">
+          <div className="text-[150px] md:text-[200px] font-bold leading-none bg-linear-to-r from-[#00F0FF] to-[#0080FF] bg-clip-text text-transparent">
             404
           </div>
         </motion.div>
@@ -48,7 +48,7 @@ export default function NotFound() {
         >
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform"
           >
             <Home className="w-5 h-5" />
             Go Home

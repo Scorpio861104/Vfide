@@ -83,7 +83,7 @@ function GlassCard({ children, className = "", hover = true }: {
     <motion.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -191,7 +191,7 @@ export default function BadgesPage() {
 
         {/* Hero */}
         <section className="py-12 border-b border-white/5 relative z-10">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -201,7 +201,7 @@ export default function BadgesPage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", delay: 0.2 }}
-                className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-500/30 to-orange-500/20 border border-amber-500/30 rounded-3xl mb-6 shadow-lg shadow-amber-500/20"
+                className="inline-flex items-center justify-center w-20 h-20 bg-linear-to-br from-amber-500/30 to-orange-500/20 border border-amber-500/30 rounded-3xl mb-6 shadow-lg shadow-amber-500/20"
               >
                 <Award className="w-10 h-10 text-amber-400" />
               </motion.div>
@@ -245,7 +245,7 @@ export default function BadgesPage() {
 
         {/* Filters & Search */}
         <section className="py-6 sticky top-20 z-40 bg-[#08080A]/80 backdrop-blur-xl border-b border-white/5">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             {/* Tabs */}
             <div className="flex flex-wrap gap-2 mb-4">
               {tabs.map(tab => (
@@ -256,7 +256,7 @@ export default function BadgesPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
                     activeTab === tab.id
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
+                      ? 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
                       : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -309,7 +309,7 @@ export default function BadgesPage() {
 
         {/* Badge Grid */}
         <section className="py-8 relative z-10">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <motion.div 
               variants={containerVariants}
               initial="hidden"
@@ -375,7 +375,7 @@ export default function BadgesPage() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleMintBadge(badge.name)}
                             disabled={mintingBadge === badge.name}
-                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25"
+                            className="w-full py-3 bg-linear-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25"
                           >
                             {mintingBadge === badge.name ? (
                               <Loader2 className="animate-spin" size={18} />

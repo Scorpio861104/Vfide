@@ -63,7 +63,7 @@ export function BadgeProgress({ address, maxItems = 5 }: BadgeProgressProps) {
       <CardContent className="space-y-4">
         {badgesWithProgress.map(badge => (
           <div key={badge.id} className="flex items-center gap-4">
-            <BadgeDisplay badgeId={badge.id} size="sm" className="flex-shrink-0" />
+            <BadgeDisplay badgeId={badge.id} size="sm" className="shrink-0" />
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">

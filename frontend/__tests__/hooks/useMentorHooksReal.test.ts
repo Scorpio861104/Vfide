@@ -3,16 +3,16 @@
  * Tests for useMentorHooks to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook } from '@testing-library/react'
 
 // Mock wagmi
-const mockUseAccount = vi.fn()
-const mockUseReadContract = vi.fn()
-const mockUseWriteContract = vi.fn()
-const mockUseWaitForTransactionReceipt = vi.fn()
+const mockUseAccount = jest.fn()
+const mockUseReadContract = jest.fn()
+const mockUseWriteContract = jest.fn()
+const mockUseWaitForTransactionReceipt = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
@@ -20,14 +20,14 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock contracts
-vi.mock('../../lib/contracts', () => ({
+jest.mock('../../lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
   },
 }))
 
 // Mock ABIs
-vi.mock('../../lib/abis', () => ({
+jest.mock('../../lib/abis', () => ({
   SeerABI: [],
 }))
 
@@ -41,7 +41,7 @@ import {
 
 describe('useIsMentor', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0xuser' })
   })
 
@@ -113,10 +113,10 @@ describe('useIsMentor', () => {
 })
 
 describe('useBecomeMentor', () => {
-  const mockWriteContract = vi.fn()
+  const mockWriteContract = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,
@@ -186,10 +186,10 @@ describe('useBecomeMentor', () => {
 })
 
 describe('useSponsorMentee', () => {
-  const mockWriteContract = vi.fn()
+  const mockWriteContract = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,
@@ -239,7 +239,7 @@ describe('useSponsorMentee', () => {
 
 describe('useMentorInfo', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0xuser' })
   })
 

@@ -44,7 +44,7 @@ export function SimpleWalletConnect() {
                     onClick={openConnectModal}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 py-2.5 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)]"
+                    className="px-6 py-2.5 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)]"
                   >
                     Connect Wallet
                   </motion.button>
@@ -100,7 +100,7 @@ export function SimpleWalletConnect() {
                   <motion.button
                     onClick={openAccountModal}
                     whileHover={{ scale: 1.05 }}
-                    className="px-4 py-2 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] text-sm"
+                    className="px-4 py-2 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] text-sm"
                   >
                     {account.displayName}
                     {account.displayBalance ? ` (${account.displayBalance})` : ''}

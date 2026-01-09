@@ -2,26 +2,26 @@
  * PaymentQR Tests
  * Tests for PaymentQR component (0% coverage)
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { PaymentQR } from '@/components/merchant/PaymentQR'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({
     address: '0x1234567890123456789012345678901234567890',
   }),
 }))
 
 // Mock QRCodeSVG
-vi.mock('qrcode.react', () => ({
+jest.mock('qrcode.react', () => ({
   QRCodeSVG: ({ value, id }: { value: string; id?: string }) => (
     <svg data-testid="qr-code" id={id} data-value={value} />
   ),
 }))
 
 // Mock vfide-hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   useIsMerchant: () => ({
     isMerchant: true,
     businessName: 'Test Store',
@@ -30,13 +30,13 @@ vi.mock('@/lib/vfide-hooks', () => ({
 
 // Mock clipboard API
 const mockClipboard = {
-  writeText: vi.fn(() => Promise.resolve()),
+  writeText: jest.fn(() => Promise.resolve()),
 }
 Object.assign(navigator, { clipboard: mockClipboard })
 
 describe('PaymentQR', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders for connected merchant', () => {

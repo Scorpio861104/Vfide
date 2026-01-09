@@ -2,13 +2,13 @@
  * Tests for app-level error, loading, and not-found components
  * Core Next.js page components
  */
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: any) => <div className={className} {...props}>{children}</div>,
     button: ({ children, className, onClick, ...props }: any) => <button className={className} onClick={onClick} {...props}>{children}</button>,
@@ -20,7 +20,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react icons
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   AlertTriangle: () => <span data-testid="icon-alert-triangle">AlertTriangle</span>,
   RefreshCw: () => <span data-testid="icon-refresh">RefreshCw</span>,
   Home: () => <span data-testid="icon-home">Home</span>,
@@ -28,7 +28,7 @@ vi.mock('lucide-react', () => ({
 }))
 
 // Mock next/link
-vi.mock('next/link', () => ({
+jest.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
@@ -36,14 +36,14 @@ vi.mock('next/link', () => ({
 
 describe('Error Page', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    jest.clearAllMocks()
+    jest.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   it('should render error page', async () => {
     const ErrorPage = (await import('@/app/error')).default
     const mockError = new Error('Test error')
-    const mockReset = vi.fn()
+    const mockReset = jest.fn()
 
     render(<ErrorPage error={mockError} reset={mockReset} />)
 
@@ -53,7 +53,7 @@ describe('Error Page', () => {
   it('should display error icon', async () => {
     const ErrorPage = (await import('@/app/error')).default
     const mockError = new Error('Test error')
-    const mockReset = vi.fn()
+    const mockReset = jest.fn()
 
     render(<ErrorPage error={mockError} reset={mockReset} />)
 
@@ -63,7 +63,7 @@ describe('Error Page', () => {
   it('should display error message', async () => {
     const ErrorPage = (await import('@/app/error')).default
     const mockError = new Error('Test error')
-    const mockReset = vi.fn()
+    const mockReset = jest.fn()
 
     render(<ErrorPage error={mockError} reset={mockReset} />)
 
@@ -73,7 +73,7 @@ describe('Error Page', () => {
   it('should display error digest if available', async () => {
     const ErrorPage = (await import('@/app/error')).default
     const mockError = Object.assign(new Error('Test error'), { digest: 'abc123' })
-    const mockReset = vi.fn()
+    const mockReset = jest.fn()
 
     render(<ErrorPage error={mockError} reset={mockReset} />)
 
@@ -83,7 +83,7 @@ describe('Error Page', () => {
   it('should call reset when Try Again is clicked', async () => {
     const ErrorPage = (await import('@/app/error')).default
     const mockError = new Error('Test error')
-    const mockReset = vi.fn()
+    const mockReset = jest.fn()
 
     render(<ErrorPage error={mockError} reset={mockReset} />)
 
@@ -96,7 +96,7 @@ describe('Error Page', () => {
   it('should have home link', async () => {
     const ErrorPage = (await import('@/app/error')).default
     const mockError = new Error('Test error')
-    const mockReset = vi.fn()
+    const mockReset = jest.fn()
 
     render(<ErrorPage error={mockError} reset={mockReset} />)
 
@@ -107,7 +107,7 @@ describe('Error Page', () => {
   it('should display refresh icon', async () => {
     const ErrorPage = (await import('@/app/error')).default
     const mockError = new Error('Test error')
-    const mockReset = vi.fn()
+    const mockReset = jest.fn()
 
     render(<ErrorPage error={mockError} reset={mockReset} />)
 
@@ -115,10 +115,10 @@ describe('Error Page', () => {
   })
 
   it('should log error to console', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     const ErrorPage = (await import('@/app/error')).default
     const mockError = new Error('Test error')
-    const mockReset = vi.fn()
+    const mockReset = jest.fn()
 
     render(<ErrorPage error={mockError} reset={mockReset} />)
 
@@ -129,10 +129,10 @@ describe('Error Page', () => {
 
 describe('Not Found Page', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     // Mock window.history.back
     Object.defineProperty(window, 'history', {
-      value: { back: vi.fn() },
+      value: { back: jest.fn() },
       writable: true,
     })
   })
@@ -223,7 +223,7 @@ describe('Not Found Page', () => {
 
 describe('Loading Page', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should render loading page', async () => {

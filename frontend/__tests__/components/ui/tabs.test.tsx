@@ -1,7 +1,7 @@
 /**
  * Comprehensive tests for Tabs primitive component
  */
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -92,7 +92,7 @@ describe('Tabs', () => {
   })
 
   it('controls value with controlled component', () => {
-    const onValueChange = vi.fn()
+    const onValueChange = jest.fn()
     render(
       <Tabs value="tab1" onValueChange={onValueChange}>
         <TabsList>

@@ -3,23 +3,23 @@
  * Tests for actual vault components with mocked hooks
  */
 
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock wagmi first
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useChainId: vi.fn(() => 84532),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useChainId: jest.fn(() => 84532),
 }))
 
 // Mock useVaultHub
-vi.mock('@/hooks/useVaultHub', () => ({
-  useVaultHub: vi.fn(),
+jest.mock('@/hooks/useVaultHub', () => ({
+  useVaultHub: jest.fn(),
 }))
 
 // Mock next/link
-vi.mock('next/link', () => ({
+jest.mock('next/link', () => ({
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
     <a href={href} {...props}>{children}</a>
   ),
@@ -34,7 +34,7 @@ describe('VaultStatusIndicator', () => {
   const mockVaultAddress = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('Not Connected', () => {

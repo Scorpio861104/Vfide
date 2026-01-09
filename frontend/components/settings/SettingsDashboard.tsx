@@ -23,7 +23,8 @@ interface ToggleRowProps {
   onChange: (checked: boolean) => void;
 }
 
-const ToggleRow: React.FC<ToggleRowProps> = ({ label, description, checked, onChange }) => (
+function ToggleRow({ label, description, checked, onChange }: ToggleRowProps) {
+  return (
   <label className="flex items-start justify-between gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
     <div>
       <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</div>
@@ -37,7 +38,8 @@ const ToggleRow: React.FC<ToggleRowProps> = ({ label, description, checked, onCh
       aria-label={label}
     />
   </label>
-);
+  );
+}
 
 interface SelectRowProps {
   label: string;
@@ -47,7 +49,8 @@ interface SelectRowProps {
   description?: string;
 }
 
-const SelectRow: React.FC<SelectRowProps> = ({ label, value, onChange, options, description }) => (
+function SelectRow({ label, value, onChange, options, description }: SelectRowProps) {
+  return (
   <div className="space-y-1">
     <div className="flex items-center justify-between">
       <div>
@@ -68,14 +71,15 @@ const SelectRow: React.FC<SelectRowProps> = ({ label, value, onChange, options, 
       ))}
     </select>
   </div>
-);
+  );
+}
 
-export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
+export function SettingsDashboard({
   onSave,
   onExport,
   onImport,
   className = ''
-}) => {
+}: SettingsDashboardProps) {
   const {
     settings,
     isDirty,

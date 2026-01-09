@@ -1,35 +1,35 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 
 // ============================================
 // VAULT HUB HOOK TESTS
 // ============================================
 
-// Inline mock addresses (vi.mock is hoisted, so we define these inline)
+// Inline mock addresses (jest.mock is hoisted, so we define these inline)
 const MOCK_USER = '0x1234567890123456789012345678901234567890'
 const MOCK_VAULT = '0xABCDEF1234567890ABCDEF1234567890ABCDEF12'
 const MOCK_ZERO = '0x0000000000000000000000000000000000000000'
 const MOCK_TX_HASH = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890'
 const MOCK_BALANCE = BigInt('1000000000000000000000')
 
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
   })),
-  useChainId: vi.fn(() => 84532),
-  useReadContract: vi.fn(() => ({
+  useChainId: jest.fn(() => 84532),
+  useReadContract: jest.fn(() => ({
     data: '0xABCDEF1234567890ABCDEF1234567890ABCDEF12',
     isLoading: false,
     error: null,
-    refetch: vi.fn(),
+    refetch: jest.fn(),
   })),
-  useWriteContract: vi.fn(() => ({
-    writeContract: vi.fn(),
-    writeContractAsync: vi.fn().mockResolvedValue('0xhash'),
+  useWriteContract: jest.fn(() => ({
+    writeContract: jest.fn(),
+    writeContractAsync: jest.fn().mockResolvedValue('0xhash'),
     data: undefined,
     isPending: false,
   })),
-  useWaitForTransactionReceipt: vi.fn(() => ({
+  useWaitForTransactionReceipt: jest.fn(() => ({
     isLoading: false,
     isSuccess: false,
   })),
@@ -37,7 +37,7 @@ vi.mock('wagmi', () => ({
 
 describe('useVaultHub', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('Wallet Connection States', () => {
@@ -58,7 +58,7 @@ describe('useVaultHub', () => {
 
     it('detects disconnected wallet', async () => {
       const { useAccount } = await import('wagmi')
-      const mockUseAccount = useAccount as ReturnType<typeof vi.fn>
+      const mockUseAccount = useAccount as ReturnType<typeof jest.fn>
       
       mockUseAccount.mockReturnValueOnce({
         address: undefined,
@@ -86,13 +86,13 @@ describe('useVaultHub', () => {
 
     it('returns zero address when no vault exists', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: MOCK_ZERO,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
       
       const result = useReadContract({
@@ -113,13 +113,13 @@ describe('useVaultHub', () => {
 
     it('handles loading state', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: undefined,
         isLoading: true,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
       
       const result = useReadContract({
@@ -134,13 +134,13 @@ describe('useVaultHub', () => {
 
     it('handles error state', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: undefined,
         isLoading: false,
         error: new Error('Contract not found'),
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
       
       const result = useReadContract({
@@ -157,11 +157,11 @@ describe('useVaultHub', () => {
   describe('Vault Write Operations', () => {
     it('handles pending transaction state', async () => {
       const { useWriteContract } = await import('wagmi')
-      const mockUseWriteContract = useWriteContract as ReturnType<typeof vi.fn>
+      const mockUseWriteContract = useWriteContract as ReturnType<typeof jest.fn>
       
       mockUseWriteContract.mockReturnValueOnce({
-        writeContract: vi.fn(),
-        writeContractAsync: vi.fn(),
+        writeContract: jest.fn(),
+        writeContractAsync: jest.fn(),
         data: undefined,
         isPending: true,
       })
@@ -172,12 +172,12 @@ describe('useVaultHub', () => {
 
     it('returns transaction hash on success', async () => {
       const { useWriteContract, useWaitForTransactionReceipt } = await import('wagmi')
-      const mockUseWriteContract = useWriteContract as ReturnType<typeof vi.fn>
-      const mockUseWaitForTx = useWaitForTransactionReceipt as ReturnType<typeof vi.fn>
+      const mockUseWriteContract = useWriteContract as ReturnType<typeof jest.fn>
+      const mockUseWaitForTx = useWaitForTransactionReceipt as ReturnType<typeof jest.fn>
       
       mockUseWriteContract.mockReturnValueOnce({
-        writeContract: vi.fn(),
-        writeContractAsync: vi.fn().mockResolvedValue(MOCK_TX_HASH),
+        writeContract: jest.fn(),
+        writeContractAsync: jest.fn().mockResolvedValue(MOCK_TX_HASH),
         data: MOCK_TX_HASH,
         isPending: false,
       })
@@ -198,7 +198,7 @@ describe('useVaultHub', () => {
 describe('Vault Balance', () => {
   it('reads vault balance correctly', async () => {
     const { useReadContract } = await import('wagmi')
-    const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+    const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
     
     mockUseReadContract.mockReturnValueOnce({
       data: MOCK_BALANCE,
@@ -219,7 +219,7 @@ describe('Vault Balance', () => {
 
   it('handles zero balance', async () => {
     const { useReadContract } = await import('wagmi')
-    const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+    const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
     
     mockUseReadContract.mockReturnValueOnce({
       data: BigInt(0),

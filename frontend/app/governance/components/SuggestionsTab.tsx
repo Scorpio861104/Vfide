@@ -210,7 +210,7 @@ export function SuggestionsTab() {
 
   return (
     <section className="py-8">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-[#F5F3E8]">💡 Submit & Vote on Ideas</h2>
@@ -226,7 +226,7 @@ export function SuggestionsTab() {
             />
             <button
               onClick={() => setShowSubmitForm(!showSubmitForm)}
-              className="px-4 py-2 bg-gradient-to-r from-[#50C878] to-[#00F0FF] text-[#1A1A1D] rounded-lg font-bold hover:opacity-90 transition-all"
+              className="px-4 py-2 bg-linear-to-r from-[#50C878] to-[#00F0FF] text-[#1A1A1D] rounded-lg font-bold hover:opacity-90 transition-all"
             >
               {showSubmitForm ? "✕ Cancel" : "+ Submit Idea"}
             </button>
@@ -389,7 +389,7 @@ export function SuggestionsTab() {
                     {suggestion.status === "new" && score > 0 && (
                       <div className="w-full h-1 bg-[#3A3A3F] rounded-full mb-3 overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-[#50C878] to-[#00F0FF] transition-all duration-500"
+                          className="h-full bg-linear-to-r from-[#50C878] to-[#00F0FF] transition-all duration-500"
                           style={{ width: `${progressToPromotion}%` }}
                         />
                       </div>

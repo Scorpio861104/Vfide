@@ -1,21 +1,19 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
+import { GlobalNav } from "@/components/layout/GlobalNav";
+import {
+    ArrowUpDown,
+    Building2,
+    CreditCard,
+    FileText,
+    Globe,
+    Shield,
+    TrendingUp,
+    Zap
+} from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { 
-  Building2, 
-  CreditCard, 
-  ArrowUpDown, 
-  Shield, 
-  Globe,
-  Zap,
-  CheckCircle,
-  Clock,
-  FileText,
-  TrendingUp
-} from "lucide-react";
 
 type TabType = 'overview' | 'gateway' | 'fiat' | 'finance';
 
@@ -34,10 +32,10 @@ export default function EnterprisePage() {
     <>
       <GlobalNav />
       <main className="min-h-screen bg-[#0D0D0F] pt-24 pb-16">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-4">
               Enterprise Solutions
             </h1>
             <p className="text-[#A0A0A5] text-lg max-w-2xl mx-auto">
@@ -110,9 +108,9 @@ function OverviewTab() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-xl p-8 text-center">
+      <div className="bg-linear-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-xl p-8 text-center">
         <Building2 className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-        <h2 className="text-3xl font-bold text-[#F5F3E8] mb-4">Enterprise-Grade Infrastructure</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#F5F3E8] mb-4">Enterprise-Grade Infrastructure</h2>
         <p className="text-[#A0A0A5] max-w-2xl mx-auto">
           VFIDE provides institutional-quality payment infrastructure with zero protocol fees,
           instant settlements, and seamless fiat integration for businesses of all sizes.
@@ -174,7 +172,7 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Gateway Overview */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
         <div className="flex items-center gap-4 mb-6">
           <Globe className="w-12 h-12 text-cyan-400" />
           <div>
@@ -279,7 +277,7 @@ function FiatTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Fiat Overview */}
-      <div className="bg-gradient-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
         <div className="flex items-center gap-4 mb-6">
           <CreditCard className="w-12 h-12 text-green-400" />
           <div>
@@ -359,7 +357,7 @@ function FinanceTab() {
   return (
     <div className="space-y-8">
       {/* Finance Overview */}
-      <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-8">
         <div className="flex items-center gap-4 mb-6">
           <TrendingUp className="w-12 h-12 text-yellow-400" />
           <div>
@@ -390,7 +388,7 @@ function FinanceTab() {
           {treasuryAssets.map((asset, idx) => (
             <div key={idx} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                <div className="w-10 h-10 bg-linear-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
                   {asset.token.charAt(0)}
                 </div>
                 <div>

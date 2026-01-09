@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Users, MessageSquare, Award, TrendingUp, Command } from 'lucide-react';
-import { useKeyboardShortcuts, SHORTCUTS } from '@/hooks/useKeyboardShortcuts';
-import { useRouter } from 'next/navigation';
-import { Friend } from '@/types/messaging';
+import { SHORTCUTS, useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { Group } from '@/types/groups';
+import { Friend } from '@/types/messaging';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Command, MessageSquare, Search, TrendingUp, Users, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 interface SearchResult {
@@ -248,7 +248,7 @@ export function GlobalSearch() {
               <div className="max-h-96 overflow-y-auto">
                 {results.length === 0 && query ? (
                   <div className="p-8 text-center">
-                    <p className="text-sm text-[#6B6B78]">No results found for "{query}"</p>
+                    <p className="text-sm text-[#6B6B78]">No results found for &quot;{query}&quot;</p>
                   </div>
                 ) : results.length === 0 ? (
                   <div className="p-8 text-center">

@@ -1,15 +1,15 @@
 // Tests for useProofScore.ts - comprehensive coverage
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { renderHook } from '@testing-library/react'
 
 // Mock wagmi before importing hooks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useReadContract: vi.fn(),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useReadContract: jest.fn(),
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
   },
@@ -29,7 +29,7 @@ describe('useProofScore - Comprehensive Tests', () => {
   const mockBadgeId = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
       isConnected: true,
@@ -76,7 +76,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(8500),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -97,7 +97,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(7500),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -118,7 +118,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(6000),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -137,7 +137,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(4500),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -155,7 +155,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(2000),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -176,7 +176,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: undefined,
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -191,7 +191,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(7000),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       renderHook(() => useProofScore(targetAddress))
@@ -208,7 +208,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: undefined,
         isError: false,
         isLoading: true,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -221,7 +221,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: undefined,
         isError: true,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -230,7 +230,7 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should provide refetch function', () => {
-      const mockRefetch = vi.fn()
+      const mockRefetch = jest.fn()
       ;(useReadContract as Mock).mockReturnValue({
         data: BigInt(5000),
         isError: false,
@@ -249,7 +249,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(5400),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -262,7 +262,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(5600),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -377,7 +377,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(8000),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -389,7 +389,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(7999),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -401,7 +401,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(5000),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -413,7 +413,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(4999),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())
@@ -425,7 +425,7 @@ describe('useProofScore - Comprehensive Tests', () => {
         data: BigInt(3999),
         isError: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useProofScore())

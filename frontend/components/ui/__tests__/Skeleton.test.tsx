@@ -1,5 +1,15 @@
 import { render } from '@testing-library/react'
-import { Skeleton, SkeletonText, SkeletonCard, SkeletonStat, SkeletonTable } from '../Skeleton'
+import {
+    AchievementListSkeleton,
+    FriendListSkeleton,
+    GroupListSkeleton,
+    MessageListSkeleton,
+    Skeleton,
+    SkeletonCard,
+    SkeletonStat,
+    SkeletonTable,
+    SkeletonText
+} from '../Skeleton'
 
 describe('Skeleton', () => {
   it('renders skeleton element', () => {
@@ -154,5 +164,85 @@ describe('SkeletonTable', () => {
   it('applies custom className', () => {
     const { container } = render(<SkeletonTable className="custom-class" />)
     expect(container.firstChild).toHaveClass('custom-class')
+  })
+})
+describe('MessageListSkeleton', () => {
+  it('renders message list skeleton with default count', () => {
+    const { container } = render(<MessageListSkeleton />)
+    expect(container.querySelector('.space-y-4')).toBeInTheDocument()
+  })
+
+  it('renders custom count of messages', () => {
+    const { container } = render(<MessageListSkeleton count={3} />)
+    const messages = container.querySelectorAll('.max-w-\\[70\\%\\]')
+    expect(messages).toHaveLength(3)
+  })
+
+  it('alternates message alignment', () => {
+    const { container } = render(<MessageListSkeleton count={2} />)
+    const firstMessage = container.querySelector('.justify-end')
+    expect(firstMessage).toBeInTheDocument()
+  })
+})
+
+describe('FriendListSkeleton', () => {
+  it('renders friend list skeleton with default count', () => {
+    const { container } = render(<FriendListSkeleton />)
+    expect(container.querySelector('.space-y-2')).toBeInTheDocument()
+  })
+
+  it('renders custom count of friends', () => {
+    const { container } = render(<FriendListSkeleton count={4} />)
+    const friends = container.querySelectorAll('.flex.items-center')
+    expect(friends).toHaveLength(4)
+  })
+
+  it('includes avatar and text skeletons', () => {
+    const { container } = render(<FriendListSkeleton count={1} />)
+    expect(container.querySelector('.rounded-full')).toBeInTheDocument()
+  })
+})
+
+describe('GroupListSkeleton', () => {
+  it('renders group list skeleton with default count', () => {
+    const { container } = render(<GroupListSkeleton />)
+    expect(container.querySelector('.space-y-3')).toBeInTheDocument()
+  })
+
+  it('renders custom count of groups', () => {
+    const { container } = render(<GroupListSkeleton count={3} />)
+    const groups = container.querySelectorAll('.p-4.bg-\\[\\#0F0F14\\]')
+    expect(groups).toHaveLength(3)
+  })
+
+  it('includes group info skeletons', () => {
+    const { container } = render(<GroupListSkeleton count={1} />)
+    expect(container.querySelector('.rounded-full')).toBeInTheDocument()
+    expect(container.querySelectorAll('.space-y-2')).toHaveLength(1)
+  })
+})
+
+describe('AchievementListSkeleton', () => {
+  it('renders achievement list skeleton with default count', () => {
+    const { container } = render(<AchievementListSkeleton />)
+    expect(container.querySelector('.grid')).toBeInTheDocument()
+  })
+
+  it('renders custom count of achievements', () => {
+    const { container } = render(<AchievementListSkeleton count={4} />)
+    const achievements = container.querySelectorAll('.p-4.bg-\\[\\#0F0F14\\]')
+    expect(achievements).toHaveLength(4)
+  })
+
+  it('includes responsive grid layout', () => {
+    const { container } = render(<AchievementListSkeleton />)
+    expect(container.firstChild).toHaveClass('grid')
+    expect(container.firstChild).toHaveClass('grid-cols-1')
+    expect(container.firstChild).toHaveClass('md:grid-cols-2')
+  })
+
+  it('includes achievement info skeletons', () => {
+    const { container } = render(<AchievementListSkeleton count={1} />)
+    expect(container.querySelector('.rounded-full')).toBeInTheDocument()
   })
 })

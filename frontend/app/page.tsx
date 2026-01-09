@@ -151,7 +151,7 @@ function FeatureCard({ icon, title, description, color, delay = 0 }: FeatureCard
       whileHover={{ y: -8, transition: { duration: 0.3 } }}
       className="group relative"
     >
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl -z-10"
+      <div className="absolute inset-0 rounded-2xl bg-linear-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl -z-10"
         style={{ background: `linear-gradient(135deg, ${color}20, transparent)` }} 
       />
       <div className="glass-card rounded-2xl p-8 h-full relative overflow-hidden">
@@ -201,7 +201,7 @@ function StatItem({ value, label, prefix = "", suffix = "", color }: StatItemPro
       className="text-center relative"
     >
       <div 
-        className="text-4xl md:text-5xl font-bold mb-2 counter"
+        className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 counter"
         style={{ color }}
       >
         {prefix}{count.toLocaleString()}{suffix}
@@ -231,13 +231,13 @@ function Step({ number, title, description, time, index }: StepProps) {
     >
       {/* Connection line */}
       {index < 2 && (
-        <div className="absolute left-7 top-16 bottom-0 w-px bg-gradient-to-b from-[#00F0FF]/30 to-transparent" />
+        <div className="absolute left-7 top-16 bottom-0 w-px bg-linear-to-b from-[#00F0FF]/30 to-transparent" />
       )}
       
       {/* Step number */}
       <motion.div 
         whileHover={{ scale: 1.1, rotate: 5 }}
-        className="relative z-10 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold text-xl flex-shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
+        className="relative z-10 w-14 h-14 rounded-2xl bg-linear-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold text-xl shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
       >
         {number}
       </motion.div>
@@ -294,7 +294,7 @@ export default function Home() {
         
         <motion.div 
           style={{ opacity: heroOpacity, y: heroY }}
-          className="relative z-10 container mx-auto px-4"
+          className="relative z-10 container mx-auto px-3 sm:px-4"
         >
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
             {/* Left: Text content */}
@@ -403,7 +403,7 @@ export default function Home() {
       <section className="relative py-20 bg-[#0A0A0F] overflow-hidden">
         <div className="absolute inset-0 aurora-bg" />
         
-        <div className="relative z-10 container mx-auto px-4 max-w-6xl">
+        <div className="relative z-10 container mx-auto px-3 sm:px-4 max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -436,9 +436,9 @@ export default function Home() {
 
       {/* Why VFIDE Section */}
       <section className="py-24 bg-[#08080A] relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1F1F2A] to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
         
-        <div className="container mx-auto px-4 max-w-7xl">
+        <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -502,7 +502,7 @@ export default function Home() {
 
       {/* How It Works Section */}
       <section className="py-24 bg-[#0A0A0F] relative">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1F1F2A] to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
         
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.div
@@ -565,7 +565,7 @@ export default function Home() {
 
       {/* Testimonial / Social Proof */}
       <section className="py-24 bg-[#08080A] relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1F1F2A] to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
         
         <div className="container mx-auto px-4 max-w-4xl text-center">
           <motion.div
@@ -586,7 +586,7 @@ export default function Home() {
             </blockquote>
             
             <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold">
+              <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold">
                 M
               </div>
               <div className="text-left">
@@ -609,7 +609,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-6xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] mb-6"
           >
             Ready to Own Your Payments?
           </motion.h2>

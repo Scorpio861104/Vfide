@@ -227,7 +227,7 @@ export function NotificationCenter() {
                             <div className="flex items-start gap-3">
                               {/* Icon */}
                               <div
-                                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                                 style={{ backgroundColor: `${color}20` }}
                               >
                                 <div style={{ color }}>{getIcon(notif.type)}</div>
@@ -240,7 +240,7 @@ export function NotificationCenter() {
                                     {notif.title}
                                   </h4>
                                   {!notif.read && (
-                                    <div className="w-2 h-2 bg-[#00F0FF] rounded-full flex-shrink-0 mt-1" />
+                                    <div className="w-2 h-2 bg-[#00F0FF] rounded-full shrink-0 mt-1" />
                                   )}
                                 </div>
                                 <p className="text-sm text-[#A0A0A5] mb-2">

@@ -1,32 +1,32 @@
 'use client';
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock wagmi hooks
-vi.mock('wagmi', () => ({
-  useChainId: vi.fn(() => 84532),
-  useSwitchChain: vi.fn(() => ({
-    switchChain: vi.fn(),
+jest.mock('wagmi', () => ({
+  useChainId: jest.fn(() => 84532),
+  useSwitchChain: jest.fn(() => ({
+    switchChain: jest.fn(),
     isPending: false,
   })),
 }));
 
 // Mock chains
-vi.mock('@/lib/chains', () => ({
+jest.mock('@/lib/chains', () => ({
   CHAINS: {
     base: { id: 'base', name: 'Base', icon: '🔵', testnet: { id: 84532 }, mainnet: { id: 8453 } },
     zksync: { id: 'zksync', name: 'zkSync', icon: '⚡', testnet: { id: 300 }, mainnet: { id: 324 } },
     polygon: { id: 'polygon', name: 'Polygon', icon: '🟣', testnet: { id: 80002 }, mainnet: { id: 137 } },
   },
-  getChainList: vi.fn(() => [
+  getChainList: jest.fn(() => [
     { id: 'base', name: 'Base', icon: '🔵', testnet: { id: 84532 }, mainnet: { id: 8453 } },
     { id: 'zksync', name: 'zkSync', icon: '⚡', testnet: { id: 300 }, mainnet: { id: 324 } },
     { id: 'polygon', name: 'Polygon', icon: '🟣', testnet: { id: 80002 }, mainnet: { id: 137 } },
   ]),
-  isChainReady: vi.fn(() => true),
+  isChainReady: jest.fn(() => true),
   IS_TESTNET: true,
-  getChainNetwork: vi.fn((chain: string) => {
+  getChainNetwork: jest.fn((chain: string) => {
     const networks: Record<string, any> = {
       base: { id: 84532 },
       zksync: { id: 300 },
@@ -37,7 +37,7 @@ vi.mock('@/lib/chains', () => ({
 }));
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: any) => (
       <div className={className} {...props}>{children}</div>
@@ -54,7 +54,7 @@ import * as chains from '@/lib/chains';
 
 describe('ChainSelector', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Default Render', () => {
@@ -109,8 +109,8 @@ describe('ChainSelector', () => {
 
   describe('Chain Selection', () => {
     it('should call switchChain when chain selected', async () => {
-      const mockSwitch = vi.fn();
-      vi.mocked(wagmi.useSwitchChain).mockReturnValue({
+      const mockSwitch = jest.fn();
+      jest.mocked(wagmi.useSwitchChain).mockReturnValue({
         switchChain: mockSwitch,
         isPending: false,
       } as any);
@@ -128,7 +128,7 @@ describe('ChainSelector', () => {
     });
 
     it('should accept onChainSelect callback prop', () => {
-      const onSelect = vi.fn();
+      const onSelect = jest.fn();
       
       // Just verify prop is accepted without error
       render(<ChainSelector compact onChainSelect={onSelect} />);
@@ -140,7 +140,7 @@ describe('ChainSelector', () => {
 
   describe('Show Only Ready', () => {
     it('should filter chains based on ready status', () => {
-      vi.mocked(chains.isChainReady).mockImplementation((id) => id === 'base');
+      jest.mocked(chains.isChainReady).mockImplementation((id) => id === 'base');
       
       render(<ChainSelector compact showOnlyReady />);
       
@@ -155,8 +155,8 @@ describe('ChainSelector', () => {
 
   describe('Pending State', () => {
     it('should disable buttons when switching is pending', () => {
-      vi.mocked(wagmi.useSwitchChain).mockReturnValue({
-        switchChain: vi.fn(),
+      jest.mocked(wagmi.useSwitchChain).mockReturnValue({
+        switchChain: jest.fn(),
         isPending: true,
       } as any);
       

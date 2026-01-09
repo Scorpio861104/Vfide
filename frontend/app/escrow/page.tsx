@@ -251,7 +251,7 @@ export default function EscrowPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,240,255,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(34,197,94,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
@@ -273,7 +273,7 @@ export default function EscrowPage() {
               <motion.div 
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 rounded-full mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 rounded-full mb-6"
               >
                 <Shield className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm font-medium text-cyan-300">Safe Buy Protection</span>
@@ -281,7 +281,7 @@ export default function EscrowPage() {
               
               <h1 className="text-4xl md:text-5xl font-black mb-4">
                 <span className="text-white">Buyer Protection </span>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-cyan-400 via-teal-400 to-emerald-400">
                   Escrow
                 </span>
               </h1>
@@ -311,9 +311,9 @@ export default function EscrowPage() {
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.02, y: -2 }}
                 transition={{ delay: idx * 0.1 }}
-                className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4`}
+                className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4`}
               >
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-3`}>
+                <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-3`}>
                   <div className={stat.text}>{stat.icon}</div>
                 </div>
                 <p className="text-2xl font-bold text-white">{stat.value}</p>
@@ -326,7 +326,7 @@ export default function EscrowPage() {
 
         {/* Main Content */}
         <section className="pb-12">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             {/* Tabs & Create Button */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -343,7 +343,7 @@ export default function EscrowPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
                       activeTab === tab.id
-                        ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-lg shadow-cyan-500/25'
+                        ? 'bg-linear-to-r from-cyan-500 to-emerald-500 text-white shadow-lg shadow-cyan-500/25'
                         : 'bg-white/5 text-gray-400 hover:bg-cyan-500/10 hover:text-cyan-400'
                     }`}
                   >
@@ -357,7 +357,7 @@ export default function EscrowPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-cyan-500 to-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all"
               >
                 <Plus className="w-4 h-4" />
                 Create Escrow
@@ -374,7 +374,7 @@ export default function EscrowPage() {
                   exit={{ opacity: 0, y: -20 }}
                   className="text-center py-16"
                 >
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
+                  <div className="p-4 rounded-2xl bg-linear-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
                     <Wallet className="w-12 h-12 text-cyan-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h3>
@@ -388,7 +388,7 @@ export default function EscrowPage() {
                   exit={{ opacity: 0, y: -20 }}
                   className="text-center py-16"
                 >
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
+                  <div className="p-4 rounded-2xl bg-linear-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
                     <Package className="w-12 h-12 text-cyan-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">No Escrows Found</h3>
@@ -409,7 +409,7 @@ export default function EscrowPage() {
                       animate={{ opacity: 1, y: 0 }}
                       whileHover={{ scale: 1.005, y: -2 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
+                      className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
                     >
                       <div className="p-6">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -472,7 +472,7 @@ export default function EscrowPage() {
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => handleRelease(escrow.id)}
                                 disabled={actionLoading === `release-${escrow.id}`}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50"
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-linear-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50"
                               >
                                 {actionLoading === `release-${escrow.id}` ? (
                                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -525,8 +525,8 @@ export default function EscrowPage() {
 
         {/* How It Works */}
         <section className="py-20">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-emerald-400">How Escrow Works</h2>
+          <div className="container mx-auto px-3 sm:px-4">
+            <h2 className="text-2xl font-bold text-center mb-12 bg-clip-text text-transparent bg-linear-to-r from-cyan-400 to-emerald-400">How Escrow Works</h2>
           
             <div className="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto">
             {[
@@ -574,9 +574,9 @@ export default function EscrowPage() {
                 whileHover={{ scale: 1.02, y: -4 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.15 }}
-                className={`text-center bg-gradient-to-br ${step.gradient} backdrop-blur-xl border ${step.border} rounded-2xl p-6`}
+                className={`text-center bg-linear-to-br ${step.gradient} backdrop-blur-xl border ${step.border} rounded-2xl p-6`}
               >
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${step.gradient} border ${step.border} flex items-center justify-center mx-auto mb-4`}>
+                <div className={`w-14 h-14 rounded-xl bg-linear-to-br ${step.gradient} border ${step.border} flex items-center justify-center mx-auto mb-4`}>
                   <div className={step.text}>{step.icon}</div>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
@@ -589,10 +589,10 @@ export default function EscrowPage() {
           <div className="mt-16 max-w-3xl mx-auto">
             <motion.div 
               whileHover={{ scale: 1.01, y: -2 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
             >
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0">
                   <Info className="w-5 h-5 text-cyan-400" />
                 </div>
                 <div>
@@ -636,9 +636,9 @@ export default function EscrowPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
+              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
             >
-              <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-emerald-400">Create Escrow</h2>
+              <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-linear-to-r from-cyan-400 to-emerald-400">Create Escrow</h2>
               
               <div className="space-y-4">
                 <div>
@@ -689,7 +689,7 @@ export default function EscrowPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={handleCreateEscrow}
                   disabled={actionLoading === 'create' || !createForm.merchant || !createForm.amount || !createForm.orderId}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white rounded-xl font-medium shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-cyan-500 to-emerald-500 text-white rounded-xl font-medium shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50"
                 >
                   {actionLoading === 'create' ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />

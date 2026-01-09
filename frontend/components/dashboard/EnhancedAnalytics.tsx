@@ -630,7 +630,7 @@ function AlertItem({ alert }: { alert: Alert }) {
   return (
     <div className={`rounded-lg p-4 border ${bgColor[alert.type]} ${alert.read ? 'opacity-75' : ''}`}>
       <div className="flex gap-3">
-        <span className="text-xl flex-shrink-0">{iconColor[alert.type]}</span>
+        <span className="text-xl shrink-0">{iconColor[alert.type]}</span>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-900 dark:text-white text-sm">
             {alert.title}

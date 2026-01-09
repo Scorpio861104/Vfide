@@ -52,7 +52,7 @@ export default function AddressPage() {
           Back to Leaderboard
         </Link>
         
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
+        <div className="bg-linear-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
           <h1 className="text-3xl font-bold mb-4">User Profile</h1>
           
           {/* Address Display */}
@@ -87,7 +87,7 @@ export default function AddressPage() {
         <div className="lg:col-span-1">
           <div className="space-y-4">
             {/* ProofScore Visualizer */}
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
+            <div className="bg-linear-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
               <ProofScoreVisualizer
                 address={address}
                 size="medium"
@@ -99,7 +99,7 @@ export default function AddressPage() {
             </div>
 
             {/* Trust Tier Info */}
-            <div className="bg-gradient-to-br from-amber-900/20 to-orange-900/20 border border-amber-500/30 rounded-lg p-4">
+            <div className="bg-linear-to-br from-amber-900/20 to-orange-900/20 border border-amber-500/30 rounded-lg p-4">
               <div className="text-sm space-y-2">
                 <div>
                   <span className="text-gray-400">Trust Tier:</span>
@@ -126,20 +126,20 @@ export default function AddressPage() {
         <div className="lg:col-span-2 space-y-4">
           
           {/* Endorsement Stats */}
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
+          <div className="bg-linear-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
             <h2 className="text-lg font-bold mb-4">Endorsements</h2>
             <EndorsementStats address={address} size="medium" />
           </div>
 
           {/* Badges */}
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
+          <div className="bg-linear-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
             <h2 className="text-lg font-bold mb-4">Badges</h2>
             <BadgeGallery address={address} />
           </div>
 
           {/* Endorsement Action (if viewing someone else's profile) */}
           {connectedAddress && connectedAddress.toLowerCase() !== address.toLowerCase() && (
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
+            <div className="bg-linear-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
               <h2 className="text-lg font-bold mb-4">Actions</h2>
               <ProofScoreVisualizer
                 address={connectedAddress}

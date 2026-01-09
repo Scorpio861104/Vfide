@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onClick, ...props }: any) => (
       <div className={className} style={style} onClick={onClick} {...props}>{children}</div>
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   HelpCircle: () => <span data-testid="help-icon">Help</span>,
   X: () => <span>X</span>,
   Book: () => <span>Book</span>,

@@ -151,7 +151,7 @@ export function GuardianManagementPanel() {
   return (
     <div className="space-y-6">
       {/* Current Status */}
-      <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-2 border-purple-500/30 rounded-xl p-6">
+      <div className="bg-linear-to-br from-purple-900/20 to-blue-900/20 border-2 border-purple-500/30 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-4">
           <Shield className="w-8 h-8 text-purple-400" />
           <div>
@@ -208,7 +208,7 @@ export function GuardianManagementPanel() {
           <button
             onClick={handleAddGuardian}
             disabled={isAdding || !isAddress(newGuardian)}
-            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
+            className="w-full bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
           >
             {isAdding ? 'Adding...' : 'Add Guardian'}
           </button>
@@ -263,7 +263,7 @@ export function GuardianManagementPanel() {
           <button
             onClick={handleRemoveGuardian}
             disabled={isRemoving || !isAddress(removeAddress)}
-            className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
+            className="w-full bg-linear-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
           >
             {isRemoving ? 'Removing...' : 'Remove Guardian'}
           </button>
@@ -322,7 +322,7 @@ export function GuardianManagementPanel() {
           <button
             onClick={handleSetThreshold}
             disabled={isSettingThreshold || guardians.guardianCount === 0}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
+            className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
           >
             {isSettingThreshold ? 'Updating...' : 'Update Threshold'}
           </button>
@@ -346,7 +346,7 @@ export function GuardianManagementPanel() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border-2 border-orange-500/30 rounded-2xl p-6"
+        className="bg-linear-to-br from-orange-900/20 to-red-900/20 border-2 border-orange-500/30 rounded-2xl p-6"
       >
         <div className="flex items-center gap-3 mb-4">
           <AlertTriangle className="w-6 h-6 text-orange-400" />
@@ -425,7 +425,7 @@ function InheritanceCancellationSection({ vaultAddress }: { vaultAddress: `0x${s
       <button
         onClick={handleCancelInheritance}
         disabled={isLoading}
-        className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 disabled:from-gray-700 disabled:to-gray-700 text-white font-bold py-3 rounded-lg transition-all"
+        className="w-full bg-linear-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 disabled:from-gray-700 disabled:to-gray-700 text-white font-bold py-3 rounded-lg transition-all"
       >
         {isLoading ? 'Voting to Cancel...' : 'Vote to Cancel Inheritance Request'}
       </button>

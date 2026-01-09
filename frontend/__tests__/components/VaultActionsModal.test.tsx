@@ -1,47 +1,47 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { VaultActionsModal } from '@/components/vault/VaultActionsModal';
 
 // Mock wagmi hooks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({ address: '0x1234567890123456789012345678901234567890' as const })),
-  useWriteContract: vi.fn(() => ({
-    writeContract: vi.fn(),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890' as const })),
+  useWriteContract: jest.fn(() => ({
+    writeContract: jest.fn(),
     data: undefined,
     isPending: false,
     error: null,
-    reset: vi.fn(),
+    reset: jest.fn(),
   })),
-  useWaitForTransactionReceipt: vi.fn(() => ({
+  useWaitForTransactionReceipt: jest.fn(() => ({
     isLoading: false,
     isSuccess: false,
     isError: false,
   })),
-  useReadContract: vi.fn(() => ({
+  useReadContract: jest.fn(() => ({
     data: BigInt('1000000000000000000000'), // 1000 tokens
   })),
 }));
 
 // Mock useVaultBalance
-vi.mock('@/hooks/useVaultHooks', () => ({
-  useVaultBalance: vi.fn(() => ({
+jest.mock('@/hooks/useVaultHooks', () => ({
+  useVaultBalance: jest.fn(() => ({
     balance: '500',
     balanceRaw: BigInt('500000000000000000000'),
     isLoading: false,
-    refetch: vi.fn(),
+    refetch: jest.fn(),
   })),
 }));
 
 // Mock useToast
-vi.mock('@/components/ui/toast', () => ({
-  useToast: vi.fn(() => ({
-    showToast: vi.fn(),
-    toast: vi.fn(),
+jest.mock('@/components/ui/toast', () => ({
+  useToast: jest.fn(() => ({
+    showToast: jest.fn(),
+    toast: jest.fn(),
   })),
 }));
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     VFIDEToken: '0xVFIDEToken',
     VaultHub: '0xVaultHub',
@@ -49,7 +49,7 @@ vi.mock('@/lib/contracts', () => ({
 }));
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
@@ -58,11 +58,11 @@ vi.mock('framer-motion', () => ({
 }));
 
 describe('VaultActionsModal', () => {
-  const mockOnClose = vi.fn();
+  const mockOnClose = jest.fn();
   const mockVaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Deposit mode', () => {

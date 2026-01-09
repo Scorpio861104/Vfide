@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import { formatSecurityEventType } from '@/config/security-advanced';
 import { useSecurityLogs } from '@/hooks/useSecurityLogs';
-import { SecurityEventType, formatSecurityEventType } from '@/config/security-advanced';
+import { useState } from 'react';
 
 interface SecurityLogsDashboardProps {
   className?: string;
 }
 
-export const SecurityLogsDashboard: React.FC<SecurityLogsDashboardProps> = ({ className = '' }) => {
+export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardProps) {
   const logs = useSecurityLogs();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -95,7 +95,7 @@ export const SecurityLogsDashboard: React.FC<SecurityLogsDashboardProps> = ({ cl
 
       {/* Logs List */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="max-h-[600px] overflow-y-auto">
+        <div className="max-h-150 overflow-y-auto">
           {logs.filteredLogs.length === 0 ? (
             <div className="p-12 text-center text-gray-500 dark:text-gray-400">
               <div className="text-4xl mb-3">📝</div>
@@ -106,7 +106,7 @@ export const SecurityLogsDashboard: React.FC<SecurityLogsDashboardProps> = ({ cl
               {logs.filteredLogs.map((log) => (
                 <div key={log.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
                   <div className="flex items-start gap-3">
-                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                    <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
                       log.severity === 'critical' ? 'bg-red-500' :
                       log.severity === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
                     }`} />

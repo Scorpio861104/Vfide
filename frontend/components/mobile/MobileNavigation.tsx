@@ -14,11 +14,11 @@ interface BottomNavigationProps {
   className?: string;
 }
 
-export const BottomNavigation: React.FC<BottomNavigationProps> = ({
+export function BottomNavigation({
   items,
   activeId,
   className = ''
-}) => {
+}: BottomNavigationProps) {
   const isMobile = useIsMobile();
 
   if (!isMobile) return null;
@@ -75,12 +75,12 @@ interface MobileMenuProps {
   className?: string;
 }
 
-export const MobileMenu: React.FC<MobileMenuProps> = ({
+export function MobileMenu({
   isOpen,
   onClose,
   sections,
   className = ''
-}) => {
+}: MobileMenuProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -167,13 +167,13 @@ interface FloatingActionButtonProps {
   className?: string;
 }
 
-export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
+export function FloatingActionButton({
   icon,
   onClick,
   label = 'Action',
   position = 'bottom-right',
   className = ''
-}) => {
+}: FloatingActionButtonProps) {
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
     'bottom-left': 'bottom-6 left-6',
@@ -204,12 +204,12 @@ interface TabBarProps {
   className?: string;
 }
 
-export const TabBar: React.FC<TabBarProps> = ({
+export function TabBar({
   tabs,
   activeId,
   onChange,
   className = ''
-}) => {
+}: TabBarProps) {
   return (
     <div
       className={`flex overflow-x-auto bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 ${className}`}
@@ -252,12 +252,12 @@ interface MobileHeaderProps {
   className?: string;
 }
 
-export const MobileHeader: React.FC<MobileHeaderProps> = ({
+export function MobileHeader({
   title,
   leftAction,
   rightAction,
   className = ''
-}) => {
+}: MobileHeaderProps) {
   const isMobile = useIsMobile();
 
   if (!isMobile) return null;

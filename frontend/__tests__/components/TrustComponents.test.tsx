@@ -1,35 +1,35 @@
 'use client';
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock hooks
-vi.mock('@/lib/vfide-hooks', () => ({
-  useProofScore: vi.fn(() => ({
+jest.mock('@/lib/vfide-hooks', () => ({
+  useProofScore: jest.fn(() => ({
     score: 5000,
     canEndorse: false,
   })),
-  useIsMentor: vi.fn(() => ({
+  useIsMentor: jest.fn(() => ({
     isMentor: false,
   })),
-  useBecomeMentor: vi.fn(() => ({
-    becomeMentor: vi.fn(),
+  useBecomeMentor: jest.fn(() => ({
+    becomeMentor: jest.fn(),
     isLoading: false,
     isSuccess: false,
   })),
-  useMentorInfo: vi.fn(() => ({
+  useMentorInfo: jest.fn(() => ({
     canBecomeMentor: false,
     mentorEligibleAt: null,
   })),
 }));
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({ isConnected: true, address: '0x123' })),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({ isConnected: true, address: '0x123' })),
 }));
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: any) => (
       <div className={className} {...props}>{children}</div>
@@ -50,13 +50,13 @@ import * as wagmi from 'wagmi';
 
 describe('BecomeMentorCard', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(wagmi.useAccount).mockReturnValue({ isConnected: true, address: '0x123' } as any);
+    jest.clearAllMocks();
+    jest.mocked(wagmi.useAccount).mockReturnValue({ isConnected: true, address: '0x123' } as any);
   });
 
   describe('When Not Connected', () => {
     it('should return null when wallet not connected', () => {
-      vi.mocked(wagmi.useAccount).mockReturnValue({ isConnected: false, address: undefined } as any);
+      jest.mocked(wagmi.useAccount).mockReturnValue({ isConnected: false, address: undefined } as any);
       
       const { container } = render(<BecomeMentorCard />);
       
@@ -66,7 +66,7 @@ describe('BecomeMentorCard', () => {
 
   describe('When Already Mentor', () => {
     it('should return null when user is already a mentor', () => {
-      vi.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: true } as any);
+      jest.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: true } as any);
       
       const { container } = render(<BecomeMentorCard />);
       
@@ -76,8 +76,8 @@ describe('BecomeMentorCard', () => {
 
   describe('When Eligible User', () => {
     beforeEach(() => {
-      vi.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
-      vi.mocked(hooks.useProofScore).mockReturnValue({
+      jest.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
+      jest.mocked(hooks.useProofScore).mockReturnValue({
         score: 5000,
         canEndorse: false,
       } as any);
@@ -145,12 +145,12 @@ describe('BecomeMentorCard', () => {
 
   describe('When Requirements Met', () => {
     beforeEach(() => {
-      vi.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
-      vi.mocked(hooks.useProofScore).mockReturnValue({
+      jest.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
+      jest.mocked(hooks.useProofScore).mockReturnValue({
         score: 9000,
         canEndorse: true,
       } as any);
-      vi.mocked(hooks.useMentorInfo).mockReturnValue({
+      jest.mocked(hooks.useMentorInfo).mockReturnValue({
         canBecomeMentor: true,
         mentorEligibleAt: Math.floor(Date.now() / 1000) - 1000,
       } as any);
@@ -164,8 +164,8 @@ describe('BecomeMentorCard', () => {
     });
 
     it('should enable register button when all requirements met', () => {
-      const mockBecome = vi.fn();
-      vi.mocked(hooks.useBecomeMentor).mockReturnValue({
+      const mockBecome = jest.fn();
+      jest.mocked(hooks.useBecomeMentor).mockReturnValue({
         becomeMentor: mockBecome,
         isLoading: false,
         isSuccess: false,
@@ -178,8 +178,8 @@ describe('BecomeMentorCard', () => {
     });
 
     it('should call becomeMentor on button click', () => {
-      const mockBecome = vi.fn();
-      vi.mocked(hooks.useBecomeMentor).mockReturnValue({
+      const mockBecome = jest.fn();
+      jest.mocked(hooks.useBecomeMentor).mockReturnValue({
         becomeMentor: mockBecome,
         isLoading: false,
         isSuccess: false,
@@ -196,17 +196,17 @@ describe('BecomeMentorCard', () => {
 
   describe('Loading State', () => {
     it('should show loading state when registering', () => {
-      vi.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
-      vi.mocked(hooks.useProofScore).mockReturnValue({
+      jest.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
+      jest.mocked(hooks.useProofScore).mockReturnValue({
         score: 9000,
         canEndorse: true,
       } as any);
-      vi.mocked(hooks.useMentorInfo).mockReturnValue({
+      jest.mocked(hooks.useMentorInfo).mockReturnValue({
         canBecomeMentor: true,
         mentorEligibleAt: null,
       } as any);
-      vi.mocked(hooks.useBecomeMentor).mockReturnValue({
-        becomeMentor: vi.fn(),
+      jest.mocked(hooks.useBecomeMentor).mockReturnValue({
+        becomeMentor: jest.fn(),
         isLoading: true,
         isSuccess: false,
       } as any);
@@ -219,17 +219,17 @@ describe('BecomeMentorCard', () => {
 
   describe('Success State', () => {
     it('should show success message after registration', () => {
-      vi.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
-      vi.mocked(hooks.useProofScore).mockReturnValue({
+      jest.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
+      jest.mocked(hooks.useProofScore).mockReturnValue({
         score: 9000,
         canEndorse: true,
       } as any);
-      vi.mocked(hooks.useMentorInfo).mockReturnValue({
+      jest.mocked(hooks.useMentorInfo).mockReturnValue({
         canBecomeMentor: true,
         mentorEligibleAt: null,
       } as any);
-      vi.mocked(hooks.useBecomeMentor).mockReturnValue({
-        becomeMentor: vi.fn(),
+      jest.mocked(hooks.useBecomeMentor).mockReturnValue({
+        becomeMentor: jest.fn(),
         isLoading: false,
         isSuccess: true,
       } as any);
@@ -243,12 +243,12 @@ describe('BecomeMentorCard', () => {
 
   describe('Countdown Display', () => {
     it('should show days remaining when time requirement not met', () => {
-      vi.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
-      vi.mocked(hooks.useProofScore).mockReturnValue({
+      jest.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
+      jest.mocked(hooks.useProofScore).mockReturnValue({
         score: 9000,
         canEndorse: true,
       } as any);
-      vi.mocked(hooks.useMentorInfo).mockReturnValue({
+      jest.mocked(hooks.useMentorInfo).mockReturnValue({
         canBecomeMentor: true,
         mentorEligibleAt: Math.floor(Date.now() / 1000) + (10 * 24 * 60 * 60),
       } as any);
@@ -262,12 +262,12 @@ describe('BecomeMentorCard', () => {
 
   describe('Not Eligible Message', () => {
     it('should show message to increase ProofScore when not meeting score requirement', () => {
-      vi.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
-      vi.mocked(hooks.useProofScore).mockReturnValue({
+      jest.mocked(hooks.useIsMentor).mockReturnValue({ isMentor: false } as any);
+      jest.mocked(hooks.useProofScore).mockReturnValue({
         score: 5000,
         canEndorse: false,
       } as any);
-      vi.mocked(hooks.useMentorInfo).mockReturnValue({
+      jest.mocked(hooks.useMentorInfo).mockReturnValue({
         canBecomeMentor: false,
         mentorEligibleAt: null,
       } as any);

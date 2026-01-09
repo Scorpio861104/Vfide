@@ -2,12 +2,12 @@
  * SponsorMenteeModal Tests
  * Tests for SponsorMenteeModal component (0% coverage)
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { SponsorMenteeModal } from '@/components/trust/SponsorMenteeModal'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, onClick, ...props }: React.ComponentProps<'div'>) => (
       <div onClick={onClick} {...props}>{children}</div>
@@ -20,9 +20,9 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock vfide-hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   useSponsorMentee: () => ({
-    sponsorMentee: vi.fn(),
+    sponsorMentee: jest.fn(),
     isSponsoring: false,
     isSuccess: false,
   }),
@@ -39,10 +39,10 @@ vi.mock('@/lib/vfide-hooks', () => ({
 }))
 
 describe('SponsorMenteeModal', () => {
-  const mockOnClose = vi.fn()
+  const mockOnClose = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders when isOpen is true', () => {

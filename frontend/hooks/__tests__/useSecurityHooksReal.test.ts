@@ -1,17 +1,17 @@
 // Tests for useSecurityHooks.ts - comprehensive coverage
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi before importing hooks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useReadContract: vi.fn(),
-  useWriteContract: vi.fn(),
-  useWaitForTransactionReceipt: vi.fn(),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useReadContract: jest.fn(),
+  useWriteContract: jest.fn(),
+  useWaitForTransactionReceipt: jest.fn(),
 }))
 
 // Mock abis
-vi.mock('@/lib/abis', () => ({
+jest.mock('@/lib/abis', () => ({
   SecurityHubABI: [],
   PanicGuardABI: [],
   GuardianRegistryABI: [],
@@ -21,7 +21,7 @@ vi.mock('@/lib/abis', () => ({
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     SecurityHub: '0x1111111111111111111111111111111111111111',
     PanicGuard: '0x2222222222222222222222222222222222222222',
@@ -52,13 +52,13 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
   const mockTxHash = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
       isConnected: true,
     })
     ;(useWriteContract as Mock).mockReturnValue({
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isPending: false,
     })
@@ -74,7 +74,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: true,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useIsVaultLocked(mockVaultAddress))
@@ -87,7 +87,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: false,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useIsVaultLocked(mockVaultAddress))
@@ -99,7 +99,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: undefined,
         isLoading: true,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useIsVaultLocked(mockVaultAddress))
@@ -109,7 +109,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
     })
 
     it('should provide refetch function', () => {
-      const mockRefetch = vi.fn()
+      const mockRefetch = jest.fn()
       ;(useReadContract as Mock).mockReturnValue({
         data: false,
         isLoading: false,
@@ -125,7 +125,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: undefined,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useIsVaultLocked(undefined))
@@ -221,7 +221,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
   // ==================== useSelfPanic ====================
   describe('useSelfPanic', () => {
     it('should call selfPanic with duration', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
@@ -245,7 +245,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
     })
 
     it('should use default duration of 24 hours', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
@@ -267,7 +267,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
 
     it('should track transaction success', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: false,
       })
@@ -284,7 +284,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
 
     it('should show panicking state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: true,
       })
@@ -401,7 +401,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
   // ==================== useCastGuardianLock ====================
   describe('useCastGuardianLock', () => {
     it('should cast lock vote with reason', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
@@ -423,7 +423,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
     })
 
     it('should use default reason', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
@@ -445,7 +445,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
 
     it('should track casting state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: true,
       })
@@ -457,7 +457,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
 
     it('should track success state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: false,
       })
@@ -480,7 +480,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
       ;(useReadContract as Mock).mockImplementation(() => {
         callCount++
         if (callCount === 1) {
-          return { data: true, refetch: vi.fn() } // halted
+          return { data: true, refetch: jest.fn() } // halted
         } else {
           return { data: false } // globalRisk
         }
@@ -497,7 +497,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
       ;(useReadContract as Mock).mockImplementation(() => {
         callCount++
         if (callCount === 1) {
-          return { data: false, refetch: vi.fn() } // halted
+          return { data: false, refetch: jest.fn() } // halted
         } else {
           return { data: true } // globalRisk
         }
@@ -512,7 +512,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
     it('should return no emergency when all clear', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useEmergencyStatus())
@@ -523,7 +523,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
     })
 
     it('should provide refetch function', () => {
-      const mockRefetch = vi.fn()
+      const mockRefetch = jest.fn()
       ;(useReadContract as Mock).mockReturnValue({
         data: false,
         refetch: mockRefetch,

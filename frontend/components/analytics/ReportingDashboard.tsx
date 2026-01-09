@@ -66,7 +66,7 @@ const DATE_RANGES: DateRange[] = [
 ];
 
 // Metric Card Component
-const MetricCard: React.FC<{ metric: Metric }> = ({ metric }) => {
+function MetricCard({ metric }: { metric: Metric }) {
   const formatValue = (value: number | string, format?: string): string => {
     if (typeof value === 'string') return value;
     
@@ -140,7 +140,7 @@ const MetricCard: React.FC<{ metric: Metric }> = ({ metric }) => {
 };
 
 // Simple Line Chart Component
-const LineChart: React.FC<{ data: ChartData[]; height?: number }> = ({ data, height = 300 }) => {
+function LineChart({ data, height = 300 }: { data: ChartData[]; height?: number }) {
   const getMinMax = () => {
     let minY = Infinity;
     let maxY = -Infinity;
@@ -226,7 +226,7 @@ const LineChart: React.FC<{ data: ChartData[]; height?: number }> = ({ data, hei
 };
 
 // Bar Chart Component
-const BarChart: React.FC<{ data: ChartData[]; height?: number }> = ({ data, height = 300 }) => {
+function BarChart({ data, height = 300 }: { data: ChartData[]; height?: number }) {
   const maxValue = Math.max(...data.flatMap(series => series.data.map(d => d.y)));
 
   return (
@@ -272,12 +272,12 @@ const BarChart: React.FC<{ data: ChartData[]; height?: number }> = ({ data, heig
 };
 
 // Main Dashboard Component
-export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({
+export function ReportingDashboard({
   reports,
   onRefresh,
   onExport,
   className = ''
-}) => {
+}: ReportingDashboardProps) {
   const [selectedReportId, setSelectedReportId] = useState<string>(reports[0]?.id || '');
   const [dateRange, setDateRange] = useState<DateRange>(DATE_RANGES[1]);
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');

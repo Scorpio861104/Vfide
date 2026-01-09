@@ -1,0 +1,420 @@
+{
+  // Build and development tasks for VFIDE
+  "version": "2.0.0",
+  "tasks": [
+    // Frontend Tasks
+    {
+      "label": "Frontend: Install Dependencies",
+      "type": "shell",
+      "command": "npm install",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Frontend: Dev Server",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "none",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "."
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Local:.+(https?://.+)"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Frontend: Build",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Frontend: Test",
+      "type": "shell",
+      "command": "npm test",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Frontend: Test Watch",
+      "type": "shell",
+      "command": "npm run test:watch",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "test",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Frontend: Lint",
+      "type": "shell",
+      "command": "npm run lint",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Frontend: Type Check",
+      "type": "shell",
+      "command": "npm run type-check",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // WebSocket Server Tasks
+    {
+      "label": "WebSocket: Install Dependencies",
+      "type": "shell",
+      "command": "npm install",
+      "options": {
+        "cwd": "${workspaceFolder}/websocket-server"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "WebSocket: Dev Server",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/websocket-server"
+      },
+      "group": "none",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "WebSocket: Build",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/websocket-server"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "WebSocket: Test",
+      "type": "shell",
+      "command": "npm test",
+      "options": {
+        "cwd": "${workspaceFolder}/websocket-server"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Smart Contracts Tasks
+    {
+      "label": "Contracts: Compile",
+      "type": "shell",
+      "command": "forge build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Contracts: Test",
+      "type": "shell",
+      "command": "forge test -vvv",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Contracts: Test Watch",
+      "type": "shell",
+      "command": "forge test --watch",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Contracts: Coverage",
+      "type": "shell",
+      "command": "forge coverage",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Docker Tasks
+    {
+      "label": "Docker: Build",
+      "type": "shell",
+      "command": "docker-compose build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Docker: Up",
+      "type": "shell",
+      "command": "docker-compose up",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Docker: Down",
+      "type": "shell",
+      "command": "docker-compose down",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Development Scripts
+    {
+      "label": "Dev: Clean All",
+      "type": "shell",
+      "command": "./scripts/dev-clean.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Dev: Reset All",
+      "type": "shell",
+      "command": "./scripts/dev-reset.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Dev: Check All",
+      "type": "shell",
+      "command": "./scripts/check-all.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Dev: Security Audit",
+      "type": "shell",
+      "command": "./scripts/security-audit.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Dev: Quick Start",
+      "type": "shell",
+      "command": "./scripts/quick-start.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Blockchain Tasks
+    {
+      "label": "Blockchain: Start Anvil",
+      "type": "shell",
+      "command": "anvil --host 0.0.0.0 --port 8545 --chain-id 31337",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Blockchain: Deploy Local",
+      "type": "shell",
+      "command": "forge script script/DeployLocal.s.sol --rpc-url http://localhost:8545 --broadcast",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // Compound Tasks
+    {
+      "label": "Full Stack: Install All",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Frontend: Install Dependencies",
+        "WebSocket: Install Dependencies"
+      ],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Full Stack: Dev Servers",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        "Frontend: Dev Server",
+        "WebSocket: Dev Server"
+      ],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Full Stack: Test All",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Frontend: Test",
+        "WebSocket: Test",
+        "Contracts: Test"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Full Stack: Build All",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        "Frontend: Build",
+        "WebSocket: Build",
+        "Contracts: Compile"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    }
+  ]
+}

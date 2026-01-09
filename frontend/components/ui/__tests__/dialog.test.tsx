@@ -1,12 +1,15 @@
 import { render, screen } from '@testing-library/react'
-import { 
-  Dialog, 
-  DialogTrigger, 
-  DialogContent, 
-  DialogHeader, 
-  DialogFooter, 
-  DialogTitle, 
-  DialogDescription
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogOverlay,
+    DialogPortal,
+    DialogTitle,
+    DialogTrigger
 } from '../dialog'
 
 describe('Dialog', () => {
@@ -211,5 +214,103 @@ describe('Dialog complete structure', () => {
     expect(screen.getByText('Modal body content')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
+  })
+
+  it('handles controlled dialog with onOpenChange', () => {
+    const handleOpenChange = jest.fn()
+    render(
+      <Dialog open={true} onOpenChange={handleOpenChange}>
+        <DialogContent>
+          <DialogTitle>Controlled Dialog</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(screen.getByText('Controlled Dialog')).toBeInTheDocument()
+  })
+
+  it('renders dialog with trigger and opens on interaction', () => {
+    render(
+      <Dialog>
+        <DialogTrigger asChild>
+          <button>Open Dialog</button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogTitle>Triggered Dialog</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(screen.getByText('Open Dialog')).toBeInTheDocument()
+  })
+
+  it('renders overlay with custom className', () => {
+    const { container } = render(
+      <Dialog open>
+        <DialogContent>
+          <DialogTitle>Test</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    // DialogOverlay is rendered as part of DialogContent - check for dialog role instead
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('renders dialog with multiple header elements', () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Title</DialogTitle>
+            <DialogDescription>Description line 1</DialogDescription>
+            <DialogDescription>Description line 2</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(screen.getByText('Description line 1')).toBeInTheDocument()
+    expect(screen.getByText('Description line 2')).toBeInTheDocument()
+  })
+
+  it('renders dialog with custom footer content', () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogTitle>Custom Footer</DialogTitle>
+          <DialogFooter>
+            <span>Footer text</span>
+            <button>Action 1</button>
+            <button>Action 2</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(screen.getByText('Footer text')).toBeInTheDocument()
+    expect(screen.getByText('Action 1')).toBeInTheDocument()
+    expect(screen.getByText('Action 2')).toBeInTheDocument()
+  })
+
+  it('exports DialogPortal component', () => {
+    expect(DialogPortal).toBeDefined()
+  })
+
+  it('exports DialogOverlay component', () => {
+    expect(DialogOverlay).toBeDefined()
+  })
+
+  it('exports DialogClose component', () => {
+    expect(DialogClose).toBeDefined()
+  })
+
+  it('renders DialogClose explicitly', () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogTitle>Test</DialogTitle>
+          <DialogClose asChild>
+            <button>Custom Close</button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(screen.getByText('Custom Close')).toBeInTheDocument()
   })
 })

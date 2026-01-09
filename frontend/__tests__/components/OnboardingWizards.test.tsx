@@ -1,9 +1,9 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onClick, ...props }: any) => (
       <div className={className} style={style} onClick={onClick}>{children}</div>
@@ -19,14 +19,14 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
   }),
   useChainId: () => 84532,
   useSwitchChain: () => ({
-    switchChain: vi.fn(),
+    switchChain: jest.fn(),
     isPending: false,
   }),
   useBalance: () => ({
@@ -35,19 +35,19 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock RainbowKit
-vi.mock('@rainbow-me/rainbowkit', () => ({
+jest.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: () => <button>Connect Wallet</button>,
 }))
 
 // Mock testnet config
-vi.mock('@/lib/testnet', () => ({
+jest.mock('@/lib/testnet', () => ({
   CURRENT_CHAIN_ID: 84532,
   FAUCET_URLS: { eth: 'https://faucet.example.com' },
   IS_TESTNET: true,
 }))
 
 // Mock lucide-react icons
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Wallet: () => <span>WalletIcon</span>,
   Globe: () => <span>GlobeIcon</span>,
   Droplets: () => <span>DropletsIcon</span>,
@@ -81,10 +81,10 @@ vi.mock('lucide-react', () => ({
 
 // Mock localStorage
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
 }
 Object.defineProperty(window, 'localStorage', { value: localStorageMock })
 
@@ -93,7 +93,7 @@ import { SetupWizard } from '@/components/onboarding/SetupWizard'
 
 describe('SetupWizard', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     localStorageMock.getItem.mockReturnValue(null)
   })
 
@@ -103,7 +103,7 @@ describe('SetupWizard', () => {
   })
 
   it('calls onComplete when provided', () => {
-    const onComplete = vi.fn()
+    const onComplete = jest.fn()
     const { container } = render(<SetupWizard onComplete={onComplete} />)
     expect(container).toBeInTheDocument()
   })
@@ -115,7 +115,7 @@ describe('SetupWizard', () => {
 
   it('skips wizard if already completed', () => {
     localStorageMock.getItem.mockReturnValue('true')
-    const onComplete = vi.fn()
+    const onComplete = jest.fn()
     render(<SetupWizard onComplete={onComplete} />)
     // Should call onComplete since setup is already done
     expect(localStorageMock.getItem).toHaveBeenCalled()
@@ -147,7 +147,7 @@ describe('SetupWizard', () => {
     // Mock clipboard
     Object.assign(navigator, {
       clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined),
+        writeText: jest.fn().mockResolvedValue(undefined),
       },
     })
     
@@ -166,7 +166,7 @@ describe('SetupWizard', () => {
   })
 
   it('handles close action', () => {
-    const onComplete = vi.fn()
+    const onComplete = jest.fn()
     render(<SetupWizard onComplete={onComplete} />)
     
     // Find close button (X)

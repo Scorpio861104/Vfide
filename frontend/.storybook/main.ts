@@ -1,4 +1,4 @@
-import type { StorybookConfig } from "@storybook/react-webpack5";
+import type { StorybookConfig } from "@storybook/react-vite";
 import path from "path";
 
 const config: StorybookConfig = {
@@ -10,19 +10,18 @@ const config: StorybookConfig = {
     "@storybook/addon-interactions",
     "@storybook/addon-a11y",
     "@storybook/addon-viewport",
-    "@storybook/addon-webpack5-compiler-swc",
   ],
   framework: {
-    name: "@storybook/react-webpack5",
+    name: "@storybook/react-vite",
     options: {},
   },
   docs: {
     autodocs: "tag",
   },
-  webpackFinal: async (webpackConfig) => {
-    webpackConfig.resolve = webpackConfig.resolve ?? {};
-    webpackConfig.resolve.alias = {
-      ...(webpackConfig.resolve.alias ?? {}),
+  viteFinal: async (viteConfig) => {
+    viteConfig.resolve = viteConfig.resolve ?? {};
+    viteConfig.resolve.alias = {
+      ...(viteConfig.resolve.alias ?? {}),
       "@": path.resolve(__dirname, ".."),
       "next/link": path.resolve(__dirname, "mocks/next/link.tsx"),
       "next/navigation": path.resolve(__dirname, "mocks/next/navigation.ts"),
@@ -31,7 +30,7 @@ const config: StorybookConfig = {
       "next/font/google": path.resolve(__dirname, "mocks/next/font/google.ts"),
     };
 
-    return webpackConfig;
+    return viteConfig;
   },
 };
 export default config;

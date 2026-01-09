@@ -1,28 +1,28 @@
 // Extended tests for useMerchantHooks.ts - covering all remaining functions
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi before importing hooks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useReadContract: vi.fn(),
-  useWriteContract: vi.fn(),
-  useWaitForTransactionReceipt: vi.fn(),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useReadContract: jest.fn(),
+  useWriteContract: jest.fn(),
+  useWaitForTransactionReceipt: jest.fn(),
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
+jest.mock('viem', () => ({
   parseEther: (val: string) => BigInt(parseFloat(val) * 1e18),
   formatEther: (val: bigint) => (Number(val) / 1e18).toString(),
 }))
 
 // Mock abis
-vi.mock('@/lib/abis', () => ({
+jest.mock('@/lib/abis', () => ({
   MerchantPortalABI: [],
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     MerchantPortal: '0x1234567890123456789012345678901234567890',
   },
@@ -47,14 +47,14 @@ describe('useMerchantHooks - Extended Tests', () => {
   const mockTxHash = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
       isConnected: true,
     })
     ;(useWriteContract as Mock).mockReturnValue({
-      writeContractAsync: vi.fn().mockResolvedValue(mockTxHash),
-      writeContract: vi.fn(),
+      writeContractAsync: jest.fn().mockResolvedValue(mockTxHash),
+      writeContract: jest.fn(),
       data: undefined,
       isPending: false,
     })
@@ -67,7 +67,7 @@ describe('useMerchantHooks - Extended Tests', () => {
   // ==================== useProcessPayment ====================
   describe('useProcessPayment', () => {
     it('should process payment successfully', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         data: mockTxHash,
@@ -94,7 +94,7 @@ describe('useMerchantHooks - Extended Tests', () => {
     })
 
     it('should handle process payment error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('Not registered merchant'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('Not registered merchant'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         data: undefined,
@@ -117,7 +117,7 @@ describe('useMerchantHooks - Extended Tests', () => {
 
     it('should track processing state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContractAsync: vi.fn(),
+        writeContractAsync: jest.fn(),
         data: mockTxHash,
         isPending: true,
       })
@@ -129,7 +129,7 @@ describe('useMerchantHooks - Extended Tests', () => {
 
     it('should track success state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContractAsync: vi.fn(),
+        writeContractAsync: jest.fn(),
         data: mockTxHash,
         isPending: false,
       })
@@ -144,7 +144,7 @@ describe('useMerchantHooks - Extended Tests', () => {
     })
 
     it('should handle non-Error object rejection', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue('string error')
+      const mockWriteAsync = jest.fn().mockRejectedValue('string error')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         data: undefined,
@@ -169,7 +169,7 @@ describe('useMerchantHooks - Extended Tests', () => {
   // ==================== usePayMerchant ====================
   describe('usePayMerchant', () => {
     it('should pay merchant successfully', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         data: mockTxHash,
@@ -196,7 +196,7 @@ describe('useMerchantHooks - Extended Tests', () => {
     })
 
     it('should handle payment error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('Merchant suspended'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('Merchant suspended'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         data: undefined,
@@ -219,7 +219,7 @@ describe('useMerchantHooks - Extended Tests', () => {
 
     it('should track paying state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContractAsync: vi.fn(),
+        writeContractAsync: jest.fn(),
         data: mockTxHash,
         isPending: true,
       })
@@ -231,7 +231,7 @@ describe('useMerchantHooks - Extended Tests', () => {
 
     it('should track success and txHash', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContractAsync: vi.fn(),
+        writeContractAsync: jest.fn(),
         data: mockTxHash,
         isPending: false,
       })
@@ -247,7 +247,7 @@ describe('useMerchantHooks - Extended Tests', () => {
     })
 
     it('should handle non-Error object rejection', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(null)
+      const mockWriteAsync = jest.fn().mockRejectedValue(null)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         data: undefined,
@@ -328,7 +328,7 @@ describe('useMerchantHooks - Extended Tests', () => {
   // ==================== useSetAutoConvert ====================
   describe('useSetAutoConvert', () => {
     it('should enable auto-convert', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
@@ -350,7 +350,7 @@ describe('useMerchantHooks - Extended Tests', () => {
     })
 
     it('should disable auto-convert', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
@@ -373,7 +373,7 @@ describe('useMerchantHooks - Extended Tests', () => {
 
     it('should track setting state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: true,
       })
@@ -385,7 +385,7 @@ describe('useMerchantHooks - Extended Tests', () => {
 
     it('should track success state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: false,
       })
@@ -404,7 +404,7 @@ describe('useMerchantHooks - Extended Tests', () => {
   // ==================== useSetPayoutAddress ====================
   describe('useSetPayoutAddress', () => {
     it('should set payout address', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       const payoutAddress = '0x7777777777777777777777777777777777777777' as `0x${string}`
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
@@ -428,7 +428,7 @@ describe('useMerchantHooks - Extended Tests', () => {
 
     it('should track setting state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: true,
       })
@@ -440,7 +440,7 @@ describe('useMerchantHooks - Extended Tests', () => {
 
     it('should track success state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: false,
       })
@@ -471,7 +471,7 @@ describe('useMerchantHooks - Extended Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: mockMerchantInfo,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useIsMerchant())
@@ -498,7 +498,7 @@ describe('useMerchantHooks - Extended Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: mockMerchantInfo,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useIsMerchant())
@@ -511,7 +511,7 @@ describe('useMerchantHooks - Extended Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: undefined,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       renderHook(() => useIsMerchant(mockMerchantAddress))
@@ -527,7 +527,7 @@ describe('useMerchantHooks - Extended Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: undefined,
         isLoading: true,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useIsMerchant())
@@ -539,7 +539,7 @@ describe('useMerchantHooks - Extended Tests', () => {
   // ==================== useRegisterMerchant - Extended ====================
   describe('useRegisterMerchant - Extended', () => {
     it('should register merchant with business info', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         data: mockTxHash,
@@ -562,7 +562,7 @@ describe('useMerchantHooks - Extended Tests', () => {
     })
 
     it('should handle registration error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('Already registered'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('Already registered'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         data: undefined,
@@ -580,7 +580,7 @@ describe('useMerchantHooks - Extended Tests', () => {
 
     it('should track registering state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContractAsync: vi.fn(),
+        writeContractAsync: jest.fn(),
         data: mockTxHash,
         isPending: true,
       })
@@ -591,7 +591,7 @@ describe('useMerchantHooks - Extended Tests', () => {
     })
 
     it('should handle non-Error object rejection', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue({ code: 'UNKNOWN' })
+      const mockWriteAsync = jest.fn().mockRejectedValue({ code: 'UNKNOWN' })
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         data: undefined,

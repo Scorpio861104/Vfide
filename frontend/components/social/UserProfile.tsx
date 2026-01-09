@@ -265,12 +265,12 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
       {/* Cover Image */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative h-48 md:h-64 bg-gradient-to-r from-[#00F0FF]/20 via-[#A78BFA]/20 to-[#FF006E]/20"
+        className="relative h-48 md:h-64 bg-linear-to-r from-[#00F0FF]/20 via-[#A78BFA]/20 to-[#FF006E]/20"
       >
         {user.coverImage && (
           <img src={user.coverImage} alt="cover" className="w-full h-full object-cover" />
@@ -287,8 +287,8 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
           transition={{ delay: 0.1 }}
           className="flex flex-col md:flex-row md:items-end gap-4 -mt-20 mb-6"
         >
-          <div className="flex-shrink-0">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] p-1 shadow-2xl">
+          <div className="shrink-0">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-linear-to-br from-[#00F0FF] to-[#A78BFA] p-1 shadow-2xl">
               <div className="w-full h-full rounded-xl bg-[#1A1A2E] flex items-center justify-center text-6xl md:text-8xl">
                 {user.avatar}
               </div>
@@ -327,7 +327,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-2 shrink-0">
             {isOwnProfile ? (
               <button className="px-6 py-3 bg-[#00F0FF]/20 border border-[#00F0FF] text-[#00F0FF] rounded-lg hover:bg-[#00F0FF]/30 transition-colors font-semibold">
                 Edit Profile
@@ -440,7 +440,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                 <motion.div
                   key={badge.id}
                   whileHover={{ scale: 1.1 }}
-                  className={`flex-shrink-0 relative group cursor-pointer`}
+                  className={`shrink-0 relative group cursor-pointer`}
                 >
                   <div
                     className={`w-20 h-20 rounded-xl flex items-center justify-center text-3xl border-2 ${
@@ -515,7 +515,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                   className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 hover:border-[#00F0FF]/50 transition-colors"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="text-2xl flex-shrink-0">{item.icon}</div>
+                    <div className="text-2xl shrink-0">{item.icon}</div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-[#F5F3E8] font-semibold">{item.title}</h4>
                       <p className="text-[#A0A0A5] text-sm">{item.description}</p>
@@ -595,7 +595,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`text-4xl flex-shrink-0 ${achievement.isUnlocked ? 'opacity-100' : 'opacity-50'}`}>
+                    <div className={`text-4xl shrink-0 ${achievement.isUnlocked ? 'opacity-100' : 'opacity-50'}`}>
                       {achievement.icon}
                     </div>
                     <div className="flex-1">
@@ -606,7 +606,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                           initial={{ width: 0 }}
                           animate={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
                           transition={{ duration: 1, delay: 0.2 }}
-                          className={`h-full ${achievement.isUnlocked ? 'bg-gradient-to-r from-[#00F0FF] to-[#A78BFA]' : 'bg-[#3A3A4F]'}`}
+                          className={`h-full ${achievement.isUnlocked ? 'bg-linear-to-r from-[#00F0FF] to-[#A78BFA]' : 'bg-[#3A3A4F]'}`}
                         />
                       </div>
                       <div className="flex justify-between items-center mt-2">

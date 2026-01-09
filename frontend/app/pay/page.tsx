@@ -54,13 +54,13 @@ function PayContent() {
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full mb-4"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full mb-4"
           >
             <CreditCard className="w-4 h-4 text-cyan-400" />
             <span className="text-cyan-400 text-sm font-medium">Secure Checkout</span>
           </motion.div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
-            Complete <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Payment</span>
+            Complete <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400">Payment</span>
           </h1>
           <p className="text-xl text-gray-400">
             Secure checkout powered by VFIDE
@@ -74,7 +74,7 @@ function PayContent() {
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-8"
+            className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-8"
           >
             {/* Merchant Info */}
             <div className="mb-8 pb-8 border-b border-white/10">
@@ -90,7 +90,7 @@ function PayContent() {
             {/* Amount */}
             <div className="mb-8">
               <div className="text-gray-400 text-sm mb-2">Amount</div>
-              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-2">${amount}</div>
+              <div className="text-5xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 mb-2">${amount}</div>
               <div className="text-gray-400">≈ {(safeParseFloat(amount, 0) * 2).toFixed(0)} VFIDE</div>
             </div>
 
@@ -142,7 +142,7 @@ function PayContent() {
               <div className="border-t border-white/10 my-3" />
               <div className="flex justify-between items-center">
                 <span className="text-white font-bold">Total</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-xl">${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}</span>
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 font-bold text-xl">${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}</span>
               </div>
             </div>
 
@@ -152,7 +152,7 @@ function PayContent() {
               disabled={isProcessing}
               whileHover={{ scale: isProcessing ? 1 : 1.02 }}
               whileTap={{ scale: isProcessing ? 1 : 0.98 }}
-              className="w-full px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-8 py-4 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isProcessing ? (
                 <>

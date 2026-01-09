@@ -6,32 +6,30 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Shield,
-  Crown,
-  Users,
-  ChevronDown,
-  Check,
-  X,
-  Settings,
-  AlertCircle,
-  Loader2,
-} from 'lucide-react';
-import {
-  GroupMember,
-  GroupRole,
-  Permission,
-  ROLE_INFO,
-  PERMISSION_INFO,
-  getRolePermissions,
-  getPermissionsByCategory,
-  memberHasPermission,
-  useGroupMembers,
-  useMemberPermissions,
-} from '@/lib/groupPermissions';
 import { useAnnounce } from '@/lib/accessibility';
+import {
+    GroupMember,
+    GroupRole,
+    PERMISSION_INFO,
+    Permission,
+    ROLE_INFO,
+    getPermissionsByCategory,
+    getRolePermissions,
+    useGroupMembers,
+    useMemberPermissions
+} from '@/lib/groupPermissions';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+    AlertCircle,
+    Check,
+    Crown,
+    Loader2,
+    Settings,
+    Shield,
+    Users,
+    X
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface PermissionsManagerProps {
   groupId: string;
@@ -70,11 +68,11 @@ export function PermissionsManager({ groupId, currentUserId }: PermissionsManage
   if (!canManageRoles) {
     return (
       <div className="bg-yellow-900/20 border border-yellow-900/30 rounded-lg p-6 flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
         <div>
           <h3 className="text-yellow-400 font-medium mb-1">Insufficient Permissions</h3>
           <p className="text-sm text-yellow-400/80">
-            You don't have permission to manage roles and permissions.
+            You don&apos;t have permission to manage roles and permissions.
           </p>
         </div>
       </div>
@@ -159,7 +157,7 @@ function MemberCard({ member, currentUserId, canManage, canRemove, onEdit, onRem
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1">
           {/* Avatar */}
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-sm">
               {member.userId.slice(0, 2).toUpperCase()}
             </span>

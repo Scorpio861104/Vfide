@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 
 // Mock wagmi hooks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({ address: '0x1234567890123456789012345678901234567890' })),
-  useReadContract: vi.fn(() => ({ data: null, isLoading: false, refetch: vi.fn() })),
-  useWriteContract: vi.fn(() => ({ writeContract: vi.fn(), data: null, isPending: false })),
-  useWaitForTransactionReceipt: vi.fn(() => ({ isLoading: false, isSuccess: false })),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890' })),
+  useReadContract: jest.fn(() => ({ data: null, isLoading: false, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), data: null, isPending: false })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ isLoading: false, isSuccess: false })),
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
     BadgeNFT: '0x1234567890123456789012345678901234567891',
@@ -17,7 +17,7 @@ vi.mock('@/lib/contracts', () => ({
 }))
 
 // Mock ABIs
-vi.mock('@/lib/abis', () => ({
+jest.mock('@/lib/abis', () => ({
   VFIDEBadgeNFTABI: [],
   SeerABI: [],
 }))
@@ -27,19 +27,19 @@ import { useUserBadges, useBadgeNFTs, useMintBadge, useCanMintBadge } from '@/ho
 
 describe('useBadgeHooks', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     // Reset all mocks to default values
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: null,
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     } as unknown as ReturnType<typeof useReadContract>)
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContract: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContract: jest.fn(),
       data: null,
       isPending: false,
     } as unknown as ReturnType<typeof useWriteContract>)
-    vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+    jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
       isLoading: false,
       isSuccess: false,
     } as ReturnType<typeof useWaitForTransactionReceipt>)
@@ -53,10 +53,10 @@ describe('useBadgeHooks', () => {
     })
 
     it('returns badge IDs when user has badges', () => {
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: ['0xbadge1', '0xbadge2'] as unknown as undefined,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       } as ReturnType<typeof useReadContract>)
 
       const { badgeIds } = useUserBadges()
@@ -78,10 +78,10 @@ describe('useBadgeHooks', () => {
     })
 
     it('handles loading state', () => {
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: null,
         isLoading: true,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       } as unknown as ReturnType<typeof useReadContract>)
 
       const { isLoading } = useUserBadges()
@@ -97,10 +97,10 @@ describe('useBadgeHooks', () => {
     })
 
     it('returns token IDs and count when user has NFTs', () => {
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: [1n, 2n, 3n] as unknown as undefined,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       } as ReturnType<typeof useReadContract>)
 
       const { tokenIds, count } = useBadgeNFTs()
@@ -111,8 +111,8 @@ describe('useBadgeHooks', () => {
 
   describe('useMintBadge', () => {
     it('provides mintBadge function', () => {
-      const mockWriteContract = vi.fn()
-      vi.mocked(useWriteContract).mockReturnValue({
+      const mockWriteContract = jest.fn()
+      jest.mocked(useWriteContract).mockReturnValue({
         writeContract: mockWriteContract,
         data: null,
         isPending: false,
@@ -123,8 +123,8 @@ describe('useBadgeHooks', () => {
     })
 
     it('calls writeContract when minting', () => {
-      const mockWriteContract = vi.fn()
-      vi.mocked(useWriteContract).mockReturnValue({
+      const mockWriteContract = jest.fn()
+      jest.mocked(useWriteContract).mockReturnValue({
         writeContract: mockWriteContract,
         data: null,
         isPending: false,
@@ -141,8 +141,8 @@ describe('useBadgeHooks', () => {
     })
 
     it('tracks minting state', () => {
-      vi.mocked(useWriteContract).mockReturnValue({
-        writeContract: vi.fn(),
+      jest.mocked(useWriteContract).mockReturnValue({
+        writeContract: jest.fn(),
         data: null,
         isPending: true,
       } as unknown as ReturnType<typeof useWriteContract>)
@@ -152,7 +152,7 @@ describe('useBadgeHooks', () => {
     })
 
     it('tracks confirmation state', () => {
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: true,
         isSuccess: false,
       } as ReturnType<typeof useWaitForTransactionReceipt>)
@@ -162,7 +162,7 @@ describe('useBadgeHooks', () => {
     })
 
     it('tracks success state', () => {
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: false,
         isSuccess: true,
       } as ReturnType<typeof useWaitForTransactionReceipt>)
@@ -180,7 +180,7 @@ describe('useBadgeHooks', () => {
     })
 
     it('returns canMint true when user can mint', () => {
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: [true, 'Ready to mint'] as unknown as undefined,
         isLoading: false,
       } as ReturnType<typeof useReadContract>)
@@ -191,7 +191,7 @@ describe('useBadgeHooks', () => {
     })
 
     it('returns reason when cannot mint', () => {
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: [false, 'Badge already owned'] as unknown as undefined,
         isLoading: false,
       } as ReturnType<typeof useReadContract>)
@@ -202,7 +202,7 @@ describe('useBadgeHooks', () => {
     })
 
     it('handles loading state', () => {
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: null,
         isLoading: true,
       } as unknown as ReturnType<typeof useReadContract>)

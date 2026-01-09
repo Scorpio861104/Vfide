@@ -132,9 +132,9 @@ export default function SocialPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-2xl p-8 md:p-12 text-center"
+                className="bg-linear-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-2xl p-8 md:p-12 text-center"
               >
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center">
                   <MessageCircle className="w-10 h-10 text-[#0A0A0F]" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-[#F5F3E8] mb-4">
@@ -469,7 +469,7 @@ export default function SocialPage() {
             className="mt-8 bg-[#1A1A2E] border border-[#00F0FF]/30 rounded-lg p-6"
           >
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#00F0FF]/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-[#00F0FF]/20 flex items-center justify-center shrink-0">
                 <Lock className="w-5 h-5 text-[#00F0FF]" />
               </div>
               <div className="flex-1">

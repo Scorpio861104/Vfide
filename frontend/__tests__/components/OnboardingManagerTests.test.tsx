@@ -2,13 +2,13 @@
  * Tests for OnboardingManager component
  * Controls when the onboarding tour is shown
  */
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, act } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import React from 'react'
 
 // Mock OnboardingTour
-vi.mock('@/components/onboarding/OnboardingTour', () => ({
+jest.mock('@/components/onboarding/OnboardingTour', () => ({
   OnboardingTour: ({ onComplete }: { onComplete: () => void }) => (
     <div data-testid="onboarding-tour">
       <button onClick={onComplete} data-testid="complete-tour">Complete Tour</button>
@@ -20,7 +20,7 @@ describe('OnboardingManager', () => {
   let windowWithTour: any
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     windowWithTour = window as any
     delete windowWithTour.startVFIDETour
   })

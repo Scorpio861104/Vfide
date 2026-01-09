@@ -1,19 +1,19 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useChainId: vi.fn(() => 84532),
-  useAccount: vi.fn(() => ({ address: '0x1234567890abcdef', isConnected: true })),
-  useBalance: vi.fn(() => ({ 
+jest.mock('wagmi', () => ({
+  useChainId: jest.fn(() => 84532),
+  useAccount: jest.fn(() => ({ address: '0x1234567890abcdef', isConnected: true })),
+  useBalance: jest.fn(() => ({ 
     data: { formatted: '1.5', symbol: 'ETH' },
     isLoading: false 
   })),
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Wallet: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'wallet-icon' }),
   ChevronDown: ({ className }: { className?: string }) => 
@@ -27,7 +27,7 @@ vi.mock('lucide-react', () => ({
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onClick, ...props }: React.PropsWithChildren<{ 
       className?: string; 
@@ -125,7 +125,7 @@ describe('WalletAddress', () => {
   })
 
   it('copies address to clipboard when copy clicked', async () => {
-    const mockClipboard = { writeText: vi.fn() }
+    const mockClipboard = { writeText: jest.fn() }
     Object.assign(navigator, { clipboard: mockClipboard })
     
     render(<WalletAddress address="0xTestAddress" />)
@@ -141,7 +141,7 @@ describe('WalletButton', () => {
   })
 
   it('calls onConnect when connect button clicked', () => {
-    const onConnect = vi.fn()
+    const onConnect = jest.fn()
     render(<WalletButton isConnected={false} onConnect={onConnect} />)
     fireEvent.click(screen.getByTestId('connect-button'))
     expect(onConnect).toHaveBeenCalled()
@@ -160,7 +160,7 @@ describe('WalletButton', () => {
   })
 
   it('calls onDisconnect when disconnect clicked', () => {
-    const onDisconnect = vi.fn()
+    const onDisconnect = jest.fn()
     render(
       <WalletButton 
         isConnected={true}

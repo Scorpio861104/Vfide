@@ -70,7 +70,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
                 <ul className="space-y-2">
                   {section.points.map((point, pointIdx) => (
                     <li key={pointIdx} className="flex items-start gap-2 text-[#A0A0A5]">
-                      <CheckCircle className="w-4 h-4 text-[#00FF88] mt-1 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-[#00FF88] mt-1 shrink-0" />
                       <span>{point}</span>
                     </li>
                   ))}
@@ -80,7 +80,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
           ))}
 
           {/* Key Takeaways */}
-          <div className="bg-gradient-to-br from-[#00F0FF]/10 to-[#00FF88]/10 rounded-xl p-6 border border-[#00F0FF]/30">
+          <div className="bg-linear-to-br from-[#00F0FF]/10 to-[#00FF88]/10 rounded-xl p-6 border border-[#00F0FF]/30">
             <h3 className="text-lg font-bold text-[#00F0FF] mb-4 flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
               Key Takeaways
@@ -99,7 +99,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
           <div className="flex justify-center pt-4">
             <button
               onClick={onClose}
-              className="px-8 py-3 bg-gradient-to-r from-[#00F0FF] to-[#00FF88] text-[#1A1A1D] font-bold rounded-xl hover:opacity-90 transition-opacity"
+              className="px-8 py-3 bg-linear-to-r from-[#00F0FF] to-[#00FF88] text-[#1A1A1D] font-bold rounded-xl hover:opacity-90 transition-opacity"
             >
               Complete Lesson
             </button>

@@ -14,12 +14,12 @@ interface DataExportProps {
   className?: string;
 }
 
-export const DataExport: React.FC<DataExportProps> = ({
+export function DataExport({
   data,
   filename = 'export',
   onExport,
   className = ''
-}) => {
+}: DataExportProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [options, setOptions] = useState<ExportOptions>({
     format: 'csv',

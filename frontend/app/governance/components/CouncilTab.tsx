@@ -37,7 +37,7 @@ export function CouncilTab({ councilMembers, terms, currentTerm, epochData, elec
 
   return (
     <section className="py-12">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="lg:w-2/3 space-y-6">
             <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">

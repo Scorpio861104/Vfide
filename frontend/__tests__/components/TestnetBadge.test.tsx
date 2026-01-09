@@ -1,28 +1,28 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useChainId: vi.fn(() => 84532),
-  useAccount: vi.fn(() => ({ isConnected: true })),
+jest.mock('wagmi', () => ({
+  useChainId: jest.fn(() => 84532),
+  useAccount: jest.fn(() => ({ isConnected: true })),
 }))
 
 // Mock wagmi/chains
-vi.mock('wagmi/chains', () => ({
+jest.mock('wagmi/chains', () => ({
   baseSepolia: { id: 84532 },
   polygonAmoy: { id: 80002 },
   zkSyncSepoliaTestnet: { id: 300 },
 }))
 
 // Mock testnet config
-vi.mock('@/lib/testnet', () => ({
+jest.mock('@/lib/testnet', () => ({
   IS_TESTNET: true,
   CURRENT_CHAIN_ID: 84532,
 }))
 
 // Mock next/link
-vi.mock('next/link', () => ({
+jest.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
     <a href={href} {...props}>{children}</a>
   ),
@@ -32,7 +32,7 @@ import { TestnetBadge, TestnetCornerBadge } from '@/components/ui/TestnetBadge'
 
 describe('TestnetBadge', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders testnet indicator on Base Sepolia', () => {
@@ -66,7 +66,7 @@ describe('TestnetBadge', () => {
 describe('TestnetBadge - Different Chains', () => {
   it('shows Polygon Amoy when on that chain', async () => {
     const { useChainId } = await import('wagmi')
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(80002)
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(80002)
     
     render(<TestnetBadge />)
     expect(screen.getByText(/Polygon Amoy/)).toBeInTheDocument()
@@ -74,7 +74,7 @@ describe('TestnetBadge - Different Chains', () => {
 
   it('shows zkSync Sepolia when on that chain', async () => {
     const { useChainId } = await import('wagmi')
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(300)
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(300)
     
     render(<TestnetBadge />)
     expect(screen.getByText(/zkSync Sepolia/)).toBeInTheDocument()
@@ -82,7 +82,7 @@ describe('TestnetBadge - Different Chains', () => {
 
   it('returns null when on non-testnet chain', async () => {
     const { useChainId } = await import('wagmi')
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(1) // Mainnet
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(1) // Mainnet
     
     const { container } = render(<TestnetBadge />)
     expect(container.firstChild).toBeNull()
@@ -91,10 +91,10 @@ describe('TestnetBadge - Different Chains', () => {
 
 describe('TestnetCornerBadge', () => {
   beforeEach(async () => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     const { useChainId, useAccount } = await import('wagmi')
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(84532)
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: true })
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(84532)
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
   })
 
   it('renders when connected on correct network', async () => {
@@ -111,7 +111,7 @@ describe('TestnetCornerBadge', () => {
 
   it('shows setup guide when not connected', async () => {
     const { useAccount } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: false })
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: false })
     
     const { container } = render(<TestnetCornerBadge />)
     expect(container.textContent).toMatch(/Setup Guide/)
@@ -119,7 +119,7 @@ describe('TestnetCornerBadge', () => {
 
   it('shows setup guide when on wrong network', async () => {
     const { useChainId } = await import('wagmi')
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(1) // Wrong chain
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(1) // Wrong chain
     
     const { container } = render(<TestnetCornerBadge />)
     expect(container.textContent).toMatch(/Setup Guide/)

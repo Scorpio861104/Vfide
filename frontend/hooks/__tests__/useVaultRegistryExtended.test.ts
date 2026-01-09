@@ -1,19 +1,19 @@
 // Extended tests for useVaultRegistry.ts - covering additional search and recovery functions
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi before importing hooks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useReadContract: vi.fn(),
-  useWriteContract: vi.fn(),
-  useWaitForTransactionReceipt: vi.fn(),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useReadContract: jest.fn(),
+  useWriteContract: jest.fn(),
+  useWaitForTransactionReceipt: jest.fn(),
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
-  keccak256: vi.fn((input: unknown) => '0x' + 'a'.repeat(64)),
-  toBytes: vi.fn((input: string) => new Uint8Array([...input].map(c => c.charCodeAt(0)))),
+jest.mock('viem', () => ({
+  keccak256: jest.fn((input: unknown) => '0x' + 'a'.repeat(64)),
+  toBytes: jest.fn((input: string) => new Uint8Array([...input].map(c => c.charCodeAt(0)))),
 }))
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
@@ -46,13 +46,13 @@ describe('useVaultRegistry - Extended Tests', () => {
   const mockTxHash = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
       isConnected: true,
     })
     ;(useWriteContract as Mock).mockReturnValue({
-      writeContractAsync: vi.fn().mockResolvedValue(mockTxHash),
+      writeContractAsync: jest.fn().mockResolvedValue(mockTxHash),
       data: undefined,
       isPending: false,
     })
@@ -69,7 +69,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: mockVaultAddress,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByRecoveryId('my-recovery-id'))
@@ -83,7 +83,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByRecoveryId(''))
@@ -99,7 +99,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: mockVaultAddress,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByEmail('test@example.com'))
@@ -112,7 +112,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByEmail(''))
@@ -128,7 +128,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: mockVaultAddress,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByUsername('johndoe'))
@@ -141,7 +141,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByUsername(''))
@@ -158,7 +158,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: mockVaults,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByGuardian(mockAddress))
@@ -172,7 +172,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByGuardian(undefined))
@@ -199,7 +199,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: mockVaultInfo,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useVaultInfo(mockVaultAddress))
@@ -212,7 +212,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useVaultInfo(undefined))
@@ -229,7 +229,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: mockResult,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByWalletAddress(mockAddress))
@@ -242,7 +242,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByWalletAddress(undefined))
@@ -259,7 +259,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: mockInfo,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByVaultAddress(mockVaultAddress))
@@ -272,7 +272,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useSearchByVaultAddress(undefined))
@@ -289,7 +289,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: mockMatches,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => 
@@ -304,7 +304,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => 
@@ -352,7 +352,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: [mockVaultAddress, mockVaultInfo],
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useVaultByIndex(5))
@@ -366,7 +366,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useVaultByIndex(undefined))
@@ -378,7 +378,7 @@ describe('useVaultRegistry - Extended Tests', () => {
   // ==================== useSetRecoveryId ====================
   describe('useSetRecoveryId', () => {
     it('should set recovery ID successfully', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: mockTxHash,
@@ -397,7 +397,7 @@ describe('useVaultRegistry - Extended Tests', () => {
 
     it('should track pending state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: true,
         error: null,
@@ -412,7 +412,7 @@ describe('useVaultRegistry - Extended Tests', () => {
   // ==================== useSetEmailRecovery ====================
   describe('useSetEmailRecovery', () => {
     it('should set email recovery successfully', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: mockTxHash,
@@ -433,7 +433,7 @@ describe('useVaultRegistry - Extended Tests', () => {
   // ==================== useSetUsername ====================
   describe('useSetUsername', () => {
     it('should set username successfully', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: mockTxHash,
@@ -508,7 +508,7 @@ describe('useVaultRegistry - Extended Tests', () => {
   // ==================== useInitiateClaim ====================
   describe('useInitiateClaim', () => {
     it('should initiate claim successfully', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: mockTxHash,
@@ -531,7 +531,7 @@ describe('useVaultRegistry - Extended Tests', () => {
 
     it('should track pending state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: true,
         error: null,
@@ -563,7 +563,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: mockClaim,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useGetClaim(BigInt(1)))
@@ -576,7 +576,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useGetClaim(undefined))
@@ -597,7 +597,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: [BigInt(1), mockClaim],
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useActiveClaimForVault(mockVaultAddress))
@@ -611,7 +611,7 @@ describe('useVaultRegistry - Extended Tests', () => {
         data: undefined,
         isLoading: false,
         error: null,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useActiveClaimForVault(mockVaultAddress))
@@ -624,7 +624,7 @@ describe('useVaultRegistry - Extended Tests', () => {
   // ==================== useGuardianVote ====================
   describe('useGuardianVote', () => {
     it('should cast guardian vote successfully', async () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: mockTxHash,
@@ -643,7 +643,7 @@ describe('useVaultRegistry - Extended Tests', () => {
 
     it('should track voting state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: true,
         error: null,
@@ -658,7 +658,7 @@ describe('useVaultRegistry - Extended Tests', () => {
   // ==================== useChallengeClaim ====================
   describe('useChallengeClaim', () => {
     it('should challenge claim successfully', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: mockTxHash,
@@ -677,7 +677,7 @@ describe('useVaultRegistry - Extended Tests', () => {
 
     it('should track challenging state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: true,
         error: null,

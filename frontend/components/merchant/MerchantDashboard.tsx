@@ -48,9 +48,9 @@ export function MerchantDashboard() {
     return (
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-2 border-purple-500/30 rounded-xl p-8">
+        <div className="bg-linear-to-br from-purple-900/20 to-blue-900/20 border-2 border-purple-500/30 rounded-xl p-8">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-linear-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
               <Store className="w-8 h-8 text-white" />
             </div>
             <div>
@@ -115,7 +115,7 @@ export function MerchantDashboard() {
               <button
                 onClick={() => registerMerchant(businessName, category)}
                 disabled={isRegistering || !businessName.trim()}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
+                className="w-full bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg transition-all"
               >
                 {isRegistering ? 'Registering...' : 'Register as Merchant'}
               </button>
@@ -157,7 +157,7 @@ export function MerchantDashboard() {
   return (
     <div className="space-y-6">
       {/* Status Header */}
-      <div className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-2 border-green-500/30 rounded-xl p-6">
+      <div className="bg-linear-to-br from-green-900/20 to-emerald-900/20 border-2 border-green-500/30 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">

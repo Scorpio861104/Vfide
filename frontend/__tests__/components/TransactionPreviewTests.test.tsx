@@ -2,13 +2,13 @@
  * TransactionPreview Tests
  * Tests for TransactionPreview and GasEstimate components (0% coverage)
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { TransactionPreview, GasEstimate } from '@/components/ui/TransactionPreview'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useGasPrice: vi.fn(() => ({
+jest.mock('wagmi', () => ({
+  useGasPrice: jest.fn(() => ({
     data: BigInt(1000000000), // 1 gwei
   })),
 }))

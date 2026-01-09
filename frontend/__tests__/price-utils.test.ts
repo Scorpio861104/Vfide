@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from '@jest/globals'
 import {
   PRESALE_PRICES,
   DEFAULT_VFIDE_PRICE,

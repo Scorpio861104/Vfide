@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onClick, ...props }: any) => (
       <div className={className} style={style} onClick={onClick} {...props}>{children}</div>
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
@@ -24,12 +24,12 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock QR code
-vi.mock('qrcode.react', () => ({
+jest.mock('qrcode.react', () => ({
   QRCodeSVG: ({ value }: any) => <div data-testid="qr-code">{value}</div>,
 }))
 
 // Mock vfide hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   useIsMerchant: () => ({
     isMerchant: true,
     businessName: 'Test Coffee Shop',

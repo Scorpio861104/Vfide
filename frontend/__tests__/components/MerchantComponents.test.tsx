@@ -3,11 +3,11 @@
  * Tests for merchant-related components
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Store: () => <span data-testid="store-icon" />,
   DollarSign: () => <span data-testid="dollar-icon" />,
   TrendingUp: () => <span data-testid="trending-up" />,
@@ -175,7 +175,7 @@ describe('PaymentInterface Pattern', () => {
   })
 
   it('calls onAmountChange when input changes', () => {
-    const onAmountChange = vi.fn()
+    const onAmountChange = jest.fn()
     render(
       <PaymentInterface 
         amount="0" 
@@ -322,7 +322,7 @@ describe('PaymentQR Pattern', () => {
   })
 
   it('calls onCopy when copy button clicked', () => {
-    const onCopy = vi.fn()
+    const onCopy = jest.fn()
     render(
       <PaymentQR 
         merchantAddress="0x1234567890123456789012345678901234567890"
@@ -389,7 +389,7 @@ describe('TransactionList Pattern', () => {
   })
 
   it('calls onTransactionClick when transaction clicked', () => {
-    const onTransactionClick = vi.fn()
+    const onTransactionClick = jest.fn()
     const transactions = [
       { id: '1', customer: '0x1234...5678', amount: '100 VFIDE', timestamp: '5 min ago', status: 'completed' as const },
     ]

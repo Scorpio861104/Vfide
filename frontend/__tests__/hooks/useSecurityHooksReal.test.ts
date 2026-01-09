@@ -3,16 +3,16 @@
  * Tests for actual security hook implementations to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook } from '@testing-library/react'
 
 // Mock wagmi
-const mockUseAccount = vi.fn()
-const mockUseReadContract = vi.fn()
-const mockUseWriteContract = vi.fn()
-const mockUseWaitForTransactionReceipt = vi.fn()
+const mockUseAccount = jest.fn()
+const mockUseReadContract = jest.fn()
+const mockUseWriteContract = jest.fn()
+const mockUseWaitForTransactionReceipt = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
@@ -20,7 +20,7 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock contracts
-vi.mock('../../lib/contracts', () => ({
+jest.mock('../../lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     SecurityHub: '0x1234567890123456789012345678901234567890',
     PanicGuard: '0x0987654321098765432109876543210987654321',
@@ -32,7 +32,7 @@ vi.mock('../../lib/contracts', () => ({
 }))
 
 // Mock ABIs
-vi.mock('../../lib/abis', () => ({
+jest.mock('../../lib/abis', () => ({
   SecurityHubABI: [],
   PanicGuardABI: [],
   GuardianRegistryABI: [],
@@ -50,14 +50,14 @@ import {
 
 describe('useIsVaultLocked', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('returns true when vault is locked', () => {
     mockUseReadContract.mockReturnValue({
       data: true,
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
@@ -69,7 +69,7 @@ describe('useIsVaultLocked', () => {
     mockUseReadContract.mockReturnValue({
       data: false,
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
@@ -81,7 +81,7 @@ describe('useIsVaultLocked', () => {
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
@@ -93,7 +93,7 @@ describe('useIsVaultLocked', () => {
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: true,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
@@ -102,7 +102,7 @@ describe('useIsVaultLocked', () => {
   })
 
   it('provides refetch function', () => {
-    const mockRefetch = vi.fn()
+    const mockRefetch = jest.fn()
     mockUseReadContract.mockReturnValue({
       data: false,
       isLoading: false,
@@ -117,7 +117,7 @@ describe('useIsVaultLocked', () => {
 
 describe('useQuarantineStatus', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('returns quarantine timestamp when quarantined', () => {
@@ -168,7 +168,7 @@ describe('useQuarantineStatus', () => {
 
 describe('useCanSelfPanic', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0x1234' })
   })
 

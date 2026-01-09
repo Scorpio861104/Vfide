@@ -252,7 +252,7 @@ interface StatCardProps {
   color?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = 'blue' }) => {
+function StatCard({ label, value, icon, color = 'blue' }: StatCardProps) {
   const colorClasses: Record<string, string> = {
     blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
     green: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -283,7 +283,7 @@ interface BadgeCardProps {
   badge: Badge;
 }
 
-const BadgeCard: React.FC<BadgeCardProps> = ({ badge }) => {
+function BadgeCard({ badge }: BadgeCardProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="text-center">
@@ -305,7 +305,7 @@ interface ActivityItemProps {
   activity: RecentActivity;
 }
 
-const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
+function ActivityItem({ activity }: ActivityItemProps) {
   const getActivityIcon = (type: string): string => {
     const icons: Record<string, string> = {
       vote: '🗳️',
@@ -330,7 +330,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
 
 // ==================== MAIN COMPONENT ====================
 
-const UserProfile: React.FC = () => {
+export default function UserProfile() {
   // State
   const [profile, setProfile] = useState<UserProfile>(generateMockProfile());
   const [stats] = useState<UserStats>(generateMockStats());
@@ -442,7 +442,7 @@ const UserProfile: React.FC = () => {
                 onUploadComplete={handleAvatarUpload}
               />
             ) : (
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-6xl">
+              <div className="w-32 h-32 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-6xl">
                 {profile.avatar ? (
                   typeof profile.avatar === 'string' && profile.avatar.startsWith('http') ? (
                     <img src={profile.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
@@ -887,6 +887,4 @@ const UserProfile: React.FC = () => {
       </div>
     </ResponsiveContainer>
   );
-};
-
-export default UserProfile;
+}

@@ -3,11 +3,11 @@
  * Tests for security panel and emergency control components
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Shield: () => <span data-testid="shield-icon" />,
   ShieldAlert: () => <span data-testid="shield-alert" />,
   ShieldCheck: () => <span data-testid="shield-check" />,
@@ -276,7 +276,7 @@ describe('EmergencyPanel Pattern', () => {
   })
 
   it('calls onActivateEmergency when activate clicked', () => {
-    const onActivateEmergency = vi.fn()
+    const onActivateEmergency = jest.fn()
     render(
       <EmergencyPanel 
         isEmergencyActive={false}
@@ -290,7 +290,7 @@ describe('EmergencyPanel Pattern', () => {
   })
 
   it('calls onDeactivateEmergency when deactivate clicked', () => {
-    const onDeactivateEmergency = vi.fn()
+    const onDeactivateEmergency = jest.fn()
     render(
       <EmergencyPanel 
         isEmergencyActive={true}
@@ -414,7 +414,7 @@ describe('GuardianManager Pattern', () => {
   })
 
   it('calls onAddGuardian when add clicked', () => {
-    const onAddGuardian = vi.fn()
+    const onAddGuardian = jest.fn()
     render(
       <GuardianManager 
         guardians={mockGuardians}
@@ -427,7 +427,7 @@ describe('GuardianManager Pattern', () => {
   })
 
   it('calls onRemoveGuardian when remove clicked', () => {
-    const onRemoveGuardian = vi.fn()
+    const onRemoveGuardian = jest.fn()
     render(
       <GuardianManager 
         guardians={mockGuardians}

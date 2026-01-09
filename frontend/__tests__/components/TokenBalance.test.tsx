@@ -1,12 +1,12 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({ address: '0x1234567890123456789012345678901234567890', isConnected: true })),
-  useReadContract: vi.fn(() => ({ data: 1000000000000000000n, isLoading: false })),
-  useBalance: vi.fn(() => ({ data: { formatted: '1.5' }, isLoading: false })),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890', isConnected: true })),
+  useReadContract: jest.fn(() => ({ data: 1000000000000000000n, isLoading: false })),
+  useBalance: jest.fn(() => ({ data: { formatted: '1.5' }, isLoading: false })),
 }))
 
 import { TokenBalance, NavbarBalance } from '@/components/ui/TokenBalance'
@@ -14,7 +14,7 @@ import { TokenBalance, NavbarBalance } from '@/components/ui/TokenBalance'
 describe('TokenBalance', () => {
   it('renders nothing when not connected', async () => {
     const { useAccount } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ 
       address: undefined, 
       isConnected: false 
     })
@@ -25,15 +25,15 @@ describe('TokenBalance', () => {
 
   it('renders ETH and token balances when connected', async () => {
     const { useAccount, useBalance, useReadContract } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ 
       address: '0x1234567890123456789012345678901234567890', 
       isConnected: true 
     })
-    ;(useBalance as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useBalance as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: { formatted: '1.5' }, 
       isLoading: false 
     })
-    ;(useReadContract as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useReadContract as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: 1000000000000000000n, 
       isLoading: false 
     })
@@ -45,15 +45,15 @@ describe('TokenBalance', () => {
 
   it('shows loading skeleton when loading', async () => {
     const { useAccount, useBalance, useReadContract } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ 
       address: '0x1234', 
       isConnected: true 
     })
-    ;(useBalance as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useBalance as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: undefined, 
       isLoading: true 
     })
-    ;(useReadContract as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useReadContract as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: undefined, 
       isLoading: true 
     })
@@ -64,15 +64,15 @@ describe('TokenBalance', () => {
 
   it('hides native balance when showNative is false', async () => {
     const { useAccount, useBalance, useReadContract } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ 
       address: '0x1234', 
       isConnected: true 
     })
-    ;(useBalance as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useBalance as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: { formatted: '1.5' }, 
       isLoading: false 
     })
-    ;(useReadContract as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useReadContract as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: 1000000000000000000n, 
       isLoading: false 
     })
@@ -83,15 +83,15 @@ describe('TokenBalance', () => {
 
   it('applies custom className', async () => {
     const { useAccount, useBalance, useReadContract } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ 
       address: '0x1234', 
       isConnected: true 
     })
-    ;(useBalance as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useBalance as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: { formatted: '0' }, 
       isLoading: false 
     })
-    ;(useReadContract as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useReadContract as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: 0n, 
       isLoading: false 
     })
@@ -104,7 +104,7 @@ describe('TokenBalance', () => {
 describe('NavbarBalance', () => {
   it('renders nothing when not connected', async () => {
     const { useAccount } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ 
       address: undefined, 
       isConnected: false 
     })
@@ -115,15 +115,15 @@ describe('NavbarBalance', () => {
 
   it('renders TokenBalance when connected', async () => {
     const { useAccount, useBalance, useReadContract } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ 
       address: '0x1234', 
       isConnected: true 
     })
-    ;(useBalance as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useBalance as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: { formatted: '0.1' }, 
       isLoading: false 
     })
-    ;(useReadContract as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useReadContract as ReturnType<typeof jest.fn>).mockReturnValue({ 
       data: 0n, 
       isLoading: false 
     })

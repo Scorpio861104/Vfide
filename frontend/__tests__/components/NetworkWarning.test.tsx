@@ -1,22 +1,22 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
 // Mock hooks
-const mockSwitchChain = vi.fn()
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({ isConnected: false })),
-  useChainId: vi.fn(() => 84532),
-  useSwitchChain: vi.fn(() => ({ switchChain: mockSwitchChain, isPending: false })),
+const mockSwitchChain = jest.fn()
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({ isConnected: false })),
+  useChainId: jest.fn(() => 84532),
+  useSwitchChain: jest.fn(() => ({ switchChain: mockSwitchChain, isPending: false })),
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   X: () => React.createElement('svg', { 'data-testid': 'close-icon' }),
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: React.PropsWithChildren<{ className?: string }>) =>
       React.createElement('div', { className, ...props }, children),
@@ -25,7 +25,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock testnet config
-vi.mock('@/lib/testnet', () => ({
+jest.mock('@/lib/testnet', () => ({
   IS_TESTNET: true,
   CURRENT_CHAIN_ID: 84532,
 }))
@@ -34,13 +34,13 @@ import { NetworkWarning } from '@/components/ui/NetworkWarning'
 
 describe('NetworkWarning', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     localStorage.clear()
   })
 
   it('does not show when not connected', async () => {
     const { useAccount } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: false })
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: false })
     
     render(<NetworkWarning />)
     
@@ -49,8 +49,8 @@ describe('NetworkWarning', () => {
 
   it('does not show when on correct chain', async () => {
     const { useAccount, useChainId } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: true })
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(84532)
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(84532)
     
     render(<NetworkWarning />)
     
@@ -59,8 +59,8 @@ describe('NetworkWarning', () => {
 
   it('shows warning when on wrong chain', async () => {
     const { useAccount, useChainId } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: true })
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(1) // Wrong chain
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(1) // Wrong chain
 
     const { container } = render(<NetworkWarning />)
     
@@ -70,9 +70,9 @@ describe('NetworkWarning', () => {
 
   it('handles switch chain click', async () => {
     const { useAccount, useChainId, useSwitchChain } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: true })
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(1) // Wrong chain
-    ;(useSwitchChain as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(1) // Wrong chain
+    ;(useSwitchChain as ReturnType<typeof jest.fn>).mockReturnValue({ 
       switchChain: mockSwitchChain, 
       isPending: false 
     })
@@ -90,8 +90,8 @@ describe('NetworkWarning', () => {
 
   it('handles dismiss click', async () => {
     const { useAccount, useChainId } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: true })
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(1) // Wrong chain
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(1) // Wrong chain
 
     const { container } = render(<NetworkWarning />)
     
@@ -105,8 +105,8 @@ describe('NetworkWarning', () => {
 
   it('stores dismissal in localStorage', async () => {
     const { useAccount, useChainId } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: true })
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(1) // Wrong chain
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(1) // Wrong chain
 
     render(<NetworkWarning />)
     
@@ -116,8 +116,8 @@ describe('NetworkWarning', () => {
 
   it('clears dismissal on correct chain', async () => {
     const { useAccount, useChainId } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: true })
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(84532) // Correct chain
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(84532) // Correct chain
 
     localStorage.setItem('vfide-network-warning-dismissed', String(Date.now() + 100000))
     
@@ -131,9 +131,9 @@ describe('NetworkWarning', () => {
 
   it('shows pending state during chain switch', async () => {
     const { useAccount, useChainId, useSwitchChain } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ isConnected: true })
-    ;(useChainId as ReturnType<typeof vi.fn>).mockReturnValue(1) // Wrong chain
-    ;(useSwitchChain as ReturnType<typeof vi.fn>).mockReturnValue({ 
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(1) // Wrong chain
+    ;(useSwitchChain as ReturnType<typeof jest.fn>).mockReturnValue({ 
       switchChain: mockSwitchChain, 
       isPending: true 
     })

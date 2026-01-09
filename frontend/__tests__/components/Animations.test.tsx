@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion completely to avoid animation issues
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onMouseMove, onMouseLeave, ...props }: any) => (
       <div className={className} style={style} onMouseMove={onMouseMove} onMouseLeave={onMouseLeave} {...props}>{children}</div>

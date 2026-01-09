@@ -2,12 +2,12 @@
  * NotificationCenter Tests
  * Tests for NotificationCenter component (0% coverage)
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { NotificationCenter } from '@/components/ui/NotificationCenter'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.ComponentProps<'button'>) => <button {...props}>{children}</button>,
@@ -17,7 +17,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock next/link
-vi.mock('next/link', () => ({
+jest.mock('next/link', () => ({
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
     <a href={href} {...props}>{children}</a>
   ),

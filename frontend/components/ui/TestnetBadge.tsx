@@ -27,7 +27,7 @@ export function TestnetBadge() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 text-black text-center py-1 text-sm font-bold">
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-linear-to-r from-orange-500 via-yellow-500 to-orange-500 text-black text-center py-1 text-sm font-bold">
       ⚠️ TESTNET MODE - Using {getNetworkName()} Test Network - Tokens have no real value ⚠️
     </div>
   );

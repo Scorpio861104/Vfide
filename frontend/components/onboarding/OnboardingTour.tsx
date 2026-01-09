@@ -161,11 +161,11 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
             transition={{ type: "spring", duration: 0.5 }}
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[101] w-[calc(100%-2rem)] max-w-lg sm:max-w-xl md:max-w-2xl"
           >
-            <div className="bg-gradient-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#00F0FF] rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-linear-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#00F0FF] rounded-2xl shadow-2xl overflow-hidden">
               {/* Progress Bar */}
               <div className="h-1 bg-[#3A3A3F]">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-[#00F0FF] to-[#0080FF]"
+                  className="h-full bg-linear-to-r from-[#00F0FF] to-[#0080FF]"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.3 }}
@@ -233,14 +233,14 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
                 {currentStep.id === "vault-security" && (
                   <div className="mt-6 space-y-3">
                     <div className="flex items-start gap-3 p-3 bg-[#1A1A1D] border border-[#50C878] rounded-lg">
-                      <svg className="w-6 h-6 text-[#50C878] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                      <svg className="w-6 h-6 text-[#50C878] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                       <div>
                         <div className="font-bold text-[#50C878] text-sm">Guardian Recovery</div>
                         <div className="text-xs text-[#A0A0A5]">Trusted friends/family help recover lost wallets</div>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 p-3 bg-[#1A1A1D] border border-[#FFD700] rounded-lg">
-                      <svg className="w-6 h-6 text-[#FFD700] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                      <svg className="w-6 h-6 text-[#FFD700] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
                       <div>
                         <div className="font-bold text-[#FFD700] text-sm">Next of Kin</div>
                         <div className="text-xs text-[#A0A0A5]">Designate an heir to inherit your vault</div>
@@ -280,7 +280,7 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
 
                 <button
                   onClick={handleNext}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:scale-105 transition-transform"
+                  className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:scale-105 transition-transform"
                 >
                   {isLastStep ? (
                     <>

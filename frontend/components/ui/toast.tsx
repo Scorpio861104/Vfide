@@ -76,9 +76,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 ${toast.type === 'info' ? 'bg-[#00F0FF]/10 border-[#00F0FF]' : ''}
               `}
             >
-              {toast.type === 'success' && <CheckCircle2 className="text-[#50C878] flex-shrink-0" size={20} />}
-              {toast.type === 'error' && <XCircle className="text-[#C41E3A] flex-shrink-0" size={20} />}
-              {toast.type === 'info' && <AlertCircle className="text-[#00F0FF] flex-shrink-0" size={20} />}
+              {toast.type === 'success' && <CheckCircle2 className="text-[#50C878] shrink-0" size={20} />}
+              {toast.type === 'error' && <XCircle className="text-[#C41E3A] shrink-0" size={20} />}
+              {toast.type === 'info' && <AlertCircle className="text-[#00F0FF] shrink-0" size={20} />}
               
               <div className="flex-1 text-[#F5F3E8] text-sm">{toast.message}</div>
               

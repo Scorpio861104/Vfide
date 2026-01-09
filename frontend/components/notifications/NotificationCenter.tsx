@@ -356,7 +356,7 @@ function NotificationItem({
     >
       <div className="flex items-start gap-4">
         {/* Icon and Priority Indicator */}
-        <div className="relative flex-shrink-0">
+        <div className="relative shrink-0">
           <span className="text-2xl md:text-3xl">{notification.icon}</span>
           <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${getPriorityColor(notification.priority)}`} />
         </div>
@@ -368,7 +368,7 @@ function NotificationItem({
               {notification.title}
             </h3>
             {!isRead && (
-              <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0 ml-2" />
+              <div className="w-3 h-3 rounded-full bg-blue-500 shrink-0 ml-2" />
             )}
           </div>
 
@@ -388,7 +388,7 @@ function NotificationItem({
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-2 flex-shrink-0">
+        <div className="flex flex-col gap-2 shrink-0">
           {!isRead && (
             <button
               onClick={(e) => {
@@ -434,7 +434,7 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, color }: StatCardProps) {
   return (
-    <div className={`rounded-lg p-4 md:p-6 bg-gradient-to-br ${color} text-white shadow-lg`}>
+    <div className={`rounded-lg p-4 md:p-6 bg-linear-to-br ${color} text-white shadow-lg`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs md:text-sm font-medium opacity-90 mb-1 md:mb-2">
@@ -741,7 +741,7 @@ export default function NotificationCenter() {
                 key={notification.id}
                 className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
               >
-                <span className="text-2xl flex-shrink-0">{notification.icon}</span>
+                <span className="text-2xl shrink-0">{notification.icon}</span>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900 dark:text-white truncate">
                     {notification.title}

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 
 describe('contracts', () => {

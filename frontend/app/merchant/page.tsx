@@ -1,22 +1,22 @@
 "use client";
 
-import { motion } from 'framer-motion';
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
+import { GlobalNav } from '@/components/layout/GlobalNav';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
-import { 
-  Store, 
-  CreditCard, 
-  QrCode, 
-  Zap, 
-  Shield, 
-  RefreshCw, 
-  DollarSign,
-  Check,
-  Sparkles,
-  ArrowRight
+import { motion } from 'framer-motion';
+import {
+    ArrowRight,
+    Check,
+    CreditCard,
+    DollarSign,
+    QrCode,
+    RefreshCw,
+    Shield,
+    Sparkles,
+    Store,
+    Zap
 } from 'lucide-react';
 
 // Animation variants
@@ -74,13 +74,13 @@ function FeatureCard({
     <motion.div
       variants={scaleVariants}
       whileHover={{ y: -5, scale: 1.02 }}
-      className={`group relative p-6 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} backdrop-blur-xl transition-all duration-300 hover:shadow-xl ${c.glow}`}
+      className={`group relative p-6 rounded-2xl bg-linear-to-br ${c.bg} border ${c.border} backdrop-blur-xl transition-all duration-300 hover:shadow-xl ${c.glow}`}
     >
       {/* Glow effect */}
-      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${c.bg} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
+      <div className={`absolute inset-0 rounded-2xl bg-linear-to-br ${c.bg} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
       
       <div className="relative z-10 text-center">
-        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} flex items-center justify-center`}>
+        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-linear-to-br ${c.bg} border ${c.border} flex items-center justify-center`}>
           <Icon className={`w-8 h-8 ${c.text}`} />
         </div>
         <h3 className={`font-bold text-lg mb-2 ${c.text}`}>{title}</h3>
@@ -111,16 +111,16 @@ function ComparisonRow({
       variants={itemVariants}
       className={`${!isLast ? 'border-b border-white/5' : ''} group hover:bg-white/[0.02] transition-colors`}
     >
-      <td className="py-4 px-4 text-gray-300 font-medium">{feature}</td>
-      <td className="py-4 px-4 text-center">
-        <span className="inline-flex items-center gap-1.5 text-emerald-400 font-bold">
+      <td className="py-3 sm:py-4 px-2 sm:px-4 text-gray-300 font-medium text-sm">{feature}</td>
+      <td className="py-3 sm:py-4 px-2 sm:px-4 text-center">
+        <span className="inline-flex items-center gap-1.5 text-emerald-400 font-bold text-sm">
           {vfide === 'Yes' ? <Check className="w-4 h-4" /> : null}
           {vfide}
         </span>
       </td>
-      <td className="py-4 px-4 text-center text-gray-500">{stripe}</td>
-      <td className="py-4 px-4 text-center text-gray-500">{square}</td>
-      <td className="py-4 px-4 text-center text-gray-500">{paypal}</td>
+      <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-500 text-sm">{stripe}</td>
+      <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-500 text-sm">{square}</td>
+      <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-500 text-sm">{paypal}</td>
     </motion.tr>
   );
 }
@@ -133,7 +133,7 @@ function Step({ number, title, description }: { number: number; title: string; d
       whileHover={{ x: 5 }}
       className="flex gap-4 items-start group"
     >
-      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+      <div className="shrink-0 w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
         {number}
       </div>
       <div>
@@ -170,13 +170,13 @@ export default function MerchantPage() {
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="inline-flex items-center justify-center w-24 h-24 mb-6 rounded-3xl bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 shadow-2xl shadow-purple-500/30"
+              className="inline-flex items-center justify-center w-24 h-24 mb-6 rounded-3xl bg-linear-to-br from-purple-500 via-blue-500 to-cyan-500 shadow-2xl shadow-purple-500/30"
             >
               <Store className="w-12 h-12 text-white" />
             </motion.div>
 
-            <h1 className="text-5xl md:text-6xl font-black mb-6">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-6">
+              <span className="bg-clip-text text-transparent bg-linear-to-r from-purple-400 via-blue-400 to-cyan-400">
                 Merchant Portal
               </span>
             </h1>
@@ -212,7 +212,7 @@ export default function MerchantPage() {
             {/* Merchant Dashboard Section */}
             <motion.div variants={itemVariants}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20">
+                <div className="p-2 rounded-xl bg-linear-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20">
                   <Store className="w-5 h-5 text-purple-400" />
                 </div>
                 <h2 className="text-xl font-bold text-white">Merchant Dashboard</h2>
@@ -223,7 +223,7 @@ export default function MerchantPage() {
             {/* Payment Interface Section */}
             <motion.div variants={itemVariants}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20">
+                <div className="p-2 rounded-xl bg-linear-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20">
                   <CreditCard className="w-5 h-5 text-blue-400" />
                 </div>
                 <h2 className="text-xl font-bold text-white">Make Payment</h2>
@@ -235,7 +235,7 @@ export default function MerchantPage() {
           {/* QR Code Section */}
           <motion.div variants={itemVariants} className="mb-16">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
+              <div className="p-2 rounded-xl bg-linear-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
                 <QrCode className="w-5 h-5 text-cyan-400" />
               </div>
               <h2 className="text-xl font-bold text-white">Generate Payment QR Code</h2>
@@ -247,7 +247,7 @@ export default function MerchantPage() {
           <motion.section variants={containerVariants} className="mb-16">
             <motion.div variants={itemVariants} className="text-center mb-10">
               <h2 className="text-3xl font-bold mb-4">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-purple-400 to-blue-400">
                   Why Choose VFIDE?
                 </span>
               </h2>
@@ -291,26 +291,26 @@ export default function MerchantPage() {
           >
             <motion.div variants={itemVariants} className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-emerald-400 to-cyan-400">
                   vs Traditional Processors
                 </span>
               </h2>
               <p className="text-gray-400">See how VFIDE compares to traditional payment solutions</p>
             </motion.div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <table className="w-full min-w-[600px]">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-4 px-4 text-gray-400 font-medium">Feature</th>
-                    <th className="text-center py-4 px-4">
-                      <span className="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                    <th className="text-left py-4 px-2 sm:px-4 text-gray-400 font-medium text-sm">Feature</th>
+                    <th className="text-center py-4 px-2 sm:px-4">
+                      <span className="px-2 sm:px-3 py-1 rounded-full bg-linear-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-bold border border-emerald-500/30 text-xs sm:text-sm">
                         VFIDE
                       </span>
                     </th>
-                    <th className="text-center py-4 px-4 text-gray-500 font-medium">Stripe</th>
-                    <th className="text-center py-4 px-4 text-gray-500 font-medium">Square</th>
-                    <th className="text-center py-4 px-4 text-gray-500 font-medium">PayPal</th>
+                    <th className="text-center py-4 px-2 sm:px-4 text-gray-500 font-medium text-sm">Stripe</th>
+                    <th className="text-center py-4 px-2 sm:px-4 text-gray-500 font-medium text-sm">Square</th>
+                    <th className="text-center py-4 px-2 sm:px-4 text-gray-500 font-medium text-sm">PayPal</th>
                   </tr>
                 </thead>
                 <motion.tbody variants={containerVariants}>
@@ -331,10 +331,10 @@ export default function MerchantPage() {
           {/* Getting Started */}
           <motion.section
             variants={containerVariants}
-            className="p-8 rounded-3xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl"
+            className="p-8 rounded-3xl bg-linear-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl"
           >
             <motion.div variants={itemVariants} className="flex items-center gap-3 mb-8">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
+              <div className="p-2 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-white">Getting Started</h2>

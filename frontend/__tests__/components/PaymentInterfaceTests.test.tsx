@@ -2,12 +2,12 @@
  * PaymentInterface Tests
  * Tests for PaymentInterface component (0% coverage)
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { PaymentInterface } from '@/components/merchant/PaymentInterface'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.ComponentProps<'button'>) => <button {...props}>{children}</button>,
@@ -15,16 +15,16 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({
     address: '0x1234567890123456789012345678901234567890',
   }),
 }))
 
 // Mock vfide-hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   usePayMerchant: () => ({
-    payMerchant: vi.fn(),
+    payMerchant: jest.fn(),
     isPaying: false,
     isSuccess: false,
     error: null,
@@ -48,7 +48,7 @@ vi.mock('@/lib/vfide-hooks', () => ({
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     VFIDEToken: '0xTokenAddress',
   },
@@ -56,7 +56,7 @@ vi.mock('@/lib/contracts', () => ({
 
 describe('PaymentInterface', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders payment header', () => {

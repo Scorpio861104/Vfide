@@ -105,7 +105,7 @@ export default function SanctumPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,107,157,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
@@ -116,7 +116,7 @@ export default function SanctumPage() {
         animate={{ opacity: 1 }}
         className="min-h-screen pt-24 pb-16"
       >
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4">
           {/* Header */}
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
@@ -126,13 +126,13 @@ export default function SanctumPage() {
             <motion.div 
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500/20 to-rose-500/20 border border-pink-500/30 rounded-full mb-4"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-pink-500/20 to-rose-500/20 border border-pink-500/30 rounded-full mb-4"
             >
               <Heart className="w-4 h-4 text-pink-400" />
               <span className="text-pink-400 text-sm font-medium">Sanctum Charity Vault</span>
             </motion.div>
             <h1 className="text-4xl md:text-5xl font-black mb-4">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-rose-400 to-red-400">
+              <span className="bg-clip-text text-transparent bg-linear-to-r from-pink-400 via-rose-400 to-red-400">
                 The Sanctum
               </span>
             </h1>
@@ -158,7 +158,7 @@ export default function SanctumPage() {
               <motion.div 
                 key={idx} 
                 whileHover={{ scale: 1.02, y: -2 }}
-                className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
+                className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
               >
                 <stat.icon className={`w-6 h-6 mx-auto mb-2 ${stat.text}`} />
                 <div className="text-2xl font-bold text-white">{stat.value}</div>
@@ -191,7 +191,7 @@ export default function SanctumPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
                     isActive
-                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25'
+                      ? 'bg-linear-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25'
                       : 'bg-white/5 text-gray-400 hover:bg-pink-500/10 hover:text-pink-400'
                   }`}
                 >
@@ -231,7 +231,7 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -244,7 +244,7 @@ function OverviewTab() {
       {/* How It Works */}
       <GlassCard className="p-8">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-pink-500/5">
+          <div className="p-2 rounded-xl bg-linear-to-br from-pink-500/20 to-pink-500/5">
             <Sparkles className="w-5 h-5 text-pink-400" />
           </div>
           How The Sanctum Works
@@ -305,7 +305,7 @@ function OverviewTab() {
       </GlassCard>
 
       {/* Current Balance */}
-      <div className="lg:col-span-2 bg-gradient-to-r from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-2xl p-8">
+      <div className="lg:col-span-2 bg-linear-to-r from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-2xl p-8">
         <div className="text-center">
           <div className="text-gray-400 mb-2">Current Sanctum Balance</div>
           <div className="text-5xl font-bold text-pink-400 mb-4">45,230 VFIDE</div>
@@ -501,7 +501,7 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
 
           <button
             disabled={!amount || safeParseFloat(amount, 0) <= 0}
-            className="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 disabled:from-gray-600 disabled:to-gray-600 text-white font-bold rounded-lg transition-all"
+            className="w-full py-4 bg-linear-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 disabled:from-gray-600 disabled:to-gray-600 text-white font-bold rounded-lg transition-all"
           >
             Donate {amount ? `${safeParseFloat(amount, 0).toLocaleString()} VFIDE` : ''}
           </button>

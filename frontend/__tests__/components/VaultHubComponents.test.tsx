@@ -3,11 +3,11 @@
  * Tests for vault hub and vault management components
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Vault: () => <span data-testid="vault-icon" />,
   Lock: () => <span data-testid="lock-icon" />,
   Unlock: () => <span data-testid="unlock-icon" />,
@@ -117,21 +117,21 @@ describe('VaultDashboard Pattern', () => {
   })
 
   it('calls onDeposit when deposit clicked', () => {
-    const onDeposit = vi.fn()
+    const onDeposit = jest.fn()
     render(<VaultDashboard vault={mockVault} onDeposit={onDeposit} onWithdraw={() => {}} onSettings={() => {}} />)
     fireEvent.click(screen.getByTestId('deposit-button'))
     expect(onDeposit).toHaveBeenCalled()
   })
 
   it('calls onWithdraw when withdraw clicked', () => {
-    const onWithdraw = vi.fn()
+    const onWithdraw = jest.fn()
     render(<VaultDashboard vault={mockVault} onDeposit={() => {}} onWithdraw={onWithdraw} onSettings={() => {}} />)
     fireEvent.click(screen.getByTestId('withdraw-button'))
     expect(onWithdraw).toHaveBeenCalled()
   })
 
   it('calls onSettings when settings clicked', () => {
-    const onSettings = vi.fn()
+    const onSettings = jest.fn()
     render(<VaultDashboard vault={mockVault} onDeposit={() => {}} onWithdraw={() => {}} onSettings={onSettings} />)
     fireEvent.click(screen.getByTestId('settings-button'))
     expect(onSettings).toHaveBeenCalled()
@@ -296,7 +296,7 @@ describe('VaultTransactionHistory Pattern', () => {
   })
 
   it('calls onLoadMore when load more clicked', () => {
-    const onLoadMore = vi.fn()
+    const onLoadMore = jest.fn()
     render(
       <VaultTransactionHistory
         transactions={mockTransactions}
@@ -394,7 +394,7 @@ describe('VaultSettings Pattern', () => {
   })
 
   it('calls onSave when save clicked', () => {
-    const onSave = vi.fn()
+    const onSave = jest.fn()
     render(<VaultSettings config={mockConfig} onSave={onSave} isSaving={false} />)
     fireEvent.click(screen.getByTestId('save-button'))
     expect(onSave).toHaveBeenCalledWith(mockConfig)
@@ -495,7 +495,7 @@ describe('VaultLockStatus Pattern', () => {
   })
 
   it('calls onUnlock when unlock clicked', () => {
-    const onUnlock = vi.fn()
+    const onUnlock = jest.fn()
     render(
       <VaultLockStatus
         isLocked={true}

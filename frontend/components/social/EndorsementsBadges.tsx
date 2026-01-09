@@ -191,7 +191,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                   >
                     <div className="flex items-start gap-3">
                       <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-lg shrink-0"
                         style={{ backgroundColor: `${color}20` }}
                       >
                         {getCategoryIcon(endorsement.category)}
@@ -293,10 +293,10 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-gradient-to-r from-[#50C878]/20 to-[#00F0FF]/20 border border-[#50C878]/30 rounded-xl"
+          className="p-4 bg-linear-to-r from-[#50C878]/20 to-[#00F0FF]/20 border border-[#50C878]/30 rounded-xl"
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#50C878] to-[#00F0FF] flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#50C878] to-[#00F0FF] flex items-center justify-center">
               <Shield className="w-6 h-6 text-[#0A0A0F]" />
             </div>
             <div>

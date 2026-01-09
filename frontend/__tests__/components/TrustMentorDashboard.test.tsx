@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: any) => (
       <div className={className} style={style}>{children}</div>
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
@@ -24,14 +24,14 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock vfide-hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   useIsMentor: () => ({ isMentor: true }),
   useMentorInfo: () => ({ menteeCount: 5, mentees: [] }),
   useProofScore: () => ({ score: 8500 }),
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Star: () => <span>StarIcon</span>,
   Gem: () => <span>GemIcon</span>,
   Trophy: () => <span>TrophyIcon</span>,
@@ -47,15 +47,15 @@ vi.mock('lucide-react', () => ({
 }))
 
 // Mock child components
-vi.mock('@/components/trust/MentorBadge', () => ({
+jest.mock('@/components/trust/MentorBadge', () => ({
   MentorBadge: () => <div data-testid="mentor-badge">Mentor Badge</div>,
 }))
 
-vi.mock('@/components/trust/SponsorMenteeModal', () => ({
+jest.mock('@/components/trust/SponsorMenteeModal', () => ({
   SponsorMenteeModal: () => <div data-testid="sponsor-modal">Sponsor Modal</div>,
 }))
 
-vi.mock('@/components/trust/BecomeMentorCard', () => ({
+jest.mock('@/components/trust/BecomeMentorCard', () => ({
   BecomeMentorCard: () => <div data-testid="become-mentor-card">Become Mentor</div>,
 }))
 

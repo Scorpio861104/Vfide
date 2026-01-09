@@ -45,7 +45,7 @@ export function MentorBadge({ address, size = 'md', showMenteeCount = true }: Me
 
       {/* Badge */}
       <div
-        className={`relative ${sizeClasses[size]} rounded-full font-bold bg-gradient-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] flex items-center gap-2`}
+        className={`relative ${sizeClasses[size]} rounded-full font-bold bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] flex items-center gap-2`}
         style={{
           boxShadow: '0 0 20px rgba(0, 255, 136, 0.5)',
         }}

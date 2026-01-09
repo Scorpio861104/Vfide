@@ -3,7 +3,7 @@
  * Tests for NetworkSwitchOverlay component (0% coverage)
  * Simplified tests that work with the component's rendering logic
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 
 // Store mock implementations
@@ -14,14 +14,14 @@ let mockSwitchChainError = false
 let mockSwitchChainSuccess = false
 
 // Mock wagmi before imports
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({
     isConnected: mockIsConnected,
     address: mockIsConnected ? '0x1234567890123456789012345678901234567890' : undefined,
   }),
   useChainId: () => mockChainId,
   useSwitchChain: () => ({
-    switchChain: vi.fn(),
+    switchChain: jest.fn(),
     isPending: mockSwitchChainPending,
     isError: mockSwitchChainError,
     isSuccess: mockSwitchChainSuccess,
@@ -30,7 +30,7 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, onClick, ...props }: React.ComponentProps<'div'>) => (
       <div onClick={onClick} {...props}>{children}</div>
@@ -46,22 +46,22 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock testnet config
-vi.mock('@/lib/testnet', () => ({
+jest.mock('@/lib/testnet', () => ({
   IS_TESTNET: true,
   CURRENT_CHAIN_ID: 84532, // Base Sepolia
 }))
 
 // Mock utils
-vi.mock('@/lib/utils', () => ({
+jest.mock('@/lib/utils', () => ({
   safeLocalStorage: {
     getItem: () => null,
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
   },
 }))
 
 // Mock wagmi/chains
-vi.mock('wagmi/chains', () => ({
+jest.mock('wagmi/chains', () => ({
   baseSepolia: { id: 84532, name: 'Base Sepolia' },
   base: { id: 8453, name: 'Base' },
 }))
@@ -78,7 +78,7 @@ describe('NetworkSwitchOverlay', () => {
   })
 
   afterEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders overlay when on wrong network and connected', async () => {

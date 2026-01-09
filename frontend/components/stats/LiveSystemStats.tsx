@@ -51,7 +51,7 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
           <div className="flex items-center justify-between">
             <span className="text-[10px] sm:text-xs md:text-sm text-[#F5F3E8]/60 truncate pr-1">{label}</span>
             <motion.div
-              className="text-lg sm:text-xl md:text-2xl flex-shrink-0"
+              className="text-lg sm:text-xl md:text-2xl shrink-0"
               animate={{
                 scale: isHovered ? [1, 1.2, 1] : 1,
                 rotate: isHovered ? [0, 15, 0] : 0,

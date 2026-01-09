@@ -2,38 +2,38 @@
  * Tests for useMentorHooks
  * Mentor system hooks for helping new users succeed
  */
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { renderHook, waitFor } from '@testing-library/react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useReadContract: vi.fn(),
-  useWriteContract: vi.fn(),
-  useAccount: vi.fn(),
-  useWaitForTransactionReceipt: vi.fn(),
+jest.mock('wagmi', () => ({
+  useReadContract: jest.fn(),
+  useWriteContract: jest.fn(),
+  useAccount: jest.fn(),
+  useWaitForTransactionReceipt: jest.fn(),
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
   },
 }))
 
 // Mock abis
-vi.mock('@/lib/abis', () => ({
+jest.mock('@/lib/abis', () => ({
   SeerABI: [],
 }))
 
 describe('useMentorHooks', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('useIsMentor', () => {
     it('should return false when not a mentor', async () => {
       const { useReadContract, useAccount } = await import('wagmi')
-      vi.mocked(useAccount).mockReturnValue({
+      jest.mocked(useAccount).mockReturnValue({
         address: '0xabc123',
         isConnecting: false,
         isDisconnected: false,
@@ -45,7 +45,7 @@ describe('useMentorHooks', () => {
         chainId: undefined,
         connector: undefined,
       })
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: false,
         isLoading: false,
         isError: false,
@@ -58,7 +58,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: Date.now(),
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -76,7 +76,7 @@ describe('useMentorHooks', () => {
 
     it('should return true when user is a mentor', async () => {
       const { useReadContract, useAccount } = await import('wagmi')
-      vi.mocked(useAccount).mockReturnValue({
+      jest.mocked(useAccount).mockReturnValue({
         address: '0xmentor123',
         isConnecting: false,
         isDisconnected: false,
@@ -88,7 +88,7 @@ describe('useMentorHooks', () => {
         chainId: undefined,
         connector: undefined,
       })
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: true,
         isLoading: false,
         isError: false,
@@ -101,7 +101,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: Date.now(),
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -118,7 +118,7 @@ describe('useMentorHooks', () => {
 
     it('should handle loading state', async () => {
       const { useReadContract, useAccount } = await import('wagmi')
-      vi.mocked(useAccount).mockReturnValue({
+      jest.mocked(useAccount).mockReturnValue({
         address: '0xuser',
         isConnecting: false,
         isDisconnected: false,
@@ -130,7 +130,7 @@ describe('useMentorHooks', () => {
         chainId: undefined,
         connector: undefined,
       })
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: undefined,
         isLoading: true,
         isError: false,
@@ -143,7 +143,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: 0,
         errorUpdatedAt: 0,
         fetchStatus: 'fetching',
@@ -161,7 +161,7 @@ describe('useMentorHooks', () => {
 
     it('should use provided address instead of connected address', async () => {
       const { useReadContract, useAccount } = await import('wagmi')
-      vi.mocked(useAccount).mockReturnValue({
+      jest.mocked(useAccount).mockReturnValue({
         address: '0xconnected',
         isConnecting: false,
         isDisconnected: false,
@@ -173,7 +173,7 @@ describe('useMentorHooks', () => {
         chainId: undefined,
         connector: undefined,
       })
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: true,
         isLoading: false,
         isError: false,
@@ -186,7 +186,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: Date.now(),
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -206,9 +206,9 @@ describe('useMentorHooks', () => {
 
   describe('useBecomeMentor', () => {
     it('should provide becomeMentor function', async () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       const { useWriteContract, useWaitForTransactionReceipt } = await import('wagmi')
-      vi.mocked(useWriteContract).mockReturnValue({
+      jest.mocked(useWriteContract).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
         isPending: false,
@@ -216,8 +216,8 @@ describe('useMentorHooks', () => {
         isSuccess: false,
         isIdle: true,
         error: null,
-        reset: vi.fn(),
-        writeContractAsync: vi.fn(),
+        reset: jest.fn(),
+        writeContractAsync: jest.fn(),
         context: undefined,
         failureCount: 0,
         failureReason: null,
@@ -225,7 +225,7 @@ describe('useMentorHooks', () => {
         submittedAt: 0,
         variables: undefined,
       })
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: false,
         isSuccess: false,
         isError: false,
@@ -238,7 +238,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: 0,
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -257,9 +257,9 @@ describe('useMentorHooks', () => {
     })
 
     it('should call writeContract when becomeMentor is invoked', async () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       const { useWriteContract, useWaitForTransactionReceipt } = await import('wagmi')
-      vi.mocked(useWriteContract).mockReturnValue({
+      jest.mocked(useWriteContract).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
         isPending: false,
@@ -267,8 +267,8 @@ describe('useMentorHooks', () => {
         isSuccess: false,
         isIdle: true,
         error: null,
-        reset: vi.fn(),
-        writeContractAsync: vi.fn(),
+        reset: jest.fn(),
+        writeContractAsync: jest.fn(),
         context: undefined,
         failureCount: 0,
         failureReason: null,
@@ -276,7 +276,7 @@ describe('useMentorHooks', () => {
         submittedAt: 0,
         variables: undefined,
       })
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: false,
         isSuccess: false,
         isError: false,
@@ -289,7 +289,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: 0,
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -309,16 +309,16 @@ describe('useMentorHooks', () => {
 
     it('should show loading state during transaction', async () => {
       const { useWriteContract, useWaitForTransactionReceipt } = await import('wagmi')
-      vi.mocked(useWriteContract).mockReturnValue({
-        writeContract: vi.fn(),
+      jest.mocked(useWriteContract).mockReturnValue({
+        writeContract: jest.fn(),
         data: '0xtxhash' as `0x${string}`,
         isPending: true,
         isError: false,
         isSuccess: false,
         isIdle: false,
         error: null,
-        reset: vi.fn(),
-        writeContractAsync: vi.fn(),
+        reset: jest.fn(),
+        writeContractAsync: jest.fn(),
         context: undefined,
         failureCount: 0,
         failureReason: null,
@@ -326,7 +326,7 @@ describe('useMentorHooks', () => {
         submittedAt: Date.now(),
         variables: undefined,
       })
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: false,
         isSuccess: false,
         isError: false,
@@ -339,7 +339,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: 0,
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -356,16 +356,16 @@ describe('useMentorHooks', () => {
 
     it('should show success state after transaction confirms', async () => {
       const { useWriteContract, useWaitForTransactionReceipt } = await import('wagmi')
-      vi.mocked(useWriteContract).mockReturnValue({
-        writeContract: vi.fn(),
+      jest.mocked(useWriteContract).mockReturnValue({
+        writeContract: jest.fn(),
         data: '0xtxhash' as `0x${string}`,
         isPending: false,
         isError: false,
         isSuccess: true,
         isIdle: false,
         error: null,
-        reset: vi.fn(),
-        writeContractAsync: vi.fn(),
+        reset: jest.fn(),
+        writeContractAsync: jest.fn(),
         context: undefined,
         failureCount: 0,
         failureReason: null,
@@ -373,7 +373,7 @@ describe('useMentorHooks', () => {
         submittedAt: Date.now(),
         variables: undefined,
       })
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: false,
         isSuccess: true,
         isError: false,
@@ -386,7 +386,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: Date.now(),
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -404,9 +404,9 @@ describe('useMentorHooks', () => {
 
   describe('useSponsorMentee', () => {
     it('should provide sponsorMentee function', async () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       const { useWriteContract, useWaitForTransactionReceipt } = await import('wagmi')
-      vi.mocked(useWriteContract).mockReturnValue({
+      jest.mocked(useWriteContract).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
         isPending: false,
@@ -414,8 +414,8 @@ describe('useMentorHooks', () => {
         isSuccess: false,
         isIdle: true,
         error: null,
-        reset: vi.fn(),
-        writeContractAsync: vi.fn(),
+        reset: jest.fn(),
+        writeContractAsync: jest.fn(),
         context: undefined,
         failureCount: 0,
         failureReason: null,
@@ -423,7 +423,7 @@ describe('useMentorHooks', () => {
         submittedAt: 0,
         variables: undefined,
       })
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: false,
         isSuccess: false,
         isError: false,
@@ -436,7 +436,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: 0,
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -454,9 +454,9 @@ describe('useMentorHooks', () => {
     })
 
     it('should call writeContract with mentee address', async () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       const { useWriteContract, useWaitForTransactionReceipt } = await import('wagmi')
-      vi.mocked(useWriteContract).mockReturnValue({
+      jest.mocked(useWriteContract).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
         isPending: false,
@@ -464,8 +464,8 @@ describe('useMentorHooks', () => {
         isSuccess: false,
         isIdle: true,
         error: null,
-        reset: vi.fn(),
-        writeContractAsync: vi.fn(),
+        reset: jest.fn(),
+        writeContractAsync: jest.fn(),
         context: undefined,
         failureCount: 0,
         failureReason: null,
@@ -473,7 +473,7 @@ describe('useMentorHooks', () => {
         submittedAt: 0,
         variables: undefined,
       })
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: false,
         isSuccess: false,
         isError: false,
@@ -486,7 +486,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: 0,
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -508,16 +508,16 @@ describe('useMentorHooks', () => {
 
     it('should track isSponsoring state', async () => {
       const { useWriteContract, useWaitForTransactionReceipt } = await import('wagmi')
-      vi.mocked(useWriteContract).mockReturnValue({
-        writeContract: vi.fn(),
+      jest.mocked(useWriteContract).mockReturnValue({
+        writeContract: jest.fn(),
         data: '0xtxhash' as `0x${string}`,
         isPending: true,
         isError: false,
         isSuccess: false,
         isIdle: false,
         error: null,
-        reset: vi.fn(),
-        writeContractAsync: vi.fn(),
+        reset: jest.fn(),
+        writeContractAsync: jest.fn(),
         context: undefined,
         failureCount: 0,
         failureReason: null,
@@ -525,7 +525,7 @@ describe('useMentorHooks', () => {
         submittedAt: Date.now(),
         variables: undefined,
       })
-      vi.mocked(useWaitForTransactionReceipt).mockReturnValue({
+      jest.mocked(useWaitForTransactionReceipt).mockReturnValue({
         isLoading: true,
         isSuccess: false,
         isError: false,
@@ -538,7 +538,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: 0,
         errorUpdatedAt: 0,
         fetchStatus: 'fetching',
@@ -558,7 +558,7 @@ describe('useMentorHooks', () => {
   describe('useMentorInfo', () => {
     it('should return mentor info for a user', async () => {
       const { useReadContract, useAccount } = await import('wagmi')
-      vi.mocked(useAccount).mockReturnValue({
+      jest.mocked(useAccount).mockReturnValue({
         address: '0xuser123',
         isConnecting: false,
         isDisconnected: false,
@@ -570,7 +570,7 @@ describe('useMentorHooks', () => {
         chainId: undefined,
         connector: undefined,
       })
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: '0xmentor456',
         isLoading: false,
         isError: false,
@@ -583,7 +583,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: Date.now(),
         errorUpdatedAt: 0,
         fetchStatus: 'idle',
@@ -600,7 +600,7 @@ describe('useMentorHooks', () => {
 
     it('should accept custom address', async () => {
       const { useReadContract, useAccount } = await import('wagmi')
-      vi.mocked(useAccount).mockReturnValue({
+      jest.mocked(useAccount).mockReturnValue({
         address: '0xconnected',
         isConnecting: false,
         isDisconnected: false,
@@ -612,7 +612,7 @@ describe('useMentorHooks', () => {
         chainId: undefined,
         connector: undefined,
       })
-      vi.mocked(useReadContract).mockReturnValue({
+      jest.mocked(useReadContract).mockReturnValue({
         data: '0xmentor789',
         isLoading: false,
         isError: false,
@@ -625,7 +625,7 @@ describe('useMentorHooks', () => {
         failureCount: 0,
         failureReason: null,
         isRefetching: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
         dataUpdatedAt: Date.now(),
         errorUpdatedAt: 0,
         fetchStatus: 'idle',

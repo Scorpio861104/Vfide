@@ -219,7 +219,7 @@ export function NetworkSwitchOverlay() {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative max-w-md w-full mx-4 bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden"
+              className="relative max-w-md w-full mx-4 bg-linear-to-b from-zinc-900 to-zinc-950 rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden"
             >
               {/* Dismiss button */}
               <button
@@ -294,7 +294,7 @@ export function NetworkSwitchOverlay() {
                 <button
                   onClick={() => handleSwitch(false)}
                   disabled={isPending || isAddingNetwork}
-                  className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
+                  className="w-full py-3.5 px-4 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
                 >
                   {isPending ? (
                     <>

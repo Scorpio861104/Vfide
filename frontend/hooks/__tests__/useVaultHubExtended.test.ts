@@ -1,38 +1,38 @@
 // Extended tests for useVaultHub.ts - comprehensive coverage
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Store original env
 const originalEnv = process.env
 
 // Mock wagmi before importing hooks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useReadContract: vi.fn(),
-  useWriteContract: vi.fn(),
-  useChainId: vi.fn(),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useReadContract: jest.fn(),
+  useWriteContract: jest.fn(),
+  useChainId: jest.fn(),
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
+jest.mock('viem', () => ({
   isAddress: (addr: string) => addr && addr.startsWith('0x') && addr.length === 42,
 }))
 
 // Mock lib/contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   VAULT_HUB_ABI: [],
 }))
 
 // Mock lib/utils
-vi.mock('@/lib/utils', () => ({
+jest.mock('@/lib/utils', () => ({
   devLog: {
-    error: vi.fn(),
-    log: vi.fn(),
+    error: jest.fn(),
+    log: jest.fn(),
   },
 }))
 
 // Mock lib/testnet  
-vi.mock('@/lib/testnet', () => ({
+jest.mock('@/lib/testnet', () => ({
   IS_TESTNET: true,
   CURRENT_CHAIN_ID: 84532,
 }))
@@ -46,7 +46,7 @@ describe('useVaultHub - Extended Tests', () => {
   const mockTxHash = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     // Reset env
     process.env = { ...originalEnv, NEXT_PUBLIC_VAULT_HUB_ADDRESS: '0x6666666666666666666666666666666666666666' }
     
@@ -56,7 +56,7 @@ describe('useVaultHub - Extended Tests', () => {
     })
     ;(useChainId as Mock).mockReturnValue(84532) // Base Sepolia
     ;(useWriteContract as Mock).mockReturnValue({
-      writeContractAsync: vi.fn().mockResolvedValue(mockTxHash),
+      writeContractAsync: jest.fn().mockResolvedValue(mockTxHash),
       isPending: false,
     })
   })
@@ -80,7 +80,7 @@ describe('useVaultHub - Extended Tests', () => {
         return { 
           data: '0x0000000000000000000000000000000000000000', 
           isLoading: false, 
-          refetch: vi.fn() 
+          refetch: jest.fn() 
         }
       }
       if (functionName === 'vfideToken') {
@@ -99,7 +99,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle user rejected error', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('user rejected the transaction'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('user rejected the transaction'))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -116,7 +116,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle insufficient funds error', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('insufficient funds for gas'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('insufficient funds for gas'))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -133,7 +133,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle wrong chain error', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('chain unsupported'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('chain unsupported'))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -150,7 +150,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle UV:zero contract error', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('uv:zero'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('uv:zero'))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -167,7 +167,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle create2 failed error', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('create2 failed'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('create2 failed'))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -184,7 +184,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle network error', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('network error timeout'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('network error timeout'))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -201,7 +201,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle gas estimation error', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('gas estimate failed'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('gas estimate failed'))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -220,7 +220,7 @@ describe('useVaultHub - Extended Tests', () => {
       
       // Long hex string (>200 chars) that would indicate raw revert data
       const longHexError = 'execution reverted 0x' + 'a'.repeat(200)
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error(longHexError))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error(longHexError))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -237,7 +237,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle simple revert error', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('execution reverted'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('execution reverted'))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -254,7 +254,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle non-Error object', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue('string error')
+      const mockWriteAsync = jest.fn().mockRejectedValue('string error')
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -271,7 +271,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should handle address format error', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('invalid 20 byte address'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('invalid 20 byte address'))
       setupErrorTest(mockWriteAsync)
 
       const { result } = renderHook(() => useVaultHub())
@@ -292,7 +292,7 @@ describe('useVaultHub - Extended Tests', () => {
       
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
-          return { data: mockVaultAddress, isLoading: false, refetch: vi.fn() }
+          return { data: mockVaultAddress, isLoading: false, refetch: jest.fn() }
         }
         if (functionName === 'vfideToken') {
           return { data: mockTokenAddress }
@@ -314,7 +314,7 @@ describe('useVaultHub - Extended Tests', () => {
           return { 
             data: '0x0000000000000000000000000000000000000000', 
             isLoading: false, 
-            refetch: vi.fn() 
+            refetch: jest.fn() 
           }
         }
         if (functionName === 'vfideToken') {
@@ -333,7 +333,7 @@ describe('useVaultHub - Extended Tests', () => {
       
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
-          return { data: undefined, isLoading: true, refetch: vi.fn() }
+          return { data: undefined, isLoading: true, refetch: jest.fn() }
         }
         if (functionName === 'vfideToken') {
           return { data: mockTokenAddress }
@@ -352,10 +352,10 @@ describe('useVaultHub - Extended Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: '0x0000000000000000000000000000000000000000',
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContractAsync: vi.fn(),
+        writeContractAsync: jest.fn(),
         isPending: true,
       })
 
@@ -372,7 +372,7 @@ describe('useVaultHub - Extended Tests', () => {
       ;(useChainId as Mock).mockReturnValue(84532)
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
-          return { data: mockVaultAddress, isLoading: false, refetch: vi.fn() }
+          return { data: mockVaultAddress, isLoading: false, refetch: jest.fn() }
         }
         if (functionName === 'vfideToken') {
           return { data: mockTokenAddress }
@@ -392,7 +392,7 @@ describe('useVaultHub - Extended Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: undefined,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useVaultHub())
@@ -409,7 +409,7 @@ describe('useVaultHub - Extended Tests', () => {
           return { 
             data: '0x0000000000000000000000000000000000000000', 
             isLoading: false, 
-            refetch: vi.fn() 
+            refetch: jest.fn() 
           }
         }
         if (functionName === 'vfideToken') {
@@ -437,7 +437,7 @@ describe('useVaultHub - Extended Tests', () => {
       
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
-          return { data: mockVaultAddress, isLoading: false, refetch: vi.fn() }
+          return { data: mockVaultAddress, isLoading: false, refetch: jest.fn() }
         }
         if (functionName === 'vfideToken') {
           return { data: mockTokenAddress }
@@ -455,7 +455,7 @@ describe('useVaultHub - Extended Tests', () => {
       
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
-          return { data: mockVaultAddress, isLoading: false, refetch: vi.fn() }
+          return { data: mockVaultAddress, isLoading: false, refetch: jest.fn() }
         }
         if (functionName === 'vfideToken') {
           return { data: '0x0000000000000000000000000000000000000000' }
@@ -476,7 +476,7 @@ describe('useVaultHub - Extended Tests', () => {
           return { 
             data: '0x0000000000000000000000000000000000000000', 
             isLoading: false, 
-            refetch: vi.fn() 
+            refetch: jest.fn() 
           }
         }
         if (functionName === 'vfideToken') {
@@ -502,7 +502,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should create vault successfully', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
         isPending: false,
@@ -512,7 +512,7 @@ describe('useVaultHub - Extended Tests', () => {
           return { 
             data: '0x0000000000000000000000000000000000000000', 
             isLoading: false, 
-            refetch: vi.fn() 
+            refetch: jest.fn() 
           }
         }
         if (functionName === 'vfideToken') {
@@ -539,7 +539,7 @@ describe('useVaultHub - Extended Tests', () => {
     it('should provide refetch function', async () => {
       const useVaultHub = await getUseVaultHub()
       
-      const mockRefetch = vi.fn()
+      const mockRefetch = jest.fn()
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
           return { data: mockVaultAddress, isLoading: false, refetch: mockRefetch }

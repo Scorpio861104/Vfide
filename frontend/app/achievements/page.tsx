@@ -26,9 +26,9 @@ export default function AchievementsPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-2xl p-8 md:p-12 text-center"
+                className="bg-linear-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-2xl p-8 md:p-12 text-center"
               >
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-linear-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center">
                   <Trophy className="w-10 h-10 text-[#0A0A0F]" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-[#F5F3E8] mb-4">
@@ -81,7 +81,7 @@ export default function AchievementsPage() {
                 onClick={() => setActiveTab('achievements')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                   activeTab === 'achievements'
-                    ? 'bg-gradient-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F]'
+                    ? 'bg-linear-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F]'
                     : 'bg-[#1A1A2E] text-[#A0A0A5] hover:text-[#F5F3E8]'
                 }`}
               >
@@ -92,7 +92,7 @@ export default function AchievementsPage() {
                 onClick={() => setActiveTab('stats')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                   activeTab === 'stats'
-                    ? 'bg-gradient-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F]'
+                    ? 'bg-linear-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F]'
                     : 'bg-[#1A1A2E] text-[#A0A0A5] hover:text-[#F5F3E8]'
                 }`}
               >
@@ -175,7 +175,7 @@ export default function AchievementsPage() {
                         </div>
                         <div className="h-3 bg-[#0A0A0F] rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-gradient-to-r from-[#00F0FF] to-[#A78BFA]"
+                            className="h-full bg-linear-to-r from-[#00F0FF] to-[#A78BFA]"
                             style={{ width: `${progress.xpToNextLevel > 0 ? ((progress.xp / (progress.xp + progress.xpToNextLevel)) * 100) : 100}%` }}
                           />
                         </div>
@@ -191,7 +191,7 @@ export default function AchievementsPage() {
                         </div>
                         <div className="h-3 bg-[#0A0A0F] rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-gradient-to-r from-[#FFD700] to-[#FFA500]"
+                            className="h-full bg-linear-to-r from-[#FFD700] to-[#FFA500]"
                             style={{ width: `${(progress.achievements.length / Object.keys(ACHIEVEMENTS).length) * 100}%` }}
                           />
                         </div>

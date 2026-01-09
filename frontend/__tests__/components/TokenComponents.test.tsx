@@ -3,11 +3,11 @@
  * Tests for token-related components like balances, transfers, staking
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Coins: () => <span data-testid="coins-icon" />,
   Send: () => <span data-testid="send-icon" />,
   ArrowDownLeft: () => <span data-testid="receive-icon" />,
@@ -204,7 +204,7 @@ describe('TransferForm Pattern', () => {
   })
 
   it('calls onSubmit with form values', () => {
-    const onSubmit = vi.fn()
+    const onSubmit = jest.fn()
     render(<TransferForm maxAmount="100" onSubmit={onSubmit} isSubmitting={false} />)
     
     fireEvent.change(screen.getByTestId('to-input'), { target: { value: '0x1234' } })
@@ -335,7 +335,7 @@ describe('StakingPanel Pattern', () => {
   })
 
   it('calls onStake when stake clicked', () => {
-    const onStake = vi.fn()
+    const onStake = jest.fn()
     render(
       <StakingPanel data={mockData} onStake={onStake} onUnstake={() => {}} onClaimRewards={() => {}} isProcessing={false} />
     )
@@ -344,7 +344,7 @@ describe('StakingPanel Pattern', () => {
   })
 
   it('calls onClaimRewards when claim clicked', () => {
-    const onClaimRewards = vi.fn()
+    const onClaimRewards = jest.fn()
     render(
       <StakingPanel data={mockData} onStake={() => {}} onUnstake={() => {}} onClaimRewards={onClaimRewards} isProcessing={false} />
     )
@@ -435,7 +435,7 @@ describe('TokenSelector Pattern', () => {
   })
 
   it('calls onSelect when token clicked', () => {
-    const onSelect = vi.fn()
+    const onSelect = jest.fn()
     render(<TokenSelector tokens={mockTokens} selectedToken={null} onSelect={onSelect} />)
     fireEvent.click(screen.getByTestId('token-USDC'))
     expect(onSelect).toHaveBeenCalledWith('0x2')

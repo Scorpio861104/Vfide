@@ -1,33 +1,33 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock providers
-vi.mock('@rainbow-me/rainbowkit', () => ({
+jest.mock('@rainbow-me/rainbowkit', () => ({
   RainbowKitProvider: ({ children }: any) => <div data-testid="rainbowkit">{children}</div>,
   darkTheme: () => ({}),
 }))
 
-vi.mock('@rainbow-me/rainbowkit/styles.css', () => ({}))
+jest.mock('@rainbow-me/rainbowkit/styles.css', () => ({}))
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   WagmiProvider: ({ children }: any) => <div data-testid="wagmi">{children}</div>,
 }))
 
-vi.mock('@tanstack/react-query', () => ({
+jest.mock('@tanstack/react-query', () => ({
   QueryClient: class MockQueryClient { defaultOptions = {} },
   QueryClientProvider: ({ children }: any) => <div data-testid="query">{children}</div>,
 }))
 
-vi.mock('@/lib/wagmi', () => ({
+jest.mock('@/lib/wagmi', () => ({
   config: {},
 }))
 
-vi.mock('@/lib/chains', () => ({
+jest.mock('@/lib/chains', () => ({
   IS_TESTNET: true,
 }))
 
-vi.mock('wagmi/chains', () => ({
+jest.mock('wagmi/chains', () => ({
   base: { id: 8453 },
   baseSepolia: { id: 84532 },
 }))

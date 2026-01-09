@@ -3,22 +3,22 @@
  * Tests for useVaultRegistry to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi
-const mockUseReadContract = vi.fn()
-const mockUseWriteContract = vi.fn()
-const mockUseWaitForTransactionReceipt = vi.fn()
+const mockUseReadContract = jest.fn()
+const mockUseWriteContract = jest.fn()
+const mockUseWaitForTransactionReceipt = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
   useWaitForTransactionReceipt: () => mockUseWaitForTransactionReceipt(),
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
+jest.mock('viem', () => ({
   keccak256: (input: unknown) => '0xhash',
   toBytes: (input: string) => new Uint8Array(),
 }))
@@ -69,10 +69,10 @@ describe('ClaimStatus constants', () => {
 })
 
 describe('useSearchByRecoveryId', () => {
-  const mockRefetch = vi.fn()
+  const mockRefetch = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -122,10 +122,10 @@ describe('useSearchByRecoveryId', () => {
 })
 
 describe('useSearchByEmail', () => {
-  const mockRefetch = vi.fn()
+  const mockRefetch = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -162,10 +162,10 @@ describe('useSearchByEmail', () => {
 })
 
 describe('useSearchByUsername', () => {
-  const mockRefetch = vi.fn()
+  const mockRefetch = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -189,10 +189,10 @@ describe('useSearchByUsername', () => {
 })
 
 describe('useSearchByGuardian', () => {
-  const mockRefetch = vi.fn()
+  const mockRefetch = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -217,7 +217,7 @@ describe('useSearchByGuardian', () => {
 
 describe('useVaultInfo', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -240,7 +240,7 @@ describe('useVaultInfo', () => {
 
 describe('useSearchByWalletAddress', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -263,7 +263,7 @@ describe('useSearchByWalletAddress', () => {
 
 describe('useSearchByVaultAddress', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -286,7 +286,7 @@ describe('useSearchByVaultAddress', () => {
 
 describe('useTotalVaults', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -308,10 +308,10 @@ describe('useTotalVaults', () => {
 })
 
 describe('useSetRecoveryId', () => {
-  const mockWriteContractAsync = vi.fn()
+  const mockWriteContractAsync = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       isPending: false,
@@ -341,10 +341,10 @@ describe('useSetRecoveryId', () => {
 })
 
 describe('useSetEmailRecovery', () => {
-  const mockWriteContractAsync = vi.fn()
+  const mockWriteContractAsync = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       isPending: false,
@@ -363,10 +363,10 @@ describe('useSetEmailRecovery', () => {
 })
 
 describe('useSetUsername', () => {
-  const mockWriteContractAsync = vi.fn()
+  const mockWriteContractAsync = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       isPending: false,
@@ -386,7 +386,7 @@ describe('useSetUsername', () => {
 
 describe('useIsRecoveryIdAvailable', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -421,7 +421,7 @@ describe('useIsRecoveryIdAvailable', () => {
 
 describe('useIsUsernameAvailable', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -444,7 +444,7 @@ describe('useIsUsernameAvailable', () => {
 
 describe('useGetClaim', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -467,7 +467,7 @@ describe('useGetClaim', () => {
 
 describe('useActiveClaimForVault', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,

@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 
 // Mock wagmi hooks
-vi.mock('wagmi', () => ({
-  useReadContract: vi.fn(() => ({ data: null, isError: false, isLoading: false })),
+jest.mock('wagmi', () => ({
+  useReadContract: jest.fn(() => ({ data: null, isError: false, isLoading: false })),
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     MerchantPortal: '0x1234567890123456789012345678901234567890',
   },
@@ -18,7 +18,7 @@ import { useMerchantStatus } from '@/hooks/useMerchantStatus'
 
 describe('useMerchantStatus', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('returns isMerchant false when no data', () => {
@@ -29,7 +29,7 @@ describe('useMerchantStatus', () => {
   })
 
   it('returns isMerchant true when user is merchant', () => {
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: true as unknown as undefined,
       isError: false,
       isLoading: false,
@@ -40,7 +40,7 @@ describe('useMerchantStatus', () => {
   })
 
   it('returns isMerchant false when user is not merchant', () => {
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: false as unknown as undefined,
       isError: false,
       isLoading: false,
@@ -51,7 +51,7 @@ describe('useMerchantStatus', () => {
   })
 
   it('handles loading state', () => {
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: null,
       isError: false,
       isLoading: true,
@@ -62,7 +62,7 @@ describe('useMerchantStatus', () => {
   })
 
   it('handles error state', () => {
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: null,
       isError: true,
       isLoading: false,

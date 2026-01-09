@@ -40,7 +40,7 @@ describe('class helpers', () => {
 
   test('glassCard and gradient helpers append custom class', () => {
     const glass = glassCard('extra')
-    expect(glass).toContain('bg-gradient-to-br')
+    expect(glass).toContain('bg-linear-to-br')
     expect(glass).toContain('extra')
 
     const gradient = gradientCard('from-a', 'border-b', 'extra')
@@ -55,7 +55,7 @@ describe('class helpers', () => {
     expect(success).toContain('extra')
 
     const primary = buttonVariant()
-    expect(primary).toContain('bg-gradient-to-r')
+    expect(primary).toContain('bg-linear-to-r')
     const dangerLg = buttonVariant('danger', 'lg')
     expect(dangerLg).toContain('bg-red-500')
     expect(dangerLg).toContain('text-lg')

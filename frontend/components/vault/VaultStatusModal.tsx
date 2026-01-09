@@ -100,7 +100,7 @@ export function VaultStatusModal() {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-gradient-to-br from-[#1A1A1D] to-[#2A2A2F] border-2 border-[#00F0FF] rounded-2xl p-8 max-w-md w-full shadow-2xl shadow-[#00F0FF]/20"
+          className="bg-linear-to-br from-[#1A1A1D] to-[#2A2A2F] border-2 border-[#00F0FF] rounded-2xl p-8 max-w-md w-full shadow-2xl shadow-[#00F0FF]/20"
         >
           {/* Vault Status Display */}
           {isLoadingVault ? (
@@ -132,7 +132,7 @@ export function VaultStatusModal() {
               </div>
               <button
                 onClick={handleDismiss}
-                className="w-full py-3 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:scale-105 transition-transform"
+                className="w-full py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:scale-105 transition-transform"
               >
                 Continue
               </button>
@@ -140,7 +140,7 @@ export function VaultStatusModal() {
           ) : (
             <div className="text-center">
               {/* Icon */}
-              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-[#00F0FF] to-[#0080FF] rounded-2xl flex items-center justify-center">
+              <div className="w-20 h-20 mx-auto mb-6 bg-linear-to-br from-[#00F0FF] to-[#0080FF] rounded-2xl flex items-center justify-center">
                 <span className="text-4xl">🏦</span>
               </div>
 
@@ -206,7 +206,7 @@ export function VaultStatusModal() {
                 <button
                   onClick={handleCreateVault}
                   disabled={isCreatingVault || isCreating || isContractConfigured === false || !isOnCorrectChain}
-                  className="w-full py-4 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full py-4 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isCreatingVault || isCreating ? (
                     <span className="flex items-center justify-center gap-2">

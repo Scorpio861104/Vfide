@@ -1,9 +1,9 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({
     address: undefined,
     chain: undefined,
   })),
@@ -14,7 +14,7 @@ import { DemoModeBanner } from '@/components/DemoModeBanner'
 describe('DemoModeBanner', () => {
   it('shows demo mode when wallet not connected', async () => {
     const { useAccount } = await import('wagmi')
-    const mockUseAccount = useAccount as ReturnType<typeof vi.fn>
+    const mockUseAccount = useAccount as ReturnType<typeof jest.fn>
     
     mockUseAccount.mockReturnValue({
       address: undefined,
@@ -27,7 +27,7 @@ describe('DemoModeBanner', () => {
 
   it('shows testnet mode when on testnet', async () => {
     const { useAccount } = await import('wagmi')
-    const mockUseAccount = useAccount as ReturnType<typeof vi.fn>
+    const mockUseAccount = useAccount as ReturnType<typeof jest.fn>
     
     mockUseAccount.mockReturnValue({
       address: '0x1234567890123456789012345678901234567890',
@@ -44,7 +44,7 @@ describe('DemoModeBanner', () => {
 
   it('does not render when on mainnet with connected wallet', async () => {
     const { useAccount } = await import('wagmi')
-    const mockUseAccount = useAccount as ReturnType<typeof vi.fn>
+    const mockUseAccount = useAccount as ReturnType<typeof jest.fn>
     
     mockUseAccount.mockReturnValue({
       address: '0x1234567890123456789012345678901234567890',
@@ -60,7 +60,7 @@ describe('DemoModeBanner', () => {
 
   it('has correct styling when visible', async () => {
     const { useAccount } = await import('wagmi')
-    const mockUseAccount = useAccount as ReturnType<typeof vi.fn>
+    const mockUseAccount = useAccount as ReturnType<typeof jest.fn>
     
     mockUseAccount.mockReturnValue({
       address: undefined,

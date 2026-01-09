@@ -1,9 +1,9 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import React from 'react'
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   CheckCircle2: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'check-icon' }),
   XCircle: ({ className }: { className?: string }) => 
@@ -14,7 +14,7 @@ vi.mock('lucide-react', () => ({
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: React.PropsWithChildren<{ className?: string }>) =>
       React.createElement('div', { className, ...props }, children),
@@ -42,11 +42,11 @@ function TestComponent() {
 
 describe('ToastProvider', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('renders children', () => {
@@ -152,7 +152,7 @@ describe('ToastProvider', () => {
     expect(screen.getByText('Success message')).toBeInTheDocument()
     
     await act(async () => {
-      vi.advanceTimersByTime(5000)
+      jest.advanceTimersByTime(5000)
     })
     
     expect(screen.queryByText('Success message')).not.toBeInTheDocument()

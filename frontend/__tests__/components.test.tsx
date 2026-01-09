@@ -1,34 +1,34 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 // Mock wagmi hooks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
   })),
-  useReadContract: vi.fn(() => ({
+  useReadContract: jest.fn(() => ({
     data: undefined,
     isLoading: false,
     error: null,
   })),
-  useWriteContract: vi.fn(() => ({
-    writeContract: vi.fn(),
-    writeContractAsync: vi.fn(),
+  useWriteContract: jest.fn(() => ({
+    writeContract: jest.fn(),
+    writeContractAsync: jest.fn(),
     data: undefined,
     isPending: false,
   })),
-  useWaitForTransactionReceipt: vi.fn(() => ({
+  useWaitForTransactionReceipt: jest.fn(() => ({
     isLoading: false,
     isSuccess: false,
   })),
-  useChainId: vi.fn(() => 84532),
+  useChainId: jest.fn(() => 84532),
 }))
 
 // Mock framer-motion to avoid animation issues in tests
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <button {...props}>{children}</button>,
@@ -43,7 +43,7 @@ vi.mock('framer-motion', () => ({
 
 describe('Component Test Template', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   afterEach(() => {
@@ -59,7 +59,7 @@ describe('Component Test Template', () => {
 
   it('handles user interaction', async () => {
     const user = userEvent.setup()
-    const handleClick = vi.fn()
+    const handleClick = jest.fn()
     
     const TestButton = () => (
       <button onClick={handleClick} data-testid="button">
@@ -91,7 +91,7 @@ describe('Component Test Template', () => {
 
   it('handles form inputs', async () => {
     const user = userEvent.setup()
-    const handleSubmit = vi.fn((e: React.FormEvent) => e.preventDefault())
+    const handleSubmit = jest.fn((e: React.FormEvent) => e.preventDefault())
     
     const TestForm = () => (
       <form onSubmit={handleSubmit}>

@@ -3,11 +3,11 @@
  * Tests for DAO governance components like proposals, voting, etc.
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Vote: () => <span data-testid="vote-icon" />,
   ThumbsUp: () => <span data-testid="thumbs-up" />,
   ThumbsDown: () => <span data-testid="thumbs-down" />,
@@ -129,7 +129,7 @@ describe('ProposalCard Pattern', () => {
   })
 
   it('calls onClick when clicked', () => {
-    const onClick = vi.fn()
+    const onClick = jest.fn()
     render(<ProposalCard proposal={mockProposal} onClick={onClick} />)
     fireEvent.click(screen.getByTestId('proposal-card'))
     expect(onClick).toHaveBeenCalled()
@@ -241,7 +241,7 @@ describe('VotingInterface Pattern', () => {
   })
 
   it('calls onVote with for', () => {
-    const onVote = vi.fn()
+    const onVote = jest.fn()
     render(
       <VotingInterface
         proposalId={1}
@@ -256,7 +256,7 @@ describe('VotingInterface Pattern', () => {
   })
 
   it('calls onVote with against', () => {
-    const onVote = vi.fn()
+    const onVote = jest.fn()
     render(
       <VotingInterface
         proposalId={1}
@@ -416,7 +416,7 @@ describe('ProposalList Pattern', () => {
   })
 
   it('calls onSelectProposal when clicked', () => {
-    const onSelectProposal = vi.fn()
+    const onSelectProposal = jest.fn()
     render(
       <ProposalList
         proposals={mockProposals}
@@ -446,7 +446,7 @@ describe('ProposalList Pattern', () => {
   })
 
   it('calls onFilterChange when filter clicked', () => {
-    const onFilterChange = vi.fn()
+    const onFilterChange = jest.fn()
     render(
       <ProposalList
         proposals={mockProposals}
@@ -590,7 +590,7 @@ describe('DelegationPanel Pattern', () => {
   }
 
   // Need to import React for useState
-  const React = { useState: vi.fn().mockReturnValue(['', vi.fn()]) }
+  const React = { useState: jest.fn().mockReturnValue(['', jest.fn()]) }
 
   it('shows delegation form when not delegated', () => {
     render(
@@ -633,7 +633,7 @@ describe('DelegationPanel Pattern', () => {
   })
 
   it('calls onUndelegate when clicked', () => {
-    const onUndelegate = vi.fn()
+    const onUndelegate = jest.fn()
     render(
       <DelegationPanel
         currentDelegate="0x1234...5678"

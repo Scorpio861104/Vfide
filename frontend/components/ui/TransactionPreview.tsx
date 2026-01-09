@@ -97,7 +97,7 @@ export function TransactionPreview({
       {/* Testnet gas warning */}
       {IS_TESTNET && (
         <div className="flex items-start gap-2 text-xs bg-amber-900/20 border border-amber-800/50 rounded-md p-2 mt-2">
-          <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
+          <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
           <span className="text-amber-300/80">
             Testnet gas estimates may appear higher than mainnet. Real mainnet costs are typically &lt;$0.01 on Base.
           </span>

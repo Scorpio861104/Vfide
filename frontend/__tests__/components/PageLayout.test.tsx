@@ -1,15 +1,15 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock next/link
-vi.mock('next/link', () => ({
+jest.mock('next/link', () => ({
   default: ({ children, href, ...props }: React.PropsWithChildren<{ href: string }>) =>
     React.createElement('a', { href, ...props }, children),
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   ArrowLeft: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'arrow-left' }),
   Menu: ({ className }: { className?: string }) => 
@@ -19,7 +19,7 @@ vi.mock('lucide-react', () => ({
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: React.PropsWithChildren<{ className?: string; style?: object }>) =>
       React.createElement('div', { className, style, ...props }, children),

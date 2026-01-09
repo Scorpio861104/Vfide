@@ -27,7 +27,7 @@ export function MembersTab({ searchQuery }: { searchQuery: string }) {
 
   return (
     <section className="py-8">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-3 sm:px-4">
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">

@@ -125,7 +125,7 @@ export function VaultInfoTooltip({
 
                 <a
                   href="/vault"
-                  className="block w-full text-center py-2 px-3 bg-gradient-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F] font-semibold text-xs rounded-lg hover:opacity-90 transition-opacity"
+                  className="block w-full text-center py-2 px-3 bg-linear-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F] font-semibold text-xs rounded-lg hover:opacity-90 transition-opacity"
                 >
                   Create Vault →
                 </a>

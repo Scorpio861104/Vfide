@@ -40,18 +40,18 @@ export default function GuardiansPage() {
 
         {/* Header */}
         <section className="py-12 relative z-10">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center gap-4 mb-4"
             >
-              <div className="p-4 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl shadow-lg shadow-cyan-500/25">
+              <div className="p-4 bg-linear-to-br from-cyan-500 to-blue-500 rounded-2xl shadow-lg shadow-cyan-500/25">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-                  Guardian <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Dashboard</span>
+                  Guardian <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400">Dashboard</span>
                 </h1>
                 <p className="text-xl text-gray-400">
                   Manage vault recoveries you&apos;re responsible for
@@ -63,7 +63,7 @@ export default function GuardiansPage() {
 
         {/* Tab Navigation */}
         <section className="bg-[#0D0D0F]/80 backdrop-blur-xl border-b border-white/10 sticky top-20 z-40">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label="Guardian management sections">
               {[
                 { id: 'overview' as const, label: 'Overview', icon: Shield },
@@ -83,7 +83,7 @@ export default function GuardiansPage() {
                   whileTap={{ scale: 0.98 }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${
                     activeTab === tab.id
-                      ? `bg-gradient-to-r ${colorMap[tab.id].gradient} text-white shadow-lg ${colorMap[tab.id].shadow}`
+                      ? `bg-linear-to-r ${colorMap[tab.id].gradient} text-white shadow-lg ${colorMap[tab.id].shadow}`
                       : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -134,8 +134,8 @@ function OverviewTab() {
       className="space-y-8 max-w-4xl mx-auto"
     >
       {/* What is a Guardian */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/30 p-8">
-        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-6 flex items-center gap-3">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/30 p-8">
+        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 mb-6 flex items-center gap-3">
           <Shield className="w-7 h-7 text-cyan-400" />
           What is a Guardian?
         </h2>
@@ -152,7 +152,7 @@ function OverviewTab() {
       </div>
 
       {/* How Recovery Works */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-8">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
           <Clock className="w-7 h-7 text-cyan-400" />
           How Recovery Works
@@ -171,7 +171,7 @@ function OverviewTab() {
               transition={{ delay: i * 0.1 }}
               className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 shadow-lg shadow-cyan-500/25">
+              <div className="w-10 h-10 bg-linear-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold shrink-0 shadow-lg shadow-cyan-500/25">
                 {item.step}
               </div>
               <div>
@@ -189,7 +189,7 @@ function OverviewTab() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           whileHover={{ scale: 1.02 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/30 p-6"
+          className="relative overflow-hidden rounded-2xl bg-linear-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/30 p-6"
         >
           <div className="flex items-center gap-2 mb-4">
             <span className="text-3xl">🔑</span>
@@ -208,7 +208,7 @@ function OverviewTab() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border border-yellow-500/30 rounded-2xl p-6"
+          className="bg-linear-to-br from-yellow-500/10 to-amber-500/5 border border-yellow-500/30 rounded-2xl p-6"
         >
           <div className="flex items-center gap-2 mb-4">
             <span className="text-3xl">💎</span>
@@ -259,7 +259,7 @@ function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6 max-w-4xl mx-auto"
       >
-        <div className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
+        <div className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
           <motion.div
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -285,7 +285,7 @@ function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6 max-w-4xl mx-auto"
     >
-      <div className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+      <div className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
           <Users className="w-5 h-5 text-cyan-400" />
           Vaults You&apos;re Guarding ({vaultsGuarding.length})
@@ -329,7 +329,7 @@ function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border border-yellow-500/30 rounded-2xl p-6"
+        className="bg-linear-to-br from-yellow-500/10 to-amber-500/5 border border-yellow-500/30 rounded-2xl p-6"
       >
         <h3 className="text-lg font-bold text-yellow-400 mb-3">⚠️ Guardian Responsibilities</h3>
         <ul className="space-y-2 text-white text-sm">
@@ -415,7 +415,7 @@ function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-r from-red-500/10 to-red-500/5 border border-red-500/30 rounded-2xl p-4"
+        className="bg-linear-to-r from-red-500/10 to-red-500/5 border border-red-500/30 rounded-2xl p-4"
       >
         <p className="text-red-400 font-bold text-center">
           ⚠️ {pendingRecoveries.length} recovery request(s) need your attention
@@ -428,7 +428,7 @@ function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.1 }}
-          className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-yellow-500/50 rounded-2xl p-6"
+          className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-yellow-500/50 rounded-2xl p-6"
         >
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -458,7 +458,7 @@ function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
+              className="flex-1 px-6 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
             >
               ✓ Approve Recovery
             </motion.button>
@@ -530,7 +530,7 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             whileHover={{ scale: 1.02, y: -2 }}
-            className={`relative overflow-hidden bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border border-white/10 rounded-2xl p-6`}
+            className={`relative overflow-hidden bg-linear-to-br ${stat.gradient} backdrop-blur-xl border border-white/10 rounded-2xl p-6`}
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-400 text-sm">{stat.label}</span>
@@ -547,7 +547,7 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -558,7 +558,7 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+            className="px-4 py-2 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
           >
             {showAddForm ? 'Cancel' : '+ Add Guardian'}
           </motion.button>
@@ -590,7 +590,7 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+                className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
               >
                 Add Guardian
               </motion.button>
@@ -604,7 +604,7 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <h3 className="text-xl font-bold text-white mb-4">Your Guardians</h3>
         <div className="space-y-3">
@@ -698,7 +698,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6"
+        className="bg-linear-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6"
       >
         <h2 className="text-xl font-bold text-yellow-400 mb-4 flex items-center gap-3">
           <Heart size={24} />
@@ -725,7 +725,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-white">Current Next of Kin</h3>
@@ -740,7 +740,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
         </div>
         
         {currentNextOfKin ? (
-          <div className="p-4 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-xl">
+          <div className="p-4 bg-linear-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-xl">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-yellow-500/20 rounded-full">
                 <Heart className="text-yellow-400" size={24} />
@@ -787,7 +787,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-500 text-black rounded-xl font-bold shadow-lg shadow-yellow-500/25"
+                className="w-full py-3 bg-linear-to-r from-yellow-500 to-amber-500 text-black rounded-xl font-bold shadow-lg shadow-yellow-500/25"
               >
                 Set Next of Kin
               </motion.button>
@@ -801,7 +801,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/30 rounded-2xl p-6"
+          className="bg-linear-to-br from-red-500/10 to-red-500/5 border border-red-500/30 rounded-2xl p-6"
         >
           <h3 className="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
             <AlertCircle size={20} />
@@ -814,7 +814,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/25"
+            className="w-full py-3 bg-linear-to-r from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/25"
           >
             Deny Inheritance Request (I&apos;m Alive!)
           </motion.button>
@@ -826,7 +826,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <h3 className="text-xl font-bold text-white mb-4">Inheritance Process</h3>
         <div className="space-y-3">
@@ -843,7 +843,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
               transition={{ delay: 0.3 + i * 0.1 }}
               className="flex gap-4 p-3 bg-black/20 rounded-xl border border-white/10"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-full flex items-center justify-center text-black font-bold flex-shrink-0 text-sm shadow-lg shadow-yellow-500/25">
+              <div className="w-8 h-8 bg-linear-to-br from-yellow-500 to-amber-500 rounded-full flex items-center justify-center text-black font-bold shrink-0 text-sm shadow-lg shadow-yellow-500/25">
                 {item.step}
               </div>
               <div>
@@ -904,7 +904,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-6"
+        className="bg-linear-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-6"
       >
         <h2 className="text-xl font-bold text-cyan-400 mb-4 flex items-center gap-3">
           <Key size={24} />
@@ -927,7 +927,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6"
+          className="bg-linear-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6"
         >
           <h3 className="text-xl font-bold text-yellow-400 mb-4 flex items-center gap-2">
             <RefreshCw size={20} className="animate-spin" />
@@ -950,7 +950,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
+              className="flex-1 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
             >
               Finalize Recovery
             </motion.button>
@@ -968,7 +968,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+          className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-white">Request Recovery</h3>
@@ -976,7 +976,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowRequestForm(!showRequestForm)}
-              className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+              className="px-4 py-2 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
             >
               {showRequestForm ? 'Cancel' : 'Start Recovery'}
             </motion.button>
@@ -1013,7 +1013,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+                  className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
                 >
                   Request Recovery
                 </motion.button>
@@ -1031,11 +1031,11 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <h3 className="text-xl font-bold text-white mb-4">Recovery Timeline</h3>
         <div className="relative">
-          <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-gradient-to-b from-cyan-500/50 via-yellow-500/50 to-green-500/50" />
+          <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-linear-to-b from-cyan-500/50 via-yellow-500/50 to-green-500/50" />
           <div className="space-y-6">
             {[
               { icon: Key, color: "cyan", title: "Recovery Requested", desc: "Owner, guardian, or Next of Kin initiates request" },
@@ -1052,7 +1052,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                 className="flex gap-4 relative"
               >
                 <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center z-10 flex-shrink-0 bg-${step.color}-500/20 border border-${step.color}-500/50`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center z-10 shrink-0 bg-${step.color}-500/20 border border-${step.color}-500/50`}
                 >
                   <step.icon size={16} className={`text-${step.color}-400`} />
                 </div>
@@ -1071,7 +1071,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
           <Lock size={18} className="text-yellow-400" />

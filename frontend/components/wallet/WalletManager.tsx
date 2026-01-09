@@ -317,13 +317,13 @@ function WalletCard({ wallet, onActivate, onDisconnect, onEdit }: WalletCardProp
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="text-3xl md:text-4xl flex-shrink-0">{wallet.icon}</span>
+          <span className="text-3xl md:text-4xl shrink-0">{wallet.icon}</span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white truncate">
                 {wallet.nickname}
               </h3>
-              <div className={`w-2 h-2 rounded-full ${statusColor} flex-shrink-0`} />
+              <div className={`w-2 h-2 rounded-full ${statusColor} shrink-0`} />
             </div>
             <p className="font-mono text-xs md:text-sm text-gray-600 dark:text-gray-400">
               {wallet.address}
@@ -439,7 +439,7 @@ function TokenList({ tokens }: TokenListProps) {
             className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
           >
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="text-2xl md:text-3xl flex-shrink-0">{token.logo}</span>
+              <span className="text-2xl md:text-3xl shrink-0">{token.logo}</span>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm md:text-base text-gray-900 dark:text-white">
                   {token.symbol}
@@ -471,7 +471,7 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, color }: StatCardProps) {
   return (
-    <div className={`rounded-lg p-4 md:p-6 bg-gradient-to-br ${color} text-white shadow-lg`}>
+    <div className={`rounded-lg p-4 md:p-6 bg-linear-to-br ${color} text-white shadow-lg`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs md:text-sm font-medium opacity-90 mb-1 md:mb-2">{label}</p>

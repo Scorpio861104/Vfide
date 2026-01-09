@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
@@ -38,7 +38,7 @@ const ThrowingComponent = ({ shouldThrow }: { shouldThrow: boolean }) => {
 
 describe('ErrorBoundary', () => {
   beforeEach(() => {
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    jest.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   it('renders children when no error', () => {
@@ -60,7 +60,7 @@ describe('ErrorBoundary', () => {
   })
 
   it('calls onError callback when error occurs', () => {
-    const onError = vi.fn()
+    const onError = jest.fn()
     render(
       <ErrorBoundaryTestWrapper onError={onError}>
         <ThrowingComponent shouldThrow={true} />

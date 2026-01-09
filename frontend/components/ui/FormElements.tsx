@@ -69,14 +69,14 @@ export function Modal({
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className={`
                 w-full ${sizes[size]} max-h-[85vh] overflow-y-auto
-                bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D]
+                bg-linear-to-b from-[#2A2A2F] to-[#1A1A1D]
                 border border-white/10 rounded-3xl shadow-2xl
                 pointer-events-auto
               `}
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="sticky top-0 flex items-start justify-between p-6 pb-0 bg-gradient-to-b from-[#2A2A2F] to-transparent z-10">
+                <div className="sticky top-0 flex items-start justify-between p-6 pb-0 bg-linear-to-b from-[#2A2A2F] to-transparent z-10">
                   <div>
                     {title && (
                       <h2 className="text-2xl font-bold text-[#F5F3E8]">{title}</h2>
@@ -142,11 +142,11 @@ export function Button({
   type = 'button'
 }: ButtonProps) {
   const variants = {
-    primary: 'bg-gradient-to-r from-[#00F0FF] to-[#00A8B5] text-black hover:shadow-lg hover:shadow-[#00F0FF]/25',
+    primary: 'bg-linear-to-r from-[#00F0FF] to-[#00A8B5] text-black hover:shadow-lg hover:shadow-[#00F0FF]/25',
     secondary: 'bg-white/10 text-[#F5F3E8] hover:bg-white/20 border border-white/10',
     ghost: 'bg-transparent text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-white/5',
-    danger: 'bg-gradient-to-r from-[#FF4444] to-[#CC3333] text-white hover:shadow-lg hover:shadow-[#FF4444]/25',
-    success: 'bg-gradient-to-r from-[#50C878] to-[#3DA55D] text-black hover:shadow-lg hover:shadow-[#50C878]/25',
+    danger: 'bg-linear-to-r from-[#FF4444] to-[#CC3333] text-white hover:shadow-lg hover:shadow-[#FF4444]/25',
+    success: 'bg-linear-to-r from-[#50C878] to-[#3DA55D] text-black hover:shadow-lg hover:shadow-[#50C878]/25',
   }
 
   const sizes = {
@@ -347,7 +347,7 @@ export function Badge({
     warning: 'bg-[#FFD700]/20 text-[#FFD700]',
     danger: 'bg-[#FF4444]/20 text-[#FF4444]',
     info: 'bg-[#00F0FF]/20 text-[#00F0FF]',
-    premium: 'bg-gradient-to-r from-[#FFD700]/20 to-[#FFA500]/20 text-[#FFD700]',
+    premium: 'bg-linear-to-r from-[#FFD700]/20 to-[#FFA500]/20 text-[#FFD700]',
   }
 
   const sizes = {
@@ -506,7 +506,7 @@ export function Alert({
       `}
     >
       <div className="flex items-start gap-3">
-        {icon && <span className="flex-shrink-0 mt-0.5">{icon}</span>}
+        {icon && <span className="shrink-0 mt-0.5">{icon}</span>}
         <div className="flex-1">
           {title && <h4 className="font-semibold mb-1">{title}</h4>}
           <div className="text-sm opacity-90">{children}</div>
@@ -514,7 +514,7 @@ export function Alert({
         {dismissible && (
           <button
             onClick={onDismiss}
-            className="flex-shrink-0 p-1 hover:bg-white/10 rounded transition-colors"
+            className="shrink-0 p-1 hover:bg-white/10 rounded transition-colors"
           >
             <X size={16} />
           </button>
@@ -537,14 +537,14 @@ export function Divider({ label, className = '' }: DividerProps) {
   if (label) {
     return (
       <div className={`flex items-center gap-4 ${className}`}>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
         <span className="text-sm text-[#6A6A6F] font-medium">{label}</span>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
       </div>
     )
   }
 
   return (
-    <div className={`h-px bg-gradient-to-r from-transparent via-white/20 to-transparent ${className}`} />
+    <div className={`h-px bg-linear-to-r from-transparent via-white/20 to-transparent ${className}`} />
   )
 }

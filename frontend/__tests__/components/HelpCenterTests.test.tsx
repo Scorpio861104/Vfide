@@ -2,13 +2,13 @@
  * Tests for HelpCenter component
  * Help and documentation center with topics
  */
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, onClick, ...props }: any) => <div className={className} onClick={onClick} {...props}>{children}</div>,
     button: ({ children, className, onClick, ...props }: any) => <button className={className} onClick={onClick} {...props}>{children}</button>,
@@ -23,7 +23,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react icons
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   HelpCircle: () => <span data-testid="icon-help-circle">HelpCircle</span>,
   X: () => <span data-testid="icon-x">X</span>,
   Book: () => <span data-testid="icon-book">Book</span>,
@@ -39,7 +39,7 @@ vi.mock('lucide-react', () => ({
 
 describe('HelpCenter', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should render help button when closed', async () => {

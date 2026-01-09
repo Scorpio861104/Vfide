@@ -1,19 +1,19 @@
 // Tests for useVaultHooks.ts - comprehensive coverage for all 17 exported functions
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock wagmi before importing hooks
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useReadContract: vi.fn(),
-  useWriteContract: vi.fn(),
-  useWaitForTransactionReceipt: vi.fn(),
-  useChainId: vi.fn(),
-  useWatchContractEvent: vi.fn(),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useReadContract: jest.fn(),
+  useWriteContract: jest.fn(),
+  useWaitForTransactionReceipt: jest.fn(),
+  useChainId: jest.fn(),
+  useWatchContractEvent: jest.fn(),
 }))
 
 // Mock abis
-vi.mock('@/lib/abis', () => ({
+jest.mock('@/lib/abis', () => ({
   VaultInfrastructureABI: [],
   VFIDETokenABI: [],
   VaultHubABI: [],
@@ -21,7 +21,7 @@ vi.mock('@/lib/abis', () => ({
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     VFIDE_TOKEN: '0x1234567890123456789012345678901234567890',
     VAULT_HUB: '0x2345678901234567890123456789012345678901',
@@ -29,8 +29,8 @@ vi.mock('@/lib/contracts', () => ({
 }))
 
 // Mock utils
-vi.mock('@/lib/utils', () => ({
-  devLog: vi.fn(),
+jest.mock('@/lib/utils', () => ({
+  devLog: jest.fn(),
 }))
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
@@ -61,13 +61,13 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   const mockTxHash = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
       isConnected: true,
     })
     ;(useWriteContract as Mock).mockReturnValue({
-      writeContractAsync: vi.fn().mockResolvedValue(mockTxHash),
+      writeContractAsync: jest.fn().mockResolvedValue(mockTxHash),
     })
     ;(useWaitForTransactionReceipt as Mock).mockReturnValue({
       isSuccess: false,
@@ -134,7 +134,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== useCreateVault ====================
   describe('useCreateVault', () => {
     it('should call createVault function', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
@@ -159,7 +159,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
 
     it('should track transaction pending state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: undefined,
         isPending: true,
       })
@@ -189,7 +189,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: rawBalance,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useVaultBalance())
@@ -202,7 +202,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: undefined,
         isLoading: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       })
 
       const { result } = renderHook(() => useVaultBalance())
@@ -211,7 +211,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should provide refetch function', () => {
-      const mockRefetch = vi.fn()
+      const mockRefetch = jest.fn()
       ;(useReadContract as Mock).mockReturnValue({
         data: BigInt(0),
         isLoading: false,
@@ -227,7 +227,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== useTransferVFIDE ====================
   describe('useTransferVFIDE', () => {
     it('should call transfer function', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
@@ -255,7 +255,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should not transfer when no vault', () => {
-      const mockWriteContract = vi.fn()
+      const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
         data: undefined,
@@ -280,7 +280,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
 
     it('should track transfer loading state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: undefined,
         isPending: true,
       })
@@ -368,7 +368,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== useSetGuardian ====================
   describe('useSetGuardian', () => {
     it('should set guardian successfully', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -383,7 +383,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should handle UV_RecoveryActive error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('UV_RecoveryActive'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('UV_RecoveryActive'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -401,7 +401,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should handle UV_Locked error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('UV_Locked'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('UV_Locked'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -419,7 +419,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should handle generic error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('Generic error'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('Generic error'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -487,7 +487,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== useSetBalanceSnapshotMode ====================
   describe('useSetBalanceSnapshotMode', () => {
     it('should set snapshot mode successfully', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -502,7 +502,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should handle error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('Failed'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('Failed'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -520,7 +520,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== useUpdateBalanceSnapshot ====================
   describe('useUpdateBalanceSnapshot', () => {
     it('should update snapshot successfully', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -535,7 +535,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should handle update error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('Update failed'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('Update failed'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -633,7 +633,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== useApprovePendingTransaction ====================
   describe('useApprovePendingTransaction', () => {
     it('should approve transaction successfully', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -655,7 +655,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should handle approval error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('Not guardian'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('Not guardian'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -673,7 +673,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== useExecutePendingTransaction ====================
   describe('useExecutePendingTransaction', () => {
     it('should execute transaction successfully', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -695,7 +695,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should handle execution error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('Not approved'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('Not approved'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -713,7 +713,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== useCleanupExpiredTransaction ====================
   describe('useCleanupExpiredTransaction', () => {
     it('should cleanup expired transaction successfully', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -735,7 +735,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should handle cleanup error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('Not expired'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('Not expired'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -764,7 +764,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== useGuardianCancelInheritance ====================
   describe('useGuardianCancelInheritance', () => {
     it('should cancel inheritance successfully', async () => {
-      const mockWriteAsync = vi.fn().mockResolvedValue(mockTxHash)
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -785,7 +785,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     })
 
     it('should handle cancellation error', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue(new Error('No active request'))
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('No active request'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -853,7 +853,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
   // ==================== Non-Error Object Error Handling ====================
   describe('Error handling edge cases', () => {
     it('should handle non-Error object in useSetGuardian', async () => {
-      const mockWriteAsync = vi.fn().mockRejectedValue('string error')
+      const mockWriteAsync = jest.fn().mockRejectedValue('string error')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContractAsync: mockWriteAsync,
       })
@@ -871,7 +871,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     // doesn't return success/error, so we test the non-async behavior
     it('should handle useCreateVault initial state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: false,
       })
@@ -890,7 +890,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     // doesn't return success/error
     it('should handle useTransferVFIDE state tracking', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
         data: mockTxHash,
         isPending: false,
       })

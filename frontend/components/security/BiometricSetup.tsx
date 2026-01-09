@@ -9,12 +9,12 @@ interface BiometricSetupProps {
   className?: string;
 }
 
-export const BiometricSetup: React.FC<BiometricSetupProps> = ({
+export function BiometricSetup({
   userId,
   onComplete,
   onCancel,
   className = ''
-}) => {
+}: BiometricSetupProps) {
   const biometric = useBiometricAuth(userId);
   const [credentialName, setCredentialName] = useState('');
   const [selectedType, setSelectedType] = useState<BiometricType | null>(null);

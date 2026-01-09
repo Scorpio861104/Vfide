@@ -3,11 +3,11 @@
  * Tests for statistics display and metrics components
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
   },
@@ -15,7 +15,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   TrendingUp: () => <span data-testid="trending-up" />,
   TrendingDown: () => <span data-testid="trending-down" />,
   ArrowUp: () => <span data-testid="arrow-up" />,
@@ -369,7 +369,7 @@ describe('LiveMetric Pattern', () => {
   })
 
   it('calls onRefresh when refresh clicked', () => {
-    const onRefresh = vi.fn()
+    const onRefresh = jest.fn()
     render(
       <LiveMetric 
         value="$1,234" 

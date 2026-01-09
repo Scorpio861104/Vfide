@@ -171,7 +171,7 @@ function LeaderboardRow({ entry, index }: { entry: typeof mockLeaderboard[0]; in
       whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
       className={`
         border-b border-white/5 last:border-0
-        ${entry.rank <= 3 ? 'bg-gradient-to-r from-[#FFD700]/5 to-transparent' : ''}
+        ${entry.rank <= 3 ? 'bg-linear-to-r from-[#FFD700]/5 to-transparent' : ''}
       `}
     >
       <div className="md:hidden flex items-center justify-between px-4 py-4">
@@ -249,16 +249,16 @@ export default function LeaderboardPage() {
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Header */}
-        <section className="py-12 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
-          <div className="container mx-auto px-4 max-w-5xl">
+        <section className="py-12 bg-linear-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+          <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#FFD700] to-[#FFA500] rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-linear-to-br from-[#FFD700] to-[#FFA500] rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Trophy className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
                 ProofScore Leaderboard
               </h1>
-              <p className="text-xl text-[#A0A0A5] font-[family-name:var(--font-body)]">
+              <p className="text-lg sm:text-xl text-[#A0A0A5] font-[family-name:var(--font-body)]">
                 Top contributors in the VFIDE ecosystem
               </p>
             </div>
@@ -286,7 +286,7 @@ export default function LeaderboardPage() {
 
         {/* Timeframe Filter */}
         <section className="py-4 bg-[#1A1A1D] border-b border-[#3A3A3F] sticky top-20 z-40">
-          <div className="container mx-auto px-4 max-w-5xl">
+          <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
             <div className="flex gap-2">
               {(['all', 'month', 'week'] as const).map((tf) => (
                 <button
@@ -307,7 +307,7 @@ export default function LeaderboardPage() {
 
         {/* Leaderboard Table */}
         <section className="py-8">
-          <div className="container mx-auto px-4 max-w-5xl">
+          <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
             {/* Top 3 Podium */}
             <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
               {/* 2nd Place */}
@@ -327,7 +327,7 @@ export default function LeaderboardPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-[#FFD700]/20 to-[#FFA500]/20 border-2 border-[#FFD700] rounded-xl p-4 md:p-6 text-center -mt-2 md:-mt-4"
+                className="bg-linear-to-br from-[#FFD700]/20 to-[#FFA500]/20 border-2 border-[#FFD700] rounded-xl p-4 md:p-6 text-center -mt-2 md:-mt-4"
               >
                 <Crown className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 text-[#FFD700]" />
                 <div className="text-3xl md:text-4xl font-bold text-[#FFD700] mb-1">1st</div>

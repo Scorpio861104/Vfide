@@ -282,7 +282,7 @@ function MetricCard({ title, type, range, icon: Icon, color }: MetricCardProps) 
       <div className="flex items-start justify-between mb-4">
         <div className="text-sm text-gray-400">{title}</div>
         <div
-          className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center`}
+          className={`w-10 h-10 rounded-lg bg-linear-to-br ${colorClasses[color]} flex items-center justify-center`}
         >
           <Icon className="w-5 h-5" />
         </div>

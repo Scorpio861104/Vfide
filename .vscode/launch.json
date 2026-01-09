@@ -1,0 +1,118 @@
+{
+  // Debug configurations for VFIDE
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: Debug Frontend",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
+    },
+    {
+      "name": "Next.js: Debug Server-side",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": {
+        "NODE_OPTIONS": "--inspect"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    },
+    {
+      "name": "WebSocket Server: Debug",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/websocket-server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "env": {
+        "NODE_ENV": "development",
+        "DEBUG": "socket.io:*"
+      }
+    },
+    {
+      "name": "Jest: Debug Current Test",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/node_modules/.bin/jest",
+      "args": [
+        "${fileBasenameNoExtension}",
+        "--runInBand",
+        "--no-cache",
+        "--watchAll=false"
+      ],
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Jest: Debug All Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/node_modules/.bin/jest",
+      "args": ["--runInBand", "--no-cache"],
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Playwright: Debug Current Test",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/node_modules/.bin/playwright",
+      "args": ["test", "${file}", "--debug"],
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Foundry: Run Anvil",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "anvil",
+      "runtimeArgs": [
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8545",
+        "--chain-id",
+        "31337"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Attach to Node Process",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack: Debug",
+      "configurations": [
+        "Next.js: Debug Frontend",
+        "WebSocket Server: Debug"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "Full Stack",
+        "order": 1
+      },
+      "stopAll": true
+    }
+  ]
+}

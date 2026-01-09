@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import {
   cn,
   validateAddress,
@@ -291,7 +291,7 @@ describe('devLog', () => {
     process.env.NODE_ENV = 'development'
     
     const { devLog } = await import('@/lib/utils')
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     
     devLog.error('test error', { data: 123 })
     
@@ -305,7 +305,7 @@ describe('devLog', () => {
     process.env.NODE_ENV = 'development'
     
     const { devLog } = await import('@/lib/utils')
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
     
     devLog.warn('test warning')
     
@@ -319,7 +319,7 @@ describe('devLog', () => {
     process.env.NODE_ENV = 'development'
     
     const { devLog } = await import('@/lib/utils')
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
     
     devLog.log('test log')
     
@@ -335,7 +335,7 @@ describe('devLog', () => {
     // Need to re-import to get fresh module with production env
     vi.resetModules()
     const { devLog } = await import('@/lib/utils')
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
     
     devLog.log('test log')
     

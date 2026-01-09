@@ -149,7 +149,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold shrink-0">
                       {request.fromAlias
                         ? request.fromAlias[0].toUpperCase()
                         : request.from.slice(2, 4).toUpperCase()}
@@ -199,7 +199,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
 
                     {/* Actions */}
                     {isPending && (
-                      <div className="flex gap-2 flex-shrink-0">
+                      <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => handleAccept(request)}
                           className="p-2 rounded-lg bg-[#50C878]/20 text-[#50C878] hover:bg-[#50C878]/30 transition-colors"

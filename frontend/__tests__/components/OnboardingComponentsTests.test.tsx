@@ -3,11 +3,11 @@
  * Tests for FeatureTooltip, GuardianWizard, OnboardingTour, BeginnerWizard
  * All have 0% coverage
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, onClick, ...props }: React.ComponentProps<'div'>) => (
       <div onClick={onClick} {...props}>{children}</div>
@@ -23,23 +23,23 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock next/navigation
-vi.mock('next/navigation', () => ({
+jest.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: jest.fn(),
   }),
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({
     isConnected: true,
   }),
 }))
 
 // Mock hooks
-vi.mock('@/hooks/useSimpleVault', () => ({
+jest.mock('@/hooks/useSimpleVault', () => ({
   useSimpleVault: () => ({
-    executeVaultAction: vi.fn(),
+    executeVaultAction: jest.fn(),
     userMessage: '',
     actionStatus: 'idle',
   }),
@@ -47,12 +47,12 @@ vi.mock('@/hooks/useSimpleVault', () => ({
 
 describe('GuardianWizard', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders with onClose prop', async () => {
     const { GuardianWizard } = await import('@/components/onboarding/GuardianWizard')
-    const mockOnClose = vi.fn()
+    const mockOnClose = jest.fn()
     render(<GuardianWizard onClose={mockOnClose} />)
     
     expect(screen.getByText('What are Guardians?')).toBeInTheDocument()
@@ -60,7 +60,7 @@ describe('GuardianWizard', () => {
 
   it('shows step progress indicators', async () => {
     const { GuardianWizard } = await import('@/components/onboarding/GuardianWizard')
-    render(<GuardianWizard onClose={vi.fn()} />)
+    render(<GuardianWizard onClose={jest.fn()} />)
     
     // 4 steps in the wizard
     const progressBars = document.querySelectorAll('.h-2.flex-1.rounded-full')
@@ -69,14 +69,14 @@ describe('GuardianWizard', () => {
 
   it('has close button', async () => {
     const { GuardianWizard } = await import('@/components/onboarding/GuardianWizard')
-    render(<GuardianWizard onClose={vi.fn()} />)
+    render(<GuardianWizard onClose={jest.fn()} />)
     
     expect(screen.getByText('×')).toBeInTheDocument()
   })
 
   it('calls onClose when close button clicked', async () => {
     const { GuardianWizard } = await import('@/components/onboarding/GuardianWizard')
-    const mockOnClose = vi.fn()
+    const mockOnClose = jest.fn()
     render(<GuardianWizard onClose={mockOnClose} />)
     
     fireEvent.click(screen.getByText('×'))
@@ -85,7 +85,7 @@ describe('GuardianWizard', () => {
 
   it('displays first step description', async () => {
     const { GuardianWizard } = await import('@/components/onboarding/GuardianWizard')
-    render(<GuardianWizard onClose={vi.fn()} />)
+    render(<GuardianWizard onClose={jest.fn()} />)
     
     expect(screen.getByText(/Guardians are like trusted friends/i)).toBeInTheDocument()
   })
@@ -93,33 +93,33 @@ describe('GuardianWizard', () => {
 
 describe('OnboardingTour', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders when autoStart is true', async () => {
     const { OnboardingTour } = await import('@/components/onboarding/OnboardingTour')
-    render(<OnboardingTour onComplete={vi.fn()} autoStart={true} />)
+    render(<OnboardingTour onComplete={jest.fn()} autoStart={true} />)
     
     expect(screen.getByText('Welcome to VFIDE')).toBeInTheDocument()
   })
 
   it('does not render when autoStart is false', async () => {
     const { OnboardingTour } = await import('@/components/onboarding/OnboardingTour')
-    render(<OnboardingTour onComplete={vi.fn()} autoStart={false} />)
+    render(<OnboardingTour onComplete={jest.fn()} autoStart={false} />)
     
     expect(screen.queryByText('Welcome to VFIDE')).not.toBeInTheDocument()
   })
 
   it('shows first step description', async () => {
     const { OnboardingTour } = await import('@/components/onboarding/OnboardingTour')
-    render(<OnboardingTour onComplete={vi.fn()} autoStart={true} />)
+    render(<OnboardingTour onComplete={jest.fn()} autoStart={true} />)
     
     expect(screen.getByText(/take a quick tour/i)).toBeInTheDocument()
   })
 
   it('has Next button', async () => {
     const { OnboardingTour } = await import('@/components/onboarding/OnboardingTour')
-    render(<OnboardingTour onComplete={vi.fn()} autoStart={true} />)
+    render(<OnboardingTour onComplete={jest.fn()} autoStart={true} />)
     
     const nextButton = screen.getByRole('button', { name: /next/i })
     expect(nextButton).toBeInTheDocument()
@@ -127,7 +127,7 @@ describe('OnboardingTour', () => {
 
   it('advances to next step when Next clicked', async () => {
     const { OnboardingTour } = await import('@/components/onboarding/OnboardingTour')
-    render(<OnboardingTour onComplete={vi.fn()} autoStart={true} />)
+    render(<OnboardingTour onComplete={jest.fn()} autoStart={true} />)
     
     const nextButton = screen.getByRole('button', { name: /next/i })
     fireEvent.click(nextButton)
@@ -139,7 +139,7 @@ describe('OnboardingTour', () => {
 
 describe('BeginnerWizard', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders by default', async () => {
@@ -174,7 +174,7 @@ describe('BeginnerWizard', () => {
 
   it('closes wizard when X clicked', async () => {
     const { BeginnerWizard } = await import('@/components/onboarding/BeginnerWizard')
-    const mockOnComplete = vi.fn()
+    const mockOnComplete = jest.fn()
     render(<BeginnerWizard onComplete={mockOnComplete} />)
     
     const closeButton = screen.getByText('×')
@@ -187,11 +187,11 @@ describe('BeginnerWizard', () => {
 
 describe('FeatureTooltip', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     // Mock localStorage
     const mockStorage: Record<string, string> = {}
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key: string) => mockStorage[key] || null)
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string, value: string) => {
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation((key: string) => mockStorage[key] || null)
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string, value: string) => {
       mockStorage[key] = value
     })
   })

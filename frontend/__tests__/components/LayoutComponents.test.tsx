@@ -1,49 +1,49 @@
 'use client';
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 
 // Mock next/navigation
-vi.mock('next/navigation', () => ({
-  usePathname: vi.fn(() => '/dashboard'),
+jest.mock('next/navigation', () => ({
+  usePathname: jest.fn(() => '/dashboard'),
 }));
 
 // Mock next/link
-vi.mock('next/link', () => ({
+jest.mock('next/link', () => ({
   default: ({ children, href, className }: any) => (
     <a href={href} className={className}>{children}</a>
   ),
 }));
 
 // Mock wallet components
-vi.mock('@/components/wallet/SimpleWalletConnect', () => ({
+jest.mock('@/components/wallet/SimpleWalletConnect', () => ({
   SimpleWalletConnect: () => <div data-testid="wallet-connect">Wallet</div>,
 }));
 
-vi.mock('@/components/wallet/FaucetButton', () => ({
+jest.mock('@/components/wallet/FaucetButton', () => ({
   FaucetButton: () => <button data-testid="faucet-button">Faucet</button>,
 }));
 
 // Mock vault components
-vi.mock('@/components/vault/VaultStatusModal', () => ({
+jest.mock('@/components/vault/VaultStatusModal', () => ({
   VaultStatusModal: () => <div data-testid="vault-modal" />,
 }));
 
-vi.mock('@/components/vault/VaultStatusIndicator', () => ({
+jest.mock('@/components/vault/VaultStatusIndicator', () => ({
   VaultStatusIndicator: () => <div data-testid="vault-indicator" />,
 }));
 
 // Mock UI components
-vi.mock('@/components/ui/TokenBalance', () => ({
+jest.mock('@/components/ui/TokenBalance', () => ({
   NavbarBalance: () => <div data-testid="navbar-balance">Balance</div>,
 }));
 
-vi.mock('@/components/ui/NotificationCenter', () => ({
+jest.mock('@/components/ui/NotificationCenter', () => ({
   NotificationCenter: () => <div data-testid="notification-center">Notifications</div>,
 }));
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, layoutId, ...props }: any) => (
       <div className={className} data-layoutid={layoutId} {...props}>{children}</div>
@@ -54,7 +54,7 @@ vi.mock('framer-motion', () => ({
 }));
 
 // Mock lucide-react icons
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Github: () => <span data-testid="github-icon">GitHub</span>,
   Twitter: () => <span data-testid="twitter-icon">Twitter</span>,
   MessageCircle: () => <span data-testid="discord-icon">Discord</span>,
@@ -66,7 +66,7 @@ import { Footer } from '@/components/layout/Footer';
 
 describe('GlobalNav', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should render VFIDE logo text', () => {
@@ -128,7 +128,7 @@ describe('GlobalNav', () => {
 
 describe('Footer', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should render VFIDE brand', () => {

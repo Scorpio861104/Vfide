@@ -1,23 +1,23 @@
 'use client';
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock hooks
-vi.mock('@/lib/vfide-hooks', () => ({
-  useFeeCalculator: vi.fn(() => ({
+jest.mock('@/lib/vfide-hooks', () => ({
+  useFeeCalculator: jest.fn(() => ({
     vfideFee: 0.5,
     traditionalFee: 2.9,
     savings: 2.4,
     savingsPercent: 82.76,
   })),
-  useProofScore: vi.fn(() => ({
+  useProofScore: jest.fn(() => ({
     score: 5000,
     burnFee: 0.5,
     tier: 'Silver',
     color: '#C0C0C0',
   })),
-  useSystemStats: vi.fn(() => ({
+  useSystemStats: jest.fn(() => ({
     vaults: 1234,
     merchants: 567,
     transactions24h: 89012,
@@ -26,7 +26,7 @@ vi.mock('@/lib/vfide-hooks', () => ({
 }));
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: any) => (
       <div className={className} style={style} {...props}>{children}</div>
@@ -48,7 +48,7 @@ vi.mock('framer-motion', () => ({
 }));
 
 // Mock lucide-react icons
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Lock: () => <span data-testid="lock-icon">🔒</span>,
   Building2: () => <span data-testid="building-icon">🏢</span>,
   Store: () => <span data-testid="store-icon">🏪</span>,
@@ -61,7 +61,7 @@ import * as hooks from '@/lib/vfide-hooks';
 
 describe('FeeSavingsCalculator', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should render calculator heading', () => {
@@ -135,7 +135,7 @@ describe('FeeSavingsCalculator', () => {
 
 describe('LiveSystemStats', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should render network statistics heading', () => {

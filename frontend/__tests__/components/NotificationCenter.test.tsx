@@ -1,9 +1,9 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import React from 'react'
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Bell: ({ className, onClick }: { className?: string; onClick?: () => void }) => 
     React.createElement('button', { className, onClick, 'data-testid': 'bell-icon' }),
   X: ({ className, onClick }: { className?: string; onClick?: () => void }) => 
@@ -17,7 +17,7 @@ vi.mock('lucide-react', () => ({
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onClick, ...props }: React.PropsWithChildren<{ 
       className?: string; 
@@ -76,7 +76,7 @@ describe('NotificationCenter', () => {
   })
 
   it('calls onDismiss when dismiss button clicked', () => {
-    const onDismiss = vi.fn()
+    const onDismiss = jest.fn()
     const notifications: Notification[] = [
       { id: '1', type: 'info', title: 'Info message' },
     ]
@@ -116,7 +116,7 @@ describe('NotificationItem', () => {
   })
 
   it('calls onDismiss with correct id', () => {
-    const onDismiss = vi.fn()
+    const onDismiss = jest.fn()
     render(
       <NotificationItem 
         notification={{ id: 'abc123', type: 'info', title: 'Info' }} 

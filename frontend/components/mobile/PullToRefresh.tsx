@@ -9,13 +9,13 @@ interface PullToRefreshProps {
   className?: string;
 }
 
-export const PullToRefresh: React.FC<PullToRefreshProps> = ({
+export function PullToRefresh({
   onRefresh,
   children,
   threshold = 80,
   disabled = false,
   className = ''
-}) => {
+}: PullToRefreshProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   
   const { isPulling, isRefreshing, pullDistance, progress } = usePullToRefresh(

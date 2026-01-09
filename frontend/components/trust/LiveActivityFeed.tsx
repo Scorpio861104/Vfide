@@ -125,7 +125,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
         <div className="flex items-start gap-2 sm:gap-3">
           {/* Icon */}
           <motion.div
-            className="text-lg sm:text-xl md:text-2xl flex-shrink-0"
+            className="text-lg sm:text-xl md:text-2xl shrink-0"
             animate={{
               scale: isHovered ? [1, 1.2, 1] : 1,
               rotate: isHovered ? [0, 10, -10, 0] : 0,

@@ -1,9 +1,9 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: any) => (
       <div className={className} style={style} {...props}>{children}</div>
@@ -19,9 +19,9 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock the hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   useMintBadge: () => ({
-    mintBadge: vi.fn().mockResolvedValue(undefined),
+    mintBadge: jest.fn().mockResolvedValue(undefined),
     isMinting: false,
     isSuccess: false,
     txHash: null,
@@ -34,7 +34,7 @@ vi.mock('@/lib/vfide-hooks', () => ({
   useBadgeNFTs: () => ({
     tokenIds: [],
     count: 0,
-    refetch: vi.fn(),
+    refetch: jest.fn(),
   }),
   useUserBadges: () => ({
     badgeIds: [],
@@ -47,7 +47,7 @@ vi.mock('@/lib/vfide-hooks', () => ({
 }))
 
 // Mock badge registry
-vi.mock('@/lib/badge-registry', () => ({
+jest.mock('@/lib/badge-registry', () => ({
   getBadgeById: (id: string) => ({
     id,
     displayName: 'Test Badge',
@@ -63,28 +63,28 @@ vi.mock('@/lib/badge-registry', () => ({
 }))
 
 // Mock toast
-vi.mock('@/lib/utils', () => ({
-  devLog: { error: vi.fn(), warn: vi.fn(), log: vi.fn() },
+jest.mock('@/lib/utils', () => ({
+  devLog: { error: jest.fn(), warn: jest.fn(), log: jest.fn() },
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }))
 
-vi.mock('@/components/ui/toast', () => ({
-  useToast: () => ({ showToast: vi.fn() }),
+jest.mock('@/components/ui/toast', () => ({
+  useToast: () => ({ showToast: jest.fn() }),
 }))
 
 // Mock BadgeDisplay
-vi.mock('@/components/badge/BadgeDisplay', () => ({
+jest.mock('@/components/badge/BadgeDisplay', () => ({
   BadgeDisplay: ({ badgeId }: any) => <div data-testid="badge-display">{badgeId}</div>,
 }))
 
 // Mock UI components
-vi.mock('@/components/ui/button', () => ({
+jest.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, ...props }: any) => (
     <button onClick={onClick} disabled={disabled} {...props}>{children}</button>
   ),
 }))
 
-vi.mock('@/components/ui/card', () => ({
+jest.mock('@/components/ui/card', () => ({
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
   CardHeader: ({ children }: any) => <div>{children}</div>,
   CardContent: ({ children, className }: any) => <div className={className}>{children}</div>,
@@ -93,12 +93,12 @@ vi.mock('@/components/ui/card', () => ({
   CardDescription: ({ children }: any) => <p>{children}</p>,
 }))
 
-vi.mock('@/components/ui/alert', () => ({
+jest.mock('@/components/ui/alert', () => ({
   Alert: ({ children }: any) => <div role="alert">{children}</div>,
   AlertDescription: ({ children }: any) => <span>{children}</span>,
 }))
 
-vi.mock('@/components/ui/progress', () => ({
+jest.mock('@/components/ui/progress', () => ({
   Progress: ({ value, className }: any) => (
     <div className={className} role="progressbar" aria-valuenow={value}>{value}%</div>
   ),
@@ -115,7 +115,7 @@ describe('BadgeNFTMinter', () => {
   })
 
   it('shows badge not found for invalid ID', async () => {
-    vi.mocked(await import('@/lib/badge-registry')).getBadgeById = vi.fn().mockReturnValueOnce(null)
+    jest.mocked(await import('@/lib/badge-registry')).getBadgeById = jest.fn().mockReturnValueOnce(null)
     const { getBadgeById } = await import('@/lib/badge-registry')
     ;(getBadgeById as any).mockReturnValueOnce(null)
     

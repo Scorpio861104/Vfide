@@ -1,24 +1,24 @@
 'use client';
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock badge registry
-vi.mock('@/lib/badge-registry', () => ({
-  getBadgeById: vi.fn(),
-  getAllBadges: vi.fn(() => []),
-  getBadgesByCategory: vi.fn(() => []),
-  getBadgeCategories: vi.fn(() => []),
+jest.mock('@/lib/badge-registry', () => ({
+  getBadgeById: jest.fn(),
+  getAllBadges: jest.fn(() => []),
+  getBadgesByCategory: jest.fn(() => []),
+  getBadgeCategories: jest.fn(() => []),
 }));
 
 // Mock hooks
-vi.mock('@/lib/vfide-hooks', () => ({
-  useUserBadges: vi.fn(() => ({ badgeIds: [], isLoading: false })),
-  useBadgeNFTs: vi.fn(() => ({ count: 0 })),
+jest.mock('@/lib/vfide-hooks', () => ({
+  useUserBadges: jest.fn(() => ({ badgeIds: [], isLoading: false })),
+  useBadgeNFTs: jest.fn(() => ({ count: 0 })),
 }));
 
 // Mock Tabs components
-vi.mock('@/components/ui/tabs', () => ({
+jest.mock('@/components/ui/tabs', () => ({
   Tabs: ({ children, value, onValueChange }: any) => (
     <div data-testid="tabs" data-value={value}>{children}</div>
   ),
@@ -35,12 +35,12 @@ import * as hooks from '@/lib/vfide-hooks';
 
 describe('BadgeDisplay', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Unknown Badge', () => {
     it('should render placeholder for unknown badge', () => {
-      vi.mocked(badgeRegistry.getBadgeById).mockReturnValue(undefined);
+      jest.mocked(badgeRegistry.getBadgeById).mockReturnValue(undefined);
       
       render(<BadgeDisplay badgeId="0x123" />);
       
@@ -48,7 +48,7 @@ describe('BadgeDisplay', () => {
     });
 
     it('should apply size class', () => {
-      vi.mocked(badgeRegistry.getBadgeById).mockReturnValue(undefined);
+      jest.mocked(badgeRegistry.getBadgeById).mockReturnValue(undefined);
       
       const { container } = render(<BadgeDisplay badgeId="0x123" size="lg" />);
       
@@ -57,7 +57,7 @@ describe('BadgeDisplay', () => {
     });
 
     it('should apply custom className', () => {
-      vi.mocked(badgeRegistry.getBadgeById).mockReturnValue(undefined);
+      jest.mocked(badgeRegistry.getBadgeById).mockReturnValue(undefined);
       
       const { container } = render(<BadgeDisplay badgeId="0x123" className="custom-class" />);
       
@@ -78,7 +78,7 @@ describe('BadgeDisplay', () => {
     };
 
     it('should render badge when found', () => {
-      vi.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
+      jest.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
       
       render(<BadgeDisplay badgeId="0xabc" />);
       
@@ -88,7 +88,7 @@ describe('BadgeDisplay', () => {
     });
 
     it('should show badge icon in main display', () => {
-      vi.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
+      jest.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
       
       const { container } = render(<BadgeDisplay badgeId="0xabc" />);
       
@@ -99,7 +99,7 @@ describe('BadgeDisplay', () => {
     });
 
     it('should show points when showPoints is true', () => {
-      vi.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
+      jest.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
       
       render(<BadgeDisplay badgeId="0xabc" showPoints />);
       
@@ -107,7 +107,7 @@ describe('BadgeDisplay', () => {
     });
 
     it('should show description when showDescription is true', () => {
-      vi.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
+      jest.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
       
       render(<BadgeDisplay badgeId="0xabc" showDescription />);
       
@@ -117,7 +117,7 @@ describe('BadgeDisplay', () => {
     });
 
     it('should apply small size', () => {
-      vi.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
+      jest.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
       
       const { container } = render(<BadgeDisplay badgeId="0xabc" size="sm" />);
       
@@ -125,7 +125,7 @@ describe('BadgeDisplay', () => {
     });
 
     it('should apply medium size by default', () => {
-      vi.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
+      jest.mocked(badgeRegistry.getBadgeById).mockReturnValue(mockBadge);
       
       const { container } = render(<BadgeDisplay badgeId="0xabc" />);
       
@@ -159,16 +159,16 @@ describe('BadgeGallery', () => {
   ];
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Loading State', () => {
     it('should show loading spinner when loading', () => {
-      vi.mocked(hooks.useUserBadges).mockReturnValue({
+      jest.mocked(hooks.useUserBadges).mockReturnValue({
         badgeIds: [],
         isLoading: true,
         isError: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       } as any);
       
       const { container } = render(<BadgeGallery />);
@@ -179,13 +179,13 @@ describe('BadgeGallery', () => {
 
   describe('Empty State', () => {
     it('should show empty message when no badges earned', () => {
-      vi.mocked(hooks.useUserBadges).mockReturnValue({
+      jest.mocked(hooks.useUserBadges).mockReturnValue({
         badgeIds: [],
         isLoading: false,
         isError: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       } as any);
-      vi.mocked(hooks.useBadgeNFTs).mockReturnValue({
+      jest.mocked(hooks.useBadgeNFTs).mockReturnValue({
         count: 0,
         nfts: [],
         isLoading: false,
@@ -200,19 +200,19 @@ describe('BadgeGallery', () => {
 
   describe('With Badges', () => {
     beforeEach(() => {
-      vi.mocked(hooks.useUserBadges).mockReturnValue({
+      jest.mocked(hooks.useUserBadges).mockReturnValue({
         badgeIds: ['0x001', '0x002'] as `0x${string}`[],
         isLoading: false,
         isError: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       } as any);
-      vi.mocked(hooks.useBadgeNFTs).mockReturnValue({
+      jest.mocked(hooks.useBadgeNFTs).mockReturnValue({
         count: 1,
         nfts: [],
         isLoading: false,
       } as any);
-      vi.mocked(badgeRegistry.getAllBadges).mockReturnValue(mockBadges);
-      vi.mocked(badgeRegistry.getBadgeById).mockImplementation((id) => 
+      jest.mocked(badgeRegistry.getAllBadges).mockReturnValue(mockBadges);
+      jest.mocked(badgeRegistry.getBadgeById).mockImplementation((id) => 
         mockBadges.find(b => b.id === id)
       );
     });
@@ -245,23 +245,23 @@ describe('BadgeGallery', () => {
 
   describe('Show All Mode', () => {
     beforeEach(() => {
-      vi.mocked(hooks.useUserBadges).mockReturnValue({
+      jest.mocked(hooks.useUserBadges).mockReturnValue({
         badgeIds: ['0x001'] as `0x${string}`[],
         isLoading: false,
         isError: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       } as any);
-      vi.mocked(hooks.useBadgeNFTs).mockReturnValue({
+      jest.mocked(hooks.useBadgeNFTs).mockReturnValue({
         count: 0,
         nfts: [],
         isLoading: false,
       } as any);
-      vi.mocked(badgeRegistry.getAllBadges).mockReturnValue(mockBadges);
-      vi.mocked(badgeRegistry.getBadgeCategories).mockReturnValue(['Commerce', 'Trust']);
-      vi.mocked(badgeRegistry.getBadgesByCategory).mockImplementation((cat) => 
+      jest.mocked(badgeRegistry.getAllBadges).mockReturnValue(mockBadges);
+      jest.mocked(badgeRegistry.getBadgeCategories).mockReturnValue(['Commerce', 'Trust']);
+      jest.mocked(badgeRegistry.getBadgesByCategory).mockImplementation((cat) => 
         mockBadges.filter(b => b.category === cat)
       );
-      vi.mocked(badgeRegistry.getBadgeById).mockImplementation((id) => 
+      jest.mocked(badgeRegistry.getBadgeById).mockImplementation((id) => 
         mockBadges.find(b => b.id === id)
       );
     });
@@ -296,13 +296,13 @@ describe('BadgeGallery', () => {
   describe('Address Prop', () => {
     it('should pass address to hooks', () => {
       const address = '0xabc123' as `0x${string}`;
-      vi.mocked(hooks.useUserBadges).mockReturnValue({
+      jest.mocked(hooks.useUserBadges).mockReturnValue({
         badgeIds: [],
         isLoading: false,
         isError: false,
-        refetch: vi.fn(),
+        refetch: jest.fn(),
       } as any);
-      vi.mocked(hooks.useBadgeNFTs).mockReturnValue({
+      jest.mocked(hooks.useBadgeNFTs).mockReturnValue({
         count: 0,
         nfts: [],
         isLoading: false,

@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 
 // Mock wagmi hooks
-vi.mock('wagmi', () => ({
-  useReadContract: vi.fn(() => ({ data: null, isError: false, isLoading: false })),
+jest.mock('wagmi', () => ({
+  useReadContract: jest.fn(() => ({ data: null, isError: false, isLoading: false })),
 }))
 
 // Mock contracts
-vi.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     VFIDEToken: '0x1234567890123456789012345678901234567890',
   },
@@ -18,7 +18,7 @@ import { useVFIDEBalance } from '@/hooks/useVFIDEBalance'
 
 describe('useVFIDEBalance', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('returns null balance when no data', () => {
@@ -29,7 +29,7 @@ describe('useVFIDEBalance', () => {
   })
 
   it('returns balance when available', () => {
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: 1000000000000000000n as unknown as undefined, // 1 token with 18 decimals
       isError: false,
       isLoading: false,
@@ -40,7 +40,7 @@ describe('useVFIDEBalance', () => {
   })
 
   it('returns large balances', () => {
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: 1000000000000000000000n as unknown as undefined, // 1000 tokens
       isError: false,
       isLoading: false,
@@ -51,7 +51,7 @@ describe('useVFIDEBalance', () => {
   })
 
   it('returns zero balance', () => {
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: 0n as unknown as undefined,
       isError: false,
       isLoading: false,
@@ -62,7 +62,7 @@ describe('useVFIDEBalance', () => {
   })
 
   it('handles loading state', () => {
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: null,
       isError: false,
       isLoading: true,
@@ -73,7 +73,7 @@ describe('useVFIDEBalance', () => {
   })
 
   it('handles error state', () => {
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: null,
       isError: true,
       isLoading: false,

@@ -277,7 +277,7 @@ function TransactionCard({
           </div>
           <div className="w-full h-2 bg-[#2A2A2F] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#FFD700] to-[#00F0FF] transition-all duration-1000"
+              className="h-full bg-linear-to-r from-[#FFD700] to-[#00F0FF] transition-all duration-1000"
               style={{ width: `${Math.min(100, ((now - (eta - 48 * 3600)) / (48 * 3600)) * 100)}%` }}
             />
           </div>

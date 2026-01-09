@@ -1,15 +1,15 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: React.PropsWithChildren<{ className?: string; style?: object }>) =>
       React.createElement('div', { className, style, ...props }, children),
     circle: (props: object) => React.createElement('circle', props),
   },
-  useSpring: () => ({ set: vi.fn(), get: () => 0 }),
+  useSpring: () => ({ set: jest.fn(), get: () => 0 }),
   useTransform: () => 0,
   useInView: () => true,
 }))
@@ -18,11 +18,11 @@ import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 
 describe('AnimatedCounter', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('renders with prefix and suffix', () => {

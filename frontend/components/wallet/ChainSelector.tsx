@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { CHAINS, IS_TESTNET, type SupportedChain, getChainList, getChainNetwork, isChainReady } from '@/lib/chains'
+import { useEffect, useState } from 'react'
 import { useChainId, useSwitchChain } from 'wagmi'
-import { CHAINS, getChainList, isChainReady, IS_TESTNET, type SupportedChain, getChainNetwork } from '@/lib/chains'
 
 interface ChainSelectorProps {
   onChainSelect?: (chain: SupportedChain) => void
@@ -22,7 +22,7 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
     for (const chain of chains) {
       const network = IS_TESTNET ? chain.testnet : chain.mainnet
       if (network.id === chainId) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional state update on prop change to sync selected chain
+         
         setSelectedChain(prev => prev !== chain.id ? chain.id : prev)
         break
       }
@@ -82,7 +82,7 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
               className="fixed inset-0 z-40" 
               onClick={() => setIsOpen(false)} 
             />
-            <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 rounded-xl border border-gray-700 shadow-xl overflow-hidden min-w-[200px] max-w-[calc(100vw-2rem)]">
+            <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 rounded-xl border border-gray-700 shadow-xl overflow-hidden min-w-50 max-w-[calc(100vw-2rem)]">
               {chainList.map((chain) => {
                 const ready = isChainReady(chain.id)
                 return (

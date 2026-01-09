@@ -1,12 +1,12 @@
 /**
  * Comprehensive tests for VaultSettingsPanel component
  */
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: any) => <div className={className}>{children}</div>,
     button: ({ children, className, onClick, disabled, ...props }: any) => (
@@ -17,37 +17,37 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({ address: '0x1234567890123456789012345678901234567890' })),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890' })),
 }))
 
 // Mock vfide-hooks
-vi.mock('@/lib/vfide-hooks', () => ({
-  useUserVault: vi.fn(() => ({
+jest.mock('@/lib/vfide-hooks', () => ({
+  useUserVault: jest.fn(() => ({
     vaultAddress: '0xVaultAddress123456789012345678901234567890' as `0x${string}`,
   })),
-  useVaultBalance: vi.fn(() => ({
+  useVaultBalance: jest.fn(() => ({
     balance: '1000',
     balanceRaw: BigInt('1000000000000000000000'),
   })),
-  useAbnormalTransactionThreshold: vi.fn(() => ({
+  useAbnormalTransactionThreshold: jest.fn(() => ({
     threshold: BigInt('100000000000000000000'),
     usePercentage: true,
     percentageBps: 500, // 5%
   })),
-  useBalanceSnapshot: vi.fn(() => ({
+  useBalanceSnapshot: jest.fn(() => ({
     useSnapshot: false,
     snapshot: BigInt('500000000000000000000'),
   })),
-  useSetBalanceSnapshotMode: vi.fn(() => ({
-    setSnapshotMode: vi.fn(),
+  useSetBalanceSnapshotMode: jest.fn(() => ({
+    setSnapshotMode: jest.fn(),
     isLoading: false,
   })),
-  useUpdateBalanceSnapshot: vi.fn(() => ({
-    updateSnapshot: vi.fn(),
+  useUpdateBalanceSnapshot: jest.fn(() => ({
+    updateSnapshot: jest.fn(),
     isLoading: false,
   })),
-  usePendingTransaction: vi.fn(() => ({
+  usePendingTransaction: jest.fn(() => ({
     pendingTxCount: 2,
     pendingTx: {
       amount: BigInt('50000000000000000000'),
@@ -57,22 +57,22 @@ vi.mock('@/lib/vfide-hooks', () => ({
       expiresAt: BigInt(Date.now() + 86400000),
     },
   })),
-  useApprovePendingTransaction: vi.fn(() => ({
-    approve: vi.fn(),
+  useApprovePendingTransaction: jest.fn(() => ({
+    approve: jest.fn(),
     isLoading: false,
   })),
-  useExecutePendingTransaction: vi.fn(() => ({
-    execute: vi.fn(),
+  useExecutePendingTransaction: jest.fn(() => ({
+    execute: jest.fn(),
     isLoading: false,
   })),
-  useCleanupExpiredTransaction: vi.fn(() => ({
-    cleanup: vi.fn(),
+  useCleanupExpiredTransaction: jest.fn(() => ({
+    cleanup: jest.fn(),
     isLoading: false,
   })),
 }))
 
 // Mock lucide icons
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Shield: () => <span data-testid="icon-shield">Shield</span>,
   AlertTriangle: () => <span data-testid="icon-alert">Alert</span>,
   Clock: () => <span data-testid="icon-clock">Clock</span>,
@@ -88,7 +88,7 @@ import { VaultSettingsPanel } from '@/components/vault/VaultSettingsPanel'
 
 describe('VaultSettingsPanel', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders settings panel', () => {
@@ -129,7 +129,7 @@ describe('VaultSettingsPanel', () => {
 describe('VaultSettingsPanel - No Wallet', () => {
   it('shows connect wallet message', async () => {
     const { useAccount } = await import('wagmi')
-    ;(useAccount as ReturnType<typeof vi.fn>).mockReturnValue({ address: undefined })
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ address: undefined })
     
     const { container } = render(<VaultSettingsPanel />)
     expect(container.textContent).toMatch(/connect|wallet/i)
@@ -139,7 +139,7 @@ describe('VaultSettingsPanel - No Wallet', () => {
 describe('VaultSettingsPanel - No Vault', () => {
   it('shows connect wallet message when no vault', async () => {
     const hooks = await import('@/lib/vfide-hooks')
-    ;(hooks.useUserVault as ReturnType<typeof vi.fn>).mockReturnValue({ vaultAddress: null })
+    ;(hooks.useUserVault as ReturnType<typeof jest.fn>).mockReturnValue({ vaultAddress: null })
     
     const { container } = render(<VaultSettingsPanel />)
     expect(container.textContent).toMatch(/connect|wallet/i)

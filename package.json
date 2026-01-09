@@ -6,6 +6,7 @@
     "dev": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
     "start": "npm --prefix frontend run start",
+    "analyze": "npm --prefix frontend run analyze",
     "postinstall": "npm --prefix frontend install",
     "frontend:install": "npm --prefix frontend install",
     "frontend:typecheck": "npm --prefix frontend run typecheck",
@@ -18,7 +19,12 @@
     "frontend:storybook:build": "npm --prefix frontend run build:storybook",
     "test:all": "npm run frontend:install && npm run frontend:typecheck && npm run frontend:lint && npm run frontend:test && npm run frontend:test:coverage && npm run frontend:test:a11y && npm run frontend:test:e2e && npm run frontend:test:e2e:chromium && npm run frontend:storybook:build && npm run build && npm run test",
     "test": "hardhat test --no-compile",
-    "coverage": "hardhat coverage"
+    "coverage": "hardhat coverage",
+    "dev:clean": "bash scripts/dev-clean.sh",
+    "dev:reset": "bash scripts/dev-reset.sh",
+    "check": "bash scripts/check-all.sh",
+    "validate:env": "bash scripts/validate-env.sh",
+    "security:audit": "bash scripts/security-audit.sh"
   },
   "devDependencies": {
     "@matterlabs/hardhat-zksync-deploy": "^1.8.0",

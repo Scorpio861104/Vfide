@@ -3,16 +3,16 @@
  * Tests for useProofScoreHooks to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi
-const mockUseAccount = vi.fn()
-const mockUseReadContract = vi.fn()
-const mockUseWriteContract = vi.fn()
-const mockUseWaitForTransactionReceipt = vi.fn()
+const mockUseAccount = jest.fn()
+const mockUseReadContract = jest.fn()
+const mockUseWriteContract = jest.fn()
+const mockUseWaitForTransactionReceipt = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
@@ -20,14 +20,14 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock contracts
-vi.mock('../../lib/contracts', () => ({
+jest.mock('../../lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
   },
 }))
 
 // Mock ABIs
-vi.mock('../../lib/abis', () => ({
+jest.mock('../../lib/abis', () => ({
   SeerABI: [],
 }))
 
@@ -40,7 +40,7 @@ import {
 
 describe('useProofScore', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0x1234' })
   })
 
@@ -48,7 +48,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(8000),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -62,7 +62,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(7000),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -75,7 +75,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(5000),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -88,7 +88,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(4000),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -101,7 +101,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(3000),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -114,7 +114,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(9000),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -126,7 +126,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(5500),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -138,7 +138,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(5400),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -150,7 +150,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(5600),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -162,7 +162,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(7000),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -174,7 +174,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(8000),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -186,7 +186,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -199,7 +199,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(8500),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const customAddress = '0xCustom' as `0x${string}`
@@ -212,7 +212,7 @@ describe('useProofScore', () => {
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: true,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useProofScore())
@@ -222,10 +222,10 @@ describe('useProofScore', () => {
 })
 
 describe('useEndorse', () => {
-  const mockWriteContractAsync = vi.fn()
+  const mockWriteContractAsync = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       data: undefined,
@@ -336,7 +336,7 @@ describe('useEndorse', () => {
 
 describe('useScoreBreakdown', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0x1234' })
   })
 
@@ -344,7 +344,7 @@ describe('useScoreBreakdown', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(7500),
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useScoreBreakdown())
@@ -356,7 +356,7 @@ describe('useScoreBreakdown', () => {
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useScoreBreakdown())
@@ -369,7 +369,7 @@ describe('useScoreBreakdown', () => {
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: true,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useScoreBreakdown())

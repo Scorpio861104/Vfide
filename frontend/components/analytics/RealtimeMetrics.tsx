@@ -27,13 +27,13 @@ interface RealtimeMetricsProps {
   className?: string;
 }
 
-export const RealtimeMetrics: React.FC<RealtimeMetricsProps> = ({
+export function RealtimeMetrics({
   metrics: initialMetrics,
   onUpdate,
   updateInterval = 5000,
   maxHistoryLength = 60,
   className = ''
-}) => {
+}: RealtimeMetricsProps) {
   const [metrics, setMetrics] = useState<RealtimeMetric[]>(initialMetrics);
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -90,7 +90,7 @@ export const RealtimeMetrics: React.FC<RealtimeMetricsProps> = ({
     }
   };
 
-  const MiniSparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color = '#3b82f6' }) => {
+  function MiniSparkline({ data, color = '#3b82f6' }: { data: number[]; color?: string }) {
     if (data.length < 2) return <div className="w-full h-12" />;
 
     const max = Math.max(...data);

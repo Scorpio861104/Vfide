@@ -6,21 +6,21 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useAnnounce } from '@/lib/accessibility';
+import { formatExpirationTime, formatUsageLimit } from '@/lib/inviteLinks';
 import { motion } from 'framer-motion';
 import {
-  Users,
-  Clock,
-  Check,
-  X,
-  AlertCircle,
-  Loader2,
-  Shield,
+    AlertCircle,
+    Check,
+    Clock,
+    Loader2,
+    Shield,
+    Users,
+    X,
 } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { formatExpirationTime, formatUsageLimit } from '@/lib/inviteLinks';
-import { useAnnounce } from '@/lib/accessibility';
 
 interface InviteData {
   invite: {
@@ -208,11 +208,11 @@ export default function InvitePage() {
       >
         {/* Group Info */}
         <div className="text-center mb-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">
-            You've been invited!
+            You&apos;ve been invited!
           </h1>
           <p className="text-gray-400">
             {inviteData?.invite.metadata?.description || 'Join this group on VFIDE'}
@@ -250,7 +250,7 @@ export default function InvitePage() {
         {/* Error Message */}
         {error && (
           <div className="bg-red-900/20 border border-red-900/30 rounded-lg p-4 mb-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
             <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
@@ -298,7 +298,7 @@ export default function InvitePage() {
 
         {/* Footer */}
         <p className="text-xs text-gray-500 text-center mt-6">
-          By joining, you agree to the group's rules and VFIDE's terms of service
+          By joining, you agree to the group&apos;s rules and VFIDE&apos;s terms of service
         </p>
       </motion.div>
     </div>

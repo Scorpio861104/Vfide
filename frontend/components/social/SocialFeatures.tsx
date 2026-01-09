@@ -286,7 +286,7 @@ interface UserCardProps {
   onBlock: (userId: string) => void;
 }
 
-const UserCard: React.FC<UserCardProps> = ({
+function UserCard({
   user,
   relationship,
   onFollow,
@@ -294,7 +294,8 @@ const UserCard: React.FC<UserCardProps> = ({
   onAddFriend,
   onRemoveFriend,
   onBlock,
-}) => (
+}: UserCardProps) {
+  return (
   <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
     <div className="flex items-start justify-between mb-3">
       <div className="flex-1">
@@ -375,7 +376,8 @@ const UserCard: React.FC<UserCardProps> = ({
       )}
     </div>
   </div>
-);
+  );
+}
 
 interface FriendRequestCardProps {
   request: FriendRequest;
@@ -383,7 +385,8 @@ interface FriendRequestCardProps {
   onReject: (requestId: string) => void;
 }
 
-const FriendRequestCard: React.FC<FriendRequestCardProps> = ({ request, onAccept, onReject }) => (
+function FriendRequestCard({ request, onAccept, onReject }: FriendRequestCardProps) {
+  return (
   <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 flex items-center justify-between">
     <div className="flex items-center gap-3 flex-1">
       <span className="text-3xl">{request.fromUser.avatar}</span>
@@ -408,7 +411,8 @@ const FriendRequestCard: React.FC<FriendRequestCardProps> = ({ request, onAccept
       </button>
     </div>
   </div>
-);
+  );
+}
 
 interface SuggestionCardProps {
   suggestion: SocialSuggestion;
@@ -416,7 +420,8 @@ interface SuggestionCardProps {
   onDismiss: (userId: string) => void;
 }
 
-const SuggestionCard: React.FC<SuggestionCardProps> = ({ suggestion, onFollow, onDismiss }) => (
+function SuggestionCard({ suggestion, onFollow, onDismiss }: SuggestionCardProps) {
+  return (
   <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
     <div className="flex items-start gap-3 mb-3">
       <span className="text-3xl">{suggestion.user.avatar}</span>
@@ -426,7 +431,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ suggestion, onFollow, o
             <h3 className="font-semibold">{suggestion.user.displayName}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">@{suggestion.user.username}</p>
           </div>
-          <div className="text-right text-xs font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded">
+          <div className="text-right text-xs font-semibold bg-linear-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded">
             {suggestion.score}%
           </div>
         </div>
@@ -451,7 +456,8 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({ suggestion, onFollow, o
       </button>
     </div>
   </div>
-);
+  );
+}
 
 interface FeedPostCardProps {
   post: FeedPost;
@@ -460,7 +466,8 @@ interface FeedPostCardProps {
   onShare: (postId: string) => void;
 }
 
-const FeedPostCard: React.FC<FeedPostCardProps> = ({ post, onLike, onComment, onShare }) => (
+function FeedPostCard({ post, onLike, onComment, onShare }: FeedPostCardProps) {
+  return (
   <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
     <div className="flex items-center gap-3 mb-3">
       <span className="text-2xl">{post.user.avatar}</span>
@@ -507,7 +514,8 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({ post, onLike, onComment, on
       </button>
     </div>
   </div>
-);
+  );
+}
 
 // ==================== MAIN COMPONENT ====================
 
@@ -515,7 +523,7 @@ interface SocialFeaturesProps {
   className?: string;
 }
 
-const SocialFeatures: React.FC<SocialFeaturesProps> = ({ className = '' }) => {
+function SocialFeatures({ className = '' }: SocialFeaturesProps) {
   // State Management
   const [activeTab, setActiveTab] = useState<
     'feed' | 'following' | 'followers' | 'friends' | 'suggestions' | 'requests' | 'blocked'

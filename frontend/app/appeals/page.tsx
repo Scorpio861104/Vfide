@@ -37,7 +37,7 @@ export default function AppealsPage() {
       <GlobalNav />
       <div className="min-h-screen bg-black text-white pt-24 pb-16">
         <div className="max-w-5xl mx-auto px-4 md:px-8 space-y-10">
-          <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0f1117] via-[#0a0c12] to-[#05060a] border border-white/10 p-8">
+          <section className="relative overflow-hidden rounded-2xl bg-linear-to-br from-[#0f1117] via-[#0a0c12] to-[#05060a] border border-white/10 p-8">
             <div className="absolute -left-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
             <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl" />
 
@@ -107,7 +107,7 @@ export default function AppealsPage() {
                 disabled={!canSubmit}
                 className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
                   canSubmit
-                    ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-black hover:shadow-lg hover:shadow-emerald-500/30'
+                    ? 'bg-linear-to-r from-emerald-500 to-cyan-500 text-black hover:shadow-lg hover:shadow-emerald-500/30'
                     : 'bg-white/5 text-gray-500 cursor-not-allowed'
                 }`}
               >
@@ -159,7 +159,7 @@ export default function AppealsPage() {
                 )}
               </div>
 
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 text-sm text-gray-200 space-y-2">
+              <div className="p-6 rounded-2xl bg-linear-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 text-sm text-gray-200 space-y-2">
                 <div className="font-semibold text-white">How reviews work</div>
                 <ul className="space-y-2 list-disc list-inside text-gray-300">
                   <li>Appeals are reviewed by the DAO or designated reviewers.</li>

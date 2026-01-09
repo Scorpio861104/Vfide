@@ -1,27 +1,27 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: any) => <div className={className} {...props}>{children}</div>,
     button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
     span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
-  useMotionValue: () => ({ set: vi.fn(), get: () => 0 }),
+  useMotionValue: () => ({ set: jest.fn(), get: () => 0 }),
   useSpring: (val: any) => val,
   useTransform: () => 0,
 }));
 
 // Mock wagmi for TestnetBadge
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useChainId: () => 84532, // Base Sepolia
   useAccount: () => ({ isConnected: true }),
 }));
 
 // Mock testnet config
-vi.mock('@/lib/testnet', () => ({
+jest.mock('@/lib/testnet', () => ({
   IS_TESTNET: true,
   CURRENT_CHAIN_ID: 84532,
 }));

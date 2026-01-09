@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 
 // ============================================
 // MERCHANT HOOKS TESTS
@@ -8,24 +8,24 @@ const MOCK_USER = '0x1234567890123456789012345678901234567890'
 const MOCK_MERCHANT = '0x9876543210987654321098765432109876543210'
 const MOCK_ZERO = '0x0000000000000000000000000000000000000000'
 
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
   })),
-  useReadContract: vi.fn(() => ({
+  useReadContract: jest.fn(() => ({
     data: undefined,
     isLoading: false,
     error: null,
-    refetch: vi.fn(),
+    refetch: jest.fn(),
   })),
-  useWriteContract: vi.fn(() => ({
-    writeContract: vi.fn(),
-    writeContractAsync: vi.fn().mockResolvedValue('0xhash'),
+  useWriteContract: jest.fn(() => ({
+    writeContract: jest.fn(),
+    writeContractAsync: jest.fn().mockResolvedValue('0xhash'),
     data: undefined,
     isPending: false,
   })),
-  useWaitForTransactionReceipt: vi.fn(() => ({
+  useWaitForTransactionReceipt: jest.fn(() => ({
     isLoading: false,
     isSuccess: false,
   })),
@@ -33,13 +33,13 @@ vi.mock('wagmi', () => ({
 
 describe('useMerchantHooks', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('useIsMerchant', () => {
     it('detects registered merchant', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       // Mock merchant info tuple
       mockUseReadContract.mockReturnValueOnce({
@@ -61,7 +61,7 @@ describe('useMerchantHooks', () => {
 
     it('detects non-merchant', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: [false, false, '', '', BigInt(0), BigInt(0), BigInt(0)],
@@ -81,7 +81,7 @@ describe('useMerchantHooks', () => {
 
     it('detects suspended merchant', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: [true, true, 'Suspended Shop', 'Retail', BigInt(1703980800), BigInt(0), BigInt(0)],
@@ -200,7 +200,7 @@ describe('useMerchantHooks', () => {
   describe('Customer Trust Score', () => {
     it('reads customer trust score from Seer contract', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       // Mock tuple return: [score, highTrust, lowTrust, eligible]
       mockUseReadContract.mockReturnValueOnce({

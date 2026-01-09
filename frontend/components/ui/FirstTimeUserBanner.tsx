@@ -49,9 +49,9 @@ export function FirstTimeUserBanner({
           exit={{ opacity: 0, y: -20 }}
           className="relative mb-6"
         >
-          <div className="bg-gradient-to-r from-[#00F0FF]/10 to-[#A78BFA]/10 border border-[#00F0FF]/30 rounded-xl p-4 md:p-5">
+          <div className="bg-linear-to-r from-[#00F0FF]/10 to-[#A78BFA]/10 border border-[#00F0FF]/30 rounded-xl p-4 md:p-5">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-[#0A0A0F]" />
               </div>
               
@@ -72,7 +72,7 @@ export function FirstTimeUserBanner({
 
               <button
                 onClick={handleDismiss}
-                className="p-1 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors flex-shrink-0"
+                className="p-1 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors shrink-0"
                 aria-label="Dismiss"
               >
                 <X className="w-5 h-5" />

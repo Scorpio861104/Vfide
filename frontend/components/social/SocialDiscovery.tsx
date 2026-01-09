@@ -286,7 +286,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -430,7 +430,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="bg-gradient-to-br from-[#1A1A2E] via-[#2A2A3E] to-[#1A1A2E] border border-[#FF6B9D]/30 rounded-lg p-6 hover:border-[#FF6B9D] transition-colors group cursor-pointer"
+                className="bg-linear-to-br from-[#1A1A2E] via-[#2A2A3E] to-[#1A1A2E] border border-[#FF6B9D]/30 rounded-lg p-6 hover:border-[#FF6B9D] transition-colors group cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-5xl">{user.avatar}</div>
@@ -551,7 +551,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                   className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-5 hover:border-[#00F0FF] transition-all group cursor-pointer"
                 >
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shrink-0">
                       {user.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -572,7 +572,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                     <motion.div
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className="text-xs font-bold bg-gradient-to-r from-[#00F0FF] to-[#A78BFA] text-transparent bg-clip-text flex-shrink-0"
+                      className="text-xs font-bold bg-linear-to-r from-[#00F0FF] to-[#A78BFA] text-transparent bg-clip-text shrink-0"
                     >
                       {user.matchScore}%
                     </motion.div>

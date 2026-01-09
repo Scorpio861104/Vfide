@@ -1,0 +1,125 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for VFIDE
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What user need does it address?
+      placeholder: "As a user, I find it difficult to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: "I would like to be able to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Have you considered any alternative approaches?
+      placeholder: "Another way to solve this could be..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of VFIDE would this affect?
+      options:
+        - Frontend UI
+        - Wallet Connection
+        - Smart Contracts
+        - Governance
+        - Personal Vault
+        - Marketplace
+        - WebSocket Server
+        - Documentation
+        - Developer Tools
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (Your Opinion)
+      description: How important is this feature to you?
+      options:
+        - Critical - Blocks core functionality
+        - High - Significantly improves UX
+        - Medium - Nice to have
+        - Low - Minor improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: User Benefits
+      description: Who benefits from this feature and how?
+      placeholder: |
+        - Users can accomplish X more easily
+        - Merchants save time on Y
+        - Improves trust score accuracy
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups or Examples
+      description: If you have mockups, wireframes, or examples from other apps, share them here
+      placeholder: Drag and drop images here or paste URLs
+    validations:
+      required: false
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Implementation Complexity (Your Estimate)
+      description: How complex do you think this would be to implement?
+      options:
+        - "Simple - Small UI change or minor feature"
+        - "Medium - Requires backend changes or new components"
+        - "Complex - Major feature requiring contracts and frontend"
+        - "I don't know"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, links, or information about the feature
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: This feature aligns with VFIDE's mission of trust-based commerce
+          required: true
+        - label: I would be willing to help implement this feature
+          required: false

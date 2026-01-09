@@ -303,7 +303,7 @@ interface SearchResultCardProps {
   onSelect: (id: string) => void;
 }
 
-const SearchResultCard: React.FC<SearchResultCardProps> = ({ result, onSelect }) => {
+function SearchResultCard({ result, onSelect }: SearchResultCardProps) {
   return (
     <div
       className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -381,7 +381,7 @@ interface HistoryItemProps {
   onDelete: (id: string) => void;
 }
 
-const HistoryItem: React.FC<HistoryItemProps> = ({ item, onReuse, onDelete }) => {
+function HistoryItem({ item, onReuse, onDelete }: HistoryItemProps) {
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
       <div className="flex-1 cursor-pointer" onClick={() => onReuse(item)}>
@@ -417,7 +417,7 @@ interface SavedSearchItemProps {
   onDelete: (id: string) => void;
 }
 
-const SavedSearchItem: React.FC<SavedSearchItemProps> = ({ search, onUse, onDelete }) => {
+function SavedSearchItem({ search, onUse, onDelete }: SavedSearchItemProps) {
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <div className="flex items-start justify-between mb-2">
@@ -462,10 +462,10 @@ interface AdvancedSearchProps {
   onResultSelect?: (resultId: string) => void;
 }
 
-const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
+export default function AdvancedSearch({
   className = '',
   onResultSelect
-}) => {
+}: AdvancedSearchProps) {
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<SearchFilter>({
@@ -998,6 +998,4 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       </div>
     </div>
   );
-};
-
-export default AdvancedSearch;
+}

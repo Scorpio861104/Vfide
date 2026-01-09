@@ -204,7 +204,7 @@ export function MerchantPOS() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] to-[#1A1A2E] py-8 px-4">
+    <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-[#1A1A2E] py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -222,7 +222,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('pos')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'pos'
-                ? 'bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-white'
+                ? 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-white'
                 : 'bg-[#0F0F0F]/50 text-[#F5F3E8]/60 hover:text-[#F5F3E8]'
             }`}
           >
@@ -232,7 +232,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('products')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'products'
-                ? 'bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-white'
+                ? 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-white'
                 : 'bg-[#0F0F0F]/50 text-[#F5F3E8]/60 hover:text-[#F5F3E8]'
             }`}
           >
@@ -242,7 +242,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('sales')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'sales'
-                ? 'bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-white'
+                ? 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-white'
                 : 'bg-[#0F0F0F]/50 text-[#F5F3E8]/60 hover:text-[#F5F3E8]'
             }`}
           >
@@ -413,7 +413,7 @@ export function MerchantPOS() {
                   {/* Generate QR Button */}
                   <button
                     onClick={() => setShowQRPayment(true)}
-                    className="w-full bg-gradient-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-4 rounded-xl hover:scale-105 transition-transform"
+                    className="w-full bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-4 rounded-xl hover:scale-105 transition-transform"
                   >
                     Generate QR Payment
                   </button>
@@ -430,7 +430,7 @@ export function MerchantPOS() {
               <h2 className="text-2xl font-bold text-[#F5F3E8]">Manage Products</h2>
               <button
                 onClick={() => setShowAddProduct(true)}
-                className="bg-gradient-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
+                className="bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
               >
                 + Add Product
               </button>
@@ -603,7 +603,7 @@ export function MerchantPOS() {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={handleAddProduct}
-                    className="flex-1 bg-gradient-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="flex-1 bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     Add Product
                   </button>
@@ -700,7 +700,7 @@ export function MerchantPOS() {
               <div className="space-y-3">
                 <button
                   onClick={() => setShowEmailPrompt(true)}
-                  className="w-full bg-gradient-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-4 rounded-xl hover:scale-105 transition-transform"
+                  className="w-full bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-4 rounded-xl hover:scale-105 transition-transform"
                 >
                   Payment Complete
                 </button>
@@ -776,7 +776,7 @@ export function MerchantPOS() {
                         completeSale()
                       }
                     }}
-                    className="bg-gradient-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     {customerEmail ? 'Send Receipt' : 'Continue'}
                   </button>

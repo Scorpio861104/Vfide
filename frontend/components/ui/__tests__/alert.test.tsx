@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { Alert, AlertTitle, AlertDescription } from '../alert'
+import { Alert, AlertDescription, AlertTitle } from '../alert'
 
 describe('Alert', () => {
   it('renders alert with default variant', () => {
@@ -98,5 +98,90 @@ describe('Alert components together', () => {
     expect(alert).toHaveClass('border-destructive/50')
     expect(screen.getByText('Error')).toBeInTheDocument()
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+  })
+
+  it('renders alert with icon and title', () => {
+    const Icon = () => <svg data-testid="alert-icon" />
+    render(
+      <Alert>
+        <Icon />
+        <AlertTitle>Alert with icon</AlertTitle>
+      </Alert>
+    )
+    expect(screen.getByTestId('alert-icon')).toBeInTheDocument()
+    expect(screen.getByText('Alert with icon')).toBeInTheDocument()
+  })
+
+  it('renders alert with icon, title, and description', () => {
+    const Icon = () => <svg data-testid="warning-icon" />
+    render(
+      <Alert variant="destructive">
+        <Icon />
+        <AlertTitle>Critical Error</AlertTitle>
+        <AlertDescription>
+          <p>Please check your settings and try again.</p>
+        </AlertDescription>
+      </Alert>
+    )
+    expect(screen.getByTestId('warning-icon')).toBeInTheDocument()
+    expect(screen.getByText('Critical Error')).toBeInTheDocument()
+    expect(screen.getByText('Please check your settings and try again.')).toBeInTheDocument()
+  })
+
+  it('renders alert with only icon', () => {
+    const Icon = () => <svg data-testid="standalone-icon" />
+    render(
+      <Alert>
+        <Icon />
+      </Alert>
+    )
+    expect(screen.getByTestId('standalone-icon')).toBeInTheDocument()
+  })
+
+  it('renders alert with description containing multiple paragraphs', () => {
+    render(
+      <Alert>
+        <AlertTitle>Multi-paragraph alert</AlertTitle>
+        <AlertDescription>
+          <p>First paragraph with information.</p>
+          <p>Second paragraph with more details.</p>
+        </AlertDescription>
+      </Alert>
+    )
+    expect(screen.getByText('First paragraph with information.')).toBeInTheDocument()
+    expect(screen.getByText('Second paragraph with more details.')).toBeInTheDocument()
+  })
+
+  it('renders alert with custom data attributes', () => {
+    render(
+      <Alert data-testid="custom-alert" data-status="warning">
+        <AlertTitle data-testid="custom-title">Custom attrs</AlertTitle>
+        <AlertDescription data-testid="custom-desc">Description</AlertDescription>
+      </Alert>
+    )
+    expect(screen.getByTestId('custom-alert')).toHaveAttribute('data-status', 'warning')
+    expect(screen.getByTestId('custom-title')).toBeInTheDocument()
+    expect(screen.getByTestId('custom-desc')).toBeInTheDocument()
+  })
+
+  it('renders alert with aria attributes', () => {
+    render(
+      <Alert aria-live="polite" aria-atomic="true">
+        <AlertTitle>Accessible alert</AlertTitle>
+      </Alert>
+    )
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveAttribute('aria-live', 'polite')
+    expect(alert).toHaveAttribute('aria-atomic', 'true')
+  })
+
+  it('renders alert description with nested elements', () => {
+    render(
+      <AlertDescription>
+        <strong>Bold text</strong> and <em>italic text</em>
+      </AlertDescription>
+    )
+    expect(screen.getByText(/Bold text/)).toBeInTheDocument()
+    expect(screen.getByText(/italic text/)).toBeInTheDocument()
   })
 })

@@ -178,7 +178,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                             : 'hover:bg-[#2A2A3F]'
                         }`}
                       >
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center text-[#F5F3E8] text-xs font-bold">
+                        <div className="w-6 h-6 rounded-full bg-linear-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center text-[#F5F3E8] text-xs font-bold">
                           {friend.alias ? friend.alias[0].toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
                         </div>
                         <span className="text-xs text-[#F5F3E8] flex-1">
@@ -238,7 +238,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center text-[#F5F3E8] font-bold text-sm flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center text-[#F5F3E8] font-bold text-sm shrink-0">
                       {group.name[0].toUpperCase()}
                     </div>
 

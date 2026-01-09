@@ -161,7 +161,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 1 }}
-          className="fixed bottom-24 md:bottom-6 left-6 z-40 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+          className="fixed bottom-24 md:bottom-6 left-6 z-40 px-4 py-3 bg-linear-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
         >
           <AlertCircle size={20} />
           <span>Setup Required</span>
@@ -185,7 +185,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-lg md:w-full z-[101] bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-2xl border border-zinc-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-lg md:w-full z-[101] bg-linear-to-b from-zinc-900 to-zinc-950 rounded-2xl border border-zinc-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
               {/* Header */}
               <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
@@ -284,7 +284,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                     <button
                       onClick={handleSwitchNetwork}
                       disabled={isSwitching || isAddingNetwork}
-                      className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-zinc-600 disabled:to-zinc-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-zinc-600 disabled:to-zinc-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
                     >
                       {isSwitching || isAddingNetwork ? (
                         <>
@@ -414,7 +414,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                     {hasBalance && (
                       <button
                         onClick={() => setCurrentStep('complete')}
-                        className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-linear-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2"
                       >
                         Continue <ArrowRight size={18} />
                       </button>
@@ -464,7 +464,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
                     <button
                       onClick={handleComplete}
-                      className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
                     >
                       Start Exploring <ArrowRight size={18} />
                     </button>

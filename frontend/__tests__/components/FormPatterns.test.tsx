@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
@@ -137,7 +137,7 @@ describe('FormInput', () => {
   })
 
   it('calls onChange when typing', () => {
-    const onChange = vi.fn()
+    const onChange = jest.fn()
     render(
       <FormInput
         label="Name"
@@ -238,7 +238,7 @@ describe('FormSelect', () => {
   })
 
   it('calls onChange when selecting', () => {
-    const onChange = vi.fn()
+    const onChange = jest.fn()
     render(
       <FormSelect
         label="Country"
@@ -319,7 +319,7 @@ describe('FormCheckbox', () => {
   })
 
   it('calls onChange when clicked', () => {
-    const onChange = vi.fn()
+    const onChange = jest.fn()
     render(
       <FormCheckbox
         label="Toggle"

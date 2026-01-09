@@ -3,33 +3,33 @@
  * Tests for useSimpleVault to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock useVaultHub first (before other imports)
-const mockVaultAddress = vi.fn()
+const mockVaultAddress = jest.fn()
 
-vi.mock('../../hooks/useVaultHub', () => ({
+jest.mock('../../hooks/useVaultHub', () => ({
   useVaultHub: () => ({
     vaultAddress: mockVaultAddress(),
   }),
 }))
 
 // Mock wagmi
-const mockWriteContract = vi.fn()
+const mockWriteContract = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useWriteContract: () => ({
     writeContract: mockWriteContract,
   }),
 }))
 
 // Mock utils
-vi.mock('../../lib/utils', () => ({
+jest.mock('../../lib/utils', () => ({
   devLog: {
-    error: vi.fn(),
-    log: vi.fn(),
-    warn: vi.fn(),
+    error: jest.fn(),
+    log: jest.fn(),
+    warn: jest.fn(),
   },
 }))
 
@@ -42,14 +42,14 @@ import {
 
 describe('useSimpleVault', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    vi.useFakeTimers({ shouldAdvanceTime: true })
+    jest.clearAllMocks()
+    jest.useFakeTimers({ shouldAdvanceTime: true })
     mockVaultAddress.mockReturnValue('0xvault123')
     mockWriteContract.mockResolvedValue('0xtxhash')
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('returns executeVaultAction function', () => {

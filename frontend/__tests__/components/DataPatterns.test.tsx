@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React, { useState } from 'react'
 
@@ -166,7 +166,7 @@ describe('DataTable', () => {
   })
 
   it('calls onRowClick when row is clicked', () => {
-    const onRowClick = vi.fn()
+    const onRowClick = jest.fn()
     render(<DataTable data={sampleData} columns={columns} onRowClick={onRowClick} />)
     fireEvent.click(screen.getByTestId('row-0'))
     expect(onRowClick).toHaveBeenCalledWith(sampleData[0])
@@ -180,14 +180,14 @@ describe('Pagination', () => {
   })
 
   it('calls onPageChange when clicking next', () => {
-    const onPageChange = vi.fn()
+    const onPageChange = jest.fn()
     render(<Pagination currentPage={2} totalPages={10} onPageChange={onPageChange} />)
     fireEvent.click(screen.getByTestId('next-button'))
     expect(onPageChange).toHaveBeenCalledWith(3)
   })
 
   it('calls onPageChange when clicking previous', () => {
-    const onPageChange = vi.fn()
+    const onPageChange = jest.fn()
     render(<Pagination currentPage={5} totalPages={10} onPageChange={onPageChange} />)
     fireEvent.click(screen.getByTestId('prev-button'))
     expect(onPageChange).toHaveBeenCalledWith(4)
@@ -218,14 +218,14 @@ describe('SearchBar', () => {
   })
 
   it('calls onChange when typing', () => {
-    const onChange = vi.fn()
+    const onChange = jest.fn()
     render(<SearchBar value="" onChange={onChange} onSearch={() => {}} />)
     fireEvent.change(screen.getByTestId('search-input'), { target: { value: 'test' } })
     expect(onChange).toHaveBeenCalledWith('test')
   })
 
   it('calls onSearch when button clicked', () => {
-    const onSearch = vi.fn()
+    const onSearch = jest.fn()
     render(<SearchBar value="query" onChange={() => {}} onSearch={onSearch} />)
     fireEvent.click(screen.getByTestId('search-button'))
     expect(onSearch).toHaveBeenCalled()
@@ -249,7 +249,7 @@ describe('FilterChip', () => {
   })
 
   it('calls onClick when clicked', () => {
-    const onClick = vi.fn()
+    const onClick = jest.fn()
     render(<FilterChip label="Toggle" active={false} onClick={onClick} />)
     fireEvent.click(screen.getByTestId('filter-toggle'))
     expect(onClick).toHaveBeenCalled()

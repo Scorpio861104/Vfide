@@ -32,7 +32,7 @@ export function OverviewTab({
   return (
     <>
       <section className="py-8">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -40,7 +40,7 @@ export function OverviewTab({
           >
             <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 group"
+              className="bg-linear-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 group"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Your Voting Power</div>
@@ -50,7 +50,7 @@ export function OverviewTab({
               </div>
               {address ? (
                 <>
-                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">{votingPower}</div>
+                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-400 to-blue-400">{votingPower}</div>
                   <div className="text-gray-500 text-sm mt-1">Based on ProofScore</div>
                   <div className="mt-3 text-xs text-emerald-400 flex items-center gap-1">
                     {isEligibleBool ? (
@@ -71,7 +71,7 @@ export function OverviewTab({
 
             <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6"
+              className="bg-linear-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Active Proposals</div>
@@ -90,7 +90,7 @@ export function OverviewTab({
 
             <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
+              className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Your Participation</div>
@@ -107,7 +107,7 @@ export function OverviewTab({
 
             <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
+              className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Governance Fatigue</div>
@@ -126,7 +126,7 @@ export function OverviewTab({
       </section>
 
       <section className="py-8">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -134,7 +134,7 @@ export function OverviewTab({
             className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
           >
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20">
+              <div className="p-2 rounded-xl bg-linear-to-br from-red-500/20 to-orange-500/20">
                 <Clock className="w-5 h-5 text-red-400" />
               </div>
               Upcoming Voting Deadlines
@@ -166,7 +166,7 @@ function DeadlineCard({ id, title, hoursRemaining, voted }: { id: number; title:
   return (
     <motion.div
       whileHover={{ scale: 1.01, x: 4 }}
-      className={`flex items-center justify-between p-4 bg-gradient-to-r ${colors.bg} backdrop-blur-sm border ${colors.border} rounded-xl hover:shadow-lg ${colors.glow} transition-all`}
+      className={`flex items-center justify-between p-4 bg-linear-to-r ${colors.bg} backdrop-blur-sm border ${colors.border} rounded-xl hover:shadow-lg ${colors.glow} transition-all`}
     >
       <div>
         <div className="text-white font-bold">{title}</div>

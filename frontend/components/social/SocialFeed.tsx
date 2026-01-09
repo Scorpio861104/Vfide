@@ -18,6 +18,7 @@ import {
   X,
   MoreHorizontal,
 } from 'lucide-react';
+import { SocialTipButton } from './SocialTipButton';
 
 // ==================== TYPES ====================
 
@@ -349,7 +350,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
       {/* Sticky Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -432,10 +433,10 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-xl p-6 mb-8 sticky top-20 z-20"
+          className="bg-linear-to-r from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-xl p-6 mb-8 sticky top-20 z-20"
         >
           <div className="flex gap-4 mb-4">
-            <div className="w-10 h-10 rounded-full bg-[#2A2A3E] flex items-center justify-center text-lg flex-shrink-0">👤</div>
+            <div className="w-10 h-10 rounded-full bg-[#2A2A3E] flex items-center justify-center text-lg shrink-0">👤</div>
             <textarea
               value={newPostContent}
               onChange={(e) => setNewPostContent(e.target.value)}
@@ -488,12 +489,12 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ delay: idx * 0.05 }}
-                  className={`bg-gradient-to-br ${getPostColor(post.type)} border rounded-xl p-6 hover:border-[#00F0FF]/50 transition-all group`}
+                  className={`bg-linear-to-br ${getPostColor(post.type)} border rounded-xl p-6 hover:border-[#00F0FF]/50 transition-all group`}
                 >
                   {/* Post Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4 flex-1 min-w-0">
-                      <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-xl flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-xl shrink-0">
                         {post.author.avatar}
                       </div>
 
@@ -510,7 +511,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-2 shrink-0">
                       <span className="text-2xl">{getPostIcon(post.type)}</span>
                       <button className="p-2 text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3E] rounded transition-colors opacity-0 group-hover:opacity-100">
                         <MoreHorizontal className="w-4 h-4" />
@@ -583,6 +584,15 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                       Reply
                     </button>
 
+                    <SocialTipButton
+                      postId={post.id}
+                      recipientAddress={`0x${post.author.id.padEnd(40, '0')}`}
+                      recipientName={post.author.name}
+                      compact={true}
+                      showTotal={true}
+                      className="flex-1"
+                    />
+
                     <button className="flex-1 px-3 py-2 bg-[#2A2A3E] text-[#A0A0A5] hover:border-[#50C878] border border-transparent rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2">
                       <Share2 className="w-4 h-4" />
                       Share
@@ -612,7 +622,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                         <div className="space-y-4 mb-4">
                           {mockComments.map((comment) => (
                             <div key={comment.id} className="flex gap-3">
-                              <div className="w-8 h-8 rounded-full bg-[#2A2A3E] flex items-center justify-center text-sm flex-shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-[#2A2A3E] flex items-center justify-center text-sm shrink-0">
                                 {comment.author.avatar}
                               </div>
                               <div className="flex-1 bg-[#0A0A0F] rounded-lg p-3">
@@ -634,7 +644,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
 
                         {/* Reply Input */}
                         <div className="flex gap-3 mt-4">
-                          <div className="w-8 h-8 rounded-full bg-[#2A2A3E] flex items-center justify-center text-sm flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#2A2A3E] flex items-center justify-center text-sm shrink-0">
                             👤
                           </div>
                           <div className="flex-1 flex gap-2">
@@ -674,10 +684,12 @@ interface CheckProps {
   className?: string;
 }
 
-const Check: React.FC<CheckProps> = ({ className }) => (
+function Check({ className }: CheckProps) {
+  return (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
   </svg>
-);
+  );
+}
 
 export default SocialFeed;

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from '@jest/globals'
 
 // Test that vfide-hooks properly re-exports from all domain-specific hook files
 describe('vfide-hooks exports', () => {

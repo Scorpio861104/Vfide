@@ -3,16 +3,16 @@
  * Tests for useVaultRecovery to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi
-const mockUseAccount = vi.fn()
-const mockUseReadContract = vi.fn()
-const mockUseWriteContract = vi.fn()
-const mockUseWatchContractEvent = vi.fn()
+const mockUseAccount = jest.fn()
+const mockUseReadContract = jest.fn()
+const mockUseWriteContract = jest.fn()
+const mockUseWatchContractEvent = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
@@ -20,7 +20,7 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
+jest.mock('viem', () => ({
   parseAbi: (abi: string[]) => abi,
 }))
 
@@ -28,11 +28,11 @@ vi.mock('viem', () => ({
 import { useVaultRecovery } from '../../hooks/useVaultRecovery'
 
 describe('useVaultRecovery', () => {
-  const mockWriteContractAsync = vi.fn()
+  const mockWriteContractAsync = jest.fn()
   const testVaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0xuser' })
     mockUseWriteContract.mockReturnValue({
       writeContractAsync: mockWriteContractAsync,

@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: any) => (
       <div className={className} style={style}>{children}</div>
@@ -16,7 +16,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide icons
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   AlertCircle: () => <span>AlertIcon</span>,
   RefreshCw: () => <span>RefreshIcon</span>,
   Home: () => <span>HomeIcon</span>,
@@ -31,7 +31,7 @@ describe('ErrorBoundary', () => {
   // Suppress console.error for error boundary tests
   const originalError = console.error
   beforeAll(() => {
-    console.error = vi.fn()
+    console.error = jest.fn()
   })
   afterAll(() => {
     console.error = originalError

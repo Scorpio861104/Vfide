@@ -2,13 +2,13 @@
  * DashboardCards Tests
  * Tests for StatCard component with 0% coverage
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { StatCard } from '@/components/ui/DashboardCards'
 import { ChevronRight, Activity } from 'lucide-react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
     span: ({ children, ...props }: React.ComponentProps<'span'>) => <span {...props}>{children}</span>,
@@ -18,7 +18,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock next/link
-vi.mock('next/link', () => ({
+jest.mock('next/link', () => ({
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
     <a href={href} {...props}>{children}</a>
   ),

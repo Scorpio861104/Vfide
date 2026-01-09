@@ -6,23 +6,22 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Wifi,
-  WifiOff,
-  Cloud,
-  CloudOff,
-  RefreshCw,
-  AlertCircle,
-  Check,
-  X,
-  Loader2,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import { useOnlineStatus, useSyncQueue, SyncStatus } from '@/lib/offline';
 import { useAnnounce } from '@/lib/accessibility';
+import { SyncStatus, useOnlineStatus, useSyncQueue } from '@/lib/offline';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+    Check,
+    ChevronDown,
+    ChevronUp,
+    Cloud,
+    CloudOff,
+    Loader2,
+    RefreshCw,
+    Wifi,
+    WifiOff,
+    X
+} from 'lucide-react';
+import { useState } from 'react';
 
 export function OfflineIndicator() {
   const online = useOnlineStatus();
@@ -254,7 +253,7 @@ export function OfflineBanner() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-center gap-2">
         <CloudOff className="w-5 h-5 text-red-400" />
         <span className="text-red-400 font-medium">
-          You're offline. Changes will sync when you're back online.
+          You&apos;re offline. Changes will sync when you&apos;re back online.
         </span>
       </div>
     </motion.div>

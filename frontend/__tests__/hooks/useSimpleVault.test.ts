@@ -2,53 +2,53 @@
  * Tests for useSimpleVault hook
  * Simple vault interface for executing vault actions
  */
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useWriteContract: vi.fn(),
+jest.mock('wagmi', () => ({
+  useWriteContract: jest.fn(),
 }))
 
 // Mock useVaultHub
-vi.mock('@/hooks/useVaultHub', () => ({
-  useVaultHub: vi.fn(),
+jest.mock('@/hooks/useVaultHub', () => ({
+  useVaultHub: jest.fn(),
 }))
 
 // Mock utils
-vi.mock('@/lib/utils', () => ({
+jest.mock('@/lib/utils', () => ({
   devLog: {
-    error: vi.fn(),
-    log: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
+    error: jest.fn(),
+    log: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
   },
 }))
 
 describe('useSimpleVault', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    vi.useFakeTimers()
+    jest.clearAllMocks()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('should return initial idle state', async () => {
     const { useWriteContract } = await import('wagmi')
     const { useVaultHub } = await import('@/hooks/useVaultHub')
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContract: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContract: jest.fn(),
       data: undefined,
       isPending: false,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
-      writeContractAsync: vi.fn(),
+      reset: jest.fn(),
+      writeContractAsync: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -56,7 +56,7 @@ describe('useSimpleVault', () => {
       submittedAt: 0,
       variables: undefined,
     })
-    vi.mocked(useVaultHub).mockReturnValue({
+    jest.mocked(useVaultHub).mockReturnValue({
       vaultAddress: '0xvault123' as `0x${string}`,
       hasVault: true,
       isLoading: false,
@@ -74,16 +74,16 @@ describe('useSimpleVault', () => {
     const { useWriteContract } = await import('wagmi')
     const { useVaultHub } = await import('@/hooks/useVaultHub')
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContract: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContract: jest.fn(),
       data: undefined,
       isPending: false,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
-      writeContractAsync: vi.fn(),
+      reset: jest.fn(),
+      writeContractAsync: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -91,7 +91,7 @@ describe('useSimpleVault', () => {
       submittedAt: 0,
       variables: undefined,
     })
-    vi.mocked(useVaultHub).mockReturnValue({
+    jest.mocked(useVaultHub).mockReturnValue({
       vaultAddress: undefined,
       hasVault: false,
       isLoading: false,
@@ -109,11 +109,11 @@ describe('useSimpleVault', () => {
   })
 
   it('should set preparing status initially', async () => {
-    const mockWriteContract = vi.fn().mockResolvedValue(undefined)
+    const mockWriteContract = jest.fn().mockResolvedValue(undefined)
     const { useWriteContract } = await import('wagmi')
     const { useVaultHub } = await import('@/hooks/useVaultHub')
     
-    vi.mocked(useWriteContract).mockReturnValue({
+    jest.mocked(useWriteContract).mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,
       isPending: false,
@@ -121,8 +121,8 @@ describe('useSimpleVault', () => {
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
-      writeContractAsync: vi.fn(),
+      reset: jest.fn(),
+      writeContractAsync: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -130,7 +130,7 @@ describe('useSimpleVault', () => {
       submittedAt: 0,
       variables: undefined,
     })
-    vi.mocked(useVaultHub).mockReturnValue({
+    jest.mocked(useVaultHub).mockReturnValue({
       vaultAddress: '0x1234567890123456789012345678901234567890' as `0x${string}`,
       hasVault: true,
       isLoading: false,
@@ -151,11 +151,11 @@ describe('useSimpleVault', () => {
   })
 
   it('should handle custom emoji in messages', async () => {
-    const mockWriteContract = vi.fn().mockResolvedValue(undefined)
+    const mockWriteContract = jest.fn().mockResolvedValue(undefined)
     const { useWriteContract } = await import('wagmi')
     const { useVaultHub } = await import('@/hooks/useVaultHub')
     
-    vi.mocked(useWriteContract).mockReturnValue({
+    jest.mocked(useWriteContract).mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,
       isPending: false,
@@ -163,8 +163,8 @@ describe('useSimpleVault', () => {
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
-      writeContractAsync: vi.fn(),
+      reset: jest.fn(),
+      writeContractAsync: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -172,7 +172,7 @@ describe('useSimpleVault', () => {
       submittedAt: 0,
       variables: undefined,
     })
-    vi.mocked(useVaultHub).mockReturnValue({
+    jest.mocked(useVaultHub).mockReturnValue({
       vaultAddress: '0x1234567890123456789012345678901234567890' as `0x${string}`,
       hasVault: true,
       isLoading: false,
@@ -186,13 +186,13 @@ describe('useSimpleVault', () => {
   })
 
   it('should handle transaction errors', async () => {
-    const mockWriteContract = vi.fn(() => {
+    const mockWriteContract = jest.fn(() => {
       throw new Error('Transaction rejected')
     })
     const { useWriteContract } = await import('wagmi')
     const { useVaultHub } = await import('@/hooks/useVaultHub')
     
-    vi.mocked(useWriteContract).mockReturnValue({
+    jest.mocked(useWriteContract).mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,
       isPending: false,
@@ -200,8 +200,8 @@ describe('useSimpleVault', () => {
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
-      writeContractAsync: vi.fn(),
+      reset: jest.fn(),
+      writeContractAsync: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -209,7 +209,7 @@ describe('useSimpleVault', () => {
       submittedAt: 0,
       variables: undefined,
     })
-    vi.mocked(useVaultHub).mockReturnValue({
+    jest.mocked(useVaultHub).mockReturnValue({
       vaultAddress: '0x1234567890123456789012345678901234567890' as `0x${string}`,
       hasVault: true,
       isLoading: false,
@@ -227,16 +227,16 @@ describe('useSimpleVault', () => {
     const { useWriteContract } = await import('wagmi')
     const { useVaultHub } = await import('@/hooks/useVaultHub')
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContract: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContract: jest.fn(),
       data: undefined,
       isPending: false,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
-      writeContractAsync: vi.fn(),
+      reset: jest.fn(),
+      writeContractAsync: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -244,7 +244,7 @@ describe('useSimpleVault', () => {
       submittedAt: 0,
       variables: undefined,
     })
-    vi.mocked(useVaultHub).mockReturnValue({
+    jest.mocked(useVaultHub).mockReturnValue({
       vaultAddress: '0x1234567890123456789012345678901234567890' as `0x${string}`,
       hasVault: true,
       isLoading: false,
@@ -267,11 +267,11 @@ describe('useSimpleVault', () => {
   })
 
   it('should use default emoji if not provided', async () => {
-    const mockWriteContract = vi.fn()
+    const mockWriteContract = jest.fn()
     const { useWriteContract } = await import('wagmi')
     const { useVaultHub } = await import('@/hooks/useVaultHub')
     
-    vi.mocked(useWriteContract).mockReturnValue({
+    jest.mocked(useWriteContract).mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,
       isPending: false,
@@ -279,8 +279,8 @@ describe('useSimpleVault', () => {
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
-      writeContractAsync: vi.fn(),
+      reset: jest.fn(),
+      writeContractAsync: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -288,7 +288,7 @@ describe('useSimpleVault', () => {
       submittedAt: 0,
       variables: undefined,
     })
-    vi.mocked(useVaultHub).mockReturnValue({
+    jest.mocked(useVaultHub).mockReturnValue({
       vaultAddress: '0x1234567890123456789012345678901234567890' as `0x${string}`,
       hasVault: true,
       isLoading: false,

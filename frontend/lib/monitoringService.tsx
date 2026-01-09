@@ -284,7 +284,7 @@ export function withPerformanceTracking<P extends object>(
   Component: React.ComponentType<P>,
   componentName?: string
 ) {
-  return React.memo((props: P) => {
+  const WrappedComponent = React.memo((props: P) => {
     const name = componentName || Component.displayName || Component.name || 'Unknown';
     const startTime = performance.now();
 
@@ -292,9 +292,13 @@ export function withPerformanceTracking<P extends object>(
       return () => {
         const renderTime = performance.now() - startTime;
         monitoring.trackPerformance(name, renderTime, props as Record<string, unknown>);
-      };
+};
     }, [props]);
 
     return <Component {...props} />;
   });
+  
+  WrappedComponent.displayName = `withPerformanceTracking(${componentName || Component.displayName || Component.name || 'Component'})`;
+  
+  return WrappedComponent;
 }

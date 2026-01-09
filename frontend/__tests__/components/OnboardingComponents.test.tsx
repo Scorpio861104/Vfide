@@ -3,11 +3,11 @@
  * Tests for onboarding wizard and help components
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
@@ -17,7 +17,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   ChevronRight: () => <span data-testid="chevron-right" />,
   ChevronLeft: () => <span data-testid="chevron-left" />,
   Check: () => <span data-testid="check-icon" />,
@@ -136,14 +136,14 @@ describe('SetupWizard Pattern', () => {
   })
 
   it('calls onStepChange when next clicked', () => {
-    const onStepChange = vi.fn()
+    const onStepChange = jest.fn()
     render(<SetupWizard steps={mockSteps} currentStep={0} onStepChange={onStepChange} onComplete={() => {}} />)
     fireEvent.click(screen.getByTestId('next-button'))
     expect(onStepChange).toHaveBeenCalledWith(1)
   })
 
   it('calls onComplete when complete clicked', () => {
-    const onComplete = vi.fn()
+    const onComplete = jest.fn()
     render(<SetupWizard steps={mockSteps} currentStep={2} onStepChange={() => {}} onComplete={onComplete} />)
     fireEvent.click(screen.getByTestId('complete-button'))
     expect(onComplete).toHaveBeenCalled()
@@ -216,7 +216,7 @@ describe('HelpCenter Pattern', () => {
   })
 
   it('calls onTopicSelect when topic clicked', () => {
-    const onTopicSelect = vi.fn()
+    const onTopicSelect = jest.fn()
     render(<HelpCenter topics={mockTopics} onTopicSelect={onTopicSelect} />)
     fireEvent.click(screen.getByTestId('topic-1'))
     expect(onTopicSelect).toHaveBeenCalledWith('1')
@@ -301,7 +301,7 @@ describe('FeatureTooltip Pattern', () => {
   })
 
   it('calls onDismiss when dismiss clicked', () => {
-    const onDismiss = vi.fn()
+    const onDismiss = jest.fn()
     render(
       <FeatureTooltip 
         title="New Feature" 
@@ -456,7 +456,7 @@ describe('OnboardingTour Pattern', () => {
   })
 
   it('calls onSkip when skip clicked', () => {
-    const onSkip = vi.fn()
+    const onSkip = jest.fn()
     render(
       <OnboardingTour 
         stops={mockStops} 

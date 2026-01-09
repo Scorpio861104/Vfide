@@ -1,0 +1,42 @@
+{
+  // Recommended VS Code extensions for VFIDE development
+  "recommendations": [
+    // TypeScript & JavaScript
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    
+    // React & Next.js
+    "dsznajder.es7-react-js-snippets",
+    "styled-components.vscode-styled-components",
+    
+    // Solidity
+    "juanblanco.solidity",
+    "tintinweb.solidity-visual-auditor",
+    
+    // Git
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    
+    // Testing
+    "orta.vscode-jest",
+    
+    // Utilities
+    "christian-kohler.path-intellisense",
+    "visualstudioexptteam.vscodeintellicode",
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    
+    // Docker
+    "ms-azuretools.vscode-docker",
+    
+    // Markdown
+    "yzhang.markdown-all-in-one",
+    
+    // Environment Files
+    "mikestead.dotenv",
+    
+    // Error Tracking
+    "sentry.sentry-vscode"
+  ],
+  "unwantedRecommendations": []
+}

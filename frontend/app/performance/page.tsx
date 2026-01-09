@@ -93,7 +93,7 @@ export default function PerformanceDashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-linear-to-b from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
       <div className="border-b border-slate-800">
         <div className="container mx-auto px-4 py-8">
@@ -205,7 +205,7 @@ export default function PerformanceDashboardPage() {
 
       {/* Tab Navigation */}
       <div className="sticky top-20 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4">
           <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
             {tabs.map(({ id, label, icon: Icon }) => (
               <motion.button

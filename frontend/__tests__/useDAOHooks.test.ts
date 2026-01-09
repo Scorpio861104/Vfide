@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 
 // ============================================
 // DAO/GOVERNANCE HOOKS TESTS
@@ -7,26 +7,26 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const MOCK_USER = '0x1234567890123456789012345678901234567890'
 const MOCK_MERCHANT = '0x9876543210987654321098765432109876543210'
 
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
     chainId: 84532, // Base Sepolia
   })),
-  useReadContract: vi.fn(() => ({
+  useReadContract: jest.fn(() => ({
     data: undefined,
     isLoading: false,
     error: null,
-    refetch: vi.fn(),
+    refetch: jest.fn(),
   })),
-  useWriteContract: vi.fn(() => ({
-    writeContract: vi.fn(),
-    writeContractAsync: vi.fn().mockResolvedValue('0xhash'),
+  useWriteContract: jest.fn(() => ({
+    writeContract: jest.fn(),
+    writeContractAsync: jest.fn().mockResolvedValue('0xhash'),
     data: undefined,
     isPending: false,
     error: null,
   })),
-  useWaitForTransactionReceipt: vi.fn(() => ({
+  useWaitForTransactionReceipt: jest.fn(() => ({
     isLoading: false,
     isSuccess: false,
     error: null,
@@ -35,13 +35,13 @@ vi.mock('wagmi', () => ({
 
 describe('useDAOHooks', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('useProposalCount', () => {
     it('returns total proposal count', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: BigInt(42),
@@ -60,7 +60,7 @@ describe('useDAOHooks', () => {
 
     it('returns zero when no proposals exist', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: BigInt(0),
@@ -94,7 +94,7 @@ describe('useDAOHooks', () => {
 
     it('returns proposal details correctly', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: mockProposal,
@@ -183,7 +183,7 @@ describe('useDAOHooks', () => {
 
     it('prevents double voting', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: true, // Already voted
@@ -301,7 +301,7 @@ describe('Council Hooks', () => {
   describe('useIsCouncilMember', () => {
     it('checks if user is a council member', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: true,
@@ -321,7 +321,7 @@ describe('Council Hooks', () => {
 
     it('returns false for non-council members', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: false,
@@ -343,7 +343,7 @@ describe('Council Hooks', () => {
   describe('useCouncilElection', () => {
     it('reads current election info', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       const mockElection = {
         isActive: true,
@@ -388,7 +388,7 @@ describe('Timelock Hooks', () => {
   describe('useTimelockDelay', () => {
     it('returns the timelock delay', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       // 2 days in seconds
       mockUseReadContract.mockReturnValueOnce({
@@ -411,7 +411,7 @@ describe('Timelock Hooks', () => {
   describe('useScheduledOperations', () => {
     it('reads scheduled timelock operations', async () => {
       const { useReadContract } = await import('wagmi')
-      const mockUseReadContract = useReadContract as ReturnType<typeof vi.fn>
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
       
       mockUseReadContract.mockReturnValueOnce({
         data: BigInt(Math.floor(Date.now() / 1000) + 172800), // Ready in 2 days

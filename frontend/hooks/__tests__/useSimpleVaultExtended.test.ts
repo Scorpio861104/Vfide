@@ -3,25 +3,25 @@
  * Covers executeVaultAction flow and ProofScore tiers
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, Mock } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock useVaultHub
-vi.mock('../useVaultHub', () => ({
-  useVaultHub: vi.fn(),
+jest.mock('../useVaultHub', () => ({
+  useVaultHub: jest.fn(),
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useWriteContract: vi.fn(),
+jest.mock('wagmi', () => ({
+  useWriteContract: jest.fn(),
 }))
 
 // Mock utils
-vi.mock('../../lib/utils', () => ({
+jest.mock('../../lib/utils', () => ({
   devLog: {
-    error: vi.fn(),
-    log: vi.fn(),
-    warn: vi.fn(),
+    error: jest.fn(),
+    log: jest.fn(),
+    warn: jest.fn(),
   },
 }))
 
@@ -39,20 +39,20 @@ describe('useSimpleVault - Extended Tests', () => {
   const mockCallData = '0xdeadbeef' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    vi.useFakeTimers({ shouldAdvanceTime: true })
+    jest.clearAllMocks()
+    jest.useFakeTimers({ shouldAdvanceTime: true })
     ;(useVaultHub as Mock).mockReturnValue({
       vaultAddress: mockVaultAddress,
     })
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   describe('executeVaultAction - Success Flow', () => {
     it('should progress through preparing state', async () => {
-      const mockWriteContract = vi.fn().mockResolvedValue('0xtxhash')
+      const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -70,7 +70,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should include action name in preparing message', async () => {
-      const mockWriteContract = vi.fn().mockResolvedValue('0xtxhash')
+      const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -87,7 +87,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should call writeContract with correct vault execute params', async () => {
-      const mockWriteContract = vi.fn().mockResolvedValue('0xtxhash')
+      const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -110,7 +110,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should set signing status after preparing', async () => {
-      const mockWriteContract = vi.fn().mockImplementation(() => {
+      const mockWriteContract = jest.fn().mockImplementation(() => {
         return new Promise(resolve => setTimeout(resolve, 1000))
       })
       ;(useWriteContract as Mock).mockReturnValue({
@@ -133,7 +133,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should set confirming status after signing', async () => {
-      const mockWriteContract = vi.fn().mockResolvedValue('0xtxhash')
+      const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -155,7 +155,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should reach success status after all steps', async () => {
-      const mockWriteContract = vi.fn().mockResolvedValue('0xtxhash')
+      const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -176,7 +176,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should reset to idle after success', async () => {
-      const mockWriteContract = vi.fn().mockResolvedValue('0xtxhash')
+      const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -199,7 +199,7 @@ describe('useSimpleVault - Extended Tests', () => {
 
   describe('executeVaultAction - Error Handling', () => {
     it('should set error status when writeContract fails', async () => {
-      const mockWriteContract = vi.fn().mockRejectedValue(new Error('Transaction reverted'))
+      const mockWriteContract = jest.fn().mockRejectedValue(new Error('Transaction reverted'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -223,7 +223,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should include action name in error message', async () => {
-      const mockWriteContract = vi.fn().mockRejectedValue(new Error('User rejected'))
+      const mockWriteContract = jest.fn().mockRejectedValue(new Error('User rejected'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -249,7 +249,7 @@ describe('useSimpleVault - Extended Tests', () => {
         vaultAddress: undefined,
       })
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
       })
 
       const { result } = renderHook(() => useSimpleVault())
@@ -267,7 +267,7 @@ describe('useSimpleVault - Extended Tests', () => {
         vaultAddress: undefined,
       })
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: vi.fn(),
+        writeContract: jest.fn(),
       })
 
       const { result } = renderHook(() => useSimpleVault())
@@ -278,7 +278,7 @@ describe('useSimpleVault - Extended Tests', () => {
 
   describe('isLoading state', () => {
     it('should be true during preparing', async () => {
-      const mockWriteContract = vi.fn().mockImplementation(() => new Promise(() => {}))
+      const mockWriteContract = jest.fn().mockImplementation(() => new Promise(() => {}))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -295,7 +295,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should be true during signing', async () => {
-      const mockWriteContract = vi.fn().mockImplementation(() => new Promise(() => {}))
+      const mockWriteContract = jest.fn().mockImplementation(() => new Promise(() => {}))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -315,7 +315,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should be false after success', async () => {
-      const mockWriteContract = vi.fn().mockResolvedValue('0xtxhash')
+      const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -335,7 +335,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should be false after error', async () => {
-      const mockWriteContract = vi.fn().mockRejectedValue(new Error('Error'))
+      const mockWriteContract = jest.fn().mockRejectedValue(new Error('Error'))
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -360,7 +360,7 @@ describe('useSimpleVault - Extended Tests', () => {
 
   describe('Custom emoji', () => {
     it('should use default emoji when not provided', async () => {
-      const mockWriteContract = vi.fn().mockResolvedValue('0xtxhash')
+      const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })
@@ -377,7 +377,7 @@ describe('useSimpleVault - Extended Tests', () => {
     })
 
     it('should use provided emoji', async () => {
-      const mockWriteContract = vi.fn().mockResolvedValue('0xtxhash')
+      const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash')
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
       })

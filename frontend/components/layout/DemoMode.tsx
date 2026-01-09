@@ -83,7 +83,7 @@ export function DemoMode() {
           onClick={() => setShowDemo(true)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="fixed bottom-6 right-6 px-6 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#1A1A1D] font-bold rounded-full shadow-lg hover:shadow-2xl transition-all z-40 flex items-center gap-2"
+          className="fixed bottom-6 right-6 px-6 py-3 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#1A1A1D] font-bold rounded-full shadow-lg hover:shadow-2xl transition-all z-40 flex items-center gap-2"
         >
           <span className="text-xl">🎮</span>
           Try Demo Mode
@@ -143,7 +143,7 @@ export function DemoMode() {
                     onClick={handleStepAction}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-full px-6 py-4 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#1A1A1D] font-bold rounded-lg text-lg hover:shadow-lg hover:shadow-[#FFD700]/50 transition-all"
+                    className="w-full px-6 py-4 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#1A1A1D] font-bold rounded-lg text-lg hover:shadow-lg hover:shadow-[#FFD700]/50 transition-all"
                   >
                     {steps[currentStep].action} →
                   </motion.button>

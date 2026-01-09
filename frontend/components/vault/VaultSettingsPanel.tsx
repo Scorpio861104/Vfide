@@ -105,7 +105,7 @@ export function VaultSettingsPanel() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-xl p-6"
+        className="bg-linear-to-br from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-xl p-6"
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export function VaultSettingsPanel() {
 
         <div className="mt-4 bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
           <div className="flex items-start gap-2 text-sm text-blue-300">
-            <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <Info className="w-4 h-4 mt-0.5 shrink-0" />
             <div>
               Transactions exceeding this threshold will be flagged for manual approval, 
               providing an extra layer of security against unauthorized large transfers.
@@ -158,7 +158,7 @@ export function VaultSettingsPanel() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-6"
+        className="bg-linear-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-6"
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export function VaultSettingsPanel() {
 
         <div className="mt-4 bg-purple-900/20 border border-purple-500/30 rounded-lg p-3">
           <div className="flex items-start gap-2 text-sm text-purple-300">
-            <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <Info className="w-4 h-4 mt-0.5 shrink-0" />
             <div>
               <strong>Snapshot Mode:</strong> When enabled, percentage-based thresholds use a locked 
               balance snapshot instead of current balance. This prevents attackers from draining your 
@@ -217,7 +217,7 @@ export function VaultSettingsPanel() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-6"
+        className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-6"
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -316,7 +316,7 @@ export function VaultSettingsPanel() {
 
         <div className="mt-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3">
           <div className="flex items-start gap-2 text-sm text-yellow-300">
-            <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <Info className="w-4 h-4 mt-0.5 shrink-0" />
             <div>
               Transactions flagged as abnormal require manual approval before execution. 
               You can approve, execute, or clean up expired transactions here. Cleanup frees 

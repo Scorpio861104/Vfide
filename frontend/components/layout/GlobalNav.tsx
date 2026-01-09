@@ -1,14 +1,14 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SimpleWalletConnect } from "../wallet/SimpleWalletConnect";
-import { FaucetButton } from "../wallet/FaucetButton";
-import { VaultStatusModal } from "../vault/VaultStatusModal";
-import { VaultStatusIndicator } from "../vault/VaultStatusIndicator";
-import { NavbarBalance } from "../ui/TokenBalance";
 import { NotificationCenter } from "../ui/NotificationCenter";
-import { motion } from "framer-motion";
+import { NavbarBalance } from "../ui/TokenBalance";
+import { VaultStatusIndicator } from "../vault/VaultStatusIndicator";
+import { VaultStatusModal } from "../vault/VaultStatusModal";
+import { FaucetButton } from "../wallet/FaucetButton";
+import { SimpleWalletConnect } from "../wallet/SimpleWalletConnect";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
@@ -31,11 +31,10 @@ export function GlobalNav() {
   
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-[#1F1F2A]">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto px-3 sm:px-4 py-3">
+        <div className="flex items-center justify-between gap-2">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <motion.svg 
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">\n            <motion.svg 
               width="40" 
               height="40" 
               viewBox="0 0 40 40" 

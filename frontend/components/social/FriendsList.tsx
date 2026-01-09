@@ -243,7 +243,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold text-sm">
                       {friend.alias ? friend.alias[0].toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
                     </div>
                     <PresenceDot address={friend.address} position="bottom-right" />

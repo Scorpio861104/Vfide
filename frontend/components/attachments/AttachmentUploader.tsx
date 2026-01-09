@@ -6,30 +6,28 @@
 
 'use client';
 
-import React, { useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Upload,
-  X,
-  File,
-  Image as ImageIcon,
-  Video,
-  FileText,
-  Music,
-  Loader2,
-  AlertCircle,
-  Check,
-} from 'lucide-react';
-import {
-  useFileUpload,
-  useFileDrop,
-  validateFile,
-  formatFileSize,
-  getAttachmentType,
-  AttachmentType,
-  MAX_FILES_PER_MESSAGE,
-} from '@/lib/attachments';
 import { useAnnounce } from '@/lib/accessibility';
+import {
+    AttachmentType,
+    formatFileSize,
+    MAX_FILES_PER_MESSAGE,
+    useFileDrop,
+    useFileUpload,
+    validateFile
+} from '@/lib/attachments';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+    AlertCircle,
+    Check,
+    File,
+    FileText,
+    Image as ImageIcon,
+    Music,
+    Upload,
+    Video,
+    X
+} from 'lucide-react';
+import React, { useRef, useState } from 'react';
 
 interface AttachmentUploaderProps {
   messageId: string;
@@ -143,7 +141,7 @@ export function AttachmentUploader({ messageId, userId, onUploaded }: Attachment
       {/* Validation Error */}
       {validationError && (
         <div className="bg-red-900/20 border border-red-900/30 rounded-lg p-3 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
           <p className="text-sm text-red-400">{validationError}</p>
         </div>
       )}
@@ -151,7 +149,7 @@ export function AttachmentUploader({ messageId, userId, onUploaded }: Attachment
       {/* Upload Error */}
       {error && (
         <div className="bg-red-900/20 border border-red-900/30 rounded-lg p-3 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
           <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
@@ -232,7 +230,7 @@ interface AttachmentCardProps {
 }
 
 function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
-  const Icon = getIconForType(attachment.type);
+  const Icon = React.useMemo(() => getIconForType(attachment.type), [attachment.type]);
 
   return (
     <motion.div
@@ -241,7 +239,7 @@ function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
       exit={{ opacity: 0, scale: 0.95 }}
       className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-3 flex items-center gap-3 hover:border-[#3A3A3F] transition-colors"
     >
-      <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+      <div className="w-10 h-10 bg-linear-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
         <Icon className="w-5 h-5 text-blue-400" />
       </div>
 

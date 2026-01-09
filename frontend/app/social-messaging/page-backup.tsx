@@ -183,7 +183,7 @@ export default function SocialPage() {
                 <div className="lg:col-span-2">
                   {selectedGroup ? (
                     <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col items-center justify-center p-12 text-center">
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center mb-6 text-4xl font-bold text-[#F5F3E8]">
+                      <div className="w-24 h-24 rounded-full bg-linear-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center mb-6 text-4xl font-bold text-[#F5F3E8]">
                         {selectedGroup.name[0].toUpperCase()}
                       </div>
                       <h3 className="text-2xl font-bold text-[#F5F3E8] mb-3">
@@ -253,7 +253,7 @@ export default function SocialPage() {
             className="mt-8 bg-[#1A1A2E] border border-[#00F0FF]/30 rounded-lg p-6"
           >
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#00F0FF]/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-[#00F0FF]/20 flex items-center justify-center shrink-0">
                 <Lock className="w-5 h-5 text-[#00F0FF]" />
               </div>
               <div className="flex-1">

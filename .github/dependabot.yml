@@ -1,0 +1,180 @@
+version: 2
+updates:
+  # Frontend dependencies (npm)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Scorpio861104"
+    labels:
+      - "dependencies"
+      - "frontend"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      # Group Next.js related updates
+      nextjs:
+        patterns:
+          - "next"
+          - "@next/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group React related updates
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group testing dependencies
+      testing:
+        patterns:
+          - "jest"
+          - "@jest/*"
+          - "@testing-library/*"
+          - "@playwright/*"
+          - "playwright"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group TypeScript and related tools
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+          - "ts-node"
+          - "ts-jest"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Radix UI components
+      radix:
+        patterns:
+          - "@radix-ui/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Web3 dependencies
+      web3:
+        patterns:
+          - "wagmi"
+          - "viem"
+          - "ethers"
+          - "@web3modal/*"
+        update-types:
+          - "patch"
+    ignore:
+      # Don't update major versions automatically (breaking changes)
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # WebSocket server dependencies (npm)
+  - package-ecosystem: "npm"
+    directory: "/websocket-server"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Scorpio861104"
+    labels:
+      - "dependencies"
+      - "websocket-server"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      # Group Socket.IO updates
+      socketio:
+        patterns:
+          - "socket.io"
+          - "socket.io-client"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Express and related
+      express:
+        patterns:
+          - "express"
+          - "cors"
+          - "body-parser"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Root dependencies (npm)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Scorpio861104"
+    labels:
+      - "dependencies"
+      - "root"
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Scorpio861104"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci)"
+
+  # Docker base images
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "Scorpio861104"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: "docker"
+    directory: "/websocket-server"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "Scorpio861104"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(docker)"

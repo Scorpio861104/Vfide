@@ -74,7 +74,7 @@ export function GlobalUserSearch() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#F5F3E8] font-bold">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#F5F3E8] font-bold">
                     {user.username ? user.username[0].toUpperCase() : user.address.slice(2, 4).toUpperCase()}
                   </div>
                   <div>

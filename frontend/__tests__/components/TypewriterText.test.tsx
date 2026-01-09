@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, act } from '@testing-library/react'
 import React from 'react'
 
@@ -6,11 +6,11 @@ import { TypewriterText } from '@/components/ui/TypewriterText'
 
 describe('TypewriterText', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('renders with cursor', () => {
@@ -28,13 +28,13 @@ describe('TypewriterText', () => {
     render(<TypewriterText texts={['Hi']} typingSpeed={100} />)
     
     await act(async () => {
-      vi.advanceTimersByTime(100)
+      jest.advanceTimersByTime(100)
     })
     
     expect(screen.getByText(/H/)).toBeInTheDocument()
     
     await act(async () => {
-      vi.advanceTimersByTime(100)
+      jest.advanceTimersByTime(100)
     })
     
     expect(screen.getByText(/Hi/)).toBeInTheDocument()
@@ -59,7 +59,7 @@ describe('TypewriterText', () => {
     
     // Type 'One' - advance enough time to type 3 characters
     await act(async () => {
-      vi.advanceTimersByTime(100) // 3 chars * 10ms + buffer
+      jest.advanceTimersByTime(100) // 3 chars * 10ms + buffer
     })
     
     // The text should contain 'O', 'On', or 'One' depending on timing

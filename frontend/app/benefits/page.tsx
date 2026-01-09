@@ -44,10 +44,10 @@ export default function BenefitsPage() {
   ];
 
   const colorMap: Record<string, { active: string; hover: string }> = {
-    cyan: { active: 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25', hover: 'hover:bg-cyan-500/10 hover:text-cyan-400' },
-    amber: { active: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25', hover: 'hover:bg-amber-500/10 hover:text-amber-400' },
-    emerald: { active: 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25', hover: 'hover:bg-emerald-500/10 hover:text-emerald-400' },
-    purple: { active: 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25', hover: 'hover:bg-purple-500/10 hover:text-purple-400' },
+    cyan: { active: 'bg-linear-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25', hover: 'hover:bg-cyan-500/10 hover:text-cyan-400' },
+    amber: { active: 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25', hover: 'hover:bg-amber-500/10 hover:text-amber-400' },
+    emerald: { active: 'bg-linear-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25', hover: 'hover:bg-emerald-500/10 hover:text-emerald-400' },
+    purple: { active: 'bg-linear-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25', hover: 'hover:bg-purple-500/10 hover:text-purple-400' },
   };
 
   return (
@@ -56,7 +56,7 @@ export default function BenefitsPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,240,255,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,215,0,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
@@ -68,19 +68,19 @@ export default function BenefitsPage() {
         variants={containerVariants}
         className="min-h-screen pt-24 pb-16"
       >
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4">
           {/* Header */}
           <motion.div variants={itemVariants} className="text-center mb-12">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-sm text-cyan-300 mb-4"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-linear-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-sm text-cyan-300 mb-4"
             >
               <Sparkles className="w-4 h-4" />
               Exclusive Member Perks
             </motion.div>
             <h1 className="text-4xl md:text-5xl font-black mb-4">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-400">
+              <span className="bg-clip-text text-transparent bg-linear-to-r from-cyan-400 via-purple-400 to-amber-400">
                 Member Benefits
               </span>
             </h1>
@@ -143,7 +143,7 @@ function GlassCard({ children, className = "", gradient }: {
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient || 'from-white/[0.08] to-white/[0.02]'} backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${gradient || 'from-white/[0.08] to-white/[0.02]'} backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -193,7 +193,7 @@ function OverviewTab() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-xl p-8 text-center">
+      <div className="bg-linear-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-xl p-8 text-center">
         <Gift className="w-16 h-16 text-purple-400 mx-auto mb-4" />
         <h2 className="text-3xl font-bold text-[#F5F3E8] mb-4">Active Participation Benefits</h2>
         <p className="text-[#A0A0A5] max-w-2xl mx-auto">
@@ -344,7 +344,7 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
       {isConnected ? (
         <>
           {/* Claimable Rewards */}
-          <div className="bg-gradient-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
+          <div className="bg-linear-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
             <div className="flex items-center gap-4 mb-6">
               <Award className="w-12 h-12 text-green-400" />
               <div>
@@ -442,9 +442,9 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
   return (
     <div className="space-y-8">
       {/* User Summary */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-3xl font-bold text-white">
+          <div className="w-20 h-20 bg-linear-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-3xl font-bold text-white">
             G
           </div>
           <div className="text-center md:text-left">
@@ -518,7 +518,7 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
             <span className="text-[#00F0FF]">21%</span>
           </div>
           <div className="h-3 bg-[#1A1A1D] rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-yellow-500 to-[#E5E4E2] w-[21%] rounded-full" />
+            <div className="h-full bg-linear-to-r from-yellow-500 to-[#E5E4E2] w-[21%] rounded-full" />
           </div>
         </div>
         <p className="text-[#A0A0A5] text-sm">

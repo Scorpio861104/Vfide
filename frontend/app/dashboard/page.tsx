@@ -44,7 +44,7 @@ function GlassCard({ children, className = "", hover = true }: {
     <motion.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -126,10 +126,10 @@ function QuickAction({
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.98 }}
         className={`p-4 rounded-2xl font-semibold transition-all flex flex-col items-center gap-3 text-center ${isPrimary 
-          ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25' 
+          ? 'bg-linear-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25' 
           : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20'}`}
       >
-        <div className={`p-3 rounded-xl ${isPrimary ? 'bg-white/20' : 'bg-gradient-to-br from-white/10 to-white/5'}`}>
+        <div className={`p-3 rounded-xl ${isPrimary ? 'bg-white/20' : 'bg-linear-to-br from-white/10 to-white/5'}`}>
           <Icon size={24} />
         </div>
         <span className="text-sm">{label}</span>
@@ -181,11 +181,11 @@ export default function DashboardPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-              className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center backdrop-blur-xl"
+              className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-linear-to-br from-cyan-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center backdrop-blur-xl"
             >
               <Wallet className="text-cyan-400" size={48} />
             </motion.div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Connect Your Wallet</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">Connect Your Wallet</h1>
             <p className="text-white/60 mb-8 max-w-md text-lg">
               Connect your wallet to access your dashboard, view your ProofScore, and explore the ecosystem.
             </p>
@@ -209,7 +209,7 @@ export default function DashboardPage() {
           </div>
 
         <section className="relative py-8 border-b border-white/5">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -244,14 +244,14 @@ export default function DashboardPage() {
                     </a>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-linear-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
                     <span className="text-cyan-400 font-bold text-sm flex items-center gap-2">
                       <Zap size={14} />
                       ProofScore {proofscore}
                     </span>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-linear-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
                     <span className="text-emerald-400 font-bold text-sm">{currentFeeRate.toFixed(2)}% fee</span>
                   </motion.div>
                 </div>
@@ -277,7 +277,7 @@ export default function DashboardPage() {
         </section>
 
         <section className="sticky top-20 z-40 bg-[#08080A]/80 backdrop-blur-xl border-b border-white/5">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide" role="tablist">
               {[
                 { id: 'overview' as const, label: 'Overview', icon: Activity },
@@ -294,7 +294,7 @@ export default function DashboardPage() {
                   whileTap={{ scale: 0.98 }}
                   className={`px-5 py-3 rounded-xl font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
                     activeTab === tab.id
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
+                      ? 'bg-linear-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                       : 'bg-transparent text-white/60 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -306,7 +306,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <div className="container mx-auto px-4 py-8 relative z-10">
+        <div className="container mx-auto px-3 sm:px-4 py-8 relative z-10">
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
               <motion.div key="overview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
@@ -396,7 +396,7 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
                     <span className="text-white font-medium">{item.value.toLocaleString()} / {item.max.toLocaleString()}</span>
                   </div>
                   <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${(item.value / item.max) * 100}%` }} transition={{ duration: 1, delay: index * 0.1 }} className={`h-full rounded-full bg-gradient-to-r ${
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${(item.value / item.max) * 100}%` }} transition={{ duration: 1, delay: index * 0.1 }} className={`h-full rounded-full bg-linear-to-r ${
                       item.color === 'cyan' ? 'from-cyan-500 to-cyan-400' :
                       item.color === 'emerald' ? 'from-emerald-500 to-emerald-400' :
                       item.color === 'amber' ? 'from-amber-500 to-amber-400' :
@@ -501,7 +501,7 @@ function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
               </div>
             </div>
             
-            <div className="grid grid-cols-3 gap-4 p-6 bg-white/5 rounded-2xl border border-white/10">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-6 bg-white/5 rounded-2xl border border-white/10">
               <div className="text-center">
                 <p className="text-white/60 text-sm mb-1">Fee Rate</p>
                 <p className="text-2xl font-bold text-amber-400">{feePercent.toFixed(2)}%</p>
@@ -582,7 +582,7 @@ function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
             ))}
           </div>
           
-          <div className="mt-8 p-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30">
+          <div className="mt-8 p-6 bg-linear-to-br from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30">
             <div className="flex justify-between items-center mb-4">
               <span className="text-white/80">Current Score</span>
               <span className="text-xl font-bold text-white">{currentScore}</span>

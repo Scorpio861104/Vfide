@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
 
@@ -6,74 +6,74 @@ import React from 'react'
 // Tests that pages render without throwing errors
 
 // Mock Next.js
-vi.mock('next/navigation', () => ({
+jest.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-    back: vi.fn(),
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
   }),
   usePathname: () => '/',
   useSearchParams: () => new URLSearchParams(),
 }))
 
-vi.mock('next/link', () => ({
+jest.mock('next/link', () => ({
   default: ({ children, href }: React.PropsWithChildren<{ href: string }>) =>
     React.createElement('a', { href }, children),
 }))
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(() => ({ 
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(() => ({ 
     address: '0x1234567890abcdef1234567890abcdef12345678',
     isConnected: true 
   })),
-  useChainId: vi.fn(() => 84532),
-  useBalance: vi.fn(() => ({
+  useChainId: jest.fn(() => 84532),
+  useBalance: jest.fn(() => ({
     data: { formatted: '1.5', symbol: 'ETH', value: BigInt(1500000000000000000) },
     isLoading: false,
     error: null,
   })),
-  useReadContract: vi.fn(() => ({
+  useReadContract: jest.fn(() => ({
     data: undefined,
     isLoading: false,
     error: null,
   })),
-  useWriteContract: vi.fn(() => ({
-    writeContract: vi.fn(),
+  useWriteContract: jest.fn(() => ({
+    writeContract: jest.fn(),
     isPending: false,
     isSuccess: false,
     error: null,
   })),
-  useWaitForTransactionReceipt: vi.fn(() => ({
+  useWaitForTransactionReceipt: jest.fn(() => ({
     isLoading: false,
     isSuccess: false,
     error: null,
   })),
-  useConfig: vi.fn(() => ({})),
-  useSwitchChain: vi.fn(() => ({
-    switchChain: vi.fn(),
+  useConfig: jest.fn(() => ({})),
+  useSwitchChain: jest.fn(() => ({
+    switchChain: jest.fn(),
     isPending: false,
   })),
-  useConnect: vi.fn(() => ({
-    connect: vi.fn(),
+  useConnect: jest.fn(() => ({
+    connect: jest.fn(),
     connectors: [],
     isPending: false,
   })),
-  useDisconnect: vi.fn(() => ({
-    disconnect: vi.fn(),
+  useDisconnect: jest.fn(() => ({
+    disconnect: jest.fn(),
     isPending: false,
   })),
 }))
 
 // Mock connectkit
-vi.mock('connectkit', () => ({
+jest.mock('connectkit', () => ({
   ConnectKitButton: () => React.createElement('button', { 'data-testid': 'connect-button' }, 'Connect'),
   ConnectKitProvider: ({ children }: React.PropsWithChildren) => children,
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: React.PropsWithChildren<{ className?: string }>) =>
       React.createElement('div', { className, ...props }, children),
@@ -89,15 +89,15 @@ vi.mock('framer-motion', () => ({
       React.createElement('article', { className, ...props }, children),
   },
   AnimatePresence: ({ children }: React.PropsWithChildren) => children,
-  useMotionValue: () => ({ get: () => 0, set: vi.fn() }),
-  useSpring: () => ({ get: () => 0, set: vi.fn() }),
+  useMotionValue: () => ({ get: () => 0, set: jest.fn() }),
+  useSpring: () => ({ get: () => 0, set: jest.fn() }),
   useTransform: () => ({ get: () => 0 }),
   useInView: () => true,
-  useAnimation: () => ({ start: vi.fn(), stop: vi.fn() }),
+  useAnimation: () => ({ start: jest.fn(), stop: jest.fn() }),
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => {
+jest.mock('lucide-react', () => {
   const MockIcon = ({ className, 'data-testid': testId }: { className?: string; 'data-testid'?: string }) =>
     React.createElement('svg', { className, 'data-testid': testId })
   

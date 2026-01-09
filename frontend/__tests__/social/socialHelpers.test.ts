@@ -4,7 +4,7 @@
  * Run with: npm test
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from '@jest/globals';
 import { addNotification } from '../../components/social/NotificationCenter';
 import { addActivity } from '../../components/social/ActivityFeed';
 
@@ -35,7 +35,7 @@ describe('addNotification', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should add a notification to localStorage', () => {
@@ -102,10 +102,10 @@ describe('addNotification', () => {
   });
 
   it('should handle localStorage errors gracefully', () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
     
     // Mock localStorage.setItem to throw
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });
 
@@ -147,7 +147,7 @@ describe('addActivity', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should add an activity to localStorage', () => {
@@ -245,9 +245,9 @@ describe('addActivity', () => {
   });
 
   it('should handle localStorage errors gracefully', () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
     
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });
 

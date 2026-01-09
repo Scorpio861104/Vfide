@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import React from 'react'
 
@@ -55,11 +55,11 @@ const TransactionSuccess = ({
 
 describe('TransactionSuccess', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('renders nothing when not open', () => {
@@ -100,7 +100,7 @@ describe('TransactionSuccess', () => {
   })
 
   it('calls onClose when close button clicked', () => {
-    const onClose = vi.fn()
+    const onClose = jest.fn()
     render(<TransactionSuccess isOpen={true} onClose={onClose} />)
     fireEvent.click(screen.getByTestId('close-button'))
     expect(onClose).toHaveBeenCalled()
@@ -122,14 +122,14 @@ describe('TransactionSuccess', () => {
   })
 
   it('closes when clicking overlay', () => {
-    const onClose = vi.fn()
+    const onClose = jest.fn()
     render(<TransactionSuccess isOpen={true} onClose={onClose} />)
     fireEvent.click(screen.getByTestId('transaction-success-overlay'))
     expect(onClose).toHaveBeenCalled()
   })
 
   it('does not close when clicking modal content', () => {
-    const onClose = vi.fn()
+    const onClose = jest.fn()
     render(<TransactionSuccess isOpen={true} onClose={onClose} />)
     fireEvent.click(screen.getByTestId('transaction-success-modal'))
     expect(onClose).not.toHaveBeenCalled()

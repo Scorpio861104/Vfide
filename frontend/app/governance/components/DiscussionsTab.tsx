@@ -274,7 +274,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
 
   return (
     <section className="py-8">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">💬 Community Discussions</h2>
@@ -282,7 +282,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
           </div>
           <button
             onClick={() => setShowNewThread(!showNewThread)}
-            className="px-6 py-3 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-6 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all"
           >
             {showNewThread ? "✕ Cancel" : "+ New Discussion"}
           </button>

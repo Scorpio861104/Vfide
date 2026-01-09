@@ -270,9 +270,9 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
                 onClick={handleConfirm}
                 disabled={!amount || parseFloat(amount) <= 0}
                 className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
-                  actionType === 'deposit' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700' :
-                  actionType === 'withdraw' ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700' :
-                  'bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700'
+                  actionType === 'deposit' ? 'bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700' :
+                  actionType === 'withdraw' ? 'bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700' :
+                  'bg-linear-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 Continue

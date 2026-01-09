@@ -3,24 +3,24 @@
  * Tests for wallet connection and management components
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn().mockReturnValue({ address: null, isConnected: false }),
-  useConnect: vi.fn().mockReturnValue({ connect: vi.fn(), connectors: [], isPending: false }),
-  useDisconnect: vi.fn().mockReturnValue({ disconnect: vi.fn() }),
-  useChainId: vi.fn().mockReturnValue(84532),
-  useSwitchChain: vi.fn().mockReturnValue({ switchChain: vi.fn() }),
-  useBalance: vi.fn().mockReturnValue({ data: null, isLoading: false }),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn().mockReturnValue({ address: null, isConnected: false }),
+  useConnect: jest.fn().mockReturnValue({ connect: jest.fn(), connectors: [], isPending: false }),
+  useDisconnect: jest.fn().mockReturnValue({ disconnect: jest.fn() }),
+  useChainId: jest.fn().mockReturnValue(84532),
+  useSwitchChain: jest.fn().mockReturnValue({ switchChain: jest.fn() }),
+  useBalance: jest.fn().mockReturnValue({ data: null, isLoading: false }),
   WagmiProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  createConfig: vi.fn(),
-  http: vi.fn(),
+  createConfig: jest.fn(),
+  http: jest.fn(),
 }))
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
@@ -29,7 +29,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Wallet: () => <span data-testid="wallet-icon" />,
   LogOut: () => <span data-testid="logout-icon" />,
   ChevronDown: () => <span data-testid="chevron-down" />,
@@ -124,7 +124,7 @@ describe('WalletConnectButton Pattern', () => {
   })
 
   it('calls onConnect when connect clicked', () => {
-    const onConnect = vi.fn()
+    const onConnect = jest.fn()
     render(
       <WalletConnectButton
         isConnected={false}
@@ -138,7 +138,7 @@ describe('WalletConnectButton Pattern', () => {
   })
 
   it('calls onDisconnect when disconnect clicked', () => {
-    const onDisconnect = vi.fn()
+    const onDisconnect = jest.fn()
     render(
       <WalletConnectButton
         isConnected={true}
@@ -263,7 +263,7 @@ describe('ConnectorSelector Pattern', () => {
   })
 
   it('calls onSelect when connector clicked', () => {
-    const onSelect = vi.fn()
+    const onSelect = jest.fn()
     render(
       <ConnectorSelector
         connectors={mockConnectors}
@@ -277,7 +277,7 @@ describe('ConnectorSelector Pattern', () => {
   })
 
   it('calls onClose when cancel clicked', () => {
-    const onClose = vi.fn()
+    const onClose = jest.fn()
     render(
       <ConnectorSelector
         connectors={mockConnectors}
@@ -386,7 +386,7 @@ describe('NetworkSwitcher Pattern', () => {
   })
 
   it('calls onSwitch when network clicked', () => {
-    const onSwitch = vi.fn()
+    const onSwitch = jest.fn()
     render(
       <NetworkSwitcher
         currentChainId={8453}
@@ -547,7 +547,7 @@ describe('FaucetPanel Pattern', () => {
   })
 
   it('calls onClaim when button clicked', () => {
-    const onClaim = vi.fn()
+    const onClaim = jest.fn()
     render(
       <FaucetPanel
         isTestnet={true}

@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onClick, ...props }: any) => (
       <div className={className} style={style} onClick={onClick} {...props}>{children}</div>
@@ -16,14 +16,14 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Mock rainbowkit
-vi.mock('@rainbow-me/rainbowkit', () => ({
+jest.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: {
     Custom: ({ children }: any) => children({
       account: { address: '0x1234567890123456789012345678901234567890', displayName: 'Test' },
       chain: { id: 84532, name: 'Base Sepolia', unsupported: false },
-      openAccountModal: vi.fn(),
-      openChainModal: vi.fn(),
-      openConnectModal: vi.fn(),
+      openAccountModal: jest.fn(),
+      openChainModal: jest.fn(),
+      openConnectModal: jest.fn(),
       authenticationStatus: 'authenticated',
       mounted: true,
     }),
@@ -31,7 +31,7 @@ vi.mock('@rainbow-me/rainbowkit', () => ({
 }))
 
 // Mock Next.js Image
-vi.mock('next/image', () => ({
+jest.mock('next/image', () => ({
   default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
 }))
 
@@ -58,9 +58,9 @@ describe('SimpleWalletConnect - Disconnected', () => {
         Custom: ({ children }: any) => children({
           account: null,
           chain: null,
-          openAccountModal: vi.fn(),
-          openChainModal: vi.fn(),
-          openConnectModal: vi.fn(),
+          openAccountModal: jest.fn(),
+          openChainModal: jest.fn(),
+          openConnectModal: jest.fn(),
           authenticationStatus: null,
           mounted: true,
         }),
@@ -81,9 +81,9 @@ describe('SimpleWalletConnect - Wrong Network', () => {
         Custom: ({ children }: any) => children({
           account: { address: '0x1234567890123456789012345678901234567890' },
           chain: { unsupported: true },
-          openAccountModal: vi.fn(),
-          openChainModal: vi.fn(),
-          openConnectModal: vi.fn(),
+          openAccountModal: jest.fn(),
+          openChainModal: jest.fn(),
+          openConnectModal: jest.fn(),
           authenticationStatus: 'authenticated',
           mounted: true,
         }),

@@ -83,7 +83,7 @@ export function PaymentButton({
           compact
             ? 'px-2 py-1 text-xs'
             : 'px-3 py-1.5 text-sm'
-        } bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 text-green-400 rounded-lg transition-all`}
+        } bg-linear-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 text-green-400 rounded-lg transition-all`}
         title={variant === 'tip' ? 'Send Tip' : 'Send Payment'}
       >
         <DollarSign className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
@@ -128,7 +128,7 @@ export function PaymentButton({
                 {/* Success State */}
                 {success && (
                   <div className="bg-green-900/20 border border-green-900/30 rounded-lg p-4 flex items-center gap-3">
-                    <Check className="w-6 h-6 text-green-400 flex-shrink-0" />
+                    <Check className="w-6 h-6 text-green-400 shrink-0" />
                     <div>
                       <div className="text-green-400 font-medium">Payment Sent!</div>
                       <div className="text-green-400/70 text-sm">
@@ -141,7 +141,7 @@ export function PaymentButton({
                 {/* Error State */}
                 {error && (
                   <div className="bg-red-900/20 border border-red-900/30 rounded-lg p-3 flex items-start gap-2">
-                    <X className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <X className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                     <p className="text-sm text-red-400">{error}</p>
                   </div>
                 )}
@@ -216,7 +216,7 @@ export function PaymentButton({
                     <button
                       onClick={handleSend}
                       disabled={sending || !amount}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {sending ? (
                         <>

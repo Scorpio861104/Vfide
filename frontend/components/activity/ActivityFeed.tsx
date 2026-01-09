@@ -325,13 +325,13 @@ interface ActivityItemProps {
   showTimeline?: boolean;
 }
 
-const ActivityItem: React.FC<ActivityItemProps> = ({ activity, showTimeline = true }) => {
+function ActivityItem({ activity, showTimeline = true }: ActivityItemProps) {
   return (
     <div className="flex gap-4">
       {/* Timeline indicator */}
       {showTimeline && (
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-lg flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-lg shrink-0">
             {activity.icon || '📌'}
           </div>
           <div className="w-0.5 h-full bg-gray-200 dark:bg-gray-700 mt-2" />
@@ -394,7 +394,7 @@ interface StatCardProps {
   color?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = 'blue' }) => {
+function StatCard({ label, value, icon, color = 'blue' }: StatCardProps) {
   const colorClasses: Record<string, string> = {
     blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
     green: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -423,7 +423,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, color = 'blue' 
 
 // ==================== MAIN COMPONENT ====================
 
-const ActivityFeed: React.FC = () => {
+export default function ActivityFeed() {
   // State
   const [activities] = useState<Activity[]>(generateMockActivities());
   const [filter, setFilter] = useState<ActivityFilter>({
@@ -665,6 +665,4 @@ const ActivityFeed: React.FC = () => {
       </div>
     </ResponsiveContainer>
   );
-};
-
-export default ActivityFeed;
+}

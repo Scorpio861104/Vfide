@@ -6,19 +6,18 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import { Transaction, useTransactions } from '@/lib/crypto';
 import { motion } from 'framer-motion';
 import {
-  ArrowUpRight,
-  ArrowDownLeft,
-  Gift,
-  FileText,
-  Users,
-  ExternalLink,
-  Filter,
-  Search,
+    ArrowDownLeft,
+    ArrowUpRight,
+    ExternalLink,
+    FileText,
+    Gift,
+    Search,
+    Users
 } from 'lucide-react';
-import { useTransactions, Transaction } from '@/lib/crypto';
+import { useState } from 'react';
 
 interface TransactionHistoryProps {
   userId: string;
@@ -145,7 +144,7 @@ function TransactionCard({ transaction, userId }: TransactionCardProps) {
           </div>
 
           <div className="text-sm text-gray-400 truncate">
-            {isSent ? 'To' : 'From'}: {formatAddress(isSent ? transaction.to : transaction.from)}
+            {isSent ? (<>To</>) : (<>From</>)}: {formatAddress(isSent ? transaction.to : transaction.from)}
           </div>
 
           {transaction.memo && (

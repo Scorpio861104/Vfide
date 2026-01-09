@@ -2,31 +2,31 @@
  * Tests for useVaultRecovery hook
  * Vault recovery functionality including guardians and next of kin
  */
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useWriteContract: vi.fn(),
-  useReadContract: vi.fn(),
-  useWatchContractEvent: vi.fn(),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useWriteContract: jest.fn(),
+  useReadContract: jest.fn(),
+  useWatchContractEvent: jest.fn(),
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
-  parseAbi: vi.fn(() => []),
+jest.mock('viem', () => ({
+  parseAbi: jest.fn(() => []),
 }))
 
 describe('useVaultRecovery', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should return initial recovery status', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xuser123' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -39,16 +39,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -57,7 +57,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -70,7 +70,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -79,7 +79,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -93,7 +93,7 @@ describe('useVaultRecovery', () => {
   it('should return vault owner', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xuser123' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -106,16 +106,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -124,7 +124,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: '0xowner456' as `0x${string}`,
       isLoading: false,
       isError: false,
@@ -137,7 +137,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -146,7 +146,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -158,7 +158,7 @@ describe('useVaultRecovery', () => {
   it('should return guardian count', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xuser123' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -171,16 +171,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -189,7 +189,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: 3,
       isLoading: false,
       isError: false,
@@ -202,7 +202,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -211,7 +211,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -223,7 +223,7 @@ describe('useVaultRecovery', () => {
   it('should check if user is guardian', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xguardian123' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -236,16 +236,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -254,7 +254,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: true,
       isLoading: false,
       isError: false,
@@ -267,7 +267,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -276,7 +276,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -286,10 +286,10 @@ describe('useVaultRecovery', () => {
   })
 
   it('should provide setNextOfKin function', async () => {
-    const mockWriteContractAsync = vi.fn()
+    const mockWriteContractAsync = jest.fn()
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xowner' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -302,16 +302,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
+    jest.mocked(useWriteContract).mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -320,7 +320,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -333,7 +333,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -342,7 +342,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -353,10 +353,10 @@ describe('useVaultRecovery', () => {
   })
 
   it('should provide setGuardian function', async () => {
-    const mockWriteContractAsync = vi.fn()
+    const mockWriteContractAsync = jest.fn()
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xowner' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -369,16 +369,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
+    jest.mocked(useWriteContract).mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -387,7 +387,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -400,7 +400,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -409,7 +409,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -422,10 +422,10 @@ describe('useVaultRecovery', () => {
   })
 
   it('should provide requestRecovery function', async () => {
-    const mockWriteContractAsync = vi.fn()
+    const mockWriteContractAsync = jest.fn()
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xguardian' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -438,16 +438,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
+    jest.mocked(useWriteContract).mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -456,7 +456,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -469,7 +469,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -478,7 +478,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -491,7 +491,7 @@ describe('useVaultRecovery', () => {
   it('should provide approveRecovery function', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xguardian' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -504,16 +504,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -522,7 +522,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -535,7 +535,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -544,7 +544,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -557,7 +557,7 @@ describe('useVaultRecovery', () => {
   it('should provide cancelRecovery function', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xowner' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -570,16 +570,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -588,7 +588,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -601,7 +601,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -610,7 +610,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -623,7 +623,7 @@ describe('useVaultRecovery', () => {
   it('should provide finalizeRecovery function', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xproposed' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -636,16 +636,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -654,7 +654,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -667,7 +667,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -676,7 +676,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -689,7 +689,7 @@ describe('useVaultRecovery', () => {
   it('should return isWritePending status', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xuser' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -702,16 +702,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: true,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: false,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -720,7 +720,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -733,7 +733,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -742,7 +742,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
@@ -754,7 +754,7 @@ describe('useVaultRecovery', () => {
   it('should handle undefined vault address', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xuser' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -767,16 +767,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -785,7 +785,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -798,7 +798,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -807,7 +807,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const { result } = renderHook(() => useVaultRecovery(undefined))
@@ -818,7 +818,7 @@ describe('useVaultRecovery', () => {
   it('should return nextOfKin', async () => {
     const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
     
-    vi.mocked(useAccount).mockReturnValue({
+    jest.mocked(useAccount).mockReturnValue({
       address: '0xuser' as `0x${string}`,
       isConnecting: false,
       isDisconnected: false,
@@ -831,16 +831,16 @@ describe('useVaultRecovery', () => {
       connector: undefined,
     })
     
-    vi.mocked(useWriteContract).mockReturnValue({
-      writeContractAsync: vi.fn(),
+    jest.mocked(useWriteContract).mockReturnValue({
+      writeContractAsync: jest.fn(),
       isPending: false,
-      writeContract: vi.fn(),
+      writeContract: jest.fn(),
       data: undefined,
       isError: false,
       isSuccess: false,
       isIdle: true,
       error: null,
-      reset: vi.fn(),
+      reset: jest.fn(),
       context: undefined,
       failureCount: 0,
       failureReason: null,
@@ -849,7 +849,7 @@ describe('useVaultRecovery', () => {
       variables: undefined,
     })
     
-    vi.mocked(useReadContract).mockReturnValue({
+    jest.mocked(useReadContract).mockReturnValue({
       data: '0xnextofkin' as `0x${string}`,
       isLoading: false,
       isError: false,
@@ -862,7 +862,7 @@ describe('useVaultRecovery', () => {
       failureCount: 0,
       failureReason: null,
       isRefetching: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
       dataUpdatedAt: Date.now(),
       errorUpdatedAt: 0,
       fetchStatus: 'idle',
@@ -871,7 +871,7 @@ describe('useVaultRecovery', () => {
       queryKey: [],
     })
     
-    vi.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useWatchContractEvent).mockImplementation(() => {})
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`

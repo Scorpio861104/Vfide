@@ -1,9 +1,9 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
 import { render } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion comprehensively
-vi.mock('framer-motion', () => {
+jest.mock('framer-motion', () => {
   const createMotionComponent = (tag: string) => {
     return React.forwardRef(({ children, ...props }: any, ref: any) => {
       const Tag = tag as any
@@ -24,7 +24,7 @@ vi.mock('framer-motion', () => {
 })
 
 // Mock lucide icons
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   CheckCircle: () => <span>CheckIcon</span>,
   CheckCircle2: () => <span data-testid="check-icon">CheckIcon</span>,
   Loader2: () => <span>LoaderIcon</span>,
@@ -43,12 +43,12 @@ import { TransactionSuccess } from '@/components/ui/TransactionSuccess'
 
 describe('TransactionSuccess', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
-    vi.stubGlobal('open', vi.fn())
+    jest.useFakeTimers()
+    vi.stubGlobal('open', jest.fn())
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
     vi.unstubAllGlobals()
   })
 
@@ -105,9 +105,9 @@ describe('TransactionSuccess', () => {
   })
 
   it('calls onClose after timeout', () => {
-    const onClose = vi.fn()
+    const onClose = jest.fn()
     render(<TransactionSuccess isOpen={true} onClose={onClose} />)
-    vi.advanceTimersByTime(5000)
+    jest.advanceTimersByTime(5000)
     expect(onClose).toHaveBeenCalled()
   })
 })

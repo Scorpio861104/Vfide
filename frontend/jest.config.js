@@ -77,10 +77,13 @@ const customJestConfig = {
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(wagmi|@wagmi|viem|@tanstack)/)',
+  ],
   testPathIgnorePatterns: [
     '/node_modules/',
     '/__mocks__/',
-    '<rootDir>/__tests__/',
+    '<rootDir>/__tests__/(?!(contract-interactions|network-resilience|security|integration|multi-chain|load-stress|accessibility|websocket|storage|error-boundary)\\.test\\.tsx?)',
     '<rootDir>/hooks/__tests__/.*Extended\\.test\\.[jt]sx?$',
     '<rootDir>/hooks/__tests__/.*Real\\.test\\.[jt]sx?$',
     '<rootDir>/playwright/',

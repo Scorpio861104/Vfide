@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Questions and Discussions
+    url: https://github.com/Scorpio861104/Vfide/discussions
+    about: Ask questions, share ideas, or discuss with the community
+  
+  - name: 🔐 Security Vulnerability
+    url: mailto:security@vfide.io
+    about: Please report security vulnerabilities via email, not GitHub issues
+  
+  - name: 📖 Documentation
+    url: https://github.com/Scorpio861104/Vfide/blob/main/README.md
+    about: Read our comprehensive documentation, guides, and API references
+  
+  - name: 💡 Discord Community
+    url: https://discord.gg/vfide
+    about: Join our Discord server for real-time help and community support

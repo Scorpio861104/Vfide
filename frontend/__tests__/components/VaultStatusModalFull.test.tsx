@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
@@ -11,19 +11,19 @@ vi.mock('framer-motion', () => ({
 }));
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => ({ address: '0xTestAddress123', isConnected: true }),
-  useSwitchChain: () => ({ switchChain: vi.fn(), isPending: false }),
+  useSwitchChain: () => ({ switchChain: jest.fn(), isPending: false }),
 }));
 
 // Mock useVaultHub
-vi.mock('@/hooks/useVaultHub', () => ({
+jest.mock('@/hooks/useVaultHub', () => ({
   useVaultHub: () => ({
     vaultAddress: null,
     hasVault: false,
     isLoadingVault: false,
     isCreatingVault: false,
-    createVault: vi.fn(),
+    createVault: jest.fn(),
     isContractConfigured: true,
     isOnCorrectChain: true,
     expectedChainId: 84532,
@@ -32,15 +32,15 @@ vi.mock('@/hooks/useVaultHub', () => ({
 }));
 
 // Mock toast
-vi.mock('@/components/ui/toast', () => ({
-  useToast: () => ({ showToast: vi.fn() }),
+jest.mock('@/components/ui/toast', () => ({
+  useToast: () => ({ showToast: jest.fn() }),
 }));
 
 import { VaultStatusModal } from '@/components/vault/VaultStatusModal';
 
 describe('VaultStatusModal', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('renders when connected and no vault', () => {

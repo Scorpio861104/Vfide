@@ -3,18 +3,18 @@
  * Tests for actual wallet components with mocked hooks
  */
 
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock dependencies
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useBalance: vi.fn(),
-  useChainId: vi.fn(() => 84532),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useBalance: jest.fn(),
+  useChainId: jest.fn(() => 84532),
 }))
 
-vi.mock('@/lib/testnet', () => ({
+jest.mock('@/lib/testnet', () => ({
   IS_TESTNET: true,
   FAUCET_URLS: {
     sepolia: 'https://faucet.sepolia.dev',
@@ -22,7 +22,7 @@ vi.mock('@/lib/testnet', () => ({
   },
 }))
 
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Droplets: ({ size, className }: { size?: number; className?: string }) => (
     <span data-testid="droplets-icon" className={className} data-size={size} />
   ),
@@ -44,12 +44,12 @@ describe('FaucetButton', () => {
   const mockAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     
     // Mock clipboard
     Object.assign(navigator, {
       clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined),
+        writeText: jest.fn().mockResolvedValue(undefined),
       },
     })
   })
@@ -232,11 +232,11 @@ describe('FaucetButton - Mainnet', () => {
     }))
     
     vi.doMock('wagmi', () => ({
-      useAccount: vi.fn().mockReturnValue({
+      useAccount: jest.fn().mockReturnValue({
         address: '0x1234567890123456789012345678901234567890',
         isConnected: true,
       }),
-      useBalance: vi.fn().mockReturnValue({
+      useBalance: jest.fn().mockReturnValue({
         data: { formatted: '1.0' },
       }),
     }))

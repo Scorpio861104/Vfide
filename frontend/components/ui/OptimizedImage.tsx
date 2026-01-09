@@ -110,7 +110,7 @@ export function AvatarImage({
   if (!src || hasError) {
     return (
       <div
-        className="rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-white font-semibold"
+        className="rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-white font-semibold"
         style={{ width: size, height: size, fontSize: size / 2.5 }}
       >
         {fallback || alt.charAt(0).toUpperCase()}

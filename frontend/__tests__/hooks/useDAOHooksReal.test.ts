@@ -3,29 +3,29 @@
  * Tests for useDAOHooks to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook } from '@testing-library/react'
 
 // Mock wagmi
-const mockUseReadContract = vi.fn()
-const mockUseWriteContract = vi.fn()
-const mockUseWaitForTransactionReceipt = vi.fn()
+const mockUseReadContract = jest.fn()
+const mockUseWriteContract = jest.fn()
+const mockUseWaitForTransactionReceipt = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
   useWaitForTransactionReceipt: () => mockUseWaitForTransactionReceipt(),
 }))
 
 // Mock contracts
-vi.mock('../../lib/contracts', () => ({
+jest.mock('../../lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     DAO: '0x1234567890123456789012345678901234567890',
   },
 }))
 
 // Mock ABIs
-vi.mock('../../lib/abis', () => ({
+jest.mock('../../lib/abis', () => ({
   DAOABI: [],
 }))
 
@@ -37,7 +37,7 @@ import {
 
 describe('useDAOProposals', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('returns proposal count', () => {
@@ -72,10 +72,10 @@ describe('useDAOProposals', () => {
 })
 
 describe('useVote', () => {
-  const mockWriteContract = vi.fn()
+  const mockWriteContract = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,

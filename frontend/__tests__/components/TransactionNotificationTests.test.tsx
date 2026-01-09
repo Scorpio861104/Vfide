@@ -2,12 +2,12 @@
  * TransactionNotification Tests
  * Tests for wallet transaction notification toasts (0% coverage)
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     a: ({ children, ...props }: any) => <a {...props}>{children}</a>,
@@ -19,11 +19,11 @@ import { TransactionNotification, useTransactionNotifications } from '@/componen
 
 describe('TransactionNotification', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   describe('rendering', () => {
@@ -126,7 +126,7 @@ describe('TransactionNotification', () => {
 
   describe('close functionality', () => {
     it('calls onClose when close button is clicked', () => {
-      const onClose = vi.fn()
+      const onClose = jest.fn()
       const notification = {
         id: '6',
         type: 'success' as const,
@@ -144,7 +144,7 @@ describe('TransactionNotification', () => {
     })
 
     it('auto-closes success notification after 8 seconds', async () => {
-      const onClose = vi.fn()
+      const onClose = jest.fn()
       const notification = {
         id: '7',
         type: 'success' as const,
@@ -157,14 +157,14 @@ describe('TransactionNotification', () => {
       )
       
       act(() => {
-        vi.advanceTimersByTime(8000)
+        jest.advanceTimersByTime(8000)
       })
       
       expect(onClose).toHaveBeenCalled()
     })
 
     it('auto-closes pending notification after 30 seconds', async () => {
-      const onClose = vi.fn()
+      const onClose = jest.fn()
       const notification = {
         id: '8',
         type: 'pending' as const,
@@ -177,14 +177,14 @@ describe('TransactionNotification', () => {
       )
       
       act(() => {
-        vi.advanceTimersByTime(30000)
+        jest.advanceTimersByTime(30000)
       })
       
       expect(onClose).toHaveBeenCalled()
     })
 
     it('auto-closes error notification after 8 seconds', async () => {
-      const onClose = vi.fn()
+      const onClose = jest.fn()
       const notification = {
         id: '9',
         type: 'error' as const,
@@ -197,7 +197,7 @@ describe('TransactionNotification', () => {
       )
       
       act(() => {
-        vi.advanceTimersByTime(8000)
+        jest.advanceTimersByTime(8000)
       })
       
       expect(onClose).toHaveBeenCalled()
@@ -207,11 +207,11 @@ describe('TransactionNotification', () => {
 
 describe('useTransactionNotifications', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('initializes with null notification', () => {
@@ -322,7 +322,7 @@ describe('useTransactionNotifications', () => {
     firstId = hookResult!.notification!.id
     
     // Advance time so Date.now() returns different value
-    vi.advanceTimersByTime(1)
+    jest.advanceTimersByTime(1)
     
     act(() => {
       hookResult!.showNotification('error', 'Second', 'Message')

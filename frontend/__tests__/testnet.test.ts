@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from '@jest/globals'
 import {
   IS_TESTNET,
   TESTNET_CHAIN_ID,

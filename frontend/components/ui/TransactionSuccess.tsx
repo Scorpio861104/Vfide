@@ -144,7 +144,7 @@ export function TransactionSuccess({
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.8, y: 20 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative bg-gradient-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#50C878] rounded-2xl p-8 max-w-md w-full text-center"
+            className="relative bg-linear-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#50C878] rounded-2xl p-8 max-w-md w-full text-center"
           >
             {/* Close button */}
             <button 

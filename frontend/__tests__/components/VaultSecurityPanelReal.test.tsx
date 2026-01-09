@@ -3,28 +3,28 @@
  * Tests for actual security components with mocked hooks
  */
 
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
 // Mock all dependencies
-vi.mock('@/lib/vfide-hooks', () => ({
-  useUserVault: vi.fn(),
-  useIsVaultLocked: vi.fn(),
-  useQuarantineStatus: vi.fn(),
-  useCanSelfPanic: vi.fn(),
-  useSelfPanic: vi.fn(),
-  useVaultGuardians: vi.fn(),
-  useGuardianLockStatus: vi.fn(),
-  useEmergencyStatus: vi.fn(),
+jest.mock('@/lib/vfide-hooks', () => ({
+  useUserVault: jest.fn(),
+  useIsVaultLocked: jest.fn(),
+  useQuarantineStatus: jest.fn(),
+  useCanSelfPanic: jest.fn(),
+  useSelfPanic: jest.fn(),
+  useVaultGuardians: jest.fn(),
+  useGuardianLockStatus: jest.fn(),
+  useEmergencyStatus: jest.fn(),
 }))
 
-vi.mock('wagmi', () => ({
-  useAccount: vi.fn(),
-  useChainId: vi.fn(() => 84532),
+jest.mock('wagmi', () => ({
+  useAccount: jest.fn(),
+  useChainId: jest.fn(() => 84532),
 }))
 
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
@@ -32,7 +32,7 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Shield: ({ className }: { className?: string }) => <span data-testid="shield-icon" className={className} />,
   AlertTriangle: ({ className }: { className?: string }) => <span data-testid="alert-icon" className={className} />,
   Lock: ({ className }: { className?: string }) => <span data-testid="lock-icon" className={className} />,
@@ -58,8 +58,8 @@ describe('VaultSecurityPanel', () => {
   const mockNow = Math.floor(Date.now() / 1000)
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    vi.useFakeTimers()
+    jest.clearAllMocks()
+    jest.useFakeTimers()
     vi.setSystemTime(mockNow * 1000)
     
     // Default mocks - no vault
@@ -85,7 +85,7 @@ describe('VaultSecurityPanel', () => {
     })
     
     ;(useSelfPanic as Mock).mockReturnValue({
-      selfPanic: vi.fn(),
+      selfPanic: jest.fn(),
       isPanicking: false,
       isSuccess: false,
     })
@@ -108,7 +108,7 @@ describe('VaultSecurityPanel', () => {
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   describe('No Vault', () => {
@@ -205,7 +205,7 @@ describe('VaultSecurityPanel', () => {
     })
 
     it('should be able to trigger self panic when conditions met', () => {
-      const mockSelfPanic = vi.fn()
+      const mockSelfPanic = jest.fn()
       ;(useSelfPanic as Mock).mockReturnValue({
         selfPanic: mockSelfPanic,
         isPanicking: false,
@@ -228,7 +228,7 @@ describe('VaultSecurityPanel', () => {
 
     it('should show panic in progress state', () => {
       ;(useSelfPanic as Mock).mockReturnValue({
-        selfPanic: vi.fn(),
+        selfPanic: jest.fn(),
         isPanicking: true,
         isSuccess: false,
       })
@@ -241,7 +241,7 @@ describe('VaultSecurityPanel', () => {
 
     it('should show success after panic completes', () => {
       ;(useSelfPanic as Mock).mockReturnValue({
-        selfPanic: vi.fn(),
+        selfPanic: jest.fn(),
         isPanicking: false,
         isSuccess: true,
       })

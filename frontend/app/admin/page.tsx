@@ -1,11 +1,11 @@
 'use client';
 
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
-import { useState, useEffect } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { GlobalNav } from '@/components/layout/GlobalNav';
+import { safeBigIntToNumber, safeParseInt } from '@/lib/validation';
+import { useEffect, useState } from 'react';
 import { formatEther } from 'viem';
-import { safeParseInt, safeBigIntToNumber } from '@/lib/validation';
+import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 
 // Transaction history type
 type AdminTransaction = {
@@ -835,9 +835,9 @@ export default function AdminPanel() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-md">
-          <h1 className="text-3xl font-bold text-white mb-4">Admin Panel</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">Admin Panel</h1>
           <p className="text-gray-300">Please connect your wallet to access admin functions.</p>
         </div>
       </div>
@@ -846,7 +846,7 @@ export default function AdminPanel() {
 
   if (!isOwner) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
         <div className="bg-red-500/20 backdrop-blur-md rounded-2xl p-8 max-w-md border border-red-500/50">
           <h1 className="text-3xl font-bold text-white mb-4">Access Denied</h1>
           <p className="text-gray-300 mb-4">You are not the contract owner.</p>
@@ -864,12 +864,12 @@ export default function AdminPanel() {
   return (
     <>
       <GlobalNav />
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12 px-4 pt-24">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-linear-to-br from-gray-900 via-purple-900 to-violet-900 py-12 px-4 pt-24">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">VFIDE Owner Control Panel</h1>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">VFIDE Owner Control Panel</h1>
               <p className="text-gray-300">Contract: <span className="font-mono text-sm">{TOKEN_ADDRESS}</span></p>
             </div>
             <div className="bg-green-500/20 border border-green-500 rounded-lg px-4 py-2">
@@ -1566,7 +1566,7 @@ export default function AdminPanel() {
 
           {/* Contract Health Dashboard */}
           {showHealthDashboard && (
-            <div className="bg-gradient-to-br from-purple-900/30 to-blue-700/20 rounded-lg p-6 border border-purple-500 shadow-lg">
+            <div className="bg-linear-to-br from-purple-900/30 to-blue-700/20 rounded-lg p-6 border border-purple-500 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-purple-400">🏥 System Health Dashboard</h2>
                 <button
@@ -1715,7 +1715,7 @@ export default function AdminPanel() {
 
           {/* Batch Actions Queue */}
           {showBatchMode && (
-            <div className="bg-gradient-to-br from-orange-900/30 to-orange-700/20 rounded-lg p-6 border border-orange-500 shadow-lg">
+            <div className="bg-linear-to-br from-orange-900/30 to-orange-700/20 rounded-lg p-6 border border-orange-500 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-orange-400">📦 Batch Actions Queue</h2>
                 <button
@@ -1789,7 +1789,7 @@ export default function AdminPanel() {
 
           {/* Transaction History */}
           {showTxHistory && txHistory.length > 0 && (
-            <div className="bg-gradient-to-br from-gray-900/30 to-gray-700/20 rounded-lg p-6 border border-gray-500 shadow-lg">
+            <div className="bg-linear-to-br from-gray-900/30 to-gray-700/20 rounded-lg p-6 border border-gray-500 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-400">📜 Transaction History</h2>
                 <div className="flex gap-2">
@@ -1848,7 +1848,7 @@ export default function AdminPanel() {
           )}
 
           {/* Ownership Transfer - DAO Handover */}
-          <div className="bg-gradient-to-br from-red-900/40 to-orange-900/40 backdrop-blur-md rounded-2xl p-6 border-2 border-red-500">
+          <div className="bg-linear-to-br from-red-900/40 to-orange-900/40 backdrop-blur-md rounded-2xl p-6 border-2 border-red-500">
             <h2 className="text-2xl font-bold text-white mb-4">👑 Ownership Transfer</h2>
             <p className="text-gray-300 text-sm mb-4">
               Transfer contract ownership to DAO Timelock for decentralized governance. This is the final step in progressive decentralization.

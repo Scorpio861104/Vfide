@@ -1,14 +1,14 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => {
+jest.mock('framer-motion', () => {
   // Create a simple mock motion value
   const createMotionValue = () => ({
-    set: vi.fn(),
+    set: jest.fn(),
     get: () => 0,
-    on: vi.fn(() => vi.fn()),
+    on: jest.fn(() => jest.fn()),
   })
   
   return {
@@ -29,7 +29,7 @@ vi.mock('framer-motion', () => {
 })
 
 // Mock vfide-hooks
-vi.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/lib/vfide-hooks', () => ({
   useProofScore: () => ({
     score: 7500,
     tier: 'Gold',
@@ -56,7 +56,7 @@ vi.mock('@/lib/vfide-hooks', () => ({
 }))
 
 // Mock badge-registry
-vi.mock('@/lib/badge-registry', () => ({
+jest.mock('@/lib/badge-registry', () => ({
   getBadgeById: (id: string) => ({
     id,
     name: `Badge ${id}`,
@@ -65,7 +65,7 @@ vi.mock('@/lib/badge-registry', () => ({
 }))
 
 // Mock child components
-vi.mock('@/components/badge/BadgeDisplay', () => ({
+jest.mock('@/components/badge/BadgeDisplay', () => ({
   BadgeDisplay: ({ badgeId }: any) => <div data-testid={`badge-${badgeId}`}>Badge {badgeId}</div>,
 }))
 

@@ -12,14 +12,14 @@ export default function AboutPage() {
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Hero */}
-        <section className="py-20 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
-          <div className="container mx-auto px-4">
+        <section className="py-20 bg-linear-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+          <div className="container mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center max-w-4xl mx-auto"
             >
-              <h1 className="text-5xl md:text-6xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
                 About VFIDE
               </h1>
               <p className="text-xl md:text-2xl text-[#A0A0A5] leading-relaxed">
@@ -126,7 +126,7 @@ export default function AboutPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-r from-[#00F0FF]/10 to-[#0080FF]/10 border-2 border-[#00F0FF]/30 rounded-xl p-8 text-center"
+              className="bg-linear-to-r from-[#00F0FF]/10 to-[#0080FF]/10 border-2 border-[#00F0FF]/30 rounded-xl p-8 text-center"
             >
               <h2 className="text-2xl font-bold text-[#00F0FF] mb-4">
                 &quot;This is not a system for the rich. This is for the forgotten and the struggling.&quot;
@@ -150,7 +150,7 @@ export default function AboutPage() {
               href="https://github.com/Scorpio861104/Vfide"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block px-8 py-3 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform"
+              className="inline-block px-8 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform"
             >
               View Source Code on GitHub
             </a>

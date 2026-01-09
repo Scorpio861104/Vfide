@@ -1,14 +1,14 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
 // Mock wagmi
-vi.mock('wagmi', () => ({
-  useChainId: vi.fn(() => 84532),
+jest.mock('wagmi', () => ({
+  useChainId: jest.fn(() => 84532),
 }))
 
 // Mock lucide-react
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   ExternalLink: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'external-link' }),
   Copy: ({ className }: { className?: string }) => 
@@ -21,11 +21,11 @@ import { EtherscanLink, ContractLink, getExplorerUrl, getExplorerLink } from '@/
 
 describe('EtherscanLink', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     // Mock clipboard
     Object.assign(navigator, {
       clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined),
+        writeText: jest.fn().mockResolvedValue(undefined),
       },
     })
   })

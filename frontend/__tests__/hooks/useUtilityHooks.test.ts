@@ -2,12 +2,12 @@
  * Tests for useUtilityHooks
  * System stats, fee calculator, and activity feed
  */
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock useProofScore
-vi.mock('@/hooks/useProofScoreHooks', () => ({
-  useProofScore: vi.fn(() => ({
+jest.mock('@/hooks/useProofScoreHooks', () => ({
+  useProofScore: jest.fn(() => ({
     burnFee: 0.3,
     proofScore: 50,
     level: 2,
@@ -21,12 +21,12 @@ vi.mock('@/hooks/useProofScoreHooks', () => ({
 
 describe('useUtilityHooks', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    vi.useFakeTimers()
+    jest.clearAllMocks()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   describe('useSystemStats', () => {
@@ -50,7 +50,7 @@ describe('useUtilityHooks', () => {
 
       // Advance time by 5 seconds
       await act(async () => {
-        vi.advanceTimersByTime(5000)
+        jest.advanceTimersByTime(5000)
       })
 
       // Stats should have updated
@@ -66,7 +66,7 @@ describe('useUtilityHooks', () => {
 
       // Advance time - should not cause errors
       await act(async () => {
-        vi.advanceTimersByTime(5000)
+        jest.advanceTimersByTime(5000)
       })
     })
 
@@ -76,13 +76,13 @@ describe('useUtilityHooks', () => {
 
       // Advance through multiple intervals
       await act(async () => {
-        vi.advanceTimersByTime(5000)
+        jest.advanceTimersByTime(5000)
       })
       await act(async () => {
-        vi.advanceTimersByTime(5000)
+        jest.advanceTimersByTime(5000)
       })
       await act(async () => {
-        vi.advanceTimersByTime(5000)
+        jest.advanceTimersByTime(5000)
       })
 
       // Stats should have accumulated
@@ -190,7 +190,7 @@ describe('useUtilityHooks', () => {
 
       // Advance time by 3 seconds
       await act(async () => {
-        vi.advanceTimersByTime(3000)
+        jest.advanceTimersByTime(3000)
       })
 
       expect(result.current.activities.length).toBe(1)
@@ -201,7 +201,7 @@ describe('useUtilityHooks', () => {
       const { result } = renderHook(() => useActivityFeed())
 
       await act(async () => {
-        vi.advanceTimersByTime(3000)
+        jest.advanceTimersByTime(3000)
       })
 
       const activity = result.current.activities[0]
@@ -217,7 +217,7 @@ describe('useUtilityHooks', () => {
 
       // Add 25 activities
       await act(async () => {
-        vi.advanceTimersByTime(3000 * 25)
+        jest.advanceTimersByTime(3000 * 25)
       })
 
       expect(result.current.activities.length).toBeLessThanOrEqual(20)
@@ -228,13 +228,13 @@ describe('useUtilityHooks', () => {
       const { result } = renderHook(() => useActivityFeed())
 
       await act(async () => {
-        vi.advanceTimersByTime(3000)
+        jest.advanceTimersByTime(3000)
       })
 
       const firstActivity = result.current.activities[0]
 
       await act(async () => {
-        vi.advanceTimersByTime(3000)
+        jest.advanceTimersByTime(3000)
       })
 
       // New activity should be at index 0
@@ -250,7 +250,7 @@ describe('useUtilityHooks', () => {
 
       // Should not throw
       await act(async () => {
-        vi.advanceTimersByTime(3000)
+        jest.advanceTimersByTime(3000)
       })
     })
 
@@ -260,7 +260,7 @@ describe('useUtilityHooks', () => {
 
       // Generate multiple activities
       await act(async () => {
-        vi.advanceTimersByTime(3000 * 10)
+        jest.advanceTimersByTime(3000 * 10)
       })
 
       const validTypes = ['transfer', 'merchant_payment', 'endorsement', 'vault_created', 'proposal_voted']
@@ -274,7 +274,7 @@ describe('useUtilityHooks', () => {
       const { result } = renderHook(() => useActivityFeed())
 
       await act(async () => {
-        vi.advanceTimersByTime(3000)
+        jest.advanceTimersByTime(3000)
       })
 
       const activity = result.current.activities[0]
@@ -286,7 +286,7 @@ describe('useUtilityHooks', () => {
       const { result } = renderHook(() => useActivityFeed())
 
       await act(async () => {
-        vi.advanceTimersByTime(3000)
+        jest.advanceTimersByTime(3000)
       })
 
       const activity = result.current.activities[0]

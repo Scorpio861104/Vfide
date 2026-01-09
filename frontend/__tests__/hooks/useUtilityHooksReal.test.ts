@@ -3,12 +3,12 @@
  * Tests for useUtilityHooks to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock the useProofScore hook
-vi.mock('../../hooks/useProofScoreHooks', () => ({
-  useProofScore: vi.fn().mockReturnValue({
+jest.mock('../../hooks/useProofScoreHooks', () => ({
+  useProofScore: jest.fn().mockReturnValue({
     burnFee: 0.5,
     score: 50,
     isLoading: false,
@@ -24,11 +24,11 @@ import {
 
 describe('useSystemStats', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('returns initial stats', () => {
@@ -57,7 +57,7 @@ describe('useSystemStats', () => {
     
     // Advance time by 5 seconds
     await act(async () => {
-      vi.advanceTimersByTime(5000)
+      jest.advanceTimersByTime(5000)
     })
     
     // Stats should have updated (values can go up)
@@ -67,7 +67,7 @@ describe('useSystemStats', () => {
   })
 
   it('cleans up interval on unmount', () => {
-    const clearIntervalSpy = vi.spyOn(global, 'clearInterval')
+    const clearIntervalSpy = jest.spyOn(global, 'clearInterval')
     
     const { unmount } = renderHook(() => useSystemStats())
     
@@ -142,11 +142,11 @@ describe('useFeeCalculator', () => {
 
 describe('useActivityFeed', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('returns empty activities initially', () => {
@@ -162,7 +162,7 @@ describe('useActivityFeed', () => {
     
     // Advance time by 3 seconds
     await act(async () => {
-      vi.advanceTimersByTime(3000)
+      jest.advanceTimersByTime(3000)
     })
     
     expect(result.current.activities.length).toBe(1)
@@ -172,7 +172,7 @@ describe('useActivityFeed', () => {
     const { result } = renderHook(() => useActivityFeed())
     
     await act(async () => {
-      vi.advanceTimersByTime(3000)
+      jest.advanceTimersByTime(3000)
     })
     
     const activity = result.current.activities[0]
@@ -186,7 +186,7 @@ describe('useActivityFeed', () => {
     const { result } = renderHook(() => useActivityFeed())
     
     await act(async () => {
-      vi.advanceTimersByTime(3000)
+      jest.advanceTimersByTime(3000)
     })
     
     const validTypes = ['transfer', 'merchant_payment', 'endorsement', 'vault_created', 'proposal_voted']
@@ -198,14 +198,14 @@ describe('useActivityFeed', () => {
     
     // Add 25 activities (3s each = 75s)
     await act(async () => {
-      vi.advanceTimersByTime(75000)
+      jest.advanceTimersByTime(75000)
     })
     
     expect(result.current.activities.length).toBeLessThanOrEqual(20)
   })
 
   it('cleans up on unmount', () => {
-    const clearIntervalSpy = vi.spyOn(global, 'clearInterval')
+    const clearIntervalSpy = jest.spyOn(global, 'clearInterval')
     
     const { unmount } = renderHook(() => useActivityFeed())
     

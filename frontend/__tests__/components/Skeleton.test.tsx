@@ -1,14 +1,14 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, ...props }: React.PropsWithChildren<{ className?: string; style?: object }>) =>
       React.createElement('div', { className, style, ...props }, children),
   },
-  useMotionValue: () => ({ set: vi.fn(), get: () => 0 }),
+  useMotionValue: () => ({ set: jest.fn(), get: () => 0 }),
   useSpring: (val: unknown) => val,
   useTransform: () => 0,
 }))

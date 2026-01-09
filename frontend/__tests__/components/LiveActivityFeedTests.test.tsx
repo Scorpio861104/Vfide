@@ -2,13 +2,13 @@
  * LiveActivityFeed Tests
  * Tests for LiveActivityFeed component (0% coverage)
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { LiveActivityFeed } from '@/components/trust/LiveActivityFeed'
 import type { ActivityItem } from '@/lib/vfide-hooks'
 
 // Mock framer-motion
-vi.mock('framer-motion', () => ({
+jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
     span: ({ children, ...props }: React.ComponentProps<'span'>) => <span {...props}>{children}</span>,
@@ -60,15 +60,15 @@ const mockActivities: ActivityItem[] = [
   },
 ]
 
-vi.mock('@/lib/vfide-hooks', () => ({
-  useActivityFeed: vi.fn(() => ({
+jest.mock('@/lib/vfide-hooks', () => ({
+  useActivityFeed: jest.fn(() => ({
     activities: mockActivities,
   })),
 }))
 
 describe('LiveActivityFeed', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders the component', () => {

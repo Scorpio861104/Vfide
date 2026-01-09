@@ -3,16 +3,16 @@
  * Tests for actual merchant hook implementations to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi
-const mockUseAccount = vi.fn()
-const mockUseReadContract = vi.fn()
-const mockUseWriteContract = vi.fn()
-const mockUseWaitForTransactionReceipt = vi.fn()
+const mockUseAccount = jest.fn()
+const mockUseReadContract = jest.fn()
+const mockUseWriteContract = jest.fn()
+const mockUseWaitForTransactionReceipt = jest.fn()
 
-vi.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
@@ -20,20 +20,20 @@ vi.mock('wagmi', () => ({
 }))
 
 // Mock viem
-vi.mock('viem', () => ({
+jest.mock('viem', () => ({
   parseEther: (value: string) => BigInt(parseFloat(value) * 1e18),
   formatEther: (value: bigint) => (Number(value) / 1e18).toString(),
 }))
 
 // Mock contracts
-vi.mock('../../lib/contracts', () => ({
+jest.mock('../../lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     MerchantPortal: '0x1234567890123456789012345678901234567890',
   },
 }))
 
 // Mock ABIs
-vi.mock('../../lib/abis', () => ({
+jest.mock('../../lib/abis', () => ({
   MerchantPortalABI: [],
 }))
 
@@ -46,7 +46,7 @@ import {
 
 describe('useIsMerchant', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0x1234' })
   })
 
@@ -54,7 +54,7 @@ describe('useIsMerchant', () => {
     mockUseReadContract.mockReturnValue({
       data: [true, false, 'Test Business', 'Retail', BigInt(1704067200), BigInt('1000000000000000000000'), BigInt(50)],
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsMerchant())
@@ -70,7 +70,7 @@ describe('useIsMerchant', () => {
     mockUseReadContract.mockReturnValue({
       data: [false, false, '', '', BigInt(0), BigInt(0), BigInt(0)],
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsMerchant())
@@ -83,7 +83,7 @@ describe('useIsMerchant', () => {
     mockUseReadContract.mockReturnValue({
       data: [true, true, 'Suspended Business', 'Retail', BigInt(1704067200), BigInt(0), BigInt(0)],
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsMerchant())
@@ -96,7 +96,7 @@ describe('useIsMerchant', () => {
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: true,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsMerchant())
@@ -108,7 +108,7 @@ describe('useIsMerchant', () => {
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsMerchant())
@@ -124,7 +124,7 @@ describe('useIsMerchant', () => {
     mockUseReadContract.mockReturnValue({
       data: [true, false, 'Custom Business', 'Food', BigInt(1704067200), BigInt(0), BigInt(0)],
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: jest.fn(),
     })
     
     const { result } = renderHook(() => useIsMerchant(customAddress))
@@ -134,10 +134,10 @@ describe('useIsMerchant', () => {
 })
 
 describe('useRegisterMerchant', () => {
-  const mockWriteContractAsync = vi.fn()
+  const mockWriteContractAsync = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       data: undefined,
@@ -215,10 +215,10 @@ describe('useRegisterMerchant', () => {
 })
 
 describe('useProcessPayment', () => {
-  const mockWriteContractAsync = vi.fn()
+  const mockWriteContractAsync = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseWriteContract.mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       data: undefined,
