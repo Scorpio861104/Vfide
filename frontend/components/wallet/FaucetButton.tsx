@@ -29,14 +29,14 @@ export function FaucetButton() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+        className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
           isLowBalance
             ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 animate-pulse'
             : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300'
         }`}
       >
         <Droplets size={14} />
-        <span>{isLowBalance ? 'Get ETH' : 'Faucet'}</span>
+        <span className="hidden xs:inline">{isLowBalance ? 'Get ETH' : 'Faucet'}</span>
       </button>
 
       {isOpen && (
@@ -48,7 +48,7 @@ export function FaucetButton() {
           />
           
           {/* Dropdown */}
-          <div className="absolute right-0 top-full mt-2 w-72 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="fixed sm:absolute right-3 sm:right-0 top-14 sm:top-full mt-2 w-[calc(100vw-1.5rem)] sm:w-72 max-w-md bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 overflow-hidden">
             <div className="p-4 border-b border-zinc-800">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-zinc-400 text-xs">Your Address</span>
