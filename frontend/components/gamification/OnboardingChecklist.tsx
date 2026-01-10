@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { 
-  CheckCircle2, Circle, Gift, ArrowRight, 
+  CheckCircle2, Circle, ArrowRight, 
   Wallet, Shield, Users, MessageSquare, 
   Vote, Trophy, Zap, Star, X
 } from 'lucide-react';
@@ -212,7 +212,7 @@ export default function OnboardingChecklist() {
         <div className="bg-[#50C878]/10 border-t border-[#50C878]/30 p-4 text-center">
           <div className="text-4xl mb-2">🎉</div>
           <div className="text-lg font-bold text-white mb-1">All Done!</div>
-          <div className="text-sm text-[#A0A0A5] mb-3">You've completed the onboarding checklist</div>
+          <div className="text-sm text-[#A0A0A5] mb-3">You&apos;ve completed the onboarding checklist</div>
           <button className="w-full px-4 py-2 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold hover:opacity-90 transition-opacity">
             Claim Bonus Reward
           </button>

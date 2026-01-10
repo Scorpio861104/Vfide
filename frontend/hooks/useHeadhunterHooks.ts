@@ -245,7 +245,7 @@ export function useClaimHeadhunterReward() {
         abi: ECOSYSTEM_VAULT_ABI,
         functionName: 'claimHeadhunterReward',
         args: [year, quarter],
-      });
+      }) as `0x${string}`;
       
       setTxHash(hash);
       return hash;

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { 
   Trophy, Users, TrendingUp, Gift, Copy, Check, 
-  ExternalLink, Calendar, Award, Target, Crown,
+  Award, Target, Crown,
   Share2, MessageCircle, Mail, Twitter
 } from 'lucide-react';
 import { 
@@ -28,39 +28,6 @@ import { formatEther } from 'viem';
  * - Quarterly claim interface
  * - Progress tracking
  */
-
-interface HeadhunterStats {
-  currentYearPoints: number;
-  estimatedRank: number;
-  currentYearNumber: number;
-  currentQuarterNumber: number;
-  quarterEndsAt: number;
-  pendingReferrals: number;
-  creditedReferrals: number;
-  userReferrals: number;
-  merchantReferrals: number;
-  totalEarnings: number;
-  claimableAmount: number;
-}
-
-interface LeaderboardEntry {
-  rank: number;
-  address: string;
-  points: number;
-  userReferrals: number;
-  merchantReferrals: number;
-  estimatedReward: number;
-  isCurrentUser: boolean;
-}
-
-interface ReferralActivity {
-  id: string;
-  type: 'user' | 'merchant';
-  address: string;
-  status: 'pending' | 'credited';
-  timestamp: number;
-  points: number;
-}
 
 export default function HeadhunterPage() {
   const { address, isConnected } = useAccount();
@@ -101,36 +68,6 @@ export default function HeadhunterPage() {
       console.error('Failed to claim reward:', error);
     }
   };
-
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0A0A0B] via-[#1A1A1F] to-[#0A0A0B] flex items-center justify-center p-6">
-        <div className="text-center">
-          <Trophy className="w-16 h-16 text-[#FFD700] mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Connect Wallet</h2>
-          <p className="text-gray-400">Connect your wallet to view the headhunter competition</p>
-        </div>
-      </div>
-    );
-  }
-
-  const quarterEndDate = new Date(stats.quarterEndsAt);
-  const daysUntilQuarterEnd = Math.ceil((stats.quarterEndsAt - Date.now()) / (1000 * 60 * 60 * 24));
-
-  // Rank rewards (Top 20)
-  const rankRewards = [
-    { rank: 1, percentage: '15.0%', color: '#FFD700' },
-    { rank: 2, percentage: '12.0%', color: '#C0C0C0' },
-    { rank: 3, percentage: '10.0%', color: '#CD7F32' },
-    { rank: 4, percentage: '8.0%', color: '#50C878' },
-    { rank: 5, percentage: '7.0%', color: '#50C878' },
-    { rank: 7, percentage: '5.0%', color: '#50C878' }, // User's rank
-  ];
-
-  useEffect(() => {
-    // Simulate loading
-    setTimeout(() => setIsLoading(false), 1000);
-  }, []);
 
   if (!isConnected) {
     return (
@@ -453,7 +390,7 @@ export default function HeadhunterPage() {
                       {/* Reward */}
                       <div className="text-right">
                         <div className="text-2xl font-bold text-[#50C878]">
-                          ${entry.estimatedReward.toFixed(0)}
+                          ${typeof entry.estimatedReward === 'number' ? entry.estimatedReward.toFixed(0) : entry.estimatedReward}
                         </div>
                         <div className="text-xs text-[#A0A0A5]">Est. reward</div>
                       </div>

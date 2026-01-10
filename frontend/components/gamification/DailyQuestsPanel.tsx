@@ -7,11 +7,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { 
-  Target, Trophy, Flame, Gift, CheckCircle2, Lock, 
-  Calendar, Clock, TrendingUp, Star, Zap, Award
+  Target, Flame, Gift, CheckCircle2, Lock, 
+  Clock, TrendingUp, Star, Award
 } from 'lucide-react';
 
 interface Quest {
@@ -60,6 +60,7 @@ export default function DailyQuestsPanel() {
       loadQuests();
       loadStreak();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, activeTab]);
 
   const loadQuests = async () => {
@@ -210,7 +211,7 @@ export default function DailyQuestsPanel() {
       <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-[#50C878]" />
-          Today's Progress
+          Today&apos;s Progress
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard icon={<CheckCircle2 />} label="Completed" value={`${quests.filter(q => q.completed).length}/${quests.length}`} color="text-[#50C878]" />

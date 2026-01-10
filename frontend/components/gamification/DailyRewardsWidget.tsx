@@ -150,7 +150,7 @@ export default function DailyRewardsWidget() {
       {/* Today's Reward */}
       <div className="bg-[#1A1A1F] rounded-lg p-4 mb-4">
         <div className="text-center mb-3">
-          <div className="text-sm text-[#A0A0A5] mb-1">Today's Reward</div>
+          <div className="text-sm text-[#A0A0A5] mb-1">Today&apos;s Reward</div>
           <div className="flex items-center justify-center gap-4">
             <div className="flex items-center gap-2">
               <Gift className="w-4 h-4 text-[#FFD700]" />

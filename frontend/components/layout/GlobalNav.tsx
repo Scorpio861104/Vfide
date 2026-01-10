@@ -13,7 +13,7 @@ import { FaucetButton } from "../wallet/FaucetButton";
 import { SimpleWalletConnect } from "../wallet/SimpleWalletConnect";
 
 // Primary navigation - organized by category
-const navLinks = [
+const navLinks: Array<{ href: string; label: string; highlight?: boolean; accent?: boolean }> = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/vault", label: "Vault" },
   { href: "/crypto", label: "Wallet", highlight: true },

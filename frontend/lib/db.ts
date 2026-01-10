@@ -1,7 +1,7 @@
 // Database Client - Real PostgreSQL Connection
 // NO MOCKS - Real database queries
 
-import { Pool, QueryResult } from 'pg';
+import { Pool, QueryResult, QueryResultRow } from 'pg';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/vfide_testnet',
