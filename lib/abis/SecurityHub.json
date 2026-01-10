@@ -1,0 +1,212 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_dao",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_guardianLock",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_panicGuard",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_breaker",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_ledger",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "breaker",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract EmergencyBreaker"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "dao",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "guardianLock",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract GuardianLock"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isLocked",
+    "inputs": [
+      {
+        "name": "vault",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ledger",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IProofLedger"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "panicGuard",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract PanicGuard"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "setDAO",
+    "inputs": [
+      {
+        "name": "_dao",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setModules",
+    "inputs": [
+      {
+        "name": "_guardianLock",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_panicGuard",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_breaker",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_ledger",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "DAOSet",
+    "inputs": [
+      {
+        "name": "dao",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ModulesSet",
+    "inputs": [
+      {
+        "name": "guardianLock",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "panicGuard",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "breaker",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "ledger",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "SEC_NotDAO",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SEC_Zero",
+    "inputs": []
+  }
+]

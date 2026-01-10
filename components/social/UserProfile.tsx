@@ -1,0 +1,689 @@
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Users,
+  TrendingUp,
+  Award,
+  Calendar,
+  MapPin,
+  Shield,
+  Share2,
+  MessageCircle,
+  Heart,
+  Flame,
+  Target,
+  Zap,
+  Copy,
+  CheckCircle2,
+} from 'lucide-react';
+
+// ==================== TYPES ====================
+
+interface UserProfile {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar: string;
+  coverImage?: string;
+  bio: string;
+  location?: string;
+  joinedAt: Date;
+  proofScore: number;
+  followers: number;
+  following: number;
+  friends: number;
+  badges: Badge[];
+  isVerified: boolean;
+  isFollowing: boolean;
+  isFriend: boolean;
+  activityStreak: number;
+  totalPoints: number;
+  level: number;
+  lastActive: Date;
+}
+
+interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  unlockedAt: Date;
+}
+
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  progress: number;
+  maxProgress: number;
+  icon: string;
+  isUnlocked: boolean;
+  unlockedAt?: Date;
+}
+
+interface ActivityItem {
+  id: string;
+  type: 'achievement' | 'badge' | 'proposal' | 'governance' | 'transaction';
+  title: string;
+  description: string;
+  timestamp: Date;
+  icon: string;
+  details?: Record<string, unknown>;
+}
+
+interface FriendInfo {
+  id: string;
+  displayName: string;
+  avatar: string;
+  proofScore: number;
+  isMutual: boolean;
+}
+
+// ==================== MOCK DATA ====================
+
+const mockUserProfile: UserProfile = {
+  id: 'user_123',
+  username: 'alice_blockchain',
+  displayName: 'Alice Chen',
+  avatar: '👩‍💼',
+  coverImage: 'url_to_cover',
+  bio: 'DeFi enthusiast | Governance advocate | Building trust on VFIDE 🚀',
+  location: 'San Francisco, CA',
+  joinedAt: new Date('2023-06-15'),
+  proofScore: 8450,
+  followers: 342,
+  following: 187,
+  friends: 54,
+  badges: [
+    {
+      id: 'b1',
+      name: 'Governance Pro',
+      description: 'Participated in 50+ proposals',
+      icon: '🗳️',
+      rarity: 'rare',
+      unlockedAt: new Date('2024-01-20'),
+    },
+    {
+      id: 'b2',
+      name: 'Payment Pioneer',
+      description: 'Completed 100 transactions',
+      icon: '💳',
+      rarity: 'uncommon',
+      unlockedAt: new Date('2023-12-10'),
+    },
+    {
+      id: 'b3',
+      name: 'Community Builder',
+      description: 'Referred 10+ successful users',
+      icon: '🤝',
+      rarity: 'rare',
+      unlockedAt: new Date('2024-02-05'),
+    },
+    {
+      id: 'b4',
+      name: 'Vault Master',
+      description: 'Maintained 500k+ vault balance for 30 days',
+      icon: '🔒',
+      rarity: 'epic',
+      unlockedAt: new Date('2024-01-15'),
+    },
+  ],
+  isVerified: true,
+  isFollowing: false,
+  isFriend: false,
+  activityStreak: 28,
+  totalPoints: 15430,
+  level: 12,
+  lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000),
+};
+
+const mockAchievements: Achievement[] = [
+  {
+    id: 'a1',
+    title: 'Power User',
+    description: 'Reach ProofScore of 10,000',
+    progress: 8450,
+    maxProgress: 10000,
+    icon: '⚡',
+    isUnlocked: false,
+  },
+  {
+    id: 'a2',
+    title: 'Social Butterfly',
+    description: 'Get 100 followers',
+    progress: 342,
+    maxProgress: 100,
+    icon: '🦋',
+    isUnlocked: true,
+    unlockedAt: new Date('2024-01-10'),
+  },
+  {
+    id: 'a3',
+    title: 'Finance Master',
+    description: 'Complete 500 transactions',
+    progress: 287,
+    maxProgress: 500,
+    icon: '💰',
+    isUnlocked: false,
+  },
+  {
+    id: 'a4',
+    title: 'Governance Legend',
+    description: 'Vote on 100 proposals',
+    progress: 87,
+    maxProgress: 100,
+    icon: '🏛️',
+    isUnlocked: false,
+  },
+];
+
+const mockActivityItems: ActivityItem[] = [
+  {
+    id: 'act1',
+    type: 'badge',
+    title: 'Unlocked: Community Builder',
+    description: 'Successfully referred 10 users',
+    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    icon: '🤝',
+  },
+  {
+    id: 'act2',
+    type: 'governance',
+    title: 'Voted on Proposal #142',
+    description: 'Proposal: Increase staking rewards - Voted YES',
+    timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+    icon: '🗳️',
+  },
+  {
+    id: 'act3',
+    type: 'transaction',
+    title: 'Payment Completed',
+    description: 'Received 2.5 ETH payment',
+    timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+    icon: '💸',
+  },
+  {
+    id: 'act4',
+    type: 'achievement',
+    title: 'Unlocked: Social Butterfly',
+    description: 'Reached 100 followers milestone',
+    timestamp: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+    icon: '🦋',
+  },
+];
+
+const mockFriends: FriendInfo[] = [
+  {
+    id: 'f1',
+    displayName: 'Bob Smith',
+    avatar: '👨‍💻',
+    proofScore: 7200,
+    isMutual: true,
+  },
+  {
+    id: 'f2',
+    displayName: 'Carol Johnson',
+    avatar: '👩‍🎤',
+    proofScore: 6800,
+    isMutual: true,
+  },
+  {
+    id: 'f3',
+    displayName: 'David Lee',
+    avatar: '👨‍🔬',
+    proofScore: 5400,
+    isMutual: false,
+  },
+];
+
+// ==================== COMPONENTS ====================
+
+interface UserProfileProps {
+  user?: UserProfile;
+  isOwnProfile?: boolean;
+}
+
+export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = false }: UserProfileProps) {
+  const [activeTab, setActiveTab] = useState<'activity' | 'friends' | 'achievements' | 'badges'>('activity');
+  const [copied, setCopied] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+
+  const handleCopyProfile = () => {
+    navigator.clipboard.writeText(`https://vfide.app/profile/${user.username}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const tabs = [
+    { key: 'activity', label: 'Activity', icon: '📊', count: mockActivityItems.length },
+    { key: 'friends', label: 'Friends', icon: '👥', count: user.friends },
+    { key: 'achievements', label: 'Achievements', icon: '🎯', count: mockAchievements.filter(a => a.isUnlocked).length },
+    { key: 'badges', label: 'Badges', icon: '🏆', count: user.badges.length },
+  ];
+
+  return (
+    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+      {/* Cover Image */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative h-48 md:h-64 bg-linear-to-r from-[#00F0FF]/20 via-[#A78BFA]/20 to-[#FF006E]/20"
+      >
+        {user.coverImage && (
+          <img src={user.coverImage} alt="cover" className="w-full h-full object-cover" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F] to-transparent" />
+      </motion.div>
+
+      {/* Profile Header */}
+      <div className="relative px-4 md:px-8 pb-8">
+        {/* Avatar */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="flex flex-col md:flex-row md:items-end gap-4 -mt-20 mb-6"
+        >
+          <div className="shrink-0">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-linear-to-br from-[#00F0FF] to-[#A78BFA] p-1 shadow-2xl">
+              <div className="w-full h-full rounded-xl bg-[#1A1A2E] flex items-center justify-center text-6xl md:text-8xl">
+                {user.avatar}
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold text-[#F5F3E8]">{user.displayName}</h1>
+              {user.isVerified && (
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  title="Verified user"
+                >
+                  <CheckCircle2 className="w-8 h-8 text-[#00F0FF]" />
+                </motion.div>
+              )}
+            </div>
+            <p className="text-[#A0A0A5] text-lg mb-3">@{user.username}</p>
+
+            {user.location && (
+              <div className="flex items-center gap-2 text-[#A0A0A5] mb-3">
+                <MapPin className="w-4 h-4" />
+                {user.location}
+              </div>
+            )}
+
+            <p className="text-[#D0D0D8] max-w-2xl mb-4">{user.bio}</p>
+
+            <div className="flex items-center gap-2 text-sm text-[#A0A0A5] mb-4">
+              <Calendar className="w-4 h-4" />
+              Joined {user.joinedAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 shrink-0">
+            {isOwnProfile ? (
+              <button className="px-6 py-3 bg-[#00F0FF]/20 border border-[#00F0FF] text-[#00F0FF] rounded-lg hover:bg-[#00F0FF]/30 transition-colors font-semibold">
+                Edit Profile
+              </button>
+            ) : (
+              <>
+                <button className="px-4 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg hover:bg-[#00D9E8] transition-colors font-semibold">
+                  {user.isFollowing ? 'Following' : 'Follow'}
+                </button>
+                <button className="px-4 py-2 bg-[#A78BFA] text-white rounded-lg hover:bg-[#9661F0] transition-colors font-semibold">
+                  {user.isFriend ? 'Friends' : 'Add Friend'}
+                </button>
+              </>
+            )}
+
+            <div className="relative">
+              <button
+                onClick={() => setShowShareMenu(!showShareMenu)}
+                className="px-4 py-2 bg-[#2A2A3E] border border-[#3A3A4F] text-[#A0A0A5] rounded-lg hover:border-[#00F0FF] transition-colors"
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
+
+              <AnimatePresence>
+                {showShareMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-2 w-48 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg shadow-xl z-10"
+                  >
+                    <button
+                      onClick={handleCopyProfile}
+                      className="w-full text-left px-4 py-3 text-[#F5F3E8] hover:bg-[#2A2A3E] flex items-center gap-2 transition-colors border-b border-[#3A3A4F]"
+                    >
+                      {copied ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-green-500" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy Link
+                        </>
+                      )}
+                    </button>
+                    <button className="w-full text-left px-4 py-3 text-[#F5F3E8] hover:bg-[#2A2A3E] flex items-center gap-2 transition-colors border-b border-[#3A3A4F]">
+                      <Share2 className="w-4 h-4" />
+                      Share on X
+                    </button>
+                    <button className="w-full text-left px-4 py-3 text-[#F5F3E8] hover:bg-[#2A2A3E] flex items-center gap-2 transition-colors">
+                      <MessageCircle className="w-4 h-4" />
+                      Share Message
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
+        >
+          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#00F0FF] transition-colors">
+            <div className="text-[#00F0FF] text-2xl font-bold mb-1">{user.proofScore.toLocaleString()}</div>
+            <div className="text-xs text-[#A0A0A5]">Proof Score</div>
+          </div>
+
+          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#A78BFA] transition-colors">
+            <div className="text-[#A78BFA] text-2xl font-bold mb-1">{user.level}</div>
+            <div className="text-xs text-[#A0A0A5]">Level</div>
+          </div>
+
+          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#50C878] transition-colors">
+            <div className="text-[#50C878] text-2xl font-bold mb-1">{user.followers.toLocaleString()}</div>
+            <div className="text-xs text-[#A0A0A5]">Followers</div>
+          </div>
+
+          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#FF6B9D] transition-colors">
+            <div className="text-[#FF6B9D] text-2xl font-bold mb-1 flex items-center justify-center gap-1">
+              <Flame className="w-5 h-5" />
+              {user.activityStreak}
+            </div>
+            <div className="text-xs text-[#A0A0A5]">Day Streak</div>
+          </div>
+
+          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#FFD700] transition-colors">
+            <div className="text-[#FFD700] text-2xl font-bold mb-1">{user.totalPoints.toLocaleString()}</div>
+            <div className="text-xs text-[#A0A0A5]">Total Points</div>
+          </div>
+        </motion.div>
+
+        {/* Badges Quick View */}
+        {user.badges.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-8"
+          >
+            <h3 className="text-lg font-bold text-[#F5F3E8] mb-4">Featured Badges</h3>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {user.badges.slice(0, 4).map((badge) => (
+                <motion.div
+                  key={badge.id}
+                  whileHover={{ scale: 1.1 }}
+                  className={`shrink-0 relative group cursor-pointer`}
+                >
+                  <div
+                    className={`w-20 h-20 rounded-xl flex items-center justify-center text-3xl border-2 ${
+                      badge.rarity === 'common'
+                        ? 'border-gray-500 bg-gray-500/10'
+                        : badge.rarity === 'uncommon'
+                          ? 'border-green-500 bg-green-500/10'
+                          : badge.rarity === 'rare'
+                            ? 'border-[#00F0FF] bg-[#00F0FF]/10'
+                            : badge.rarity === 'epic'
+                              ? 'border-[#A78BFA] bg-[#A78BFA]/10'
+                              : 'border-yellow-500 bg-yellow-500/10'
+                    }`}
+                  >
+                    {badge.icon}
+                  </div>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    className="absolute inset-0 bg-black/80 rounded-xl flex flex-col items-center justify-center p-2"
+                  >
+                    <div className="text-xs font-bold text-center text-[#F5F3E8]">{badge.name}</div>
+                    <div className="text-[10px] text-[#A0A0A5] text-center mt-1">{badge.description}</div>
+                  </motion.div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="sticky top-0 z-20 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-[#3A3A4F]">
+        <div className="px-4 md:px-8">
+          <div className="flex gap-1 overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                className={`px-4 py-3 font-semibold text-sm whitespace-nowrap border-b-2 transition-all ${
+                  activeTab === tab.key
+                    ? 'border-[#00F0FF] text-[#00F0FF]'
+                    : 'border-transparent text-[#A0A0A5] hover:text-[#F5F3E8]'
+                }`}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.label} <span className="text-xs ml-1">({tab.count})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="px-4 md:px-8 py-8 max-w-6xl mx-auto">
+        <AnimatePresence mode="wait">
+          {/* Activity Tab */}
+          {activeTab === 'activity' && (
+            <motion.div
+              key="activity"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-4"
+            >
+              {mockActivityItems.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 hover:border-[#00F0FF]/50 transition-colors"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="text-2xl shrink-0">{item.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[#F5F3E8] font-semibold">{item.title}</h4>
+                      <p className="text-[#A0A0A5] text-sm">{item.description}</p>
+                      <p className="text-[#6B6B78] text-xs mt-1">
+                        {new Date(item.timestamp).toLocaleDateString()} at{' '}
+                        {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Friends Tab */}
+          {activeTab === 'friends' && (
+            <motion.div
+              key="friends"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              {mockFriends.map((friend, idx) => (
+                <motion.div
+                  key={friend.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 hover:border-[#A78BFA] transition-colors"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-2xl">
+                      {friend.avatar}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-[#F5F3E8] truncate">{friend.displayName}</h4>
+                      {friend.isMutual && (
+                        <div className="text-xs text-[#00F0FF] flex items-center gap-1">
+                          <Users className="w-3 h-3" />
+                          Mutual friends
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mb-3">
+                    <div>
+                      <div className="text-[#00F0FF] font-semibold">{friend.proofScore}</div>
+                      <div className="text-[#A0A0A5] text-xs">Proof Score</div>
+                    </div>
+                  </div>
+                  <button className="w-full px-3 py-2 bg-[#2A2A3E] border border-[#3A3A4F] text-[#F5F3E8] rounded hover:border-[#A78BFA] transition-colors text-sm font-semibold">
+                    View Profile
+                  </button>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Achievements Tab */}
+          {activeTab === 'achievements' && (
+            <motion.div
+              key="achievements"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              {mockAchievements.map((achievement, idx) => (
+                <motion.div
+                  key={achievement.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className={`bg-[#1A1A2E] border rounded-lg p-4 transition-colors ${
+                    achievement.isUnlocked ? 'border-[#00F0FF]' : 'border-[#3A3A4F]'
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`text-4xl shrink-0 ${achievement.isUnlocked ? 'opacity-100' : 'opacity-50'}`}>
+                      {achievement.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-[#F5F3E8] mb-1">{achievement.title}</h4>
+                      <p className="text-[#A0A0A5] text-sm mb-3">{achievement.description}</p>
+                      <div className="w-full bg-[#0A0A0F] rounded-full h-2 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.2 }}
+                          className={`h-full ${achievement.isUnlocked ? 'bg-linear-to-r from-[#00F0FF] to-[#A78BFA]' : 'bg-[#3A3A4F]'}`}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-[#A0A0A5]">
+                          {achievement.progress} / {achievement.maxProgress}
+                        </span>
+                        {achievement.isUnlocked && (
+                          <span className="text-[10px] text-[#00F0FF] font-semibold">UNLOCKED</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Badges Tab */}
+          {activeTab === 'badges' && (
+            <motion.div
+              key="badges"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            >
+              {user.badges.map((badge, idx) => (
+                <motion.div
+                  key={badge.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="group cursor-pointer"
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.05, rotateZ: 5 }}
+                    className={`w-full aspect-square rounded-xl flex items-center justify-center text-6xl border-2 mb-3 transition-colors ${
+                      badge.rarity === 'common'
+                        ? 'border-gray-500 bg-gray-500/10'
+                        : badge.rarity === 'uncommon'
+                          ? 'border-green-500 bg-green-500/10'
+                          : badge.rarity === 'rare'
+                            ? 'border-[#00F0FF] bg-[#00F0FF]/10'
+                            : badge.rarity === 'epic'
+                              ? 'border-[#A78BFA] bg-[#A78BFA]/10'
+                              : 'border-yellow-500 bg-yellow-500/10'
+                    }`}
+                  >
+                    {badge.icon}
+                  </motion.div>
+                  <h4 className="font-semibold text-[#F5F3E8] text-center text-sm mb-1">{badge.name}</h4>
+                  <p className="text-[#A0A0A5] text-xs text-center">{badge.description}</p>
+                  <div className="text-center mt-2">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-1 rounded ${
+                        badge.rarity === 'common'
+                          ? 'text-gray-400 bg-gray-500/20'
+                          : badge.rarity === 'uncommon'
+                            ? 'text-green-400 bg-green-500/20'
+                            : badge.rarity === 'rare'
+                              ? 'text-[#00F0FF] bg-[#00F0FF]/20'
+                              : badge.rarity === 'epic'
+                                ? 'text-[#A78BFA] bg-[#A78BFA]/20'
+                                : 'text-yellow-400 bg-yellow-500/20'
+                      }`}
+                    >
+                      {badge.rarity.toUpperCase()}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+export default UserProfileComponent;

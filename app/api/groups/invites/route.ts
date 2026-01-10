@@ -1,0 +1,289 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+
+interface GroupInvite {
+  id: number;
+  group_id: number;
+  code: string;
+  created_by: number;
+  expires_at: string | null;
+  max_uses: number | null;
+  current_uses: number;
+  is_active: boolean;
+  description: string | null;
+  require_approval: boolean;
+  created_at: string;
+}
+
+async function generateInviteCode(): Promise<string> {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let code = '';
+  for (let i = 0; i < 12; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const existing = await query('SELECT id FROM group_invites WHERE code = $1', [code]);
+  if (existing.rows.length > 0) {
+    return generateInviteCode();
+  }
+  return code;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { groupId, createdByAddress, expiresIn, maxUses, description, requireApproval } = body;
+
+    if (!groupId || !createdByAddress) {
+      return NextResponse.json(
+        { error: 'Missing required fields: groupId, createdByAddress' },
+        { status: 400 }
+      );
+    }
+
+    const userResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [createdByAddress.toLowerCase()]
+    );
+
+    if (userResult.rows.length === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const userId = userResult.rows[0].id;
+    const memberResult = await query(
+      'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
+      [groupId, userId]
+    );
+
+    if (memberResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Not a group member' }, { status: 403 });
+    }
+
+    const code = await generateInviteCode();
+    const expiresAt = expiresIn ? new Date(Date.now() + expiresIn).toISOString() : null;
+
+    const result = await query<GroupInvite>(
+      `INSERT INTO group_invites (group_id, code, created_by, expires_at, max_uses, description, require_approval)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [groupId, code, userId, expiresAt, maxUses || null, description || null, requireApproval || false]
+    );
+
+    return NextResponse.json({ success: true, invite: result.rows[0] }, { status: 201 });
+  } catch (error) {
+    console.error('[Group Invites POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const groupId = searchParams.get('groupId');
+    const code = searchParams.get('code');
+
+    if (code) {
+      const result = await query<GroupInvite>(
+        `SELECT gi.*, g.name as group_name, u.username as creator_username
+         FROM group_invites gi
+         JOIN groups g ON gi.group_id = g.id
+         JOIN users u ON gi.created_by = u.id
+         WHERE gi.code = $1`,
+        [code]
+      );
+      if (result.rows.length === 0) {
+        return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
+      }
+      return NextResponse.json({ invite: result.rows[0] });
+    }
+
+    if (groupId) {
+      const result = await query<GroupInvite>(
+        `SELECT gi.*, u.username as creator_username
+         FROM group_invites gi
+         JOIN users u ON gi.created_by = u.id
+         WHERE gi.group_id = $1 AND gi.is_active = true
+         ORDER BY gi.created_at DESC`,
+        [groupId]
+      );
+      return NextResponse.json({ invites: result.rows });
+    }
+
+    return NextResponse.json({ error: 'groupId or code required' }, { status: 400 });
+  } catch (error) {
+    console.error('[Group Invites GET] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
+  }
+}
+
+    inviteLinksStore.set(code, link);
+
+    return NextResponse.json({
+      success: true,
+      invite: link,
+      url: `${request.nextUrl.origin}/invite/${code}`,
+    });
+  } catch (error) {
+    console.error('Error creating invite link:', error);
+    return NextResponse.json(
+      { error: 'Failed to create invite link' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * GET /api/groups/invites?groupId=xxx
+ * Get all invite links for a group
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const groupId = request.nextUrl.searchParams.get('groupId');
+    const code = request.nextUrl.searchParams.get('code');
+
+    // Get specific invite by code
+    if (code) {
+      const link = inviteLinksStore.get(code);
+      
+      if (!link) {
+        return NextResponse.json(
+          { error: 'Invite not found' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        invite: link,
+        valid: isInviteLinkValid(link),
+      });
+    }
+
+    // Get all invites for a group
+    if (groupId) {
+      const links = Array.from(inviteLinksStore.values()).filter(
+        (link) => link.groupId === groupId
+      );
+
+      return NextResponse.json({
+        success: true,
+        invites: links,
+        total: links.length,
+      });
+    }
+
+    return NextResponse.json(
+      { error: 'Missing groupId or code parameter' },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error('Error getting invite links:', error);
+    return NextResponse.json(
+      { error: 'Failed to get invite links' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PATCH /api/groups/invites
+ * Update invite link (revoke, etc.)
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { code, action, userId } = body;
+
+    if (!code || !action) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    const link = inviteLinksStore.get(code);
+    
+    if (!link) {
+      return NextResponse.json(
+        { error: 'Invite not found' },
+        { status: 404 }
+      );
+    }
+
+    // In production: Verify user has permission
+    // const hasPermission = await checkGroupPermission(userId, link.groupId, 'manage_invites');
+
+    switch (action) {
+      case 'revoke':
+        link.isActive = false;
+        inviteLinksStore.set(code, link);
+        return NextResponse.json({
+          success: true,
+          message: 'Invite link revoked',
+          invite: link,
+        });
+
+      case 'activate':
+        link.isActive = true;
+        inviteLinksStore.set(code, link);
+        return NextResponse.json({
+          success: true,
+          message: 'Invite link activated',
+          invite: link,
+        });
+
+      default:
+        return NextResponse.json(
+          { error: 'Invalid action' },
+          { status: 400 }
+        );
+    }
+  } catch (error) {
+    console.error('Error updating invite link:', error);
+    return NextResponse.json(
+      { error: 'Failed to update invite link' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/groups/invites?code=xxx
+ * Delete an invite link
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const code = request.nextUrl.searchParams.get('code');
+
+    if (!code) {
+      return NextResponse.json(
+        { error: 'Missing code parameter' },
+        { status: 400 }
+      );
+    }
+
+    const link = inviteLinksStore.get(code);
+    
+    if (!link) {
+      return NextResponse.json(
+        { error: 'Invite not found' },
+        { status: 404 }
+      );
+    }
+
+    // In production: Verify user has permission
+    // const hasPermission = await checkGroupPermission(userId, link.groupId, 'manage_invites');
+
+    inviteLinksStore.delete(code);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Invite link deleted',
+    });
+  } catch (error) {
+    console.error('Error deleting invite link:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete invite link' },
+      { status: 500 }
+    );
+  }
+}
