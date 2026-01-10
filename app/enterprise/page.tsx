@@ -288,28 +288,6 @@ function LivePriceDisplay() {
   );
 }
 
-function LivePriceDisplay() {
-  const { priceUsd, source, isLoading } = useVfidePrice();
-  
-  return (
-    <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-      <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Current Rate</h3>
-      <div className="text-center py-4">
-        <div className="text-4xl font-bold text-[#00F0FF]">
-          {isLoading ? (
-            <span className="animate-pulse">Loading...</span>
-          ) : (
-            `1 VFIDE = $${priceUsd.toFixed(2)}`
-          )}
-        </div>
-        <div className="text-sm text-[#A0A0A5] mt-2">
-          {isLoading ? 'Fetching price...' : `Live from ${source === 'calculated' ? 'market data' : source}`}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function FiatTab({ isConnected }: { isConnected: boolean }) {
   const [rampType, setRampType] = useState<'on' | 'off'>('on');
 
