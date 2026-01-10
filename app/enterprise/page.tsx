@@ -2,6 +2,7 @@
 
 import { Footer } from "@/components/layout/Footer";
 import { GlobalNav } from "@/components/layout/GlobalNav";
+import { useVfidePrice } from "@/hooks/usePriceHooks";
 import {
     ArrowUpDown,
     Building2,
@@ -14,7 +15,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { useVfidePrice } from "@/hooks/usePriceHooks";
 
 type TabType = 'overview' | 'gateway' | 'fiat' | 'finance';
 
