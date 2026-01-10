@@ -47,7 +47,7 @@ function Confetti() {
       rotateDir: Math.random() > 0.5 ? 1 : -1,
       borderRadius: Math.random() > 0.5 ? '50%' : '2px',
     }))
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Particle generation requires immediate state initialization
+     
     setParticles(newParticles)
   }, [])
 

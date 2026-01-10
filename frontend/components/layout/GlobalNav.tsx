@@ -114,7 +114,7 @@ export function GlobalNav() {
                 </linearGradient>
               </defs>
             </motion.svg>
-            <span className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] group-hover:text-[#00F0FF] transition-colors">
+            <span className="text-2xl font-(family-name:--font-display) font-bold text-[#F8F8FC] group-hover:text-[#00F0FF] transition-colors">
               VFIDE
             </span>
           </Link>
@@ -173,7 +173,7 @@ export function GlobalNav() {
                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      className="absolute top-full right-0 mt-2 w-72 bg-[#0F0F12] border border-[#1F1F2A] rounded-xl shadow-2xl p-3 z-50 max-h-[32rem] overflow-y-auto scrollbar-thin"
+                      className="absolute top-full right-0 mt-2 w-72 bg-[#0F0F12] border border-[#1F1F2A] rounded-xl shadow-2xl p-3 z-50 max-h-128 overflow-y-auto scrollbar-thin"
                     >
                       {moreLinks.map((section, sectionIdx) => (
                         <div key={section.category} className={sectionIdx > 0 ? "mt-4 pt-4 border-t border-[#1F1F2A]" : ""}>

@@ -34,7 +34,7 @@ interface ChecklistItem {
 }
 
 export default function OnboardingChecklist() {
-  const { address, isConnected } = useAccount();
+  const { address: _address, isConnected } = useAccount();
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -146,7 +146,7 @@ export default function OnboardingChecklist() {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-24 right-6 z-40 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] px-6 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+        className="fixed bottom-24 right-6 z-40 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] px-6 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
       >
         <Trophy className="w-5 h-5" />
         Getting Started ({completedCount}/{totalCount})
@@ -157,7 +157,7 @@ export default function OnboardingChecklist() {
   return (
     <div className="fixed bottom-24 right-6 z-40 w-96 bg-[#1A1A1F] border-2 border-[#FFD700] rounded-xl shadow-2xl">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#FFD700]/20 to-[#FFA500]/20 p-4 border-b border-[#FFD700]/30">
+      <div className="bg-linear-to-r from-[#FFD700]/20 to-[#FFA500]/20 p-4 border-b border-[#FFD700]/30">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
             <Trophy className="w-6 h-6 text-[#FFD700]" />
@@ -187,7 +187,7 @@ export default function OnboardingChecklist() {
           </div>
           <div className="w-full bg-[#2A2A2F] rounded-full h-3">
             <div 
-              className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] h-3 rounded-full transition-all"
+              className="bg-linear-to-r from-[#FFD700] to-[#FFA500] h-3 rounded-full transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -213,7 +213,7 @@ export default function OnboardingChecklist() {
           <div className="text-4xl mb-2">🎉</div>
           <div className="text-lg font-bold text-white mb-1">All Done!</div>
           <div className="text-sm text-[#A0A0A5] mb-3">You&apos;ve completed the onboarding checklist</div>
-          <button className="w-full px-4 py-2 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold hover:opacity-90 transition-opacity">
+          <button className="w-full px-4 py-2 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold hover:opacity-90 transition-opacity">
             Claim Bonus Reward
           </button>
         </div>

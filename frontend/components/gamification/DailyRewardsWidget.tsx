@@ -20,10 +20,10 @@ interface DailyReward {
 }
 
 export default function DailyRewardsWidget() {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const [canClaim, setCanClaim] = useState(true);
   const [claiming, setClaiming] = useState(false);
-  const [streak, setStreak] = useState(7);
+  const [streak] = useState(7);
   const [nextRewardTime, setNextRewardTime] = useState<number | null>(null);
   const [weekRewards, setWeekRewards] = useState<DailyReward[]>([]);
 
@@ -98,11 +98,11 @@ export default function DailyRewardsWidget() {
   const minutesLeft = Math.floor((timeUntilNext % (1000 * 60 * 60)) / (1000 * 60));
 
   return (
-    <div className="bg-gradient-to-br from-[#FFD700]/10 to-[#FFA500]/10 border-2 border-[#FFD700]/30 rounded-xl p-6">
+    <div className="bg-linear-to-br from-[#FFD700]/10 to-[#FFA500]/10 border-2 border-[#FFD700]/30 rounded-xl p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-[#FFD700] to-[#FFA500] rounded-lg p-3">
+          <div className="bg-linear-to-br from-[#FFD700] to-[#FFA500] rounded-lg p-3">
             <Gift className="w-6 h-6 text-[#0A0A0B]" />
           </div>
           <div>
@@ -123,7 +123,7 @@ export default function DailyRewardsWidget() {
 
       {/* Week Calendar */}
       <div className="grid grid-cols-7 gap-2 mb-4">
-        {weekRewards.map((reward, index) => (
+        {weekRewards.map((reward) => (
           <div
             key={reward.day}
             className={`aspect-square rounded-lg p-2 text-center ${
@@ -175,7 +175,7 @@ export default function DailyRewardsWidget() {
           disabled={!canClaim || claiming}
           className={`w-full py-3 rounded-lg font-bold transition-all ${
             canClaim && !claiming
-              ? 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] hover:opacity-90'
+              ? 'bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] hover:opacity-90'
               : 'bg-[#2A2A2F] text-[#6A6A6F] cursor-not-allowed'
           }`}
         >

@@ -4,7 +4,7 @@
  * Handles push notifications, background sync, and caching.
  */
 
-/* eslint-disable no-restricted-globals */
+ 
 /* global self, clients */
 
 const CACHE_NAME = 'vfide-v1';

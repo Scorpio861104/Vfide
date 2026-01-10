@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { 
   Trophy, Users, TrendingUp, Gift, Copy, Check, 
@@ -30,14 +30,14 @@ import { formatEther } from 'viem';
  */
 
 export default function HeadhunterPage() {
-  const { address, isConnected } = useAccount();
+  const { address: _address, isConnected } = useAccount();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'leaderboard' | 'activity'>('dashboard');
 
   // Real contract hooks
   const stats = useHeadhunterStats();
-  const { poolEstimate, formattedPool } = useQuarterlyPoolEstimate();
-  const { referralLink, qrCodeUrl } = useReferralLink();
+  const { poolEstimate: _poolEstimate, formattedPool } = useQuarterlyPoolEstimate();
+  const { referralLink, qrCodeUrl: _qrCodeUrl } = useReferralLink();
   const reward = useHeadhunterReward(stats.currentYearNumber, stats.currentQuarterNumber);
   const { claimReward, isPending: isClaimPending, isSuccess: isClaimSuccess } = useClaimHeadhunterReward();
   const { leaderboard, isLoading: leaderboardLoading } = useLeaderboard(stats.currentYearNumber, stats.currentQuarterNumber);
@@ -76,7 +76,7 @@ export default function HeadhunterPage() {
           <Trophy className="w-24 h-24 text-[#FFD700] mx-auto mb-6" />
           <h1 className="text-3xl font-bold text-white mb-4">Headhunter Competition</h1>
           <p className="text-[#A0A0A5] mb-6">Connect your wallet to participate</p>
-          <button className="px-8 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-semibold hover:opacity-90 transition-opacity">
+          <button className="px-8 py-3 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-semibold hover:opacity-90 transition-opacity">
             Connect Wallet
           </button>
         </div>
@@ -87,13 +87,13 @@ export default function HeadhunterPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#FFD700]/10 to-[#FFA500]/10 border-b border-[#FFD700]/20">
+      <div className="bg-linear-to-r from-[#FFD700]/10 to-[#FFA500]/10 border-b border-[#FFD700]/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <Trophy className="w-10 h-10 text-[#FFD700]" />
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold bg-linear-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">
                   Headhunter Competition
                 </h1>
               </div>
@@ -324,7 +324,7 @@ export default function HeadhunterPage() {
 
               <div className="mt-6 p-4 bg-[#FFD700]/10 border border-[#FFD700]/20 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <Crown className="w-5 h-5 text-[#FFD700] flex-shrink-0 mt-0.5" />
+                  <Crown className="w-5 h-5 text-[#FFD700] shrink-0 mt-0.5" />
                   <div className="text-sm text-[#A0A0A5]">
                     <span className="text-[#FFD700] font-semibold">Pro Tip:</span> Maintain 60%+ ProofScore to participate. Score below 60% at claim time = forfeited rewards!
                   </div>
@@ -390,7 +390,7 @@ export default function HeadhunterPage() {
                       {/* Reward */}
                       <div className="text-right">
                         <div className="text-2xl font-bold text-[#50C878]">
-                          ${typeof entry.estimatedReward === 'number' ? entry.estimatedReward.toFixed(0) : entry.estimatedReward}
+                          ${typeof entry.estimatedReward === 'number' ? entry.estimatedReward.toFixed(0) : (entry.estimatedReward as any)}
                         </div>
                         <div className="text-xs text-[#A0A0A5]">Est. reward</div>
                       </div>

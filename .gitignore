@@ -6,3 +6,43 @@ coverage/
 compile-contracts.js
 .vercel
 .env*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.npm
+.eslintcache
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Backup Files
+*.backup
+*.orig
+*.bak
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+
+# Misc
+.turbo/
+.vercel/

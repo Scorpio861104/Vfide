@@ -42,10 +42,10 @@ interface StreakData {
 }
 
 export default function DailyQuestsPanel() {
-  const { address, isConnected } = useAccount();
+  const { address: _address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [quests, setQuests] = useState<Quest[]>([]);
-  const [streak, setStreak] = useState<StreakData>({
+  const [streak] = useState<StreakData>({
     current: 7,
     longest: 12,
     lastActive: Date.now(),
@@ -133,7 +133,7 @@ export default function DailyQuestsPanel() {
   return (
     <div className="space-y-6">
       {/* Streak Counter */}
-      <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6">
+      <div className="bg-linear-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -161,7 +161,7 @@ export default function DailyQuestsPanel() {
           </div>
           <div className="w-full bg-[#2A2A2F] rounded-full h-3">
             <div 
-              className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
+              className="bg-linear-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
               style={{ width: `${(streak.current / streak.nextMilestone) * 100}%` }}
             />
           </div>
@@ -251,7 +251,7 @@ function QuestCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 bg-gradient-to-br ${getTypeColor(quest.type)} rounded-lg flex items-center justify-center text-2xl`}>
+          <div className={`w-12 h-12 bg-linear-to-br ${getTypeColor(quest.type)} rounded-lg flex items-center justify-center text-2xl`}>
             {quest.icon}
           </div>
           <div>
@@ -270,7 +270,7 @@ function QuestCard({
         </div>
         <div className="w-full bg-[#2A2A2F] rounded-full h-2">
           <div 
-            className={`bg-gradient-to-r ${quest.completed ? 'from-[#50C878] to-[#50C878]' : 'from-[#3B82F6] to-[#9333EA]'} h-2 rounded-full transition-all`}
+            className={`bg-linear-to-r ${quest.completed ? 'from-[#50C878] to-[#50C878]' : 'from-[#3B82F6] to-[#9333EA]'} h-2 rounded-full transition-all`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -313,7 +313,7 @@ function QuestCard({
         {quest.completed && !quest.claimed ? (
           <button 
             onClick={() => onClaim(quest)}
-            className="px-4 py-2 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
+            className="px-4 py-2 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
           >
             <Gift className="w-4 h-4" />
             Claim
@@ -336,7 +336,7 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
   return (
     <div className="bg-[#0A0A0B] rounded-lg p-4">
       <div className={`${color} mb-2`}>
-        {React.cloneElement(icon as React.ReactElement, { className: 'w-5 h-5' })}
+        {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-5 h-5' })}
       </div>
       <div className="text-2xl font-bold text-white mb-1">{value}</div>
       <div className="text-xs text-[#A0A0A5]">{label}</div>
@@ -370,7 +370,7 @@ function ClaimRewardModal({ reward, onClose }: { reward: Quest; onClose: () => v
 
         <button 
           onClick={onClose}
-          className="w-full px-6 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold hover:opacity-90 transition-opacity"
+          className="w-full px-6 py-3 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold hover:opacity-90 transition-opacity"
         >
           Awesome!
         </button>
