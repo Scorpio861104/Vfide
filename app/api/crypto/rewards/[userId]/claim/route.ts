@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-export async function POST(request: NextRequest, { params }: { params: { userId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
     const body = await request.json();
     const { rewardIds } = body;
 
