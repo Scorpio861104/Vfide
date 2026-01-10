@@ -131,40 +131,37 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const existing = await query(
+    const result = await query<GroupInvite>(
       'SELECT * FROM group_invites WHERE code = $1',
       [code]
     );
     
-    if (existing.rows.length === 0) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         { error: 'Invite not found' },
         { status: 404 }
       );
     }
 
-    let result;
     switch (action) {
       case 'revoke':
-        result = await query(
-          'UPDATE group_invites SET is_active = false WHERE code = $1 RETURNING *',
+        await query(
+          'UPDATE group_invites SET is_active = false WHERE code = $1',
           [code]
         );
         return NextResponse.json({
           success: true,
           message: 'Invite link revoked',
-          invite: result.rows[0],
         });
 
       case 'activate':
-        result = await query(
-          'UPDATE group_invites SET is_active = true WHERE code = $1 RETURNING *',
+        await query(
+          'UPDATE group_invites SET is_active = true WHERE code = $1',
           [code]
         );
         return NextResponse.json({
           success: true,
           message: 'Invite link activated',
-          invite: result.rows[0],
         });
 
       default:
@@ -174,7 +171,7 @@ export async function PATCH(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('[Group Invites PATCH] Error:', error);
+    console.error('Error updating invite link:', error);
     return NextResponse.json(
       { error: 'Failed to update invite link' },
       { status: 500 }
@@ -197,26 +194,24 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const existing = await query(
-      'SELECT * FROM group_invites WHERE code = $1',
+    const result = await query(
+      'DELETE FROM group_invites WHERE code = $1 RETURNING *',
       [code]
     );
     
-    if (existing.rows.length === 0) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         { error: 'Invite not found' },
         { status: 404 }
       );
     }
 
-    await query('DELETE FROM group_invites WHERE code = $1', [code]);
-
     return NextResponse.json({
       success: true,
       message: 'Invite link deleted',
     });
   } catch (error) {
-    console.error('[Group Invites DELETE] Error:', error);
+    console.error('Error deleting invite link:', error);
     return NextResponse.json(
       { error: 'Failed to delete invite link' },
       { status: 500 }
