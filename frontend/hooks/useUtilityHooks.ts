@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useProofScore } from './useProofScoreHooks'
 
+// Re-export price hooks
+export * from './usePriceHooks'
+
 // ============================================
 // SYSTEM STATS - Live network statistics
 // ============================================

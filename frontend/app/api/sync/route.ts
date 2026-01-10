@@ -1,79 +1,48 @@
-/**
- * Sync API
- * 
- * Endpoint for syncing offline actions.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const action = await request.json();
-    
-    if (!action || !action.type || !action.action) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid action format' },
-        { status: 400 }
-      );
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
-    // Process action based on type
-    let result;
-    switch (action.type) {
-      case 'message':
-        result = await syncMessage(action);
-        break;
-      case 'reaction':
-        result = await syncReaction(action);
-        break;
-      case 'profile_update':
-        result = await syncProfileUpdate(action);
-        break;
-      case 'group_action':
-        result = await syncGroupAction(action);
-        break;
-      default:
-        return NextResponse.json(
-          { success: false, error: 'Unknown action type' },
-          { status: 400 }
-        );
-    }
-
-    return NextResponse.json({
-      success: true,
-      result,
-    });
-  } catch (error) {
-    console.error('Sync error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Sync failed' },
-      { status: 500 }
+    const result = await query(
+      `SELECT * FROM sync_state WHERE user_id = $1`,
+      [userId]
     );
+
+    return NextResponse.json({ syncState: result.rows[0] || null });
+  } catch (error) {
+    console.error('[Sync GET] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch sync state' }, { status: 500 });
   }
 }
 
-// Helper functions to process different action types
-async function syncMessage(action: any) {
-  // Send message to backend
-  // In production, call actual message sending API
-  console.log('Syncing message:', action.data);
-  return { messageId: action.data.id, synced: true };
-}
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { userId, entity, lastSyncTimestamp } = body;
 
-async function syncReaction(action: any) {
-  // Add reaction to backend
-  console.log('Syncing reaction:', action.data);
-  return { reactionId: action.data.id, synced: true };
-}
+    if (!userId || !entity) {
+      return NextResponse.json({ error: 'userId and entity required' }, { status: 400 });
+    }
 
-async function syncProfileUpdate(action: any) {
-  // Update profile in backend
-  console.log('Syncing profile update:', action.data);
-  return { updated: true };
-}
+    const result = await query(
+      `INSERT INTO sync_state (user_id, entity, last_sync_timestamp)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, entity) DO UPDATE
+       SET last_sync_timestamp = $3
+       RETURNING *`,
+      [userId, entity, lastSyncTimestamp || new Date()]
+    );
 
-async function syncGroupAction(action: any) {
-  // Process group action
-  console.log('Syncing group action:', action.data);
-  return { actionId: action.data.id, synced: true };
+    return NextResponse.json({ success: true, syncState: result.rows[0] });
+  } catch (error) {
+    console.error('[Sync POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to update sync state' }, { status: 500 });
+  }
 }

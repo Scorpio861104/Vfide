@@ -15,6 +15,7 @@ import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { PerformanceProvider } from "@/components/performance/PerformanceProvider";
 import { ErrorMonitoringProvider, DevErrorConsole } from "@/components/monitoring/ErrorMonitoringProvider";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
+import { AchievementToastContainer } from "@/components/gamification/AchievementToast";
 
 const inter = Inter({
   variable: "--font-body",
@@ -100,6 +101,7 @@ export default function RootLayout({
                   <DemoModeBanner />
                 <NetworkSwitchOverlay />
                 <TestnetCornerBadge />
+                <AchievementToastContainer />
                 {children}
                 <MobileBottomNav />
                 <OnboardingManager />

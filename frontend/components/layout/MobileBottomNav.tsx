@@ -5,11 +5,11 @@
 
 'use client'
 
+import { AnimatePresence, motion } from 'framer-motion'
+import { Home, LayoutDashboard, MoreHorizontal, Store, Vault, Vote, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, LayoutDashboard, Vault, Store, Vote, MoreHorizontal, X } from 'lucide-react'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
@@ -19,15 +19,28 @@ const navItems = [
   { href: '/governance', label: 'Gov', icon: Vote },
 ]
 
+// Organized by category for better mobile UX
 const moreItems = [
-  { href: '/social', label: 'Social', emoji: '👥' },
-  { href: '/social-messaging', label: 'Messages', emoji: '💬' },
-  { href: '/token-launch', label: 'Token Launch', emoji: '🚀' },
-  { href: '/leaderboard', label: 'Leaderboard', emoji: '🏆' },
-  { href: '/rewards', label: 'Rewards', emoji: '🎁' },
-  { href: '/escrow', label: 'Escrow', emoji: '🔒' },
-  { href: '/sanctum', label: 'Sanctum', emoji: '⚡' },
-  { href: '/docs', label: 'Docs', emoji: '📚' },
+  { href: '/crypto', label: 'Wallet', emoji: '💳', category: 'Core' },
+  { href: '/social', label: 'Social', emoji: '👥', category: 'Core' },
+  { href: '/social-messaging', label: 'Messages', emoji: '💬', category: 'Core' },
+  { href: '/profile', label: 'Profile', emoji: '👤', category: 'Core' },
+  { href: '/quests', label: 'Quests', emoji: '🎯', category: 'Gamification' },
+  { href: '/achievements', label: 'Achievements', emoji: '🏆', category: 'Gamification' },
+  { href: '/badges', label: 'Badges', emoji: '🎖️', category: 'Gamification' },
+  { href: '/rewards', label: 'Rewards', emoji: '🎁', category: 'Gamification' },
+  { href: '/leaderboard', label: 'Leaderboard', emoji: '📊', category: 'Gamification' },
+  { href: '/headhunter', label: 'Headhunter', emoji: '🏹', category: 'Community' },
+  { href: '/endorsements', label: 'Endorsements', emoji: '⭐', category: 'Community' },
+  { href: '/appeals', label: 'Appeals', emoji: '⚖️', category: 'Community' },
+  { href: '/council', label: 'Council', emoji: '👑', category: 'Community' },
+  { href: '/payroll', label: 'Payroll', emoji: '💰', category: 'Finance' },
+  { href: '/escrow', label: 'Escrow', emoji: '🔒', category: 'Finance' },
+  { href: '/treasury', label: 'Treasury', emoji: '🏦', category: 'Finance' },
+  { href: '/token-launch', label: 'Token Launch', emoji: '🚀', category: 'Finance' },
+  { href: '/sanctum', label: 'Sanctum', emoji: '⚡', category: 'System' },
+  { href: '/security-center', label: 'Security', emoji: '🛡️', category: 'System' },
+  { href: '/docs', label: 'Docs', emoji: '📚', category: 'System' },
 ]
 
 export function MobileBottomNav() {
@@ -67,33 +80,47 @@ export function MobileBottomNav() {
                   <X size={16} />
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                {moreItems.map((item, index) => (
-                  <motion.div
-                    key={item.href}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Link
-                      href={item.href}
-                      onClick={() => setShowMore(false)}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all ${
-                        pathname === item.href
-                          ? 'bg-[#00F0FF]/20 border border-[#00F0FF]/30'
-                          : 'bg-[#16161D] border border-[#1F1F2A] hover:border-[#00F0FF]/20'
-                      }`}
-                    >
-                      <span className="text-2xl">{item.emoji}</span>
-                      <span className={`text-xs font-medium ${
-                        pathname === item.href ? 'text-[#00F0FF]' : 'text-[#A8A8B3]'
-                      }`}>
-                        {item.label}
-                      </span>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
+              
+              {/* Group items by category */}
+              {['Core', 'Gamification', 'Community', 'Finance', 'System'].map((category) => {
+                const categoryItems = moreItems.filter(item => item.category === category);
+                if (categoryItems.length === 0) return null;
+                
+                return (
+                  <div key={category} className="mb-4 last:mb-0">
+                    <div className="px-2 mb-2 text-xs font-semibold text-[#6B6B78] uppercase tracking-wider">
+                      {category}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {categoryItems.map((item, index) => (
+                        <motion.div
+                          key={item.href}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                        >
+                          <Link
+                            href={item.href}
+                            onClick={() => setShowMore(false)}
+                            className={`flex flex-col items-center gap-2 p-3 rounded-xl text-center transition-all ${
+                              pathname === item.href
+                                ? 'bg-[#00F0FF]/20 border border-[#00F0FF]/30'
+                                : 'bg-[#16161D] border border-[#1F1F2A] hover:border-[#00F0FF]/20'
+                            }`}
+                          >
+                            <span className="text-xl">{item.emoji}</span>
+                            <span className={`text-[10px] font-medium leading-tight ${
+                              pathname === item.href ? 'text-[#00F0FF]' : 'text-[#A8A8B3]'
+                            }`}>
+                              {item.label}
+                            </span>
+                          </Link>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </motion.div>
           </>
         )}

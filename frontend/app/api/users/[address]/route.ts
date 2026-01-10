@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// In-memory user profiles (use database in production)
-const usersStore = new Map<string, any>();
+interface User {
+  wallet_address: string;
+  username: string;
+  email: string;
+  bio: string;
+  avatar_url: string;
+  proof_score: number;
+  is_council_member: boolean;
+  is_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface UserStats {
+  badge_count: number;
+  friend_count: number;
+  proposal_count: number;
+  endorsement_count: number;
+}
 
 /**
  * GET /api/users/:address
- * Get user profile
+ * Get user profile with stats
  */
 export async function GET(
   request: NextRequest,
@@ -21,16 +39,47 @@ export async function GET(
       );
     }
 
-    const user = usersStore.get(address.toLowerCase());
+    // Get user by wallet_address or username
+    const userResult = await query<User>(
+      `SELECT * FROM users 
+       WHERE wallet_address = $1 OR username = $1`,
+      [address.toLowerCase()]
+    );
 
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ user });
+    const user = userResult.rows[0];
+
+    // Get user stats
+    const statsResult = await query<UserStats>(
+      `SELECT 
+        (SELECT COUNT(*) FROM user_badges WHERE user_id = u.id) as badge_count,
+        (SELECT COUNT(*) FROM friendships WHERE (user_id = u.id OR friend_id = u.id) AND status = 'accepted') as friend_count,
+        (SELECT COUNT(*) FROM proposals WHERE proposer_id = u.id) as proposal_count,
+        (SELECT COUNT(*) FROM endorsements WHERE endorser_id = u.id) as endorsement_count
+       FROM users u
+       WHERE u.wallet_address = $1`,
+      [user.wallet_address]
+    );
+
+    const stats = statsResult.rows[0] || {
+      badge_count: 0,
+      friend_count: 0,
+      proposal_count: 0,
+      endorsement_count: 0
+    };
+
+    return NextResponse.json({ 
+      user: {
+        ...user,
+        stats
+      }
+    });
   } catch (error) {
     console.error('[User GET API] Error:', error);
     return NextResponse.json(
@@ -60,25 +109,31 @@ export async function PUT(
       );
     }
 
-    // Get existing user or create new
-    const existingUser = usersStore.get(address.toLowerCase()) || {
-      address: address.toLowerCase(),
-      createdAt: Date.now(),
-    };
+    const { username, email, bio, avatar_url } = body;
 
-    // Update user data
-    const updatedUser = {
-      ...existingUser,
-      ...body,
-      address: address.toLowerCase(), // Prevent address override
-      updatedAt: Date.now(),
-    };
+    // Update user in database
+    const result = await query<User>(
+      `UPDATE users 
+       SET username = COALESCE($2, username),
+           email = COALESCE($3, email),
+           bio = COALESCE($4, bio),
+           avatar_url = COALESCE($5, avatar_url),
+           updated_at = NOW()
+       WHERE wallet_address = $1
+       RETURNING *`,
+      [address.toLowerCase(), username, email, bio, avatar_url]
+    );
 
-    usersStore.set(address.toLowerCase(), updatedUser);
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      user: updatedUser,
+      user: result.rows[0],
     });
   } catch (error) {
     console.error('[User PUT API] Error:', error);
@@ -133,15 +188,28 @@ export async function POST(
     // 2. Process image (resize, optimize)
     // 3. Update user profile with image URL
 
-    // For now, just store metadata
-    const user = usersStore.get(address.toLowerCase()) || { address: address.toLowerCase() };
-    user.avatar = `https://placeholder.com/avatars/${address.toLowerCase()}.jpg`;
-    user.updatedAt = Date.now();
-    usersStore.set(address.toLowerCase(), user);
+    // For now, generate a placeholder URL
+    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${address.toLowerCase()}`;
+    
+    // Update user avatar in database
+    const result = await query<User>(
+      `UPDATE users 
+       SET avatar_url = $2, updated_at = NOW()
+       WHERE wallet_address = $1
+       RETURNING avatar_url`,
+      [address.toLowerCase(), avatarUrl]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      avatarUrl: user.avatar,
+      avatarUrl: result.rows[0].avatar_url,
     });
   } catch (error) {
     console.error('[Avatar Upload API] Error:', error);

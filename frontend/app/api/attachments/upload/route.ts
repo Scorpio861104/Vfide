@@ -1,76 +1,25 @@
-/**
- * Attachment Upload API
- * 
- * Handle file uploads for message attachments.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { getAttachmentType } from '@/lib/attachments';
-
-// Mock storage (replace with cloud storage like S3)
-const attachmentsStore = new Map<string, any>();
+import { query } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const messageId = formData.get('messageId') as string;
-    const userId = formData.get('userId') as string;
+    const body = await request.json();
+    const { userId, filename, fileType, fileSize, url } = body;
 
-    if (!file || !messageId || !userId) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      );
+    if (!userId || !filename || !url) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Validate file size (50MB max)
-    const MAX_SIZE = 50 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json(
-        { success: false, error: 'File too large (max 50MB)' },
-        { status: 400 }
-      );
-    }
-
-    // Generate attachment ID
-    const attachmentId = `att_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // In production, upload to cloud storage (S3, Cloudinary, etc.)
-    // For now, create a mock URL
-    const mockUrl = `/api/attachments/${attachmentId}`;
-
-    // Create attachment record
-    const attachment = {
-      id: attachmentId,
-      messageId,
-      type: getAttachmentType(file.type),
-      name: file.name,
-      size: file.size,
-      mimeType: file.type,
-      url: mockUrl,
-      uploadedAt: Date.now(),
-      uploadedBy: userId,
-    };
-
-    // Store file data (in production, store in cloud)
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    
-    attachmentsStore.set(attachmentId, {
-      ...attachment,
-      buffer,
-    });
-
-    return NextResponse.json({
-      success: true,
-      attachment,
-    });
-  } catch (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Upload failed' },
-      { status: 500 }
+    const result = await query(
+      `INSERT INTO attachments (user_id, filename, file_type, file_size, url, uploaded_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       RETURNING *`,
+      [userId, filename, fileType, fileSize, url]
     );
+
+    return NextResponse.json({ success: true, attachment: result.rows[0] });
+  } catch (error) {
+    console.error('[Attachments Upload] Error:', error);
+    return NextResponse.json({ error: 'Failed to upload attachment' }, { status: 500 });
   }
 }

@@ -91,7 +91,13 @@ function PayContent() {
             <div className="mb-8">
               <div className="text-gray-400 text-sm mb-2">Amount</div>
               <div className="text-5xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 mb-2">${amount}</div>
-              <div className="text-gray-400">≈ {(safeParseFloat(amount, 0) * 2).toFixed(0)} VFIDE</div>
+              <div className="text-gray-400">
+                {priceLoading ? (
+                  <span className="animate-pulse">Calculating...</span>
+                ) : (
+                  `≈ ${vfideAmount} VFIDE`
+                )}
+              </div>
             </div>
 
             {/* Payment Method */}

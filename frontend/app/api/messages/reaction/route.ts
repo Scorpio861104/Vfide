@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
 interface ReactionRequest {
   messageId: string;
@@ -12,9 +13,6 @@ interface ReactionRequest {
   emoji: string;
   userAddress: string;
 }
-
-// In-memory message store (use database in production)
-const messagesStore = new Map<string, any>();
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate emoji (basic check)
+    // Validate emoji
     const emojiRegex = /^[\p{Emoji}]+$/u;
     if (!emojiRegex.test(emoji)) {
       return NextResponse.json(
@@ -37,40 +35,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get message from store
-    const messageKey = `${conversationId}_${messageId}`;
-    const message = messagesStore.get(messageKey) || {
-      id: messageId,
-      conversationId,
-      reactions: {},
-    };
+    // Check if reaction exists
+    const existingResult = await query(
+      `SELECT id FROM message_reactions mr
+       JOIN users u ON mr.user_id = u.id
+       WHERE mr.message_id = $1 AND mr.emoji = $2 AND u.wallet_address = $3`,
+      [messageId, emoji, userAddress.toLowerCase()]
+    );
 
-    // Initialize reactions if not exists
-    if (!message.reactions) {
-      message.reactions = {};
-    }
-
-    // Toggle reaction
-    if (!message.reactions[emoji]) {
-      message.reactions[emoji] = [];
-    }
-
-    const userIndex = message.reactions[emoji].indexOf(userAddress);
-    
-    if (userIndex > -1) {
+    if (existingResult.rows.length > 0) {
       // Remove reaction
-      message.reactions[emoji].splice(userIndex, 1);
-      
-      // Clean up empty emoji arrays
-      if (message.reactions[emoji].length === 0) {
-        delete message.reactions[emoji];
-      }
+      await query(
+        `DELETE FROM message_reactions mr
+         USING users u
+         WHERE mr.user_id = u.id
+           AND mr.message_id = $1
+           AND mr.emoji = $2
+           AND u.wallet_address = $3`,
+        [messageId, emoji, userAddress.toLowerCase()]
+      );
     } else {
       // Add reaction
-      message.reactions[emoji].push(userAddress);
+      await query(
+        `INSERT INTO message_reactions (message_id, user_id, emoji, created_at)
+         SELECT $1, u.id, $2, NOW()
+         FROM users u
+         WHERE u.wallet_address = $3`,
+        [messageId, emoji, userAddress.toLowerCase()]
+      );
     }
 
-    messagesStore.set(messageKey, message);
+    // Get all reactions for the message
+    const reactionsResult = await query(
+      `SELECT emoji, json_agg(u.wallet_address) as users
+       FROM message_reactions mr
+       JOIN users u ON mr.user_id = u.id
+       WHERE mr.message_id = $1
+       GROUP BY emoji`,
+      [messageId]
+    );
+
+    const reactions = reactionsResult.rows.reduce((acc: any, row: any) => {
+      acc[row.emoji] = row.users;
+      return acc;
+    }, {});
 
     // In production: Broadcast reaction update via WebSocket
     // broadcastReactionUpdate(conversationId, message);

@@ -1,66 +1,31 @@
-/**
- * Crypto API Routes - Individual Payment Request Endpoint
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// Mock payment requests storage
-const requestsStore = new Map<string, any>();
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
-    const paymentRequest = requestsStore.get(id);
+    const { id } = params;
+    const body = await request.json();
+    const { status, txHash } = body;
 
-    if (!paymentRequest) {
-      return NextResponse.json(
-        { success: false, error: 'Request not found' },
-        { status: 404 }
-      );
+    if (!status) {
+      return NextResponse.json({ error: 'Status required' }, { status: 400 });
     }
 
-    return NextResponse.json({
-      success: true,
-      request: paymentRequest,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch request' },
-      { status: 500 }
+    const result = await query(
+      `UPDATE payment_requests
+       SET status = $2, tx_hash = $3, updated_at = NOW()
+       WHERE id = $1
+       RETURNING *`,
+      [id, status, txHash]
     );
-  }
-}
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const updates = await request.json();
-    
-    const paymentRequest = requestsStore.get(id);
-    if (!paymentRequest) {
-      return NextResponse.json(
-        { success: false, error: 'Request not found' },
-        { status: 404 }
-      );
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
 
-    const updated = { ...paymentRequest, ...updates };
-    requestsStore.set(id, updated);
-
-    return NextResponse.json({
-      success: true,
-      request: updated,
-    });
+    return NextResponse.json({ success: true, request: result.rows[0] });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to update request' },
-      { status: 500 }
-    );
+    console.error('[Payment Request PATCH] Error:', error);
+    return NextResponse.json({ error: 'Failed to update request' }, { status: 500 });
   }
 }

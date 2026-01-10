@@ -1,132 +1,57 @@
-/**
- * Analytics API
- * 
- * Endpoints for fetching analytics data and metrics.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  MetricType,
-  TimeRange,
-  getMetricSummary,
-  getTimeSeriesData,
-  getPlatformAnalytics,
-  getUserAnalytics,
-  getTimeRangeBounds,
-} from '@/lib/analytics';
-
-// ============================================================================
-// GET - Fetch analytics data
-// ============================================================================
+import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const endpoint = searchParams.get('endpoint') || 'metrics';
-    
-    // Metric summary endpoint
-    if (endpoint === 'metrics') {
-      const type = searchParams.get('type') as MetricType;
-      const range = (searchParams.get('range') as TimeRange) || TimeRange.DAY;
-      
-      if (!type) {
-        return NextResponse.json(
-          { success: false, error: 'type is required' },
-          { status: 400 }
-        );
-      }
-      
-      const summary = getMetricSummary(type, range);
-      
-      return NextResponse.json({
-        success: true,
-        summary,
-      });
+    const eventType = searchParams.get('eventType');
+    const userId = searchParams.get('userId');
+    const limit = parseInt(searchParams.get('limit') || '100');
+
+    let sql = `SELECT * FROM analytics_events WHERE 1=1`;
+    const params: any[] = [];
+
+    if (eventType) {
+      params.push(eventType);
+      sql += ` AND event_type = $${params.length}`;
     }
-    
-    // Time series endpoint
-    if (endpoint === 'timeseries') {
-      const type = searchParams.get('type') as MetricType;
-      const range = (searchParams.get('range') as TimeRange) || TimeRange.DAY;
-      
-      if (!type) {
-        return NextResponse.json(
-          { success: false, error: 'type is required' },
-          { status: 400 }
-        );
-      }
-      
-      // Determine interval based on range
-      let interval: number;
-      switch (range) {
-        case TimeRange.HOUR:
-          interval = 5 * 60 * 1000; // 5 minutes
-          break;
-        case TimeRange.DAY:
-          interval = 60 * 60 * 1000; // 1 hour
-          break;
-        case TimeRange.WEEK:
-          interval = 6 * 60 * 60 * 1000; // 6 hours
-          break;
-        case TimeRange.MONTH:
-          interval = 24 * 60 * 60 * 1000; // 1 day
-          break;
-        case TimeRange.YEAR:
-          interval = 7 * 24 * 60 * 60 * 1000; // 1 week
-          break;
-        default:
-          interval = 24 * 60 * 60 * 1000; // 1 day
-      }
-      
-      const data = getTimeSeriesData(type, range, interval);
-      
-      return NextResponse.json({
-        success: true,
-        data,
-        interval,
-      });
+
+    if (userId) {
+      params.push(userId);
+      sql += ` AND user_id = $${params.length}`;
     }
-    
-    // Platform analytics endpoint
-    if (endpoint === 'platform') {
-      const range = (searchParams.get('range') as TimeRange) || TimeRange.DAY;
-      const analytics = getPlatformAnalytics(range);
-      
-      return NextResponse.json({
-        success: true,
-        analytics,
-      });
-    }
-    
-    // User analytics endpoint
-    if (endpoint === 'user') {
-      const userId = searchParams.get('userId');
-      const range = (searchParams.get('range') as TimeRange) || TimeRange.ALL;
-      
-      if (!userId) {
-        return NextResponse.json(
-          { success: false, error: 'userId is required' },
-          { status: 400 }
-        );
-      }
-      
-      const analytics = getUserAnalytics(userId, range);
-      
-      return NextResponse.json({
-        success: true,
-        analytics,
-      });
-    }
-    
-    return NextResponse.json(
-      { success: false, error: 'Invalid endpoint' },
-      { status: 400 }
-    );
+
+    params.push(limit);
+    sql += ` ORDER BY timestamp DESC LIMIT $${params.length}`;
+
+    const result = await query(sql, params);
+
+    return NextResponse.json({ events: result.rows, total: result.rows.length });
   } catch (error) {
-    console.error('Error fetching analytics:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
+    console.error('[Analytics] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { userId, eventType, eventData } = body;
+
+    if (!eventType) {
+      return NextResponse.json({ error: 'eventType required' }, { status: 400 });
+    }
+
+    const result = await query(
+      `INSERT INTO analytics_events (user_id, event_type, event_data, timestamp)
+       VALUES ($1, $2, $3, NOW())
+       RETURNING *`,
+      [userId, eventType, JSON.stringify(eventData || {})]
     );
+
+    return NextResponse.json({ success: true, event: result.rows[0] });
+  } catch (error) {
+    console.error('[Analytics POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to log event' }, { status: 500 });
   }
 }

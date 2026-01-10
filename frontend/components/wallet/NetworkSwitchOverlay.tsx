@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useAccount, useChainId, useSwitchChain } from 'wagmi'
-import { motion, AnimatePresence } from 'framer-motion'
-import { AlertTriangle, ArrowRight, Check, Loader2, X, Zap, Plus } from 'lucide-react'
-import { IS_TESTNET, CURRENT_CHAIN_ID } from '@/lib/testnet'
+import { CURRENT_CHAIN_ID, IS_TESTNET } from '@/lib/testnet'
 import { safeLocalStorage } from '@/lib/utils'
-import { baseSepolia, base } from 'wagmi/chains'
+import { AnimatePresence, motion } from 'framer-motion'
+import { AlertTriangle, ArrowRight, Check, Loader2, Plus, X, Zap } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { useAccount, useChainId, useSwitchChain } from 'wagmi'
+import { base, baseSepolia } from 'wagmi/chains'
 
 // Base Sepolia network configuration for MetaMask
 const BASE_SEPOLIA_CONFIG = {

@@ -3,34 +3,7 @@
 import { useMemo } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
-
-const SEER_MENTOR_ABI = [
-  {
-    name: 'getMentorInfo',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'subject', type: 'address' }],
-    outputs: [
-      { type: 'bool' },   // isMentorUser
-      { type: 'address' },// mentor
-      { type: 'uint16' }, // menteeCount
-      { type: 'bool' },   // hasMentor
-      { type: 'bool' },   // canBecome
-      { type: 'uint16' }, // minScore
-      { type: 'uint16' }, // currentScore
-    ],
-  },
-  {
-    name: 'getMentees',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'mentor', type: 'address' }],
-    outputs: [{ type: 'address[]' }],
-  },
-  { name: 'becomeMentor', type: 'function', stateMutability: 'nonpayable', inputs: [], outputs: [] },
-  { name: 'sponsorMentee', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'mentee', type: 'address' }], outputs: [] },
-  { name: 'removeMentee', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'mentee', type: 'address' }], outputs: [] },
-] as const
+import { SeerABI } from '@/lib/abis'
 
 type MentorInfo = {
   isMentor: boolean
@@ -46,7 +19,7 @@ type MentorInfo = {
 export function useMentorInfo(address?: `0x${string}`) {
   const { data, isLoading, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_MENTOR_ABI,
+    abi: SeerABI,
     functionName: 'getMentorInfo',
     args: address ? [address] : undefined,
     query: { enabled: Boolean(address) },
@@ -54,7 +27,7 @@ export function useMentorInfo(address?: `0x${string}`) {
 
   const { data: menteesData } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_MENTOR_ABI,
+    abi: SeerABI,
     functionName: 'getMentees',
     args: address ? [address] : undefined,
     query: { enabled: Boolean(address) },
@@ -104,7 +77,7 @@ export function useBecomeMentor() {
     if (!address) return
     writeContract({
       address: CONTRACT_ADDRESSES.Seer,
-      abi: SEER_MENTOR_ABI,
+      abi: SeerABI,
       functionName: 'becomeMentor',
       args: [],
     })
@@ -122,7 +95,7 @@ export function useSponsorMentee(menteeAddress?: `0x${string}`) {
     if (!address || !menteeAddress) return
     writeContract({
       address: CONTRACT_ADDRESSES.Seer,
-      abi: SEER_MENTOR_ABI,
+      abi: SeerABI,
       functionName: 'sponsorMentee',
       args: [menteeAddress],
     })

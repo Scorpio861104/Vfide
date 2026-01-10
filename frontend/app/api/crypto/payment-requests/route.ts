@@ -1,11 +1,5 @@
-/**
- * Crypto API Routes - Payment Requests Endpoint
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-
-// Mock payment requests storage
-const requestsStore = new Map<string, any>();
+import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,44 +7,42 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
 
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'User ID required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
-    const allRequests = Array.from(requestsStore.values());
-    const userRequests = allRequests.filter(
-      (r) =>
-        r.from.toLowerCase() === userId.toLowerCase() ||
-        r.to.toLowerCase() === userId.toLowerCase()
+    const result = await query(
+      `SELECT * FROM payment_requests
+       WHERE from_user_id = $1 OR to_user_id = $1
+       ORDER BY created_at DESC`,
+      [userId]
     );
 
-    return NextResponse.json({
-      success: true,
-      requests: userRequests.sort((a, b) => b.createdAt - a.createdAt),
-    });
+    return NextResponse.json({ requests: result.rows });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch requests' },
-      { status: 500 }
-    );
+    console.error('[Payment Requests GET] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const paymentRequest = await request.json();
-    requestsStore.set(paymentRequest.id, paymentRequest);
+    const body = await request.json();
+    const { fromUserId, toUserId, amount, token, memo } = body;
 
-    return NextResponse.json({
-      success: true,
-      request: paymentRequest,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to create request' },
-      { status: 500 }
+    if (!fromUserId || !toUserId || !amount) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const result = await query(
+      `INSERT INTO payment_requests (from_user_id, to_user_id, amount, token, memo, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, 'pending', NOW())
+       RETURNING *`,
+      [fromUserId, toUserId, amount, token || 'ETH', memo]
     );
+
+    return NextResponse.json({ success: true, request: result.rows[0] });
+  } catch (error) {
+    console.error('[Payment Requests POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to create request' }, { status: 500 });
   }
 }

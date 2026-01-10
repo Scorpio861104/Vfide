@@ -1,31 +1,20 @@
-/**
- * Crypto API Routes - Balance Endpoint
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// Mock token balances (replace with blockchain queries)
-const tokenBalances = new Map<string, string>();
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ address: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: { address: string } }) {
   try {
-    const { address } = await params;
-    
-    // In production, query token contract
-    const balance = tokenBalances.get(address.toLowerCase()) || '1000';
+    const { address } = params;
 
-    return NextResponse.json({
-      success: true,
-      address,
-      tokenBalance: balance,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch balance' },
-      { status: 500 }
+    const result = await query(
+      `SELECT tb.* FROM token_balances tb
+       JOIN users u ON tb.user_id = u.id
+       WHERE u.wallet_address = $1`,
+      [address.toLowerCase()]
     );
+
+    return NextResponse.json({ balances: result.rows });
+  } catch (error) {
+    console.error('[Balance API] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch balances' }, { status: 500 });
   }
 }

@@ -1,75 +1,36 @@
-/**
- * Attachment Download/Delete API
- * 
- * Handle file downloads and deletion.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// Mock storage (shared with upload route)
-const attachmentsStore = new Map<string, any>();
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
-    const attachment = attachmentsStore.get(id);
+    const { id } = params;
 
-    if (!attachment) {
-      return NextResponse.json(
-        { success: false, error: 'Attachment not found' },
-        { status: 404 }
-      );
+    const result = await query(`SELECT * FROM attachments WHERE id = $1`, [id]);
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Attachment not found' }, { status: 404 });
     }
 
-    // Return file
-    return new NextResponse(attachment.buffer, {
-      headers: {
-        'Content-Type': attachment.mimeType,
-        'Content-Disposition': `attachment; filename="${attachment.name}"`,
-        'Content-Length': attachment.size.toString(),
-      },
-    });
+    return NextResponse.json({ attachment: result.rows[0] });
   } catch (error) {
-    console.error('Download error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Download failed' },
-      { status: 500 }
-    );
+    console.error('[Attachments GET] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch attachment' }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
-    const attachment = attachmentsStore.get(id);
+    const { id } = params;
 
-    if (!attachment) {
-      return NextResponse.json(
-        { success: false, error: 'Attachment not found' },
-        { status: 404 }
-      );
+    const result = await query(`DELETE FROM attachments WHERE id = $1 RETURNING *`, [id]);
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Attachment not found' }, { status: 404 });
     }
 
-    // TODO: Check permissions (user must be uploader or have delete permission)
-
-    // Delete from storage
-    attachmentsStore.delete(id);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Attachment deleted',
-    });
+    return NextResponse.json({ success: true, attachment: result.rows[0] });
   } catch (error) {
-    console.error('Delete error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Delete failed' },
-      { status: 500 }
-    );
+    console.error('[Attachments DELETE] Error:', error);
+    return NextResponse.json({ error: 'Failed to delete attachment' }, { status: 500 });
   }
 }

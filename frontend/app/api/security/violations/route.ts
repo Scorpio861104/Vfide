@@ -1,76 +1,38 @@
-/**
- * Security Violations API Route
- * 
- * General security monitoring endpoint for client-side violations.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-interface SecurityViolation {
-  type: string;
-  details: any;
-  timestamp: number;
-  url: string;
-  userAgent: string;
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '100');
+
+    const result = await query(
+      `SELECT * FROM security_violations ORDER BY detected_at DESC LIMIT $1`,
+      [limit]
+    );
+
+    return NextResponse.json({ violations: result.rows });
+  } catch (error) {
+    console.error('[Security Violations] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch violations' }, { status: 500 });
+  }
 }
-
-// In-memory store (use database in production)
-const violations: SecurityViolation[] = [];
-const MAX_VIOLATIONS = 1000;
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    const violation: SecurityViolation = {
-      type: body.type || 'unknown',
-      details: body.details || {},
-      timestamp: body.timestamp || Date.now(),
-      url: body.url || request.url,
-      userAgent: request.headers.get('user-agent') || 'unknown',
-    };
+    const { userId, violationType, severity, description, ipAddress } = body;
 
-    violations.push(violation);
+    const result = await query(
+      `INSERT INTO security_violations (user_id, violation_type, severity, description, ip_address, detected_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       RETURNING *`,
+      [userId, violationType, severity, description, ipAddress]
+    );
 
-    // Keep only recent violations
-    if (violations.length > MAX_VIOLATIONS) {
-      violations.shift();
-    }
-
-    // Log in development
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[Security Violation]', violation.type, violation.details);
-    }
-
-    // In production, send to monitoring service
-    // await sendToMonitoring(violation);
-
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json({ success: true, violation: result.rows[0] });
   } catch (error) {
-    console.error('Error recording security violation:', error);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    console.error('[Security Violations POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to log violation' }, { status: 500 });
   }
-}
-
-export async function GET(request: NextRequest) {
-  // Development only: view recent violations
-  if (process.env.NODE_ENV !== 'development') {
-    return NextResponse.json({ error: 'Not available' }, { status: 404 });
-  }
-
-  const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50');
-  const type = request.nextUrl.searchParams.get('type');
-
-  let filtered = violations;
-  if (type) {
-    filtered = violations.filter(v => v.type === type);
-  }
-
-  const recent = filtered.slice(-limit).reverse();
-
-  return NextResponse.json({
-    total: filtered.length,
-    recent,
-    types: Array.from(new Set(violations.map(v => v.type))),
-  });
 }

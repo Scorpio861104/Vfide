@@ -145,12 +145,12 @@ export default function DashboardPage() {
   
   const { balance: vaultBalanceRaw, isLoading: vaultLoading } = useVaultBalance();
   const { score: proofscore, tier, isLoading: scoreLoading } = useProofScore(address);
+  const { priceUsd: liveVfidePrice, isLoading: priceLoading } = useVfidePrice();
   
   const walletAddress = address || "";
   const walletBalance = vaultLoading ? "Loading..." : vaultBalanceRaw;
-  const PRESALE_REFERENCE_PRICE = 0.01;
   const balanceValue = safeParseFloat(vaultBalanceRaw, 0);
-  const usdValue = vaultLoading ? "..." : (balanceValue * PRESALE_REFERENCE_PRICE).toFixed(2);
+  const usdValue = vaultLoading || priceLoading ? "..." : (balanceValue * liveVfidePrice).toFixed(2);
   
   const copyAddress = () => {
     copy(walletAddress);

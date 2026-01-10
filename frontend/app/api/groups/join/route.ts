@@ -5,32 +5,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-
-interface InviteLink {
-  id: string;
-  groupId: string;
-  code: string;
-  createdBy: string;
-  createdAt: number;
-  expiresAt?: number;
-  maxUses?: number;
-  currentUses: number;
-  isActive: boolean;
-  metadata?: {
-    description?: string;
-    requireApproval?: boolean;
-  };
-}
-
-// Mock storage (shared with invites route)
-const inviteLinksStore = new Map<string, InviteLink>();
-const groupMembersStore = new Map<string, Set<string>>();
+import { query, getClient } from '@/lib/db';
 
 /**
  * POST /api/groups/join
  * Join a group using an invite code
  */
 export async function POST(request: NextRequest) {
+  const client = await getClient();
+  
   try {
     const body = await request.json();
     const { code, userId } = body;
@@ -42,32 +25,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    await client.query('BEGIN');
+
     // Get invite link
-    const link = inviteLinksStore.get(code);
+    const linkResult = await client.query(
+      `SELECT * FROM group_invites WHERE code = $1`,
+      [code]
+    );
     
-    if (!link) {
+    if (linkResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'Invalid invite code' },
         { status: 404 }
       );
     }
 
+    const link = linkResult.rows[0];
+
     // Check if invite is valid
-    if (!link.isActive) {
+    if (!link.is_active) {
+      await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'This invite link has been revoked' },
         { status: 400 }
       );
     }
 
-    if (link.expiresAt && Date.now() > link.expiresAt) {
+    if (link.expires_at && new Date() > new Date(link.expires_at)) {
+      await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'This invite link has expired' },
         { status: 400 }
       );
     }
 
-    if (link.maxUses && link.currentUses >= link.maxUses) {
+    if (link.max_uses && link.current_uses >= link.max_uses) {
+      await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'This invite link has reached its usage limit' },
         { status: 400 }
@@ -75,47 +69,65 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is already a member
-    const members = groupMembersStore.get(link.groupId) || new Set();
-    if (members.has(userId)) {
+    const memberCheckResult = await client.query(
+      `SELECT id FROM group_members WHERE group_id = $1 AND user_id = $2`,
+      [link.group_id, userId]
+    );
+    
+    if (memberCheckResult.rows.length > 0) {
+      await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'You are already a member of this group' },
         { status: 400 }
       );
     }
 
-    // If requires approval, create pending request
+    // If requires approval, create pending request (future feature)
     if (link.metadata?.requireApproval) {
-      // In production: Create approval request in database
+      await client.query('ROLLBACK');
       return NextResponse.json({
         success: true,
         status: 'pending',
         message: 'Your request to join has been sent to the group admins',
-        groupId: link.groupId,
+        groupId: link.group_id,
       });
     }
 
     // Add user to group
-    members.add(userId);
-    groupMembersStore.set(link.groupId, members);
+    await client.query(
+      `INSERT INTO group_members (group_id, user_id, role, joined_at)
+       VALUES ($1, $2, 'member', NOW())`,
+      [link.group_id, userId]
+    );
 
-    // Increment usage count
-    link.currentUses++;
-    inviteLinksStore.set(code, link);
+    // Update invite usage count
+    await client.query(
+      `UPDATE group_invites SET current_uses = current_uses + 1 WHERE id = $1`,
+      [link.id]
+    );
 
-    // In production: Add user to group in database
-    // await addGroupMember(link.groupId, userId);
+    // Update group member count
+    await client.query(
+      `UPDATE groups SET member_count = member_count + 1 WHERE id = $1`,
+      [link.group_id]
+    );
+
+    await client.query('COMMIT');
 
     return NextResponse.json({
       success: true,
       status: 'joined',
+      groupId: link.group_id,
       message: 'Successfully joined the group',
-      groupId: link.groupId,
     });
   } catch (error) {
-    console.error('Error joining group:', error);
+    await client.query('ROLLBACK');
+    console.error('[Join Group API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to join group' },
       { status: 500 }
     );
+  } finally {
+    client.release();
   }
 }

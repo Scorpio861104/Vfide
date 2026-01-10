@@ -1,11 +1,11 @@
 "use client";
 
+import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard';
+import { FAUCET_URLS, IS_TESTNET } from '@/lib/testnet';
+import { safeParseFloat } from '@/lib/validation';
+import { Check, Copy, Droplets, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { useAccount, useBalance } from 'wagmi';
-import { IS_TESTNET, FAUCET_URLS } from '@/lib/testnet';
-import { Droplets, ExternalLink, Copy, Check } from 'lucide-react';
-import { safeParseFloat } from '@/lib/validation';
-import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard';
 
 /**
  * Faucet button for testnet - shows "Get ETH" when balance is low

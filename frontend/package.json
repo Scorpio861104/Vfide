@@ -8,8 +8,8 @@
     "start": "next start",
     "analyze": "ANALYZE=true npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint --quiet --cache --cache-location .eslintcache \"app/**/*.{js,jsx,ts,tsx}\" \"components/**/*.{js,jsx,ts,tsx}\" \"hooks/**/*.{js,jsx,ts,tsx}\" \"lib/**/*.{js,jsx,ts,tsx}\"",
-    "prepare": "husky",
+    "lint": "eslint . --ext .ts,.tsx --cache --cache-location .eslintcache",
+    "prepare": "cd .. && husky frontend/.husky",
     "size": "size-limit",
     "check-circular": "madge --circular --extensions ts,tsx ./",
     "test": "jest",
@@ -42,9 +42,7 @@
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build",
     "circular-deps": "madge --circular --extensions ts,tsx ./",
-    "size": "size-limit",
-    "size:why": "size-limit --why",
-    "prepare": "cd .. && husky frontend/.husky"
+    "size:why": "size-limit --why"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -62,6 +60,7 @@
     "framer-motion": "^12.23.25",
     "lucide-react": "^0.555.0",
     "next": "^16.1.1",
+    "pg": "^8.16.3",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.3",
@@ -100,6 +99,7 @@
     "@types/dompurify": "^3.0.5",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
+    "@types/pg": "^8.16.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-window": "^1.8.8",

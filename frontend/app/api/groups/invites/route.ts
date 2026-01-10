@@ -1,102 +1,119 @@
-/**
- * Group Invite Links API Routes
- * 
- * Handles creation, validation, and management of group invite links.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-interface InviteLink {
-  id: string;
-  groupId: string;
+interface GroupInvite {
+  id: number;
+  group_id: number;
   code: string;
-  createdBy: string;
-  createdAt: number;
-  expiresAt?: number;
-  maxUses?: number;
-  currentUses: number;
-  isActive: boolean;
-  metadata?: {
-    description?: string;
-    requireApproval?: boolean;
-  };
+  created_by: number;
+  expires_at: string | null;
+  max_uses: number | null;
+  current_uses: number;
+  is_active: boolean;
+  description: string | null;
+  require_approval: boolean;
+  created_at: string;
 }
 
-// In-memory storage (use database in production)
-const inviteLinksStore = new Map<string, InviteLink>();
-
-/**
- * Generate unique invite code
- */
-function generateInviteCode(): string {
+async function generateInviteCode(): Promise<string> {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let code = '';
   for (let i = 0; i < 12; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  
-  // Ensure uniqueness
-  if (inviteLinksStore.has(code)) {
+  const existing = await query('SELECT id FROM group_invites WHERE code = $1', [code]);
+  if (existing.rows.length > 0) {
     return generateInviteCode();
   }
-  
   return code;
 }
 
-/**
- * Check if invite link is valid
- */
-function isInviteLinkValid(link: InviteLink): boolean {
-  // Check if active
-  if (!link.isActive) return false;
-  
-  // Check expiration
-  if (link.expiresAt && Date.now() > link.expiresAt) return false;
-  
-  // Check max uses
-  if (link.maxUses && link.currentUses >= link.maxUses) return false;
-  
-  return true;
-}
-
-/**
- * POST /api/groups/invites
- * Create a new invite link
- */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { groupId, createdBy, expiresIn, maxUses, description, requireApproval } = body;
+    const { groupId, createdByAddress, expiresIn, maxUses, description, requireApproval } = body;
 
-    if (!groupId || !createdBy) {
+    if (!groupId || !createdByAddress) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: groupId, createdByAddress' },
         { status: 400 }
       );
     }
 
-    // In production: Verify user has permission to create invite for this group
-    // const hasPermission = await checkGroupPermission(createdBy, groupId, 'invite');
-    // if (!hasPermission) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    // }
+    const userResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [createdByAddress.toLowerCase()]
+    );
 
-    const code = generateInviteCode();
-    const link: InviteLink = {
-      id: `invite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      groupId,
-      code,
-      createdBy,
-      createdAt: Date.now(),
-      expiresAt: expiresIn ? Date.now() + expiresIn : undefined,
-      maxUses: maxUses || undefined,
-      currentUses: 0,
-      isActive: true,
-      metadata: {
-        description,
-        requireApproval,
-      },
-    };
+    if (userResult.rows.length === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const userId = userResult.rows[0].id;
+    const memberResult = await query(
+      'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
+      [groupId, userId]
+    );
+
+    if (memberResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Not a group member' }, { status: 403 });
+    }
+
+    const code = await generateInviteCode();
+    const expiresAt = expiresIn ? new Date(Date.now() + expiresIn).toISOString() : null;
+
+    const result = await query<GroupInvite>(
+      `INSERT INTO group_invites (group_id, code, created_by, expires_at, max_uses, description, require_approval)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [groupId, code, userId, expiresAt, maxUses || null, description || null, requireApproval || false]
+    );
+
+    return NextResponse.json({ success: true, invite: result.rows[0] }, { status: 201 });
+  } catch (error) {
+    console.error('[Group Invites POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const groupId = searchParams.get('groupId');
+    const code = searchParams.get('code');
+
+    if (code) {
+      const result = await query<GroupInvite>(
+        `SELECT gi.*, g.name as group_name, u.username as creator_username
+         FROM group_invites gi
+         JOIN groups g ON gi.group_id = g.id
+         JOIN users u ON gi.created_by = u.id
+         WHERE gi.code = $1`,
+        [code]
+      );
+      if (result.rows.length === 0) {
+        return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
+      }
+      return NextResponse.json({ invite: result.rows[0] });
+    }
+
+    if (groupId) {
+      const result = await query<GroupInvite>(
+        `SELECT gi.*, u.username as creator_username
+         FROM group_invites gi
+         JOIN users u ON gi.created_by = u.id
+         WHERE gi.group_id = $1 AND gi.is_active = true
+         ORDER BY gi.created_at DESC`,
+        [groupId]
+      );
+      return NextResponse.json({ invites: result.rows });
+    }
+
+    return NextResponse.json({ error: 'groupId or code required' }, { status: 400 });
+  } catch (error) {
+    console.error('[Group Invites GET] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
+  }
+}
 
     inviteLinksStore.set(code, link);
 

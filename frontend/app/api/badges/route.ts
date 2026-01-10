@@ -1,0 +1,216 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+
+interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  rarity: string;
+  requirements: any;
+  created_at: string;
+}
+
+interface UserBadge {
+  id: number;
+  user_id: number;
+  badge_id: number;
+  earned_at: string;
+  badge_name?: string;
+  badge_description?: string;
+  badge_icon?: string;
+  badge_rarity?: string;
+}
+
+/**
+ * GET /api/badges?userAddress=0x...
+ * Get all badges or user's earned badges
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const userAddress = searchParams.get('userAddress');
+
+    if (userAddress) {
+      // Get user's earned badges
+      const result = await query<UserBadge>(
+        `SELECT 
+          ub.*,
+          b.name as badge_name,
+          b.description as badge_description,
+          b.icon as badge_icon,
+          b.rarity as badge_rarity
+         FROM user_badges ub
+         JOIN badges b ON ub.badge_id = b.id
+         JOIN users u ON ub.user_id = u.id
+         WHERE u.wallet_address = $1
+         ORDER BY ub.earned_at DESC`,
+        [userAddress.toLowerCase()]
+      );
+
+      return NextResponse.json({
+        badges: result.rows,
+        count: result.rows.length,
+      });
+    } else {
+      // Get all available badges
+      const result = await query<Badge>(
+        'SELECT * FROM badges ORDER BY rarity, name',
+        []
+      );
+
+      return NextResponse.json({
+        badges: result.rows,
+        count: result.rows.length,
+      });
+    }
+  } catch (error) {
+    console.error('[Badges GET API] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch badges' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/badges
+ * Award a badge to a user
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { userAddress, badgeId } = body;
+
+    if (!userAddress || !badgeId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: userAddress, badgeId' },
+        { status: 400 }
+      );
+    }
+
+    // Get user ID
+    const userResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [userAddress.toLowerCase()]
+    );
+
+    if (userResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const userId = userResult.rows[0].id;
+
+    // Check if badge exists
+    const badgeResult = await query(
+      'SELECT * FROM badges WHERE id = $1',
+      [badgeId]
+    );
+
+    if (badgeResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'Badge not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if user already has this badge
+    const existingResult = await query(
+      'SELECT * FROM user_badges WHERE user_id = $1 AND badge_id = $2',
+      [userId, badgeId]
+    );
+
+    if (existingResult.rows.length > 0) {
+      return NextResponse.json(
+        { error: 'User already has this badge' },
+        { status: 400 }
+      );
+    }
+
+    // Award badge
+    const result = await query<UserBadge>(
+      `INSERT INTO user_badges (user_id, badge_id)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [userId, badgeId]
+    );
+
+    // Create notification
+    const badge = badgeResult.rows[0];
+    await query(
+      `INSERT INTO notifications (user_id, type, title, message, data)
+       VALUES ($1, 'badge_earned', 'New Badge Earned!', $2, $3)`,
+      [
+        userId,
+        `You earned the "${badge.name}" badge!`,
+        JSON.stringify({ badgeId, badgeName: badge.name })
+      ]
+    );
+
+    return NextResponse.json({
+      success: true,
+      userBadge: result.rows[0],
+    }, { status: 201 });
+  } catch (error) {
+    console.error('[Badges POST API] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to award badge' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/badges?userAddress=0x...&badgeId=123
+ * Remove a badge from a user (admin only)
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const userAddress = searchParams.get('userAddress');
+    const badgeId = searchParams.get('badgeId');
+
+    if (!userAddress || !badgeId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: userAddress, badgeId' },
+        { status: 400 }
+      );
+    }
+
+    // Get user ID
+    const userResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [userAddress.toLowerCase()]
+    );
+
+    if (userResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const userId = userResult.rows[0].id;
+
+    // Remove badge
+    const result = await query(
+      'DELETE FROM user_badges WHERE user_id = $1 AND badge_id = $2',
+      [userId, badgeId]
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: 'Badge removed',
+      deleted: result.rowCount || 0,
+    });
+  } catch (error) {
+    console.error('[Badges DELETE API] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to remove badge' },
+      { status: 500 }
+    );
+  }
+}

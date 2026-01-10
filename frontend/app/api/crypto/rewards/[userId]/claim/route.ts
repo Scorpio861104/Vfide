@@ -1,59 +1,34 @@
-/**
- * Crypto API Routes - Claim Rewards Endpoint
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// Mock rewards storage (shared with rewards route)
-const rewardsStore = new Map<string, any[]>();
-const tokenBalances = new Map<string, string>();
-
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: { userId: string } }) {
   try {
-    const { userId } = await params;
-    const userIdLower = userId.toLowerCase();
-    
-    const rewards = rewardsStore.get(userIdLower) || [];
-    const unclaimedRewards = rewards.filter((r: any) => !r.claimed);
+    const { userId } = params;
+    const body = await request.json();
+    const { rewardIds } = body;
 
-    if (unclaimedRewards.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: 'No rewards to claim',
-        rewards: [],
-      });
+    if (!rewardIds || !Array.isArray(rewardIds)) {
+      return NextResponse.json({ error: 'rewardIds array required' }, { status: 400 });
     }
 
-    // Calculate total
-    const total = unclaimedRewards.reduce(
-      (sum: number, r: any) => sum + parseFloat(r.amount),
-      0
+    const result = await query(
+      `UPDATE user_rewards
+       SET status = 'claimed', claimed_at = NOW()
+       WHERE user_id = $1 AND id = ANY($2::uuid[]) AND status = 'pending'
+       RETURNING *`,
+      [userId, rewardIds]
     );
 
-    // Update balance
-    const currentBalance = parseFloat(tokenBalances.get(userIdLower) || '1000');
-    tokenBalances.set(userIdLower, (currentBalance + total).toString());
-
-    // Mark as claimed
-    const updatedRewards = rewards.map((r: any) => ({
-      ...r,
-      claimed: true,
-    }));
-    rewardsStore.set(userIdLower, updatedRewards);
+    const totalClaimed = result.rows.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
 
     return NextResponse.json({
       success: true,
-      rewards: unclaimedRewards,
-      totalClaimed: total.toFixed(2),
-      newBalance: (currentBalance + total).toFixed(2),
+      claimed: result.rows.length,
+      totalAmount: totalClaimed,
+      rewards: result.rows
     });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to claim rewards' },
-      { status: 500 }
-    );
+    console.error('[Rewards Claim] Error:', error);
+    return NextResponse.json({ error: 'Failed to claim rewards' }, { status: 500 });
   }
 }

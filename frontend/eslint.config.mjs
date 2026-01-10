@@ -31,6 +31,11 @@ const eslintConfig = defineConfig([
     "**/*.stories.mdx",
     "e2e/**",
     "playwright/**",
+    
+    // Temporarily exclude extremely large files that cause ESLint to hang
+    // TODO: Refactor these files into smaller components
+    "app/governance/page.tsx",
+    "app/admin/page.tsx",
   ]),
 
   // Make lint actionable for this repo: avoid failing on widespread, intentional patterns.

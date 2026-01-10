@@ -1,91 +1,79 @@
-/**
- * Message Edit API Route
- * 
- * Handles message editing with encryption and validation.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { query, getClient } from '@/lib/db';
 
-interface EditMessageRequest {
+interface MessageEditRequest {
   messageId: string;
   conversationId: string;
-  encryptedContent: string;
+  newContent: string;
+  userAddress: string;
 }
 
-// In-memory message store (use database in production)
-const messagesStore = new Map<string, any>();
-
 export async function PATCH(request: NextRequest) {
+  const client = await getClient();
+  
   try {
-    const body: EditMessageRequest = await request.json();
-    const { messageId, conversationId, encryptedContent } = body;
+    const body: MessageEditRequest = await request.json();
+    const { messageId, conversationId, newContent, userAddress } = body;
 
-    if (!messageId || !conversationId || !encryptedContent) {
+    if (!messageId || !conversationId || !newContent || !userAddress) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Get message from store
-    const messageKey = `${conversationId}_${messageId}`;
-    const message = messagesStore.get(messageKey);
+    await client.query('BEGIN');
 
-    if (!message) {
-      return NextResponse.json(
-        { error: 'Message not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check if message was already deleted
-    if (message.deletedAt) {
-      return NextResponse.json(
-        { error: 'Cannot edit deleted message' },
-        { status: 400 }
-      );
-    }
-
-    // Verify the user is the sender (in production, verify with auth token)
-    // const userId = await getUserIdFromToken(request);
-    // if (message.from !== userId) {
-    //   return NextResponse.json(
-    //     { error: 'Unauthorized' },
-    //     { status: 403 }
-    //   );
-    // }
-
-    // Check if message is too old to edit (optional: 15 minute window)
-    const fifteenMinutes = 15 * 60 * 1000;
-    const messageAge = Date.now() - message.timestamp;
-    if (messageAge > fifteenMinutes) {
-      return NextResponse.json(
-        { error: 'Message is too old to edit (15 minute limit)' },
-        { status: 400 }
-      );
-    }
-
-    // Update message
-    const updatedMessage = {
-      ...message,
-      encryptedContent,
-      editedAt: Date.now(),
-    };
-
-    messagesStore.set(messageKey, updatedMessage);
-
-    // In production: Broadcast edit via WebSocket
-    // broadcastMessageEdit(conversationId, updatedMessage);
-
-    return NextResponse.json({
-      success: true,
-      message: updatedMessage,
-    });
-  } catch (error) {
-    console.error('Error editing message:', error);
-    return NextResponse.json(
-      { error: 'Failed to edit message' },
-      { status: 500 }
+    const messageResult = await client.query(
+      `SELECT m.*, u.wallet_address as sender
+       FROM messages m
+       JOIN users u ON m.sender_id = u.id
+       WHERE m.id = $1 AND m.conversation_id = $2`,
+      [messageId, conversationId]
     );
+
+    if (messageResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Message not found' }, { status: 404 });
+    }
+
+    const message = messageResult.rows[0];
+
+    if (message.sender.toLowerCase() !== userAddress.toLowerCase()) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    if (message.is_deleted) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Cannot edit deleted message' }, { status: 400 });
+    }
+
+    const messageAge = Date.now() - new Date(message.timestamp).getTime();
+    if (messageAge > 15 * 60 * 1000) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Edit time limit exceeded' }, { status: 400 });
+    }
+
+    await client.query(
+      `INSERT INTO message_edits (message_id, original_content, edited_at)
+       VALUES ($1, $2, NOW())`,
+      [messageId, message.content]
+    );
+
+    const updateResult = await client.query(
+      `UPDATE messages SET content = $1, edited_at = NOW() WHERE id = $2 RETURNING *`,
+      [newContent, messageId]
+    );
+
+    await client.query('COMMIT');
+
+    return NextResponse.json({ success: true, message: updateResult.rows[0] });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('[Message Edit] Error:', error);
+    return NextResponse.json({ error: 'Failed to edit message' }, { status: 500 });
+  } finally {
+    client.release();
   }
 }
