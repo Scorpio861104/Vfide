@@ -11,6 +11,32 @@ import { VaultStatusIndicator } from "../vault/VaultStatusIndicator";
 import { VaultStatusModal } from "../vault/VaultStatusModal";
 import { FaucetButton } from "../wallet/FaucetButton";
 import { SimpleWalletConnect } from "../wallet/SimpleWalletConnect";
+import {
+  MetalDashboardIcon,
+  MetalVaultIcon,
+  MetalSocialIcon,
+  MetalMerchantIcon,
+  MetalGovernanceIcon,
+  MetalHeadhunterIcon,
+  MetalShieldIcon,
+  MetalRewardsIcon,
+  MetalTokenIcon,
+} from "../icons/MetallicIcons";
+
+// Icon mapping for navigation
+const navIcons: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
+  Dashboard: MetalDashboardIcon,
+  Vault: MetalVaultIcon,
+  Wallet: MetalVaultIcon, // Using vault icon for wallet
+  Social: MetalSocialIcon,
+  Messages: MetalSocialIcon,
+  Merchant: MetalMerchantIcon,
+  Governance: MetalGovernanceIcon,
+  Headhunter: MetalHeadhunterIcon,
+  Endorsements: MetalShieldIcon,
+  Rewards: MetalRewardsIcon,
+  "Token Launch": MetalTokenIcon,
+};
 
 // Primary navigation - organized by category
 const navLinks: Array<{ href: string; label: string; highlight?: boolean; accent?: boolean }> = [
@@ -123,12 +149,14 @@ export function GlobalNav() {
           <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               const isActive = pathname?.startsWith(link.href);
+              const IconComponent = navIcons[link.label];
+              
               return (
                 <Link 
                   key={link.href}
                   href={link.href} 
                   className={`
-                    relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
+                    relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2
                     ${link.accent 
                       ? 'text-[#00F0FF] hover:bg-[#00F0FF]/10' 
                       : isActive 
@@ -137,6 +165,7 @@ export function GlobalNav() {
                     }
                   `}
                 >
+                  {IconComponent && <IconComponent size={18} className="opacity-80" />}
                   {link.label}
                   {isActive && !link.accent && (
                     <motion.div
@@ -182,13 +211,15 @@ export function GlobalNav() {
                           </div>
                           {section.items.map((link) => {
                             const isActive = pathname?.startsWith(link.href);
+                            const IconComponent = navIcons[link.label];
+                            
                             return (
                               <Link
                                 key={link.href}
                                 href={link.href}
                                 onClick={() => setShowMoreMenu(false)}
                                 className={`
-                                  block px-3 py-2 rounded-lg text-sm transition-all
+                                  flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all
                                   ${link.accent 
                                     ? 'text-[#00F0FF] hover:bg-[#00F0FF]/10' 
                                     : isActive 
@@ -197,6 +228,7 @@ export function GlobalNav() {
                                   }
                                 `}
                               >
+                                {IconComponent && <IconComponent size={18} className="opacity-70 flex-shrink-0" />}
                                 {link.label}
                               </Link>
                             );
