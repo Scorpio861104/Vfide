@@ -44,7 +44,10 @@ export function MessageWithReactions({ message }: { message: Message }) {
         reaction,
         address
       );
-      setReactions(result.reactions);
+      // Update reactions from the message in the response
+      if (result.success && result.message) {
+        setReactions(result.message.reactions || {});
+      }
     } catch (error) {
       console.error('Failed to add reaction:', error);
     } finally {
