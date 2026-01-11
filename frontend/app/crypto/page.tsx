@@ -43,7 +43,7 @@ export default function CryptoDashboard() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Crypto Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Crypto Dashboard</h1>
             <p className="text-gray-400">Manage your wallet, payments, and rewards</p>
           </div>
           <WalletButton />

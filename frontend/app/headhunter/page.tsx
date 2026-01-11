@@ -347,17 +347,17 @@ export default function HeadhunterPage() {
                 {leaderboard.map((entry) => (
                   <div
                     key={entry.rank}
-                    className={`p-4 rounded-xl border transition-all ${
+                    className={`p-3 sm:p-4 rounded-xl border transition-all ${
                       entry.isCurrentUser
                         ? 'bg-[#FFD700]/10 border-[#FFD700]'
                         : 'bg-[#2A2A2F] border-[#3A3A3F] hover:border-[#4A4A4F]'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 sm:gap-4 flex-1 min-w-0">
                         {/* Rank Badge */}
                         <div
-                          className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${
+                          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0 ${
                             entry.rank === 1 ? 'bg-[#FFD700] text-[#0A0A0B]' :
                             entry.rank === 2 ? 'bg-[#C0C0C0] text-[#0A0A0B]' :
                             entry.rank === 3 ? 'bg-[#CD7F32] text-white' :
@@ -368,31 +368,31 @@ export default function HeadhunterPage() {
                         </div>
 
                         {/* Address & Stats */}
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-mono text-white font-semibold">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="font-mono text-white font-semibold text-sm sm:text-base truncate">
                               {entry.isCurrentUser ? 'You' : entry.address}
                             </span>
                             {entry.isCurrentUser && (
-                              <span className="px-2 py-0.5 bg-[#FFD700] text-[#0A0A0B] text-xs font-bold rounded">YOU</span>
+                              <span className="px-2 py-0.5 bg-[#FFD700] text-[#0A0A0B] text-xs font-bold rounded flex-shrink-0">YOU</span>
                             )}
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-[#A0A0A5]">
-                            <span>{entry.points} points</span>
-                            <span>•</span>
-                            <span>{entry.userReferrals} users</span>
-                            <span>•</span>
-                            <span>{entry.merchantReferrals} merchants</span>
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[#A0A0A5]">
+                            <span className="whitespace-nowrap">{entry.points} pts</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span className="whitespace-nowrap">{entry.userReferrals} users</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span className="whitespace-nowrap">{entry.merchantReferrals} merchants</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Reward */}
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-[#50C878]">
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-lg sm:text-2xl font-bold text-[#50C878]">
                           {entry.estimatedReward}
                         </div>
-                        <div className="text-xs text-[#A0A0A5]">Est. reward</div>
+                        <div className="text-xs text-[#A0A0A5] whitespace-nowrap">Est. reward</div>
                       </div>
                     </div>
                   </div>

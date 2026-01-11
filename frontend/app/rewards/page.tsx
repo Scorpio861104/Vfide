@@ -363,7 +363,7 @@ function OverviewTab({ isConnected, totalClaimable, onClaim, claimingId }: {
     return (
       <div className="text-center py-16">
         <Gift className="w-20 h-20 mx-auto mb-6 text-[#A0A0A5]" />
-        <h2 className="text-3xl font-bold text-[#F5F3E8] mb-4">Connect Wallet</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#F5F3E8] mb-4">Connect Wallet</h2>
         <p className="text-[#A0A0A5] text-lg">Connect your wallet to view and claim your rewards</p>
       </div>
     )
@@ -377,7 +377,7 @@ function OverviewTab({ isConnected, totalClaimable, onClaim, claimingId }: {
         animate={{ opacity: 1, y: 0 }}
         className="bg-linear-to-r from-[#FFD700]/20 to-[#50C878]/20 border border-[#FFD700]/50 rounded-2xl p-8 text-center"
       >
-        <h2 className="text-3xl font-bold text-[#F5F3E8] mb-2">Your Rewards Are Ready!</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#F5F3E8] mb-2">Your Rewards Are Ready!</h2>
         <p className="text-[#A0A0A5] mb-6">You have {totalClaimable.toLocaleString()} VFIDE available to claim</p>
         <button 
           onClick={() => onClaim('all')}

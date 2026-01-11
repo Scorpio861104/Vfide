@@ -141,19 +141,19 @@ function OverviewTab() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-[#00F0FF]">0%</div>
+          <div className="text-2xl sm:text-3xl font-bold text-[#00F0FF]">0%</div>
           <div className="text-sm text-[#A0A0A5]">Protocol Fees</div>
         </div>
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-green-400">&lt;2s</div>
+          <div className="text-2xl sm:text-3xl font-bold text-green-400">&lt;2s</div>
           <div className="text-sm text-[#A0A0A5]">Settlement Time</div>
         </div>
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-purple-400">99.9%</div>
+          <div className="text-2xl sm:text-3xl font-bold text-purple-400">99.9%</div>
           <div className="text-sm text-[#A0A0A5]">Uptime SLA</div>
         </div>
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-yellow-400">24/7</div>
+          <div className="text-2xl sm:text-3xl font-bold text-yellow-400">24/7</div>
           <div className="text-sm text-[#A0A0A5]">Operations</div>
         </div>
       </div>
@@ -273,7 +273,7 @@ function LivePriceDisplay() {
     <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
       <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Current Rate</h3>
       <div className="text-center py-4">
-        <div className="text-4xl font-bold text-[#00F0FF]">
+        <div className="text-3xl sm:text-4xl font-bold text-[#00F0FF]">
           {isLoading ? (
             <span className="animate-pulse">Loading...</span>
           ) : (
