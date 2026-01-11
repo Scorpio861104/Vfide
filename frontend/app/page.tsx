@@ -306,7 +306,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00F0FF]/10 border border-[#00F0FF]/20 text-[#00F0FF] text-sm font-medium mb-8"
               >
                 <Sparkles className="w-4 h-4" />
-                Now Live on Base Sepolia Testnet
+                Now Live on Base
               </motion.div>
               
               <motion.h1
@@ -428,7 +428,7 @@ export default function Home() {
           >
             <span className="inline-flex items-center gap-2">
               <span className="w-2 h-2 bg-[#00F0FF] rounded-full animate-pulse" />
-              Live testnet data • Updates in real-time
+              Live data • Updates in real-time
             </span>
           </motion.p>
         </div>

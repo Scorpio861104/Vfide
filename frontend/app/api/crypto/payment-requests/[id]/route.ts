@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { status, txHash } = body;
 

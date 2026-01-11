@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
 
 interface GroupInvite {
   id: number;
@@ -115,75 +115,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-    inviteLinksStore.set(code, link);
-
-    return NextResponse.json({
-      success: true,
-      invite: link,
-      url: `${request.nextUrl.origin}/invite/${code}`,
-    });
-  } catch (error) {
-    console.error('Error creating invite link:', error);
-    return NextResponse.json(
-      { error: 'Failed to create invite link' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * GET /api/groups/invites?groupId=xxx
- * Get all invite links for a group
- */
-export async function GET(request: NextRequest) {
-  try {
-    const groupId = request.nextUrl.searchParams.get('groupId');
-    const code = request.nextUrl.searchParams.get('code');
-
-    // Get specific invite by code
-    if (code) {
-      const link = inviteLinksStore.get(code);
-      
-      if (!link) {
-        return NextResponse.json(
-          { error: 'Invite not found' },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        invite: link,
-        valid: isInviteLinkValid(link),
-      });
-    }
-
-    // Get all invites for a group
-    if (groupId) {
-      const links = Array.from(inviteLinksStore.values()).filter(
-        (link) => link.groupId === groupId
-      );
-
-      return NextResponse.json({
-        success: true,
-        invites: links,
-        total: links.length,
-      });
-    }
-
-    return NextResponse.json(
-      { error: 'Missing groupId or code parameter' },
-      { status: 400 }
-    );
-  } catch (error) {
-    console.error('Error getting invite links:', error);
-    return NextResponse.json(
-      { error: 'Failed to get invite links' },
-      { status: 500 }
-    );
-  }
-}
-
 /**
  * PATCH /api/groups/invites
  * Update invite link (revoke, etc.)
@@ -191,7 +122,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { code, action, userId } = body;
+    const { code, action } = body;
 
     if (!code || !action) {
       return NextResponse.json(
@@ -200,35 +131,37 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const link = inviteLinksStore.get(code);
+    const result = await query<GroupInvite>(
+      'SELECT * FROM group_invites WHERE code = $1',
+      [code]
+    );
     
-    if (!link) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         { error: 'Invite not found' },
         { status: 404 }
       );
     }
 
-    // In production: Verify user has permission
-    // const hasPermission = await checkGroupPermission(userId, link.groupId, 'manage_invites');
-
     switch (action) {
       case 'revoke':
-        link.isActive = false;
-        inviteLinksStore.set(code, link);
+        await query(
+          'UPDATE group_invites SET is_active = false WHERE code = $1',
+          [code]
+        );
         return NextResponse.json({
           success: true,
           message: 'Invite link revoked',
-          invite: link,
         });
 
       case 'activate':
-        link.isActive = true;
-        inviteLinksStore.set(code, link);
+        await query(
+          'UPDATE group_invites SET is_active = true WHERE code = $1',
+          [code]
+        );
         return NextResponse.json({
           success: true,
           message: 'Invite link activated',
-          invite: link,
         });
 
       default:
@@ -261,19 +194,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const link = inviteLinksStore.get(code);
+    const result = await query(
+      'DELETE FROM group_invites WHERE code = $1 RETURNING *',
+      [code]
+    );
     
-    if (!link) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         { error: 'Invite not found' },
         { status: 404 }
       );
     }
-
-    // In production: Verify user has permission
-    // const hasPermission = await checkGroupPermission(userId, link.groupId, 'manage_invites');
-
-    inviteLinksStore.delete(code);
 
     return NextResponse.json({
       success: true,

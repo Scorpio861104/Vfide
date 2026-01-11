@@ -390,7 +390,7 @@ export default function HeadhunterPage() {
                       {/* Reward */}
                       <div className="text-right">
                         <div className="text-2xl font-bold text-[#50C878]">
-                          ${typeof entry.estimatedReward === 'number' ? entry.estimatedReward.toFixed(0) : (entry.estimatedReward as any)}
+                          {entry.estimatedReward}
                         </div>
                         <div className="text-xs text-[#A0A0A5]">Est. reward</div>
                       </div>

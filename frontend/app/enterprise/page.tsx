@@ -2,6 +2,7 @@
 
 import { Footer } from "@/components/layout/Footer";
 import { GlobalNav } from "@/components/layout/GlobalNav";
+import { useVfidePrice } from "@/hooks/usePriceHooks";
 import {
     ArrowUpDown,
     Building2,
@@ -14,7 +15,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { useVfidePrice } from "@/hooks/usePriceHooks";
 
 type TabType = 'overview' | 'gateway' | 'fiat' | 'finance';
 
@@ -260,28 +260,6 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
               </div>
             </div>
           ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LivePriceDisplay() {
-  const { priceUsd, source, isLoading } = useVfidePrice();
-  
-  return (
-    <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-      <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Current Rate</h3>
-      <div className="text-center py-4">
-        <div className="text-4xl font-bold text-[#00F0FF]">
-          {isLoading ? (
-            <span className="animate-pulse">Loading...</span>
-          ) : (
-            `1 VFIDE = $${priceUsd.toFixed(2)}`
-          )}
-        </div>
-        <div className="text-sm text-[#A0A0A5] mt-2">
-          {isLoading ? 'Fetching price...' : `Live from ${source === 'calculated' ? 'market data' : source}`}
         </div>
       </div>
     </div>

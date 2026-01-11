@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest, { params }: { params: { address: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ address: string }> }) {
   try {
-    const { address } = params;
+    const { address } = await params;
 
     const result = await query(
       `SELECT tb.* FROM token_balances tb

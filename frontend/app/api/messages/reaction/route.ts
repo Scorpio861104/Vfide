@@ -80,13 +80,13 @@ export async function POST(request: NextRequest) {
       return acc;
     }, {});
 
-    // In production: Broadcast reaction update via WebSocket
-    // broadcastReactionUpdate(conversationId, message);
+    // In production: Broadcast reaction update via WebSocket would happen here
+    // For now, we just return the updated reactions
 
     return NextResponse.json({
       success: true,
-      message,
-      reactions: message.reactions,
+      messageId,
+      reactions,
     });
   } catch (error) {
     console.error('Error updating reaction:', error);
@@ -109,31 +109,20 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const messageKey = `${conversationId}_${messageId}`;
-    const message = messagesStore.get(messageKey);
-
-    if (!message || !message.reactions || !message.reactions[emoji]) {
-      return NextResponse.json({
-        success: true,
-        message: 'Reaction not found',
-      });
-    }
-
-    // Remove user from reaction
-    const userIndex = message.reactions[emoji].indexOf(userAddress);
-    if (userIndex > -1) {
-      message.reactions[emoji].splice(userIndex, 1);
-      
-      if (message.reactions[emoji].length === 0) {
-        delete message.reactions[emoji];
-      }
-    }
-
-    messagesStore.set(messageKey, message);
+    // Remove reaction
+    await query(
+      `DELETE FROM message_reactions mr
+       USING users u
+       WHERE mr.user_id = u.id
+         AND mr.message_id = $1
+         AND mr.emoji = $2
+         AND u.wallet_address = $3`,
+      [messageId, emoji, userAddress.toLowerCase()]
+    );
 
     return NextResponse.json({
       success: true,
-      reactions: message.reactions,
+      message: 'Reaction removed',
     });
   } catch (error) {
     console.error('Error removing reaction:', error);

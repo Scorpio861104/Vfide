@@ -1,11 +1,12 @@
 "use client";
 
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard';
-import { FAUCET_URLS, IS_TESTNET } from '@/lib/testnet';
+import { FAUCET_URLS } from '@/lib/testnet';
+import { IS_TESTNET, isTestnetChainId } from '@/lib/chains';
 import { safeParseFloat } from '@/lib/validation';
 import { Check, Copy, Droplets, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance, useChainId } from 'wagmi';
 
 /**
  * Faucet button for testnet - shows "Get ETH" when balance is low
@@ -16,9 +17,10 @@ export function FaucetButton() {
   const { copied, copy } = useCopyToClipboard();
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
+  const chainId = useChainId();
 
-  // Only show on testnet when connected
-  if (!IS_TESTNET || !isConnected) return null;
+  // Only show on testnet chains when connected
+  if (!isConnected || !chainId || !isTestnetChainId(chainId)) return null;
 
   const ethBalance = balance ? safeParseFloat(balance.formatted, 0) : 0;
   const isLowBalance = ethBalance < 0.01;

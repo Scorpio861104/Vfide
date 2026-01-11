@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+import { query, getClient } from '@/lib/db';
 
 /**
  * GET /api/quests/daily
@@ -18,7 +14,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
 
-    const client = await pool.connect();
+    const client = await getClient();
 
     try {
       // Get user ID from address

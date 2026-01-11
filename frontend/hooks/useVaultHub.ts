@@ -1,8 +1,10 @@
 import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi';
 import { isAddress } from 'viem';
 import { VAULT_HUB_ABI } from '../lib/contracts';
+import { CURRENT_CHAIN_ID } from '../lib/testnet';
+import { getChainByChainId, isTestnetChainId } from '../lib/chains';
 import { devLog } from '../lib/utils';
-import { IS_TESTNET, CURRENT_CHAIN_ID } from '../lib/testnet';
+// Network-agnostic: Uses chain from wallet connection
 
 // Parse the ABI for proper type inference
 const PARSED_VAULT_HUB_ABI = VAULT_HUB_ABI;
@@ -126,7 +128,7 @@ export function useVaultHub() {
     }
 
     if (!isOnCorrectChain) {
-      throw new Error(`Please switch to ${IS_TESTNET ? 'Base Sepolia' : 'Base'} network to create a vault.`);
+      throw new Error(`Please switch to the correct network to create a vault.`);
     }
 
     // Check if contract is properly configured before attempting
@@ -151,6 +153,12 @@ export function useVaultHub() {
     }
   };
 
+  const currentChainConfig = getChainByChainId(chainId);
+  const isTestnet = isTestnetChainId(chainId);
+  const chainName = currentChainConfig
+    ? (isTestnet ? currentChainConfig.testnet.name : currentChainConfig.mainnet.name)
+    : 'Base';
+
   return {
     vaultAddress: hasVault ? vaultAddressHex : undefined,
     hasVault,
@@ -162,6 +170,6 @@ export function useVaultHub() {
     isContractConfigured,
     isOnCorrectChain,
     expectedChainId: EXPECTED_CHAIN_ID,
-    expectedChainName: IS_TESTNET ? 'Base Sepolia' : 'Base',
+    expectedChainName: chainName,
   };
 }

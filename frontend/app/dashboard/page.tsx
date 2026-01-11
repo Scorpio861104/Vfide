@@ -15,11 +15,11 @@ import {
   Sliders, Sparkles, Zap
 } from "lucide-react";
 import { useState, useMemo } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId } from 'wagmi';
 import { BadgeGallery } from "@/components/badge/BadgeGallery";
 import { BadgeProgress } from "@/components/badge/BadgeProgress";
-import { useUserBadges, useVaultBalance, useProofScore } from "@/lib/vfide-hooks";
-import { EXPLORER_URL } from "@/lib/testnet";
+import { useUserBadges, useVaultBalance, useProofScore, useVfidePrice } from "@/lib/vfide-hooks";
+import { getSupportedChainFromId, getExplorerUrlForChainId } from '@/lib/chains';
 import Link from "next/link";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 
@@ -140,8 +140,10 @@ function QuickAction({
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const chainId = useChainId();
+  const explorerUrl = getExplorerUrlForChainId(chainId);
   const { copied: copiedAddress, copy } = useCopyToClipboard();
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   
   const { balance: vaultBalanceRaw, isLoading: vaultLoading } = useVaultBalance();
   const { score: proofscore, tier, isLoading: scoreLoading } = useProofScore(address);
@@ -239,7 +241,7 @@ export default function DashboardPage() {
                         )}
                       </AnimatePresence>
                     </button>
-                    <a href={`${EXPLORER_URL}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+                    <a href={`${explorerUrl}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-white/10 rounded-lg transition-colors">
                       <ExternalLink className="text-white/60" size={14} />
                     </a>
                   </motion.div>

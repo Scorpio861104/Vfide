@@ -1,10 +1,10 @@
 "use client";
 
-import { useGasPrice } from 'wagmi';
+import { useGasPrice, useChainId } from 'wagmi';
 import { formatEther } from 'viem';
 import { Fuel, AlertTriangle } from 'lucide-react';
 import { useEthPrice } from '@/hooks/useEthPrice';
-import { IS_TESTNET } from '@/lib/testnet';
+import { isTestnetChainId } from '@/lib/chains';
 
 interface TransactionPreviewProps {
   /** Label for the transaction type */
@@ -31,6 +31,8 @@ export function TransactionPreview({
 }: TransactionPreviewProps) {
   const { data: gasPrice } = useGasPrice();
   const { ethPrice } = useEthPrice();
+  const chainId = useChainId();
+  const isTestnet = isTestnetChainId(chainId);
 
   if (!show) return null;
 
@@ -95,7 +97,7 @@ export function TransactionPreview({
       </div>
 
       {/* Testnet gas warning */}
-      {IS_TESTNET && (
+      {isTestnet && (
         <div className="flex items-start gap-2 text-xs bg-amber-900/20 border border-amber-800/50 rounded-md p-2 mt-2">
           <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
           <span className="text-amber-300/80">

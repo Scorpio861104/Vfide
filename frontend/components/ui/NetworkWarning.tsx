@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
-import { baseSepolia, base } from 'wagmi/chains';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IS_TESTNET, CURRENT_CHAIN_ID } from '@/lib/testnet';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
+import { getChainByChainId, isTestnetChainId } from '@/lib/chains';
 import { safeParseInt } from '@/lib/validation';
 
 const DISMISS_KEY = 'vfide-network-warning-dismissed';
@@ -23,7 +23,11 @@ export function NetworkWarning() {
 
   // Use centralized config for expected chain
   const expectedChainId = CURRENT_CHAIN_ID;
-  const expectedChain = IS_TESTNET ? baseSepolia : base;
+  const expectedChainConfig = getChainByChainId(expectedChainId);
+  const isTestnet = isTestnetChainId(expectedChainId);
+  const expectedChainName = expectedChainConfig 
+    ? (isTestnet ? expectedChainConfig.testnet.name : expectedChainConfig.mainnet.name)
+    : 'Base';
   
   // Check localStorage on mount
   useEffect(() => {
@@ -73,7 +77,7 @@ export function NetworkWarning() {
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-zinc-300 text-sm">
-                  Switch to {expectedChain.name}
+                  Switch to {expectedChainName}
                 </p>
               </div>
               <button
