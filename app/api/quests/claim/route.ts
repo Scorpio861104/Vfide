@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+import { query, getClient } from '@/lib/db';
 
 /**
  * POST /api/quests/claim
@@ -21,7 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = await pool.connect();
+    const client = await getClient();
 
     try {
       await client.query('BEGIN');

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
 
     let sql = `SELECT * FROM analytics_events WHERE 1=1`;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (eventType) {
       params.push(eventType);

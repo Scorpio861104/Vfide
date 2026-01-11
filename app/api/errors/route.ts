@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
 
     let sql = `SELECT * FROM error_logs`;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (severity) {
       params.push(severity);

@@ -8,7 +8,8 @@ import {
   ExternalLink, Copy, Check, Loader2, AlertCircle, Sparkles
 } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { CURRENT_CHAIN_ID, FAUCET_URLS, IS_TESTNET } from '@/lib/testnet'
+import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
+import { IS_TESTNET, isTestnetChainId } from '@/lib/chains'
 import { safeParseFloat } from '@/lib/validation'
 
 // Base Sepolia network configuration
@@ -53,11 +54,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
     const seen = localStorage.getItem('vfide-setup-complete')
     setHasSeenWizard(!!seen)
     
-    // Auto-show wizard for new users who aren't connected
-    if (!seen && !isConnected && IS_TESTNET) {
-      const timer = setTimeout(() => setIsOpen(true), 2000)
-      return () => clearTimeout(timer)
-    }
+    // Don't auto-show wizard - let user open it manually if needed
   }, [isConnected])
 
   // Auto-advance steps based on state
@@ -141,9 +138,6 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
       await addNetworkToWallet()
     }
   }
-
-  // Don't render if not testnet or already completed
-  if (!IS_TESTNET) return null
 
   const steps = [
     { id: 'wallet', label: 'Connect', icon: Wallet, complete: isConnected },
@@ -269,9 +263,9 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                       <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
                         <Globe size={40} className="text-blue-400" />
                       </div>
-                      <h3 className="text-2xl font-bold text-white mb-2">Switch to Base Sepolia</h3>
+                      <h3 className="text-2xl font-bold text-white mb-2">Connect to Supported Network</h3>
                       <p className="text-zinc-400">
-                        VFIDE is on the Base Sepolia testnet
+                        Switch to a supported VFIDE network (Base or Base Sepolia)
                       </p>
                     </div>
 

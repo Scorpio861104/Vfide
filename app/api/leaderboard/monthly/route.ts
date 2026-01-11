@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+import { query, getClient } from '@/lib/db';
 
 /**
  * GET /api/leaderboard/monthly
@@ -16,7 +12,7 @@ export async function GET(request: NextRequest) {
     const userAddress = searchParams.get('userAddress');
     const limit = parseInt(searchParams.get('limit') || '100');
 
-    const client = await pool.connect();
+    const client = await getClient();
 
     try {
       // Get prize pool info
@@ -160,7 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     const monthYear = new Date().toISOString().slice(0, 7);
-    const client = await pool.connect();
+    const client = await getClient();
 
     try {
       await client.query('BEGIN');

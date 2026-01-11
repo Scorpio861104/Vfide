@@ -5,6 +5,22 @@ import { useAccount, useSignMessage } from 'wagmi';
 import { apiClient, APIError } from '@/lib/api-client';
 
 /**
+ * User profile type
+ */
+export interface UserProfile {
+  address: string;
+  alias?: string;
+  bio?: string;
+  email?: string;
+  location?: string;
+  website?: string;
+  avatar?: string;
+  proofScore?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
  * Hook for API authentication
  */
 export function useAuth() {
@@ -128,7 +144,7 @@ export function useMessages(conversationId: string, enabled = true) {
  * Hook for user profile
  */
 export function useUserProfile(address?: string) {
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -143,7 +159,7 @@ export function useUserProfile(address?: string) {
 
     try {
       const response = await apiClient.getUser(address);
-      setProfile(response.user);
+      setProfile(response.user as UserProfile);
     } catch (err) {
       const error = err as APIError;
       if (error.statusCode === 404) {
@@ -160,12 +176,12 @@ export function useUserProfile(address?: string) {
     fetchProfile();
   }, [fetchProfile]);
 
-  const updateProfile = useCallback(async (data: any) => {
+  const updateProfile = useCallback(async (data: { username?: string; displayName?: string; bio?: string; avatarUrl?: string }) => {
     if (!address) return;
 
     try {
       const response = await apiClient.updateUser(address, data);
-      setProfile(response.user);
+      setProfile(response.user as UserProfile);
       return response.user;
     } catch (err) {
       const error = err as APIError;
@@ -178,7 +194,7 @@ export function useUserProfile(address?: string) {
 
     try {
       const response = await apiClient.uploadAvatar(address, file);
-      setProfile((prev: any) => ({ ...prev, avatar: response.avatarUrl }));
+      setProfile((prev) => prev ? { ...prev, avatar: response.avatarUrl } : null);
       return response.avatarUrl;
     } catch (err) {
       const error = err as APIError;

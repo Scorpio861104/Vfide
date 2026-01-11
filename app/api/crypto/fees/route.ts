@@ -23,12 +23,24 @@ async function estimateNetworkFee(): Promise<{ gasLimit: bigint; gasPrice: bigin
   }
 }
 
+interface FeeCalculation {
+  requestedAmount: string;
+  burnFee: string;
+  networkFeeInVfide: string;
+  totalAmount: string;
+  breakdown: {
+    burn: string;
+    sanctum: string;
+    ecosystem: string;
+  };
+}
+
 function calculateTotalAmount(
   amount: string,
   burnFeeBps: number,
   networkFeeInEth: string,
   vfidePriceInEth: number
-): any {
+): FeeCalculation {
   const requestedAmountBigInt = parseEther(amount);
   const burnFeeBigInt = (requestedAmountBigInt * BigInt(burnFeeBps)) / 10000n;
   const networkFeeEthBigInt = parseEther(networkFeeInEth);

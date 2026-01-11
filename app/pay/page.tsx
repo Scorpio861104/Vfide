@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { useAccount } from "wagmi";
+import { useVfidePrice } from "@/lib/vfide-hooks";
 import { motion } from "framer-motion";
 import { Shield, Sparkles, CreditCard, Loader2 } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
@@ -18,6 +19,10 @@ function PayContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { showToast } = useToast();
   const { isConnected } = useAccount();
+  const { priceUsd, isLoading: priceLoading } = useVfidePrice();
+
+  const amountNum = safeParseFloat(amount, 0);
+  const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
 
   const handlePayment = async () => {
     if (!isConnected) {

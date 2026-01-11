@@ -3,6 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Book, ChevronRight, Droplets, Globe, HelpCircle, Shield, Star, Store, Vote, Wallet, X } from "lucide-react";
 import { useState } from "react";
+import { useChainId } from "wagmi";
+import { isTestnetChainId } from "@/lib/chains";
 
 interface HelpTopic {
   id: string;
@@ -30,18 +32,21 @@ const helpTopics: HelpTopic[] = [
     id: "network-setup",
     title: "Network Setup",
     icon: <Globe size={24} />,
-    description: "Add Base Sepolia to your wallet",
+    description: "Add supported networks to your wallet",
     content: [
-      "VFIDE runs on Base Sepolia (testnet). Add it to your wallet:",
+      "VFIDE supports Base (mainnet) and Base Sepolia (testnet):",
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-      "Network Name: Base Sepolia",
-      "RPC URL: https://sepolia.base.org",
-      "Chain ID: 84532",
-      "Currency Symbol: ETH",
-      "Block Explorer: https://sepolia.basescan.org",
+      "Base Mainnet:",
+      "• RPC: https://mainnet.base.org",
+      "• Chain ID: 8453",
+      "• Explorer: https://basescan.org",
+      "",
+      "Base Sepolia (Testnet):",
+      "• RPC: https://sepolia.base.org",
+      "• Chain ID: 84532",
+      "• Explorer: https://sepolia.basescan.org",
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-      "MetaMask: Settings → Networks → Add Network → Add Manually",
-      "Coinbase Wallet: Settings → Networks → + Add Network",
+      "The app works identically on both networks.",
       "Tip: Click 'Switch Network' in the app and your wallet should auto-add it!"
     ]
   },
@@ -177,6 +182,8 @@ const helpTopics: HelpTopic[] = [
 export function HelpCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
+  const chainId = useChainId();
+  const isTestnet = chainId ? isTestnetChainId(chainId) : false;
 
   return (
     <>
@@ -268,13 +275,15 @@ export function HelpCenter() {
                     <div className="mt-8 p-4 bg-[#00F0FF]/10 border border-[#00F0FF] rounded-lg">
                       <h3 className="font-bold text-[#00F0FF] mb-3">Quick Actions</h3>
                       <div className="space-y-2">
-                        <a
-                          href="/testnet"
-                          onClick={() => setIsOpen(false)}
-                          className="block w-full px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] hover:border-[#00F0FF] rounded-lg text-[#F5F3E8] text-sm text-left transition-all"
-                        >
-                          💧 Get Test ETH (Faucet Links)
-                        </a>
+                        {isTestnet && (
+                          <a
+                            href="/testnet"
+                            onClick={() => setIsOpen(false)}
+                            className="block w-full px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] hover:border-[#00F0FF] rounded-lg text-[#F5F3E8] text-sm text-left transition-all"
+                          >
+                            💧 Get Test ETH (Faucet Links)
+                          </a>
+                        )}
                         <button
                           onClick={() => {
                             setIsOpen(false);

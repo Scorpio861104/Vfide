@@ -5,9 +5,10 @@ import { Web3Provider } from "@/components/wallet/Web3Provider";
 import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
 import { HelpCenter } from "@/components/onboarding/HelpCenter";
 import { ToastProvider } from "@/components/ui/toast";
-import { TestnetCornerBadge } from "@/components/ui/TestnetBadge";
+// Network-agnostic: Works on testnet and mainnet identically
 import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
 import { DemoModeBanner } from "@/components/DemoModeBanner";
+import { TestnetNotification } from "@/components/ui/TestnetNotification";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PresenceManager } from "@/components/social/PresenceManager";
@@ -100,7 +101,8 @@ export default function RootLayout({
                   <DevErrorConsole />
                   <DemoModeBanner />
                 <NetworkSwitchOverlay />
-                <TestnetCornerBadge />
+                <TestnetNotification />
+                {/* Network detection handled by wallet connection */}
                 <AchievementToastContainer />
                 {children}
                 <MobileBottomNav />

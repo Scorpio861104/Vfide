@@ -240,15 +240,12 @@ export function useClaimHeadhunterReward() {
 
   const claimReward = async (year: bigint, quarter: bigint) => {
     try {
-      const hash = await writeContract({
+      writeContract({
         address: ECOSYSTEM_VAULT_ADDRESS,
         abi: ECOSYSTEM_VAULT_ABI,
         functionName: 'claimHeadhunterReward',
         args: [year, quarter],
-      }) as `0x${string}`;
-      
-      setTxHash(hash);
-      return hash;
+      });
     } catch (err) {
       console.error('Claim failed:', err);
       throw err;

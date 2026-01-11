@@ -4,8 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { useAccount } from 'wagmi'
-import { IS_TESTNET, FAUCET_URLS } from '@/lib/testnet'
+import { useAccount, useChainId } from 'wagmi'
+import { FAUCET_URLS } from '@/lib/testnet'
+import { isTestnetChainId } from '@/lib/chains'
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 
@@ -13,13 +14,14 @@ export default function TestnetPage() {
   const router = useRouter()
   const { copied, copy } = useCopyToClipboard()
   const { address } = useAccount()
+  const chainId = useChainId()
 
-  // Redirect to home if not testnet mode
+  // Redirect to home if not on testnet
   useEffect(() => {
-    if (!IS_TESTNET) {
+    if (chainId && !isTestnetChainId(chainId)) {
       router.push('/')
     }
-  }, [router])
+  }, [router, chainId])
 
   const copyAddress = () => {
     if (address) {

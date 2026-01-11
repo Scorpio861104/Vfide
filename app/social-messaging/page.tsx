@@ -105,8 +105,8 @@ export default function SocialPage() {
     gamification.awardXP(address, 25, 'Added a friend');
   };
 
-  const handleRejectRequest = (request: FriendRequest) => {
-    console.log('Rejected request from:', request.from);
+  const handleRejectRequest = (_request: FriendRequest) => {
+    // Rejected request handled
   };
 
   const tabs = [

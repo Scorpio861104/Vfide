@@ -192,13 +192,40 @@ export function getAllChainIds(): number[] {
 }
 
 /**
- * Find chain config by chain ID
+ * Find chain config by chain ID (works for both mainnet and testnet)
  */
 export function getChainByChainId(chainId: number): ChainConfig | undefined {
   return Object.values(CHAINS).find(config => {
-    const network = IS_TESTNET ? config.testnet : config.mainnet
-    return network.id === chainId
+    return config.mainnet.id === chainId || config.testnet.id === chainId
   })
+}
+
+/**
+ * Get supported chain from chain ID
+ */
+export function getSupportedChainFromId(chainId: number): SupportedChain | undefined {
+  const config = getChainByChainId(chainId)
+  return config?.id
+}
+
+/**
+ * Check if a chain ID is a testnet
+ */
+export function isTestnetChainId(chainId: number): boolean {
+  const config = getChainByChainId(chainId)
+  return config ? config.testnet.id === chainId : false
+}
+
+/**
+ * Get explorer URL for specific chain ID
+ */
+export function getExplorerUrlForChainId(chainId: number): string {
+  const config = getChainByChainId(chainId)
+  if (!config) return 'https://basescan.org'
+  
+  const isTestnet = config.testnet.id === chainId
+  const network = isTestnet ? config.testnet : config.mainnet
+  return network.blockExplorers?.default?.url || 'https://basescan.org'
 }
 
 /**

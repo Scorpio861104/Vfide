@@ -1,6 +1,6 @@
 'use client'
 
-import { CHAINS, IS_TESTNET, type SupportedChain, getChainList, getChainNetwork, isChainReady } from '@/lib/chains'
+import { CHAINS, type SupportedChain, getChainList, getChainNetwork, isChainReady } from '@/lib/chains'
 import { useEffect, useState } from 'react'
 import { useChainId, useSwitchChain } from 'wagmi'
 
@@ -20,9 +20,8 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
   useEffect(() => {
     const chains = getChainList()
     for (const chain of chains) {
-      const network = IS_TESTNET ? chain.testnet : chain.mainnet
-      if (network.id === chainId) {
-         
+      // Check both mainnet and testnet for this chain
+      if (chain.mainnet.id === chainId || chain.testnet.id === chainId) {
         setSelectedChain(prev => prev !== chain.id ? chain.id : prev)
         break
       }

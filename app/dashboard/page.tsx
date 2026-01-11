@@ -15,11 +15,11 @@ import {
   Sliders, Sparkles, Zap
 } from "lucide-react";
 import { useState, useMemo } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId } from 'wagmi';
 import { BadgeGallery } from "@/components/badge/BadgeGallery";
 import { BadgeProgress } from "@/components/badge/BadgeProgress";
-import { useUserBadges, useVaultBalance, useProofScore } from "@/lib/vfide-hooks";
-import { EXPLORER_URL } from "@/lib/testnet";
+import { useUserBadges, useVaultBalance, useProofScore, useVfidePrice } from "@/lib/vfide-hooks";
+import { getSupportedChainFromId, getExplorerUrlForChainId } from '@/lib/chains';
 import Link from "next/link";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 
@@ -140,8 +140,10 @@ function QuickAction({
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const chainId = useChainId();
+  const explorerUrl = getExplorerUrlForChainId(chainId);
   const { copied: copiedAddress, copy } = useCopyToClipboard();
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   
   const { balance: vaultBalanceRaw, isLoading: vaultLoading } = useVaultBalance();
   const { score: proofscore, tier, isLoading: scoreLoading } = useProofScore(address);
@@ -223,9 +225,9 @@ export default function DashboardPage() {
                   </motion.span>
                 </h1>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-white font-mono text-sm">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+                  <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 max-w-full">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                    <span className="text-white font-mono text-xs sm:text-sm truncate">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
                     <button onClick={copyAddress} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
                       <AnimatePresence mode="wait">
                         {copiedAddress ? (
@@ -239,7 +241,7 @@ export default function DashboardPage() {
                         )}
                       </AnimatePresence>
                     </button>
-                    <a href={`${EXPLORER_URL}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+                    <a href={`${explorerUrl}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-white/10 rounded-lg transition-colors">
                       <ExternalLink className="text-white/60" size={14} />
                     </a>
                   </motion.div>
@@ -430,17 +432,17 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
               { desc: "Earned PIONEER badge", time: "2 days ago", icon: Award, color: "amber" },
               { desc: "Voted on Proposal #42", time: "3 days ago", icon: Vote, color: "purple" },
             ].map((activity, index) => (
-              <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/8 transition-colors">
-                <div className={`p-2 rounded-xl ${
+              <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-xl hover:bg-white/8 transition-colors">
+                <div className={`p-2 rounded-xl flex-shrink-0 ${
                   activity.color === 'cyan' ? 'bg-cyan-500/20 text-cyan-400' :
                   activity.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400' :
                   activity.color === 'amber' ? 'bg-amber-500/20 text-amber-400' :
                   'bg-purple-500/20 text-purple-400'
                 }`}>
-                  <activity.icon size={20} />
+                  <activity.icon size={16} className="sm:w-5 sm:h-5" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-white text-sm">{activity.desc}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-xs sm:text-sm truncate">{activity.desc}</p>
                   <p className="text-white/40 text-xs">{activity.time}</p>
                 </div>
                 <ChevronRight className="text-white/20" size={16} />

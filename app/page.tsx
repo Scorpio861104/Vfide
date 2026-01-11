@@ -46,14 +46,14 @@ function FloatingOrbs() {
 // Hero 3D shield visualization
 function HeroVisualization() {
   return (
-    <div className="relative w-full h-[400px] md:h-[500px] flex items-center justify-center">
+    <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] flex items-center justify-center">
       <div className="absolute inset-0 flex items-center justify-center">
         {/* Outer glow ring */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="absolute w-80 h-80 md:w-[400px] md:h-[400px]"
+          className="absolute w-60 h-60 sm:w-80 sm:h-80 md:w-[400px] md:h-[400px]"
         >
           <div className="absolute inset-0 rounded-full border border-[#00F0FF]/20 animate-pulse" />
           <div className="absolute inset-4 rounded-full border border-[#00F0FF]/15" />
@@ -69,10 +69,12 @@ function HeroVisualization() {
           style={{ perspective: '1000px' }}
         >
           <svg 
-            width="180" 
-            height="220" 
+            width="140" 
+            height="170"
+            className="sm:w-[180px] sm:h-[220px]"
             viewBox="0 0 100 120" 
-            className="drop-shadow-[0_0_60px_rgba(0,240,255,0.4)]"
+            style={{ width: '140px', height: '170px' }}
+            preserveAspectRatio="xMidYMid meet"
           >
             <defs>
               <linearGradient id="hero-shield-gradient" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse">
@@ -306,7 +308,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00F0FF]/10 border border-[#00F0FF]/20 text-[#00F0FF] text-sm font-medium mb-8"
               >
                 <Sparkles className="w-4 h-4" />
-                Now Live on Base Sepolia Testnet
+                Now Live on Base
               </motion.div>
               
               <motion.h1
@@ -428,7 +430,7 @@ export default function Home() {
           >
             <span className="inline-flex items-center gap-2">
               <span className="w-2 h-2 bg-[#00F0FF] rounded-full animate-pulse" />
-              Live testnet data • Updates in real-time
+              Live data • Updates in real-time
             </span>
           </motion.p>
         </div>
@@ -445,7 +447,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] mb-4">
               Why VFIDE?
             </h2>
             <p className="text-lg text-[#6B6B78] max-w-2xl mx-auto">
@@ -580,7 +582,7 @@ export default function Home() {
               ))}
             </div>
             
-            <blockquote className="text-2xl md:text-3xl font-medium text-[#F8F8FC] mb-8 leading-relaxed">
+            <blockquote className="text-xl sm:text-2xl md:text-3xl font-medium text-[#F8F8FC] mb-8 leading-relaxed">
               &ldquo;Finally, a payment system that doesn&apos;t take a cut of every transaction. 
               VFIDE lets me keep what I earn.&rdquo;
             </blockquote>

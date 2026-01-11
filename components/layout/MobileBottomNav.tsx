@@ -22,8 +22,10 @@ const navItems = [
 // Organized by category for better mobile UX
 const moreItems = [
   { href: '/crypto', label: 'Wallet', emoji: '💳', category: 'Core' },
-  { href: '/social', label: 'Social', emoji: '👥', category: 'Core' },
+  { href: '/feed', label: 'Feed', emoji: '📰', category: 'Core' },
+  { href: '/stories', label: 'Stories', emoji: '📸', category: 'Core' },
   { href: '/social-messaging', label: 'Messages', emoji: '💬', category: 'Core' },
+  { href: '/social', label: 'Analytics', emoji: '📈', category: 'Core' },
   { href: '/profile', label: 'Profile', emoji: '👤', category: 'Core' },
   { href: '/quests', label: 'Quests', emoji: '🎯', category: 'Gamification' },
   { href: '/achievements', label: 'Achievements', emoji: '🏆', category: 'Gamification' },

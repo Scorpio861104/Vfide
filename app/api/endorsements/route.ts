@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN proposals p ON e.proposal_id = p.id
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
     let paramCount = 1;
 
     if (endorsedAddress) {
