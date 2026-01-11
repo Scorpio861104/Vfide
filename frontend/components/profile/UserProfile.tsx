@@ -407,7 +407,7 @@ export default function UserProfile() {
     }
   }, [errors]);
 
-  const handlePrivacyChange = useCallback((field: keyof PrivacySettings, value: any) => {
+  const handlePrivacyChange = useCallback((field: keyof PrivacySettings, value: PrivacySettings[keyof PrivacySettings]) => {
     setPrivacySettings((prev) => ({ ...prev, [field]: value }));
   }, []);
 

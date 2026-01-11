@@ -61,6 +61,13 @@ interface BulkPaymentJob {
   totalAmount: number;
 }
 
+interface NewPaymentRequest {
+  amount: string;
+  currency: string;
+  email: string;
+  description: string;
+}
+
 // ==================== MOCK DATA ====================
 
 function generateMockPaymentRequests(): PaymentRequest[] {
@@ -373,8 +380,8 @@ function PaymentRequestsSection({
   onCreateRequest,
 }: {
   requests: PaymentRequest[];
-  newRequest: any;
-  setNewRequest: any;
+  newRequest: NewPaymentRequest;
+  setNewRequest: React.Dispatch<React.SetStateAction<NewPaymentRequest>>;
   onCreateRequest: () => void;
 }) {
   return (

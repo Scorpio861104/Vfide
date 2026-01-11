@@ -9,7 +9,7 @@
  */
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits } from 'viem';
 import { ESCROW_ABI, VFIDE_TOKEN_ABI } from './abis';
 import { getEscrowAddress, getTokenAddress } from './addresses';
@@ -55,6 +55,77 @@ export function useEscrow() {
   const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  // ============ HELPER FUNCTIONS (defined first) ============
+
+  // Helper: Check token allowance
+  const checkAllowance = useCallback(async (_owner: `0x${string}`, _spender: `0x${string}`): Promise<bigint> => {
+    // Implementation would use contract read
+    return BigInt(0);
+  }, []);
+
+  // Helper: Approve token
+  const approveToken = useCallback(async (spender: `0x${string}`, amount: bigint) => {
+    writeContract({
+      address: tokenAddress,
+      abi: VFIDE_TOKEN_ABI,
+      functionName: 'approve',
+      args: [spender, amount],
+    });
+  }, [tokenAddress, writeContract]);
+
+  // Read single escrow
+  const readEscrow = useCallback(async (id: bigint): Promise<Escrow> => {
+    // This would use useReadContract in real implementation
+    // For now, return mock structure
+    return {
+      id,
+      buyer: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+      merchant: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+      token: tokenAddress,
+      amount: BigInt(0),
+      createdAt: BigInt(Date.now() / 1000),
+      releaseTime: BigInt(Date.now() / 1000 + 604800), // 7 days
+      state: 0,
+      orderId: ''
+    };
+  }, [tokenAddress]);
+
+  // Format helpers
+  const formatEscrowAmount = useCallback((amount: bigint): string => {
+    return formatUnits(amount, 18);
+  }, []);
+
+  const getStateLabel = useCallback((state: number): EscrowState => {
+    return STATE_MAP[state] || 'CREATED';
+  }, []);
+
+  const getTimeRemaining = useCallback((releaseTime: bigint): string => {
+    const now = BigInt(Math.floor(Date.now() / 1000));
+    const diff = releaseTime - now;
+    
+    if (diff <= 0) return 'Ready to claim';
+    
+    const days = Number(diff) / 86400;
+    const hours = (Number(diff) % 86400) / 3600;
+    
+    if (days >= 1) return `${Math.floor(days)}d ${Math.floor(hours)}h`;
+    return `${Math.floor(hours)}h`;
+  }, []);
+
+  // Check timeout status
+  const checkTimeout = useCallback(async (): Promise<{
+    isNearTimeout: boolean;
+    timeRemaining: bigint;
+  }> => {
+    // Would use useReadContract in production
+    return {
+      isNearTimeout: false,
+      timeRemaining: BigInt(0)
+    };
+  }, []);
+
+  // ============ MAIN FUNCTIONS (use helpers) ============
+
   // Load all escrows for current user
   const loadEscrows = useCallback(async () => {
     if (!escrowCount || !address) return;
@@ -86,23 +157,6 @@ export function useEscrow() {
       setLoading(false);
     }
   }, [escrowCount, address, readEscrow]);
-
-  // Read single escrow
-  const readEscrow = useCallback(async (id: bigint): Promise<Escrow> => {
-    // This would use useReadContract in real implementation
-    // For now, return mock structure
-    return {
-      id,
-      buyer: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-      merchant: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-      token: tokenAddress,
-      amount: BigInt(0),
-      createdAt: BigInt(Date.now() / 1000),
-      releaseTime: BigInt(Date.now() / 1000 + 604800), // 7 days
-      state: 0,
-      orderId: ''
-    };
-  }, [tokenAddress]);
 
   // Create escrow (with automatic token approval)
   const createEscrow = useCallback(async (
@@ -222,55 +276,7 @@ export function useEscrow() {
     }
   }, [escrowAddress, writeContract]);
 
-  // Helper: Check token allowance
-  const checkAllowance = useCallback(async (_owner: `0x${string}`, _spender: `0x${string}`): Promise<bigint> => {
-    // Implementation would use contract read
-    return BigInt(0);
-  }, []);
-
-  // Helper: Approve token
-  const approveToken = useCallback(async (spender: `0x${string}`, amount: bigint) => {
-    writeContract({
-      address: tokenAddress,
-      abi: VFIDE_TOKEN_ABI,
-      functionName: 'approve',
-      args: [spender, amount],
-    });
-  }, [tokenAddress, writeContract]);
-
-  // Check timeout status
-  const checkTimeout = useCallback(async (): Promise<{
-    isNearTimeout: boolean;
-    timeRemaining: bigint;
-  }> => {
-    // Would use useReadContract in production
-    return {
-      isNearTimeout: false,
-      timeRemaining: BigInt(0)
-    };
-  }, []);
-
-  // Format helpers
-  const formatEscrowAmount = useCallback((amount: bigint): string => {
-    return formatUnits(amount, 18);
-  }, []);
-
-  const getStateLabel = useCallback((state: number): EscrowState => {
-    return STATE_MAP[state] || 'CREATED';
-  }, []);
-
-  const getTimeRemaining = useCallback((releaseTime: bigint): string => {
-    const now = BigInt(Math.floor(Date.now() / 1000));
-    const diff = releaseTime - now;
-    
-    if (diff <= 0) return 'Ready to claim';
-    
-    const days = Number(diff) / 86400;
-    const hours = (Number(diff) % 86400) / 3600;
-    
-    if (days >= 1) return `${Math.floor(days)}d ${Math.floor(hours)}h`;
-    return `${Math.floor(hours)}h`;
-  }, []);
+  // ============ EFFECTS ============
 
   // Auto-reload after successful transaction
   useEffect(() => {
@@ -286,6 +292,12 @@ export function useEscrow() {
       setError(writeError.message);
     }
   }, [writeError]);
+
+  // ============ COMPUTED VALUES ============
+
+  const activeEscrows = useMemo(() => escrows.filter(e => e.state === 0), [escrows]);
+  const completedEscrows = useMemo(() => escrows.filter(e => e.state === 1 || e.state === 2), [escrows]);
+  const disputedEscrows = useMemo(() => escrows.filter(e => e.state === 3), [escrows]);
 
   return {
     // Data
@@ -309,8 +321,8 @@ export function useEscrow() {
     getTimeRemaining,
     
     // State filters
-    activeEscrows: escrows.filter(e => e.state === 0),
-    completedEscrows: escrows.filter(e => e.state === 1 || e.state === 2),
-    disputedEscrows: escrows.filter(e => e.state === 3),
+    activeEscrows,
+    completedEscrows,
+    disputedEscrows,
   };
 }

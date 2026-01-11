@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Story, isStoryExpired, getStoryTimeRemaining } from '@/lib/storiesSystem';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface StoryViewerProps {
   stories: Story[];
@@ -10,7 +13,7 @@ interface StoryViewerProps {
   userAddress: string;
 }
 
-export default function StoryViewer({
+export function StoryViewer({
   stories,
   initialIndex = 0,
   onClose,
@@ -50,7 +53,7 @@ export default function StoryViewer({
     if (currentStory && !currentStory.viewedBy.includes(userAddress)) {
       onView(currentStory.id);
     }
-  }, [currentStory, userAddress]);
+  }, [currentStory, userAddress, onView]);
 
   const goToNext = () => {
     if (currentIndex < stories.length - 1) {
@@ -78,13 +81,18 @@ export default function StoryViewer({
   if (!currentStory) return null;
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black z-50 flex items-center justify-center"
+    >
       {/* Progress Bars */}
       <div className="absolute top-4 left-4 right-4 flex gap-1 z-20">
         {stories.map((story, index) => (
           <div key={story.id} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-white transition-all"
+            <motion.div
+              className="h-full bg-white"
               style={{
                 width:
                   index < currentIndex
@@ -136,7 +144,9 @@ export default function StoryViewer({
         />
 
         {currentStory.type === 'text' ? (
-          <div
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             className="w-full h-full flex items-center justify-center p-12"
             style={{
               background: currentStory.backgroundColor,
@@ -148,9 +158,13 @@ export default function StoryViewer({
             >
               {currentStory.content}
             </p>
-          </div>
+          </motion.div>
         ) : currentStory.type === 'image' ? (
-          <div className="w-full h-full relative">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full h-full relative"
+          >
             <img
               src={currentStory.content}
               alt="Story"
@@ -161,9 +175,13 @@ export default function StoryViewer({
                 <p className="text-white text-xl text-center">{currentStory.caption}</p>
               </div>
             )}
-          </div>
+          </motion.div>
         ) : currentStory.type === 'video' ? (
-          <div className="w-full h-full relative">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full h-full relative"
+          >
             <video
               src={currentStory.content}
               className="w-full h-full object-contain"
@@ -176,7 +194,7 @@ export default function StoryViewer({
                 <p className="text-white text-xl text-center">{currentStory.caption}</p>
               </div>
             )}
-          </div>
+          </motion.div>
         ) : null}
       </div>
 
@@ -214,26 +232,42 @@ export default function StoryViewer({
       </div>
 
       {/* Reaction Picker */}
-      {showReactions && (
-        <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm rounded-full px-6 py-3 flex gap-3 z-30">
-          {quickReactions.map((emoji) => (
-            <button
-              key={emoji}
-              onClick={() => handleReaction(emoji)}
-              className="text-3xl hover:scale-125 transition-transform"
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {showReactions && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm rounded-full px-6 py-3 flex gap-3 z-30"
+          >
+            {quickReactions.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => handleReaction(emoji)}
+                className="text-3xl hover:scale-125 transition-transform"
+              >
+                {emoji}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Paused Indicator */}
-      {isPaused && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-6xl opacity-50 z-20">
-          ⏸️
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {isPaused && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.5, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-6xl z-20"
+          >
+            ⏸️
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
+
+export default StoryViewer;

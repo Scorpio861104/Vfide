@@ -244,7 +244,8 @@ export function useReportingAnalytics() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       // In a real app, this would call an API
-      console.log('Executing query:', query);
+      // Query execution would happen here
+      void query; // Mark as used
 
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 500));

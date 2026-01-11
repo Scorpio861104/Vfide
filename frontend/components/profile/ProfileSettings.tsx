@@ -32,11 +32,11 @@ export function ProfileSettings() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        alias: (profile.alias as string) || '',
-        bio: (profile.bio as string) || '',
-        email: (profile.email as string) || '',
-        location: (profile.location as string) || '',
-        website: (profile.website as string) || '',
+        alias: profile.alias || '',
+        bio: profile.bio || '',
+        email: profile.email || '',
+        location: profile.location || '',
+        website: profile.website || '',
       });
     }
   }, [profile]);
@@ -77,9 +77,8 @@ export function ProfileSettings() {
     }
   };
 
-  const handleAvatarUpload = async (avatarUrl: string) => {
-    // Avatar is already uploaded via API, just update local state
-    console.log('Avatar uploaded:', avatarUrl);
+  const handleAvatarUpload = async (_avatarUrl: string) => {
+    // Avatar is already uploaded via API, local state will refresh on next fetch
   };
 
   if (isLoading) {

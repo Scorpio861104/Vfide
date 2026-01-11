@@ -1,15 +1,19 @@
+'use client';
+
 import React, { useState, useRef } from 'react';
-import { createTextStory, createMediaStory, STORY_BACKGROUNDS } from '@/lib/storiesSystem';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Camera, Type, Image as ImageIcon } from 'lucide-react';
+import { createTextStory, createMediaStory, STORY_BACKGROUNDS, Story } from '@/lib/storiesSystem';
 
 interface StoryCreatorProps {
   onClose: () => void;
-  onCreate: (story: any) => void;
+  onCreate: (story: Story) => void;
   userAddress: string;
   userName: string;
   userAvatar?: string;
 }
 
-export default function StoryCreator({
+export function StoryCreator({
   onClose,
   onCreate,
   userAddress,
@@ -55,8 +59,7 @@ export default function StoryCreator({
         userName,
         textContent,
         STORY_BACKGROUNDS[selectedBackground].gradient,
-        '#FFFFFF',
-        userAvatar
+        '#FFFFFF'
       );
 
       onCreate(story);
@@ -82,40 +85,52 @@ export default function StoryCreator({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#0A0A0F] border-2 border-[#00F0FF] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    >
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#00F0FF]/20">
+        <div className="flex items-center justify-between p-4 border-b border-[#3A3A4F]">
           <h2 className="text-xl font-bold text-[#00F0FF]">Create Story</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-[#A0A0A5] hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#3A3A4F]"
           >
-            ✕
+            <X size={20} />
           </button>
         </div>
 
         {/* Mode Selector */}
-        <div className="flex border-b border-[#00F0FF]/20">
+        <div className="flex border-b border-[#3A3A4F]">
           <button
             onClick={() => setMode('text')}
-            className={`flex-1 py-3 font-semibold transition-colors ${
+            className={`flex-1 py-3 font-semibold transition-colors flex items-center justify-center gap-2 ${
               mode === 'text'
                 ? 'bg-[#00F0FF]/10 text-[#00F0FF] border-b-2 border-[#00F0FF]'
-                : 'text-gray-400 hover:text-white'
+                : 'text-[#A0A0A5] hover:text-white'
             }`}
           >
-            📝 Text Story
+            <Type size={18} />
+            Text Story
           </button>
           <button
             onClick={() => setMode('media')}
-            className={`flex-1 py-3 font-semibold transition-colors ${
+            className={`flex-1 py-3 font-semibold transition-colors flex items-center justify-center gap-2 ${
               mode === 'media'
                 ? 'bg-[#00F0FF]/10 text-[#00F0FF] border-b-2 border-[#00F0FF]'
-                : 'text-gray-400 hover:text-white'
+                : 'text-[#A0A0A5] hover:text-white'
             }`}
           >
-            📸 Photo/Video
+            <Camera size={18} />
+            Photo/Video
           </button>
         </div>
 
@@ -132,19 +147,19 @@ export default function StoryCreator({
                   value={textContent}
                   onChange={(e) => setTextContent(e.target.value)}
                   placeholder="Type your story..."
-                  className="w-full h-full bg-transparent text-white text-3xl font-bold text-center resize-none focus:outline-none placeholder-white/50"
+                  className="w-full h-full bg-transparent text-white text-2xl md:text-3xl font-bold text-center resize-none focus:outline-none placeholder-white/50"
                   maxLength={200}
                 />
               </div>
 
               {/* Character Count */}
-              <p className="text-center text-sm text-gray-400">
+              <p className="text-center text-sm text-[#A0A0A5]">
                 {textContent.length}/200 characters
               </p>
 
               {/* Background Selector */}
               <div>
-                <p className="text-white mb-3 font-semibold">Choose Background</p>
+                <p className="text-[#F5F3E8] mb-3 font-semibold">Choose Background</p>
                 <div className="grid grid-cols-5 gap-3">
                   {STORY_BACKGROUNDS.map((bg, index) => (
                     <button
@@ -164,15 +179,24 @@ export default function StoryCreator({
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleMediaSelect}
+                className="hidden"
+              />
+
               {/* Media Upload/Preview */}
               {!mediaPreview ? (
                 <div
-                  className="aspect-[9/16] max-w-sm mx-auto border-2 border-dashed border-gray-600 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-[#00F0FF] transition-colors"
+                  className="aspect-[9/16] max-w-sm mx-auto border-2 border-dashed border-[#3A3A4F] rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-[#00F0FF] transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <span className="text-6xl mb-4">📸</span>
-                  <p className="text-white text-lg mb-2">Add Photo or Video</p>
-                  <p className="text-gray-400 text-sm">Click to browse</p>
+                  <ImageIcon className="w-16 h-16 text-[#A0A0A5] mb-4" />
+                  <p className="text-[#F5F3E8] text-lg mb-2">Add Photo or Video</p>
+                  <p className="text-[#A0A0A5] text-sm">Click to browse</p>
                 </div>
               ) : (
                 <div className="aspect-[9/16] max-w-sm mx-auto rounded-xl overflow-hidden relative">
@@ -189,7 +213,7 @@ export default function StoryCreator({
                     }}
                     className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
                   >
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
               )}
@@ -197,51 +221,42 @@ export default function StoryCreator({
               {/* Caption Input */}
               {mediaPreview && (
                 <div>
-                  <label className="block text-white mb-2 font-semibold">
-                    Add Caption (Optional)
+                  <label className="block text-[#F5F3E8] mb-2 font-semibold">
+                    Add Caption (optional)
                   </label>
                   <input
                     type="text"
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
                     placeholder="Write a caption..."
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-[#00F0FF] transition-colors"
+                    className="w-full px-4 py-3 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] placeholder-[#6B6B78] focus:border-[#00F0FF] focus:outline-none"
                     maxLength={100}
                   />
-                  <p className="text-sm text-gray-400 mt-1">{caption.length}/100 characters</p>
                 </div>
               )}
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleMediaSelect}
-                className="hidden"
-              />
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="border-t border-[#00F0FF]/20 p-4 flex gap-3">
+        <div className="p-4 border-t border-[#3A3A4F] flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+            className="flex-1 py-3 border border-[#3A3A4F] text-[#A0A0A5] rounded-lg font-semibold hover:bg-[#3A3A4F]/50 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
-            disabled={
-              mode === 'text' ? !textContent.trim() : !mediaPreview
-            }
-            className="flex-1 px-6 py-3 bg-[#00F0FF] text-black font-semibold rounded-lg hover:bg-[#00F0FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={(mode === 'text' && !textContent.trim()) || (mode === 'media' && !mediaPreview)}
+            className="flex-1 py-3 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-semibold hover:bg-[#00D9E8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Post Story
+            Share Story
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
+
+export default StoryCreator;

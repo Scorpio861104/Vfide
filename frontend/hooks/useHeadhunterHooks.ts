@@ -235,8 +235,7 @@ export function usePendingReferral(referred: `0x${string}` | undefined): Pending
  * Claim headhunter reward for a completed quarter
  */
 export function useClaimHeadhunterReward() {
-  const { writeContract, isPending, isSuccess, error } = useWriteContract();
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
+  const { writeContract, data: txHash, isPending, isSuccess, error } = useWriteContract();
 
   const claimReward = async (year: bigint, quarter: bigint) => {
     try {
@@ -247,7 +246,6 @@ export function useClaimHeadhunterReward() {
         args: [year, quarter],
       });
     } catch (err) {
-      console.error('Claim failed:', err);
       throw err;
     }
   };

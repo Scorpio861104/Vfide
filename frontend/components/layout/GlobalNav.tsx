@@ -43,15 +43,22 @@ const navLinks: Array<{ href: string; label: string; highlight?: boolean; accent
   { href: "/dashboard", label: "Dashboard" },
   { href: "/vault", label: "Vault" },
   { href: "/crypto", label: "Wallet", highlight: true },
-  { href: "/social", label: "Social", highlight: true },
+  { href: "/feed", label: "Feed", highlight: true },
+  { href: "/stories", label: "Stories", highlight: true },
   { href: "/social-messaging", label: "Messages", highlight: true },
   { href: "/merchant", label: "Merchant" },
   { href: "/governance", label: "Governance" },
-  { href: "/docs", label: "Docs" },
 ];
 
 // Secondary navigation - organized by category
 const moreLinks = [
+  {
+    category: "Social",
+    items: [
+      { href: "/social", label: "Analytics", accent: true },
+      { href: "/docs", label: "Docs" },
+    ]
+  },
   {
     category: "Gamification",
     items: [

@@ -5,6 +5,59 @@ import { useAccount, useSignMessage } from 'wagmi';
 import { apiClient, APIError } from '@/lib/api-client';
 
 /**
+ * User profile type
+ */
+export interface UserProfile {
+  address: string;
+  alias?: string;
+  bio?: string;
+  email?: string;
+  location?: string;
+  website?: string;
+  avatar?: string;
+  proofScore?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Message type
+ */
+export interface Message {
+  id: string;
+  from: string;
+  to: string;
+  content: string;
+  encryptedContent?: string;
+  timestamp: number;
+  read?: boolean;
+}
+
+/**
+ * Gamification progress type
+ */
+export interface GamificationProgress {
+  level: number;
+  xp: number;
+  xpToNextLevel: number;
+  achievements: string[];
+  streak: number;
+  lastActivity?: string;
+}
+
+/**
+ * Leaderboard entry type
+ */
+export interface LeaderboardEntry {
+  address: string;
+  alias?: string;
+  level: number;
+  xp: number;
+  achievements: number;
+  rank: number;
+}
+
+/**
  * Hook for API authentication
  */
 export function useAuth() {
@@ -71,7 +124,7 @@ export function useAuth() {
  * Hook for fetching messages
  */
 export function useMessages(conversationId: string, enabled = true) {
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -128,7 +181,7 @@ export function useMessages(conversationId: string, enabled = true) {
  * Hook for user profile
  */
 export function useUserProfile(address?: string) {
-  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -143,7 +196,7 @@ export function useUserProfile(address?: string) {
 
     try {
       const response = await apiClient.getUser(address);
-      setProfile(response.user);
+      setProfile(response.user as UserProfile);
     } catch (err) {
       const error = err as APIError;
       if (error.statusCode === 404) {
@@ -165,7 +218,7 @@ export function useUserProfile(address?: string) {
 
     try {
       const response = await apiClient.updateUser(address, data);
-      setProfile(response.user);
+      setProfile(response.user as UserProfile);
       return response.user;
     } catch (err) {
       const error = err as APIError;
@@ -266,7 +319,7 @@ export function useFriends(address?: string) {
  * Hook for gamification data
  */
 export function useGamification(address?: string) {
-  const [progress, setProgress] = useState<any>(null);
+  const [progress, setProgress] = useState<GamificationProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -320,7 +373,7 @@ export function useGamification(address?: string) {
  * Hook for leaderboard
  */
 export function useLeaderboard(category: 'xp' | 'level' | 'achievements' = 'xp', limit = 50) {
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cached, setCached] = useState(false);

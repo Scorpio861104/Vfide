@@ -30,7 +30,15 @@ interface UserPosition {
   tier: string;
   prizeAmount: string;
   prizeClaimed: boolean;
-  stats: any;
+  stats: {
+    totalXp: number;
+    questsCompleted: number;
+    challengesCompleted: number;
+    currentStreak: number;
+    transactionsCount: number;
+    socialInteractions: number;
+    governanceVotes: number;
+  };
 }
 
 export default function MonthlyLeaderboard() {
