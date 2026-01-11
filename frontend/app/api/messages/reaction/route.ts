@@ -10,37 +10,75 @@ import { query } from '@/lib/db';
 interface ReactionRequest {
   messageId: string;
   conversationId: string;
-  emoji: string;
+  reactionType?: 'emoji' | 'custom_image';
+  emoji?: string;
+  imageUrl?: string;
+  imageName?: string;
   userAddress: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: ReactionRequest = await request.json();
-    const { messageId, conversationId, emoji, userAddress } = body;
+    const { messageId, conversationId, reactionType = 'emoji', emoji, imageUrl, imageName, userAddress } = body;
 
-    if (!messageId || !conversationId || !emoji || !userAddress) {
+    if (!messageId || !conversationId || !userAddress) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Validate emoji
-    const emojiRegex = /^[\p{Emoji}]+$/u;
-    if (!emojiRegex.test(emoji)) {
+    // Validate reaction based on type
+    if (reactionType === 'emoji') {
+      if (!emoji) {
+        return NextResponse.json(
+          { error: 'Emoji is required for emoji reactions' },
+          { status: 400 }
+        );
+      }
+      const emojiRegex = /^[\p{Emoji}]+$/u;
+      if (!emojiRegex.test(emoji)) {
+        return NextResponse.json(
+          { error: 'Invalid emoji' },
+          { status: 400 }
+        );
+      }
+    } else if (reactionType === 'custom_image') {
+      if (!imageUrl) {
+        return NextResponse.json(
+          { error: 'Image URL is required for custom image reactions' },
+          { status: 400 }
+        );
+      }
+      // Validate URL format
+      try {
+        new URL(imageUrl);
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid image URL' },
+          { status: 400 }
+        );
+      }
+    } else {
       return NextResponse.json(
-        { error: 'Invalid emoji' },
+        { error: 'Invalid reaction type' },
         { status: 400 }
       );
     }
 
     // Check if reaction exists
+    const reactionIdentifier = reactionType === 'emoji' ? emoji : imageUrl;
+    const identifierColumn = reactionType === 'emoji' ? 'mr.emoji' : 'mr.image_url';
+    
     const existingResult = await query(
       `SELECT id FROM message_reactions mr
        JOIN users u ON mr.user_id = u.id
-       WHERE mr.message_id = $1 AND mr.emoji = $2 AND u.wallet_address = $3`,
-      [messageId, emoji, userAddress.toLowerCase()]
+       WHERE mr.message_id = $1 
+         AND ${identifierColumn} = $2 
+         AND mr.reaction_type = $3
+         AND u.wallet_address = $4`,
+      [messageId, reactionIdentifier, reactionType, userAddress.toLowerCase()]
     );
 
     if (existingResult.rows.length > 0) {
@@ -50,33 +88,68 @@ export async function POST(request: NextRequest) {
          USING users u
          WHERE mr.user_id = u.id
            AND mr.message_id = $1
-           AND mr.emoji = $2
-           AND u.wallet_address = $3`,
-        [messageId, emoji, userAddress.toLowerCase()]
+           AND ${identifierColumn} = $2
+           AND mr.reaction_type = $3
+           AND u.wallet_address = $4`,
+        [messageId, reactionIdentifier, reactionType, userAddress.toLowerCase()]
       );
     } else {
       // Add reaction
-      await query(
-        `INSERT INTO message_reactions (message_id, user_id, emoji, created_at)
-         SELECT $1, u.id, $2, NOW()
-         FROM users u
-         WHERE u.wallet_address = $3`,
-        [messageId, emoji, userAddress.toLowerCase()]
-      );
+      if (reactionType === 'emoji') {
+        await query(
+          `INSERT INTO message_reactions (message_id, user_id, reaction_type, emoji, created_at)
+           SELECT $1, u.id, $2, $3, NOW()
+           FROM users u
+           WHERE u.wallet_address = $4`,
+          [messageId, reactionType, emoji, userAddress.toLowerCase()]
+        );
+      } else {
+        await query(
+          `INSERT INTO message_reactions (message_id, user_id, reaction_type, image_url, image_name, created_at)
+           SELECT $1, u.id, $2, $3, $4, NOW()
+           FROM users u
+           WHERE u.wallet_address = $5`,
+          [messageId, reactionType, imageUrl, imageName || 'custom', userAddress.toLowerCase()]
+        );
+      }
     }
 
     // Get all reactions for the message
     const reactionsResult = await query(
-      `SELECT emoji, json_agg(u.wallet_address) as users
+      `SELECT 
+         mr.reaction_type,
+         mr.emoji,
+         mr.image_url,
+         mr.image_name,
+         json_agg(json_build_object(
+           'address', u.wallet_address,
+           'username', u.username,
+           'avatar', u.avatar_url
+         )) as users
        FROM message_reactions mr
        JOIN users u ON mr.user_id = u.id
        WHERE mr.message_id = $1
-       GROUP BY emoji`,
+       GROUP BY mr.reaction_type, mr.emoji, mr.image_url, mr.image_name`,
       [messageId]
     );
 
-    const reactions = reactionsResult.rows.reduce((acc: Record<string, string[]>, row: { emoji: string; users: string[] }) => {
-      acc[row.emoji] = row.users;
+    interface ReactionRow {
+      reaction_type: 'emoji' | 'custom_image';
+      emoji: string | null;
+      image_url: string | null;
+      image_name: string | null;
+      users: Array<{ address: string; username: string; avatar: string }>;
+    }
+
+    const reactions = reactionsResult.rows.reduce((acc: Record<string, unknown>, row: ReactionRow) => {
+      const key = row.reaction_type === 'emoji' ? row.emoji! : row.image_url!;
+      acc[key] = {
+        type: row.reaction_type,
+        emoji: row.emoji,
+        imageUrl: row.image_url,
+        imageName: row.image_name,
+        users: row.users
+      };
       return acc;
     }, {});
 

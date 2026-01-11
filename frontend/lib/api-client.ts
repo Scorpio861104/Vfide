@@ -167,10 +167,23 @@ export class APIClient {
     });
   }
 
-  async addReaction(messageId: string, conversationId: string, emoji: string, userAddress: string) {
+  async addReaction(
+    messageId: string, 
+    conversationId: string, 
+    reaction: { type?: 'emoji' | 'custom_image'; emoji?: string; imageUrl?: string; imageName?: string }, 
+    userAddress: string
+  ) {
     return this.request<{ success: boolean; message: any }>('/messages/reaction', {
       method: 'POST',
-      body: JSON.stringify({ messageId, conversationId, emoji, userAddress }),
+      body: JSON.stringify({ 
+        messageId, 
+        conversationId, 
+        reactionType: reaction.type || 'emoji',
+        emoji: reaction.emoji,
+        imageUrl: reaction.imageUrl,
+        imageName: reaction.imageName,
+        userAddress 
+      }),
     });
   }
 

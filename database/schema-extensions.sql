@@ -81,9 +81,16 @@ CREATE TABLE IF NOT EXISTS message_reactions (
     id SERIAL PRIMARY KEY,
     message_id INTEGER REFERENCES messages(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    emoji VARCHAR(10) NOT NULL,
+    reaction_type VARCHAR(20) DEFAULT 'emoji' CHECK (reaction_type IN ('emoji', 'custom_image')),
+    emoji VARCHAR(10),
+    image_url TEXT,
+    image_name VARCHAR(100),
     created_at TIMESTAMP DEFAULT NOW(),
-    UNIQUE(message_id, user_id, emoji)
+    CONSTRAINT valid_reaction CHECK (
+        (reaction_type = 'emoji' AND emoji IS NOT NULL AND image_url IS NULL) OR
+        (reaction_type = 'custom_image' AND image_url IS NOT NULL AND emoji IS NULL)
+    ),
+    UNIQUE(message_id, user_id, reaction_type, COALESCE(emoji, image_url))
 );
 
 CREATE TABLE IF NOT EXISTS message_edits (
