@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         created_at, last_seen_at
       FROM users
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (search) {
       queryText += ` WHERE username ILIKE $1 OR display_name ILIKE $1 OR wallet_address ILIKE $1`;
@@ -54,10 +54,10 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching users:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch users', details: error.message },
+      { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -111,10 +111,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ user });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating/updating user:', error);
     return NextResponse.json(
-      { error: 'Failed to create/update user', details: error.message },
+      { error: 'Failed to create/update user', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
 
     let sql = `SELECT * FROM performance_metrics`;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (metric) {
       sql += ` WHERE metric_name = $1`;

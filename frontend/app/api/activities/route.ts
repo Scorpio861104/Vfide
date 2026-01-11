@@ -7,7 +7,7 @@ interface Activity {
   activity_type: string;
   title: string;
   description: string;
-  data: any;
+  data: Record<string, unknown>;
   created_at: string;
   user_address?: string;
   user_username?: string;

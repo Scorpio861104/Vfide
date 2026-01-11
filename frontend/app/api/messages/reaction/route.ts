@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       [messageId]
     );
 
-    const reactions = reactionsResult.rows.reduce((acc: any, row: any) => {
+    const reactions = reactionsResult.rows.reduce((acc: Record<string, string[]>, row: { emoji: string; users: string[] }) => {
       acc[row.emoji] = row.users;
       return acc;
     }, {});

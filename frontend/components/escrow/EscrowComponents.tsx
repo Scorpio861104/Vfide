@@ -4,8 +4,8 @@
 
 import { motion } from 'framer-motion';
 import { 
-  Shield, Clock, CheckCircle2, AlertTriangle, 
-  Package, Scale, FileCheck, Calendar, DollarSign, 
+  Clock, CheckCircle2, AlertTriangle, 
+  Scale, FileCheck, Calendar, DollarSign, 
   User, Hash, Timer 
 } from 'lucide-react';
 
@@ -26,7 +26,7 @@ export interface EscrowCardProps {
 }
 
 export function EscrowCard({
-  id,
+  id: _id,
   orderId,
   merchant,
   amount,
@@ -37,7 +37,7 @@ export function EscrowCard({
   timeRemaining,
   onRelease,
   onDispute,
-  onRefund,
+  onRefund: _onRefund,
   loading
 }: EscrowCardProps) {
   const stateConfig = {

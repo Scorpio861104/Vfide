@@ -85,7 +85,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [escrowCount, address]);
+  }, [escrowCount, address, readEscrow]);
 
   // Read single escrow
   const readEscrow = useCallback(async (id: bigint): Promise<Escrow> => {
@@ -140,7 +140,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [address, escrowAddress, tokenAddress, writeContract]);
+  }, [address, escrowAddress, tokenAddress, writeContract, approveToken, checkAllowance]);
 
   // Release funds to merchant
   const releaseEscrow = useCallback(async (id: bigint) => {
@@ -222,8 +222,24 @@ export function useEscrow() {
     }
   }, [escrowAddress, writeContract]);
 
+  // Helper: Check token allowance
+  const checkAllowance = useCallback(async (_owner: `0x${string}`, _spender: `0x${string}`): Promise<bigint> => {
+    // Implementation would use contract read
+    return BigInt(0);
+  }, []);
+
+  // Helper: Approve token
+  const approveToken = useCallback(async (spender: `0x${string}`, amount: bigint) => {
+    writeContract({
+      address: tokenAddress,
+      abi: VFIDE_TOKEN_ABI,
+      functionName: 'approve',
+      args: [spender, amount],
+    });
+  }, [tokenAddress, writeContract]);
+
   // Check timeout status
-  const checkTimeout = useCallback(async (id: bigint): Promise<{
+  const checkTimeout = useCallback(async (): Promise<{
     isNearTimeout: boolean;
     timeRemaining: bigint;
   }> => {
@@ -233,22 +249,6 @@ export function useEscrow() {
       timeRemaining: BigInt(0)
     };
   }, []);
-
-  // Helper: Check token allowance
-  const checkAllowance = async (owner: `0x${string}`, spender: `0x${string}`): Promise<bigint> => {
-    // Implementation would use contract read
-    return BigInt(0);
-  };
-
-  // Helper: Approve token
-  const approveToken = async (spender: `0x${string}`, amount: bigint) => {
-    writeContract({
-      address: tokenAddress,
-      abi: VFIDE_TOKEN_ABI,
-      functionName: 'approve',
-      args: [spender, amount],
-    });
-  };
 
   // Format helpers
   const formatEscrowAmount = useCallback((amount: bigint): string => {

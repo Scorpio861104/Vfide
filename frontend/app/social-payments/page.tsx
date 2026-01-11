@@ -199,7 +199,7 @@ export default function SocialPaymentsDashboard() {
         >
           {activeTab === 'feed' && (
             <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
-              <SocialFeed onPostCreated={(content) => console.log('Posted:', content)} />
+              <SocialFeed onPostCreated={() => {/* Post created */}} />
             </div>
           )}
 

@@ -7,7 +7,7 @@ interface Badge {
   description: string;
   icon: string;
   rarity: string;
-  requirements: any;
+  requirements: Record<string, unknown>;
   created_at: string;
 }
 

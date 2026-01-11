@@ -128,7 +128,7 @@ export function useMessages(conversationId: string, enabled = true) {
  * Hook for user profile
  */
 export function useUserProfile(address?: string) {
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -160,7 +160,7 @@ export function useUserProfile(address?: string) {
     fetchProfile();
   }, [fetchProfile]);
 
-  const updateProfile = useCallback(async (data: any) => {
+  const updateProfile = useCallback(async (data: { username?: string; displayName?: string; bio?: string; avatarUrl?: string }) => {
     if (!address) return;
 
     try {
@@ -178,7 +178,7 @@ export function useUserProfile(address?: string) {
 
     try {
       const response = await apiClient.uploadAvatar(address, file);
-      setProfile((prev: any) => ({ ...prev, avatar: response.avatarUrl }));
+      setProfile((prev) => prev ? { ...prev, avatar: response.avatarUrl } : null);
       return response.avatarUrl;
     } catch (err) {
       const error = err as APIError;
