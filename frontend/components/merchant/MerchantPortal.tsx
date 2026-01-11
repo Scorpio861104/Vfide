@@ -415,7 +415,7 @@ function PaymentRequestsSection({
               { value: 'DAI', label: 'DAI' },
             ]}
             value={newRequest.currency}
-            onChange={(value) => setNewRequest({ ...newRequest, currency: value })}
+            onChange={(e) => setNewRequest({ ...newRequest, currency: e.target.value })}
           />
           <MobileInput
             label="Description"

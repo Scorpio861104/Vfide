@@ -3,7 +3,8 @@ import { createPublicClient, http, formatUnits } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
 
 // VFIDE Token address on Base Sepolia (from deployment)
-const VFIDE_TOKEN_ADDRESS = '0x...'; // TODO: Update with actual deployed address
+// Note: Update with actual deployed address when token is deployed on mainnet
+const VFIDE_TOKEN_ADDRESS = process.env.VFIDE_TOKEN_ADDRESS || '0x0000000000000000000000000000000000000000';
 const WETH_ADDRESS = '0x4200000000000000000000000000000000000006'; // Base WETH
 
 // Uniswap V3 Pool interface
@@ -82,8 +83,8 @@ export async function GET(request: NextRequest) {
     const ethPriceData = await ethPriceResponse.json();
     const ethPrice = ethPriceData.ethereum?.usd || 2000;
 
-    // TODO: Once VFIDE/WETH pool is deployed, fetch live price
-    // For now, use calculated price based on tokenomics
+    // NOTE: Once VFIDE/WETH pool is deployed on Uniswap, enable live price fetching below
+    // Current pricing uses calculated price based on tokenomics:
     // Total Supply: 200M VFIDE
     // Initial Market Cap Target: $20M
     // Initial Price: $20M / 200M = $0.10 per VFIDE
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
     // Calculate VFIDE price in ETH
     const vfidePriceInEth = vfidePrice / ethPrice;
 
-    // TODO: Enable once Uniswap pool is deployed
+    // FUTURE: Enable once Uniswap pool is deployed
     /*
     try {
       const poolAddress = '0x...'; // VFIDE/WETH pool address

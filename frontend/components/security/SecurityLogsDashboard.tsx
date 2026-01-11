@@ -60,7 +60,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
             className="col-span-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
           />
           <select
-            onChange={(e) => logs.filterBySeverity(e.target.value as any || null)}
+            onChange={(e) => logs.filterBySeverity((e.target.value || null) as 'info' | 'warning' | 'critical' | null)}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
           >
             <option value="">All Severities</option>

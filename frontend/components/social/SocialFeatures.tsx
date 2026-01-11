@@ -620,12 +620,14 @@ function SocialFeatures({ className = '' }: SocialFeaturesProps) {
     });
   }, []);
 
-  const handleCommentPost = useCallback((postId: string) => {
-    console.log('Comment on post:', postId);
+  const handleCommentPost = useCallback((_postId: string) => {
+    // Comment modal would be triggered here
+    // Implementation: Show comment modal for the post
   }, []);
 
-  const handleSharePost = useCallback((postId: string) => {
-    console.log('Share post:', postId);
+  const handleSharePost = useCallback((_postId: string) => {
+    // Share functionality would be triggered here
+    // Implementation: Show share options modal
   }, []);
 
   // Filtered Data

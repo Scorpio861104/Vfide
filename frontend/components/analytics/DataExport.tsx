@@ -7,10 +7,12 @@ interface ExportOptions {
   compression?: boolean;
 }
 
+type ExportRecord = Record<string, string | number | boolean | null | undefined>;
+
 interface DataExportProps {
-  data: any[];
+  data: ExportRecord[];
   filename?: string;
-  onExport?: (data: any[], options: ExportOptions) => void;
+  onExport?: (data: ExportRecord[], options: ExportOptions) => void;
   className?: string;
 }
 
@@ -28,7 +30,7 @@ export function DataExport({
     compression: false
   });
 
-  const convertToCSV = (data: any[]): string => {
+  const convertToCSV = (data: ExportRecord[]): string => {
     if (data.length === 0) return '';
 
     const headers = Object.keys(data[0]);
@@ -50,7 +52,7 @@ export function DataExport({
     return csvRows.join('\n');
   };
 
-  const convertToJSON = (data: any[]): string => {
+  const convertToJSON = (data: ExportRecord[]): string => {
     return JSON.stringify(data, null, 2);
   };
 

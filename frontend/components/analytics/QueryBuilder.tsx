@@ -1,9 +1,12 @@
 import React, { useState, useMemo } from 'react';
 
+type FilterValue = string | number | boolean | null | [number, number] | string[];
+type QueryRecord = Record<string, string | number | boolean | null | undefined>;
+
 interface FilterCondition {
   field: string;
   operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'between' | 'in';
-  value: any;
+  value: FilterValue;
 }
 
 interface AggregationConfig {
@@ -14,8 +17,8 @@ interface AggregationConfig {
 
 interface QueryBuilderProps {
   fields: Array<{ name: string; type: 'string' | 'number' | 'date' | 'boolean' }>;
-  data: any[];
-  onQuery?: (results: any[]) => void;
+  data: QueryRecord[];
+  onQuery?: (results: QueryRecord[]) => void;
   className?: string;
 }
 
@@ -84,10 +87,16 @@ export function QueryBuilder({
           case 'lessThan':
             return Number(fieldValue) < Number(filter.value);
           case 'between':
-            const [min, max] = filter.value;
-            return Number(fieldValue) >= Number(min) && Number(fieldValue) <= Number(max);
+            if (Array.isArray(filter.value) && filter.value.length === 2) {
+              const [min, max] = filter.value;
+              return Number(fieldValue) >= Number(min) && Number(fieldValue) <= Number(max);
+            }
+            return true;
           case 'in':
-            return Array.isArray(filter.value) && filter.value.includes(fieldValue);
+            if (Array.isArray(filter.value)) {
+              return (filter.value as string[]).includes(String(fieldValue));
+            }
+            return true;
           default:
             return true;
         }
@@ -96,7 +105,7 @@ export function QueryBuilder({
 
     // Apply grouping and aggregations
     if (groupBy.length > 0 || aggregations.length > 0) {
-      const grouped = new Map<string, any[]>();
+      const grouped = new Map<string, QueryRecord[]>();
 
       results.forEach(row => {
         const key = groupBy.map(field => row[field]).join('|');
@@ -107,7 +116,7 @@ export function QueryBuilder({
       });
 
       results = Array.from(grouped.entries()).map(([key, rows]) => {
-        const result: any = {};
+        const result: QueryRecord = {};
 
         // Add group by fields
         groupBy.forEach((field, index) => {
@@ -146,8 +155,8 @@ export function QueryBuilder({
     if (sortBy.length > 0) {
       results.sort((a, b) => {
         for (const sort of sortBy) {
-          const aVal = a[sort.field];
-          const bVal = b[sort.field];
+          const aVal = a[sort.field] ?? '';
+          const bVal = b[sort.field] ?? '';
           
           if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
           if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
@@ -211,7 +220,7 @@ export function QueryBuilder({
 
                   <select
                     value={filter.operator}
-                    onChange={(e) => updateFilter(index, { operator: e.target.value as any })}
+                    onChange={(e) => updateFilter(index, { operator: e.target.value as FilterCondition['operator'] })}
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   >
                     <option value="equals">Equals</option>
@@ -225,7 +234,7 @@ export function QueryBuilder({
 
                   <input
                     type="text"
-                    value={filter.value}
+                    value={filter.value?.toString() || ''}
                     onChange={(e) => updateFilter(index, { value: e.target.value })}
                     placeholder="Value"
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
@@ -292,7 +301,7 @@ export function QueryBuilder({
                 <div key={index} className="flex gap-2">
                   <select
                     value={agg.function}
-                    onChange={(e) => updateAggregation(index, { function: e.target.value as any })}
+                    onChange={(e) => updateAggregation(index, { function: e.target.value as AggregationConfig['function'] })}
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   >
                     <option value="sum">SUM</option>

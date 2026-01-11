@@ -70,7 +70,7 @@ export function TransactionHistory({ userId }: TransactionHistoryProps) {
           {/* Filter */}
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
+            onChange={(e) => setFilter(e.target.value as typeof filter)}
             className="px-4 py-2 bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
           >
             <option value="all">All</option>

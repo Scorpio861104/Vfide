@@ -109,7 +109,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setFilter(tab.key as any)}
+              onClick={() => setFilter(tab.key as typeof filter)}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                 filter === tab.key
                   ? 'bg-[#00F0FF] text-[#0A0A0F]'

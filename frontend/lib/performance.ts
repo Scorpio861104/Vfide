@@ -174,10 +174,20 @@ export function getNavigationMetrics() {
 /**
  * Get memory usage
  */
+interface PerformanceMemory {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+interface PerformanceWithMemory extends Performance {
+  memory?: PerformanceMemory;
+}
+
 export function getMemoryUsage() {
   if (typeof window === 'undefined') return null;
   
-  const memory = (performance as any).memory;
+  const memory = (performance as PerformanceWithMemory).memory;
   if (!memory) return null;
 
   return {
@@ -269,11 +279,12 @@ export function useWebVitals() {
 /**
  * Performance optimization utilities
  */
-export function useOptimizeRendering(callback: () => void, deps: any[] = []) {
+export function useOptimizeRendering(callback: () => void, deps: React.DependencyList = []) {
   React.useEffect(() => {
     // Use requestAnimationFrame for smoother rendering
     const rafId = requestAnimationFrame(callback)
     return () => cancelAnimationFrame(rafId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }
 
@@ -303,7 +314,7 @@ export function useLazyImage(ref: React.RefObject<HTMLImageElement>) {
 /**
  * Debounce function for performance-critical operations
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -318,7 +329,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function for continuous operations
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: Parameters<T>) => ReturnType<T>>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -336,7 +347,7 @@ export function throttle<T extends (...args: any[]) => any>(
 /**
  * Memoization utility for expensive computations
  */
-export function memoize<T extends (...args: any[]) => any>(func: T): T {
+export function memoize<T extends (...args: Parameters<T>) => ReturnType<T>>(func: T): T {
   const cache = new Map();
 
   return ((...args: Parameters<T>) => {

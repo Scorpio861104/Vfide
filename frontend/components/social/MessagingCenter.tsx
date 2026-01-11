@@ -265,9 +265,9 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   };
 
   // Handle report message
-  const handleReportMessage = (messageId: string) => {
-    // In production: send report to backend
-    console.log('Report message:', messageId);
+  const handleReportMessage = (_messageId: string) => {
+    // In production: send report to backend API
+    // Implementation: POST /api/reports with message ID and reason
     alert('Message reported. Thank you for helping keep the community safe.');
   };
 

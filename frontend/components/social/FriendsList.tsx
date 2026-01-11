@@ -155,7 +155,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setFilter(tab.key as any)}
+              onClick={() => setFilter(tab.key as typeof filter)}
               className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-colors ${
                 filter === tab.key
                   ? 'bg-[#00F0FF] text-[#0A0A0F]'

@@ -45,13 +45,14 @@ export function SavedThemesManager() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
+    input.onchange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = (event: any) => {
-          const json = event.target.result;
-          if (importTheme(json)) {
+        reader.onload = (event: ProgressEvent<FileReader>) => {
+          const json = event.target?.result;
+          if (json && typeof json === 'string' && importTheme(json)) {
             alert('✅ Theme imported successfully!');
           } else {
             alert('❌ Invalid theme file');

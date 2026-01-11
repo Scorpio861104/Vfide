@@ -19,7 +19,7 @@ export function ErrorTracker({
   onExport,
 }: ErrorTrackerProps) {
   const [selectedCategory, setSelectedCategory] = useState<ErrorCategory | 'all'>('all');
-  const [selectedSeverity, setSelectedSeverity] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+  const [selectedSeverity, setSelectedSeverity] = useState<'all' | 'low' | 'medium' | 'high' | 'critical'>('all');
   const [expandedErrors, setExpandedErrors] = useState<Set<string>>(new Set());
 
   const filteredErrors = useMemo(() => {
@@ -123,7 +123,7 @@ export function ErrorTracker({
 
         <select
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value as any)}
+          onChange={(e) => setSelectedCategory(e.target.value as ErrorCategory | 'all')}
           className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:outline-none focus:border-blue-500"
         >
           <option value="all">All Categories</option>
@@ -136,7 +136,7 @@ export function ErrorTracker({
 
         <select
           value={selectedSeverity}
-          onChange={(e) => setSelectedSeverity(e.target.value as any)}
+          onChange={(e) => setSelectedSeverity(e.target.value as 'all' | 'low' | 'medium' | 'high' | 'critical')}
           className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:outline-none focus:border-blue-500"
         >
           <option value="all">All Severities</option>

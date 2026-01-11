@@ -554,10 +554,11 @@ export default function WalletManager() {
   };
 
   const handleConnectWallet = (type: string) => {
+    const walletType = type as 'metamask' | 'walletconnect' | 'ledger' | 'coinbase' | 'injected';
     const newWallet: Wallet = {
       id: `wallet-${Date.now()}`,
       address: `0x${Math.random().toString(16).substr(2, 40)}`,
-      type: type as any,
+      type: walletType,
       nickname: `${type} Wallet`,
       balance: '0',
       balanceUSD: 0,

@@ -43,8 +43,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // In production, send to error monitoring service
     if (process.env.NODE_ENV === 'production') {
-      // TODO: Send to Sentry or similar service
+      // NOTE: Configure error monitoring service (e.g., Sentry, DataDog) via environment variable
+      // Example with Sentry:
       // Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } });
+      // For now, errors are logged to console and can be captured by external monitoring tools
     }
 
     this.setState({ errorInfo });

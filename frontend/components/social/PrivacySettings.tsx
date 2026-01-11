@@ -153,7 +153,7 @@ export function PrivacySettings() {
                   name="allowMessagesFrom"
                   value={option.value}
                   checked={settings.allowMessagesFrom === option.value}
-                  onChange={(e) => setSettings({ ...settings, allowMessagesFrom: e.target.value as any })}
+                  onChange={(e) => setSettings({ ...settings, allowMessagesFrom: e.target.value as 'everyone' | 'friends' | 'trusted' })}
                   className="sr-only"
                 />
                 <div className="flex items-start gap-3">
@@ -196,7 +196,7 @@ export function PrivacySettings() {
                   name="allowFriendRequestsFrom"
                   value={option.value}
                   checked={settings.allowFriendRequestsFrom === option.value}
-                  onChange={(e) => setSettings({ ...settings, allowFriendRequestsFrom: e.target.value as any })}
+                  onChange={(e) => setSettings({ ...settings, allowFriendRequestsFrom: e.target.value as 'everyone' | 'trusted' | 'none' })}
                   className="sr-only"
                 />
                 <div className="flex items-start gap-3">
@@ -239,7 +239,7 @@ export function PrivacySettings() {
                   name="showOnlineStatus"
                   value={option.value}
                   checked={settings.showOnlineStatus === option.value}
-                  onChange={(e) => setSettings({ ...settings, showOnlineStatus: e.target.value as any })}
+                  onChange={(e) => setSettings({ ...settings, showOnlineStatus: e.target.value as 'everyone' | 'friends' | 'none' })}
                   className="sr-only"
                 />
                 <div className="flex items-center gap-3">
