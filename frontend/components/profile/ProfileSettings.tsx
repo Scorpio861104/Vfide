@@ -32,11 +32,11 @@ export function ProfileSettings() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        alias: profile.alias || '',
-        bio: profile.bio || '',
-        email: profile.email || '',
-        location: profile.location || '',
-        website: profile.website || '',
+        alias: (profile.alias as string) || '',
+        bio: (profile.bio as string) || '',
+        email: (profile.email as string) || '',
+        location: (profile.location as string) || '',
+        website: (profile.website as string) || '',
       });
     }
   }, [profile]);
