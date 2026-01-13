@@ -19,17 +19,13 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   // Add focus-visible polyfill behavior
   useEffect(() => {
-    let hadKeyboardEvent = false;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Tab') {
-        hadKeyboardEvent = true;
         document.body.classList.add('user-is-tabbing');
       }
     };
 
     const handleMouseDown = () => {
-      hadKeyboardEvent = false;
       document.body.classList.remove('user-is-tabbing');
     };
 

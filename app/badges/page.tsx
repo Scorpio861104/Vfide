@@ -7,15 +7,13 @@ import { useState } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { keccak256, toBytes } from 'viem'
 import { 
-  Award, Shield, Star, TrendingUp, CheckCircle, 
-  Clock, Lock, Sparkles, Trophy, Target, Zap, Heart,
-  ShoppingBag, Crown, Gem, Loader2, Search, Filter
+  Award, Shield, Star, CheckCircle, 
+  Lock, Trophy, Zap, Heart,
+  ShoppingBag, Crown, Gem, Loader2, Search
 } from 'lucide-react'
 import { 
-  BADGE_REGISTRY, 
   getBadgeCategories, 
-  getAllBadges,
-  type BadgeMetadata 
+  getAllBadges
 } from '@/lib/badge-registry'
 import { safeParseInt } from '@/lib/validation';
 
@@ -44,7 +42,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
   'Education & Contribution': <Star className="w-5 h-5" />,
 }
 
-const categoryColors: Record<string, string> = {
+const _categoryColors: Record<string, string> = {
   'Pioneer & Foundation': 'amber',
   'Activity & Participation': 'cyan',
   'Trust & Community': 'pink',
@@ -93,14 +91,14 @@ function GlassCard({ children, className = "", hover = true }: {
 type TabId = 'all' | 'earned' | 'available' | 'minted'
 
 export default function BadgesPage() {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected: _isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('all')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [mintingBadge, setMintingBadge] = useState<string | null>(null)
 
   const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { isLoading: _isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Get current time once on component mount
   const [currentTime] = useState(() => Date.now())
@@ -114,7 +112,7 @@ export default function BadgesPage() {
     args: address ? [address] : undefined,
   });
 
-  const { data: proofScore } = useReadContract({
+  const { data: _proofScore } = useReadContract({
     address: SEER_ADDRESS,
     abi: SEER_ABI,
     functionName: 'score',

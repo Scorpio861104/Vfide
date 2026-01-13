@@ -11,15 +11,14 @@ import {
   UserPlus,
   Settings,
   LogOut,
-  Trash2,
   CheckCheck,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
-import { Group, GroupMessage, GroupMember } from '@/types/groups';
+import { Group, GroupMessage } from '@/types/groups';
 import { Friend } from '@/types/messaging';
 import { formatAddress } from '@/lib/messageEncryption';
 import { UserDisplay } from '@/components/common/UserDisplay';
-import { addNotification } from './NotificationCenter';
+import { addNotification } from './SocialNotifications';
 
 export function GroupMessaging() {
   const { address } = useAccount();

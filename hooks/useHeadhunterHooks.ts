@@ -236,7 +236,7 @@ export function usePendingReferral(referred: `0x${string}` | undefined): Pending
  */
 export function useClaimHeadhunterReward() {
   const { writeContract, isPending, isSuccess, error } = useWriteContract();
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
+  const [txHash] = useState<`0x${string}` | null>(null);
 
   const claimReward = async (year: bigint, quarter: bigint) => {
     try {

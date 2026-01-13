@@ -560,8 +560,20 @@ export default function GovernanceUI() {
     );
   };
 
+  // TODO: Delegation requires a contract upgrade to add delegate() function to DAO.sol
+  // The VoteDelegated event exists but the delegate function is not yet implemented.
+  // For now, delegation is tracked locally in the UI state only.
+  // Future implementation: DAO.sol should add:
+  //   function delegate(address delegatee, uint256 amount) external
+  //   function undelegate(address delegatee) external
   const handleDelegate = () => {
     if (!delegateeAddress || !votesAmount) return;
+
+    // Validate address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(delegateeAddress)) {
+      alert('Invalid address format');
+      return;
+    }
 
     const newDelegation: Delegation = {
       delegator: '0xuser...',
@@ -573,6 +585,9 @@ export default function GovernanceUI() {
     setDelegations([...delegations, newDelegation]);
     setDelegateeAddress('');
     setVotesAmount('');
+    
+    // Note: This is currently a local UI feature only
+    // Delegation will be persisted to blockchain in a future update
   };
 
   const handleRevokeDelegation = (delegator: string) => {

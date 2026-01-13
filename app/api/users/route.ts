@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
          RETURNING *`,
         [wallet_address.toLowerCase(), username, display_name, bio, avatar_url]
       );
-      user = updateResult.rows[0];
+      user = updateResult.rows[0]!;
     } else {
       // Create new user
       const insertResult = await query<User>(
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
          RETURNING *`,
         [wallet_address.toLowerCase(), username, display_name, bio, avatar_url]
       );
-      user = insertResult.rows[0];
+      user = insertResult.rows[0]!;
     }
 
     return NextResponse.json({ user });

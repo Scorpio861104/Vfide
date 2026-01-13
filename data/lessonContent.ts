@@ -1,4 +1,4 @@
-import { LessonContent } from "@/components/LessonModal";
+import { LessonContent } from "@/components/modals/LessonModal";
 
 export const lessonContentData: Record<string, LessonContent> = {
   // ============ BEGINNER LESSONS ============

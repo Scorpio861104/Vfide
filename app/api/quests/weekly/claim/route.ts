@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, getClient } from '@/lib/db';
+import { getClient } from '@/lib/db';
 
 /**
  * POST /api/quests/weekly/claim

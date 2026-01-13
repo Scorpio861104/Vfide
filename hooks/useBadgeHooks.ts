@@ -14,7 +14,7 @@ import { VFIDEBadgeNFTABI } from '../lib/abis'
  * or check specific badges with useHasBadge
  * @deprecated Use useBadgeNFTs instead
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export function useUserBadges(_address?: `0x${string}`) {
  
   // Seer doesn't have getUserBadges function

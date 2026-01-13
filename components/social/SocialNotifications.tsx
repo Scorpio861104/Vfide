@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
@@ -9,15 +9,12 @@ import {
   DollarSign,
   Award,
   Users,
-  X,
-  Check,
-  Trash2,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Notification } from '@/types/socialIntegration';
-import { formatAddress } from '@/lib/messageEncryption';
+import { formatAddress as _formatAddress } from '@/lib/messageEncryption';
 
-export function NotificationCenter() {
+export function SocialNotifications() {
   const { address } = useAccount();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);

@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Smile, Image as ImageIcon, X } from 'lucide-react';
 
@@ -27,8 +27,81 @@ const DEFAULT_EMOJIS = [
   '💯', '💪', '🙏', '💡', '🚀', '⚡'
 ];
 
+const GRID_COLS = 6;
+
 export function ReactionPicker({ onSelect, onClose, customImages = [] }: ReactionPickerProps) {
   const [activeTab, setActiveTab] = useState<'emoji' | 'custom'>('emoji');
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Focus the first emoji when picker opens
+  useEffect(() => {
+    if (activeTab === 'emoji') {
+      emojiButtonRefs.current[0]?.focus();
+    }
+  }, [activeTab]);
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const items = activeTab === 'emoji' ? DEFAULT_EMOJIS : customImages;
+    const totalItems = items.length;
+    
+    if (totalItems === 0) return;
+
+    let newIndex = focusedIndex;
+
+    switch (e.key) {
+      case 'ArrowRight':
+        e.preventDefault();
+        newIndex = (focusedIndex + 1) % totalItems;
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        newIndex = (focusedIndex - 1 + totalItems) % totalItems;
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        newIndex = Math.min(focusedIndex + GRID_COLS, totalItems - 1);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        newIndex = Math.max(focusedIndex - GRID_COLS, 0);
+        break;
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (activeTab === 'emoji') {
+          onSelect({ type: 'emoji', emoji: DEFAULT_EMOJIS[focusedIndex] });
+          onClose();
+        } else if (customImages[focusedIndex]) {
+          onSelect({ 
+            type: 'custom_image', 
+            imageUrl: customImages[focusedIndex].url,
+            imageName: customImages[focusedIndex].name 
+          });
+          onClose();
+        }
+        return;
+      case 'Escape':
+        e.preventDefault();
+        onClose();
+        return;
+      case 'Tab':
+        // Allow natural tab flow but reset focus index when returning
+        break;
+      default:
+        return;
+    }
+
+    setFocusedIndex(newIndex);
+    emojiButtonRefs.current[newIndex]?.focus();
+  }, [activeTab, focusedIndex, customImages, onSelect, onClose]);
+
+  // Reset focus when tab changes
+  useEffect(() => {
+    setFocusedIndex(0);
+  }, [activeTab]);
 
   return (
     <motion.div
@@ -74,7 +147,7 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
       </div>
 
       {/* Content */}
-      <div className="p-3">
+      <div className="p-3" ref={containerRef} onKeyDown={handleKeyDown}>
         <AnimatePresence mode="wait">
           {activeTab === 'emoji' && (
             <motion.div
@@ -84,15 +157,22 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.15 }}
               className="grid grid-cols-6 gap-2"
+              role="grid"
+              aria-label="Emoji picker"
             >
-              {DEFAULT_EMOJIS.map((emoji) => (
+              {DEFAULT_EMOJIS.map((emoji, index) => (
                 <button
                   key={emoji}
+                  ref={(el) => { emojiButtonRefs.current[index] = el; }}
                   onClick={() => {
                     onSelect({ type: 'emoji', emoji });
                     onClose();
                   }}
-                  className="flex items-center justify-center w-10 h-10 text-2xl hover:bg-white/10 rounded-lg transition-colors"
+                  tabIndex={focusedIndex === index ? 0 : -1}
+                  aria-label={`React with ${emoji}`}
+                  className={`flex items-center justify-center w-10 h-10 text-2xl hover:bg-white/10 rounded-lg transition-colors ${
+                    focusedIndex === index ? 'ring-2 ring-cyan-400 bg-white/10' : ''
+                  }`}
                 >
                   {emoji}
                 </button>

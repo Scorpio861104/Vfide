@@ -54,7 +54,7 @@ export function ProofScoreRing({ score, size = "md", showLabel = true, className
       if (p < 1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Animation should only restart when target score changes
+     
   }, [score]);
   
   return (

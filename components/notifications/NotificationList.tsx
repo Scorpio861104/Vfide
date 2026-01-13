@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Notification, NotificationStatus, formatTimeAgo, getSeverityColor, getNotificationIcon } from '@/config/notification-hub';
 import { Check, X, ChevronRight } from 'lucide-react';
 
@@ -8,14 +8,14 @@ interface NotificationListProps {
   notifications: Notification[];
   onMarkAsRead: (id: string) => void;
   onDismiss: (id: string) => void;
-  groupByType?: boolean;
+  _groupByType?: boolean;
 }
 
 export function NotificationList({
   notifications,
   onMarkAsRead,
   onDismiss,
-  groupByType = false,
+  _groupByType = false,
 }: NotificationListProps) {
   const containerVariants = {
     hidden: { opacity: 0 },

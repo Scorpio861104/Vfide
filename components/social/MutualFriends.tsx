@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, User, Share2 } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import { Friend } from '@/types/messaging';
 import { formatAddress } from '@/lib/messageEncryption';
 import { UserDisplay } from '@/components/common/UserDisplay';

@@ -653,9 +653,6 @@ export function rgbToHex(r: number, g: number, b: number): string {
 
 export function generatePaletteFromColor(baseColor: string): Partial<Color> {
   // Simplified palette generation from base color
-  const baseHex = baseColor.replace('#', '');
-  const baseNum = parseInt(baseHex, 16);
-
   return {
     '50': adjustBrightness(baseColor, 0.95),
     '100': adjustBrightness(baseColor, 0.90),

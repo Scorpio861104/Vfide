@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { NotificationPreference, NotificationType, NotificationFrequency, DeliveryChannel, DEFAULT_NOTIFICATION_PREFERENCES } from '@/config/notification-hub';
+import { NotificationPreference, NotificationType, NotificationFrequency, DeliveryChannel, DEFAULT_NOTIFICATION_PREFERENCES as _DEFAULT_NOTIFICATION_PREFERENCES } from '@/config/notification-hub';
 import { Bell, Mail, MessageSquare, Send, Smartphone, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useState } from 'react';
 

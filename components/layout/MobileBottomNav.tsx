@@ -40,8 +40,18 @@ const moreItems = [
   { href: '/escrow', label: 'Escrow', emoji: '🔒', category: 'Finance' },
   { href: '/treasury', label: 'Treasury', emoji: '🏦', category: 'Finance' },
   { href: '/token-launch', label: 'Token Launch', emoji: '🚀', category: 'Finance' },
+  { href: '/streaming', label: 'Streaming', emoji: '⏱️', category: 'Finance' },
+  { href: '/cross-chain', label: 'Cross-Chain', emoji: '🔗', category: 'Finance' },
+  { href: '/stealth', label: 'Private Pay', emoji: '👁️', category: 'Privacy' },
+  { href: '/guardians', label: 'Guardians', emoji: '🛡️', category: 'Privacy' },
+  { href: '/multisig', label: 'Multi-Sig', emoji: '✍️', category: 'Privacy' },
+  { href: '/time-locks', label: 'Time Locks', emoji: '⏳', category: 'Privacy' },
+  { href: '/insights', label: 'Insights', emoji: '🧠', category: 'Intelligence' },
+  { href: '/taxes', label: 'Tax Report', emoji: '📋', category: 'Intelligence' },
+  { href: '/budgets', label: 'Budgets', emoji: '💵', category: 'Intelligence' },
   { href: '/sanctum', label: 'Sanctum', emoji: '⚡', category: 'System' },
-  { href: '/security-center', label: 'Security', emoji: '🛡️', category: 'System' },
+  { href: '/security-center', label: 'Security', emoji: '🔐', category: 'System' },
+  { href: '/developer', label: 'Developer', emoji: '👨‍💻', category: 'System' },
   { href: '/docs', label: 'Docs', emoji: '📚', category: 'System' },
 ]
 
@@ -84,7 +94,7 @@ export function MobileBottomNav() {
               </div>
               
               {/* Group items by category */}
-              {['Core', 'Gamification', 'Community', 'Finance', 'System'].map((category) => {
+              {['Core', 'Gamification', 'Community', 'Finance', 'Privacy', 'Intelligence', 'System'].map((category) => {
                 const categoryItems = moreItems.filter(item => item.category === category);
                 if (categoryItems.length === 0) return null;
                 

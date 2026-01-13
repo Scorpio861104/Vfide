@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
-import { IS_TESTNET, isTestnetChainId } from '@/lib/chains'
+import { IS_TESTNET as _IS_TESTNET, isTestnetChainId as _isTestnetChainId } from '@/lib/chains'
 import { safeParseFloat } from '@/lib/validation'
 
 // Base Sepolia network configuration

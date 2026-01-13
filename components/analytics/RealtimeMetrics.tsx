@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-interface MetricUpdate {
+// Exported for use elsewhere
+export interface MetricUpdate {
   id: string;
   value: number;
   timestamp: number;

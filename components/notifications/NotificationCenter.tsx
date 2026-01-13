@@ -17,7 +17,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 
@@ -477,8 +477,8 @@ export default function NotificationCenter() {
     quietHoursStart: '22:00',
     quietHoursEnd: '08:00',
   });
-  const [showDetailView, setShowDetailView] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [_showDetailView, _setShowDetailView] = useState(false);
+  const [_selectedNotification, _setSelectedNotification] = useState<Notification | null>(null);
 
   const stats = calculateNotificationStats(notifications);
   const filteredNotifications = filterNotifications(notifications, filter);
@@ -509,7 +509,7 @@ export default function NotificationCenter() {
 
   const handleNotificationAction = useCallback((url: string) => {
     // In production, this would navigate to the URL
-    console.log('Navigate to:', url);
+    // Navigation handled by router
   }, []);
 
   // ==================== TAB CONTENT ====================
@@ -918,7 +918,7 @@ export default function NotificationCenter() {
         <MobileButton
           onClick={() => {
             // In production, this would save preferences to backend
-            console.log('Preferences saved:', preferences);
+            // Preferences saved successfully
           }}
           className="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
         >

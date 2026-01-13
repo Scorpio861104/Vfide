@@ -17,8 +17,8 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
+import React, { useState } from 'react';
+import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 import { safeParseFloat } from '@/lib/validation';
 
@@ -179,7 +179,7 @@ function generateMockWallets(): Wallet[] {
   ];
 }
 
-function generateTokenBalances(address: string): TokenBalance[] {
+function generateTokenBalances(_address: string): TokenBalance[] {
   return [
     {
       address: '0x0000000000000000000000000000000000000000',
@@ -224,15 +224,15 @@ function generateTokenBalances(address: string): TokenBalance[] {
   ];
 }
 
-function generateTransactions(address: string): Transaction[] {
+function _generateTransactions(walletAddress: string): Transaction[] {
   const transactions: Transaction[] = [];
   const now = Date.now();
 
   for (let i = 0; i < 10; i++) {
     transactions.push({
       hash: `0x${Math.random().toString(16).substr(2, 64)}`,
-      from: i % 2 === 0 ? address : '0xother...addr',
-      to: i % 2 === 0 ? '0xother...addr' : address,
+      from: i % 2 === 0 ? walletAddress : '0xother...addr',
+      to: i % 2 === 0 ? '0xother...addr' : walletAddress,
       value: (Math.random() * 2).toFixed(4),
       timestamp: now - i * 24 * 60 * 60 * 1000,
       status: i === 0 ? 'pending' : 'confirmed',
@@ -255,12 +255,12 @@ function calculateWalletStats(wallets: Wallet[]): WalletStats {
 
 // ==================== HELPER FUNCTIONS ====================
 
-function shortenAddress(address: string): string {
-  if (!address) return '';
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+function _shortenAddress(walletAddress: string): string {
+  if (!walletAddress) return '';
+  return `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
 }
 
-function formatBalance(balance: string, decimals: number = 18): string {
+function _formatBalance(balance: string, decimals: number = 18): string {
   const num = safeParseFloat(balance, 0) / Math.pow(10, decimals);
   if (num < 0.01) return '< 0.01';
   if (num < 1) return num.toFixed(4);
@@ -491,7 +491,7 @@ export default function WalletManager() {
   );
   const [wallets, setWallets] = useState<Wallet[]>(generateMockWallets());
   const [selectedChain, setSelectedChain] = useState<number>(1);
-  const [tokens, setTokens] = useState<TokenBalance[]>(
+  const [tokens, _setTokens] = useState<TokenBalance[]>(
     generateTokenBalances(wallets[0]?.address)
   );
   const [showConnectModal, setShowConnectModal] = useState(false);

@@ -1,20 +1,14 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
-  TrendingUp,
-  Award,
   Calendar,
   MapPin,
-  Shield,
   Share2,
   MessageCircle,
-  Heart,
   Flame,
-  Target,
-  Zap,
   Copy,
   CheckCircle2,
 } from 'lucide-react';

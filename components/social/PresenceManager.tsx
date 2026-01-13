@@ -13,7 +13,7 @@ import { usePresence } from '@/lib/presence';
 
 export function PresenceManager() {
   const { address } = useAccount();
-  const { status, isOnline, isAway, isOffline } = usePresence(address);
+  const { status, isOnline, isAway, isOffline: _isOffline } = usePresence(address);
 
   // Log status changes in development
   useEffect(() => {

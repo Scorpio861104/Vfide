@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { safeBigIntToNumber, safeParseFloat } from '@/lib/validation'
-import { SectionErrorBoundary } from '@/components/ErrorBoundary'
+import { safeBigIntToNumber } from '@/lib/validation'
 import { 
   Banknote, 
   Play, 
@@ -25,6 +24,8 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadCont
 import { parseUnits, isAddress } from 'viem'
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
+import { usePayroll } from '@/hooks/usePayroll'
+import { Loader2 } from 'lucide-react'
 
 // PayrollManager ABI
 const PAYROLL_MANAGER_ABI = [
@@ -48,7 +49,7 @@ const PAYROLL_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS
 const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
 
 // Check if PayrollManager is deployed
-const IS_PAYROLL_DEPLOYED = PAYROLL_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const _IS_PAYROLL_DEPLOYED = PAYROLL_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 // Stream data type (from contract)
 interface StreamData {
@@ -66,52 +67,6 @@ interface StreamData {
   pausedAccrued: bigint
 }
 
-// Mock streams data
-const mockStreams: StreamData[] = [
-  {
-    id: 1,
-    payer: '0xCompany...1234',
-    payee: '0x1234...5678',
-    token: 'VFIDE',
-    ratePerSecond: BigInt(Math.floor((5000 * 1e18) / (30 * 24 * 60 * 60))), // 5000/month
-    startTime: Date.now() - 15 * 24 * 60 * 60 * 1000, // 15 days ago
-    lastWithdrawTime: Date.now() - 2 * 24 * 60 * 60 * 1000, // 2 days ago
-    depositBalance: BigInt(10000 * 1e18),
-    active: true,
-    paused: false,
-    pausedAt: 0,
-    pausedAccrued: BigInt(0)
-  },
-  {
-    id: 2,
-    payer: '0xStartup...5678',
-    payee: '0x1234...5678',
-    token: 'VFIDE',
-    ratePerSecond: BigInt(Math.floor((3000 * 1e18) / (30 * 24 * 60 * 60))), // 3000/month
-    startTime: Date.now() - 45 * 24 * 60 * 60 * 1000,
-    lastWithdrawTime: Date.now() - 5 * 24 * 60 * 60 * 1000,
-    depositBalance: BigInt(2000 * 1e18),
-    active: true,
-    paused: true,
-    pausedAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
-    pausedAccrued: BigInt(500 * 1e18)
-  },
-  {
-    id: 3,
-    payer: '0x1234...5678',
-    payee: '0xFreelancer...ABCD',
-    token: 'VFIDE',
-    ratePerSecond: BigInt(Math.floor((8000 * 1e18) / (30 * 24 * 60 * 60))), // 8000/month
-    startTime: Date.now() - 30 * 24 * 60 * 60 * 1000,
-    lastWithdrawTime: Date.now() - 1 * 24 * 60 * 60 * 1000,
-    depositBalance: BigInt(24000 * 1e18),
-    active: true,
-    paused: false,
-    pausedAt: 0,
-    pausedAccrued: BigInt(0)
-  }
-]
-
 type TabId = 'receiving' | 'sending' | 'all'
 type RoleType = 'employee' | 'employer'
 
@@ -119,8 +74,6 @@ export default function PayrollPage() {
   const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('receiving')
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [currentTime, setCurrentTime] = useState(Date.now())
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
   
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -129,93 +82,73 @@ export default function PayrollPage() {
     deposit: ''
   })
 
-  // Contract write hooks
-  const { writeContract, data: hash } = useWriteContract();
-  useWaitForTransactionReceipt({ hash });
+  // Use the payroll hook for all stream operations
+  const {
+    streams,
+    receivingStreams,
+    sendingStreams,
+    loading: payrollLoading,
+    error: payrollError,
+    isDeployed,
+    currentTime,
+    totalReceiving,
+    totalSending,
+    totalClaimable,
+    createStream,
+    withdraw,
+    pauseStream: pauseStreamAction,
+    resumeStream: resumeStreamAction,
+    topUp,
+    refresh,
+    formatAmount,
+    formatMonthlyRate,
+    formatTimeRemaining,
+    calculateClaimable,
+  } = usePayroll()
 
-  // Read payer streams (for displaying sending streams)
-  useReadContract({
-    address: PAYROLL_MANAGER_ADDRESS,
-    abi: PAYROLL_MANAGER_ABI,
-    functionName: 'getPayerStreams',
-    args: address ? [address] : undefined,
-  });
-
-  // Read payee streams (for displaying receiving streams)
-  useReadContract({
-    address: PAYROLL_MANAGER_ADDRESS,
-    abi: PAYROLL_MANAGER_ABI,
-    functionName: 'getPayeeStreams',
-    args: address ? [address] : undefined,
-  });
-
-  // Contract action handlers
-  const handleCreateStream = () => {
+  // Action handlers using the hook
+  const handleCreateStream = async () => {
     if (!isAddress(createForm.payee)) return;
-    const rate = parseUnits(createForm.rate, 18);
-    const deposit = parseUnits(createForm.deposit, 18);
-    
-    writeContract({
-      address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
-      functionName: 'createStream',
-      args: [createForm.payee as `0x${string}`, VFIDE_TOKEN_ADDRESS, rate, deposit],
-    });
+    try {
+      await createStream(createForm.payee, createForm.rate, createForm.deposit);
+      setShowCreateModal(false);
+      setCreateForm({ payee: '', rate: '', deposit: '' });
+    } catch (err) {
+      console.error('Failed to create stream:', err);
+    }
   };
 
-  const handleWithdraw = (streamId: number) => {
-    writeContract({
-      address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
-      functionName: 'withdraw',
-      args: [BigInt(streamId)],
-    });
+  const handleWithdraw = async (streamId: number) => {
+    try {
+      await withdraw(BigInt(streamId));
+    } catch (err) {
+      console.error('Failed to withdraw:', err);
+    }
   };
 
-  const handlePauseStream = (streamId: number) => {
-    writeContract({
-      address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
-      functionName: 'pauseStream',
-      args: [BigInt(streamId)],
-    });
+  const handlePauseStream = async (streamId: number) => {
+    try {
+      await pauseStreamAction(BigInt(streamId));
+    } catch (err) {
+      console.error('Failed to pause stream:', err);
+    }
   };
 
-  const handleResumeStream = (streamId: number) => {
-    writeContract({
-      address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
-      functionName: 'resumeStream',
-      args: [BigInt(streamId)],
-    });
+  const handleResumeStream = async (streamId: number) => {
+    try {
+      await resumeStreamAction(BigInt(streamId));
+    } catch (err) {
+      console.error('Failed to resume stream:', err);
+    }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleCancelStream = (streamId: number) => {
-    writeContract({
-      address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
-      functionName: 'cancelStream',
-      args: [BigInt(streamId)],
-    });
+  const handleTopUp = async (streamId: number, amount: string) => {
+    try {
+      await topUp(BigInt(streamId), amount);
+    } catch (err) {
+      console.error('Failed to top up:', err);
+    }
   };
-
-  const handleTopUp = (streamId: number, amount: string) => {
-    writeContract({
-      address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
-      functionName: 'topUp',
-      args: [BigInt(streamId), parseUnits(amount, 18)],
-    });
-  };
-
-  // Update time every second for real-time claimable display
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(Date.now())
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
 
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: 'receiving', label: 'Receiving', icon: <ArrowDownToLine className="w-4 h-4" /> },
@@ -223,85 +156,33 @@ export default function PayrollPage() {
     { id: 'all', label: 'All Streams', icon: <Zap className="w-4 h-4" /> }
   ]
 
-  // Mock: Determine role based on tab (in production, compare with connected address)
-  const getRole = (stream: StreamData): RoleType => {
-    // For demo, streams 1 & 2 are receiving, stream 3 is sending
-    return stream.id <= 2 ? 'employee' : 'employer'
+  // Determine role based on address comparison
+  const getRole = (stream: { payer: string; payee: string }): RoleType => {
+    if (stream.payee === address) return 'employee'
+    if (stream.payer === address) return 'employer'
+    return 'employee' // Default
   }
 
-  // Filter streams based on tab
-  const filteredStreams = mockStreams.filter(s => {
-    if (!s.active) return false
-    const role = getRole(s)
-    switch (activeTab) {
-      case 'receiving':
-        return role === 'employee'
-      case 'sending':
-        return role === 'employer'
-      default:
-        return true
-    }
-  })
+  // Filter streams based on tab - using hook's pre-filtered arrays
+  const filteredStreams = activeTab === 'receiving' 
+    ? receivingStreams 
+    : activeTab === 'sending' 
+      ? sendingStreams 
+      : streams.filter(s => s.active)
 
-  // Calculate claimable in real-time
-  const calculateClaimable = (stream: StreamData): bigint => {
-    if (!stream.active) return BigInt(0)
-    if (stream.paused) return stream.pausedAccrued
-    
-    const timeDelta = Math.floor((currentTime - stream.lastWithdrawTime) / 1000)
-    let due = BigInt(timeDelta) * stream.ratePerSecond
-    due += stream.pausedAccrued
-    
-    if (due > stream.depositBalance) {
-      return stream.depositBalance
-    }
-    return due
+  // Calculate runway using hook helper
+  const calculateRunway = (stream: { depositBalance: bigint; ratePerSecond: bigint }): string => {
+    return formatTimeRemaining(stream.depositBalance, stream.ratePerSecond)
   }
 
-  // Calculate runway
-  const calculateRunway = (stream: StreamData): number => {
-    if (stream.ratePerSecond === BigInt(0)) return Infinity
-    // Safe conversion for runway calculation
-    try {
-      return safeBigIntToNumber(stream.depositBalance / stream.ratePerSecond, 0)
-    } catch {
-      return Infinity // Value too large
-    }
-  }
-
-  // Stats
-  const totalClaimable = filteredStreams
-    .filter(s => getRole(s) === 'employee')
-    .reduce((sum, s) => sum + calculateClaimable(s), BigInt(0))
-  
-  const totalStreaming = filteredStreams
-    .filter(s => getRole(s) === 'employer')
-    .reduce((sum, s) => sum + s.depositBalance, BigInt(0))
-  
+  // Stats using hook values
   const activeStreamCount = filteredStreams.filter(s => !s.paused).length
   const pausedStreamCount = filteredStreams.filter(s => s.paused).length
 
-  const formatAmount = (amount: bigint): string => {
-    return safeBigIntToNumber(amount, 18).toLocaleString(undefined, { maximumFractionDigits: 2 })
-  }
-
-  const formatRate = (ratePerSecond: bigint): string => {
-    // Convert to monthly rate for readability
-    const monthlyRate = safeBigIntToNumber(ratePerSecond, 0) * 30 * 24 * 60 * 60 / 1e18
-    return monthlyRate.toLocaleString(undefined, { maximumFractionDigits: 0 })
-  }
-
-  const formatRunway = (seconds: number): string => {
-    if (seconds === Infinity) return '-'
-    const days = Math.floor(seconds / (24 * 60 * 60))
-    if (days > 30) {
-      const months = Math.floor(days / 30)
-      return `${months} month${months > 1 ? 's' : ''}`
-    }
-    return `${days} day${days !== 1 ? 's' : ''}`
-  }
-
-  // Contract handlers are defined above (handleCreateStream, handleWithdraw, handlePauseStream, handleResumeStream, handleCancelStream, handleTopUp)
+  // Suppress unused variable warnings
+  void payrollError
+  void isDeployed
+  void currentTime
 
   return (
     <>
@@ -360,7 +241,7 @@ export default function PayrollPage() {
               {[
                 { 
                   label: activeTab === 'receiving' ? 'Available to Claim' : 'Total Streaming', 
-                  value: `${formatAmount(activeTab === 'receiving' ? totalClaimable : totalStreaming)} VFIDE`, 
+                  value: `${formatAmount(activeTab === 'receiving' ? totalClaimable : totalSending)} VFIDE`, 
                   icon: <DollarSign className="w-5 h-5" />, 
                   gradient: 'from-purple-500/20 to-indigo-500/10',
                   border: 'border-purple-500/20',
@@ -369,7 +250,7 @@ export default function PayrollPage() {
                 },
                 { label: 'Active Streams', value: activeStreamCount.toString(), icon: <Zap className="w-5 h-5" />, gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
                 { label: 'Paused Streams', value: pausedStreamCount.toString(), icon: <Pause className="w-5 h-5" />, gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-                { label: 'Total Streams', value: mockStreams.filter(s => s.active).length.toString(), icon: <Timer className="w-5 h-5" />, gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' }
+                { label: 'Total Streams', value: streams.filter(s => s.active).length.toString(), icon: <Timer className="w-5 h-5" />, gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' }
               ].map((stat, idx) => (
                 <motion.div
                   key={stat.label}
@@ -446,6 +327,17 @@ export default function PayrollPage() {
                   <h3 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h3>
                   <p className="text-gray-400">Connect your wallet to view and manage your salary streams</p>
                 </motion.div>
+              ) : payrollLoading && streams.length === 0 ? (
+                <motion.div 
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-16"
+                >
+                  <Loader2 className="w-12 h-12 text-purple-400 animate-spin mb-4" />
+                  <p className="text-gray-400">Loading your streams...</p>
+                </motion.div>
               ) : filteredStreams.length === 0 ? (
                 <motion.div 
                   key="empty"
@@ -463,6 +355,15 @@ export default function PayrollPage() {
                       ? "You're not receiving any salary streams yet" 
                       : "You haven't created any salary streams yet"}
                   </p>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => refresh()}
+                    className="mt-4 flex items-center gap-2 px-4 py-2 bg-white/5 text-gray-300 rounded-lg hover:bg-white/10 mx-auto"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                  </motion.button>
                 </motion.div>
               ) : (
                 <motion.div 
@@ -476,11 +377,11 @@ export default function PayrollPage() {
                     const role = getRole(stream)
                     const claimable = calculateClaimable(stream)
                     const runway = calculateRunway(stream)
-                    const isLowRunway = runway < 7 * 24 * 60 * 60 // Less than 7 days
+                    const isLowRunway = runway.includes('Less') || (parseInt(runway) < 7 && runway.includes('d'))
                   
                     return (
                       <motion.div
-                        key={stream.id}
+                        key={stream.id.toString()}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ scale: 1.005, y: -2 }}
@@ -529,14 +430,17 @@ export default function PayrollPage() {
                                     {role === 'employee' ? 'From' : 'To'}
                                   </p>
                                   <p className="text-white font-mono">
-                                    {role === 'employee' ? stream.payer : stream.payee}
+                                    {role === 'employee' 
+                                      ? `${stream.payer.slice(0, 6)}...${stream.payer.slice(-4)}` 
+                                      : `${stream.payee.slice(0, 6)}...${stream.payee.slice(-4)}`
+                                    }
                                   </p>
                             </div>
                             <div>
                               <p className="text-gray-500 mb-1 flex items-center gap-1">
                                 <TrendingUp className="w-3 h-3" /> Monthly Rate
                               </p>
-                              <p className="text-white font-semibold">{formatRate(stream.ratePerSecond)} {stream.token}</p>
+                              <p className="text-white font-semibold">{formatMonthlyRate(stream.ratePerSecond)} VFIDE</p>
                             </div>
                             <div>
                               <p className="text-gray-500 mb-1 flex items-center gap-1">
@@ -551,7 +455,7 @@ export default function PayrollPage() {
                                 {role === 'employee' 
                                   ? formatAmount(claimable) 
                                   : formatAmount(stream.depositBalance)
-                                } {stream.token}
+                                } VFIDE
                               </p>
                             </div>
                             <div>
@@ -561,7 +465,7 @@ export default function PayrollPage() {
                               <p className={`font-medium ${
                                 isLowRunway ? 'text-red-400' : 'text-white'
                               }`}>
-                                {formatRunway(runway)}
+                                {runway}
                               </p>
                             </div>
                           </div>
@@ -573,11 +477,11 @@ export default function PayrollPage() {
                             <motion.button
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              onClick={() => handleWithdraw(stream.id)}
-                              disabled={actionLoading === `withdraw-${stream.id}` || claimable === BigInt(0)}
+                              onClick={() => handleWithdraw(Number(stream.id))}
+                              disabled={payrollLoading || claimable === BigInt(0)}
                               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-linear-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50"
                             >
-                              {actionLoading === `withdraw-${stream.id}` ? (
+                              {payrollLoading ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
                               ) : (
                                 <ArrowDownToLine className="w-4 h-4" />
@@ -590,11 +494,11 @@ export default function PayrollPage() {
                             <motion.button
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              onClick={() => handleTopUp(stream.id, '5000')}
-                              disabled={actionLoading === `topup-${stream.id}`}
+                              onClick={() => handleTopUp(Number(stream.id), '5000')}
+                              disabled={payrollLoading}
                               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-medium shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50"
                             >
-                              {actionLoading === `topup-${stream.id}` ? (
+                              {payrollLoading ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
                               ) : (
                                 <Plus className="w-4 h-4" />
@@ -607,11 +511,11 @@ export default function PayrollPage() {
                             <motion.button
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              onClick={() => handleResumeStream(stream.id)}
-                              disabled={actionLoading === `resume-${stream.id}`}
+                              onClick={() => handleResumeStream(Number(stream.id))}
+                              disabled={payrollLoading}
                               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-emerald-400 rounded-xl font-medium border border-emerald-500/30 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
                             >
-                              {actionLoading === `resume-${stream.id}` ? (
+                              {payrollLoading ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
                               ) : (
                                 <Play className="w-4 h-4" />
@@ -622,11 +526,11 @@ export default function PayrollPage() {
                             <motion.button
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              onClick={() => handlePauseStream(stream.id)}
-                              disabled={actionLoading === `pause-${stream.id}`}
+                              onClick={() => handlePauseStream(Number(stream.id))}
+                              disabled={payrollLoading}
                               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-amber-400 rounded-xl font-medium border border-amber-500/30 hover:bg-amber-500/10 transition-all disabled:opacity-50"
                             >
-                              {actionLoading === `pause-${stream.id}` ? (
+                              {payrollLoading ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
                               ) : (
                                 <Pause className="w-4 h-4" />
@@ -642,7 +546,7 @@ export default function PayrollPage() {
                         <div className="mt-4 pt-4 border-t border-white/10">
                           <div className="flex justify-between text-xs text-gray-400 mb-2">
                             <span>Runway Progress</span>
-                            <span>{formatRunway(runway)} remaining</span>
+                            <span>{runway} remaining</span>
                           </div>
                           <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                             <motion.div 

@@ -285,7 +285,7 @@ const getStatusBadgeColor = (status: SearchStatus): string => {
   return colors[status];
 };
 
-const highlightText = (text: string, highlights: string[]): string => {
+const _highlightText = (text: string, highlights: string[]): string => {
   let result = text;
   highlights.forEach(term => {
     const regex = new RegExp(`(${term})`, 'gi');

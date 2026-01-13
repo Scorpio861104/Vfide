@@ -66,9 +66,9 @@ interface UserRateLimitData {
 const rateLimitStore = new Map<string, Map<string, UserRateLimitData>>();
 
 /**
- * Get rate limit key
+ * Get rate limit key (reserved for future Redis integration)
  */
-function getRateLimitKey(userId: string, actionType: string): string {
+function _getRateLimitKey(userId: string, actionType: string): string {
   return `${userId}:${actionType}`;
 }
 

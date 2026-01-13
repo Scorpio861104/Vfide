@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useThemeManager } from '@/hooks/useThemeManager';
-import { ThemeSelector } from '@/components/theme/ThemeSelector';
 import { ThemeCustomizer } from '@/components/theme/ThemeCustomizer';
 import { ThemeName, THEME_PRESETS, ThemeMode } from '@/config/theme-manager';
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard';
@@ -196,7 +195,7 @@ export default function ThemeManagementPage() {
                 <h2 className="text-2xl font-bold text-white mb-6">Theme Presets</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(THEME_PRESETS).map(([key, preset]) => (
+                {Object.entries(THEME_PRESETS).map(([_key, preset]) => (
                     <motion.button
                       key={preset.id}
                       onClick={() => setTheme(preset.id as ThemeName)}

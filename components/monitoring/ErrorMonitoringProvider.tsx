@@ -21,7 +21,7 @@ export function ErrorMonitoringProvider() {
 
     // Log initialization in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('[ErrorMonitoring] Initialized');
+      // Error monitoring initialized
 
       // Add listener to log errors in development
       const unsubscribe = errorMonitor.onError((error) => {

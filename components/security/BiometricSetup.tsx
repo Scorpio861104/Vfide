@@ -5,14 +5,14 @@ import { BiometricType } from '@/config/security-advanced';
 interface BiometricSetupProps {
   userId?: string;
   onComplete?: () => void;
-  onCancel?: () => void;
+  _onCancel?: () => void; // Reserved for future cancel button implementation
   className?: string;
 }
 
 export function BiometricSetup({
   userId,
   onComplete,
-  onCancel,
+  _onCancel,
   className = ''
 }: BiometricSetupProps) {
   const biometric = useBiometricAuth(userId);
@@ -34,7 +34,7 @@ export function BiometricSetup({
       } else {
         setError('Failed to enroll biometric. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('Biometric enrollment failed');
     } finally {
       setLoading(false);

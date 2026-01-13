@@ -44,7 +44,7 @@ const checkPlatformSupport = async (): Promise<BiometricConfig['platformSupport'
       faceId: available,
       hardwareKey: true // Hardware keys always supported if WebAuthn available
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       webauthn: false,
       fingerprint: false,

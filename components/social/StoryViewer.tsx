@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Story, isStoryExpired, getStoryTimeRemaining } from '@/lib/storiesSystem';
+import { Story, isStoryExpired as _isStoryExpired, getStoryTimeRemaining } from '@/lib/storiesSystem';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface StoryViewerProps {

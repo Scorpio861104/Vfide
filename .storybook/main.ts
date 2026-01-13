@@ -22,12 +22,12 @@ const config: StorybookConfig = {
     viteConfig.resolve = viteConfig.resolve ?? {};
     viteConfig.resolve.alias = {
       ...(viteConfig.resolve.alias ?? {}),
-      "@": path.resolve(__dirname, ".."),
-      "next/link": path.resolve(__dirname, "mocks/next/link.tsx"),
-      "next/navigation": path.resolve(__dirname, "mocks/next/navigation.ts"),
-      "next/image": path.resolve(__dirname, "mocks/next/image.tsx"),
-      "next/router": path.resolve(__dirname, "mocks/next/router.ts"),
-      "next/font/google": path.resolve(__dirname, "mocks/next/font/google.ts"),
+      "@": path.resolve(_dirname, ".."),
+      "next/link": path.resolve(_dirname, "mocks/next/link.tsx"),
+      "next/navigation": path.resolve(_dirname, "mocks/next/navigation.ts"),
+      "next/image": path.resolve(_dirname, "mocks/next/image.tsx"),
+      "next/router": path.resolve(_dirname, "mocks/next/router.ts"),
+      "next/font/google": path.resolve(_dirname, "mocks/next/font/google.ts"),
     };
 
     return viteConfig;

@@ -35,7 +35,7 @@ export function OfflineIndicator() {
       if (result) {
         announce(`Synced ${result.synced} items, ${result.failed} failed`, 'polite');
       }
-    } catch (error) {
+    } catch {
       announce('Sync failed', 'assertive');
     }
   };
@@ -44,7 +44,7 @@ export function OfflineIndicator() {
     try {
       await retryFailed();
       announce('Retrying failed items', 'polite');
-    } catch (error) {
+    } catch {
       announce('Retry failed', 'assertive');
     }
   };
@@ -53,7 +53,7 @@ export function OfflineIndicator() {
     try {
       await clearQueue();
       announce('Queue cleared', 'polite');
-    } catch (error) {
+    } catch {
       announce('Failed to clear queue', 'assertive');
     }
   };

@@ -8,7 +8,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, TrendingUp, History, Award, ArrowLeftRight } from 'lucide-react';
+import { Wallet, TrendingUp, History, Award } from 'lucide-react';
 import { WalletButton } from '@/components/crypto/WalletButton';
 import { TransactionHistory } from '@/components/crypto/TransactionHistory';
 import { RewardsDisplay } from '@/components/crypto/RewardsDisplay';

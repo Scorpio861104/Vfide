@@ -4,7 +4,6 @@ import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
-import { sanitizeString } from "@/lib/validation";
 import { 
   Search, Shield, Key, Mail, User, Users,
   AlertCircle, ChevronRight, Clock, CheckCircle2, XCircle,
@@ -13,7 +12,10 @@ import {
   KeyRound, UserCheck, Zap
 } from "lucide-react";
 import Link from "next/link";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
+import { isAddress } from "viem";
+import { CONTRACT_ADDRESSES } from "@/lib/contracts";
+import { VaultHubABI, SeerABI, VFIDEBadgeNFTABI } from "@/lib/abis";
 
 // Animation variants
 const containerVariants = {
@@ -813,9 +815,11 @@ function ClaimFlowModal({
 }
 
 export default function VaultRecoveryPage() {
+  const { address } = useAccount();
   const [searchMethod, setSearchMethod] = useState<"recoveryId" | "email" | "username" | "guardian">("recoveryId");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [vaultToLookup, setVaultToLookup] = useState<`0x${string}` | undefined>(undefined);
   const [searchResult, setSearchResult] = useState<{
     address: string;
     originalOwner: string;
@@ -828,6 +832,31 @@ export default function VaultRecoveryPage() {
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [error, setError] = useState("");
   
+  // Contract reads for vault lookup
+  const { data: vaultInfo, refetch: refetchVaultInfo } = useReadContract({
+    address: CONTRACT_ADDRESSES.VaultHub,
+    abi: VaultHubABI,
+    functionName: 'getVaultInfo',
+    args: vaultToLookup ? [vaultToLookup] : undefined,
+    query: { enabled: !!vaultToLookup }
+  });
+  
+  const { data: proofScore, refetch: refetchProofScore } = useReadContract({
+    address: CONTRACT_ADDRESSES.Seer,
+    abi: SeerABI,
+    functionName: 'proofScore',
+    args: vaultToLookup ? [vaultToLookup] : undefined,
+    query: { enabled: !!vaultToLookup }
+  });
+  
+  const { data: badgeBalance, refetch: refetchBadges } = useReadContract({
+    address: CONTRACT_ADDRESSES.BadgeNFT,
+    abi: VFIDEBadgeNFTABI,
+    functionName: 'balanceOf',
+    args: vaultToLookup ? [vaultToLookup] : undefined,
+    query: { enabled: !!vaultToLookup }
+  });
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       setError("Please enter a search term");
@@ -838,22 +867,60 @@ export default function VaultRecoveryPage() {
     setError("");
     setSearchResult(null);
     
-    // Simulate search (in production, this would call the VaultRegistry contract)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Mock result for demonstration
-    if (searchQuery.toLowerCase() === "demo" || searchQuery.length > 3) {
-      setSearchResult({
-        address: "0x1234567890abcdef1234567890abcdef12345678",
-        originalOwner: "0xabcdef1234567890abcdef1234567890abcdef12",
-        proofScore: 847,
-        badgeCount: 12,
-        hasGuardians: true,
-        lastActive: "2 days ago",
-        isRecoverable: true
-      });
-    } else {
-      setError("No vault found with that identifier. Please check and try again.");
+    try {
+      // For recoveryId method, the query should be a vault address
+      if (searchMethod === "recoveryId") {
+        // Check if it's a valid address format
+        if (!isAddress(searchQuery)) {
+          setError("Please enter a valid vault address (0x...)");
+          setIsSearching(false);
+          return;
+        }
+        
+        // Set the vault to lookup and trigger contract reads
+        setVaultToLookup(searchQuery as `0x${string}`);
+        
+        // Wait for refetch to complete
+        const [vaultResult, scoreResult, badgeResult] = await Promise.all([
+          refetchVaultInfo(),
+          refetchProofScore(),
+          refetchBadges()
+        ]);
+        
+        const info = vaultResult.data as [string, bigint, boolean, boolean] | undefined;
+        
+        if (!info || !info[3]) { // info[3] is 'exists' boolean
+          setError("No vault found at this address. Please check and try again.");
+          setIsSearching(false);
+          return;
+        }
+        
+        const [owner, createdAt, isLocked] = info;
+        const score = scoreResult.data as bigint | undefined;
+        const badges = badgeResult.data as bigint | undefined;
+        
+        // Calculate last active (using createdAt for now, could add activity tracking later)
+        const createdDate = new Date(Number(createdAt) * 1000);
+        const daysSince = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        const lastActive = daysSince === 0 ? "Today" : daysSince === 1 ? "Yesterday" : `${daysSince} days ago`;
+        
+        setSearchResult({
+          address: searchQuery,
+          originalOwner: owner,
+          proofScore: score ? Number(score) / 100 : 0, // Convert from basis points
+          badgeCount: badges ? Number(badges) : 0,
+          hasGuardians: isLocked, // If locked, likely has guardians
+          lastActive,
+          isRecoverable: !isLocked && owner !== address // Can recover if not locked and not current user
+        });
+      } else {
+        // For email/username/guardian searches, would need an off-chain indexer
+        // These are stored in a backend database, not on-chain
+        // TODO: Implement backend API for off-chain identity lookup
+        setError(`${searchMethod} search requires backend integration. Currently only vault address (recoveryId) search is supported on-chain.`);
+      }
+    } catch (err) {
+      setError("Failed to fetch vault information. Please try again.");
     }
     
     setIsSearching(false);

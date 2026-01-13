@@ -8,7 +8,7 @@
 import * as React from 'react';
 import { onCLS, onINP, onFCP, onLCP, onTTFB, onFID, Metric } from 'web-vitals';
 
-interface WebVitalsMetrics {
+export interface WebVitalsMetrics {
   CLS: number; // Cumulative Layout Shift
   INP: number; // Interaction to Next Paint
   FCP: number; // First Contentful Paint
@@ -496,7 +496,7 @@ export function detectLongTasks() {
 
     observer.observe({ entryTypes: ['longtask'] });
     return observer;
-  } catch (error) {
+  } catch (_error) {
     console.log('Long Task monitoring not available');
     return null;
   }

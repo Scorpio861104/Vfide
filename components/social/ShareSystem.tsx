@@ -7,15 +7,10 @@ import {
   Copy,
   CheckCircle2,
   Download,
-  QrCode,
   Mail,
   MessageCircle,
   Twitter,
   Linkedin,
-  Gift,
-  Trophy,
-  X,
-  ArrowRight,
 } from 'lucide-react';
 
 // ==================== TYPES ====================
@@ -41,7 +36,7 @@ interface ReferralCard {
   tier: 'bronze' | 'silver' | 'gold' | 'platinum';
 }
 
-interface AchievementCertificate {
+interface _AchievementCertificate {
   id: string;
   holderName: string;
   achievementTitle: string;
@@ -127,14 +122,14 @@ interface ShareSystemProps {
   onShare?: (platform: string, content: string) => void;
 }
 
-export function ShareSystem({ userId = 'current_user', onShare }: ShareSystemProps) {
+export function ShareSystem({ userId: _userId = 'current_user', onShare }: ShareSystemProps) {
   const [activeTab, setActiveTab] = useState<'achievements' | 'referrals' | 'certificates' | 'metrics'>('achievements');
   const [selectedAchievement, setSelectedAchievement] = useState<ShareableAchievement | null>(null);
-  const [selectedReferral, setSelectedReferral] = useState<ReferralCard | null>(null);
+  const [_selectedReferral, _setSelectedReferral] = useState<ReferralCard | null>(null);
   const [copiedText, setCopiedText] = useState<string | null>(null);
-  const [showShareMenu, setShowShareMenu] = useState<string | null>(null);
+  const [_showShareMenu, _setShowShareMenu] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [_showCertificateModal, _setShowCertificateModal] = useState(false);
 
   const handleCopyLink = (text: string, type: string) => {
     navigator.clipboard.writeText(text);

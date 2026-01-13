@@ -362,7 +362,7 @@ export function AvatarUploadCompact({
       if (onUploadComplete) {
         onUploadComplete(response.avatarUrl);
       }
-    } catch (err) {
+    } catch (_err) {
       alert('Upload failed. Please try again.');
     } finally {
       setIsUploading(false);

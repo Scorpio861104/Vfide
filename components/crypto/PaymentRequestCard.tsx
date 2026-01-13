@@ -40,7 +40,7 @@ export function PaymentRequestButton({
       setShowModal(false);
       setAmount('');
       setReason('');
-    } catch (error) {
+    } catch {
       announce('Failed to create payment request', 'assertive');
     } finally {
       setCreating(false);
@@ -174,7 +174,7 @@ export function PaymentRequestCard({ request, isRecipient }: PaymentRequestCardP
     try {
       await payPaymentRequest(request.id);
       announce('Payment sent', 'polite');
-    } catch (error) {
+    } catch {
       announce('Payment failed', 'assertive');
     } finally {
       setPaying(false);

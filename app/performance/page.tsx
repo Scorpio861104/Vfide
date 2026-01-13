@@ -13,7 +13,6 @@ import { PageMetricsDisplay } from '@/components/performance/PageMetricsDisplay'
 import {
   calculateHealthScore,
   TimeRange,
-  getTimeRangeLabel,
 } from '@/config/performance-dashboard';
 import { RefreshCw, BarChart3, AlertCircle, Users, Zap } from 'lucide-react';
 
@@ -24,9 +23,9 @@ export default function PerformanceDashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>(TimeRange.LAST_24_HOURS);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const { metrics, systemMetrics, isLoading, refreshMetrics } =
+  const { metrics, systemMetrics: _systemMetrics, isLoading, refreshMetrics } =
     usePerformanceMetrics();
-  const { errors, errorStats, addError, resolveError, clearErrors, exportErrors } =
+  const { errors, errorStats, addError: _addError, resolveError, clearErrors, exportErrors } =
     useErrorTracking();
   const { analytics, trackEvent } = useUserAnalytics();
   const { pageMetrics, apiMetrics, refreshMetrics: refreshPageMetrics } =

@@ -435,8 +435,8 @@ export function useCommunities(userId: string) {
       name: string,
       description: string,
       category: CommunityCategory,
-      icon?: string,
-      visibility?: Community['visibility']
+      _icon?: string,
+      _visibility?: Community['visibility']
     ): Community => {
       const newCommunity: Community = createCommunity(name, description, category, userId);
       communityStorage.save(newCommunity);

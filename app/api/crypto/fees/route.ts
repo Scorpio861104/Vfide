@@ -14,7 +14,7 @@ async function estimateNetworkFee(): Promise<{ gasLimit: bigint; gasPrice: bigin
     const totalFee = gasPrice * estimatedGas;
     
     return { gasLimit: estimatedGas, gasPrice, totalFee };
-  } catch (error) {
+  } catch (_error) {
     return {
       gasLimit: 200000n,
       gasPrice: 1000000000n,

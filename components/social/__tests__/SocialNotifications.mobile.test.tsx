@@ -1,6 +1,6 @@
 import { renderAtViewport, VIEWPORTS } from '@/__tests__/mobile-responsive.test'
 import { render, screen } from '@testing-library/react'
-import { NotificationCenter } from '../NotificationCenter'
+import { SocialNotifications } from '../SocialNotifications'
 
 // Mock Web3 dependencies
 jest.mock('wagmi', () => ({
@@ -18,7 +18,7 @@ jest.mock('@/lib/abis', () => ({
   NotificationManagerABI: [],
 }))
 
-describe('NotificationCenter Mobile Rendering', () => {
+describe('SocialNotifications Mobile Rendering', () => {
   beforeEach(() => {
     // Mock matchMedia for responsive breakpoints
     Object.defineProperty(window, 'matchMedia', {
@@ -44,7 +44,7 @@ describe('NotificationCenter Mobile Rendering', () => {
         value: VIEWPORTS.iPhone14.width,
       })
 
-      const { container } = render(<NotificationCenter />)
+      const { container } = render(<SocialNotifications />)
       
       // Notification dropdown should exist
       const button = screen.getByRole('button', { name: /notifications/i })
@@ -52,7 +52,7 @@ describe('NotificationCenter Mobile Rendering', () => {
     })
 
     it('uses full width with margins on small screens', () => {
-      const { container } = render(<NotificationCenter />)
+      const { container } = render(<SocialNotifications />)
       
       // Component should render
       expect(container.firstChild).toBeInTheDocument()
@@ -78,14 +78,14 @@ describe('NotificationCenter Mobile Rendering', () => {
         dispatchEvent: jest.fn(),
       }))
 
-      const { container } = render(<NotificationCenter />)
+      const { container } = render(<SocialNotifications />)
       expect(container.firstChild).toBeInTheDocument()
     })
   })
 
   describe('Touch interactions', () => {
     it('handles touch events on mobile', () => {
-      const { container } = render(<NotificationCenter />)
+      const { container } = render(<SocialNotifications />)
       const button = screen.getByRole('button', { name: /notifications/i })
       
       // Simulate touch event
@@ -104,7 +104,7 @@ describe('NotificationCenter Mobile Rendering', () => {
         value: VIEWPORTS.iPhone14.width,
       })
 
-      const { container } = render(<NotificationCenter />)
+      const { container } = render(<SocialNotifications />)
       
       // Component should render properly on mobile
       expect(screen.getByRole('button', { name: /notifications/i })).toBeInTheDocument()
@@ -119,7 +119,7 @@ describe('NotificationCenter Mobile Rendering', () => {
         value: 360, // Very narrow phone
       })
 
-      const { container } = render(<NotificationCenter />)
+      const { container } = render(<SocialNotifications />)
       
       // Should not cause horizontal scrolling
       expect(container.firstChild).toBeInTheDocument()
@@ -129,7 +129,7 @@ describe('NotificationCenter Mobile Rendering', () => {
   describe('Viewport-specific layouts', () => {
     it('renders correctly on iPhone 14', () => {
       renderAtViewport(
-        <NotificationCenter />,
+        <SocialNotifications />,
         VIEWPORTS.iPhone14.width,
         VIEWPORTS.iPhone14.height
       )
@@ -139,7 +139,7 @@ describe('NotificationCenter Mobile Rendering', () => {
 
     it('renders correctly on iPad', () => {
       renderAtViewport(
-        <NotificationCenter />,
+        <SocialNotifications />,
         VIEWPORTS.iPad.width,
         VIEWPORTS.iPad.height
       )
@@ -149,7 +149,7 @@ describe('NotificationCenter Mobile Rendering', () => {
 
     it('renders correctly on Android phone', () => {
       renderAtViewport(
-        <NotificationCenter />,
+        <SocialNotifications />,
         VIEWPORTS.AndroidSmall.width,
         VIEWPORTS.AndroidSmall.height
       )

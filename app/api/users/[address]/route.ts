@@ -46,7 +46,7 @@ export async function GET(
       [address.toLowerCase()]
     );
 
-    if (userResult.rows.length === 0) {
+    if (userResult.rows.length === 0 || !userResult.rows[0]) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -200,7 +200,7 @@ export async function POST(
       [address.toLowerCase(), avatarUrl]
     );
 
-    if (result.rows.length === 0) {
+    if (result.rows.length === 0 || !result.rows[0]) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }

@@ -15,7 +15,7 @@ import {
   X,
   Clock,
   Users,
-  Settings,
+  Settings as _Settings,
   Trash2,
   RefreshCw,
 } from 'lucide-react';

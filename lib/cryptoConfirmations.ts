@@ -260,7 +260,7 @@ export async function estimateConfirmationTime(): Promise<{
       average: 2 * averageBlockTime,
       slow: 6 * averageBlockTime,
     };
-  } catch (error) {
+  } catch (_error) {
     // Default estimates
     return {
       seconds: 24,

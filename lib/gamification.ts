@@ -230,7 +230,7 @@ class GamificationEngine {
   /**
    * Award XP and check for level ups
    */
-  awardXP(userAddress: string, amount: number, reason: string): { levelUp: boolean; newLevel?: number } {
+  awardXP(userAddress: string, amount: number, _reason: string): { levelUp: boolean; newLevel?: number } {
     const progress = this.getProgress(userAddress);
     const oldLevel = progress.level;
     
@@ -431,7 +431,7 @@ class GamificationEngine {
   /**
    * Get leaderboard data
    */
-  getLeaderboard(limit: number = 10): Array<{ address: string; level: number; xp: number }> {
+  getLeaderboard(_limit: number = 10): Array<{ address: string; level: number; xp: number }> {
     // In a real implementation, this would query a backend
     // For now, return empty array
     return [];
@@ -467,7 +467,7 @@ export function getAllUserProgress(): Array<UserProgress & { address: string; al
               const profile = JSON.parse(profileData);
               alias = profile.alias;
             }
-          } catch (e) {
+          } catch (_e) {
             // Ignore profile errors
           }
 

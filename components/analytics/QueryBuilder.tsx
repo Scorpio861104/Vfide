@@ -28,7 +28,7 @@ export function QueryBuilder({
   const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [aggregations, setAggregations] = useState<AggregationConfig[]>([]);
   const [groupBy, setGroupBy] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<{ field: string; direction: 'asc' | 'desc' }[]>([]);
+  const [sortBy, _setSortBy] = useState<{ field: string; direction: 'asc' | 'desc' }[]>([]);
   const [limit, setLimit] = useState<number>(100);
 
   const addFilter = () => {

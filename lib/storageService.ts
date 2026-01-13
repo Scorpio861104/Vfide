@@ -1,186 +1,84 @@
-'use client';
-
 /**
- * Centralized localStorage service with error handling, SSR safety, and type safety
- * Eliminates duplicate localStorage code across components
+ * StorageService - Centralized localStorage management
+ * 
+ * Provides type-safe, consistent access to localStorage with:
+ * - Typed storage keys
+ * - TTL (time-to-live) support
+ * - Max items limit for array storage
+ * - Safe JSON parsing
+ * - SSR compatibility
+ * - Quota handling
  */
 
-import React from 'react';
+'use client';
 
-type StorageKey = 
-  | `vfide_notifications_${string}`
-  | `vfide_activity_feed_${string}`
-  | `vfide_endorsements_${string}`
-  | `vfide_badges_${string}`
-  | `vfide_friends_${string}`
-  | `vfide_groups_${string}`
-  | `vfide_group_messages_${string}`;
+import { useState, useEffect, useCallback } from 'react';
 
-interface StorageServiceOptions {
-  maxItems?: number;
-  ttl?: number; // Time to live in milliseconds
+// ============================================================================
+// Storage Keys - Centralized key management
+// ============================================================================
+
+export const STORAGE_KEYS = {
+  // User preferences
+  SETTINGS: 'vfide:settings',
+  THEME: 'vfide_theme',
+  LOCALE: 'vfide_locale',
+  
+  // Auth & session
+  API_TOKEN: 'vfide_api_token',
+  WALLET_SESSION: 'walletSession',
+  
+  // Notifications
+  NOTIFICATIONS: 'vfide_notifications',
+  NOTIFICATIONS_READ: 'vfide_notifications_read',
+  
+  // Social & messaging
+  MESSAGES: 'vfide_messages',
+  FRIENDS: 'vfide_friends',
+  BLOCKED_USERS: 'vfide_blocked_users',
+  
+  // Profile & gamification
+  PROFILE: 'vfide_profile',
+  GAMIFICATION: 'vfide_gamification',
+  
+  // Analytics & tracking
+  ANALYTICS_EVENTS: 'vfide_analytics_events',
+  ONBOARDING_COMPLETE: 'vfide-setup-complete',
+  
+  // Network
+  NETWORK_WARNING_DISMISSED: 'vfide-network-warning-dismissed',
+  
+  // Stories
+  MY_STORIES: 'vfide_my_stories',
+} as const;
+
+export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
+
+// ============================================================================
+// Storage Item Wrapper with Metadata
+// ============================================================================
+
+interface StorageItem<T> {
+  value: T;
+  timestamp: number;
+  ttl?: number; // Time-to-live in milliseconds
 }
 
-export class StorageService {
-  /**
-   * Safely get item from localStorage with SSR check
-   */
-  static get<T>(key: StorageKey, defaultValue: T): T {
-    if (typeof window === 'undefined') {
-      return defaultValue;
-    }
+// ============================================================================
+// StorageService Class
+// ============================================================================
 
-    try {
-      const stored = localStorage.getItem(key);
-      if (!stored) return defaultValue;
-
-      const parsed = JSON.parse(stored);
-      
-      // Check TTL if present
-      if (parsed._ttl && Date.now() > parsed._ttl) {
-        this.remove(key);
-        return defaultValue;
-      }
-
-      return parsed._data !== undefined ? parsed._data : parsed;
-    } catch (error) {
-      console.error(`[StorageService] Failed to get ${key}:`, error);
-      return defaultValue;
-    }
-  }
+class StorageServiceClass {
+  private prefix = 'vfide_';
 
   /**
-   * Safely set item in localStorage with SSR check
+   * Check if localStorage is available
    */
-  static set<T>(key: StorageKey, value: T, options?: StorageServiceOptions): boolean {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
+  isAvailable(): boolean {
     try {
-      let data: any = value;
-
-      // Apply max items limit if specified and value is array
-      if (options?.maxItems && Array.isArray(value)) {
-        data = value.slice(0, options.maxItems);
-      }
-
-      // Add TTL if specified
-      const toStore = options?.ttl 
-        ? { _data: data, _ttl: Date.now() + options.ttl }
-        : data;
-
-      localStorage.setItem(key, JSON.stringify(toStore));
-      return true;
-    } catch (error) {
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        console.error('[StorageService] Storage quota exceeded');
-        this.clearOldest();
-      } else {
-        console.error(`[StorageService] Failed to set ${key}:`, error);
-      }
-      return false;
-    }
-  }
-
-  /**
-   * Remove item from localStorage
-   */
-  static remove(key: StorageKey): boolean {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    try {
-      localStorage.removeItem(key);
-      return true;
-    } catch (error) {
-      console.error(`[StorageService] Failed to remove ${key}:`, error);
-      return false;
-    }
-  }
-
-  /**
-   * Clear all VFIDE-related storage
-   */
-  static clearAll(): void {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    try {
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith('vfide_')) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch (error) {
-      console.error('[StorageService] Failed to clear all:', error);
-    }
-  }
-
-  /**
-   * Get storage usage info
-   */
-  static getUsageInfo(): { used: number; available: number; percentUsed: number } {
-    if (typeof window === 'undefined') {
-      return { used: 0, available: 0, percentUsed: 0 };
-    }
-
-    try {
-      let used = 0;
-      for (const key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
-          used += localStorage[key].length + key.length;
-        }
-      }
-
-      // Most browsers allow 5-10MB, we'll use 5MB as conservative estimate
-      const available = 5 * 1024 * 1024;
-      const percentUsed = (used / available) * 100;
-
-      return { used, available, percentUsed };
-    } catch (error) {
-      console.error('[StorageService] Failed to get usage info:', error);
-      return { used: 0, available: 0, percentUsed: 0 };
-    }
-  }
-
-  /**
-   * Clear oldest items when quota exceeded
-   */
-  private static clearOldest(): void {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    try {
-      const keys = Object.keys(localStorage);
-      const vfideKeys = keys.filter(k => k.startsWith('vfide_'));
-      
-      // Sort by access time (if available) or just clear first item
-      if (vfideKeys.length > 0) {
-        localStorage.removeItem(vfideKeys[0]);
-        console.log('[StorageService] Cleared oldest item:', vfideKeys[0]);
-      }
-    } catch (error) {
-      console.error('[StorageService] Failed to clear oldest:', error);
-    }
-  }
-
-  /**
-   * Check if storage is available
-   */
-  static isAvailable(): boolean {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    try {
-      const test = '__storage_test__';
-      localStorage.setItem(test, test);
-      localStorage.removeItem(test);
+      const testKey = '__storage_test__';
+      localStorage.setItem(testKey, 'test');
+      localStorage.removeItem(testKey);
       return true;
     } catch {
       return false;
@@ -188,49 +86,288 @@ export class StorageService {
   }
 
   /**
-   * Batch get multiple keys
+   * Get an item from storage with type safety
    */
-  static getBatch<T>(keys: StorageKey[], defaultValue: T): Record<string, T> {
-    const result: Record<string, T> = {};
-    keys.forEach(key => {
-      result[key] = this.get(key, defaultValue);
-    });
-    return result;
+  get<T>(key: StorageKey, defaultValue: T): T {
+    if (typeof window === 'undefined') return defaultValue;
+
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return defaultValue;
+
+      const item: StorageItem<T> = JSON.parse(raw);
+      
+      // Check if item has expired
+      if (item.ttl && Date.now() - item.timestamp > item.ttl) {
+        this.remove(key);
+        return defaultValue;
+      }
+
+      return item.value ?? defaultValue;
+    } catch {
+      // If parsing fails, try to return raw value for backwards compatibility
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          // If it's not a StorageItem wrapper, return as-is
+          if (!('value' in parsed && 'timestamp' in parsed)) {
+            return parsed as T;
+          }
+        }
+      } catch {
+        // Ignore
+      }
+      return defaultValue;
+    }
   }
 
   /**
-   * Batch set multiple keys
+   * Set an item in storage with optional TTL
    */
-  static setBatch(items: Array<{ key: StorageKey; value: any; options?: StorageServiceOptions }>): boolean {
+  set<T>(key: StorageKey, value: T, options?: { ttl?: number }): boolean {
+    if (typeof window === 'undefined') return false;
+
     try {
-      items.forEach(({ key, value, options }) => {
-        this.set(key, value, options);
-      });
+      const item: StorageItem<T> = {
+        value,
+        timestamp: Date.now(),
+        ttl: options?.ttl,
+      };
+      localStorage.setItem(key, JSON.stringify(item));
       return true;
     } catch (error) {
-      console.error('[StorageService] Batch set failed:', error);
+      // Handle quota exceeded
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        this.handleQuotaExceeded();
+        // Try again after cleanup
+        try {
+          const item: StorageItem<T> = {
+            value,
+            timestamp: Date.now(),
+            ttl: options?.ttl,
+          };
+          localStorage.setItem(key, JSON.stringify(item));
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Remove an item from storage
+   */
+  remove(key: StorageKey): boolean {
+    if (typeof window === 'undefined') return false;
+
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Clear all VFIDE-related storage items
+   */
+  clearAll(): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith(this.prefix) || key.startsWith('vfide'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  /**
+   * Get storage usage info
+   */
+  getUsage(): { used: number; available: number; percentage: number } {
+    if (typeof window === 'undefined') {
+      return { used: 0, available: 0, percentage: 0 };
+    }
+
+    try {
+      let used = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          const value = localStorage.getItem(key);
+          if (value) {
+            used += key.length + value.length;
+          }
+        }
+      }
+      // Approximate localStorage limit is 5MB
+      const available = 5 * 1024 * 1024;
+      return {
+        used,
+        available,
+        percentage: Math.round((used / available) * 100),
+      };
+    } catch {
+      return { used: 0, available: 0, percentage: 0 };
+    }
+  }
+
+  /**
+   * Handle quota exceeded by removing old/expired items
+   */
+  private handleQuotaExceeded(): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      // First, remove expired items
+      const expiredKeys: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+
+          const item = JSON.parse(raw);
+          if (item.ttl && item.timestamp && Date.now() - item.timestamp > item.ttl) {
+            expiredKeys.push(key);
+          }
+        } catch {
+          // Not a JSON item, skip
+        }
+      }
+      expiredKeys.forEach(key => localStorage.removeItem(key));
+
+      // If still need space, remove analytics events (they're least critical)
+      if (localStorage.getItem(STORAGE_KEYS.ANALYTICS_EVENTS)) {
+        localStorage.removeItem(STORAGE_KEYS.ANALYTICS_EVENTS);
+      }
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+
+  /**
+   * Append to an array in storage with max items limit
+   */
+  append<T>(key: StorageKey, item: T, options?: { maxItems?: number }): boolean {
+    const current = this.get<T[]>(key, []);
+    const updated = [...current, item];
+    
+    // Apply max items limit
+    if (options?.maxItems && updated.length > options.maxItems) {
+      updated.splice(0, updated.length - options.maxItems);
+    }
+    
+    return this.set(key, updated);
+  }
+
+  /**
+   * Get raw value without wrapper (for backwards compatibility)
+   */
+  getRaw(key: string): string | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Set raw value without wrapper (for backwards compatibility)
+   */
+  setRaw(key: string, value: string): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch {
       return false;
     }
   }
 }
 
-/**
- * React hook for localStorage
- */
-export function useLocalStorage<T>(key: StorageKey, defaultValue: T, options?: StorageServiceOptions) {
-  const [value, setValue] = React.useState<T>(() => {
-    return StorageService.get(key, defaultValue);
+// Export singleton instance
+export const StorageService = new StorageServiceClass();
+
+// ============================================================================
+// useLocalStorage Hook
+// ============================================================================
+
+interface UseLocalStorageOptions {
+  ttl?: number;
+  maxItems?: number;
+}
+
+export function useLocalStorage<T>(
+  key: StorageKey,
+  initialValue: T,
+  options?: UseLocalStorageOptions
+): [T, (value: T | ((prev: T) => T)) => void, () => void] {
+  // State to store our value
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === 'undefined') {
+      return initialValue;
+    }
+    return StorageService.get(key, initialValue);
   });
 
-  const setStoredValue = React.useCallback((newValue: T | ((prev: T) => T)) => {
-    try {
-      const valueToStore = newValue instanceof Function ? newValue(value) : newValue;
-      setValue(valueToStore);
-      StorageService.set(key, valueToStore, options);
-    } catch (error) {
-      console.error(`[useLocalStorage] Failed to set ${key}:`, error);
-    }
-  }, [key, value, options]);
+  // Return a wrapped version of useState's setter function that persists to localStorage
+  const setValue = useCallback((value: T | ((prev: T) => T)) => {
+    setStoredValue(prevValue => {
+      const valueToStore = value instanceof Function ? value(prevValue) : value;
+      
+      // Apply maxItems if it's an array
+      let finalValue = valueToStore;
+      if (Array.isArray(finalValue) && options?.maxItems && finalValue.length > options.maxItems) {
+        finalValue = finalValue.slice(-options.maxItems) as unknown as T;
+      }
+      
+      StorageService.set(key, finalValue, { ttl: options?.ttl });
+      return finalValue;
+    });
+  }, [key, options]);
 
-  return [value, setStoredValue] as const;
+  // Remove the item
+  const removeValue = useCallback(() => {
+    StorageService.remove(key);
+    setStoredValue(initialValue);
+  }, [key, initialValue]);
+
+  // Listen for storage changes from other tabs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === key && e.newValue !== null) {
+        try {
+          const item = JSON.parse(e.newValue);
+          setStoredValue(item.value ?? initialValue);
+        } catch {
+          setStoredValue(initialValue);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [key, initialValue]);
+
+  return [storedValue, setValue, removeValue];
 }
+
+// ============================================================================
+// Export for backwards compatibility
+// ============================================================================
+
+export default StorageService;

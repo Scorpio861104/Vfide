@@ -39,7 +39,7 @@ class MonitoringService {
   private constructor() {
     if (typeof window !== 'undefined') {
       // Log service initialization
-      console.log('[MonitoringService] Initialized');
+      // MonitoringService initialized
       
       // Report metrics periodically (every 5 minutes)
       setInterval(() => this.generateReport(), 5 * 60 * 1000);
@@ -222,7 +222,7 @@ class MonitoringService {
       },
     };
 
-    console.log('[MonitoringService] Performance Report:', report);
+    // Performance report generated - send to analytics service in production
     
     return report;
   }
@@ -234,7 +234,7 @@ class MonitoringService {
     this.performanceMetrics = [];
     this.errorLogs = [];
     this.userInteractions = [];
-    console.log('[MonitoringService] All metrics cleared');
+    // All metrics cleared
   }
 
   /**

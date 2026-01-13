@@ -5,15 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
   Plus,
-  Edit2,
   Trash2,
   Heart,
   Home,
   Briefcase,
   Star,
-  Circle,
   Check,
-  X,
   UserPlus,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
@@ -40,7 +37,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
   const [selectedCircle, setSelectedCircle] = useState<FriendCircle | null>(null);
   const [showCreateCircle, setShowCreateCircle] = useState(false);
   const [showAddMembers, setShowAddMembers] = useState(false);
-  const [editingCircle, setEditingCircle] = useState<FriendCircle | null>(null);
+  const [_editingCircle, _setEditingCircle] = useState<FriendCircle | null>(null);
   
   // Form states
   const [circleName, setCircleName] = useState('');
@@ -176,7 +173,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
     return friends.find(f => f.address.toLowerCase() === address.toLowerCase());
   };
 
-  const getMemberNickname = (friendAddress: string, circleId: string) => {
+  const _getMemberNickname = (friendAddress: string, circleId: string) => {
     const member = circleMembers.find(
       m => m.friendAddress === friendAddress && m.circleId === circleId
     );

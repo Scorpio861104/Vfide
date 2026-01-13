@@ -7,19 +7,19 @@ import { useVaultHub } from "@/hooks/useVaultHub";
 import { TransactionHistory } from "@/components/vault/TransactionHistory";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { useAccount } from "wagmi";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import { useState, useEffect } from "react";
-import { isAddress } from "viem";
+import { isAddress, parseUnits, formatUnits } from "viem";
 import { devLog } from "@/lib/utils";
 import { useVaultBalance, useSelfPanic, useQuarantineStatus, useCanSelfPanic } from "@/lib/vfide-hooks";
 import { motion, AnimatePresence } from "framer-motion";
-import { SectionErrorBoundary } from "@/components/ErrorBoundary";
 import { 
   Shield, AlertTriangle, Lock, Clock, Plus, UserPlus, Users, Key, 
   Heart, ArrowDownToLine, ArrowUpFromLine, RefreshCw, CheckCircle2,
-  Zap, DollarSign, TrendingUp
+  Zap, DollarSign, TrendingUp, X, Loader2
 } from "lucide-react";
-import { safeParseFloat, safeParseInt } from "@/lib/validation";
+import { safeParseFloat } from "@/lib/validation";
+import { CONTRACT_ADDRESSES, VFIDETokenABI, VaultHubLiteABI, UserVaultABI } from "@/lib/contracts";
 
 // Animation variants
 const containerVariants = {
@@ -228,6 +228,131 @@ function VaultContent() {
   
   const [newGuardianAddress, setNewGuardianAddress] = useState("");
   const [newNextOfKinAddress, setNewNextOfKinAddress] = useState("");
+  
+  // Deposit/Withdraw state
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawRecipient, setWithdrawRecipient] = useState("");
+  const [isDepositing, setIsDepositing] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [depositStep, setDepositStep] = useState<'approve' | 'deposit'>('approve');
+  
+  // Contract hooks
+  const { writeContractAsync } = useWriteContract();
+  
+  // Read wallet token balance for deposit
+  const { data: walletBalance } = useReadContract({
+    address: CONTRACT_ADDRESSES.VFIDEToken,
+    abi: VFIDETokenABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+  });
+  
+  // Read allowance for VaultHub
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: CONTRACT_ADDRESSES.VFIDEToken,
+    abi: VFIDETokenABI,
+    functionName: 'allowance',
+    args: address && CONTRACT_ADDRESSES.VaultHub ? [address, CONTRACT_ADDRESSES.VaultHub] : undefined,
+  });
+  
+  const walletBalanceFormatted = walletBalance ? formatUnits(walletBalance as bigint, 18) : '0';
+  
+  const handleDeposit = async () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      showToast("Enter a valid amount", "error");
+      return;
+    }
+    
+    const amountWei = parseUnits(depositAmount, 18);
+    const currentAllowance = allowance as bigint || 0n;
+    
+    setIsDepositing(true);
+    try {
+      // Step 1: Approve if needed
+      if (currentAllowance < amountWei) {
+        setDepositStep('approve');
+        showToast("Approving VFIDE tokens...", "info");
+        await writeContractAsync({
+          address: CONTRACT_ADDRESSES.VFIDEToken,
+          abi: VFIDETokenABI,
+          functionName: 'approve',
+          args: [CONTRACT_ADDRESSES.VaultHub, amountWei],
+        });
+        await refetchAllowance();
+      }
+      
+      // Step 2: Deposit
+      setDepositStep('deposit');
+      showToast("Depositing to vault...", "info");
+      await writeContractAsync({
+        address: CONTRACT_ADDRESSES.VaultHub,
+        abi: VaultHubLiteABI,
+        functionName: 'deposit',
+        args: [amountWei],
+      });
+      
+      showToast("Deposit successful!", "success");
+      setDepositAmount("");
+      setShowDepositModal(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (!message.includes('rejected') && !message.includes('denied')) {
+        showToast("Deposit failed: " + message.slice(0, 50), "error");
+      } else {
+        showToast("Transaction cancelled", "info");
+      }
+    } finally {
+      setIsDepositing(false);
+      setDepositStep('approve');
+    }
+  };
+  
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
+      showToast("Enter a valid amount", "error");
+      return;
+    }
+    if (!withdrawRecipient || !isAddress(withdrawRecipient)) {
+      showToast("Enter a valid recipient address", "error");
+      return;
+    }
+    if (!vaultAddress) {
+      showToast("No vault found", "error");
+      return;
+    }
+    
+    const amountWei = parseUnits(withdrawAmount, 18);
+    
+    setIsWithdrawing(true);
+    try {
+      showToast("Transferring from vault...", "info");
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: UserVaultABI,
+        functionName: 'transferVFIDE',
+        args: [withdrawRecipient as `0x${string}`, amountWei],
+      });
+      
+      showToast("Withdrawal successful!", "success");
+      setWithdrawAmount("");
+      setWithdrawRecipient("");
+      setShowWithdrawModal(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (message.includes('cooldown')) {
+        showToast("Withdrawal cooldown active. Please wait 24 hours.", "error");
+      } else if (!message.includes('rejected') && !message.includes('denied')) {
+        showToast("Withdrawal failed: " + message.slice(0, 50), "error");
+      } else {
+        showToast("Transaction cancelled", "info");
+      }
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
   
   const hasNextOfKin = nextOfKin && nextOfKin !== '0x0000000000000000000000000000000000000000';
   
@@ -467,6 +592,7 @@ function VaultContent() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <motion.button 
+                      onClick={() => setShowDepositModal(true)}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                       className="p-5 bg-linear-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
@@ -475,6 +601,7 @@ function VaultContent() {
                       Deposit Funds
                     </motion.button>
                     <motion.button 
+                      onClick={() => setShowWithdrawModal(true)}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                       className="p-5 bg-white/5 border border-cyan-500/30 text-cyan-400 rounded-xl font-bold hover:bg-cyan-500/10 flex items-center justify-center gap-2"
@@ -483,6 +610,7 @@ function VaultContent() {
                       Withdraw Funds
                     </motion.button>
                     <motion.button 
+                      onClick={() => { setWithdrawRecipient(vaultAddress || ''); setShowWithdrawModal(true); }}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                       className="p-5 bg-white/5 border border-white/10 text-white/80 rounded-xl font-bold hover:border-white/20 hover:text-white flex items-center justify-center gap-2"
@@ -658,6 +786,192 @@ function VaultContent() {
             </section>
           </>
         )}
+
+        {/* Deposit Modal */}
+        <AnimatePresence>
+          {showDepositModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+              onClick={() => !isDepositing && setShowDepositModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[#1A1A1D] border border-white/10 rounded-2xl max-w-md w-full p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <ArrowDownToLine className="text-cyan-400" size={24} />
+                    Deposit VFIDE
+                  </h3>
+                  <button
+                    onClick={() => !isDepositing && setShowDepositModal(false)}
+                    disabled={isDepositing}
+                    className="text-white/60 hover:text-white disabled:opacity-50"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+                
+                <div className="mb-4 p-3 bg-white/5 border border-white/10 rounded-xl">
+                  <div className="text-white/60 text-sm mb-1">Wallet Balance</div>
+                  <div className="text-white font-bold">{parseFloat(walletBalanceFormatted).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE</div>
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-white/60 text-sm mb-2">Amount to Deposit</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 pr-20"
+                    />
+                    <button
+                      onClick={() => setDepositAmount(walletBalanceFormatted)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-cyan-500/20 text-cyan-400 text-sm rounded-lg font-bold hover:bg-cyan-500/30"
+                    >
+                      MAX
+                    </button>
+                  </div>
+                </div>
+                
+                <motion.button
+                  whileHover={{ scale: isDepositing ? 1 : 1.02 }}
+                  whileTap={{ scale: isDepositing ? 1 : 0.98 }}
+                  onClick={handleDeposit}
+                  disabled={isDepositing || !depositAmount || parseFloat(depositAmount) <= 0}
+                  className="w-full py-4 bg-linear-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isDepositing ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      {depositStep === 'approve' ? 'Approving...' : 'Depositing...'}
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDownToLine size={20} />
+                      Deposit to Vault
+                    </>
+                  )}
+                </motion.button>
+                
+                <p className="text-white/40 text-xs text-center mt-4">
+                  This will transfer tokens from your wallet to your vault.
+                </p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Withdraw Modal */}
+        <AnimatePresence>
+          {showWithdrawModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+              onClick={() => !isWithdrawing && setShowWithdrawModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[#1A1A1D] border border-white/10 rounded-2xl max-w-md w-full p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <ArrowUpFromLine className="text-amber-400" size={24} />
+                    Withdraw VFIDE
+                  </h3>
+                  <button
+                    onClick={() => !isWithdrawing && setShowWithdrawModal(false)}
+                    disabled={isWithdrawing}
+                    className="text-white/60 hover:text-white disabled:opacity-50"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+                
+                <div className="mb-4 p-3 bg-white/5 border border-white/10 rounded-xl">
+                  <div className="text-white/60 text-sm mb-1">Vault Balance</div>
+                  <div className="text-white font-bold">{safeParseFloat(vaultBalance, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE</div>
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-white/60 text-sm mb-2">Recipient Address</label>
+                  <input
+                    type="text"
+                    value={withdrawRecipient}
+                    onChange={(e) => setWithdrawRecipient(e.target.value)}
+                    placeholder="0x..."
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-cyan-500/50"
+                  />
+                  {address && (
+                    <button
+                      onClick={() => setWithdrawRecipient(address)}
+                      className="text-cyan-400 text-xs mt-1 hover:underline"
+                    >
+                      Use my wallet address
+                    </button>
+                  )}
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-white/60 text-sm mb-2">Amount to Withdraw</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 pr-20"
+                    />
+                    <button
+                      onClick={() => setWithdrawAmount(String(safeParseFloat(vaultBalance, 0)))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-amber-500/20 text-amber-400 text-sm rounded-lg font-bold hover:bg-amber-500/30"
+                    >
+                      MAX
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                  <div className="text-amber-400 text-sm font-bold mb-1">⚠️ 24-Hour Cooldown</div>
+                  <div className="text-white/60 text-xs">Withdrawals have a 24-hour cooldown period between transactions for security.</div>
+                </div>
+                
+                <motion.button
+                  whileHover={{ scale: isWithdrawing ? 1 : 1.02 }}
+                  whileTap={{ scale: isWithdrawing ? 1 : 0.98 }}
+                  onClick={handleWithdraw}
+                  disabled={isWithdrawing || !withdrawAmount || !withdrawRecipient || parseFloat(withdrawAmount) <= 0}
+                  className="w-full py-4 bg-linear-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isWithdrawing ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      Withdrawing...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowUpFromLine size={20} />
+                      Withdraw from Vault
+                    </>
+                  )}
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       <Footer />

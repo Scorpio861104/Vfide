@@ -5,14 +5,14 @@ import { TOTPSetup, TwoFactorMethod } from '@/config/security-advanced';
 interface TwoFactorSetupProps {
   userEmail?: string;
   onComplete?: () => void;
-  onCancel?: () => void;
+  _onCancel?: () => void; // Reserved for future cancel button implementation
   className?: string;
 }
 
 export function TwoFactorSetup({
   userEmail,
   onComplete,
-  onCancel,
+  _onCancel,
   className = ''
 }: TwoFactorSetupProps) {
   const twoFactor = useTwoFactorAuth(userEmail);
@@ -32,7 +32,7 @@ export function TwoFactorSetup({
       const setup = await twoFactor.initiateTOTP();
       setTotpSetup(setup);
       setSelectedMethod('totp');
-    } catch (err) {
+    } catch {
       setError('Failed to initialize authenticator app');
     } finally {
       setLoading(false);
@@ -52,7 +52,7 @@ export function TwoFactorSetup({
       } else {
         setError('Invalid verification code. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to enable authenticator app');
     } finally {
       setLoading(false);
@@ -72,7 +72,7 @@ export function TwoFactorSetup({
       } else {
         setError('Failed to enable SMS authentication');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to enable SMS authentication');
     } finally {
       setLoading(false);
@@ -92,7 +92,7 @@ export function TwoFactorSetup({
       } else {
         setError('Failed to enable email authentication');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to enable email authentication');
     } finally {
       setLoading(false);

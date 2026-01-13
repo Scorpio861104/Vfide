@@ -16,7 +16,7 @@ import { sanitizeInput, sanitizeURL } from '@/lib/sanitize';
 
 export function ProfileSettings() {
   const { address } = useAccount();
-  const { profile, updateProfile, uploadAvatar, isLoading, error } = useUserProfile(address);
+  const { profile, updateProfile, uploadAvatar: _uploadAvatar, isLoading, error } = useUserProfile(address);
 
   const [formData, setFormData] = useState({
     alias: '',
@@ -79,7 +79,7 @@ export function ProfileSettings() {
 
   const handleAvatarUpload = async (avatarUrl: string) => {
     // Avatar is already uploaded via API, just update local state
-    console.log('Avatar uploaded:', avatarUrl);
+    // Avatar upload processed
   };
 
   if (isLoading) {

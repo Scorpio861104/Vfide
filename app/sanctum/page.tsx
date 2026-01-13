@@ -21,7 +21,7 @@ const SANCTUM_VAULT_ABI = [
   { name: 'getDisbursement', type: 'function', stateMutability: 'view', inputs: [{ name: 'proposalId', type: 'uint256' }], outputs: [{ name: 'charity', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'reason', type: 'string' }, { name: 'approvalCount', type: 'uint8' }, { name: 'executed', type: 'bool' }, { name: 'rejected', type: 'bool' }, { name: 'proposedAt', type: 'uint256' }] },
   { name: 'hasApproved', type: 'function', stateMutability: 'view', inputs: [{ name: 'proposalId', type: 'uint256' }, { name: 'approver', type: 'address' }], outputs: [{ type: 'bool' }] },
   { name: 'approvedCharities', type: 'function', stateMutability: 'view', inputs: [{ name: 'index', type: 'uint256' }], outputs: [{ type: 'address' }] },
-  { name: 'nextProposalId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+  { name: '_nextProposalId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
 ] as const;
 
 // SanctumVault not deployed on Base Sepolia testnet yet
@@ -35,17 +35,17 @@ const IS_SANCTUM_DEPLOYED = SANCTUM_VAULT_ADDRESS !== '0x00000000000000000000000
 type TabType = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history';
 
 export default function SanctumPage() {
-  const { address, isConnected } = useAccount();
+  const { address: _address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [donateAmount, setDonateAmount] = useState('');
-  const [donateNote, setDonateNote] = useState('');
+  const [donateAmount, _setDonateAmount] = useState('');
+  const [donateNote, _setDonateNote] = useState('');
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
+  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Read vault balance (only if deployed)
-  const { data: vaultBalance } = useReadContract({
+  const { data: _vaultBalance } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
     abi: SANCTUM_VAULT_ABI,
     functionName: 'getBalance',
@@ -54,7 +54,7 @@ export default function SanctumPage() {
   });
 
   // Read charity count (only if deployed)
-  const { data: charityCount } = useReadContract({
+  const { data: _charityCount } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
     abi: SANCTUM_VAULT_ABI,
     functionName: 'getCharityCount',
@@ -62,15 +62,15 @@ export default function SanctumPage() {
   });
 
   // Read next proposal ID (to know how many exist)
-  const { data: nextProposalId } = useReadContract({
+  const { data: _nextProposalId } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
     abi: SANCTUM_VAULT_ABI,
-    functionName: 'nextProposalId',
+    functionName: '_nextProposalId',
     query: { enabled: IS_SANCTUM_DEPLOYED },
   });
 
   // Handlers
-  const handleDonate = () => {
+  const _handleDonate = () => {
     if (!IS_SANCTUM_DEPLOYED) return;
     if (!donateAmount || safeParseFloat(donateAmount, 0) <= 0) return;
     writeContract({
@@ -81,7 +81,7 @@ export default function SanctumPage() {
     });
   };
 
-  const handleApproveDisbursement = (proposalId: number) => {
+  const _handleApproveDisbursement = (proposalId: number) => {
     writeContract({
       address: SANCTUM_VAULT_ADDRESS,
       abi: SANCTUM_VAULT_ABI,
@@ -90,7 +90,7 @@ export default function SanctumPage() {
     });
   };
 
-  const handleExecuteDisbursement = (proposalId: number) => {
+  const _handleExecuteDisbursement = (proposalId: number) => {
     writeContract({
       address: SANCTUM_VAULT_ADDRESS,
       abi: SANCTUM_VAULT_ABI,

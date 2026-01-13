@@ -1,24 +1,26 @@
 'use client';
 
+/**
+ * Social Analytics Page
+ * 
+ * Analytics dashboard for social engagement metrics.
+ * The main social experience is in /social-hub.
+ */
+
 import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import {
-  TrendingUp,
   Users,
   Heart,
   MessageCircle,
   Share2,
-  Activity,
-  Target,
-  Zap,
-  Calendar,
-  LineChart,
-  PieChart,
   ArrowUp,
   ArrowDown,
+  ArrowRight,
 } from 'lucide-react';
 
 // ==================== TYPES ====================
@@ -182,9 +184,15 @@ export default function SocialAnalyticsPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-3">Social Analytics</h1>
-                <p className="text-[#A0A0A5] text-lg">
+                <p className="text-[#A0A0A5] text-lg mb-2">
                   Analyze your influence, engagement, and community growth in real-time
                 </p>
+                <Link 
+                  href="/social-hub" 
+                  className="inline-flex items-center gap-2 text-[#00F0FF] hover:underline text-sm"
+                >
+                  Go to Social Hub <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
 
               {/* Time Range Selector */}

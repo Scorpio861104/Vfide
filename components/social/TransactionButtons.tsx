@@ -7,10 +7,8 @@ import {
   DollarSign,
   X,
   Coins,
-  ArrowRight,
 } from 'lucide-react';
 import { Friend } from '@/types/messaging';
-import { PaymentRequest } from '@/types/socialIntegration';
 import { formatAddress } from '@/lib/messageEncryption';
 
 interface PaymentModalProps {

@@ -6,7 +6,7 @@ import {
   Award,
   Shield,
   CheckCircle,
-  TrendingUp,
+  TrendingUp as _TrendingUp,
   Star,
   AlertCircle,
 } from 'lucide-react';

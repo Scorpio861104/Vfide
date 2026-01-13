@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, TrendingUp, Medal, Crown, Zap } from 'lucide-react';
+import { Trophy, TrendingUp, Zap } from 'lucide-react';
 import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';

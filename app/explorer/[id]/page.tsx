@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation'
 import { useAccount } from 'wagmi'
-import { useState } from 'react'
 import { ArrowLeft, Copy, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'

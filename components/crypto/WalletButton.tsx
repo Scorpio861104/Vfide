@@ -22,7 +22,7 @@ export function WalletButton() {
     try {
       await connect();
       announce('Wallet connected', 'polite');
-    } catch (err) {
+    } catch {
       announce('Failed to connect wallet', 'assertive');
     }
   };

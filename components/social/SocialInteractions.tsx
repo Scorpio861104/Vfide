@@ -5,14 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageCircle,
   Users,
-  Trophy,
-  TrendingUp,
   Flame,
-  Heart,
   CheckCircle2,
-  X,
-  Gift,
-  Clock,
   Award,
 } from 'lucide-react';
 
@@ -244,10 +238,10 @@ interface SocialInteractionsProps {
   currentUserId?: string;
 }
 
-export function SocialInteractions({ currentUserId = 'current_user' }: SocialInteractionsProps) {
+export function SocialInteractions({ currentUserId: _currentUserId = 'current_user' }: SocialInteractionsProps) {
   const [activeTab, setActiveTab] = useState<'requests' | 'messages' | 'leaderboards' | 'streaks'>('requests');
   const [leaderboardType, setLeaderboardType] = useState<'proofScore' | 'badges'>('proofScore');
-  const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+  const [_expandedRequestId, _setExpandedRequestId] = useState<string | null>(null);
   const [acceptedRequests, setAcceptedRequests] = useState<Set<string>>(new Set());
   const [readMessages, setReadMessages] = useState<Set<string>>(new Set());
 

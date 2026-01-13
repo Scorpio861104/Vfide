@@ -5,7 +5,7 @@ import { parseEther, formatEther } from 'viem'
 import { useState } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
-import { VaultHubABI, VFIDETokenABI, UserVaultABI, VaultInfrastructureABI } from '../lib/abis'
+import { VaultHubABI, VFIDETokenABI, UserVaultABI } from '../lib/abis'
 import { validateAddress } from '../lib/validation'
 import { parseContractError, logError } from '@/lib/errorHandling';
 

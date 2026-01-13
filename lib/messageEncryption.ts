@@ -1,5 +1,4 @@
 // Message encryption utilities using Web3 wallet signatures
-import { Hex } from 'viem';
 
 /**
  * Encrypts a message using the recipient's public key (wallet address)
@@ -48,7 +47,7 @@ export async function decryptMessage(
   try {
     // Decode the payload
     const payload = JSON.parse(atob(encryptedMessage));
-    const { msg, sig, ts, nonce, to } = payload;
+    const { msg, sig, ts, nonce, to: _to } = payload;
     
     // Decode the message
     const message = atob(msg);

@@ -21,7 +21,7 @@ const SUBSCRIPTION_MANAGER_ABI = [
 
 // Contract addresses (SubscriptionManager not deployed yet)
 const SUBSCRIPTION_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
+const _VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
 
 // Check if contract is deployed (not zero address)
 const IS_SUBSCRIPTION_DEPLOYED = SUBSCRIPTION_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
@@ -41,11 +41,11 @@ export default function SubscriptionsPage() {
   const { showToast } = useToast();
   
   // Contract write hooks
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
+  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Read user subscriptions
-  const { data: userSubIds } = useReadContract({
+  const { data: _userSubIds } = useReadContract({
     address: SUBSCRIPTION_MANAGER_ADDRESS,
     abi: SUBSCRIPTION_MANAGER_ABI,
     functionName: 'getUserSubscriptions',
@@ -94,7 +94,7 @@ export default function SubscriptionsPage() {
   };
 
   // Display mock or empty subscriptions for now
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptions, _setSubscriptions] = useState<Subscription[]>([]);
 
   return (
     <>

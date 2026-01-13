@@ -9,7 +9,7 @@ jest.mock('wagmi', () => ({
   })),
 }))
 
-import { DemoModeBanner } from '@/components/DemoModeBanner'
+import { DemoModeBanner } from '@/components/layout/DemoModeBanner'
 
 describe('DemoModeBanner', () => {
   it('shows demo mode when wallet not connected', async () => {

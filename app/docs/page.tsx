@@ -10,7 +10,7 @@ import {
   GraduationCap, ChevronDown, ChevronRight, Lock,
   Search, Clock
 } from "lucide-react";
-import LessonModal, { LessonContent } from "@/components/LessonModal";
+import LessonModal, { LessonContent } from "@/components/modals/LessonModal";
 import { lessonContentData } from "@/data/lessonContent";
 
 type DocTab = "overview" | "learn" | "faq" | "security";

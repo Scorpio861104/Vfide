@@ -5,11 +5,14 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAccount } from 'wagmi'
+import { useAccount, useWatchContractEvent } from 'wagmi'
 import { QRCodeSVG } from 'qrcode.react'
+import { formatEther } from 'viem'
 import { useIsMerchant, useFeeCalculator } from '@/lib/vfide-hooks'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { MerchantPortalABI } from '@/lib/abis'
 
 interface Product {
   id: string
@@ -94,6 +97,75 @@ export function MerchantPOS() {
   
   const fees = calculateProcessorFees(subtotal)
   
+  // Track pending payment for event matching
+  const pendingPaymentRef = useRef<{
+    expectedAmount: string
+    cartSnapshot: CartItem[]
+  } | null>(null)
+  
+  // Store pending payment when showing QR
+  useEffect(() => {
+    if (showQRPayment && cart.length > 0) {
+      pendingPaymentRef.current = {
+        expectedAmount: vfideAmount,
+        cartSnapshot: [...cart],
+      }
+    } else if (!showQRPayment) {
+      pendingPaymentRef.current = null
+    }
+  }, [showQRPayment, cart, vfideAmount])
+  
+  // Listen for PaymentProcessed events on MerchantPortal
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESSES.MerchantPortal,
+    abi: MerchantPortalABI,
+    eventName: 'PaymentProcessed',
+    onLogs(logs) {
+      if (!address || !showQRPayment || !pendingPaymentRef.current) return
+      
+      for (const log of logs) {
+        const args = log.args as { customer?: `0x${string}`, merchant?: `0x${string}`, amount?: bigint }
+        // Check if this payment is for us
+        if (args.merchant?.toLowerCase() === address.toLowerCase()) {
+          const receivedAmount = args.amount ? parseFloat(formatEther(args.amount)) : 0
+          const expectedAmount = parseFloat(pendingPaymentRef.current.expectedAmount)
+          
+          // Allow 1% tolerance for rounding
+          if (Math.abs(receivedAmount - expectedAmount) / expectedAmount < 0.01) {
+            // Payment confirmed! Complete the sale automatically
+            handlePaymentConfirmed(args.customer || '0x0', receivedAmount.toFixed(2))
+          }
+        }
+      }
+    },
+    enabled: showQRPayment && !!address,
+  })
+  
+  // Handle confirmed payment from blockchain event
+  const handlePaymentConfirmed = useCallback((customerAddress: `0x${string}` | string, amount: string) => {
+    if (!pendingPaymentRef.current) return
+    
+    const timestamp = new Date().getTime()
+    const sale: Sale = {
+      id: timestamp.toString(),
+      timestamp: timestamp,
+      items: [...pendingPaymentRef.current.cartSnapshot],
+      subtotal: subtotal,
+      vfideAmount: amount,
+      fee: fees.vfide,
+      customerAddress: customerAddress,
+      customerEmail: undefined,
+      emailSent: false,
+    }
+    
+    setSalesHistory(prev => [sale, ...prev])
+    setCurrentSale(sale)
+    setShowQRPayment(false)
+    setShowEmailPrompt(true) // Ask for email after payment confirmed
+    clearCart()
+    pendingPaymentRef.current = null
+  }, [subtotal, fees.vfide])
+
   // Add product to catalog
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.price) return
@@ -139,33 +211,31 @@ export function MerchantPOS() {
   // Clear cart
   const clearCart = () => setCart([])
   
-  // Complete sale - called from event handler (not during render)
+  // Complete sale - now just adds email to the current sale (payment already confirmed via event)
   const completeSale = (email?: string) => {
-    const timestamp = new Date().getTime()
-    const sale: Sale = {
-      id: timestamp.toString(),
-      timestamp: timestamp,
-      items: [...cart],
-      subtotal: subtotal,
-      vfideAmount: vfideAmount,
-      fee: fees.vfide,
-      customerAddress: '0x1234...5678', // Would come from actual payment
-      customerEmail: email,
-      emailSent: !!email,
+    if (currentSale) {
+      // Update the current sale with email info
+      const updatedSale: Sale = {
+        ...currentSale,
+        customerEmail: email,
+        emailSent: !!email,
+      }
+      
+      // Update in sales history
+      setSalesHistory(prev => prev.map(s => 
+        s.id === currentSale.id ? updatedSale : s
+      ))
+      setCurrentSale(updatedSale)
+      
+      // Send email if provided
+      if (email) {
+        sendDigitalReceipt(updatedSale, email)
+      }
     }
     
-    setSalesHistory([sale, ...salesHistory])
-    setCurrentSale(sale)
-    setShowQRPayment(false)
     setShowEmailPrompt(false)
     setShowReceipt(true)
-    clearCart()
     setCustomerEmail('')
-    
-    // In production, send email via API
-    if (email) {
-      sendDigitalReceipt(sale, email)
-    }
   }
   
   // Send digital receipt
@@ -697,16 +767,28 @@ export function MerchantPOS() {
                 </motion.div>
               </div>
               
+              {/* Waiting for payment indicator */}
+              <div className="mb-4">
+                <motion.div
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="flex items-center justify-center gap-2 text-[#00F0FF]"
+                >
+                  <div className="w-2 h-2 rounded-full bg-[#00F0FF] animate-pulse" />
+                  <span className="text-sm">Waiting for blockchain confirmation...</span>
+                </motion.div>
+                <p className="text-xs text-center text-[#F5F3E8]/40 mt-2">
+                  Payment will auto-confirm when detected on-chain
+                </p>
+              </div>
+              
               <div className="space-y-3">
                 <button
-                  onClick={() => setShowEmailPrompt(true)}
-                  className="w-full bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-4 rounded-xl hover:scale-105 transition-transform"
+                  onClick={() => setShowQRPayment(false)}
+                  className="w-full bg-[#0A0A0A] border border-[#00F0FF]/30 text-[#F5F3E8] font-bold py-4 rounded-xl hover:border-[#00F0FF] transition-colors"
                 >
-                  Payment Complete
+                  Cancel Payment
                 </button>
-                <p className="text-xs text-center text-[#F5F3E8]/40">
-                  Customer can opt-in for digital receipt
-                </p>
               </div>
             </motion.div>
           </motion.div>

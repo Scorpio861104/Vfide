@@ -14,11 +14,11 @@ import { IS_TESTNET } from './chains'
 // Create noopStorage for SSR to avoid hydration mismatches
 // SSR-safe storage implementation - parameters required by Storage interface
 const noopStorage = {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by Storage interface, unused in SSR context
+   
   getItem: (_key: string) => null,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by Storage interface, unused in SSR context
+   
   setItem: (_key: string, _value: string) => {},
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by Storage interface, unused in SSR context
+   
   removeItem: (_key: string) => {},
 }
 

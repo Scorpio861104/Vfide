@@ -18,7 +18,7 @@ export function ThemeSelector() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Object.entries(THEME_PRESETS).map(([key, preset]) => (
+        {Object.entries(THEME_PRESETS).map(([_key, preset]) => (
           <motion.button
             key={preset.id}
             onClick={() => setTheme(preset.id as ThemeName)}

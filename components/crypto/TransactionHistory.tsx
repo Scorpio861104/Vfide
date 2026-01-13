@@ -6,6 +6,7 @@
 
 'use client';
 
+import React from 'react';
 import { Transaction, useTransactions } from '@/lib/crypto';
 import { motion } from 'framer-motion';
 import {
@@ -107,9 +108,9 @@ interface TransactionCardProps {
   userId: string;
 }
 
-function TransactionCard({ transaction, userId }: TransactionCardProps) {
+// Memoized for list performance
+const TransactionCard = React.memo(function TransactionCard({ transaction, userId }: TransactionCardProps) {
   const isSent = transaction.from.toLowerCase() === userId.toLowerCase();
-  const Icon = getIconForType(transaction.type);
   const statusColor = getStatusColor(transaction.status);
 
   return (
@@ -127,7 +128,7 @@ function TransactionCard({ transaction, userId }: TransactionCardProps) {
               : 'bg-green-500/10 text-green-400'
           }`}
         >
-          <Icon className="w-6 h-6" />
+          {renderIconForType(transaction.type, "w-6 h-6")}
         </div>
 
         {/* Details */}
@@ -181,26 +182,26 @@ function TransactionCard({ transaction, userId }: TransactionCardProps) {
       </div>
     </motion.div>
   );
-}
+});
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-function getIconForType(type: Transaction['type']) {
+function renderIconForType(type: Transaction['type'], className: string) {
   switch (type) {
     case 'send':
-      return ArrowUpRight;
+      return <ArrowUpRight className={className} />;
     case 'receive':
-      return ArrowDownLeft;
+      return <ArrowDownLeft className={className} />;
     case 'tip':
-      return Gift;
+      return <Gift className={className} />;
     case 'payment_request':
-      return FileText;
+      return <FileText className={className} />;
     case 'group_payment':
-      return Users;
+      return <Users className={className} />;
     default:
-      return ArrowUpRight;
+      return <ArrowUpRight className={className} />;
   }
 }
 

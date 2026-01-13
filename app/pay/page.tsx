@@ -5,9 +5,11 @@ import { Footer } from "@/components/layout/Footer";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useToast } from "@/components/ui/toast";
-import { useAccount } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
 import { useVfidePrice } from "@/lib/vfide-hooks";
+import { parseUnits } from "viem";
 import { motion } from "framer-motion";
+import { CONTRACT_ADDRESSES, VFIDETokenABI } from "@/lib/contracts";
 import { Shield, Sparkles, CreditCard, Loader2 } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
 
@@ -18,24 +20,49 @@ function PayContent() {
   const [selectedMethod, setSelectedMethod] = useState<'vfide' | 'usdc' | 'usdt'>('vfide');
   const [isProcessing, setIsProcessing] = useState(false);
   const { showToast } = useToast();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { priceUsd, isLoading: priceLoading } = useVfidePrice();
+  const { writeContractAsync } = useWriteContract();
 
   const amountNum = safeParseFloat(amount, 0);
   const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
 
   const handlePayment = async () => {
-    if (!isConnected) {
+    if (!isConnected || !address) {
       showToast('Please connect your wallet first', 'error');
       return;
     }
+    
+    // Validate merchant address
+    const merchantAddress = merchant.includes('...') ? null : merchant;
+    if (!merchantAddress || !merchantAddress.startsWith('0x') || merchantAddress.length !== 42) {
+      showToast('Invalid merchant address', 'error');
+      return;
+    }
+    
     setIsProcessing(true);
     try {
-      // Payment will be processed via smart contract
+      // Calculate VFIDE amount in wei (18 decimals)
+      const vfideAmountWei = parseUnits(vfideAmount, 18);
+      
       showToast('Payment initiated - please confirm in your wallet', 'info');
-      // Actual payment logic will use VFIDECommerce contract
-    } catch {
-      showToast('Payment failed. Please try again.', 'error');
+      
+      // Transfer VFIDE tokens to merchant
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESSES.VFIDEToken,
+        abi: VFIDETokenABI,
+        functionName: 'transfer',
+        args: [merchantAddress as `0x${string}`, vfideAmountWei],
+      });
+      
+      showToast('Payment successful! Transaction: ' + hash.slice(0, 10) + '...', 'success');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (message.includes('rejected') || message.includes('denied')) {
+        showToast('Transaction cancelled by user', 'info');
+      } else {
+        showToast('Payment failed: ' + message.slice(0, 50), 'error');
+      }
     } finally {
       setIsProcessing(false);
     }

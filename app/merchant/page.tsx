@@ -194,7 +194,7 @@ export default function MerchantPage() {
                 { icon: Sparkles, text: 'Zero Fees' }
               ].map((badge, i) => (
                 <motion.div
-                  key={i}
+                  key={badge.text}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.5 + i * 0.1 }}

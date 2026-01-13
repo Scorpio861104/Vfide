@@ -161,7 +161,7 @@ export default function TokenLaunchPage() {
   
   // Approval hooks
   const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending } = useWriteContract();
-  const { isLoading: isApproveConfirming, isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({ hash: approveHash });
+  const { isLoading: isApproveConfirming, isSuccess: _isApproveSuccess } = useWaitForTransactionReceipt({ hash: approveHash });
 
   // Gas price for fee estimate
   const { data: gasPrice } = useGasPrice();
@@ -171,21 +171,21 @@ export default function TokenLaunchPage() {
   const gasCostUsd = gasCostEth * 2500; // Rough ETH price
 
   // Read tier availability
-  const { data: foundingRemaining } = useReadContract({
+  const { data: _foundingRemaining } = useReadContract({
     address: PRESALE_ADDRESS,
     abi: PRESALE_ABI,
     functionName: 'getTierRemaining',
     args: [0],
   });
 
-  const { data: oathRemaining } = useReadContract({
+  const { data: _oathRemaining } = useReadContract({
     address: PRESALE_ADDRESS,
     abi: PRESALE_ABI,
     functionName: 'getTierRemaining',
     args: [1],
   });
 
-  const { data: publicRemaining } = useReadContract({
+  const { data: _publicRemaining } = useReadContract({
     address: PRESALE_ADDRESS,
     abi: PRESALE_ABI,
     functionName: 'getTierRemaining',
@@ -193,7 +193,7 @@ export default function TokenLaunchPage() {
   });
 
   // Read user info
-  const { data: userInfo } = useReadContract({
+  const { data: _userInfo } = useReadContract({
     address: PRESALE_ADDRESS,
     abi: PRESALE_ABI,
     functionName: 'getUserInfo',
@@ -519,8 +519,8 @@ export default function TokenLaunchPage() {
                   <div className="border-t border-white/10 pt-4 mb-6">
                     <h4 className="text-sm font-bold text-white mb-3">Utility Features:</h4>
                     <ul className="space-y-2">
-                      {tier.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2 text-xs text-gray-400">
+                      {tier.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-xs text-gray-400">
                           <span style={{ color: tier.color }}>✓</span>
                           <span>{feature}</span>
                         </li>
@@ -556,7 +556,7 @@ export default function TokenLaunchPage() {
                   { icon: '⭐', title: 'ProofScore Building', desc: 'Build reputation for fee discounts and enhanced privileges' }
                 ].map((benefit, idx) => (
                   <motion.div 
-                    key={idx}
+                    key={benefit.title}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 + idx * 0.1 }}

@@ -141,11 +141,31 @@ const mockUserStories: { userId: string; userName: string; userAvatar: string; s
 
 export default function StoriesPage() {
   const { address, isConnected } = useAccount();
-  const [userStories, setUserStories] = useState(mockUserStories);
+  const [userStories, setUserStories] = useState<typeof mockUserStories>([]);
   const [myStories, setMyStories] = useState<Story[]>([]);
   const [showCreator, setShowCreator] = useState(false);
   const [viewingStories, setViewingStories] = useState<{ stories: Story[]; index: number } | null>(null);
   const [viewedStories, setViewedStories] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch stories from API
+  useEffect(() => {
+    const fetchStories = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch('/api/community/stories');
+        if (res.ok) {
+          const data = await res.json();
+          setUserStories(data.stories || []);
+        }
+      } catch {
+        // API not available yet - use empty state
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStories();
+  }, []);
 
   // Load my stories from localStorage
   useEffect(() => {

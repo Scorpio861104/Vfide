@@ -6,10 +6,8 @@ import {
   UserPlus,
   Check,
   X,
-  Shield,
   AlertTriangle,
   Clock,
-  MessageCircle,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { FriendRequest } from '@/types/friendRequests';

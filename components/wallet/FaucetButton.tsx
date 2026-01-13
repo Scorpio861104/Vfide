@@ -2,7 +2,7 @@
 
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard';
 import { FAUCET_URLS } from '@/lib/testnet';
-import { IS_TESTNET, isTestnetChainId } from '@/lib/chains';
+import { isTestnetChainId } from '@/lib/chains';
 import { safeParseFloat } from '@/lib/validation';
 import { Check, Copy, Droplets, ExternalLink } from 'lucide-react';
 import { useState } from 'react';

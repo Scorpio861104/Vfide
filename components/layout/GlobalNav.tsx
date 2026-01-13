@@ -85,6 +85,25 @@ const moreLinks = [
       { href: "/escrow", label: "Escrow" },
       { href: "/treasury", label: "Treasury" },
       { href: "/token-launch", label: "Token Launch", accent: true },
+      { href: "/streaming", label: "Streaming", accent: true },
+      { href: "/cross-chain", label: "Cross-Chain", accent: true },
+    ]
+  },
+  {
+    category: "Privacy & Security",
+    items: [
+      { href: "/stealth", label: "Private Pay", accent: true },
+      { href: "/guardians", label: "Guardians" },
+      { href: "/multisig", label: "Multi-Sig" },
+      { href: "/time-locks", label: "Time Locks" },
+    ]
+  },
+  {
+    category: "Intelligence",
+    items: [
+      { href: "/insights", label: "Insights", accent: true },
+      { href: "/taxes", label: "Tax Report" },
+      { href: "/budgets", label: "Budgets" },
     ]
   },
   {
@@ -93,6 +112,7 @@ const moreLinks = [
       { href: "/sanctum", label: "Sanctum" },
       { href: "/security-center", label: "Security" },
       { href: "/admin", label: "Admin" },
+      { href: "/developer", label: "Developer", accent: true },
     ]
   }
 ];

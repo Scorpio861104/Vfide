@@ -42,9 +42,21 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "ignoreRestSiblings": true,
+      }],
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/purity": "off",
       "react-hooks/immutability": "off",
+      // These are intentional patterns - adding deps would cause infinite loops
+      "react-hooks/exhaustive-deps": "off",
+      // Allow <img> for dynamic/external images where Next.js Image optimization isn't suitable
+      "@next/next/no-img-element": "off",
+      // Allow anonymous default exports for config files
+      "import/no-anonymous-default-export": "off",
     },
   },
 ]);

@@ -5,15 +5,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  validateEthereumAddress,
-  validateAmount,
-  validateMemo,
-  checkSufficientBalance,
-  estimateGas,
-  parseTransactionData,
-  ValidationError,
-} from './cryptoValidation';
+// Crypto validation types - ValidationError used in type definitions
+import type { ValidationError as _ValidationError } from './cryptoValidation';
 
 // ============================================================================
 // Types & Interfaces
@@ -142,7 +135,7 @@ async function getTokenBalance(address: string): Promise<string> {
     const response = await fetch(`/api/crypto/balance/${address}`);
     const data = await response.json();
     return data.tokenBalance || '0';
-  } catch (error) {
+  } catch {
     return '0';
   }
 }
@@ -156,7 +149,7 @@ async function getUsdValue(ethAmount: number): Promise<number> {
     const response = await fetch('/api/crypto/price');
     const data = await response.json();
     return ethAmount * (data.ethPrice || 2000);
-  } catch (error) {
+  } catch {
     return ethAmount * 2000; // Fallback price
   }
 }
@@ -169,7 +162,7 @@ async function resolveEns(address: string): Promise<string | undefined> {
     const response = await fetch(`/api/crypto/ens/${address}`);
     const data = await response.json();
     return data.ensName;
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }

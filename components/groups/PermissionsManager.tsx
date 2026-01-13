@@ -37,7 +37,7 @@ interface PermissionsManagerProps {
 }
 
 export function PermissionsManager({ groupId, currentUserId }: PermissionsManagerProps) {
-  const { members, loading, updateRole, updatePermissions, removeMember, reload } = useGroupMembers(groupId);
+  const { members, loading, updateRole: _updateRole, updatePermissions: _updatePermissions, removeMember, reload } = useGroupMembers(groupId);
   const { hasPermission } = useMemberPermissions(currentUserId, groupId);
   const { announce } = useAnnounce();
 
@@ -106,7 +106,7 @@ export function PermissionsManager({ groupId, currentUserId }: PermissionsManage
                 try {
                   await removeMember(member.userId);
                   announce('Member removed', 'polite');
-                } catch (err) {
+                } catch (_err) {
                   announce('Failed to remove member', 'assertive');
                 }
               }}
@@ -231,8 +231,8 @@ interface PermissionEditModalProps {
   onUpdate: () => void;
 }
 
-function PermissionEditModal({ member, groupId, currentUserId, onClose, onUpdate }: PermissionEditModalProps) {
-  const { updateRole, updatePermissions } = useGroupMembers(groupId);
+function PermissionEditModal({ member, groupId, currentUserId: _currentUserId, onClose, onUpdate }: PermissionEditModalProps) {
+  const { updatePermissions, updateRole } = useGroupMembers(groupId);
   const { announce } = useAnnounce();
 
   const [selectedRole, setSelectedRole] = useState(member.role);
@@ -256,7 +256,7 @@ function PermissionEditModal({ member, groupId, currentUserId, onClose, onUpdate
 
       announce('Permissions updated', 'polite');
       onUpdate();
-    } catch (err) {
+    } catch (_err) {
       announce('Failed to update permissions', 'assertive');
     } finally {
       setSaving(false);

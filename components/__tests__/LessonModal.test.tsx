@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import LessonModal, { LessonContent } from "@/components/LessonModal";
+import LessonModal, { LessonContent } from "@/components/modals/LessonModal";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 // Mock framer-motion

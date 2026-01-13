@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Smile, Plus } from 'lucide-react';
+import { Smile } from 'lucide-react';
 
 export interface MessageReaction {
   emoji: string;
@@ -12,7 +12,7 @@ export interface MessageReaction {
 }
 
 interface MessageReactionsProps {
-  messageId: string;
+  _messageId: string; // Reserved for future reaction tracking by message ID
   reactions: MessageReaction[];
   onReact: (emoji: string) => void;
   onUnreact: (emoji: string) => void;
@@ -21,7 +21,7 @@ interface MessageReactionsProps {
 const QUICK_REACTIONS = ['❤️', '👍', '😂', '🎉', '🔥', '👏', '🚀', '💯'];
 
 export function MessageReactions({
-  messageId,
+  _messageId,
   reactions,
   onReact,
   onUnreact,

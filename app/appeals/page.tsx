@@ -8,7 +8,6 @@ import { useAccount } from 'wagmi'
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { useAppealStatus, useFileAppeal } from '@/lib/vfide-hooks'
-import { sanitizeString } from '@/lib/validation'
 
 export default function AppealsPage() {
   const { address, isConnected } = useAccount()

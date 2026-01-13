@@ -9,7 +9,7 @@ import { SavedThemesManager } from '@/components/theme/SavedThemesManager';
 import { Palette, RotateCcw, Eye } from 'lucide-react';
 
 export default function ThemeManagerPage() {
-  const { resetToDefault, isDirty, isSaved, exportAsCSS } = useThemeManager();
+  const { resetToDefault, isDirty, isSaved: _isSaved, exportAsCSS: _exportAsCSS } = useThemeManager();
   const [activeTab, setActiveTab] = useState<'presets' | 'customize' | 'saved'>(
     'presets'
   );

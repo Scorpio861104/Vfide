@@ -1,11 +1,13 @@
 /**
  * Live VFIDE Price Hooks
  * Fetches real-time prices from APIs with caching
+ * Uses React Query for stale-while-revalidate pattern
  */
 
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 interface PriceData {
   vfide: {
@@ -50,51 +52,32 @@ interface FeeData {
 }
 
 // ============================================
-// LIVE VFIDE PRICE - Fetches from /api/crypto/price
+// LIVE VFIDE PRICE - React Query with stale-while-revalidate
 // ============================================
 
+async function fetchVfidePrice(): Promise<PriceData> {
+  const response = await fetch('/api/crypto/price')
+  if (!response.ok) {
+    throw new Error('Failed to fetch price')
+  }
+  const result = await response.json()
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to fetch price')
+  }
+  return result
+}
+
 export function useVfidePrice() {
-  const [data, setData] = useState<PriceData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let isMounted = true
-
-    const fetchPrice = async () => {
-      try {
-        const response = await fetch('/api/crypto/price')
-        if (!response.ok) {
-          throw new Error('Failed to fetch price')
-        }
-        const result = await response.json()
-        
-        if (isMounted && result.success) {
-          setData(result)
-          setError(null)
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Unknown error')
-          console.error('[useVfidePrice] Error:', err)
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    fetchPrice()
-
-    // Refresh every 60 seconds (matches API cache)
-    const interval = setInterval(fetchPrice, 60000)
-
-    return () => {
-      isMounted = false
-      clearInterval(interval)
-    }
-  }, [])
+  const { data, isLoading, error, isStale } = useQuery({
+    queryKey: ['vfide-price'],
+    queryFn: fetchVfidePrice,
+    staleTime: 30 * 1000, // Consider stale after 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes (renamed from cacheTime in v5)
+    refetchInterval: 60 * 1000, // Refetch every 60 seconds
+    refetchOnWindowFocus: true, // Refetch when tab becomes active
+    retry: 2,
+    retryDelay: 1000,
+  })
 
   return {
     priceUsd: data?.vfide?.usd ?? 0.10, // Fallback to $0.10
@@ -106,7 +89,8 @@ export function useVfidePrice() {
     source: data?.source ?? 'fallback',
     timestamp: data?.timestamp ?? Date.now(),
     isLoading,
-    error,
+    isStale, // New: indicates if showing stale data while revalidating
+    error: error instanceof Error ? error.message : null,
   }
 }
 

@@ -79,7 +79,7 @@ export default function InvitePage() {
           setError(data.error || 'Invalid invite link');
           announce('Invalid invite link', 'assertive');
         }
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to load invite');
         announce('Failed to load invite', 'assertive');
       } finally {
@@ -133,7 +133,7 @@ export default function InvitePage() {
         setError(data.error || 'Failed to join group');
         announce(`Error: ${data.error}`, 'assertive');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to join group');
       announce('Failed to join group', 'assertive');
     } finally {

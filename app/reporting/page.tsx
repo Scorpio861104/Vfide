@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useReportingAnalytics } from '@/hooks/useReportingAnalytics';
-import { ReportingDashboard } from '@/components/analytics/ReportingDashboard';
 import {
   TimeRange,
   ReportType,
@@ -28,7 +27,7 @@ export default function ReportingAnalyticsPage() {
     setTimeRange,
     toggleAutoRefresh,
     refreshReports,
-    getFilteredReportsByDateRange,
+    getFilteredReportsByDateRange: _getFilteredReportsByDateRange,
     getReportsByType,
   } = useReportingAnalytics();
 

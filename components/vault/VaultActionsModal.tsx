@@ -71,7 +71,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
       setStep('error');
       setErrorMessage(writeError?.message || 'Transaction failed');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [isPending, isConfirming, txSuccess, txError, writeError, showToast, actionType]);
 
   const getActionTitle = () => {

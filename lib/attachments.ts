@@ -224,7 +224,7 @@ export async function uploadFile(
           } else {
             reject(new Error(response.error || 'Upload failed'));
           }
-        } catch (error) {
+        } catch (_error) {
           reject(new Error('Failed to parse response'));
         }
       } else {

@@ -6,7 +6,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ErrorBoundary, SectionErrorBoundary, useErrorHandler } from '@/components/ErrorBoundary';
+import { ErrorBoundary, SectionErrorBoundary, useErrorHandler } from '@/components/error/ErrorBoundary';
 
 // Component that throws an error
 const ThrowError = ({ error }: { error?: Error }) => {

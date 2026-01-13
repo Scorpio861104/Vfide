@@ -2,6 +2,19 @@ import { renderAtViewport, VIEWPORTS } from '@/__tests__/mobile-responsive.test'
 import { render } from '@testing-library/react'
 import { HelpCenter } from '../HelpCenter'
 
+// Mock chains module to avoid ESM issues
+jest.mock('@/lib/chains', () => ({
+  IS_TESTNET: true,
+  CURRENT_CHAIN_ID: 84532,
+  SUPPORTED_CHAINS: [],
+  isTestnetChainId: jest.fn(() => true),
+  getChainName: jest.fn(() => 'Base Sepolia'),
+  CONTRACT_ADDRESSES: {
+    mainnet: {},
+    testnet: {},
+  },
+}))
+
 describe('HelpCenter Mobile Rendering', () => {
   beforeEach(() => {
     // Mock matchMedia for responsive breakpoints

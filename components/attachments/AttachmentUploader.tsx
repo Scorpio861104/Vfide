@@ -37,7 +37,7 @@ interface AttachmentUploaderProps {
 
 export function AttachmentUploader({ messageId, userId, onUploaded }: AttachmentUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { uploading, progress, attachments, error, upload, remove, clear } = useFileUpload(messageId, userId);
+  const { uploading: _uploading, progress, attachments, error, upload, remove, clear } = useFileUpload(messageId, userId);
   const { announce } = useAnnounce();
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -230,8 +230,6 @@ interface AttachmentCardProps {
 }
 
 function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
-  const Icon = React.useMemo(() => getIconForType(attachment.type), [attachment.type]);
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -240,7 +238,7 @@ function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
       className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-3 flex items-center gap-3 hover:border-[#3A3A3F] transition-colors"
     >
       <div className="w-10 h-10 bg-linear-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5 text-blue-400" />
+        {renderIconForType(attachment.type, "w-5 h-5 text-blue-400")}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -261,17 +259,17 @@ function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
   );
 }
 
-function getIconForType(type: AttachmentType) {
+function renderIconForType(type: AttachmentType, className: string) {
   switch (type) {
     case AttachmentType.IMAGE:
-      return ImageIcon;
+      return <ImageIcon className={className} />;
     case AttachmentType.VIDEO:
-      return Video;
+      return <Video className={className} />;
     case AttachmentType.AUDIO:
-      return Music;
+      return <Music className={className} />;
     case AttachmentType.DOCUMENT:
-      return FileText;
+      return <FileText className={className} />;
     default:
-      return File;
+      return <File className={className} />;
   }
 }

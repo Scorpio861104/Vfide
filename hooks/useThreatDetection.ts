@@ -5,14 +5,13 @@ import {
   ThreatLevel,
   ThreatType,
   DeviceFingerprint,
-  SessionActivity,
+  SessionActivity as _SessionActivity,
   SecurityMetrics,
   SECURITY_STORAGE_KEYS,
   getThreatLevel,
   calculateRiskScore,
   generateDeviceFingerprint,
-  DEFAULT_RATE_LIMITS,
-  RateLimitConfig
+  DEFAULT_RATE_LIMITS
 } from '@/config/security-advanced';
 
 export interface UseThreatDetectionResult {
@@ -86,7 +85,7 @@ const checkUnusualDevice = (currentDevice: DeviceFingerprint): boolean => {
 
     const knownDevice: DeviceFingerprint = JSON.parse(stored);
     return knownDevice.hash !== currentDevice.hash;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 };

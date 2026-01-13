@@ -5,7 +5,7 @@
  * Integrates with WebSocket for real-time presence updates.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useWebSocket, WSMessage } from './websocket';
 
 export type PresenceStatus = 'online' | 'offline' | 'away' | 'busy';

@@ -178,7 +178,7 @@ export async function checkSufficientBalance(
       required,
       error: sufficient ? undefined : `Insufficient ${currency} balance`,
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       sufficient: false,
       balance: '0',

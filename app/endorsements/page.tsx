@@ -3,9 +3,9 @@
 import { useMemo } from 'react'
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
-import { SurfaceCard, AccentBadge, SectionHeading } from '@/components/ui/primitives'
+import { SurfaceCard, SectionHeading } from '@/components/ui/primitives'
 import { useAccount, useReadContract } from 'wagmi'
-import { Heart, Calendar } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
@@ -96,7 +96,7 @@ export default function EndorsementsPage() {
               { value: activeEndorsements.length, label: 'Active Endorsements', color: 'cyan' as const },
               { value: safeBigIntToNumber(stats?.[1], 0), label: 'Active Bonus', color: 'amber' as const },
             ].map((stat, idx) => (
-              <SurfaceCard key={idx} interactive className="p-4">
+              <SurfaceCard key={stat.label} interactive className="p-4">
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}>
                   <div className={`text-2xl font-bold ${stat.color === 'red' ? 'text-red-400' : stat.color === 'cyan' ? 'text-cyan-400' : 'text-amber-400'}`}>{stat.value}</div>
                   <div className="text-sm text-gray-400">{stat.label}</div>

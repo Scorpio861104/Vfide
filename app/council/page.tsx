@@ -5,7 +5,6 @@ import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
-import { sanitizeString } from "@/lib/validation";
 import { 
   Users, 
   DollarSign, 
@@ -57,11 +56,11 @@ export default function CouncilPage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
+  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Read council members
-  const { data: councilMembers } = useReadContract({
+  const { data: _councilMembers } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'getCouncilMembers',
@@ -69,7 +68,7 @@ export default function CouncilPage() {
   });
 
   // Read candidates
-  const { data: candidates } = useReadContract({
+  const { data: _candidates } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'getCandidates',
@@ -77,7 +76,7 @@ export default function CouncilPage() {
   });
 
   // Read election status
-  const { data: electionStatus } = useReadContract({
+  const { data: _electionStatus } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'getElectionStatus',
@@ -85,7 +84,7 @@ export default function CouncilPage() {
   });
 
   // Read if user is candidate
-  const { data: isCandidate } = useReadContract({
+  const { data: _isCandidate } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'isCandidate',
@@ -94,7 +93,7 @@ export default function CouncilPage() {
   });
 
   // Read if user is council member
-  const { data: isCouncilMember } = useReadContract({
+  const { data: _isCouncilMember } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'isCouncilMember',
@@ -103,7 +102,7 @@ export default function CouncilPage() {
   });
 
   // Read claimable salary
-  const { data: claimableSalary } = useReadContract({
+  const { data: _claimableSalary } = useReadContract({
     address: COUNCIL_SALARY_ADDRESS,
     abi: COUNCIL_SALARY_ABI,
     functionName: 'getClaimable',
@@ -112,7 +111,7 @@ export default function CouncilPage() {
   });
 
   // Read can register
-  const { data: canRegisterResult } = useReadContract({
+  const { data: _canRegisterResult } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
     abi: COUNCIL_ELECTION_ABI,
     functionName: 'canRegister',
@@ -121,7 +120,7 @@ export default function CouncilPage() {
   });
 
   // Handlers
-  const handleRegister = () => {
+  const _handleRegister = () => {
     writeContract({
       address: COUNCIL_ELECTION_ADDRESS,
       abi: COUNCIL_ELECTION_ABI,
@@ -129,7 +128,7 @@ export default function CouncilPage() {
     });
   };
 
-  const handleUnregister = () => {
+  const _handleUnregister = () => {
     writeContract({
       address: COUNCIL_ELECTION_ADDRESS,
       abi: COUNCIL_ELECTION_ABI,
@@ -137,7 +136,7 @@ export default function CouncilPage() {
     });
   };
 
-  const handleClaimSalary = () => {
+  const _handleClaimSalary = () => {
     writeContract({
       address: COUNCIL_SALARY_ADDRESS,
       abi: COUNCIL_SALARY_ABI,
@@ -284,7 +283,7 @@ function OverviewTab() {
           { value: '--', label: 'Active Members', gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
           { value: '365', label: 'Days Term Length', gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
           { value: '120d', label: 'Pay Interval', gradient: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
-        ].map((stat, idx) => (
+        ].map((stat, _idx) => (
           <motion.div
             key={stat.label}
             whileHover={{ scale: 1.02, y: -2 }}
@@ -310,7 +309,7 @@ function OverviewTab() {
             { icon: Vote, color: 'text-purple-400', bg: 'from-purple-500/20 to-purple-500/5', border: 'border-purple-500/20', title: 'Proposal Review', desc: 'Review and recommend DAO proposals before community voting' },
             { icon: DollarSign, color: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', title: 'Treasury Oversight', desc: 'Approve multi-sig transactions and manage fund allocations' },
             { icon: TrendingUp, color: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/20', title: 'Ecosystem Growth', desc: 'Drive partnerships, integrations, and community expansion' },
-          ].map((item, idx) => (
+          ].map((item, _idx) => (
             <motion.div 
               key={item.title}
               whileHover={{ scale: 1.02 }}
@@ -517,7 +516,7 @@ function MembersTab() {
   );
 }
 
-function SalaryTab({ isConnected }: { isConnected: boolean }) {
+function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
   // Salary is NOT fixed - funded by ecosystem fees, distributed every 120 days
   const salaryHistory = [
     { period: 'Period 1 (Days 1-120)', amount: 'Variable (fees collected)', recipients: 12, status: 'pending' },
@@ -545,8 +544,8 @@ function SalaryTab({ isConnected }: { isConnected: boolean }) {
             { value: 'Variable', label: 'Funded by ecosystem fees', gradient: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', text: 'text-emerald-400' },
             { value: '120 Days', label: 'Distribution Interval', gradient: 'from-white/10 to-white/5', border: 'border-white/10', text: 'text-white' },
             { value: 'Equal', label: 'Split among eligible', gradient: 'from-cyan-500/20 to-cyan-500/5', border: 'border-cyan-500/20', text: 'text-cyan-400' },
-          ].map((stat, idx) => (
-            <div key={idx} className={`bg-linear-to-br ${stat.gradient} border ${stat.border} rounded-xl p-4`}>
+          ].map((stat) => (
+            <div key={stat.label} className={`bg-linear-to-br ${stat.gradient} border ${stat.border} rounded-xl p-4`}>
               <div className={`text-3xl font-bold ${stat.text}`}>{stat.value}</div>
               <div className="text-sm text-gray-400">{stat.label}</div>
             </div>
@@ -563,8 +562,8 @@ function SalaryTab({ isConnected }: { isConnected: boolean }) {
       >
         <h3 className="text-xl font-bold text-white mb-6">Distribution History</h3>
         <div className="space-y-3">
-          {salaryHistory.map((entry, idx) => (
-            <div key={idx} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
+          {salaryHistory.map((entry) => (
+            <div key={entry.period} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg bg-white/5 border border-white/10">
                   <Calendar className="text-gray-400" size={20} />

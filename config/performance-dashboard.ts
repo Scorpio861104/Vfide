@@ -254,10 +254,8 @@ export function calculateHealthScore(metrics: PerformanceMetric[]): number {
 
 export function generateMetricTrendAnalysis(
   metrics: PerformanceMetric[],
-  timeRange: TimeRange
+  _timeRange: TimeRange
 ): string {
-  const avgValue =
-    metrics.reduce((sum, m) => sum + m.value, 0) / metrics.length;
   const criticalCount = metrics.filter((m) => m.status === 'critical').length;
   const warningCount = metrics.filter((m) => m.status === 'warning').length;
 
@@ -283,7 +281,7 @@ export function getTimeRangeLabel(timeRange: TimeRange): string {
 }
 
 export function getTimeRangeMilliseconds(timeRange: TimeRange): number {
-  const now = Date.now();
+  const _now = Date.now();
   switch (timeRange) {
     case TimeRange.LAST_HOUR:
       return 1000 * 60 * 60;

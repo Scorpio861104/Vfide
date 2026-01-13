@@ -19,7 +19,6 @@ export function ThemeCustomizer() {
     setBorderRadius,
     setDisableAnimations,
     setHighContrast,
-    setPalette,
   } = useThemeManager();
 
   const [expandedSection, setExpandedSection] = useState<string | null>('appearance');

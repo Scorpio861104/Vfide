@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, TrendingUp, Award, Crown, Zap, Users } from 'lucide-react';
 import { useAccount } from 'wagmi';
-import { getProgress, getAllUserProgress } from '@/lib/gamification';
+import { getProgress as _getProgress, getAllUserProgress } from '@/lib/gamification';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 interface LeaderboardEntry {
@@ -23,7 +23,7 @@ export function Leaderboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [category, setCategory] = useState<LeaderboardCategory>('xp');
-  const [timeRange, setTimeRange] = useState<'all' | 'week' | 'month'>('all');
+  const [timeRange, _setTimeRange] = useState<'all' | 'week' | 'month'>('all');
 
   // Load leaderboard data
   useEffect(() => {

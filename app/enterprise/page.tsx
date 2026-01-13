@@ -120,8 +120,8 @@ function OverviewTab() {
 
       {/* Features Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {features.map((feature, idx) => (
-          <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+        {features.map((feature) => (
+          <div key={feature.title} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
             <div className="flex items-start justify-between mb-4">
               <feature.icon size={32} style={{ color: feature.color }} />
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -163,12 +163,35 @@ function OverviewTab() {
 
 function GatewayTab({ isConnected }: { isConnected: boolean }) {
   const [orderId, setOrderId] = useState('');
+  const [amount, setAmount] = useState('');
+  const [metadata, setMetadata] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   const recentOrders = [
     { id: 'ORD-001', amount: '5,000 VFIDE', status: 'settled', time: '2 hours ago' },
     { id: 'ORD-002', amount: '12,500 VFIDE', status: 'pending', time: '5 hours ago' },
     { id: 'ORD-003', amount: '3,200 VFIDE', status: 'settled', time: '1 day ago' },
   ];
+
+  const handleCreateOrder = async () => {
+    if (!orderId || !amount) return;
+    setIsCreating(true);
+    try {
+      // Call enterprise gateway API
+      const response = await fetch('/api/enterprise/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, amount, metadata }),
+      });
+      if (response.ok) {
+        setOrderId('');
+        setAmount('');
+        setMetadata('');
+      }
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -216,6 +239,8 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
               <label className="text-sm text-[#A0A0A5] mb-2 block">Amount (VFIDE)</label>
               <input
                 type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
                 className="w-full bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg px-4 py-3 text-[#F5F3E8] placeholder-[#505055] focus:border-[#00F0FF] focus:outline-none"
               />
@@ -225,12 +250,18 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
             <label className="text-sm text-[#A0A0A5] mb-2 block">Metadata (optional)</label>
             <input
               type="text"
+              value={metadata}
+              onChange={(e) => setMetadata(e.target.value)}
               placeholder="Order reference, customer ID, etc."
               className="w-full bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg px-4 py-3 text-[#F5F3E8] placeholder-[#505055] focus:border-[#00F0FF] focus:outline-none"
             />
           </div>
-          <button className="w-full bg-[#00F0FF] hover:bg-[#00D4E0] text-[#0D0D0F] font-bold py-3 rounded-lg transition-colors">
-            Create Order
+          <button 
+            onClick={handleCreateOrder}
+            disabled={isCreating || !orderId || !amount}
+            className="w-full bg-[#00F0FF] hover:bg-[#00D4E0] text-[#0D0D0F] font-bold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCreating ? 'Creating...' : 'Create Order'}
           </button>
         </div>
       ) : (
@@ -288,7 +319,7 @@ function LivePriceDisplay() {
   );
 }
 
-function FiatTab({ isConnected }: { isConnected: boolean }) {
+function FiatTab({ isConnected: _isConnected }: { isConnected: boolean }) {
   const [rampType, setRampType] = useState<'on' | 'off'>('on');
 
   const providers = [

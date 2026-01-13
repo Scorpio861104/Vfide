@@ -24,7 +24,7 @@ export function PerformanceProvider() {
 
     // Log initial performance info in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Performance] Monitoring initialized');
+      // Performance monitoring initialized
       
       // Report after page load
       window.addEventListener('load', () => {

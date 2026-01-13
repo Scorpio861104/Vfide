@@ -15,7 +15,7 @@ interface StoryRingProps {
 }
 
 export function StoryRing({
-  userId,
+  userId: _userId,
   userName,
   userAvatar,
   stories,

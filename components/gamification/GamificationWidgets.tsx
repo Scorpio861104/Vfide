@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Zap, TrendingUp, Award } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Trophy, Zap, Award } from 'lucide-react';
 import { useGamification, ACHIEVEMENTS, type AchievementId } from '@/lib/gamification';
 
 interface UserStatsWidgetProps {

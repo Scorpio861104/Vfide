@@ -107,6 +107,35 @@ export function SkeletonTable({ rows = 5, cols = 4, className = '' }: { rows?: n
 }
 
 /**
+ * Skeleton for notification items
+ */
+export function NotificationSkeleton() {
+  return (
+    <div className="flex items-start gap-3 p-4 bg-[#2A2A2F] rounded-lg">
+      <Skeleton width={40} height={40} rounded="full" />
+      <div className="flex-1 space-y-2">
+        <Skeleton height={16} className="w-3/4" />
+        <Skeleton height={14} className="w-full" />
+        <Skeleton height={12} className="w-1/4" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton for notification list
+ */
+export function NotificationListSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <NotificationSkeleton key={`notification-skeleton-${i}`} />
+      ))}
+    </div>
+  );
+}
+
+/**
  * Skeleton for message list
  */
 export function MessageListSkeleton({ count = 5 }: { count?: number }) {

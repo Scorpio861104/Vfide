@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   Search,
   Users,
-  TrendingUp,
+  TrendingUp as _TrendingUp,
   Award,
   MessageCircle,
   UserPlus,

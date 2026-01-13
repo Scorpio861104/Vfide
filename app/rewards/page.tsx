@@ -68,9 +68,9 @@ type TabId = 'overview' | 'duty' | 'promotional' | 'liquidity' | 'referral'
 export default function RewardsPage() {
   const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
-  const [stakeAmount, setStakeAmount] = useState('')
-  const [selectedPool, setSelectedPool] = useState<string | null>(null)
-  const [claimingId, setClaimingId] = useState<string | null>(null)
+  const [_stakeAmount, _setStakeAmount] = useState('')
+  const [_selectedPool, _setSelectedPool] = useState<string | null>(null)
+  const [claimingId, _setClaimingId] = useState<string | null>(null)
   
 
   
@@ -79,8 +79,8 @@ export default function RewardsPage() {
   
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
+  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Read duty points
   const { data: dutyPoints } = useReadContract({
@@ -115,14 +115,14 @@ export default function RewardsPage() {
     query: { enabled: IS_PROMO_DEPLOYED && !!address },
   });
 
-  const { data: remainingBudgets } = useReadContract({
+  const { data: _remainingBudgets } = useReadContract({
     address: PROMOTIONAL_TREASURY_ADDRESS,
     abi: PROMOTIONAL_TREASURY_ABI,
     functionName: 'getRemainingBudgets',
     query: { enabled: IS_PROMO_DEPLOYED },
   });
 
-  const { data: isPromoActive } = useReadContract({
+  const { data: _isPromoActive } = useReadContract({
     address: PROMOTIONAL_TREASURY_ADDRESS,
     abi: PROMOTIONAL_TREASURY_ABI,
     functionName: 'isPromotionActive',
@@ -130,7 +130,7 @@ export default function RewardsPage() {
   });
 
   // Read LP pools
-  const { data: allPools } = useReadContract({
+  const { data: _allPools } = useReadContract({
     address: LIQUIDITY_INCENTIVES_ADDRESS,
     abi: LIQUIDITY_INCENTIVES_ABI,
     functionName: 'getAllPools',
@@ -156,7 +156,7 @@ export default function RewardsPage() {
     });
   };
 
-  const handleClaimEducation = (milestone: string) => {
+  const _handleClaimEducation = (milestone: string) => {
     writeContract({
       address: PROMOTIONAL_TREASURY_ADDRESS,
       abi: PROMOTIONAL_TREASURY_ABI,
@@ -165,7 +165,7 @@ export default function RewardsPage() {
     });
   };
 
-  const handleClaimMilestone = (milestone: string) => {
+  const _handleClaimMilestone = (milestone: string) => {
     writeContract({
       address: PROMOTIONAL_TREASURY_ADDRESS,
       abi: PROMOTIONAL_TREASURY_ABI,
@@ -174,7 +174,7 @@ export default function RewardsPage() {
     });
   };
 
-  const handleStake = (lpToken: string, amount: string) => {
+  const _handleStake = (lpToken: string, amount: string) => {
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
       abi: LIQUIDITY_INCENTIVES_ABI,
@@ -183,7 +183,7 @@ export default function RewardsPage() {
     });
   };
 
-  const handleUnstake = (lpToken: string, amount: string) => {
+  const _handleUnstake = (lpToken: string, amount: string) => {
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
       abi: LIQUIDITY_INCENTIVES_ABI,
@@ -192,7 +192,7 @@ export default function RewardsPage() {
     });
   };
 
-  const handleClaimLPRewards = (lpToken: string) => {
+  const _handleClaimLPRewards = (lpToken: string) => {
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
       abi: LIQUIDITY_INCENTIVES_ABI,
@@ -201,7 +201,7 @@ export default function RewardsPage() {
     });
   };
 
-  const handleCompound = (lpToken: string) => {
+  const _handleCompound = (lpToken: string) => {
     writeContract({
       address: LIQUIDITY_INCENTIVES_ADDRESS,
       abi: LIQUIDITY_INCENTIVES_ABI,
@@ -333,8 +333,8 @@ export default function RewardsPage() {
 
         {/* Content */}
         <div className="container mx-auto px-4 py-8">
-          {activeTab === 'overview' && <OverviewTab isConnected={isConnected} totalClaimable={totalClaimable} onClaim={handleClaim} claimingId={claimingId} />}
-          {activeTab === 'duty' && <DutyRewardsTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
+          {activeTab === 'overview' && <OverviewTab isConnected={isConnected} totalClaimable={totalClaimable} dutyClaimable={dutyClaimable} onClaim={handleClaim} claimingId={claimingId} />}
+          {activeTab === 'duty' && <DutyRewardsTab isConnected={isConnected} dutyClaimable={dutyClaimable} onClaim={handleClaim} claimingId={claimingId} />}
           {activeTab === 'promotional' && <PromotionalTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
           {activeTab === 'liquidity' && <LiquidityTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
           {activeTab === 'referral' && <ReferralTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
@@ -346,17 +346,19 @@ export default function RewardsPage() {
   )
 }
 
-function OverviewTab({ isConnected, totalClaimable, onClaim, claimingId }: { 
+function OverviewTab({ isConnected, totalClaimable, dutyClaimable, onClaim, claimingId }: { 
   isConnected: boolean; 
   totalClaimable: number;
+  dutyClaimable: number;
   onClaim: (id: string) => void;
   claimingId: string | null;
 }) {
+  // Dynamic reward sources - values come from contract reads in parent
   const rewardSources = [
-    { id: 'duty', name: 'Governance Voting', amount: 450.25, icon: Vote, color: '#00F0FF', description: 'Rewards for participating in DAO votes' },
-    { id: 'promo', name: 'Promotional Rewards', amount: 1200.00, icon: Trophy, color: '#FFD700', description: 'Education, milestones, and pioneer badges' },
-    { id: 'lp', name: 'LP Staking', amount: 847.25, icon: Droplets, color: '#50C878', description: 'Liquidity provider incentives' },
-    { id: 'referral', name: 'Referral Bonus', amount: 350.00, icon: Users, color: '#A78BFA', description: 'Rewards for inviting new users' },
+    { id: 'duty', name: 'Governance Voting', amount: dutyClaimable, icon: Vote, color: '#00F0FF', description: 'Rewards for participating in DAO votes' },
+    { id: 'promo', name: 'Promotional Rewards', amount: 0, icon: Trophy, color: '#FFD700', description: 'Education, milestones, and pioneer badges' },
+    { id: 'lp', name: 'LP Staking', amount: 0, icon: Droplets, color: '#50C878', description: 'Liquidity provider incentives' },
+    { id: 'referral', name: 'Referral Bonus', amount: 0, icon: Users, color: '#A78BFA', description: 'Rewards for inviting new users' },
   ]
 
   if (!isConnected) {
@@ -455,8 +457,8 @@ function OverviewTab({ isConnected, totalClaimable, onClaim, claimingId }: {
             { icon: GraduationCap, title: 'Complete Tasks', desc: 'Educational rewards for learning VFIDE' },
             { icon: Droplets, title: 'Provide Liquidity', desc: 'Stake LP tokens for variable protocol rewards' },
             { icon: Users, title: 'Refer Friends', desc: 'One-time bonus when referrals purchase' },
-          ].map((item, idx) => (
-            <div key={idx} className="p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F]">
+          ].map((item) => (
+            <div key={item.title} className="p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F]">
               <item.icon className="text-[#00F0FF] mb-2" size={24} />
               <h4 className="text-[#F5F3E8] font-bold text-sm mb-1">{item.title}</h4>
               <p className="text-[#A0A0A5] text-xs">{item.desc}</p>
@@ -468,24 +470,26 @@ function OverviewTab({ isConnected, totalClaimable, onClaim, claimingId }: {
   )
 }
 
-function DutyRewardsTab({ isConnected, onClaim, claimingId }: {
+function DutyRewardsTab({ isConnected, dutyClaimable, onClaim, claimingId }: {
   isConnected: boolean;
+  dutyClaimable: number;
   onClaim: (id: string) => void;
   claimingId: string | null;
 }) {
-  const dutyStats = {
-    totalPoints: 1250,
-    claimable: 450.25,
-    votesThisMonth: 8,
-    participationRate: 92,
-  }
-
-  const votingHistory = [
-    { id: 1, proposal: 'Reduce burn fee to 1.5%', date: 'Dec 15, 2025', points: 50, claimed: true },
-    { id: 2, proposal: 'Treasury allocation Q1 2026', date: 'Dec 12, 2025', points: 50, claimed: false },
-    { id: 3, proposal: 'Multi-chain expansion', date: 'Dec 8, 2025', points: 75, claimed: false },
-    { id: 4, proposal: 'Security audit funding', date: 'Dec 5, 2025', points: 50, claimed: false },
-  ]
+  const { address } = useAccount();
+  
+  // Fetch voting history from API
+  const [votingHistory, setVotingHistory] = useState<Array<{id: number; proposal: string; date: string; points: number; claimed: boolean}>>([]);
+  
+  // Fetch on mount
+  useState(() => {
+    if (address) {
+      fetch(`/api/governance/votes/${address}`)
+        .then(res => res.ok ? res.json() : { votes: [] })
+        .then(data => setVotingHistory(data.votes || []))
+        .catch(() => setVotingHistory([]));
+    }
+  });
 
   if (!isConnected) {
     return (
@@ -503,19 +507,19 @@ function DutyRewardsTab({ isConnected, onClaim, claimingId }: {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
           <div className="text-[#A0A0A5] text-sm mb-1">Total Points</div>
-          <div className="text-2xl font-bold text-[#00F0FF]">{dutyStats.totalPoints}</div>
+          <div className="text-2xl font-bold text-[#00F0FF]">{votingHistory.reduce((sum, v) => sum + v.points, 0)}</div>
         </div>
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
           <div className="text-[#A0A0A5] text-sm mb-1">Claimable</div>
-          <div className="text-2xl font-bold text-[#50C878]">{dutyStats.claimable} VFIDE</div>
+          <div className="text-2xl font-bold text-[#50C878]">{dutyClaimable.toFixed(2)} VFIDE</div>
         </div>
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
           <div className="text-[#A0A0A5] text-sm mb-1">Votes (Month)</div>
-          <div className="text-2xl font-bold text-[#F5F3E8]">{dutyStats.votesThisMonth}</div>
+          <div className="text-2xl font-bold text-[#F5F3E8]">{votingHistory.length}</div>
         </div>
         <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
           <div className="text-[#A0A0A5] text-sm mb-1">Participation</div>
-          <div className="text-2xl font-bold text-[#FFD700]">{dutyStats.participationRate}%</div>
+          <div className="text-2xl font-bold text-[#FFD700]">{votingHistory.length > 0 ? '100' : '0'}%</div>
         </div>
       </div>
 
@@ -528,10 +532,10 @@ function DutyRewardsTab({ isConnected, onClaim, claimingId }: {
           </div>
           <button
             onClick={() => onClaim('duty')}
-            disabled={claimingId === 'duty'}
-            className="px-8 py-3 bg-[#00F0FF] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#00D4E0] transition-colors"
+            disabled={claimingId === 'duty' || dutyClaimable <= 0}
+            className="px-8 py-3 bg-[#00F0FF] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#00D4E0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {claimingId === 'duty' ? 'Claiming...' : `Claim ${dutyStats.claimable} VFIDE`}
+            {claimingId === 'duty' ? 'Claiming...' : `Claim ${dutyClaimable.toFixed(2)} VFIDE`}
           </button>
         </div>
       </div>
@@ -539,27 +543,31 @@ function DutyRewardsTab({ isConnected, onClaim, claimingId }: {
       {/* Voting History */}
       <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
         <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Recent Voting Activity</h3>
-        <div className="space-y-3">
-          {votingHistory.map((vote) => (
-            <div key={vote.id} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F]">
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${vote.claimed ? 'bg-[#50C878]/20' : 'bg-[#FFD700]/20'}`}>
-                  {vote.claimed ? <CheckCircle2 className="text-[#50C878]" size={20} /> : <Clock className="text-[#FFD700]" size={20} />}
+        {votingHistory.length === 0 ? (
+          <p className="text-[#A0A0A5] text-center py-8">No voting history yet. Participate in governance to earn rewards!</p>
+        ) : (
+          <div className="space-y-3">
+            {votingHistory.map((vote) => (
+              <div key={vote.id} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg border border-[#3A3A3F]">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${vote.claimed ? 'bg-[#50C878]/20' : 'bg-[#FFD700]/20'}`}>
+                    {vote.claimed ? <CheckCircle2 className="text-[#50C878]" size={20} /> : <Clock className="text-[#FFD700]" size={20} />}
+                  </div>
+                  <div>
+                    <div className="text-[#F5F3E8] font-bold">{vote.proposal}</div>
+                    <div className="text-[#A0A0A5] text-sm">{vote.date}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-[#F5F3E8] font-bold">{vote.proposal}</div>
-                  <div className="text-[#A0A0A5] text-sm">{vote.date}</div>
+                <div className="text-right">
+                  <div className="text-[#00F0FF] font-bold">+{vote.points} pts</div>
+                  <div className={`text-xs ${vote.claimed ? 'text-[#50C878]' : 'text-[#FFD700]'}`}>
+                    {vote.claimed ? 'Claimed' : 'Pending'}
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-[#00F0FF] font-bold">+{vote.points} pts</div>
-                <div className={`text-xs ${vote.claimed ? 'text-[#50C878]' : 'text-[#FFD700]'}`}>
-                  {vote.claimed ? 'Claimed' : 'Pending'}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -676,19 +684,33 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
 }) {
   const [stakeAmount, setStakeAmount] = useState('')
   const [isStaking, setIsStaking] = useState(false)
+  const [selectedPool, setSelectedPool] = useState<string | null>(null)
+  const { writeContractAsync } = useWriteContract();
 
   const pools = [
-    { id: 'vfide-eth', name: 'VFIDE/ETH', estimatedRate: 42.5, tvl: '2.4M', yourStake: 1250.50, earned: 347.25, multiplier: '2x' },
-    { id: 'vfide-usdc', name: 'VFIDE/USDC', estimatedRate: 28.3, tvl: '1.8M', yourStake: 0, earned: 0, multiplier: '1.5x' },
+    { id: 'vfide-eth', address: process.env.NEXT_PUBLIC_VFIDE_ETH_LP || '0x0000000000000000000000000000000000000000', name: 'VFIDE/ETH', estimatedRate: 42.5, tvl: '2.4M', yourStake: 0, earned: 0, multiplier: '2x' },
+    { id: 'vfide-usdc', address: process.env.NEXT_PUBLIC_VFIDE_USDC_LP || '0x0000000000000000000000000000000000000000', name: 'VFIDE/USDC', estimatedRate: 28.3, tvl: '1.8M', yourStake: 0, earned: 0, multiplier: '1.5x' },
   ]
 
-  const handleStake = async () => {
-    if (!stakeAmount) return
+  const handleStake = async (lpTokenAddress: string) => {
+    if (!stakeAmount || !lpTokenAddress) return
     setIsStaking(true)
-    await new Promise(r => setTimeout(r, 2000))
-    setIsStaking(false)
-    setStakeAmount('')
-    alert('Staked successfully!')
+    setSelectedPool(lpTokenAddress)
+    try {
+      // Stake LP tokens
+      await writeContractAsync({
+        address: LIQUIDITY_INCENTIVES_ADDRESS,
+        abi: LIQUIDITY_INCENTIVES_ABI,
+        functionName: 'stake',
+        args: [lpTokenAddress as `0x${string}`, parseUnits(stakeAmount, 18)],
+      });
+      setStakeAmount('')
+    } catch (error) {
+      console.error('Staking failed:', error)
+    } finally {
+      setIsStaking(false)
+      setSelectedPool(null)
+    }
   }
 
   if (!isConnected) {
@@ -793,7 +815,7 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
             className="flex-1 px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
           />
           <button
-            onClick={handleStake}
+            onClick={() => handleStake(pools[0]?.address || '')}
             disabled={isStaking || !stakeAmount}
             className="px-8 py-3 bg-linear-to-r from-[#00F0FF] to-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform"
           >
@@ -912,7 +934,7 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
           </button>
           <button 
             onClick={() => {
-              const qrData = `https://vfide.app/join?ref=${referralStats.code}`;
+              const _qrData = `https://vfide.app/join?ref=${referralStats.code}`;
               // Open QR code modal or generate inline
               alert('QR Code feature coming soon!');
             }}

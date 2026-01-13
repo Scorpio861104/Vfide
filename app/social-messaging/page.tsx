@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageCircle,
   Users,
-  BarChart3,
   Shield,
   Lock,
   UserPlus,
@@ -28,7 +27,7 @@ import { FriendRequestsPanel } from '@/components/social/FriendRequestsPanel';
 import { PrivacySettings } from '@/components/social/PrivacySettings';
 import { FriendCirclesManager } from '@/components/social/FriendCirclesManager';
 import { AccountSettings } from '@/components/settings/AccountSettings';
-import { NotificationCenter } from '@/components/social/NotificationCenter';
+import { SocialNotifications } from '@/components/social/SocialNotifications';
 import { GlobalUserSearch } from '@/components/social/GlobalUserSearch';
 import { ActivityFeed } from '@/components/social/ActivityFeed';
 import { EndorsementsBadges } from '@/components/social/EndorsementsBadges';
@@ -44,11 +43,11 @@ type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'pri
 
 export default function SocialPage() {
   const { address, isConnected } = useAccount();
-  const { hasVault, vaultAddress, isLoading: isLoadingVault } = useHasVault();
+  const { hasVault, vaultAddress: _vaultAddress, isLoading: isLoadingVault } = useHasVault();
   const { recordActivity, unlockAchievement } = useGamification(address);
   const [activeTab, setActiveTab] = useState<TabType>('messages');
   const [selectedFriend, setSelectedFriend] = useState<Friend | undefined>();
-  const [selectedGroup, setSelectedGroup] = useState<Group | undefined>();
+  const [_selectedGroup, setSelectedGroup] = useState<Group | undefined>();
   const [friends, setFriends] = useState<Friend[]>([]);
 
   // Load friends from localStorage
@@ -219,7 +218,7 @@ export default function SocialPage() {
                     ) : null}
                   </div>
                   <div className="relative">
-                    <NotificationCenter />
+                    <SocialNotifications />
                   </div>
                 </div>
               )}
@@ -323,7 +322,7 @@ export default function SocialPage() {
                       if (stored) {
                         try {
                           setFriends(JSON.parse(stored));
-                        } catch (e) {}
+                        } catch (_e) {}
                       }
                     }}
                     selectedFriend={selectedFriend}

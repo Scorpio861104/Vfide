@@ -1,7 +1,7 @@
 'use client'
 
 import { CURRENT_CHAIN_ID } from '@/lib/testnet'
-import { IS_TESTNET, getSupportedChainFromId } from '@/lib/chains'
+import { IS_TESTNET, getSupportedChainFromId as _getSupportedChainFromId } from '@/lib/chains'
 import { base, baseSepolia } from 'wagmi/chains'
 import { safeLocalStorage } from '@/lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -67,7 +67,7 @@ export function NetworkSwitchOverlay() {
     if (autoSwitch && isWrongNetwork && !isPending && !dismissed) {
       handleSwitch(true)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on network mismatch, not on function reference changes
+     
   }, [isWrongNetwork])
 
   // Show success animation briefly

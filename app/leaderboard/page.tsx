@@ -19,27 +19,11 @@ import {
   ChevronDown,
   Minus,
   Sparkles,
-  Award
+  Award,
+  RefreshCw,
+  Loader2
 } from 'lucide-react'
-
-// Mock leaderboard data - in production this would come from contract events or indexer
-const mockLeaderboard = [
-  { rank: 1, address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8bEb1', score: 8500, tier: 'CHAMPION', change: 2, badges: 12 },
-  { rank: 2, address: '0x8ba1f109551bD432803012645Ac136ddd64DBA72', score: 8350, tier: 'CHAMPION', change: -1, badges: 10 },
-  { rank: 3, address: '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B', score: 8200, tier: 'CHAMPION', change: 0, badges: 11 },
-  { rank: 4, address: '0x1234567890123456789012345678901234567890', score: 7890, tier: 'GUARDIAN', change: 3, badges: 9 },
-  { rank: 5, address: '0xDead000000000000000000000000000000000000', score: 7650, tier: 'GUARDIAN', change: -2, badges: 8 },
-  { rank: 6, address: '0xBeeF000000000000000000000000000000000000', score: 7400, tier: 'GUARDIAN', change: 1, badges: 8 },
-  { rank: 7, address: '0xCafe000000000000000000000000000000000000', score: 7100, tier: 'DELEGATE', change: 0, badges: 7 },
-  { rank: 8, address: '0xFeed000000000000000000000000000000000000', score: 6950, tier: 'DELEGATE', change: 4, badges: 6 },
-  { rank: 9, address: '0xBabe000000000000000000000000000000000000', score: 6800, tier: 'DELEGATE', change: -1, badges: 7 },
-  { rank: 10, address: '0xFace000000000000000000000000000000000000', score: 6650, tier: 'DELEGATE', change: 0, badges: 5 },
-  { rank: 11, address: '0xAce0000000000000000000000000000000000000', score: 6500, tier: 'ADVOCATE', change: 2, badges: 5 },
-  { rank: 12, address: '0xBed0000000000000000000000000000000000000', score: 6350, tier: 'ADVOCATE', change: -3, badges: 4 },
-  { rank: 13, address: '0xDad0000000000000000000000000000000000000', score: 6200, tier: 'ADVOCATE', change: 1, badges: 4 },
-  { rank: 14, address: '0xEgg0000000000000000000000000000000000000', score: 6050, tier: 'ADVOCATE', change: 0, badges: 3 },
-  { rank: 15, address: '0xFog0000000000000000000000000000000000000', score: 5900, tier: 'MERCHANT', change: 5, badges: 3 },
-]
+import { useLeaderboard, useUserRank, type LeaderboardEntry } from '@/hooks/useLeaderboard'
 
 const tierColors: Record<string, { gradient: string; text: string; glow: string; bg: string; border: string }> = {
   'CHAMPION': { gradient: 'from-[#FFD700] to-[#FFA500]', text: 'text-[#FFD700]', glow: 'shadow-[#FFD700]/30', bg: 'bg-[#FFD700]/20', border: 'border-[#FFD700]/30' },
@@ -85,14 +69,13 @@ const getChangeIndicator = (change: number) => {
   return <Minus className="w-4 h-4 text-[#6A6A6F]" />
 }
 
-// Podium card for top 3 display (ready for use when live data available)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// Podium card for top 3 display
 function PodiumCard({ 
   entry, 
   place, 
   delay 
 }: { 
-  entry: typeof mockLeaderboard[0]
+  entry: LeaderboardEntry
   place: 1 | 2 | 3
   delay: number 
 }) {
@@ -158,9 +141,8 @@ function PodiumCard({
   )
 }
 
-// Table row for leaderboard entries (ready for use when live data available)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function LeaderboardRow({ entry, index }: { entry: typeof mockLeaderboard[0]; index: number }) {
+// Table row for leaderboard entries
+function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: number }) {
   const tierStyle = tierColors[entry.tier] || tierColors['NEUTRAL']
   
   return (
@@ -237,11 +219,16 @@ function LeaderboardRow({ entry, index }: { entry: typeof mockLeaderboard[0]; in
 
 export default function LeaderboardPage() {
   const [timeframe, setTimeframe] = useState<'all' | 'month' | 'week'>('all')
+  
+  // Fetch real leaderboard data from Seer contract
+  const { entries, isLoading, error, totalParticipants, refetch } = useLeaderboard(50)
+  const { userRank } = useUserRank()
 
-  // Stats
-  const totalParticipants = 12847
-  const avgScore = 5420
-  const topScore = mockLeaderboard[0]?.score || 0
+  // Calculate stats from real data
+  const avgScore = entries.length > 0 
+    ? Math.round(entries.reduce((sum, e) => sum + e.score, 0) / entries.length)
+    : 0
+  const topScore = entries[0]?.score || 0
 
   return (
     <>
@@ -261,6 +248,12 @@ export default function LeaderboardPage() {
               <p className="text-lg sm:text-xl text-[#A0A0A5] font-[family-name:var(--font-body)]">
                 Top contributors in the VFIDE ecosystem
               </p>
+              {userRank && (
+                <div className="mt-4 inline-flex items-center gap-2 bg-[#00F0FF]/10 border border-[#00F0FF]/30 rounded-lg px-4 py-2">
+                  <span className="text-[#A0A0A5]">Your Rank:</span>
+                  <span className="text-[#00F0FF] font-bold">#{userRank}</span>
+                </div>
+              )}
             </div>
 
             {/* Stats Cards */}
@@ -287,20 +280,30 @@ export default function LeaderboardPage() {
         {/* Timeframe Filter */}
         <section className="py-4 bg-[#1A1A1D] border-b border-[#3A3A3F] sticky top-20 z-40">
           <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
-            <div className="flex gap-2">
-              {(['all', 'month', 'week'] as const).map((tf) => (
-                <button
-                  key={tf}
-                  onClick={() => setTimeframe(tf)}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                    timeframe === tf
-                      ? 'bg-[#00F0FF] text-[#1A1A1D]'
-                      : 'bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#F5F3E8]'
-                  }`}
-                >
-                  {tf === 'all' ? 'All Time' : tf === 'month' ? 'This Month' : 'This Week'}
-                </button>
-              ))}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                {(['all', 'month', 'week'] as const).map((tf) => (
+                  <button
+                    key={tf}
+                    onClick={() => setTimeframe(tf)}
+                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                      timeframe === tf
+                        ? 'bg-[#00F0FF] text-[#1A1A1D]'
+                        : 'bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#F5F3E8]'
+                    }`}
+                  >
+                    {tf === 'all' ? 'All Time' : tf === 'month' ? 'This Month' : 'This Week'}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => refetch()}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-3 py-2 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:border-[#00F0FF] transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline text-sm">Refresh</span>
+              </button>
             </div>
           </div>
         </section>
@@ -308,123 +311,157 @@ export default function LeaderboardPage() {
         {/* Leaderboard Table */}
         <section className="py-8">
           <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
+            {/* Error State */}
+            {error && (
+              <div className="bg-[#FF4444]/10 border border-[#FF4444]/30 rounded-xl p-6 text-center mb-8">
+                <p className="text-[#FF4444] mb-4">{error}</p>
+                <button
+                  onClick={() => refetch()}
+                  className="px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] hover:border-[#00F0FF]"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {isLoading && entries.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="w-12 h-12 text-[#00F0FF] animate-spin mb-4" />
+                <p className="text-[#A0A0A5]">Loading leaderboard data...</p>
+              </div>
+            )}
+
             {/* Top 3 Podium */}
-            <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
-              {/* 2nd Place */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-[#2A2A2F] border-2 border-[#C0C0C0] rounded-xl p-3 md:p-4 text-center mt-4 md:mt-8"
-              >
-                <Medal className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 text-[#C0C0C0]" />
-                <div className="text-2xl md:text-3xl font-bold text-[#F5F3E8] mb-1">2nd</div>
-                <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{mockLeaderboard[1]?.address.slice(0, 6)}...</div>
-                <div className="text-lg md:text-xl font-bold text-[#C0C0C0] mt-2">{mockLeaderboard[1]?.score.toLocaleString()}</div>
-              </motion.div>
+            {entries.length >= 3 && (
+              <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
+                {/* 2nd Place */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-[#2A2A2F] border-2 border-[#C0C0C0] rounded-xl p-3 md:p-4 text-center mt-4 md:mt-8"
+                >
+                  <Medal className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 text-[#C0C0C0]" />
+                  <div className="text-2xl md:text-3xl font-bold text-[#F5F3E8] mb-1">2nd</div>
+                  <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{entries[1]?.address.slice(0, 6)}...</div>
+                  <div className="text-lg md:text-xl font-bold text-[#C0C0C0] mt-2">{entries[1]?.score.toLocaleString()}</div>
+                </motion.div>
 
-              {/* 1st Place */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-linear-to-br from-[#FFD700]/20 to-[#FFA500]/20 border-2 border-[#FFD700] rounded-xl p-4 md:p-6 text-center -mt-2 md:-mt-4"
-              >
-                <Crown className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 text-[#FFD700]" />
-                <div className="text-3xl md:text-4xl font-bold text-[#FFD700] mb-1">1st</div>
-                <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{mockLeaderboard[0]?.address.slice(0, 6)}...</div>
-                <div className="text-xl md:text-2xl font-bold text-[#FFD700] mt-2">{mockLeaderboard[0]?.score.toLocaleString()}</div>
-                <div className="hidden md:flex items-center justify-center gap-1 mt-2">
-                  <Star className="w-4 h-4 text-[#FFD700]" />
-                  <span className="text-xs text-[#A0A0A5]">{mockLeaderboard[0]?.badges} badges</span>
-                </div>
-              </motion.div>
+                {/* 1st Place */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-linear-to-br from-[#FFD700]/20 to-[#FFA500]/20 border-2 border-[#FFD700] rounded-xl p-4 md:p-6 text-center -mt-2 md:-mt-4"
+                >
+                  <Crown className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 text-[#FFD700]" />
+                  <div className="text-3xl md:text-4xl font-bold text-[#FFD700] mb-1">1st</div>
+                  <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{entries[0]?.address.slice(0, 6)}...</div>
+                  <div className="text-xl md:text-2xl font-bold text-[#FFD700] mt-2">{entries[0]?.score.toLocaleString()}</div>
+                  <div className="hidden md:flex items-center justify-center gap-1 mt-2">
+                    <Star className="w-4 h-4 text-[#FFD700]" />
+                    <span className="text-xs text-[#A0A0A5]">{entries[0]?.badges} badges</span>
+                  </div>
+                </motion.div>
 
-              {/* 3rd Place */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-[#2A2A2F] border-2 border-[#CD7F32] rounded-xl p-3 md:p-4 text-center mt-4 md:mt-8"
-              >
-                <Medal className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 text-[#CD7F32]" />
-                <div className="text-2xl md:text-3xl font-bold text-[#F5F3E8] mb-1">3rd</div>
-                <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{mockLeaderboard[2]?.address.slice(0, 6)}...</div>
-                <div className="text-lg md:text-xl font-bold text-[#CD7F32] mt-2">{mockLeaderboard[2]?.score.toLocaleString()}</div>
-              </motion.div>
-            </div>
+                {/* 3rd Place */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-[#2A2A2F] border-2 border-[#CD7F32] rounded-xl p-3 md:p-4 text-center mt-4 md:mt-8"
+                >
+                  <Medal className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 text-[#CD7F32]" />
+                  <div className="text-2xl md:text-3xl font-bold text-[#F5F3E8] mb-1">3rd</div>
+                  <div className="font-mono text-xs md:text-sm text-[#A0A0A5] truncate">{entries[2]?.address.slice(0, 6)}...</div>
+                  <div className="text-lg md:text-xl font-bold text-[#CD7F32] mt-2">{entries[2]?.score.toLocaleString()}</div>
+                </motion.div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoading && entries.length === 0 && !error && (
+              <div className="text-center py-16">
+                <Trophy className="w-16 h-16 text-[#3A3A3F] mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">No Rankings Yet</h3>
+                <p className="text-[#A0A0A5]">Be the first to earn ProofScore points!</p>
+              </div>
+            )}
 
             {/* Full Leaderboard */}
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl overflow-hidden overflow-x-auto">
-              {/* Table Header - Hidden on mobile */}
-              <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-[#1A1A1D] border-b border-[#3A3A3F] text-sm text-[#A0A0A5] font-bold">
-                <div className="col-span-1">Rank</div>
-                <div className="col-span-5">Address</div>
-                <div className="col-span-2 text-center">Score</div>
-                <div className="col-span-2 text-center">Tier</div>
-                <div className="col-span-1 text-center">Badges</div>
-                <div className="col-span-1 text-center">Change</div>
-              </div>
+            {entries.length > 0 && (
+              <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl overflow-hidden overflow-x-auto">
+                {/* Table Header - Hidden on mobile */}
+                <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-[#1A1A1D] border-b border-[#3A3A3F] text-sm text-[#A0A0A5] font-bold">
+                  <div className="col-span-1">Rank</div>
+                  <div className="col-span-5">Address</div>
+                  <div className="col-span-2 text-center">Score</div>
+                  <div className="col-span-2 text-center">Tier</div>
+                  <div className="col-span-1 text-center">Badges</div>
+                  <div className="col-span-1 text-center">Change</div>
+                </div>
 
-              {/* Table Body */}
-              {mockLeaderboard.map((entry, index) => {
-                const tierStyle = tierColors[entry.tier] || tierColors['NEUTRAL']
-                return (
-                  <motion.div
-                    key={entry.address}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={`border-b border-[#3A3A3F] hover:bg-[#3A3A3F]/30 transition-colors ${
-                      entry.rank <= 3 ? 'bg-[#FFD700]/5' : ''
-                    }`}
-                  >
-                    {/* Mobile Layout */}
-                    <div className="md:hidden flex items-center justify-between px-3 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8">{getRankIcon(entry.rank)}</div>
-                        <div className="flex flex-col">
-                          <span className="font-mono text-[#F5F3E8] text-sm">
-                            {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
-                          </span>
-                          <span className={`text-xs font-bold ${tierStyle.text}`}>{entry.tier}</span>
+                {/* Table Body */}
+                {entries.map((entry, index) => {
+                  const tierStyle = tierColors[entry.tier] || tierColors['NEUTRAL']
+                  return (
+                    <motion.div
+                      key={entry.address}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className={`border-b border-[#3A3A3F] hover:bg-[#3A3A3F]/30 transition-colors ${
+                        entry.rank <= 3 ? 'bg-[#FFD700]/5' : ''
+                      }`}
+                    >
+                      {/* Mobile Layout */}
+                      <div className="md:hidden flex items-center justify-between px-3 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8">{getRankIcon(entry.rank)}</div>
+                          <div className="flex flex-col">
+                            <span className="font-mono text-[#F5F3E8] text-sm">
+                              {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
+                            </span>
+                            <span className={`text-xs font-bold ${tierStyle.text}`}>{entry.tier}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#00F0FF] font-bold">{entry.score.toLocaleString()}</span>
+                          {getChangeIndicator(entry.change)}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#00F0FF] font-bold">{entry.score.toLocaleString()}</span>
-                        {getChangeIndicator(entry.change)}
-                      </div>
-                    </div>
 
-                    {/* Desktop Layout */}
-                    <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-4">
-                      <div className="col-span-1 flex items-center">
-                        {getRankIcon(entry.rank)}
+                      {/* Desktop Layout */}
+                      <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-4">
+                        <div className="col-span-1 flex items-center">
+                          {getRankIcon(entry.rank)}
+                        </div>
+                        <div className="col-span-5 flex items-center">
+                          <span className="font-mono text-[#F5F3E8] text-sm truncate">
+                            {entry.address.slice(0, 10)}...{entry.address.slice(-8)}
+                          </span>
+                        </div>
+                        <div className="col-span-2 flex items-center justify-center">
+                          <span className="text-[#00F0FF] font-bold">{entry.score.toLocaleString()}</span>
+                        </div>
+                        <div className="col-span-2 flex items-center justify-center">
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${tierStyle.bg} ${tierStyle.text} border ${tierStyle.border}`}>
+                            {entry.tier}
+                          </span>
+                        </div>
+                        <div className="col-span-1 flex items-center justify-center gap-1">
+                          <Shield className="w-4 h-4 text-[#A0A0A5]" />
+                          <span className="text-[#F5F3E8]">{entry.badges}</span>
+                        </div>
+                        <div className="col-span-1 flex items-center justify-center">
+                          {getChangeIndicator(entry.change)}
+                        </div>
                       </div>
-                      <div className="col-span-5 flex items-center">
-                        <span className="font-mono text-[#F5F3E8] text-sm truncate">
-                          {entry.address.slice(0, 10)}...{entry.address.slice(-8)}
-                        </span>
-                      </div>
-                      <div className="col-span-2 flex items-center justify-center">
-                        <span className="text-[#00F0FF] font-bold">{entry.score.toLocaleString()}</span>
-                      </div>
-                      <div className="col-span-2 flex items-center justify-center">
-                        <span className={`px-2 py-1 rounded text-xs font-bold ${tierStyle.bg} ${tierStyle.text} border ${tierStyle.border}`}>
-                          {entry.tier}
-                        </span>
-                      </div>
-                      <div className="col-span-1 flex items-center justify-center gap-1">
-                        <Shield className="w-4 h-4 text-[#A0A0A5]" />
-                        <span className="text-[#F5F3E8]">{entry.badges}</span>
-                      </div>
-                      <div className="col-span-1 flex items-center justify-center">
-                        {getChangeIndicator(entry.change)}
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            )}
 
             {/* Load More */}
             <div className="text-center mt-6">

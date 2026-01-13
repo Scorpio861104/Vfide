@@ -58,6 +58,7 @@ export function useEscrow() {
   // ============ HELPER FUNCTIONS (defined first) ============
 
   // Helper: Check token allowance
+  // Parameters prefixed with _ as they're reserved for future contract read implementation
   const checkAllowance = useCallback(async (_owner: `0x${string}`, _spender: `0x${string}`): Promise<bigint> => {
     // Implementation would use contract read
     return BigInt(0);

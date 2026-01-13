@@ -218,7 +218,7 @@ const mockBlockedUsers = (): BlockedUser[] => [
 
 // ==================== HELPER FUNCTIONS ====================
 
-const formatJoinDate = (date: Date): string => {
+const _formatJoinDate = (date: Date): string => {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 };
 
@@ -538,7 +538,7 @@ function SocialFeatures({ className = '' }: SocialFeaturesProps) {
   const [friends] = useState(mockFriends());
   const [friendRequests, setFriendRequests] = useState(mockFriendRequests());
   const [suggestions, setSuggestions] = useState(mockSuggestions());
-  const [feedPosts, setFeedPosts] = useState(mockFeedPosts());
+  const [feedPosts, _setFeedPosts] = useState(mockFeedPosts());
   const [blockedUsers, setBlockedUsers] = useState(mockBlockedUsers());
 
   // Initialize relationships
@@ -621,11 +621,11 @@ function SocialFeatures({ className = '' }: SocialFeaturesProps) {
   }, []);
 
   const handleCommentPost = useCallback((postId: string) => {
-    console.log('Comment on post:', postId);
+    // Comment action triggered
   }, []);
 
   const handleSharePost = useCallback((postId: string) => {
-    console.log('Share post:', postId);
+    // Share action triggered
   }, []);
 
   // Filtered Data

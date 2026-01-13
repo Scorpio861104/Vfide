@@ -40,8 +40,8 @@ export default function HeadhunterPage() {
   const { referralLink, qrCodeUrl: _qrCodeUrl } = useReferralLink();
   const reward = useHeadhunterReward(stats.currentYearNumber, stats.currentQuarterNumber);
   const { claimReward, isPending: isClaimPending, isSuccess: isClaimSuccess } = useClaimHeadhunterReward();
-  const { leaderboard, isLoading: leaderboardLoading } = useLeaderboard(stats.currentYearNumber, stats.currentQuarterNumber);
-  const { activity: recentActivity, isLoading: activityLoading } = useReferralActivity();
+  const { leaderboard, isLoading: _leaderboardLoading } = useLeaderboard(stats.currentYearNumber, stats.currentQuarterNumber);
+  const { activity: recentActivity, isLoading: _activityLoading } = useReferralActivity();
 
   // Calculate days until quarter end
   const quarterEndsAtMs = Number(stats.quarterEndsAt) * 1000;

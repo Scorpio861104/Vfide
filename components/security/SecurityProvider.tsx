@@ -8,7 +8,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { initCSPReporting, SecurityMonitor } from '@/lib/security';
+import { initCSPReporting } from '@/lib/security';
 
 export function SecurityProvider() {
   useEffect(() => {
@@ -17,7 +17,7 @@ export function SecurityProvider() {
 
     // Log security initialization in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Security] CSP reporting initialized');
+      // CSP reporting initialized
     }
 
     // Monitor for unsafe inline scripts (development warning)

@@ -234,7 +234,7 @@ export const storyStorage = {
   },
 
   clearExpired(): void {
-    const active = this.load(); // Already filters expired
+    const _active = this.load(); // Already filters expired
     // save is already done in load()
   },
 };

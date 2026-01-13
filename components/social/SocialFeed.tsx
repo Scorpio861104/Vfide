@@ -7,15 +7,11 @@ import {
   MessageCircle,
   Share2,
   Send,
-  Image,
+  Image as ImageIcon,
   Smile,
   Search,
   Filter,
-  Flame,
-  TrendingUp,
-  Award,
   Zap,
-  X,
   MoreHorizontal,
 } from 'lucide-react';
 import { SocialTipButton } from './SocialTipButton';
@@ -449,7 +445,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
               <button className="p-2 text-[#A0A0A5] hover:text-[#00F0FF] hover:bg-[#2A2A3E] rounded-lg transition-colors">
-                <Image className="w-5 h-5" />
+                <ImageIcon className="w-5 h-5" />
               </button>
               <button className="p-2 text-[#A0A0A5] hover:text-[#A78BFA] hover:bg-[#2A2A3E] rounded-lg transition-colors">
                 <Smile className="w-5 h-5" />

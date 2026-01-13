@@ -267,7 +267,7 @@ export function Counter({ value, duration = 1500, prefix = "", suffix = "", clas
     };
     
     requestAnimationFrame(animate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Animation should only restart when value or duration changes
+     
   }, [value, duration]);
   
   return (

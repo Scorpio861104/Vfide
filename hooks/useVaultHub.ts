@@ -99,6 +99,8 @@ export function useVaultHub() {
     query: { 
       enabled: !!isValidVaultHubAddress && !!userAddress && isOnCorrectChain,
       refetchInterval: 10000, // Refetch every 10 seconds
+      retry: 3,
+      retryDelay: 1000,
     },
   });
 
@@ -110,6 +112,8 @@ export function useVaultHub() {
     chainId: EXPECTED_CHAIN_ID,
     query: { 
       enabled: !!isValidVaultHubAddress && isOnCorrectChain,
+      retry: 3,
+      retryDelay: 1000,
     },
   });
 

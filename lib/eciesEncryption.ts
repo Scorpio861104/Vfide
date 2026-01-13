@@ -1,7 +1,7 @@
 'use client';
 
 import eccrypto from '@toruslabs/eccrypto';
-import { keccak256, toBytes, toHex } from 'viem';
+import { keccak256, toBytes } from 'viem';
 
 /**
  * ECIES (Elliptic Curve Integrated Encryption Scheme) implementation

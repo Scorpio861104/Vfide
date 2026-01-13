@@ -160,7 +160,7 @@ export class StorageService {
       // Sort by access time (if available) or just clear first item
       if (vfideKeys.length > 0) {
         localStorage.removeItem(vfideKeys[0]);
-        console.log('[StorageService] Cleared oldest item:', vfideKeys[0]);
+        // Cleared oldest item for space
       }
     } catch (error) {
       console.error('[StorageService] Failed to clear oldest:', error);
@@ -176,7 +176,7 @@ export class StorageService {
     }
 
     try {
-      const test = '__storage_test__';
+      const test = '_storage_test_';
       localStorage.setItem(test, test);
       localStorage.removeItem(test);
       return true;

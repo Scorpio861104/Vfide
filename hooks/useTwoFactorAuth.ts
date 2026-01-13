@@ -244,7 +244,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
       });
 
       return true;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }, [updateConfig]);

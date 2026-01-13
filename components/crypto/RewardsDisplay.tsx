@@ -35,7 +35,7 @@ export function RewardsDisplay({ userId }: RewardsDisplayProps) {
     try {
       await claim();
       announce(`Claimed ${totalUnclaimed} VFIDE tokens`, 'polite');
-    } catch (error) {
+    } catch {
       announce('Failed to claim rewards', 'assertive');
     } finally {
       setClaiming(false);
@@ -149,12 +149,10 @@ export function RewardsDisplay({ userId }: RewardsDisplayProps) {
 }
 
 // ============================================================================
-// Reward Card
+// Reward Card - Memoized for list performance
 // ============================================================================
 
-function RewardCard({ reward }: { reward: TokenReward }) {
-  const Icon = React.useMemo(() => getIconForAction(reward.action), [reward.action]);
-
+const RewardCard = React.memo(function RewardCard({ reward }: { reward: TokenReward }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -163,7 +161,7 @@ function RewardCard({ reward }: { reward: TokenReward }) {
       className="bg-[#1A1A1F] border border-purple-500/20 rounded-lg p-3 flex items-center gap-3 hover:border-purple-500/40 transition-colors"
     >
       <div className="w-10 h-10 bg-linear-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5 text-purple-400" />
+        {renderIconForAction(reward.action, "w-5 h-5 text-purple-400")}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -179,28 +177,28 @@ function RewardCard({ reward }: { reward: TokenReward }) {
       </div>
     </motion.div>
   );
-}
+});
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-function getIconForAction(action: TokenReward['action']) {
+function renderIconForAction(action: TokenReward['action'], className: string) {
   switch (action) {
     case 'message_sent':
-      return MessageSquare;
+      return <MessageSquare className={className} />;
     case 'reaction_given':
-      return Heart;
+      return <Heart className={className} />;
     case 'group_created':
-      return Users;
+      return <Users className={className} />;
     case 'member_invited':
-      return Users;
+      return <Users className={className} />;
     case 'content_shared':
-      return Share2;
+      return <Share2 className={className} />;
     case 'daily_login':
-      return Calendar;
+      return <Calendar className={className} />;
     default:
-      return Award;
+      return <Award className={className} />;
   }
 }
 

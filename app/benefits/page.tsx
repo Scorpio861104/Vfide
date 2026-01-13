@@ -134,7 +134,7 @@ export default function BenefitsPage() {
 }
 
 // GlassCard component
-function GlassCard({ children, className = "", gradient }: { 
+function _GlassCard({ children, className = "", gradient }: { 
   children: React.ReactNode; 
   className?: string;
   gradient?: string;

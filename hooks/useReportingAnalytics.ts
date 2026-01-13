@@ -11,7 +11,6 @@ import type {
   Query,
   ExportConfig,
   DashboardConfig,
-  RealtimeMetricUpdate,
 } from '@/config/reporting-analytics';
 import {
   ReportType,

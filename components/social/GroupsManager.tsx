@@ -12,7 +12,6 @@ import {
   Crown,
   Settings,
   LogOut,
-  UserPlus,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Group, Friend } from '@/types/messaging';

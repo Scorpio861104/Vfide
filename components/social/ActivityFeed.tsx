@@ -12,7 +12,7 @@ import {
   TrendingUp,
   Clock,
 } from 'lucide-react';
-import { formatAddress } from '@/lib/messageEncryption';
+import { formatAddress as _formatAddress } from '@/lib/messageEncryption';
 import { UserDisplay } from '@/components/common/UserDisplay';
 
 interface ActivityItem {

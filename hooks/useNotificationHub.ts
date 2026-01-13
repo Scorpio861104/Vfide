@@ -15,11 +15,11 @@ import {
   NotificationStatus,
   NotificationStats,
   NotificationType,
-  NotificationSeverity,
+  NotificationSeverity as _NotificationSeverity,
   DeliveryChannel,
   DEFAULT_NOTIFICATION_PREFERENCES,
   calculateNotificationStats,
-  groupNotificationsByType,
+  groupNotificationsByType as _groupNotificationsByType,
 } from '@/config/notification-hub';
 
 interface UseNotificationHubResult {
@@ -268,7 +268,7 @@ export function useNotificationHub(): UseNotificationHubResult {
 
   // Add delivery channel
   const addDeliveryChannel = useCallback(
-    async (channel: DeliveryChannel, value: string): Promise<void> => {
+    async (_channel: DeliveryChannel, _value: string): Promise<void> => {
       // Simulate verification
       try {
         setIsLoading(true);

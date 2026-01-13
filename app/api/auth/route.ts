@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     const [address, timestamp] = decoded.split(':');
 
     // Check if token is expired (24 hours)
-    const tokenAge = Date.now() - parseInt(timestamp);
+    const tokenAge = Date.now() - parseInt(timestamp || '0');
     if (tokenAge > 86400000) {
       return NextResponse.json(
         { error: 'Token expired' },

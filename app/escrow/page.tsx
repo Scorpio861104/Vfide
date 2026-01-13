@@ -22,9 +22,11 @@ import {
   Hash
 } from 'lucide-react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
-import { parseUnits, isAddress } from 'viem'
+import { parseUnits } from 'viem'
 import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
+import { useEscrow } from '@/lib/escrow/useEscrow'
+import { Loader2 } from 'lucide-react'
 
 // EscrowManager ABI
 const ESCROW_MANAGER_ABI = [
@@ -57,69 +59,37 @@ const stateLabels: Record<EscrowState, string> = {
   [EscrowState.DISPUTED]: 'Disputed'
 }
 
-const stateColors: Record<EscrowState, string> = {
+const _stateColors: Record<EscrowState, string> = {
   [EscrowState.CREATED]: 'text-amber-400 bg-amber-500/20',
   [EscrowState.RELEASED]: 'text-emerald-400 bg-emerald-500/20',
   [EscrowState.REFUNDED]: 'text-blue-400 bg-blue-500/20',
   [EscrowState.DISPUTED]: 'text-red-400 bg-red-500/20'
 }
 
-// Mock escrow data
-interface EscrowData {
-  id: number
-  buyer: string
-  merchant: string
-  token: string
-  amount: bigint
-  createdAt: number
-  releaseTime: number
-  state: EscrowState
-  orderId: string
-}
-
-const mockEscrows: EscrowData[] = [
-  {
-    id: 1,
-    buyer: '0x1234...5678',
-    merchant: '0x8765...4321',
-    token: 'VFIDE',
-    amount: BigInt(5000 * 1e18),
-    createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-    releaseTime: Date.now() + 5 * 24 * 60 * 60 * 1000,
-    state: EscrowState.CREATED,
-    orderId: 'ORD-2024-001'
-  },
-  {
-    id: 2,
-    buyer: '0x1234...5678',
-    merchant: '0xABCD...EFGH',
-    token: 'VFIDE',
-    amount: BigInt(1500 * 1e18),
-    createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
-    releaseTime: Date.now() - 2 * 24 * 60 * 60 * 1000,
-    state: EscrowState.RELEASED,
-    orderId: 'ORD-2024-002'
-  },
-  {
-    id: 3,
-    buyer: '0x1234...5678',
-    merchant: '0x9999...1111',
-    token: 'VFIDE',
-    amount: BigInt(12000 * 1e18),
-    createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
-    releaseTime: Date.now() + 13 * 24 * 60 * 60 * 1000,
-    state: EscrowState.DISPUTED,
-    orderId: 'ORD-2024-003'
-  }
-]
-
 type TabId = 'active' | 'completed' | 'disputed'
 
 export default function EscrowPage() {
-  const { isConnected } = useAccount()
+  const { isConnected, address } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('active')
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  
+  // Use real escrow hook
+  const {
+    escrows,
+    loading: escrowLoading,
+    error: escrowError,
+    activeEscrows,
+    completedEscrows,
+    disputedEscrows,
+    createEscrow,
+    releaseEscrow,
+    refundEscrow: _refundEscrow,
+    raiseDispute,
+    claimTimeout: _claimTimeout,
+    formatEscrowAmount,
+    getTimeRemaining,
+    refresh
+  } = useEscrow()
   
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -129,19 +99,8 @@ export default function EscrowPage() {
     timeout: '7' // days
   })
 
-  // Contract write hooks
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-
-  // Read next escrow ID (used for display)
-  useReadContract({
-    address: ESCROW_MANAGER_ADDRESS,
-    abi: ESCROW_MANAGER_ABI,
-    functionName: 'nextId',
-  });
-
-  // Contract action handlers
-  const handleCreateEscrow = () => {
+  // Contract action handlers using the hook
+  const handleCreateEscrow = async () => {
     // Validate merchant address
     const validation = validateAddress(createForm.merchant);
     if (!validation.valid) {
@@ -149,54 +108,33 @@ export default function EscrowPage() {
       return;
     }
     
-    const amount = parseUnits(createForm.amount, 18);
-    const timeoutDays = safeParseInt(createForm.timeout, 7, { min: 1, max: 365 });
-    const timeout = BigInt(timeoutDays * 24 * 60 * 60);
-    
-    writeContract({
-      address: ESCROW_MANAGER_ADDRESS,
-      abi: ESCROW_MANAGER_ABI,
-      functionName: 'createEscrow',
-      args: [createForm.merchant as `0x${string}`, VFIDE_TOKEN_ADDRESS, amount, timeout],
-    });
+    try {
+      await createEscrow(
+        createForm.merchant as `0x${string}`,
+        createForm.amount,
+        createForm.orderId
+      );
+      setShowCreateModal(false);
+      setCreateForm({ merchant: '', amount: '', orderId: '', timeout: '7' });
+    } catch (err) {
+      console.error('Failed to create escrow:', err);
+    }
   };
 
-  const handleRelease = (id: number) => {
-    writeContract({
-      address: ESCROW_MANAGER_ADDRESS,
-      abi: ESCROW_MANAGER_ABI,
-      functionName: 'release',
-      args: [BigInt(id)],
-    });
+  const handleRelease = async (id: number) => {
+    try {
+      await releaseEscrow(BigInt(id));
+    } catch (err) {
+      console.error('Failed to release escrow:', err);
+    }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleRefund = (id: number) => {
-    writeContract({
-      address: ESCROW_MANAGER_ADDRESS,
-      abi: ESCROW_MANAGER_ABI,
-      functionName: 'refund',
-      args: [BigInt(id)],
-    });
-  };
-
-  const handleDispute = (id: number) => {
-    writeContract({
-      address: ESCROW_MANAGER_ADDRESS,
-      abi: ESCROW_MANAGER_ABI,
-      functionName: 'raiseDispute',
-      args: [BigInt(id)],
-    });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleClaimTimeout = (id: number) => {
-    writeContract({
-      address: ESCROW_MANAGER_ADDRESS,
-      abi: ESCROW_MANAGER_ABI,
-      functionName: 'claimTimeout',
-      args: [BigInt(id)],
-    });
+  const handleDispute = async (id: number) => {
+    try {
+      await raiseDispute(BigInt(id));
+    } catch (err) {
+      console.error('Failed to raise dispute:', err);
+    }
   };
 
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -205,45 +143,30 @@ export default function EscrowPage() {
     { id: 'disputed', label: 'Disputed', icon: <AlertTriangle className="w-4 h-4" /> }
   ]
 
-  // Filter escrows based on tab
-  const filteredEscrows = mockEscrows.filter(e => {
-    switch (activeTab) {
-      case 'active':
-        return e.state === EscrowState.CREATED
-      case 'completed':
-        return e.state === EscrowState.RELEASED || e.state === EscrowState.REFUNDED
-      case 'disputed':
-        return e.state === EscrowState.DISPUTED
-      default:
-        return true
-    }
-  })
+  // Filter escrows based on tab - using hook's pre-filtered arrays
+  const filteredEscrows = activeTab === 'active' 
+    ? activeEscrows 
+    : activeTab === 'completed' 
+      ? completedEscrows 
+      : disputedEscrows
 
-  // Stats
-  const totalInEscrow = mockEscrows
-    .filter(e => e.state === EscrowState.CREATED)
-    .reduce((sum, e) => sum + e.amount, BigInt(0))
-  const activeCount = mockEscrows.filter(e => e.state === EscrowState.CREATED).length
-  const completedCount = mockEscrows.filter(e => e.state === EscrowState.RELEASED || e.state === EscrowState.REFUNDED).length
-  const disputedCount = mockEscrows.filter(e => e.state === EscrowState.DISPUTED).length
+  // Stats from real escrow data
+  const totalInEscrow = activeEscrows.reduce((sum, e) => sum + e.amount, BigInt(0))
+  const activeCount = activeEscrows.length
+  const completedCount = completedEscrows.length
+  const disputedCount = disputedEscrows.length
 
   const formatAmount = (amount: bigint): string => {
-    return (Number(amount) / 1e18).toLocaleString()
+    return formatEscrowAmount(amount)
   }
 
-  const formatTimeRemaining = (releaseTime: number): string => {
-    const now = Date.now()
-    const diff = releaseTime - now
-    if (diff <= 0) return 'Ready to claim'
-    
-    const days = Math.floor(diff / (24 * 60 * 60 * 1000))
-    const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
-    
-    if (days > 0) return `${days}d ${hours}h remaining`
-    return `${hours}h remaining`
+  const formatTimeRemaining = (releaseTime: bigint): string => {
+    return getTimeRemaining(releaseTime)
   }
 
-  // Old mock handlers removed - contract handlers are defined above
+  // Suppress unused variable warnings
+  void address
+  void escrowError
 
   return (
     <>
@@ -380,6 +303,17 @@ export default function EscrowPage() {
                   <h3 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h3>
                   <p className="text-gray-400">Connect your wallet to view and manage your escrows</p>
                 </motion.div>
+              ) : escrowLoading && escrows.length === 0 ? (
+                <motion.div 
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-16"
+                >
+                  <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
+                  <p className="text-gray-400">Loading your escrows...</p>
+                </motion.div>
               ) : filteredEscrows.length === 0 ? (
                 <motion.div 
                   key="empty"
@@ -393,6 +327,15 @@ export default function EscrowPage() {
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">No Escrows Found</h3>
                   <p className="text-gray-400">You don&apos;t have any {activeTab} escrows yet</p>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => refresh()}
+                    className="mt-4 flex items-center gap-2 px-4 py-2 bg-white/5 text-gray-300 rounded-lg hover:bg-white/10 mx-auto"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                  </motion.button>
                 </motion.div>
               ) : (
                 <motion.div 
@@ -404,7 +347,7 @@ export default function EscrowPage() {
                 >
                   {filteredEscrows.map((escrow, idx) => (
                     <motion.div
-                      key={escrow.id}
+                      key={escrow.id.toString()}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       whileHover={{ scale: 1.005, y: -2 }}
@@ -417,16 +360,16 @@ export default function EscrowPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-3">
                               <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                                escrow.state === EscrowState.CREATED ? 'text-amber-400 bg-amber-500/20 border-amber-500/30' :
-                                escrow.state === EscrowState.RELEASED ? 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30' :
-                                escrow.state === EscrowState.REFUNDED ? 'text-blue-400 bg-blue-500/20 border-blue-500/30' :
+                                escrow.state === 0 ? 'text-amber-400 bg-amber-500/20 border-amber-500/30' :
+                                escrow.state === 1 ? 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30' :
+                                escrow.state === 2 ? 'text-blue-400 bg-blue-500/20 border-blue-500/30' :
                                 'text-red-400 bg-red-500/20 border-red-500/30'
                               }`}>
-                                {stateLabels[escrow.state]}
+                                {stateLabels[escrow.state as EscrowState] || 'Unknown'}
                               </span>
                               <span className="text-gray-500 text-sm flex items-center gap-1">
                                 <Hash className="w-3 h-3" />
-                                {escrow.orderId}
+                                ESC-{escrow.id.toString()}
                               </span>
                             </div>
                         
@@ -435,26 +378,26 @@ export default function EscrowPage() {
                                 <p className="text-gray-500 mb-1 flex items-center gap-1">
                                   <User className="w-3 h-3" /> Merchant
                                 </p>
-                                <p className="text-white font-mono">{escrow.merchant}</p>
+                                <p className="text-white font-mono">{escrow.merchant.slice(0, 8)}...{escrow.merchant.slice(-6)}</p>
                               </div>
                               <div>
                                 <p className="text-gray-500 mb-1 flex items-center gap-1">
                                   <DollarSign className="w-3 h-3" /> Amount
                                 </p>
-                                <p className="text-white font-semibold">{formatAmount(escrow.amount)} {escrow.token}</p>
+                                <p className="text-white font-semibold">{formatAmount(escrow.amount)} VFIDE</p>
                               </div>
                               <div>
                                 <p className="text-gray-500 mb-1 flex items-center gap-1">
                                   <Calendar className="w-3 h-3" /> Created
                                 </p>
-                                <p className="text-white">{new Date(escrow.createdAt).toLocaleDateString()}</p>
+                                <p className="text-white">{new Date(Number(escrow.createdAt) * 1000).toLocaleDateString()}</p>
                               </div>
                               <div>
                                 <p className="text-gray-500 mb-1 flex items-center gap-1">
                                   <Timer className="w-3 h-3" /> Release
                                 </p>
                                 <p className={`font-medium ${
-                                  escrow.releaseTime <= Date.now() + 24 * 60 * 60 * 1000 
+                                  Number(escrow.releaseTime) * 1000 <= Date.now() + 24 * 60 * 60 * 1000 
                                     ? 'text-amber-400' 
                                     : 'text-white'
                                 }`}>
@@ -465,16 +408,16 @@ export default function EscrowPage() {
                           </div>
                       
                           {/* Right: Actions */}
-                          {escrow.state === EscrowState.CREATED && (
+                          {escrow.state === 0 && (
                             <div className="flex gap-3 lg:flex-col">
                               <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => handleRelease(escrow.id)}
-                                disabled={actionLoading === `release-${escrow.id}`}
+                                onClick={() => handleRelease(Number(escrow.id))}
+                                disabled={escrowLoading}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-linear-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50"
                               >
-                                {actionLoading === `release-${escrow.id}` ? (
+                                {escrowLoading ? (
                                   <RefreshCw className="w-4 h-4 animate-spin" />
                                 ) : (
                                   <CheckCircle2 className="w-4 h-4" />
@@ -484,11 +427,11 @@ export default function EscrowPage() {
                               <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => handleDispute(escrow.id)}
-                                disabled={actionLoading === `dispute-${escrow.id}`}
+                                onClick={() => handleDispute(Number(escrow.id))}
+                                disabled={escrowLoading}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-red-400 rounded-xl font-medium border border-red-500/30 hover:bg-red-500/10 transition-all disabled:opacity-50"
                               >
-                                {actionLoading === `dispute-${escrow.id}` ? (
+                                {escrowLoading ? (
                                   <RefreshCw className="w-4 h-4 animate-spin" />
                                 ) : (
                                   <AlertTriangle className="w-4 h-4" />
@@ -498,18 +441,18 @@ export default function EscrowPage() {
                             </div>
                           )}
                       
-                          {escrow.state === EscrowState.DISPUTED && (
+                          {escrow.state === 3 && (
                             <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-xl">
                               <Scale className="w-5 h-5 text-red-400" />
                               <span className="text-red-300 text-sm">Awaiting Arbiter Decision</span>
                             </div>
                           )}
                       
-                          {(escrow.state === EscrowState.RELEASED || escrow.state === EscrowState.REFUNDED) && (
+                          {(escrow.state === 1 || escrow.state === 2) && (
                             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
                               <FileCheck className="w-5 h-5 text-emerald-400" />
                               <span className="text-emerald-300 text-sm">
-                                {escrow.state === EscrowState.RELEASED ? 'Funds Released' : 'Funds Refunded'}
+                                {escrow.state === 1 ? 'Funds Released' : 'Funds Refunded'}
                               </span>
                             </div>
                           )}

@@ -114,7 +114,7 @@ export const safeParseSettings = (json: string): SettingsState | null => {
       return state as SettingsState;
     }
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };

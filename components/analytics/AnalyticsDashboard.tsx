@@ -17,9 +17,7 @@ import {
   MessageSquare,
   Award,
   Activity,
-  Clock,
   Loader2,
-  Calendar,
 } from 'lucide-react';
 import {
   MetricType,
@@ -35,7 +33,7 @@ interface AnalyticsDashboardProps {
   userId?: string;
 }
 
-export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
+export function AnalyticsDashboard({ userId: _userId }: AnalyticsDashboardProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>(TimeRange.DAY);
 
   return (

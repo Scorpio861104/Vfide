@@ -9,11 +9,9 @@ import { NotificationStats } from '@/components/notifications/NotificationStats'
 import {
   NotificationFilter,
   NotificationType,
-  NotificationSeverity,
 } from '@/config/notification-hub';
 import {
   Bell,
-  Settings,
   Check,
   Trash2,
   Download,
@@ -25,7 +23,7 @@ export default function NotificationHubPage() {
   const {
     notifications,
     stats,
-    isLoading,
+    isLoading: _isLoading,
     filterNotifications,
     markAsRead,
     markAllAsRead,

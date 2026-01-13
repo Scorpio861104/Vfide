@@ -576,6 +576,7 @@ export default function AdminPanel() {
       }, 3000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isSuccess]);
 
   const handleWhitelistAdd = () => {

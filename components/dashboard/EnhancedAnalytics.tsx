@@ -14,9 +14,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAccount } from 'wagmi';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart,
@@ -30,9 +29,8 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart as PiechartComponent,
 } from 'recharts';
-import { MobileInput, MobileButton, MobileSelect } from '@/components/mobile/MobileForm';
+import { MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
 import { responsiveGrids } from '@/lib/mobile';
 
 // ==================== DATA TYPES ====================
@@ -81,99 +79,78 @@ interface AssetAllocation {
   color: string;
 }
 
-// ==================== MOCK DATA GENERATOR ====================
+// ==================== DATA FETCHERS ====================
 
-function generatePortfolioData(): PortfolioDataPoint[] {
-  const data: PortfolioDataPoint[] = [];
-  const now = Date.now();
-  
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date(now - i * 24 * 60 * 60 * 1000);
-    const baseValue = 24000 + Math.random() * 2000;
-    const ethValue = 15000 + Math.random() * 1000;
-    const btcValue = 5000 + Math.random() * 500;
-    const usdcValue = 4000 + Math.random() * 500;
-    
-    data.push({
-      timestamp: date.getTime(),
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      value: baseValue,
-      eth: ethValue,
-      btc: btcValue,
-      usdc: usdcValue,
-    });
+async function fetchPortfolioData(address?: string): Promise<PortfolioDataPoint[]> {
+  if (!address) return [];
+  try {
+    const res = await fetch(`/api/analytics/portfolio/${address}`);
+    if (res.ok) {
+      const data = await res.json();
+      return data.portfolio || [];
+    }
+  } catch {
+    // API not available
   }
-  
-  return data;
+  return [];
 }
 
-function generateTransactions(): Transaction[] {
-  const assets = ['ETH', 'BTC', 'USDC', 'DAI'];
-  const transactions: Transaction[] = [];
-  const now = Date.now();
-  
-  for (let i = 0; i < 15; i++) {
-    const date = new Date(now - i * 6 * 60 * 60 * 1000);
-    const type = ['send', 'receive', 'swap', 'stake'][Math.floor(Math.random() * 4)] as any;
-    const asset = assets[Math.floor(Math.random() * assets.length)];
-    
-    transactions.push({
-      id: `tx-${i}`,
-      type,
-      asset,
-      amount: Math.random() * 50 + 0.1,
-      counterAsset: type === 'swap' ? assets[Math.floor(Math.random() * assets.length)] : undefined,
-      counterAmount: type === 'swap' ? Math.random() * 50000 : undefined,
-      status: Math.random() > 0.1 ? 'completed' : 'pending',
-      timestamp: date.getTime(),
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      hash: `0x${Math.random().toString(16).slice(2)}`,
-      from: `0x${Math.random().toString(16).slice(2).padEnd(40, '0')}`,
-      to: `0x${Math.random().toString(16).slice(2).padEnd(40, '0')}`,
-    });
+async function fetchTransactions(address?: string): Promise<Transaction[]> {
+  if (!address) return [];
+  try {
+    const res = await fetch(`/api/crypto/transactions/${address}`);
+    if (res.ok) {
+      const data = await res.json();
+      return (data.transactions || []).map((tx: {
+        id: string;
+        type: string;
+        asset: string;
+        amount: number;
+        status: string;
+        timestamp: string;
+        hash: string;
+        from: string;
+        to: string;
+      }) => ({
+        ...tx,
+        date: new Date(tx.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      }));
+    }
+  } catch {
+    // API not available
   }
-  
-  return transactions;
+  return [];
 }
 
-function generateAlerts(): Alert[] {
-  return [
-    {
-      id: 'alert-1',
-      type: 'success',
-      title: 'Transaction Completed',
-      message: 'Your ETH transfer of 2.5 ETH to Alice was successful',
-      timestamp: Date.now() - 1000 * 60 * 5, // 5 minutes ago
-      read: false,
-      action: { label: 'View', href: '/dashboard' },
-    },
-    {
-      id: 'alert-2',
-      type: 'info',
-      title: 'ProofScore Update',
-      message: 'Your ProofScore increased by 150 points this week',
-      timestamp: Date.now() - 1000 * 60 * 30,
-      read: true,
-      action: { label: 'View', href: '/proofScore' },
-    },
-    {
-      id: 'alert-3',
-      type: 'warning',
-      title: 'Low Balance Alert',
-      message: 'Your ETH balance is below 0.5 ETH',
-      timestamp: Date.now() - 1000 * 60 * 60 * 2,
-      read: true,
-    },
-    {
-      id: 'alert-4',
-      type: 'info',
-      title: 'New Feature Available',
-      message: 'Guardian multisig wallet is now available',
-      timestamp: Date.now() - 1000 * 60 * 60 * 24,
-      read: true,
-      action: { label: 'Learn More', href: '/docs/guardians' },
-    },
-  ];
+async function fetchAlerts(address?: string): Promise<Alert[]> {
+  if (!address) return [];
+  try {
+    const res = await fetch(`/api/notifications?userId=${address}`);
+    if (res.ok) {
+      const data = await res.json();
+      return (data.notifications || []).slice(0, 5).map((n: {
+        id: string;
+        type: string;
+        title: string;
+        message: string;
+        createdAt: string;
+        read: boolean;
+        actionUrl?: string;
+        actionLabel?: string;
+      }) => ({
+        id: n.id,
+        type: n.type === 'success' ? 'success' : n.type === 'warning' ? 'warning' : n.type === 'error' ? 'error' : 'info',
+        title: n.title,
+        message: n.message,
+        timestamp: new Date(n.createdAt).getTime(),
+        read: n.read,
+        action: n.actionUrl ? { label: n.actionLabel || 'View', href: n.actionUrl } : undefined,
+      }));
+    }
+  } catch {
+    // API not available
+  }
+  return [];
 }
 
 // ==================== CHART COMPONENTS ====================
@@ -285,6 +262,7 @@ export function TransactionVolumeChart({ data }: { data: PortfolioDataPoint[] })
 // ==================== MAIN DASHBOARD COMPONENT ====================
 
 export default function EnhancedDashboardAnalytics() {
+  const { address } = useAccount();
   const [portfolioData, setPortfolioData] = useState<PortfolioDataPoint[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -296,16 +274,26 @@ export default function EnhancedDashboardAnalytics() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Simulate data loading
-    const timer = setTimeout(() => {
-      setPortfolioData(generatePortfolioData());
-      setTransactions(generateTransactions());
-      setAlerts(generateAlerts());
+    // Fetch real data from APIs
+    const loadData = async () => {
+      setIsLoading(true);
+      const [portfolio, txs, notifs] = await Promise.all([
+        fetchPortfolioData(address),
+        fetchTransactions(address),
+        fetchAlerts(address),
+      ]);
+      setPortfolioData(portfolio);
+      setTransactions(txs);
+      setAlerts(notifs);
       setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+    };
+    
+    if (address) {
+      loadData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [address]);
 
   // Calculate asset allocation
   const latestData = portfolioData.length > 0 ? portfolioData[portfolioData.length - 1] : null;

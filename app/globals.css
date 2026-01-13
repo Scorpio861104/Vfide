@@ -685,4 +685,30 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Mobile safe area padding for bottom navigation */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  /* Mobile-friendly touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile page wrapper with bottom nav clearance */
+  .mobile-page-wrapper {
+    padding-bottom: 5rem; /* 80px for bottom nav */
+  }
+
+  @media (min-width: 768px) {
+    .mobile-page-wrapper {
+      padding-bottom: 0;
+    }
+  }
 }

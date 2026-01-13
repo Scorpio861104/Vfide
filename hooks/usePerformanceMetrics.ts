@@ -9,7 +9,6 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   PerformanceMetric,
   MetricType,
-  AlertLevel,
   SystemMetrics,
   DEFAULT_PERFORMANCE_THRESHOLDS,
 } from '@/config/performance-dashboard';

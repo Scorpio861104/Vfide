@@ -60,7 +60,7 @@ export default function DailyQuestsPanel() {
       loadQuests();
       loadStreak();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isConnected, activeTab]);
 
   const loadQuests = async () => {

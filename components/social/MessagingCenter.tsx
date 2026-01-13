@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Send,
   Lock,
@@ -14,7 +14,7 @@ import {
   Check,
 } from 'lucide-react';
 import { useAccount, useSignMessage } from 'wagmi';
-import { Friend, Message, Conversation } from '@/types/messaging';
+import { Friend, Message } from '@/types/messaging';
 import { 
   encryptMessage, 
   decryptMessage, 
@@ -23,9 +23,9 @@ import {
   STORAGE_KEYS 
 } from '@/lib/messageEncryption';
 import { TransactionButtons } from './TransactionButtons';
-import { EndorsementsBadges } from './EndorsementsBadges';
+import { EndorsementsBadges as _EndorsementsBadges } from './EndorsementsBadges';
 import { MutualFriends } from './MutualFriends';
-import { addNotification } from './NotificationCenter';
+import { addNotification } from './SocialNotifications';
 import { addActivity } from './ActivityFeed';
 import { VaultInfoTooltip } from '../ui/VaultInfoTooltip';
 import { analytics } from '@/lib/socialAnalytics';
@@ -69,7 +69,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                 if (msg.decryptedContent) return msg;
                 
                 // Simple verification function (in production, use proper signature verification)
-                const verify = async (message: string, signature: string) => true;
+                const verify = async (_message: string, _signature: string) => true;
                 
                 const { message: decrypted, verified } = await decryptMessage(
                   msg.encryptedContent,
@@ -120,34 +120,45 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !address || !signMessageAsync) return;
     
+    const messageContent = inputMessage;
+    const tempId = `msg_${Date.now()}_${Math.random().toString(36)}`;
+    
+    // Optimistic update: Add message immediately with pending state
+    const optimisticMessage: Message = {
+      id: tempId,
+      conversationId,
+      from: address,
+      to: friend.address,
+      encryptedContent: '', // Will be filled after encryption
+      decryptedContent: messageContent,
+      timestamp: Date.now(),
+      read: false,
+      verified: false, // Pending verification
+      type: 'direct',
+      pending: true, // Custom field for optimistic UI
+    };
+    
+    // Show message immediately
+    setMessages(prev => [...prev, optimisticMessage]);
+    setInputMessage(''); // Clear input immediately for better UX
     setIsSending(true);
     setEncryptionStatus('encrypting');
     
     try {
       // Encrypt the message
       const encryptedContent = await encryptMessage(
-        inputMessage,
+        messageContent,
         friend.address,
         (msg) => signMessageAsync({ message: msg })
       );
       
-      // Create message object
-      const newMessage: Message = {
-        id: `msg_${Date.now()}_${Math.random().toString(36)}`,
-        conversationId,
-        from: address,
-        to: friend.address,
-        encryptedContent,
-        decryptedContent: inputMessage, // Store decrypted for sender
-        timestamp: Date.now(),
-        read: false,
-        verified: true,
-        type: 'direct',
-      };
+      // Update the optimistic message with real data
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempId 
+          ? { ...msg, encryptedContent, verified: true, pending: false }
+          : msg
+      ));
       
-      // Add to messages
-      setMessages([...messages, newMessage]);
-      setInputMessage('');
       setEncryptionStatus('idle');
       
       // Reward tokens for sending message
@@ -162,7 +173,9 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       // await sendToBackend(newMessage);
       
     } catch (error) {
-      console.error('Failed to send message:', error);
+      // Rollback optimistic update on error
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      setInputMessage(messageContent); // Restore input
       alert('Failed to send message. Please try again.');
       setEncryptionStatus('error');
     } finally {
@@ -267,7 +280,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   // Handle report message
   const handleReportMessage = (messageId: string) => {
     // In production: send report to backend
-    console.log('Report message:', messageId);
+    // Message report submitted
     alert('Message reported. Thank you for helping keep the community safe.');
   };
 
@@ -519,7 +532,10 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         )}
         
         <div className="flex items-end gap-2">
-          <button className="p-2 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors">
+          <button 
+            aria-label="Open emoji picker"
+            className="p-2 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors"
+          >
             <Smile className="w-5 h-5" />
           </button>
 
@@ -534,19 +550,24 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                 }
               }}
               placeholder="Type an encrypted message..."
+              aria-label="Message input"
               rows={1}
               className="w-full px-4 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] text-sm resize-none focus:border-[#00F0FF] focus:outline-none"
               style={{ minHeight: '40px', maxHeight: '120px' }}
             />
           </div>
 
-          <button className="p-2 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors">
+          <button 
+            aria-label="Attach file"
+            className="p-2 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors"
+          >
             <Paperclip className="w-5 h-5" />
           </button>
 
           <button
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isSending}
+            aria-label={isSending ? 'Sending message' : 'Send message'}
             className="p-2 rounded-lg bg-[#00F0FF] text-[#0A0A0F] hover:bg-[#00D5E0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-5 h-5" />

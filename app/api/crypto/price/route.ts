@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient, http, formatUnits } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
+import { createPublicClient, http } from 'viem';
+import { baseSepolia } from 'viem/chains';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
-// VFIDE Token address on Base Sepolia (from deployment)
-const VFIDE_TOKEN_ADDRESS = '0x...'; // TODO: Update with actual deployed address
-const WETH_ADDRESS = '0x4200000000000000000000000000000000000006'; // Base WETH
+// VFIDE Token address - from environment or deployment
+const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x0000000000000000000000000000000000000000';
 
-// Uniswap V3 Pool interface
+// Create public client for Base Sepolia
+const client = createPublicClient({
+  chain: baseSepolia,
+  transport: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org'),
+});
+
+// Uniswap V3 Pool ABI (minimal for price reading)
 const POOL_ABI = [
   {
     inputs: [],
@@ -18,37 +24,31 @@ const POOL_ABI = [
       { name: 'observationCardinality', type: 'uint16' },
       { name: 'observationCardinalityNext', type: 'uint16' },
       { name: 'feeProtocol', type: 'uint8' },
-      { name: 'unlocked', type: 'bool' }
+      { name: 'unlocked', type: 'bool' },
     ],
     stateMutability: 'view',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [],
     name: 'token0',
     outputs: [{ name: '', type: 'address' }],
     stateMutability: 'view',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [],
     name: 'token1',
     outputs: [{ name: '', type: 'address' }],
     stateMutability: 'view',
-    type: 'function'
-  }
+    type: 'function',
+  },
 ] as const;
-
-// Create public client for Base Sepolia
-const client = createPublicClient({
-  chain: baseSepolia,
-  transport: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org'),
-});
 
 /**
  * Calculate price from Uniswap V3 sqrtPriceX96
  */
-function calculatePrice(sqrtPriceX96: bigint, token0: string, token1: string, decimals0: number, decimals1: number): number {
+function calculatePrice(sqrtPriceX96: bigint, token0: string, decimals0: number, decimals1: number): number {
   const sqrtPrice = Number(sqrtPriceX96) / (2 ** 96);
   const price = sqrtPrice ** 2;
   
@@ -56,7 +56,7 @@ function calculatePrice(sqrtPriceX96: bigint, token0: string, token1: string, de
   const decimalAdjustment = 10 ** (decimals1 - decimals0);
   let adjustedPrice = price * decimalAdjustment;
   
-  // If VFIDE is token1, invert the price
+  // If VFIDE is token0, we get VFIDE per WETH, need to invert
   if (token0.toLowerCase() === VFIDE_TOKEN_ADDRESS.toLowerCase()) {
     adjustedPrice = 1 / adjustedPrice;
   }
@@ -64,11 +64,25 @@ function calculatePrice(sqrtPriceX96: bigint, token0: string, token1: string, de
   return adjustedPrice;
 }
 
+// Pool address from environment (deployed Uniswap V3 pool)
+const VFIDE_WETH_POOL = process.env.NEXT_PUBLIC_VFIDE_WETH_POOL_ADDRESS;
+
 /**
  * GET /api/crypto/price
  * Fetch live VFIDE price from Uniswap V3 pool + ETH price from CoinGecko
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting: 60 requests per minute
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`price:${clientId}`, { windowMs: 60000, maxRequests: 60 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { success: false, error: 'Rate limit exceeded' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+  
   try {
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get('refresh') === 'true';
@@ -76,61 +90,49 @@ export async function GET(request: NextRequest) {
     // Fetch ETH price from CoinGecko
     const ethPriceResponse = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
-      { next: { revalidate: 60 } } // Cache for 60 seconds
+      { next: { revalidate: forceRefresh ? 0 : 60 } } // Cache for 60 seconds unless forced
     );
     
     const ethPriceData = await ethPriceResponse.json();
     const ethPrice = ethPriceData.ethereum?.usd || 2000;
 
-    // TODO: Once VFIDE/WETH pool is deployed, fetch live price
-    // For now, use calculated price based on tokenomics
-    // Total Supply: 200M VFIDE
-    // Initial Market Cap Target: $20M
-    // Initial Price: $20M / 200M = $0.10 per VFIDE
-    
-    const vfidePrice = 0.10; // Base price in USD
-    
-    // Calculate VFIDE price in ETH
-    const vfidePriceInEth = vfidePrice / ethPrice;
+    // Default to tokenomics-based price
+    let vfidePrice = 0.10; // Base price in USD
+    let vfidePriceInEth = vfidePrice / ethPrice;
+    let priceSource: 'uniswap' | 'tokenomics' | 'fallback' = 'tokenomics';
 
-    // TODO: Enable once Uniswap pool is deployed
-    /*
-    try {
-      const poolAddress = '0x...'; // VFIDE/WETH pool address
-      
-      const [slot0Data, token0, token1] = await Promise.all([
-        client.readContract({
-          address: poolAddress as `0x${string}`,
-          abi: POOL_ABI,
-          functionName: 'slot0',
-        }),
-        client.readContract({
-          address: poolAddress as `0x${string}`,
-          abi: POOL_ABI,
-          functionName: 'token0',
-        }),
-        client.readContract({
-          address: poolAddress as `0x${string}`,
-          abi: POOL_ABI,
-          functionName: 'token1',
-        }),
-      ]);
+    // Try to fetch live price from Uniswap if pool is deployed
+    if (VFIDE_WETH_POOL && VFIDE_WETH_POOL !== '0x0000000000000000000000000000000000000000') {
+      try {
+        const [slot0Data, token0] = await Promise.all([
+          client.readContract({
+            address: VFIDE_WETH_POOL as `0x${string}`,
+            abi: POOL_ABI,
+            functionName: 'slot0',
+          }),
+          client.readContract({
+            address: VFIDE_WETH_POOL as `0x${string}`,
+            abi: POOL_ABI,
+            functionName: 'token0',
+          }),
+        ]);
 
-      const sqrtPriceX96 = slot0Data[0];
-      const liveVfidePriceInEth = calculatePrice(
-        sqrtPriceX96,
-        token0,
-        token1,
-        18, // VFIDE decimals
-        18  // WETH decimals
-      );
-      
-      vfidePriceInEth = liveVfidePriceInEth;
-      vfidePrice = liveVfidePriceInEth * ethPrice;
-    } catch (poolError) {
-      console.warn('[Price API] Pool not deployed yet, using base price');
+        const sqrtPriceX96 = slot0Data[0];
+        const liveVfidePriceInEth = calculatePrice(
+          sqrtPriceX96,
+          token0,
+          18, // VFIDE decimals
+          18  // WETH decimals
+        );
+        
+        vfidePriceInEth = liveVfidePriceInEth;
+        vfidePrice = liveVfidePriceInEth * ethPrice;
+        priceSource = 'uniswap';
+      } catch {
+        // Pool read failed, continue with tokenomics price
+        console.warn('[Price API] Pool read failed, using tokenomics price');
+      }
     }
-    */
 
     // Market data
     const marketCap = 200_000_000 * vfidePrice; // Total supply * price
@@ -155,7 +157,7 @@ export async function GET(request: NextRequest) {
         circulatingSupply,
       },
       timestamp: Date.now(),
-      source: 'calculated', // Will be 'uniswap' once pool is deployed
+      source: priceSource,
     });
   } catch (error) {
     console.error('[Price API] Error:', error);

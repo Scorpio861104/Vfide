@@ -15,7 +15,7 @@
 
 import React, { useState } from 'react';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
-import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
+import { responsiveGrids } from '@/lib/mobile';
 import { safeParseFloat } from '@/lib/validation';
 
 // ==================== TYPES ====================
@@ -190,7 +190,7 @@ function generateMockBulkJobs(): BulkPaymentJob[] {
 export default function MerchantPortal() {
   const [activeTab, setActiveTab] = useState('requests');
   const [paymentRequests, setPaymentRequests] = useState(generateMockPaymentRequests());
-  const [revenueData, setRevenueData] = useState(generateMockRevenueData());
+  const [revenueData, _setRevenueData] = useState(generateMockRevenueData());
   const [apiKeys, setApiKeys] = useState(generateMockApiKeys());
   const [bulkJobs, setBulkJobs] = useState(generateMockBulkJobs());
 

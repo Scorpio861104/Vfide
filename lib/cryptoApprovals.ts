@@ -18,7 +18,7 @@ export const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS |
 export const MAX_UINT256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
 // ERC-20 ABI (minimal interface for approval and allowance)
-const ERC20_ABI = [
+const _ERC20_ABI = [
   {
     constant: false,
     inputs: [

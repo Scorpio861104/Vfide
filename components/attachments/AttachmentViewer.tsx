@@ -46,7 +46,7 @@ export function AttachmentViewer({ attachments, compact = false }: AttachmentVie
   return (
     <>
       <div className={`space-y-2 ${compact ? 'mt-2' : 'mt-3'}`}>
-        {attachments.map((attachment, index) => {
+        {attachments.map((attachment, _index) => {
           if (attachment.type === AttachmentType.IMAGE) {
             return (
               <ImageAttachment
@@ -164,7 +164,7 @@ function VideoAttachment({ attachment, compact }: VideoAttachmentProps) {
         preload="metadata"
       >
         <source src={attachment.url} type={attachment.mimeType} />
-        Your browser doesn't support video playback.
+        Your browser doesn&apos;t support video playback.
       </video>
       
       <div className="bg-[#1A1A1F] border-t border-[#2A2A2F] p-2 flex items-center justify-between">
@@ -193,13 +193,11 @@ interface FileAttachmentProps {
   compact?: boolean;
 }
 
-function FileAttachment({ attachment, compact }: FileAttachmentProps) {
-  const Icon = React.useMemo(() => getIconComponent(attachment.type), [attachment.type]);
-
+function FileAttachment({ attachment, compact: _compact }: FileAttachmentProps) {
   return (
     <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-3 flex items-center gap-3 hover:border-[#3A3A3F] transition-colors">
       <div className="w-10 h-10 bg-linear-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5 text-blue-400" />
+        {renderIconComponent(attachment.type, "w-5 h-5 text-blue-400")}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -344,17 +342,17 @@ function ImageLightbox({ images, initialIndex, onClose }: ImageLightboxProps) {
   );
 }
 
-function getIconComponent(type: AttachmentType) {
+function renderIconComponent(type: AttachmentType, className: string) {
   switch (type) {
     case AttachmentType.IMAGE:
-      return ImageIcon;
+      return <ImageIcon className={className} />;
     case AttachmentType.VIDEO:
-      return Video;
+      return <Video className={className} />;
     case AttachmentType.AUDIO:
-      return Music;
+      return <Music className={className} />;
     case AttachmentType.DOCUMENT:
-      return FileText;
+      return <FileText className={className} />;
     default:
-      return File;
+      return <File className={className} />;
   }
 }

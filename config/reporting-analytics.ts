@@ -312,10 +312,6 @@ export function getReportTypeColor(type: ReportType): string {
  * Format Date Range
  */
 export function formatDateRange(range: TimeRange, customStart?: number, customEnd?: number): string {
-  const now = Date.now();
-  const oneHour = 60 * 60 * 1000;
-  const oneDay = 24 * oneHour;
-
   switch (range) {
     case TimeRange.LAST_HOUR:
       return 'Last Hour';

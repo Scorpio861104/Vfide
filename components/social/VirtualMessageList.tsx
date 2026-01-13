@@ -97,7 +97,7 @@ export function VirtualMessageList({
   messages,
   currentUserAddress,
   height,
-  width,
+  width: _width,
 }: VirtualMessageListProps) {
   const listRef = useRef<ListImperativeAPI>(null);
 

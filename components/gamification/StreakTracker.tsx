@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect as _useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { Flame, TrendingUp, Calendar, Gift, Target, Award } from 'lucide-react';
+import { Flame, TrendingUp as _TrendingUp, Calendar as _Calendar, Gift, Target, Award } from 'lucide-react';
 
 interface Streak {
   type: string;
@@ -13,8 +13,8 @@ interface Streak {
 }
 
 export default function StreakTracker() {
-  const { address } = useAccount();
-  const [streak, setStreak] = useState<Streak>({
+  const { address: _address } = useAccount();
+  const [streak, _setStreak] = useState<Streak>({
     type: 'login',
     currentStreak: 5,
     longestStreak: 12,

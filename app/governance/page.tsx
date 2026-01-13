@@ -130,8 +130,7 @@ export default function GovernancePage() {
     args: address ? [address] : undefined,
   });
 
-  // Vote handler (kept for future UI use)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // Vote handler - wired to ProposalsTab buttons
   const handleVote = (proposalId: number, support: boolean) => {
     writeContract({
       address: DAO_ADDRESS,
@@ -318,7 +317,7 @@ export default function GovernancePage() {
         </section>
 
         {activeTab === 'overview' && <OverviewTab score={score} proposalCount={proposalCount} />}
-        {activeTab === 'proposals' && <ProposalsTab searchQuery={searchQuery} />}
+        {activeTab === 'proposals' && <ProposalsTab searchQuery={searchQuery} onVote={handleVote} />}
         {activeTab === 'create' && <CreateProposalTab />}
         {activeTab === 'council' && <CouncilTab />}
         {activeTab === 'suggestions' && <SuggestionsTab />}
@@ -506,7 +505,7 @@ function DeadlineCard({ id, title, hoursRemaining, voted }: { id: number; title:
   );
 }
 
-function ProposalsTab({ searchQuery }: { searchQuery: string }) {
+function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (proposalId: number, support: boolean) => void }) {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
   const [baseTime] = useState(() => Date.now());
@@ -615,10 +614,16 @@ function ProposalsTab({ searchQuery }: { searchQuery: string }) {
                   </div>
                   
                   <div className="flex gap-3">
-                    <button className="flex-1 px-4 py-2 bg-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#50C878]/90">
+                    <button 
+                      onClick={() => onVote(prop.id, true)}
+                      className="flex-1 px-4 py-2 bg-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#50C878]/90"
+                    >
                       Vote FOR
                     </button>
-                    <button className="flex-1 px-4 py-2 bg-[#C41E3A] text-[#F5F3E8] rounded-lg font-bold hover:bg-[#C41E3A]/90">
+                    <button 
+                      onClick={() => onVote(prop.id, false)}
+                      className="flex-1 px-4 py-2 bg-[#C41E3A] text-[#F5F3E8] rounded-lg font-bold hover:bg-[#C41E3A]/90"
+                    >
                       Vote AGAINST
                     </button>
                     <button
@@ -682,10 +687,16 @@ function ProposalsTab({ searchQuery }: { searchQuery: string }) {
               </div>
               
               <div className="flex gap-3 pt-4">
-                <button className="flex-1 px-6 py-3 bg-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#50C878]/90">
+                <button 
+                  onClick={() => { onVote(selectedProposal.id, true); setSelectedProposal(null); }}
+                  className="flex-1 px-6 py-3 bg-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#50C878]/90"
+                >
                   Vote FOR
                 </button>
-                <button className="flex-1 px-6 py-3 bg-[#C41E3A] text-[#F5F3E8] rounded-lg font-bold hover:bg-[#C41E3A]/90">
+                <button 
+                  onClick={() => { onVote(selectedProposal.id, false); setSelectedProposal(null); }}
+                  className="flex-1 px-6 py-3 bg-[#C41E3A] text-[#F5F3E8] rounded-lg font-bold hover:bg-[#C41E3A]/90"
+                >
                   Vote AGAINST
                 </button>
               </div>
@@ -1980,6 +1991,9 @@ function CreateProposalTab() {
   const requiredScore = 100; // Minimum ProofScore to create proposals
   const canCreate = (score || 0) >= requiredScore;
 
+  // Get writeContract hook for proposal submission
+  const { writeContractAsync } = useWriteContract();
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canCreate || !isConnected) return;
@@ -1988,12 +2002,42 @@ function CreateProposalTab() {
     const sanitizedTitle = sanitizeString(formData.title, 100);
     const sanitizedDescription = sanitizeString(formData.description, 2000);
     
+    // Map proposal type to contract enum
+    const ptypeMap: Record<string, number> = {
+      'parameter': 0,
+      'treasury': 1,
+      'upgrade': 2,
+      'other': 3
+    };
+    const ptype = ptypeMap[proposalType] ?? 3;
+    
+    // Set target and value based on proposal type
+    const target = proposalType === 'treasury' && formData.treasuryRecipient
+      ? formData.treasuryRecipient as `0x${string}`
+      : '0x0000000000000000000000000000000000000000' as `0x${string}`;
+    const value = proposalType === 'treasury' && formData.treasuryAmount
+      ? BigInt(Math.floor(parseFloat(formData.treasuryAmount) * 1e18))
+      : 0n;
+    
     setIsSubmitting(true);
-    // In production: call DAO.propose with sanitized data
-    // DAO.propose(targets, values, calldatas, sanitizedDescription)
-    await new Promise(r => setTimeout(r, 2000));
-    setIsSubmitting(false);
-    alert('Proposal submitted! It will appear in Active Proposals after confirmation.');
+    try {
+      await writeContractAsync({
+        address: DAO_ADDRESS,
+        abi: DAO_ABI,
+        functionName: 'propose',
+        args: [ptype, target, value, '0x' as `0x${string}`, `${sanitizedTitle}\n\n${sanitizedDescription}`],
+      });
+      alert('Proposal submitted! It will appear in Active Proposals after confirmation.');
+      // Reset form
+      setFormData({ title: '', description: '', targetContract: '', calldata: '', treasuryAmount: '', treasuryRecipient: '' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (!message.includes('rejected') && !message.includes('denied')) {
+        alert('Failed to submit proposal: ' + message.slice(0, 100));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isConnected) {
@@ -2229,10 +2273,26 @@ function CouncilTab() {
     const sanitizedStatement = sanitizeString(candidateStatement, 500);
     
     setIsRegistering(true);
-    // In production: call CouncilElection.register(sanitizedStatement)
-    await new Promise(r => setTimeout(r, 2000));
+    
+    // TODO: Wire to CouncilElection.register() contract call
+    // The CouncilElection contract's register() function takes no arguments -
+    // it checks eligibility based on ProofScore from Seer contract.
+    // The candidate statement is currently stored off-chain only.
+    // Future: Add candidateStatements mapping to CouncilElection.sol
+    // For now, statement is stored locally only
+    try {
+      // Future implementation:
+      // await writeContractAsync({
+      //   address: CONTRACT_ADDRESSES.CouncilElection,
+      //   abi: CouncilElectionABI,
+      //   functionName: 'register',
+      // });
+      await new Promise(r => setTimeout(r, 1500)); // Placeholder for contract call
+      alert('Registration submitted! You are now a council candidate.');
+    } catch (err) {
+      alert('Registration failed. Please try again.');
+    }
     setIsRegistering(false);
-    alert('Registration submitted! You are now a council candidate.');
   };
 
   return (

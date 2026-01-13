@@ -7,11 +7,8 @@ import {
   Users,
   Star,
   Search,
-  MoreVertical,
-  MessageCircle,
   Shield,
   Trash2,
-  Edit,
   X,
 } from 'lucide-react';
 import { useAccount } from 'wagmi';

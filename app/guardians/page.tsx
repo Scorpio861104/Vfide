@@ -2,8 +2,9 @@
 
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAccount } from "wagmi";
+import { isAddress } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Users, Clock, CheckCircle2, AlertCircle, Key, Heart, UserPlus, UserMinus, RefreshCw, ArrowRightCircle, Timer, Lock, FileText } from "lucide-react";
 
@@ -485,6 +486,12 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newGuardianAddress, setNewGuardianAddress] = useState('');
   
+  // Validate guardian address
+  const isValidAddress = useMemo(() => {
+    if (!newGuardianAddress) return null; // No input yet
+    return isAddress(newGuardianAddress);
+  }, [newGuardianAddress]);
+  
   // Mock data - in production, fetch from contract
   const myGuardians = [
     { address: "0x1a2b...3c4d", alias: "Mom", addedDate: "Dec 1, 2025", mature: true },
@@ -584,13 +591,34 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                   placeholder="0x..." 
                   value={newGuardianAddress}
                   onChange={(e) => setNewGuardianAddress(e.target.value)}
-                  className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 font-mono transition-all"
+                  aria-label="Guardian wallet address"
+                  aria-invalid={isValidAddress === false}
+                  className={`w-full px-4 py-3 bg-black/30 border rounded-xl text-white focus:outline-none focus:ring-2 font-mono transition-all ${
+                    isValidAddress === false 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
+                      : isValidAddress === true
+                        ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20'
+                        : 'border-white/10 focus:border-cyan-500 focus:ring-cyan-500/20'
+                  }`}
                 />
+                {isValidAddress === false && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    Please enter a valid Ethereum address (0x...)
+                  </p>
+                )}
+                {isValidAddress === true && (
+                  <p className="mt-1 text-sm text-green-400 flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Valid address
+                  </p>
+                )}
               </div>
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+                disabled={!isValidAddress}
+                className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add Guardian
               </motion.button>
@@ -608,12 +636,11 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       >
         <h3 className="text-xl font-bold text-white mb-4">Your Guardians</h3>
         <div className="space-y-3">
-          {myGuardians.map((guardian, idx) => (
+          {myGuardians.map((guardian) => (
             <motion.div 
-              key={idx} 
+              key={guardian.address} 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 + idx * 0.1 }}
               whileHover={{ scale: 1.01 }}
               className="p-4 bg-black/20 border border-white/10 rounded-xl"
             >

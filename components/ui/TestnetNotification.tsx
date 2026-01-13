@@ -57,7 +57,7 @@ export function TestnetNotification() {
                   Testnet Mode
                 </h3>
                 <p className="text-xs text-amber-200/80">
-                  You're on Base Sepolia testnet. All transactions use test ETH (free).
+                  You&apos;re on Base Sepolia testnet. All transactions use test ETH (free).
                 </p>
               </div>
 
