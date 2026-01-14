@@ -117,7 +117,7 @@ export default function MonthlyLeaderboard() {
   return (
     <div className="w-full max-w-7xl mx-auto p-4 space-y-6">
       {/* Header with Prize Pool */}
-      <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-6 border border-yellow-500/30">
+      <div className="bg-linear-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-6 border border-yellow-500/30">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -160,7 +160,7 @@ export default function MonthlyLeaderboard() {
 
       {/* User's Position Card */}
       {userPosition && (
-        <div className={`bg-gradient-to-r ${getTierColor(userPosition.tier)} rounded-xl p-6 border-2 border-white/20`}>
+        <div className={`bg-linear-to-r ${getTierColor(userPosition.tier)} rounded-xl p-6 border-2 border-white/20`}>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="text-sm opacity-80">Your Position</div>

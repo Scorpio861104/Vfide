@@ -372,7 +372,7 @@ export default function SocialAnalyticsPage() {
                     whileInView={{ height: `${(data.likes / 600) * 100}%` }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.05, duration: 0.8 }}
-                    className="flex-1 bg-gradient-to-t from-[#00F0FF] to-[#A78BFA] rounded-t-lg opacity-80 hover:opacity-100 transition-opacity group cursor-pointer"
+                    className="flex-1 bg-linear-to-t from-[#00F0FF] to-[#A78BFA] rounded-t-lg opacity-80 hover:opacity-100 transition-opacity group cursor-pointer"
                   >
                     <div className="h-full flex items-start justify-center pt-2">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white font-bold">

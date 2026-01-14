@@ -85,7 +85,7 @@ function OverviewTab({ financialHealth, spendingByCategory, transactionCount }: 
   return (
     <div className="space-y-6">
       {/* Health Score Card */}
-      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/20">
+      <div className="bg-linear-to-br from-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/20">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-medium text-foreground/80">Financial Health Score</h3>

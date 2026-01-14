@@ -269,7 +269,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
         {user.coverImage && (
           <img src={user.coverImage} alt="cover" className="w-full h-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F] to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#0A0A0F] to-transparent" />
       </motion.div>
 
       {/* Profile Header */}

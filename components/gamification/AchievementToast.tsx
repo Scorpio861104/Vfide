@@ -100,11 +100,11 @@ function AchievementToast({ notification, onDismiss }: ToastProps) {
       )}
 
       {/* Toast Content */}
-      <div className={`bg-gradient-to-r ${colorMap[notification.type]} p-[2px] rounded-xl shadow-2xl`}>
+      <div className={`bg-linear-to-r ${colorMap[notification.type]} p-[2px] rounded-xl shadow-2xl`}>
         <div className="bg-[#1A1A1F] rounded-xl p-4 min-w-[350px]">
           <div className="flex items-start gap-3">
             {/* Icon */}
-            <div className={`bg-gradient-to-br ${colorMap[notification.type]} rounded-lg p-3 text-white flex-shrink-0 animate-pulse`}>
+            <div className={`bg-linear-to-br ${colorMap[notification.type]} rounded-lg p-3 text-white flex-shrink-0 animate-pulse`}>
               {notification.icon ? (
                 <span className="text-2xl">{notification.icon}</span>
               ) : (

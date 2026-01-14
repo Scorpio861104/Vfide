@@ -92,7 +92,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen bg-[#0D0D0F] flex items-center justify-center px-4">
           <div className="max-w-md w-full">
-            <div className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
+            <div className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
               {/* Error Icon */}
               <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 border border-red-500/30 rounded-full mb-4">
                 <AlertTriangle className="w-8 h-8 text-red-400" />

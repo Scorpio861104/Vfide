@@ -18,7 +18,7 @@ export function DemoModeBanner() {
   if (address) return null;
   
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#FFA500] to-[#FF4444] text-white py-2 px-4 shadow-lg">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-linear-to-r from-[#FFA500] to-[#FF4444] text-white py-2 px-4 shadow-lg">
       <div className="container mx-auto flex items-center justify-center gap-2 text-sm font-medium">
         <AlertCircle className="w-4 h-4" />
         <span>Connect your wallet to access all features</span>

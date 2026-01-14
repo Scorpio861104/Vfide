@@ -72,7 +72,7 @@ export function EnhancedModal({
   const variantStyles = {
     default: "bg-[#0F0F12] border border-[#1F1F2A]",
     glass: "bg-white/5 backdrop-blur-2xl border border-white/10",
-    gradient: "bg-gradient-to-br from-[#16161D] to-[#0F0F12] border border-[#2A2A35]",
+    gradient: "bg-linear-to-br from-[#16161D] to-[#0F0F12] border border-[#2A2A35]",
   };
 
   return (
@@ -102,7 +102,7 @@ export function EnhancedModal({
             `}
           >
             {/* Glow effect */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#00F0FF]/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-[#00F0FF]/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             {/* Header */}
             {(title || showCloseButton) && (
@@ -138,7 +138,7 @@ export function EnhancedModal({
 
             {/* Shine effect */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none"
+              className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent pointer-events-none"
               initial={{ x: "-100%" }}
               animate={{ x: "100%" }}
               transition={{

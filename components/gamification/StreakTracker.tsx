@@ -46,11 +46,11 @@ export default function StreakTracker() {
   const upcomingReward = milestoneRewards[nextMilestone as keyof typeof milestoneRewards];
 
   return (
-    <div className="bg-gradient-to-br from-[#FF6B35]/10 to-[#F7931E]/10 border border-[#FF6B35]/30 rounded-xl p-6">
+    <div className="bg-linear-to-br from-[#FF6B35]/10 to-[#F7931E]/10 border border-[#FF6B35]/30 rounded-xl p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-linear-to-br from-[#FF6B35] to-[#F7931E] rounded-full flex items-center justify-center">
             <Flame className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -88,7 +88,7 @@ export default function StreakTracker() {
         </div>
         <div className="w-full bg-[#2A2A2F] rounded-full h-2 mb-2">
           <div
-            className="bg-gradient-to-r from-[#FF6B35] to-[#F7931E] h-2 rounded-full transition-all"
+            className="bg-linear-to-r from-[#FF6B35] to-[#F7931E] h-2 rounded-full transition-all"
             style={{ width: `${progressToMilestone}%` }}
           />
         </div>

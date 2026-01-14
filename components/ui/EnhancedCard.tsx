@@ -41,7 +41,7 @@ export function EnhancedCard({
       ${hover ? "hover:bg-white/10 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,240,255,0.15)]" : ""}
     `,
     gradient: `
-      bg-gradient-to-br from-[#1A1A1F] to-[#0F0F12]
+      bg-linear-to-br from-[#1A1A1F] to-[#0F0F12]
       border border-[#2A2A35]
       ${hover ? "hover:from-[#1F1F2A] hover:to-[#0F0F12] hover:border-[#00F0FF]/30" : ""}
     `,
@@ -84,7 +84,7 @@ export function EnhancedCard({
       {/* Shine effect overlay */}
       {shine && (
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none"
+          className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent pointer-events-none"
           initial={{ x: "-100%" }}
           whileHover={{ x: "100%" }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
@@ -98,7 +98,7 @@ export function EnhancedCard({
       
       {/* Border gradient animation */}
       <div className="absolute inset-0 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#00F0FF] via-[#0080FF] to-[#00F0FF] opacity-20 blur-sm" />
+        <div className="absolute inset-0 rounded-2xl bg-linear-to-r from-[#00F0FF] via-[#0080FF] to-[#00F0FF] opacity-20 blur-sm" />
       </div>
       
       {/* Content */}
