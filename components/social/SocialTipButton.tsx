@@ -38,7 +38,7 @@ export function SocialTipButton({
   const [message, setMessage] = useState('');
 
   const { tips, total, isLoading, sendTip } = useTipping(postId, commentId);
-  const { address, isConnected } = useAccount();
+  const { address: _address, isConnected } = useAccount();
 
   const handleTip = async () => {
     if (!isConnected) {

@@ -171,7 +171,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       // In production, send to backend/IPFS/blockchain here
       // await sendToBackend(newMessage);
       
-    } catch (error) {
+    } catch (_error) {
       // Rollback optimistic update on error
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
       setInputMessage(messageContent); // Restore input
@@ -277,7 +277,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   };
 
   // Handle report message
-  const handleReportMessage = (messageId: string) => {
+  const handleReportMessage = (_messageId: string) => {
     // In production: send report to backend
     // Message report submitted
     alert('Message reported. Thank you for helping keep the community safe.');
@@ -455,7 +455,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                           : 'bg-[#2A2A3F] text-[#F5F3E8]'
                       }`}
                     >
-                      <p className="text-sm break-words whitespace-pre-wrap">
+                      <p className="text-sm wrap-break-word whitespace-pre-wrap">
                         {message.decryptedContent || '[Encrypted]'}
                       </p>
                     </div>

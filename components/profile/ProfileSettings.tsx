@@ -77,7 +77,7 @@ export function ProfileSettings() {
     }
   };
 
-  const handleAvatarUpload = async (avatarUrl: string) => {
+  const handleAvatarUpload = async (_avatarUrl: string) => {
     // Avatar is already uploaded via API, just update local state
     // Avatar upload processed
   };

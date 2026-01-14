@@ -37,7 +37,7 @@ function FloatingOrbs() {
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#00F0FF]/10 rounded-full blur-[120px] animate-pulse" />
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#0080FF]/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#A78BFA]/5 rounded-full blur-[150px]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-[#A78BFA]/5 rounded-full blur-[150px]" />
     </div>
   );
 }
@@ -45,14 +45,14 @@ function FloatingOrbs() {
 // Hero 3D shield visualization
 function HeroVisualization() {
   return (
-    <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] flex items-center justify-center">
+    <div className="relative w-full h-75 sm:h-100 md:h-125 flex items-center justify-center">
       <div className="absolute inset-0 flex items-center justify-center">
         {/* Outer glow ring */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="absolute w-60 h-60 sm:w-80 sm:h-80 md:w-[400px] md:h-[400px]"
+          className="absolute w-60 h-60 sm:w-80 sm:h-80 md:w-100 md:h-100"
         >
           <div className="absolute inset-0 rounded-full border border-[#00F0FF]/20 animate-pulse" />
           <div className="absolute inset-4 rounded-full border border-[#00F0FF]/15" />
@@ -70,7 +70,7 @@ function HeroVisualization() {
           <svg 
             width="140" 
             height="170"
-            className="sm:w-[180px] sm:h-[220px]"
+            className="sm:w-45 sm:h-55"
             viewBox="0 0 100 120" 
             style={{ width: '140px', height: '170px' }}
             preserveAspectRatio="xMidYMid meet"
@@ -232,13 +232,13 @@ function Step({ number, title, description, time, index }: StepProps) {
     >
       {/* Connection line */}
       {index < 2 && (
-        <div className="absolute left-7 top-16 bottom-0 w-px bg-gradient-to-b from-[#00F0FF]/30 to-transparent" />
+        <div className="absolute left-7 top-16 bottom-0 w-px bg-linear-to-b from-[#00F0FF]/30 to-transparent" />
       )}
       
       {/* Step number */}
       <motion.div 
         whileHover={{ scale: 1.1, rotate: 5 }}
-        className="relative z-10 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold text-xl shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
+        className="relative z-10 w-14 h-14 rounded-2xl bg-linear-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold text-xl shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
       >
         {number}
       </motion.div>
@@ -312,7 +312,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-5xl sm:text-6xl lg:text-7xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] mb-6 leading-[1.1]"
+                className="text-5xl sm:text-6xl lg:text-7xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-6 leading-[1.1]"
               >
                 Accept Crypto.
                 <br />
@@ -435,7 +435,7 @@ export default function Home() {
 
       {/* Why VFIDE Section */}
       <section className="py-24 bg-[#08080A] relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1F1F2A] to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
         
         <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
           <motion.div
@@ -444,7 +444,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-4">
               Why VFIDE?
             </h2>
             <p className="text-lg text-[#6B6B78] max-w-2xl mx-auto">
@@ -501,7 +501,7 @@ export default function Home() {
 
       {/* How It Works Section */}
       <section className="py-24 bg-[#0A0A0F] relative">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1F1F2A] to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
         
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.div
@@ -510,7 +510,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] mb-4">
+            <h2 className="text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-4">
               Get Started in Seconds
             </h2>
             <p className="text-lg text-[#6B6B78]">
@@ -564,7 +564,7 @@ export default function Home() {
 
       {/* Testimonial / Social Proof */}
       <section className="py-24 bg-[#08080A] relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1F1F2A] to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
         
         <div className="container mx-auto px-3 sm:px-4 max-w-4xl text-center">
           <motion.div
@@ -585,7 +585,7 @@ export default function Home() {
             </blockquote>
             
             <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold">
+              <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold">
                 M
               </div>
               <div className="text-left">
@@ -600,7 +600,7 @@ export default function Home() {
       {/* Final CTA Section */}
       <section className="py-32 bg-[#0A0A0F] relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#00F0FF]/5 rounded-full blur-[150px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-[#00F0FF]/5 rounded-full blur-[150px]" />
         </div>
         
         <div className="relative z-10 container mx-auto px-3 sm:px-4 text-center max-w-3xl">
@@ -608,7 +608,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-6"
           >
             Ready to Own Your Payments?
           </motion.h2>

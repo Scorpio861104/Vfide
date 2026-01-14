@@ -229,7 +229,7 @@ export default function RewardsPage() {
         <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,215,0,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(80,200,120,0.08),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
       </div>
 
       <main className="min-h-screen pt-20">
@@ -237,7 +237,7 @@ export default function RewardsPage() {
         <motion.section 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="py-12 border-b border-white/10 backdrop-blur-xl bg-white/[0.02]"
+          className="py-12 border-b border-white/10 backdrop-blur-xl bg-white/2"
         >
           <div className="container mx-auto px-3 sm:px-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -682,7 +682,7 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
 }) {
   const [stakeAmount, setStakeAmount] = useState('')
   const [isStaking, setIsStaking] = useState(false)
-  const [selectedPool, setSelectedPool] = useState<string | null>(null)
+  const [_selectedPool, setSelectedPool] = useState<string | null>(null)
   const { writeContractAsync } = useWriteContract();
 
   const pools = [

@@ -155,7 +155,7 @@ export function StoryViewer({
             }}
           >
             <p
-              className="text-4xl md:text-5xl font-bold text-center max-w-2xl break-words"
+              className="text-4xl md:text-5xl font-bold text-center max-w-2xl wrap-break-word"
               style={{ color: currentStory.textColor }}
             >
               {currentStory.content}
@@ -173,7 +173,7 @@ export function StoryViewer({
               className="w-full h-full object-contain"
             />
             {currentStory.caption && (
-              <div className="absolute bottom-20 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+              <div className="absolute bottom-20 left-0 right-0 p-6 bg-linear-to-t from-black/70 to-transparent">
                 <p className="text-white text-xl text-center">{currentStory.caption}</p>
               </div>
             )}
@@ -192,7 +192,7 @@ export function StoryViewer({
               playsInline
             />
             {currentStory.caption && (
-              <div className="absolute bottom-20 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+              <div className="absolute bottom-20 left-0 right-0 p-6 bg-linear-to-t from-black/70 to-transparent">
                 <p className="text-white text-xl text-center">{currentStory.caption}</p>
               </div>
             )}

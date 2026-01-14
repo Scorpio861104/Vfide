@@ -149,7 +149,7 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-100"
             onClick={handleSkip}
           />
 
@@ -159,7 +159,7 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[101] w-[calc(100%-2rem)] max-w-lg sm:max-w-xl md:max-w-2xl"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-101 w-[calc(100%-2rem)] max-w-lg sm:max-w-xl md:max-w-2xl"
           >
             <div className="bg-linear-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#00F0FF] rounded-2xl shadow-2xl overflow-hidden">
               {/* Progress Bar */}
@@ -179,7 +179,7 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
                     {currentStep?.icon}
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-[#F5F3E8] font-[family-name:var(--font-display)]">
+                    <h3 className="text-lg sm:text-2xl font-bold text-[#F5F3E8] font-(family-name:--font-display)">
                       {currentStep?.title}
                     </h3>
                     <p className="text-sm text-[#A0A0A5]">

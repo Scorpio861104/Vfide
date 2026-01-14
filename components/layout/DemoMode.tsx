@@ -114,7 +114,7 @@ export function DemoMode() {
                   className="bg-[#2A2A2F] border-2 border-[#FFD700] rounded-2xl p-8"
                 >
                   <div className="flex justify-between items-start mb-6">
-                    <div className="text-[#FFD700] font-bold text-sm font-[family-name:var(--font-body)]">
+                    <div className="text-[#FFD700] font-bold text-sm font-(family-name:--font-body)">
                       🎮 DEMO MODE
                     </div>
                     <button
@@ -129,10 +129,10 @@ export function DemoMode() {
                     <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-[#00F0FF]/10 rounded-full border border-[#00F0FF]/30">
                       {steps[currentStep]?.icon}
                     </div>
-                    <h2 className="text-3xl font-bold text-[#F5F3E8] mb-3 font-[family-name:var(--font-display)]">
+                    <h2 className="text-3xl font-bold text-[#F5F3E8] mb-3 font-(family-name:--font-display)">
                       {steps[currentStep]?.title}
                     </h2>
-                    <p className="text-lg text-[#A0A0A5] leading-relaxed font-[family-name:var(--font-body)]">
+                    <p className="text-lg text-[#A0A0A5] leading-relaxed font-(family-name:--font-body)">
                       {steps[currentStep]?.description}
                     </p>
                   </div>
@@ -164,7 +164,7 @@ export function DemoMode() {
                   animate={{ x: 0, opacity: 1 }}
                   className="bg-[#1A1A1D] border-2 border-[#3A3A3F] rounded-2xl p-8"
                 >
-                  <div className="text-[#A0A0A5] text-sm mb-6 font-[family-name:var(--font-body)]">
+                  <div className="text-[#A0A0A5] text-sm mb-6 font-(family-name:--font-body)">
                     YOUR DEMO VAULT
                   </div>
 
@@ -205,7 +205,7 @@ export function DemoMode() {
 
                   {/* Recent Activity */}
                   <div className="mt-6">
-                    <div className="text-[#A0A0A5] text-sm mb-3 font-[family-name:var(--font-body)]">
+                    <div className="text-[#A0A0A5] text-sm mb-3 font-(family-name:--font-body)">
                       RECENT ACTIVITY
                     </div>
                     <div className="space-y-2">

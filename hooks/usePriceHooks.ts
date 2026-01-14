@@ -7,7 +7,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient as _useQueryClient } from '@tanstack/react-query'
 
 interface PriceData {
   vfide: {

@@ -13,7 +13,7 @@ import { Plus, Camera } from 'lucide-react';
 import { Story, isStoryExpired } from '@/lib/storiesSystem';
 
 // Mock users with stories
-const mockUserStories: { userId: string; userName: string; userAvatar: string; stories: Story[] }[] = [
+const _mockUserStories: { userId: string; userName: string; userAvatar: string; stories: Story[] }[] = [
   {
     userId: '0x1234...5678',
     userName: 'alex_finance',
@@ -140,12 +140,12 @@ const mockUserStories: { userId: string; userName: string; userAvatar: string; s
 
 export default function StoriesPage() {
   const { address, isConnected } = useAccount();
-  const [userStories, setUserStories] = useState<typeof mockUserStories>([]);
+  const [userStories, setUserStories] = useState<typeof _mockUserStories>([]);
   const [myStories, setMyStories] = useState<Story[]>([]);
   const [showCreator, setShowCreator] = useState(false);
   const [viewingStories, setViewingStories] = useState<{ stories: Story[]; index: number } | null>(null);
   const [viewedStories, setViewedStories] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
 
   // Fetch stories from API
   useEffect(() => {
@@ -269,7 +269,7 @@ export default function StoriesPage() {
                     className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                     onClick={() => setShowCreator(true)}
                   >
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00F0FF]/20 to-[#A78BFA]/20 border-2 border-dashed border-[#00F0FF] flex items-center justify-center hover:bg-[#00F0FF]/10 transition-colors">
+                    <div className="w-20 h-20 rounded-full bg-linear-to-br from-[#00F0FF]/20 to-[#A78BFA]/20 border-2 border-dashed border-[#00F0FF] flex items-center justify-center hover:bg-[#00F0FF]/10 transition-colors">
                       <Plus className="w-8 h-8 text-[#00F0FF]" />
                     </div>
                     <p className="text-[#00F0FF] text-sm font-medium">Add Story</p>

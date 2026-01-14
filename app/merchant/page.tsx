@@ -108,7 +108,7 @@ function ComparisonRow({
   return (
     <motion.tr 
       variants={itemVariants}
-      className={`${!isLast ? 'border-b border-white/5' : ''} group hover:bg-white/[0.02] transition-colors`}
+      className={`${!isLast ? 'border-b border-white/5' : ''} group hover:bg-white/2 transition-colors`}
     >
       <td className="py-3 sm:py-4 px-2 sm:px-4 text-gray-300 font-medium text-sm">{feature}</td>
       <td className="py-3 sm:py-4 px-2 sm:px-4 text-center">
@@ -152,7 +152,7 @@ export default function MerchantPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(59,130,246,0.1),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(16,185,129,0.08),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
       </div>
 
       <motion.div 
@@ -285,7 +285,7 @@ export default function MerchantPage() {
           {/* Comparison Table */}
           <motion.section 
             variants={containerVariants}
-            className="mb-16 p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-xl"
+            className="mb-16 p-8 rounded-3xl bg-white/2 border border-white/10 backdrop-blur-xl"
           >
             <motion.div variants={itemVariants} className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
@@ -297,7 +297,7 @@ export default function MerchantPage() {
             </motion.div>
 
             <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-              <table className="w-full min-w-[600px]">
+              <table className="w-full min-w-150">
                 <thead>
                   <tr className="border-b border-white/10">
                     <th className="text-left py-4 px-2 sm:px-4 text-gray-400 font-medium text-sm">Feature</th>

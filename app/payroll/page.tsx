@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect as _useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { safeBigIntToNumber } from '@/lib/validation'
+import { safeBigIntToNumber as _safeBigIntToNumber } from '@/lib/validation'
 import { 
   Banknote, 
   Play, 
@@ -20,14 +20,14 @@ import {
   Zap,
   ArrowDownToLine
 } from 'lucide-react'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
-import { parseUnits, isAddress } from 'viem'
+import { useAccount, useWriteContract as _useWriteContract, useWaitForTransactionReceipt as _useWaitForTransactionReceipt, useReadContract as _useReadContract } from 'wagmi'
+import { parseUnits as _parseUnits, isAddress } from 'viem'
 import { Footer } from '@/components/layout/Footer'
 import { usePayroll } from '@/hooks/usePayroll'
 import { Loader2 } from 'lucide-react'
 
 // PayrollManager ABI
-const PAYROLL_MANAGER_ABI = [
+const _PAYROLL_MANAGER_ABI = [
   { name: 'createStream', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'payee', type: 'address' }, { name: 'token', type: 'address' }, { name: 'rate', type: 'uint256' }, { name: 'initialDeposit', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
   { name: 'topUp', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'streamId', type: 'uint256' }, { name: 'amount', type: 'uint256' }], outputs: [] },
   { name: 'pauseStream', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [] },
@@ -45,13 +45,13 @@ const PAYROLL_MANAGER_ABI = [
 // PayrollManager not deployed on Base Sepolia testnet yet
 // Contract addresses will be populated after mainnet deployment
 const PAYROLL_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
+const _VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
 
 // Check if PayrollManager is deployed
 const _IS_PAYROLL_DEPLOYED = PAYROLL_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 // Stream data type (from contract)
-interface StreamData {
+interface _StreamData {
   id: number
   payer: string
   payee: string
@@ -90,7 +90,7 @@ export default function PayrollPage() {
     error: payrollError,
     isDeployed,
     currentTime,
-    totalReceiving,
+    totalReceiving: _totalReceiving,
     totalSending,
     totalClaimable,
     createStream,
@@ -191,7 +191,7 @@ export default function PayrollPage() {
         <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.08),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
       </div>
 
       <motion.main 
@@ -384,7 +384,7 @@ export default function PayrollPage() {
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ scale: 1.005, y: -2 }}
                         transition={{ delay: idx * 0.1 }}
-                        className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border transition-colors ${
+                        className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border transition-colors ${
                           stream.paused 
                             ? 'border-amber-500/30' 
                             : isLowRunway && role === 'employer'
@@ -571,7 +571,7 @@ export default function PayrollPage() {
       {/* How It Works */}
       <section className="py-20">
         <div className="container mx-auto px-3 sm:px-4">
-          <h2 className="text-2xl font-bold text-white text-center mb-12 bg-clip-text text-transparent bg-linear-to-r from-purple-400 to-indigo-400">How Streaming Works</h2>
+          <h2 className="text-2xl font-bold text-center mb-12 bg-clip-text text-transparent bg-linear-to-r from-purple-400 to-indigo-400">How Streaming Works</h2>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
@@ -686,9 +686,9 @@ export default function PayrollPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
+              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
             >
-              <h2 className="text-2xl font-bold text-white mb-6 bg-clip-text text-transparent bg-linear-to-r from-purple-400 to-indigo-400">Create Salary Stream</h2>
+              <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-linear-to-r from-purple-400 to-indigo-400">Create Salary Stream</h2>
               
               <div className="space-y-4">
                 <div>

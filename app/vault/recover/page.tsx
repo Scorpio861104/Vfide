@@ -42,7 +42,7 @@ function AuroraBackground() {
           scale: [1, 1.2, 0.9, 1]
         }}
         transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-linear-to-br from-cyan-500/20 via-blue-500/10 to-transparent rounded-full blur-[150px]"
+        className="absolute top-0 left-1/4 w-200 h-200 bg-linear-to-br from-cyan-500/20 via-blue-500/10 to-transparent rounded-full blur-[150px]"
       />
       
       {/* Secondary aurora */}
@@ -53,7 +53,7 @@ function AuroraBackground() {
           scale: [1, 0.8, 1.1, 1]
         }}
         transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute bottom-0 right-1/4 w-[700px] h-[700px] bg-linear-to-br from-purple-500/15 via-pink-500/10 to-transparent rounded-full blur-[130px]"
+        className="absolute bottom-0 right-1/4 w-175 h-175 bg-linear-to-br from-purple-500/15 via-pink-500/10 to-transparent rounded-full blur-[130px]"
       />
       
       {/* Accent glow */}
@@ -63,11 +63,11 @@ function AuroraBackground() {
           scale: [1, 1.3, 1]
         }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-linear-to-br from-emerald-500/10 to-transparent rounded-full blur-[100px]"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-linear-to-br from-emerald-500/10 to-transparent rounded-full blur-[100px]"
       />
       
       {/* Grid overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.02)_1px,transparent_1px)] bg-[size:60px_60px]" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.02)_1px,transparent_1px)] bg-size-[60px_60px]" />
     </div>
   );
 }
@@ -259,7 +259,7 @@ function GlassCard({ children, className = "", hover = true, gradient, glow }: {
     <motion.div
       whileHover={hover ? { scale: 1.01, y: -4 } : {}}
       transition={{ type: "spring" as const, stiffness: 400, damping: 25 }}
-      className={`relative overflow-hidden rounded-3xl bg-linear-to-br ${gradient ? gradientMap[gradient] : 'from-white/[0.08] via-white/[0.04] to-transparent'} backdrop-blur-2xl border border-white/10 ${glow && gradient ? `shadow-2xl ${glowMap[gradient]}` : ''} ${className}`}
+      className={`relative overflow-hidden rounded-3xl bg-linear-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 via-white/4 to-transparent'} backdrop-blur-2xl border border-white/10 ${glow && gradient ? `shadow-2xl ${glowMap[gradient]}` : ''} ${className}`}
     >
       {/* Shine effect */}
       <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
@@ -658,7 +658,7 @@ function ClaimFlowModal({
                 className="space-y-5"
               >
                 <div>
-                  <label className="block text-sm text-gray-300 mb-3 font-medium flex items-center gap-2">
+                  <label className="text-sm text-gray-300 mb-3 font-medium flex items-center gap-2">
                     <Fingerprint className="h-4 w-4 text-purple-400" />
                     Recovery ID
                   </label>
@@ -675,7 +675,7 @@ function ClaimFlowModal({
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-gray-300 mb-3 font-medium flex items-center gap-2">
+                  <label className="text-sm text-gray-300 mb-3 font-medium flex items-center gap-2">
                     <HelpCircle className="h-4 w-4 text-blue-400" />
                     Recovery Reason
                   </label>
@@ -832,7 +832,7 @@ export default function VaultRecoveryPage() {
   const [error, setError] = useState("");
   
   // Contract reads for vault lookup
-  const { data: vaultInfo, refetch: refetchVaultInfo } = useReadContract({
+  const { data: _vaultInfo, refetch: refetchVaultInfo } = useReadContract({
     address: CONTRACT_ADDRESSES.VaultHub,
     abi: VaultHubABI,
     functionName: 'getVaultInfo',
@@ -840,7 +840,7 @@ export default function VaultRecoveryPage() {
     query: { enabled: !!vaultToLookup }
   });
   
-  const { data: proofScore, refetch: refetchProofScore } = useReadContract({
+  const { data: _proofScore, refetch: refetchProofScore } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'proofScore',
@@ -848,7 +848,7 @@ export default function VaultRecoveryPage() {
     query: { enabled: !!vaultToLookup }
   });
   
-  const { data: badgeBalance, refetch: refetchBadges } = useReadContract({
+  const { data: _badgeBalance, refetch: refetchBadges } = useReadContract({
     address: CONTRACT_ADDRESSES.BadgeNFT,
     abi: VFIDEBadgeNFTABI,
     functionName: 'balanceOf',
@@ -918,7 +918,7 @@ export default function VaultRecoveryPage() {
         // TODO: Implement backend API for off-chain identity lookup
         setError(`${searchMethod} search requires backend integration. Currently only vault address (recoveryId) search is supported on-chain.`);
       }
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to fetch vault information. Please try again.");
     }
     
@@ -1074,7 +1074,7 @@ export default function VaultRecoveryPage() {
                     disabled={isSearching}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-linear-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 sm:min-w-[200px] shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
+                    className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-linear-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 sm:min-w-50 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
                   >
                     {isSearching ? (
                       <>

@@ -67,7 +67,7 @@ export function StoryRing({
               {latestStory?.content?.slice(0, 15)}...
             </div>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#00F0FF]/20 to-[#A78BFA]/20 flex items-center justify-center">
+            <div className="w-full h-full bg-linear-to-br from-[#00F0FF]/20 to-[#A78BFA]/20 flex items-center justify-center">
               <span className="text-2xl">{userAvatar || '👤'}</span>
             </div>
           )}
@@ -82,7 +82,7 @@ export function StoryRing({
       </div>
 
       {/* Username */}
-      <p className="text-[#F5F3E8] text-sm text-center max-w-[80px] truncate group-hover:text-[#00F0FF] transition-colors">
+      <p className="text-[#F5F3E8] text-sm text-center max-w-20 truncate group-hover:text-[#00F0FF] transition-colors">
         {userName}
       </p>
     </motion.div>

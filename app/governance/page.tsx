@@ -170,7 +170,7 @@ export default function GovernancePage() {
         <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,240,255,0.08),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
       </div>
 
       <main className="min-h-screen pt-20">
@@ -178,7 +178,7 @@ export default function GovernancePage() {
         <motion.section 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="py-12 border-b border-white/10 backdrop-blur-xl bg-white/[0.02]"
+          className="py-12 border-b border-white/10 backdrop-blur-xl bg-white/2"
         >
           <div className="container mx-auto px-3 sm:px-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
@@ -429,7 +429,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+            className="bg-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
           >
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <div className="p-2 rounded-xl bg-linear-to-br from-red-500/20 to-orange-500/20">
@@ -1437,7 +1437,7 @@ function SuggestionsTab() {
               <div key={suggestion.id} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#50C878]/50 transition-all">
                 <div className="flex gap-4">
                   {/* Vote Column */}
-                  <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                  <div className="flex flex-col items-center gap-1 min-w-15">
                     <button
                       onClick={() => handleVote(suggestion.id, true)}
                       disabled={hasVoted}

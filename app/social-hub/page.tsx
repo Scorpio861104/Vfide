@@ -105,7 +105,7 @@ const mockStories: Story[] = [
   { id: '6', author: { address: '0x6789', name: 'TokenTrader', avatar: '📊' }, preview: 'https://picsum.photos/100/180?5', viewed: false, isLive: false },
 ];
 
-const mockPosts: Post[] = [
+const _mockPosts: Post[] = [
   {
     id: '1',
     author: {
@@ -237,11 +237,11 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="flex flex-col items-center gap-1 min-w-[72px]"
+      className="flex flex-col items-center gap-1 min-w-18"
     >
       <div className={`
         relative p-0.5 rounded-full
-        ${story.viewed ? 'bg-[#3A3A4F]' : 'bg-gradient-to-tr from-[#FF006E] via-[#FF6B9D] to-[#00F0FF]'}
+        ${story.viewed ? 'bg-[#3A3A4F]' : 'bg-linear-to-tr from-[#FF006E] via-[#FF6B9D] to-[#00F0FF]'}
         ${story.isLive ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-[#0A0A0F]' : ''}
       `}>
         <div className="w-14 h-14 rounded-full bg-[#1A1A2E] flex items-center justify-center text-2xl overflow-hidden">
@@ -259,7 +259,7 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
           </span>
         )}
       </div>
-      <span className="text-xs text-[#A0A0A5] truncate max-w-[60px]">
+      <span className="text-xs text-[#A0A0A5] truncate max-w-15">
         {story.author.name}
       </span>
     </motion.button>
@@ -284,7 +284,7 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
       className="bg-[#1A1A2E]/80 backdrop-blur-xl border border-[#3A3A4F] rounded-2xl p-4"
     >
       <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
+        <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
           ✨
         </div>
         <div className="flex-1">
@@ -293,7 +293,7 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
             onChange={(e) => setContent(e.target.value)}
             onFocus={() => setIsFocused(true)}
             placeholder="What's happening in Web3?"
-            className="w-full bg-transparent text-[#F8F8FC] placeholder-[#6A6A6F] resize-none outline-none min-h-[60px]"
+            className="w-full bg-transparent text-[#F8F8FC] placeholder-[#6A6A6F] resize-none outline-none min-h-15"
             rows={isFocused ? 3 : 1}
           />
           
@@ -326,7 +326,7 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
                   <button
                     onClick={handleSubmit}
                     disabled={!content.trim() || content.length > 280}
-                    className="px-4 py-2 bg-gradient-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F] font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 bg-linear-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F] font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     Post
@@ -353,7 +353,7 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-xl">
+          <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-xl">
             {post.author.avatar}
           </div>
           <div>
@@ -381,7 +381,7 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
             <MoreHorizontal className="w-5 h-5" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg py-1 min-w-[150px] z-10">
+            <div className="absolute right-0 top-full mt-1 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg py-1 min-w-37.5 z-10">
               <button className="w-full px-4 py-2 text-left text-sm text-[#A0A0A5] hover:bg-[#3A3A4F] flex items-center gap-2">
                 <Flag className="w-4 h-4" /> Report
               </button>
@@ -526,7 +526,7 @@ function TrendingSidebar() {
         <div className="space-y-4">
           {mockSuggested.map((user) => (
             <div key={user.address} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
                 {user.avatar}
               </div>
               <div className="flex-1 min-w-0">
@@ -548,7 +548,7 @@ function TrendingSidebar() {
       </div>
 
       {/* Stats Card */}
-      <div className="bg-gradient-to-br from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-2xl p-4">
+      <div className="bg-linear-to-br from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-2xl p-4">
         <h3 className="font-semibold text-[#F8F8FC] mb-4 flex items-center gap-2">
           <Award className="w-5 h-5 text-[#FFD700]" />
           Your Stats
@@ -583,12 +583,12 @@ function TrendingSidebar() {
 export default function SocialHubPage() {
   const { address, isConnected } = useAccount();
   const [posts, setPosts] = useState<Post[]>([]);
-  const [stories, setStories] = useState<Story[]>([]);
-  const [trending, setTrending] = useState<TrendingTopic[]>([]);
-  const [suggested, setSuggested] = useState<SuggestedUser[]>([]);
+  const [_stories, setStories] = useState<Story[]>([]);
+  const [_trending, setTrending] = useState<TrendingTopic[]>([]);
+  const [_suggested, setSuggested] = useState<SuggestedUser[]>([]);
   const [feedFilter, setFeedFilter] = useState<'all' | 'following' | 'trending'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
 
   // Fetch social data on mount
   useEffect(() => {

@@ -358,7 +358,7 @@ function TimeSeriesChart({ title, type, range }: TimeSeriesChartProps) {
                 initial={{ height: 0 }}
                 animate={{ height }}
                 transition={{ delay: index * 0.02 }}
-                className="flex-1 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-sm relative group cursor-pointer"
+                className="flex-1 bg-linear-to-t from-blue-600 to-blue-400 rounded-t-sm relative group cursor-pointer"
                 style={{ minWidth: '2px' }}
               >
                 {/* Tooltip */}

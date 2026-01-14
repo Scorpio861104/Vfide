@@ -19,7 +19,7 @@ export default function CommandBar() {
     plan: executionPlan,
     parse,
     clear: clearIntent,
-    setInput: setNLPInput,
+    setInput: _setNLPInput,
   } = useNaturalLanguage();
 
   const isProcessing = false; // No async processing for now

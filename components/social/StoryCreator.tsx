@@ -140,7 +140,7 @@ export function StoryCreator({
             <div className="space-y-6">
               {/* Preview */}
               <div
-                className="aspect-[9/16] max-w-sm mx-auto rounded-xl overflow-hidden flex items-center justify-center p-8"
+                className="aspect-9/16 max-w-sm mx-auto rounded-xl overflow-hidden flex items-center justify-center p-8"
                 style={{ background: STORY_BACKGROUNDS[selectedBackground]?.gradient }}
               >
                 <textarea
@@ -191,7 +191,7 @@ export function StoryCreator({
               {/* Media Upload/Preview */}
               {!mediaPreview ? (
                 <div
-                  className="aspect-[9/16] max-w-sm mx-auto border-2 border-dashed border-[#3A3A4F] rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-[#00F0FF] transition-colors"
+                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-[#3A3A4F] rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-[#00F0FF] transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <ImageIcon className="w-16 h-16 text-[#A0A0A5] mb-4" />
@@ -199,7 +199,7 @@ export function StoryCreator({
                   <p className="text-[#A0A0A5] text-sm">Click to browse</p>
                 </div>
               ) : (
-                <div className="aspect-[9/16] max-w-sm mx-auto rounded-xl overflow-hidden relative">
+                <div className="aspect-9/16 max-w-sm mx-auto rounded-xl overflow-hidden relative">
                   {mediaFile?.type.startsWith('video/') ? (
                     <video src={mediaPreview} className="w-full h-full object-cover" controls />
                   ) : (

@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePublicClient, useAccount, useReadContract } from 'wagmi';
 import { CONTRACT_ADDRESSES, SEER_ABI } from '@/lib/contracts';
-import { getScoreTier } from './useProofScore';
+import { getScoreTier as _getScoreTier } from './useProofScore';
 import { parseAbiItem } from 'viem';
 
 // ============================================================================

@@ -507,7 +507,7 @@ export default function NotificationCenter() {
     setNotifications((prev) => prev.filter((n) => !n.archived));
   }, []);
 
-  const handleNotificationAction = useCallback((url: string) => {
+  const handleNotificationAction = useCallback((_url: string) => {
     // In production, this would navigate to the URL
     // Navigation handled by router
   }, []);

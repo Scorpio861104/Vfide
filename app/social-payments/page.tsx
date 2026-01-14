@@ -26,7 +26,7 @@ import {
 import { useState } from 'react';
 
 export default function SocialPaymentsDashboard() {
-  const { address, isConnected } = useAccount();
+  const { address: _address, isConnected: _isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'feed' | 'activity' | 'earnings'>('feed');
 
   // Mock stats for demo

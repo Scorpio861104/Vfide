@@ -124,7 +124,7 @@ export default function MultisigPage() {
                 </div>
                 <div>
                   <div className="font-medium">{signer.name}</div>
-                  <div className="text-xs text-muted-foreground font-mono truncate max-w-[120px] sm:max-w-[200px]">{signer.address}</div>
+                  <div className="text-xs text-muted-foreground font-mono truncate max-w-30 sm:max-w-50">{signer.address}</div>
                 </div>
               </div>
               <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-500">

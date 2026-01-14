@@ -620,11 +620,11 @@ function SocialFeatures({ className = '' }: SocialFeaturesProps) {
     });
   }, []);
 
-  const handleCommentPost = useCallback((postId: string) => {
+  const handleCommentPost = useCallback((_postId: string) => {
     // Comment action triggered
   }, []);
 
-  const handleSharePost = useCallback((postId: string) => {
+  const handleSharePost = useCallback((_postId: string) => {
     // Share action triggered
   }, []);
 

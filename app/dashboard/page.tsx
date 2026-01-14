@@ -43,7 +43,7 @@ function GlassCard({ children, className = "", hover = true }: {
     <motion.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -168,8 +168,8 @@ export default function DashboardPage() {
       <>
         <main className="min-h-screen bg-[#08080A] pt-20 flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/4 left-1/4 w-150 h-150 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-100 h-100 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
           </div>
           
           <motion.div 
@@ -203,8 +203,8 @@ export default function DashboardPage() {
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20">
           <div className="fixed inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#00F0FF]/5 rounded-full blur-[120px]" />
-            <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[100px]" />
+            <div className="absolute top-0 left-1/4 w-150 h-150 bg-[#00F0FF]/5 rounded-full blur-[120px]" />
+            <div className="absolute bottom-1/4 right-0 w-125 h-125 bg-purple-500/5 rounded-full blur-[100px]" />
           </div>
 
         <section className="relative py-8 border-b border-white/5">
@@ -223,7 +223,7 @@ export default function DashboardPage() {
                 </h1>
                 <div className="flex items-center gap-3 flex-wrap">
                   <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 max-w-full">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                     <span className="text-white font-mono text-xs sm:text-sm truncate">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
                     <button onClick={copyAddress} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
                       <AnimatePresence mode="wait">
@@ -478,7 +478,7 @@ function RecentActivitySection() {
         <div className="space-y-3">
           {activities.map((activity, index) => (
             <motion.div key={`${activity.type}-${activity.time}-${index}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-xl hover:bg-white/8 transition-colors">
-              <div className={`p-2 rounded-xl flex-shrink-0 ${
+              <div className={`p-2 rounded-xl shrink-0 ${
                 activity.color === 'cyan' ? 'bg-cyan-500/20 text-cyan-400' :
                 activity.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400' :
                 activity.color === 'amber' ? 'bg-amber-500/20 text-amber-400' :

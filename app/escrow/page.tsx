@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { safeParseInt, validateAddress } from '@/lib/validation'
+import { safeParseInt as _safeParseInt, validateAddress } from '@/lib/validation'
 import { 
   Shield, 
   Package, 
@@ -21,14 +21,14 @@ import {
   Calendar,
   Hash
 } from 'lucide-react'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
-import { parseUnits } from 'viem'
+import { useAccount, useWriteContract as _useWriteContract, useWaitForTransactionReceipt as _useWaitForTransactionReceipt, useReadContract as _useReadContract } from 'wagmi'
+import { parseUnits as _parseUnits } from 'viem'
 import { Footer } from '@/components/layout/Footer'
 import { useEscrow } from '@/lib/escrow/useEscrow'
 import { Loader2 } from 'lucide-react'
 
 // EscrowManager ABI
-const ESCROW_MANAGER_ABI = [
+const _ESCROW_MANAGER_ABI = [
   { name: 'createEscrow', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'seller', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'timeout', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
   { name: 'release', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
   { name: 'refund', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
@@ -40,8 +40,8 @@ const ESCROW_MANAGER_ABI = [
 ] as const;
 
 // Contract addresses from environment
-const ESCROW_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS || '0x2167C57dDfcd1bD2a6aDDB2bf510a05c48e7aC15') as `0x${string}`;
-const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
+const _ESCROW_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS || '0x2167C57dDfcd1bD2a6aDDB2bf510a05c48e7aC15') as `0x${string}`;
+const _VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
 
 // Escrow States (from contract)
 enum EscrowState {
@@ -175,7 +175,7 @@ export default function EscrowPage() {
         <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,240,255,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(34,197,94,0.08),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
       </div>
 
       <motion.main 
@@ -350,7 +350,7 @@ export default function EscrowPage() {
                       animate={{ opacity: 1, y: 0 }}
                       whileHover={{ scale: 1.005, y: -2 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
+                      className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
                     >
                       <div className="p-6">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -530,7 +530,7 @@ export default function EscrowPage() {
           <div className="mt-16 max-w-3xl mx-auto">
             <motion.div 
               whileHover={{ scale: 1.01, y: -2 }}
-              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6"
+              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0">
@@ -577,7 +577,7 @@ export default function EscrowPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
+              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
             >
               <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-linear-to-r from-cyan-400 to-emerald-400">Create Escrow</h2>
               

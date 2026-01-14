@@ -205,7 +205,7 @@ export default function StreamingPage() {
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all"
+                    className="h-full bg-linear-to-r from-primary to-primary/60 rounded-full transition-all"
                     style={{ width: `${calculateProgress(stream)}%` }}
                   />
                 </div>

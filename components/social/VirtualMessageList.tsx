@@ -63,7 +63,7 @@ const MessageRow = ({ index, style, messages, currentUserAddress }: MessageRowPr
                 : 'bg-[#2A2A3F] text-[#F5F3E8]'
             }`}
           >
-            <p className="text-sm break-words whitespace-pre-wrap">
+            <p className="text-sm wrap-break-word whitespace-pre-wrap">
               {message.decryptedContent || '[Encrypted]'}
             </p>
           </div>
