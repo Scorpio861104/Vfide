@@ -1,0 +1,34 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ISeerAutonomous",
+  "sourceName": "contracts/VFIDETrust.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "subject",
+          "type": "address"
+        },
+        {
+          "internalType": "uint16",
+          "name": "oldScore",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "newScore",
+          "type": "uint16"
+        }
+      ],
+      "name": "onScoreChange",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

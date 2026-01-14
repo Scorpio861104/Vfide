@@ -1,0 +1,95 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockMerchantRebateVault",
+  "sourceName": "contracts/mocks/MockEcosystemVault.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_vfide",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "isManager",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "payRebate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "manager",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "active",
+          "type": "bool"
+        }
+      ],
+      "name": "setManager",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "vfide",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608034607057601f61022f38819003918201601f19168301916001600160401b03831184841017607557808492602094604052833981010312607057516001600160a01b03811690819003607057600080546001600160a01b0319169190911790556040516101a3908161008c8239f35b600080fd5b634e487b7160e01b600052604160045260246000fdfe608080604052600436101561001357600080fd5b60003560e01c90816372c8ae3b1461013357508063a5e90eee146100e5578063f3ae2415146100a65763fec4acb11461004b57600080fd5b346100a15760603660031901126100a157610064610157565b506044356001600160401b0381116100a157366023820112156100a15780600401356001600160401b0381116100a157369101602401116100a157005b600080fd5b346100a15760203660031901126100a1576001600160a01b036100c7610157565b166000526001602052602060ff604060002054166040519015158152f35b346100a15760403660031901126100a1576100fe610157565b602435908115158092036100a15760018060a01b0316600052600160205260406000209060ff80198354169116179055600080f35b346100a15760003660031901126100a1576000546001600160a01b03168152602090f35b600435906001600160a01b03821682036100a15756fea26469706673582212209f5fa460943b9397583b1003323741de0f5728f12aa7b2e5b3c8a3496b48c41464736f6c634300081e0033",
+  "deployedBytecode": "0x608080604052600436101561001357600080fd5b60003560e01c90816372c8ae3b1461013357508063a5e90eee146100e5578063f3ae2415146100a65763fec4acb11461004b57600080fd5b346100a15760603660031901126100a157610064610157565b506044356001600160401b0381116100a157366023820112156100a15780600401356001600160401b0381116100a157369101602401116100a157005b600080fd5b346100a15760203660031901126100a1576001600160a01b036100c7610157565b166000526001602052602060ff604060002054166040519015158152f35b346100a15760403660031901126100a1576100fe610157565b602435908115158092036100a15760018060a01b0316600052600160205260406000209060ff80198354169116179055600080f35b346100a15760003660031901126100a1576000546001600160a01b03168152602090f35b600435906001600160a01b03821682036100a15756fea26469706673582212209f5fa460943b9397583b1003323741de0f5728f12aa7b2e5b3c8a3496b48c41464736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

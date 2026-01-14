@@ -1,0 +1,67 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "SecurityHubMock",
+  "sourceName": "contracts/mocks/SecurityHubMock.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "vault",
+          "type": "address"
+        }
+      ],
+      "name": "isLocked",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "locked",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "vault",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "v",
+          "type": "bool"
+        }
+      ],
+      "name": "setLocked",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60808060405234601557610159908161001b8239f35b600080fdfe608080604052600436101561001357600080fd5b60003560e01c9081634a4fbeec146100d25750806389ad0a34146100845763cbf9fe5f1461004057600080fd5b3461007f57602036600319011261007f576001600160a01b0361006161010d565b166000526000602052602060ff604060002054166040519015158152f35b600080fd5b3461007f57604036600319011261007f5761009d61010d565b6024359081151580920361007f5760018060a01b0316600052600060205260406000209060ff80198354169116179055600080f35b3461007f57602036600319011261007f576020906001600160a01b036100f661010d565b166000526000825260ff6040600020541615158152f35b600435906001600160a01b038216820361007f5756fea2646970667358221220007815b263203a4e7db12fa064a3d0e83ee21905541a32ff8b7c261dba4b6e6164736f6c634300081e0033",
+  "deployedBytecode": "0x608080604052600436101561001357600080fd5b60003560e01c9081634a4fbeec146100d25750806389ad0a34146100845763cbf9fe5f1461004057600080fd5b3461007f57602036600319011261007f576001600160a01b0361006161010d565b166000526000602052602060ff604060002054166040519015158152f35b600080fd5b3461007f57604036600319011261007f5761009d61010d565b6024359081151580920361007f5760018060a01b0316600052600060205260406000209060ff80198354169116179055600080f35b3461007f57602036600319011261007f576020906001600160a01b036100f661010d565b166000526000825260ff6040600020541615158152f35b600435906001600160a01b038216820361007f5756fea2646970667358221220007815b263203a4e7db12fa064a3d0e83ee21905541a32ff8b7c261dba4b6e6164736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

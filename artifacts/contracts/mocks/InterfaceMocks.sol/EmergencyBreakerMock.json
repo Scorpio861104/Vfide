@@ -1,0 +1,42 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "EmergencyBreakerMock",
+  "sourceName": "contracts/mocks/InterfaceMocks.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "halted",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "name": "toggle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080806040523460135760d4908160198239f35b600080fdfe6080806040526004361015601257600080fd5b60003560e01c8063337d1d5b14604d5763b9b8af0b14603057600080fd5b34604857600036600319011260485780600060209252f35b600080fd5b346048576040366003190112604857600435801515036048576024356001600160401b0381116048573660238201121560485780600401356001600160401b0381116048573691016024011160485700fea2646970667358221220828195621701985a6fa54ed6c6237535c276b23727bc42d40ce0cd14512b49a764736f6c634300081e0033",
+  "deployedBytecode": "0x6080806040526004361015601257600080fd5b60003560e01c8063337d1d5b14604d5763b9b8af0b14603057600080fd5b34604857600036600319011260485780600060209252f35b600080fd5b346048576040366003190112604857600435801515036048576024356001600160401b0381116048573660238201121560485780600401356001600160401b0381116048573691016024011160485700fea2646970667358221220828195621701985a6fa54ed6c6237535c276b23727bc42d40ce0cd14512b49a764736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

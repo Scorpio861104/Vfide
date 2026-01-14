@@ -1,0 +1,29 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "SanctumMockSimple",
+  "sourceName": "contracts/mocks/InterfaceMocks.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "disburse",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60808060405234601357607d908160198239f35b600080fdfe6004361015600c57600080fd5b60003560e01c637f3bd56e14602057600080fd5b3460425760403660031901126042576004356001600160a01b03811603604257005b600080fdfea264697066735822122074f368e788e0c8acf5b75bb41f521bb056a2c305b98fd9dea7bbaf624abdb37864736f6c634300081e0033",
+  "deployedBytecode": "0x6004361015600c57600080fd5b60003560e01c637f3bd56e14602057600080fd5b3460425760403660031901126042576004356001600160a01b03811603604257005b600080fdfea264697066735822122074f368e788e0c8acf5b75bb41f521bb056a2c305b98fd9dea7bbaf624abdb37864736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

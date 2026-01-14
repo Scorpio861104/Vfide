@@ -1,0 +1,51 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "PresaleMock",
+  "sourceName": "contracts/mocks/PresaleMock.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "launch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "launchNow",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "presaleStartTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_time",
+          "type": "uint256"
+        }
+      ],
+      "name": "setPresaleStartTime",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080806040523460135760c8908160198239f35b600080fdfe6080806040526004361015601257600080fd5b60003560e01c806301339c2114607d578063296cab55146066578063715492aa1460625763a82524b214604457600080fd5b34605d576000366003190112605d576020906000548152f35b600080fd5b607d565b34605d576020366003190112605d57600435600055005b34605d576000366003190112605d574260005500fea2646970667358221220832a1f69954c98f4356e0381f5d3e7305a344565dd9ebf253118f652b1a0b39964736f6c634300081e0033",
+  "deployedBytecode": "0x6080806040526004361015601257600080fd5b60003560e01c806301339c2114607d578063296cab55146066578063715492aa1460625763a82524b214604457600080fd5b34605d576000366003190112605d576020906000548152f35b600080fd5b607d565b34605d576020366003190112605d57600435600055005b34605d576000366003190112605d574260005500fea2646970667358221220832a1f69954c98f4356e0381f5d3e7305a344565dd9ebf253118f652b1a0b39964736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "GuardianLockMock",
+  "sourceName": "contracts/mocks/InterfaceMocks.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "name": "setLocked",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608080604052346013576076908160198239f35b600080fdfe6004361015600c57600080fd5b60003560e01c63211e28b614602057600080fd5b34603b576020366003190112603b5760043580151503603b57005b600080fdfea2646970667358221220e9d37b365a68c6c549a85d911662ea0aed9ef6aeb267a73dc87b661b5e04ad5264736f6c634300081e0033",
+  "deployedBytecode": "0x6004361015600c57600080fd5b60003560e01c63211e28b614602057600080fd5b34603b576020366003190112603b5760043580151503603b57005b600080fdfea2646970667358221220e9d37b365a68c6c549a85d911662ea0aed9ef6aeb267a73dc87b661b5e04ad5264736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

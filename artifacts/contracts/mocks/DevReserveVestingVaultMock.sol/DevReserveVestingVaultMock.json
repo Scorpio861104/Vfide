@@ -1,0 +1,35 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "DevReserveVestingVaultMock",
+  "sourceName": "contracts/mocks/DevReserveVestingVaultMock.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "transfer",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60808060405234601357608a908160198239f35b600080fdfe6080806040526004361015601257600080fd5b60003560e01c63a9059cbb14602657600080fd5b34604f576040366003190112604f576004356001600160a01b03811603604f5780600160209252f35b600080fdfea2646970667358221220b8a4eb459dcad4ac52f90988214065b186744fcd954a3cb46084c0def39978fa64736f6c634300081e0033",
+  "deployedBytecode": "0x6080806040526004361015601257600080fd5b60003560e01c63a9059cbb14602657600080fd5b34604f576040366003190112604f576004356001600160a01b03811603604f5780600160209252f35b600080fdfea2646970667358221220b8a4eb459dcad4ac52f90988214065b186744fcd954a3cb46084c0def39978fa64736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

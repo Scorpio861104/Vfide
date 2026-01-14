@@ -1,0 +1,422 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IProofScoreBurnRouter",
+  "sourceName": "contracts/SharedInterfaces.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "adaptiveFeesEnabled",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "burnsPaused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "dailyBurnCap",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "ecosystemMinBps",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "getEffectiveBurnRate",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "burnBps",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "sanctumBps",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "ecosystemBps",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "score",
+          "type": "uint16"
+        }
+      ],
+      "name": "getFeeForScore",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "totalBps",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "feePercent",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSustainabilityStatus",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "dailyBurned",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "burnCapacity",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "dailyVolume",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint16",
+          "name": "volumeMultiplier",
+          "type": "uint16"
+        },
+        {
+          "internalType": "bool",
+          "name": "burnsPausedFlag",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "supplyFloor",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "currentSupply",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getVolumeMultiplier",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "maxTotalBps",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minTotalBps",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minimumSupplyFloor",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "previewFees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "burnAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "sanctumAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ecosystemAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "netAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint16",
+          "name": "score",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "burnAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "recordBurn",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "recordVolume",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "remainingDailyBurnCapacity",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "lowVolumeThreshold",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "highVolumeThreshold",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint16",
+          "name": "lowVolMultiplier",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "highVolMultiplier",
+          "type": "uint16"
+        },
+        {
+          "internalType": "bool",
+          "name": "enabled",
+          "type": "bool"
+        }
+      ],
+      "name": "setAdaptiveFees",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "minTotalBps",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "maxTotalBps",
+          "type": "uint16"
+        }
+      ],
+      "name": "setFeePolicy",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "seer",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "sanctumSink",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "burnSink",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "ecosystemSink",
+          "type": "address"
+        }
+      ],
+      "name": "setModules",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "dailyBurnCap",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minimumSupplyFloor",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint16",
+          "name": "ecosystemMinBps",
+          "type": "uint16"
+        }
+      ],
+      "name": "setSustainability",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "setToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "updateScore",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

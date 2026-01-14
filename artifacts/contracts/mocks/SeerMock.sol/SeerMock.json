@@ -1,0 +1,163 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "SeerMock",
+  "sourceName": "contracts/mocks/SeerMock.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "who",
+          "type": "address"
+        }
+      ],
+      "name": "getScore",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "highTrustThreshold",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lowTrustThreshold",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minForGovernance",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minForMerchant",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minScore",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "scores",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "m",
+          "type": "uint16"
+        }
+      ],
+      "name": "setMin",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "who",
+          "type": "address"
+        },
+        {
+          "internalType": "uint16",
+          "name": "score",
+          "type": "uint16"
+        }
+      ],
+      "name": "setScore",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "high",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "low",
+          "type": "uint16"
+        }
+      ],
+      "name": "setThresholds",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60808060405234602c57650fa01f40000065ffffffffffff19600154161760015561030090816100328239f35b600080fdfe608080604052600436101561001357600080fd5b60003560e01c90816311a8a5fc1461020557816313c2bedc146101e65750806328dd9b391461019b5780634a33fb72146101765780634ccf04cf1461008d57806352a67c5d1461015257806376dd110f14610114578063d47875d0146100e5578063df1224e2146100925763e710c92b1461008d57600080fd5b61026b565b346100e05760403660031901126100e0576100ab610233565b6100b3610244565b63ffff00006001549161ffff60201b9060201b169260101b169065ffffffff000019161717600155600080f35b600080fd5b346100e05760203660031901126100e0576020610108610103610255565b61028d565b61ffff60405191168152f35b346100e05760203660031901126100e0576001600160a01b03610135610255565b166000526000602052602061ffff60406000205416604051908152f35b346100e05760003660031901126100e057602061ffff600154821c16604051908152f35b346100e05760003660031901126100e057602061ffff60015460101c16604051908152f35b346100e05760403660031901126100e0576101b4610255565b6101bc610244565b9060018060a01b0316600052600060205261ffff6040600020911661ffff19825416179055600080f35b346100e05760003660031901126100e05760209061ffff600154168152f35b346100e05760203660031901126100e05761ffff610221610233565b1661ffff196001541617600155600080f35b6004359061ffff821682036100e057565b6024359061ffff821682036100e057565b600435906001600160a01b03821682036100e057565b346100e05760003660031901126100e057602061ffff60015416604051908152f35b6001600160a01b031660008181526020819052604090205461ffff16156102c357600052600060205261ffff6040600020541690565b506113889056fea26469706673582212209a931c63e8ba7a23e43c6500b0594f796c41651eb283ed8a17c1ef5db4242fd364736f6c634300081e0033",
+  "deployedBytecode": "0x608080604052600436101561001357600080fd5b60003560e01c90816311a8a5fc1461020557816313c2bedc146101e65750806328dd9b391461019b5780634a33fb72146101765780634ccf04cf1461008d57806352a67c5d1461015257806376dd110f14610114578063d47875d0146100e5578063df1224e2146100925763e710c92b1461008d57600080fd5b61026b565b346100e05760403660031901126100e0576100ab610233565b6100b3610244565b63ffff00006001549161ffff60201b9060201b169260101b169065ffffffff000019161717600155600080f35b600080fd5b346100e05760203660031901126100e0576020610108610103610255565b61028d565b61ffff60405191168152f35b346100e05760203660031901126100e0576001600160a01b03610135610255565b166000526000602052602061ffff60406000205416604051908152f35b346100e05760003660031901126100e057602061ffff600154821c16604051908152f35b346100e05760003660031901126100e057602061ffff60015460101c16604051908152f35b346100e05760403660031901126100e0576101b4610255565b6101bc610244565b9060018060a01b0316600052600060205261ffff6040600020911661ffff19825416179055600080f35b346100e05760003660031901126100e05760209061ffff600154168152f35b346100e05760203660031901126100e05761ffff610221610233565b1661ffff196001541617600155600080f35b6004359061ffff821682036100e057565b6024359061ffff821682036100e057565b600435906001600160a01b03821682036100e057565b346100e05760003660031901126100e057602061ffff60015416604051908152f35b6001600160a01b031660008181526020819052604090205461ffff16156102c357600052600060205261ffff6040600020541690565b506113889056fea26469706673582212209a931c63e8ba7a23e43c6500b0594f796c41651eb283ed8a17c1ef5db4242fd364736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

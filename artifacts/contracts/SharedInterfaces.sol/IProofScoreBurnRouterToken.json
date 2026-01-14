@@ -1,0 +1,65 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IProofScoreBurnRouterToken",
+  "sourceName": "contracts/SharedInterfaces.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "computeFees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "burnAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "sanctumAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ecosystemAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "sanctumSink",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "ecosystemSink",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "burnSink",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

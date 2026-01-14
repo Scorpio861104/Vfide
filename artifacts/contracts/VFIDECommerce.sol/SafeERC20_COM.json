@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "SafeERC20_COM",
+  "sourceName": "contracts/VFIDECommerce.sol",
+  "abi": [],
+  "bytecode": "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea26469706673582212208c2872866bb1946b8eaf86fcf67f86343ea5254c1e5a6dffc5e09ddfdb501ad764736f6c634300081e0033",
+  "deployedBytecode": "0x600080fdfea26469706673582212208c2872866bb1946b8eaf86fcf67f86343ea5254c1e5a6dffc5e09ddfdb501ad764736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,43 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ReenterTargetMock",
+  "sourceName": "contracts/mocks/ReenterTargetMock.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "Released",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "release",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080806040523460135760a2908160198239f35b600080fdfe6080806040526004361015601257600080fd5b60003560e01c6337bdc99b14602657600080fd5b34606757602036600319011260675760407f4d436de77f1139fda664b657c73ad6c3bde4a1984d3aabeab7c3998556b93b63916004358152336020820152a1005b600080fdfea264697066735822122005dbb1c2a10b426d6b94b2fed4ed9dfb41576812367eb1298051ca30463c416e64736f6c634300081e0033",
+  "deployedBytecode": "0x6080806040526004361015601257600080fd5b60003560e01c6337bdc99b14602657600080fd5b34606757602036600319011260675760407f4d436de77f1139fda664b657c73ad6c3bde4a1984d3aabeab7c3998556b93b63916004358152336020820152a1005b600080fdfea264697066735822122005dbb1c2a10b426d6b94b2fed4ed9dfb41576812367eb1298051ca30463c416e64736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

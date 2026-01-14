@@ -1,0 +1,48 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TreasuryMock",
+  "sourceName": "contracts/mocks/TreasuryMock.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        }
+      ],
+      "name": "NoteVFIDE",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        }
+      ],
+      "name": "noteVFIDE",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080806040523460135760b6908160198239f35b600080fdfe6080806040526004361015601257600080fd5b60003560e01c637f6b78a414602657600080fd5b34607b576040366003190112607b576024356001600160a01b03811690819003607b577f35155ba5135793b1945b1b8bcf7c66f006baf9f1a241291ff79fd3af0bcfff419160409160043582526020820152a1005b600080fdfea26469706673582212208fcf4144c1e8f02a261b7608ccb8ff04ff36e5a1ca1d9de2def498f77e94d37364736f6c634300081e0033",
+  "deployedBytecode": "0x6080806040526004361015601257600080fd5b60003560e01c637f6b78a414602657600080fd5b34607b576040366003190112607b576024356001600160a01b03811690819003607b577f35155ba5135793b1945b1b8bcf7c66f006baf9f1a241291ff79fd3af0bcfff419160409160043582526020820152a1005b600080fdfea26469706673582212208fcf4144c1e8f02a261b7608ccb8ff04ff36e5a1ca1d9de2def498f77e94d37364736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
