@@ -179,7 +179,7 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
   let rewardShare = '0%';
   
   if (rank > 0 && rank <= 20 && quarterEndedFlag) {
-    const shareBPS = BigInt(RANK_SHARES[rank - 1]);
+    const shareBPS = BigInt(RANK_SHARES[rank - 1] ?? 0);
     estimatedReward = (poolSnapshot * shareBPS) / 10000n;
     rewardShare = `${(Number(shareBPS) / 100).toFixed(1)}%`;
   }

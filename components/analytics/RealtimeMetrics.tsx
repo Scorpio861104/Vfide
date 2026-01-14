@@ -53,10 +53,10 @@ export function RealtimeMetrics({
       setMetrics(prev =>
         prev.map((metric, index) => {
           const update = updates[index];
-          const newHistory = [...metric.history, update.newValue].slice(-maxHistoryLength);
+          const newHistory = [...metric.history, update?.newValue ?? metric.value].slice(-maxHistoryLength);
           return {
             ...metric,
-            value: update.newValue,
+            value: update?.newValue ?? metric.value,
             history: newHistory
           };
         })

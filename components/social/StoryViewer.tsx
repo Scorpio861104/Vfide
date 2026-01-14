@@ -72,7 +72,9 @@ export function StoryViewer({
   };
 
   const handleReaction = (emoji: string) => {
-    onReact(currentStory.id, emoji);
+    if (currentStory) {
+      onReact(currentStory.id, emoji);
+    }
     setShowReactions(false);
   };
 

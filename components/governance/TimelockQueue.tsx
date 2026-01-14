@@ -122,11 +122,11 @@ export function TimelockQueue() {
   const transactions: QueuedTransaction[] = queueData
     ? (queueData[0] as readonly string[]).map((id, i) => ({
         id,
-        target: (queueData[1] as readonly string[])[i],
-        value: (queueData[2] as readonly bigint[])[i],
-        eta: (queueData[3] as readonly bigint[])[i],
-        done: (queueData[4] as readonly boolean[])[i],
-        expired: (queueData[5] as readonly boolean[])[i],
+        target: (queueData[1] as readonly string[])[i] ?? '',
+        value: (queueData[2] as readonly bigint[])[i] ?? BigInt(0),
+        eta: (queueData[3] as readonly bigint[])[i] ?? BigInt(0),
+        done: (queueData[4] as readonly boolean[])[i] ?? false,
+        expired: (queueData[5] as readonly boolean[])[i] ?? false,
       }))
     : [];
 

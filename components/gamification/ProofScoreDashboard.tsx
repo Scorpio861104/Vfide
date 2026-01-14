@@ -134,7 +134,7 @@ function getCurrentTier(): ScoreTier {
     },
   ];
 
-  return tiers.find((t) => score >= t.minScore && score <= t.maxScore) || tiers[0];
+  return tiers.find((t) => score >= t.minScore && score <= t.maxScore) ?? tiers[0]!;
 }
 
 function generateScoreHistory(): ScoreRecord[] {

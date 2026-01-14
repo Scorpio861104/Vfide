@@ -41,6 +41,9 @@ interface MessageRowProps {
 
 const MessageRow = ({ index, style, messages, currentUserAddress }: MessageRowProps): React.ReactElement => {
   const message = messages[index];
+  if (!message) {
+    return <div style={style} />;
+  }
   const isOwn = message.from.toLowerCase() === currentUserAddress.toLowerCase();
   
   return (

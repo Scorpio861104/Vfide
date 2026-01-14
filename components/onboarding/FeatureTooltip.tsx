@@ -40,6 +40,7 @@ export function FeatureTooltip({
       }, delay);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [id, autoShow, delay]);
 
   const handleClose = () => {

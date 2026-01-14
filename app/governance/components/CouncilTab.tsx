@@ -133,15 +133,15 @@ export function CouncilTab({ councilMembers, terms, currentTerm, epochData, elec
               <div className="space-y-2 text-sm text-[#A0A0A5]">
                 <div className="flex justify-between">
                   <span>Avg Participation</span>
-                  <span className="text-[#F5F3E8]">{epochData[0].participation}%</span>
+                  <span className="text-[#F5F3E8]">{epochData[0]?.participation ?? 0}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Avg Decision Time</span>
-                  <span className="text-[#F5F3E8]">{epochData[0].avgDecisionTime}</span>
+                  <span className="text-[#F5F3E8]">{epochData[0]?.avgDecisionTime ?? 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Emergency Actions</span>
-                  <span className="text-[#F5F3E8]">{epochData[0].emergencyActions}</span>
+                  <span className="text-[#F5F3E8]">{epochData[0]?.emergencyActions ?? 0}</span>
                 </div>
               </div>
             </div>

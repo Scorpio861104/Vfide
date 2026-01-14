@@ -34,11 +34,15 @@ export function ThemeToggle({ showLabel = false, size = 'md' }: ThemeToggleProps
   const cycleMode = () => {
     const currentIndex = modes.findIndex(m => m.mode === settings.mode);
     const nextIndex = (currentIndex + 1) % modes.length;
-    setMode(modes[nextIndex].mode);
+    const nextMode = modes[nextIndex];
+    if (nextMode) {
+      setMode(nextMode.mode);
+    }
   };
 
-  const currentMode = modes.find(m => m.mode === settings.mode) || modes[1];
-  const CurrentIcon = currentMode.icon;
+  const defaultMode = modes[1]!;
+  const currentMode = modes.find(m => m.mode === settings.mode) ?? defaultMode;
+  const CurrentIcon = currentMode?.icon ?? Moon;
 
   return (
     <motion.button
@@ -51,8 +55,8 @@ export function ThemeToggle({ showLabel = false, size = 'md' }: ThemeToggleProps
       `}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      aria-label={`Current theme: ${currentMode.label}. Click to switch theme mode`}
-      title={`Theme: ${currentMode.label}`}
+      aria-label={`Current theme: ${currentMode?.label ?? 'Dark'}. Click to switch theme mode`}
+      title={`Theme: ${currentMode?.label ?? 'Dark'}`}
     >
       <motion.div
         key={settings.mode}
@@ -64,7 +68,7 @@ export function ThemeToggle({ showLabel = false, size = 'md' }: ThemeToggleProps
         <CurrentIcon className={sizeClasses[size]} />
       </motion.div>
       {showLabel && (
-        <span className="text-sm font-medium">{currentMode.label}</span>
+        <span className="text-sm font-medium">{currentMode?.label ?? 'Dark'}</span>
       )}
     </motion.button>
   );

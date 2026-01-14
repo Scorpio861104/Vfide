@@ -219,7 +219,7 @@ export function calculateDailySpending(
     );
 
     result.unshift({
-      date: new Date(dayStart).toISOString().split('T')[0],
+      date: new Date(dayStart).toISOString().split('T')[0] ?? '',
       amount: dayTx.reduce((sum, tx) => sum + tx.usdValue, 0),
       transactions: dayTx.length,
     });
@@ -410,7 +410,7 @@ export function calculateTaxEvents(
     if (tx.type === 'receive' || tx.type === 'reward') {
       // Add to holdings
       if (!holdings[tx.token]) holdings[tx.token] = [];
-      holdings[tx.token].push({
+      holdings[tx.token]!.push({
         amount: tx.amount,
         costBasis: tx.usdValue,
         timestamp: tx.timestamp,

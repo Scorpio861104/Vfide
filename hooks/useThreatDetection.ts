@@ -248,7 +248,7 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
     }
 
     // Check if window expired
-    if (now - entry.firstAttempt > config.windowMs) {
+    if (now - entry.firstAttempt > (config?.windowMs ?? 60000)) {
       setRateLimits(prev => new Map(prev).set(key, {
         count: 1,
         firstAttempt: now,
@@ -260,13 +260,13 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
     // Increment count
     const newCount = entry.count + 1;
 
-    if (newCount > config.maxAttempts) {
+    if (newCount > (config?.maxAttempts ?? 10)) {
       // Block and report threat
       setRateLimits(prev => new Map(prev).set(key, {
         ...entry,
         count: newCount,
         blocked: true,
-        blockUntil: now + config.blockDurationMs
+        blockUntil: now + (config?.blockDurationMs ?? 300000)
       }));
 
       addThreat(
@@ -367,7 +367,7 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
     failedLoginAttempts: activeThreats.filter(t => t.type === 'brute_force').length,
     activeSessions: 1, // Mock value
     threatsDetected: threats.length,
-    lastThreatDetected: threats.length > 0 ? threats[threats.length - 1].detected : null,
+    lastThreatDetected: threats.length > 0 ? threats[threats.length - 1]?.detected ?? null : null,
     averageRiskScore: riskScore
   };
 

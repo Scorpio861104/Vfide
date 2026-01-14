@@ -395,6 +395,7 @@ export async function executeTransfer(
 
       for (let i = 0; i < route.steps.length; i++) {
         const step = route.steps[i];
+        if (!step) continue;
         status.currentStep = i + 1;
 
         if (step.type === 'approve') {

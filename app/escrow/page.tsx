@@ -629,10 +629,10 @@ export default function EscrowPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleCreateEscrow}
-                  disabled={actionLoading === 'create' || !createForm.merchant || !createForm.amount || !createForm.orderId}
+                  disabled={escrowLoading || !createForm.merchant || !createForm.amount || !createForm.orderId}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-cyan-500 to-emerald-500 text-white rounded-xl font-medium shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50"
                 >
-                  {actionLoading === 'create' ? (
+                  {escrowLoading ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <>

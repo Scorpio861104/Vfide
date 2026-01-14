@@ -101,7 +101,7 @@ export default function TreasuryPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
-                    isActive ? colors.active : `bg-white/5 text-gray-400 ${colors.hover}`
+                    isActive ? colors?.active ?? '' : `bg-white/5 text-gray-400 ${colors?.hover ?? ''}`
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />

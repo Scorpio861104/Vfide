@@ -96,7 +96,7 @@ function parseRelativeDate(text: string): Date | undefined {
 
   // Next [day]
   const nextDayMatch = lowerText.match(/next\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i);
-  if (nextDayMatch) {
+  if (nextDayMatch && nextDayMatch[1]) {
     const targetDay = DAY_NAMES.indexOf(nextDayMatch[1].toLowerCase());
     const result = new Date(now);
     const currentDay = result.getDay();
@@ -107,7 +107,7 @@ function parseRelativeDate(text: string): Date | undefined {
 
   // In X days/weeks/months
   const inMatch = lowerText.match(/in\s+(\d+)\s+(day|week|month|year)s?/i);
-  if (inMatch) {
+  if (inMatch && inMatch[1] && inMatch[2]) {
     const amount = parseInt(inMatch[1]);
     const unit = inMatch[2].toLowerCase();
     const result = new Date(now);
@@ -131,7 +131,7 @@ function parseRelativeDate(text: string): Date | undefined {
 
   // On the Xth (day of month for recurring)
   const dayOfMonthMatch = lowerText.match(/on\s+the\s+(\d+)(?:st|nd|rd|th)/i);
-  if (dayOfMonthMatch) {
+  if (dayOfMonthMatch && dayOfMonthMatch[1]) {
     const day = parseInt(dayOfMonthMatch[1]);
     const result = new Date(now);
     result.setDate(day);
@@ -148,15 +148,17 @@ function parseRelativeDate(text: string): Date | undefined {
     let month: number;
     let day: number;
 
-    if (monthDayMatch[1]) {
+    if (monthDayMatch[1] && monthDayMatch[2]) {
       // Month name format
       const monthName = monthDayMatch[1].toLowerCase().slice(0, 3);
       month = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(monthName);
       day = parseInt(monthDayMatch[2]);
-    } else {
+    } else if (monthDayMatch[3] && monthDayMatch[4]) {
       // MM/DD format
       month = parseInt(monthDayMatch[3]) - 1;
       day = parseInt(monthDayMatch[4]);
+    } else {
+      return undefined;
     }
 
     result.setMonth(month);
@@ -191,7 +193,7 @@ function parseCondition(text: string): ConditionInfo | undefined {
 
   // Price condition: "when ETH is above 3000"
   const priceMatch = lower.match(/when\s+(\w+)\s+(?:is\s+)?(above|below|over|under|at|equals?)\s+\$?(\d+(?:,\d{3})*(?:\.\d+)?)/i);
-  if (priceMatch) {
+  if (priceMatch && priceMatch[1] && priceMatch[2] && priceMatch[3]) {
     const asset = priceMatch[1].toUpperCase();
     let operator: ConditionInfo['operator'] = 'above';
     
@@ -221,7 +223,7 @@ function parseCondition(text: string): ConditionInfo | undefined {
 
   // Event condition: "when package delivered", "when milestone complete"
   const eventMatch = lower.match(/when\s+(.+?)(?:\s+(?:send|pay|release|transfer))?$/i);
-  if (eventMatch && !priceMatch && !approvalMatch) {
+  if (eventMatch && eventMatch[1] && !priceMatch && !approvalMatch) {
     return {
       type: 'event',
       description: eventMatch[1].trim(),
@@ -240,7 +242,7 @@ function parseStream(text: string): StreamInfo | undefined {
 
   // "stream 1000 VFIDE over 30 days"
   const streamMatch = lower.match(/stream\s+.*?over\s+(\d+)\s+(second|minute|hour|day|week|month)s?/i);
-  if (streamMatch) {
+  if (streamMatch && streamMatch[1] && streamMatch[2]) {
     const amount = parseInt(streamMatch[1]);
     const unit = streamMatch[2].toLowerCase();
     
@@ -309,12 +311,14 @@ export function parseNaturalLanguage(input: string): ParsedIntent {
   let usernameMatch;
   const usernameRegex = new RegExp(USERNAME_PATTERN);
   while ((usernameMatch = usernameRegex.exec(input)) !== null) {
-    recipients.push({ identifier: usernameMatch[1], type: 'username' });
+    if (usernameMatch[1]) {
+      recipients.push({ identifier: usernameMatch[1], type: 'username' });
+    }
   }
 
   // Also check for common name patterns like "to Alice", "with Bob"
   const nameMatch = lower.match(/(?:to|with|pay|send)\s+([a-z]+)(?:\s|$)/i);
-  if (nameMatch && !recipients.length) {
+  if (nameMatch && nameMatch[1] && !recipients.length) {
     const potentialName = nameMatch[1];
     // Filter out common words
     if (!['the', 'a', 'an', 'my', 'me', 'them', 'everyone'].includes(potentialName)) {
@@ -326,7 +330,7 @@ export function parseNaturalLanguage(input: string): ParsedIntent {
 
   // Extract amount
   const amountMatch = input.match(AMOUNT_PATTERN);
-  if (amountMatch) {
+  if (amountMatch && amountMatch[1]) {
     let amount = parseFloat(amountMatch[1].replace(/,/g, ''));
     const suffix = amountMatch[0].toLowerCase();
     if (suffix.endsWith('k')) amount *= 1000;
@@ -337,7 +341,7 @@ export function parseNaturalLanguage(input: string): ParsedIntent {
 
   // Extract token
   const tokenMatch = input.match(TOKEN_PATTERN);
-  if (tokenMatch) {
+  if (tokenMatch && tokenMatch[1]) {
     result.token = tokenMatch[1].toUpperCase();
   } else {
     result.token = 'VFIDE'; // Default
@@ -375,7 +379,7 @@ export function parseNaturalLanguage(input: string): ParsedIntent {
     
     // Extract day of month for recurring
     const dayMatch = lower.match(/on\s+the\s+(\d+)(?:st|nd|rd|th)/);
-    if (dayMatch) {
+    if (dayMatch && dayMatch[1]) {
       result.schedule.dayOfMonth = parseInt(dayMatch[1]);
     }
     
@@ -477,40 +481,46 @@ export function createExecutionPlan(intent: ParsedIntent): ExecutionPlan {
 
     case 'stream':
       if (intent.stream && intent.recipients.length > 0) {
-        steps.push({
-          id: 'approve-stream',
-          type: 'approve',
-          description: `Approve ${intent.amount} ${intent.token} for streaming`,
-          params: { amount: intent.amount, token: intent.token },
-        });
-        steps.push({
-          id: 'create-stream',
-          type: 'createStream',
-          description: `Create payment stream: ${intent.stream.ratePerSecond.toFixed(6)} ${intent.token}/second for ${intent.stream.duration}s`,
-          params: {
-            recipient: intent.recipients[0].identifier,
-            totalAmount: intent.amount,
-            duration: intent.stream.duration,
-            token: intent.token,
-          },
-          dependsOn: ['approve-stream'],
-        });
+        const streamRecipient = intent.recipients[0];
+        if (streamRecipient) {
+          steps.push({
+            id: 'approve-stream',
+            type: 'approve',
+            description: `Approve ${intent.amount} ${intent.token} for streaming`,
+            params: { amount: intent.amount, token: intent.token },
+          });
+          steps.push({
+            id: 'create-stream',
+            type: 'createStream',
+            description: `Create payment stream: ${intent.stream.ratePerSecond.toFixed(6)} ${intent.token}/second for ${intent.stream.duration}s`,
+            params: {
+              recipient: streamRecipient.identifier,
+              totalAmount: intent.amount,
+              duration: intent.stream.duration,
+              token: intent.token,
+            },
+            dependsOn: ['approve-stream'],
+          });
+        }
       }
       break;
 
     case 'conditional':
       if (intent.condition && intent.recipients.length > 0) {
-        steps.push({
-          id: 'create-escrow',
-          type: 'createEscrow',
-          description: `Create conditional escrow: ${intent.amount} ${intent.token} - ${intent.condition.description}`,
-          params: {
-            recipient: intent.recipients[0].identifier,
-            amount: intent.amount,
-            token: intent.token,
-            condition: intent.condition,
-          },
-        });
+        const conditionalRecipient = intent.recipients[0];
+        if (conditionalRecipient) {
+          steps.push({
+            id: 'create-escrow',
+            type: 'createEscrow',
+            description: `Create conditional escrow: ${intent.amount} ${intent.token} - ${intent.condition.description}`,
+            params: {
+              recipient: conditionalRecipient.identifier,
+              amount: intent.amount,
+              token: intent.token,
+              condition: intent.condition,
+            },
+          });
+        }
       }
       break;
 

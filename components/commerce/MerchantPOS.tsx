@@ -124,7 +124,7 @@ export function MerchantPOS() {
       if (!address || !showQRPayment || !pendingPaymentRef.current) return
       
       for (const log of logs) {
-        const args = log.args as { customer?: `0x${string}`, merchant?: `0x${string}`, amount?: bigint }
+        const args = (log as unknown as { args: { customer?: `0x${string}`, merchant?: `0x${string}`, amount?: bigint } }).args
         // Check if this payment is for us
         if (args.merchant?.toLowerCase() === address.toLowerCase()) {
           const receivedAmount = args.amount ? parseFloat(formatEther(args.amount)) : 0

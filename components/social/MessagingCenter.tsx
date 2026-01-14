@@ -135,7 +135,6 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       read: false,
       verified: false, // Pending verification
       type: 'direct',
-      pending: true, // Custom field for optimistic UI
     };
     
     // Show message immediately
@@ -293,7 +292,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
             {/* Avatar */}
             <div className="relative">
               <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold text-sm">
-                {friend.alias ? friend.alias[0].toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
+                {friend.alias ? friend.alias?.[0]?.toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
               </div>
             </div>
 

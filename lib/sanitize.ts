@@ -108,7 +108,7 @@ export function sanitizeNumber(input: string, options?: {
   }
   
   // Limit decimal places
-  if (decimals !== undefined && parts.length === 2) {
+  if (decimals !== undefined && parts.length === 2 && parts[0] !== undefined && parts[1] !== undefined) {
     cleaned = parts[0] + '.' + parts[1].substring(0, decimals);
   }
   

@@ -198,7 +198,7 @@ export function Confetti({ trigger, colors = ["#00F0FF", "#00FF88", "#FFD700", "
         id: i,
         x: Math.random() * 100 - 50,
         y: Math.random() * -100 - 50,
-        color: colors[Math.floor(Math.random() * colors.length)],
+        color: colors[Math.floor(Math.random() * colors.length)] || '#00F0FF',
         rotation: Math.random() * 360,
         scale: Math.random() * 0.5 + 0.5
       }));
@@ -208,6 +208,7 @@ export function Confetti({ trigger, colors = ["#00F0FF", "#00FF88", "#FFD700", "
       const timeout = setTimeout(() => setParticles([]), 2000);
       return () => clearTimeout(timeout);
     }
+    return undefined;
   }, [trigger, colors]);
   
   return (

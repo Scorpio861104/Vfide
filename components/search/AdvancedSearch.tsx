@@ -105,7 +105,7 @@ const generateMockSearchResult = (id: string, type: ContentType): SearchResult =
   return {
     id,
     type,
-    title: titles[type][Math.floor(Math.random() * titles[type].length)],
+    title: (titles[type] ?? titles.all)[Math.floor(Math.random() * (titles[type] ?? titles.all).length)] ?? 'Mixed Content Item',
     description: `This is a detailed description of the ${type} item. It contains relevant information that matches your search query with highlighted terms.`,
     author: {
       id: `user${id}`,
@@ -115,8 +115,8 @@ const generateMockSearchResult = (id: string, type: ContentType): SearchResult =
     },
     createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
     score: Math.floor(Math.random() * 100),
-    category: categories[Math.floor(Math.random() * categories.length)],
-    status: statuses[Math.floor(Math.random() * statuses.length)],
+    category: categories[Math.floor(Math.random() * categories.length)] ?? 'General',
+    status: statuses[Math.floor(Math.random() * statuses.length)] ?? 'active',
     highlights: ['search term', 'matched phrase', 'relevant keyword'],
     tags: ['tag1', 'tag2', 'tag3'].slice(0, Math.floor(Math.random() * 3) + 1),
     attachments: Math.random() > 0.5 ? Math.floor(Math.random() * 5) : 0

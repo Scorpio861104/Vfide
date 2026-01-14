@@ -58,7 +58,7 @@ export function parseInviteCode(url: string): string | null {
   try {
     const urlObj = new URL(url);
     const match = urlObj.pathname.match(/\/invite\/([A-Za-z0-9]+)/);
-    return match ? match[1] : null;
+    return match && match[1] ? match[1] : null;
   } catch {
     return null;
   }

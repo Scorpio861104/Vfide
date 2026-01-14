@@ -426,7 +426,7 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
 // Separate component to fetch activity from API
 function RecentActivitySection() {
   const { address } = useAccount();
-  const [activities, setActivities] = useState<Array<{desc: string; time: string; icon: typeof ArrowUpRight; color: string}>>([]);
+  const [activities, setActivities] = useState<Array<{type: string; desc: string; time: string; icon: typeof ArrowUpRight; color: string}>>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

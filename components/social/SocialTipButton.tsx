@@ -151,9 +151,9 @@ export function SocialTipButton({
                     >
                       <div className="font-bold text-[#F5F3E8]">VFIDE</div>
                       <div className="text-xs text-[#6B6B78]">Community Token</div>
-                      {wallet && (
+                      {isConnected && (
                         <div className="text-xs text-purple-400 mt-1">
-                          Balance: {wallet.tokenBalance}
+                          Connected
                         </div>
                       )}
                     </button>
@@ -167,9 +167,9 @@ export function SocialTipButton({
                     >
                       <div className="font-bold text-[#F5F3E8]">ETH</div>
                       <div className="text-xs text-[#6B6B78]">Ethereum</div>
-                      {wallet && (
+                      {isConnected && (
                         <div className="text-xs text-blue-400 mt-1">
-                          Balance: {wallet.balance}
+                          Connected
                         </div>
                       )}
                     </button>

@@ -141,7 +141,7 @@ class MonitoringService {
         };
       }
 
-      const stats = componentStats[metric.componentName];
+      const stats = componentStats[metric.componentName]!;
       stats.count++;
       stats.avgTime = (stats.avgTime * (stats.count - 1) + metric.renderTime) / stats.count;
       stats.maxTime = Math.max(stats.maxTime, metric.renderTime);

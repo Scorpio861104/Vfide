@@ -80,7 +80,9 @@ function hexToBytes(hex: string): Uint8Array {
  * Hash using SHA-256
  */
 async function sha256(data: Uint8Array): Promise<Uint8Array> {
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  // Create a copy to ensure we have a proper ArrayBuffer
+  const buffer = new Uint8Array(data).buffer as ArrayBuffer;
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
   return new Uint8Array(hashBuffer);
 }
 
@@ -93,9 +95,14 @@ async function _hkdfDerive(
   info: Uint8Array,
   length: number
 ): Promise<Uint8Array> {
+  // Create copies to ensure we have proper ArrayBuffers
+  const secretBuffer = new Uint8Array(secret).buffer as ArrayBuffer;
+  const saltBuffer = new Uint8Array(salt).buffer as ArrayBuffer;
+  const infoBuffer = new Uint8Array(info).buffer as ArrayBuffer;
+
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
-    secret,
+    secretBuffer,
     'HKDF',
     false,
     ['deriveBits']
@@ -105,8 +112,8 @@ async function _hkdfDerive(
     {
       name: 'HKDF',
       hash: 'SHA-256',
-      salt,
-      info,
+      salt: saltBuffer,
+      info: infoBuffer,
     },
     keyMaterial,
     length * 8
@@ -251,7 +258,7 @@ export async function deriveStealthPrivateKey(
   // Simplified addition - in production would use modular arithmetic
   const stealthPrivKey = new Uint8Array(32);
   for (let i = 0; i < 32; i++) {
-    stealthPrivKey[i] = (spendingPrivBytes[i] + sharedSecret[i]) % 256;
+    stealthPrivKey[i] = ((spendingPrivBytes[i] ?? 0) + (sharedSecret[i] ?? 0)) % 256;
   }
 
   return bytesToHex(stealthPrivKey);
@@ -273,7 +280,7 @@ export function encodeMetaAddress(metaAddress: StealthMetaAddress): string {
  */
 export function decodeMetaAddress(encoded: string): StealthMetaAddress | null {
   const match = encoded.match(/^st:eth:0x([a-fA-F0-9]{66})([a-fA-F0-9]{66})$/);
-  if (!match) return null;
+  if (!match || !match[1] || !match[2]) return null;
 
   return {
     prefix: 'st:eth:0x',

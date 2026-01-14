@@ -214,7 +214,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isLoadingMore) {
+        if (entries[0]?.isIntersecting && !isLoadingMore) {
           setIsLoadingMore(true);
           setTimeout(() => {
             setPosts((prev) => [...prev, ...generateMockPosts()]);

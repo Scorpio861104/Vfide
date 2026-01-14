@@ -103,13 +103,13 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
           >
             <div className="text-center mb-6">
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-[#50C878]/10 rounded-full border border-[#50C878]/30">
-                {steps[step].icon}
+                {steps[step]?.icon}
               </div>
               <h2 className="text-3xl font-bold text-[#F5F3E8] mb-3 font-[family-name:var(--font-display)]">
-                {steps[step].title}
+                {steps[step]?.title}
               </h2>
               <p className="text-lg text-[#A0A0A5] leading-relaxed font-[family-name:var(--font-body)]">
-                {steps[step].description}
+                {steps[step]?.description}
               </p>
             </div>
 

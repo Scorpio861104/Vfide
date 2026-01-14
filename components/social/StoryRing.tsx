@@ -41,7 +41,7 @@ export function StoryRing({
   // Get the latest story thumbnail
   const latestStory = activeStories[activeStories.length - 1];
   const thumbnail =
-    latestStory.type === 'image' || latestStory.type === 'video'
+    latestStory?.type === 'image' || latestStory?.type === 'video'
       ? latestStory.content
       : null;
 
@@ -59,12 +59,12 @@ export function StoryRing({
         >
           {thumbnail ? (
             <img src={thumbnail} alt={userName} className="w-full h-full object-cover" />
-          ) : latestStory.type === 'text' ? (
+          ) : latestStory?.type === 'text' ? (
             <div
               className="w-full h-full flex items-center justify-center text-xs font-bold text-white p-2 text-center"
-              style={{ background: latestStory.backgroundColor }}
+              style={{ background: latestStory?.backgroundColor }}
             >
-              {latestStory.content.slice(0, 15)}...
+              {latestStory?.content?.slice(0, 15)}...
             </div>
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-[#00F0FF]/20 to-[#A78BFA]/20 flex items-center justify-center">

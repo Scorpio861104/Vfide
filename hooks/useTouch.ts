@@ -49,16 +49,20 @@ export const useSwipe = (ref: RefObject<HTMLElement>, options: SwipeOptions = {}
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     touchEnd.current = null;
+    const touch = e.targetTouches[0];
+    if (!touch) return;
     touchStart.current = {
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY
+      x: touch.clientX,
+      y: touch.clientY
     };
   }, []);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
+    const touch = e.targetTouches[0];
+    if (!touch) return;
     touchEnd.current = {
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY
+      x: touch.clientX,
+      y: touch.clientY
     };
   }, []);
 
@@ -128,7 +132,9 @@ export const usePullToRefresh = (ref: RefObject<HTMLElement>, options: PullToRef
 
     scrollTop.current = element.scrollTop;
     if (scrollTop.current === 0) {
-      touchStart.current = e.touches[0].clientY;
+      const touch = e.touches[0];
+      if (!touch) return;
+      touchStart.current = touch.clientY;
       setIsPulling(true);
     }
   }, [ref, disabled]);
@@ -142,7 +148,9 @@ export const usePullToRefresh = (ref: RefObject<HTMLElement>, options: PullToRef
       return;
     }
 
-    const touch = e.touches[0].clientY;
+    const touchItem = e.touches[0];
+    if (!touchItem) return;
+    const touch = touchItem.clientY;
     const distance = Math.max(0, touch - touchStart.current);
     setPullDistance(Math.min(distance, threshold * 1.5));
   }, [ref, isPulling, isRefreshing, threshold, disabled]);
@@ -271,6 +279,7 @@ export const usePinch = (ref: RefObject<HTMLElement>, options: PinchOptions = {}
 
   const getDistance = (touches: TouchList): number => {
     const [touch1, touch2] = Array.from(touches);
+    if (!touch1 || !touch2) return 0;
     const dx = touch1.clientX - touch2.clientX;
     const dy = touch1.clientY - touch2.clientY;
     return Math.sqrt(dx * dx + dy * dy);

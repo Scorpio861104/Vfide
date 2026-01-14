@@ -552,7 +552,7 @@ export default function PayrollPage() {
                                 isLowRunway ? 'bg-red-500' : 'bg-linear-to-r from-purple-500 to-indigo-500'
                               }`}
                               initial={{ width: 0 }}
-                              animate={{ width: `${Math.max(5, Math.min(100, (runway / (90 * 24 * 60 * 60)) * 100))}%` }}
+                              animate={{ width: `${Math.max(5, Math.min(100, (parseInt(runway) || 0) / 90 * 100))}%` }}
                               transition={{ duration: 1, ease: 'easeOut' }}
                             />
                           </div>
@@ -746,10 +746,10 @@ export default function PayrollPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleCreateStream}
-                  disabled={actionLoading === 'create' || !createForm.payee || !createForm.rate || !createForm.deposit}
+                  disabled={payrollLoading || !createForm.payee || !createForm.rate || !createForm.deposit}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-medium shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all disabled:opacity-50"
                 >
-                  {actionLoading === 'create' ? (
+                  {payrollLoading ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <>

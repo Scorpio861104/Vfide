@@ -78,6 +78,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
       const timer = setTimeout(onClose, notification.type === 'pending' ? 30000 : 8000)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [notification, onClose])
   
   if (!notification) return null

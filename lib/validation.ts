@@ -268,7 +268,8 @@ export function safeArrayAccess<T>(
     return defaultValue;
   }
 
-  return array[index];
+  const value = array[index];
+  return value !== undefined ? value : defaultValue;
 }
 
 /**

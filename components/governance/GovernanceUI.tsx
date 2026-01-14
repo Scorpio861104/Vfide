@@ -179,8 +179,8 @@ function generateMockVotes(): Vote[] {
       votes.push({
         id: `vote-${prop.id}-${i}`,
         proposalId: prop.id,
-        voter: addresses[i % addresses.length],
-        direction: directions[i % directions.length],
+        voter: addresses[i % addresses.length]!,
+        direction: directions[i % directions.length]!,
         weight: Math.floor(Math.random() * 100000) + 10000,
         timestamp: prop.startDate + Math.random() * (prop.endDate - prop.startDate),
       });

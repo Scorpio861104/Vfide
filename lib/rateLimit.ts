@@ -78,7 +78,8 @@ export function getClientIdentifier(request: Request): string {
   
   // Use first forwarded IP if available
   if (forwarded) {
-    return forwarded.split(',')[0].trim();
+    const firstIp = forwarded.split(',')[0];
+    return firstIp?.trim() ?? 'unknown';
   }
   
   return realIp || cfIp || 'unknown';

@@ -58,15 +58,19 @@ export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
 // Storage Item Wrapper with Metadata
 // ============================================================================
 
-interface StorageItem<T> {
+interface NewStorageFormat<T> {
   _data: T;
   _timestamp: number;
-  _ttl?: number; // Time-to-live in milliseconds
-  // Legacy format support
-  value?: T;
-  timestamp?: number;
+  _ttl?: number;
+}
+
+interface LegacyStorageFormat<T> {
+  value: T;
+  timestamp: number;
   ttl?: number;
 }
+
+type StorageItem<T> = NewStorageFormat<T> | LegacyStorageFormat<T> | T;
 
 // ============================================================================
 // StorageService Class
@@ -99,29 +103,31 @@ class StorageServiceClass {
       const raw = localStorage.getItem(key);
       if (!raw) return defaultValue;
 
-      const item: StorageItem<T> = JSON.parse(raw);
+      const item = JSON.parse(raw) as StorageItem<T>;
       
-      // Check for new format (_ttl/_data)
-      if ('_data' in item) {
+      // Check for new format (_data)
+      if (item && typeof item === 'object' && '_data' in item) {
+        const newFormat = item as NewStorageFormat<T>;
         // Check if item has expired
-        if (item._ttl && item._timestamp && Date.now() - item._timestamp > item._ttl) {
+        if (newFormat._ttl && newFormat._timestamp && Date.now() - newFormat._timestamp > newFormat._ttl) {
           this.remove(key);
           return defaultValue;
         }
-        return item._data ?? defaultValue;
+        return newFormat._data ?? defaultValue;
       }
       
       // Legacy format support (value/timestamp/ttl)
-      if ('value' in item && 'timestamp' in item) {
-        if (item.ttl && item.timestamp && Date.now() - item.timestamp > item.ttl) {
+      if (item && typeof item === 'object' && 'value' in item && 'timestamp' in item) {
+        const legacyFormat = item as LegacyStorageFormat<T>;
+        if (legacyFormat.ttl && legacyFormat.timestamp && Date.now() - legacyFormat.timestamp > legacyFormat.ttl) {
           this.remove(key);
           return defaultValue;
         }
-        return item.value ?? defaultValue;
+        return legacyFormat.value ?? defaultValue;
       }
 
       // Direct value (not wrapped)
-      return item as unknown as T ?? defaultValue;
+      return (item as T) ?? defaultValue;
     } catch {
       // If parsing fails, try to return raw value for backwards compatibility
       try {

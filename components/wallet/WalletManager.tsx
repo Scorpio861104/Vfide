@@ -492,7 +492,7 @@ export default function WalletManager() {
   const [wallets, setWallets] = useState<Wallet[]>(generateMockWallets());
   const [selectedChain, setSelectedChain] = useState<number>(1);
   const [tokens, _setTokens] = useState<TokenBalance[]>(
-    generateTokenBalances(wallets[0]?.address)
+    generateTokenBalances(wallets[0]?.address ?? '')
   );
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [editingWallet, setEditingWallet] = useState<string | null>(null);

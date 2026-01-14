@@ -386,7 +386,7 @@ class GamificationEngine {
    */
   private calculateLevel(xp: number): number {
     for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-      if (xp >= LEVEL_THRESHOLDS[i]) {
+      if (xp >= (LEVEL_THRESHOLDS[i] ?? 0)) {
         return i + 1;
       }
     }
@@ -403,7 +403,7 @@ class GamificationEngine {
       return 0; // Max level
     }
 
-    return LEVEL_THRESHOLDS[currentLevel] - currentXP;
+    return (LEVEL_THRESHOLDS[currentLevel] ?? 0) - currentXP;
   }
 
   /**

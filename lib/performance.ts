@@ -34,7 +34,7 @@ const MAX_METRICS = 1000;
  * Get performance rating
  */
 function getRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
-  const thresholds = {
+  const thresholds: Record<string, [number, number]> = {
     LCP: [2500, 4000],
     FID: [100, 300],
     CLS: [0.1, 0.25],
@@ -43,7 +43,9 @@ function getRating(name: string, value: number): 'good' | 'needs-improvement' | 
     INP: [200, 500],
   };
 
-  const [good, poor] = thresholds[name as keyof typeof thresholds] || [0, 0];
+  const threshold = thresholds[name] ?? [0, 0];
+  const good = threshold[0];
+  const poor = threshold[1];
   if (value <= good) return 'good';
   if (value <= poor) return 'needs-improvement';
   return 'poor';
@@ -218,13 +220,13 @@ export function observeLongTasks(callback: (duration: number) => void) {
  * Get performance summary
  */
 export function getPerformanceSummary() {
-  const grouped = metricsStore.reduce((acc, metric) => {
+  const grouped = metricsStore.reduce<Record<string, number[]>>((acc, metric) => {
     if (!acc[metric.name]) {
       acc[metric.name] = [];
     }
-    acc[metric.name].push(metric.value);
+    acc[metric.name]!.push(metric.value);
     return acc;
-  }, {} as Record<string, number[]>);
+  }, {});
 
   const summary: Record<string, {
     count: number;
@@ -285,8 +287,9 @@ export function useLazyImage(ref: React.RefObject<HTMLImageElement>) {
     if (!ref.current) return;
 
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && ref.current?.dataset.src) {
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting && ref.current?.dataset.src) {
           ref.current.src = ref.current.dataset.src;
           ref.current.removeAttribute('data-src');
           observer.unobserve(entry.target);
@@ -375,8 +378,9 @@ export function useIntersectionObserver(
   React.useEffect(() => {
     if (!ref.current) return;
 
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry?.isIntersecting) {
         setIsVisible(true);
         observer.unobserve(entry.target);
       }

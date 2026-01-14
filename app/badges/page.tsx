@@ -315,7 +315,8 @@ export default function BadgesPage() {
               <AnimatePresence mode="popLayout">
                 {filteredBadges.map((badge) => {
                   const userBadge = mockUserBadges[badge.name]
-                  const rarity = rarityColors[badge.rarity] || rarityColors.Common
+                  const defaultRarity = { bg: 'bg-gray-500/20', border: 'border-gray-500/30', text: 'text-gray-400', glow: '' }
+                  const rarity = rarityColors[badge.rarity] ?? rarityColors.Common ?? defaultRarity
                   const isEarned = userBadge?.earned
                   const isMinted = userBadge?.minted
                   

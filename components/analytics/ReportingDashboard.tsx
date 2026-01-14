@@ -200,8 +200,8 @@ function LineChart({ data, height = 300 }: { data: ChartData[]; height?: number 
 
         {/* X-axis labels */}
         <div className="flex justify-between text-xs text-gray-500 mt-2">
-          {data[0]?.data.map((point, index) => {
-            if (index === 0 || index === data[0].data.length - 1) {
+          {data[0]?.data?.map((point, index) => {
+            if (index === 0 || index === (data[0]?.data?.length ?? 0) - 1) {
               return <span key={index}>{point.x}</span>;
             }
             return null;
@@ -236,7 +236,7 @@ function BarChart({ data, height = 300 }: { data: ChartData[]; height?: number }
           <div key={index} className="flex-1 flex flex-col items-center">
             <div className="w-full relative flex-1 flex items-end justify-center">
               {data.map((series, seriesIndex) => {
-                const barHeight = (series.data[index].y / maxValue) * 100;
+                const barHeight = ((series.data[index]?.y ?? 0) / maxValue) * 100;
                 return (
                   <div
                     key={series.id}
@@ -245,7 +245,7 @@ function BarChart({ data, height = 300 }: { data: ChartData[]; height?: number }
                       height: `${barHeight}%`,
                       backgroundColor: series.color || `hsl(${seriesIndex * 360 / data.length}, 70%, 50%)`
                     }}
-                    title={`${series.label}: ${series.data[index].y}`}
+                    title={`${series.label}: ${series.data[index]?.y ?? 0}`}
                   />
                 );
               })}
@@ -279,7 +279,7 @@ export function ReportingDashboard({
   className = ''
 }: ReportingDashboardProps) {
   const [selectedReportId, setSelectedReportId] = useState<string>(reports[0]?.id || '');
-  const [dateRange, setDateRange] = useState<DateRange>(DATE_RANGES[1]);
+  const [dateRange, setDateRange] = useState<DateRange>(DATE_RANGES[1] ?? DATE_RANGES[0] ?? { start: new Date(), end: new Date(), label: 'Custom' });
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(false);

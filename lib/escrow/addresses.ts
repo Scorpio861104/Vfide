@@ -43,13 +43,13 @@ export const TOKEN_ADDRESSES: Record<number, `0x${string}`> = {
 };
 
 export function getEscrowAddress(chainId: number | undefined): `0x${string}` {
-  if (!chainId) return ESCROW_ADDRESSES[8453]; // Default to Base mainnet
-  return ESCROW_ADDRESSES[chainId] || ESCROW_ADDRESSES[8453];
+  if (!chainId) return ESCROW_ADDRESSES[8453] as `0x${string}`; // Default to Base mainnet
+  return (ESCROW_ADDRESSES[chainId] || ESCROW_ADDRESSES[8453]) as `0x${string}`;
 }
 
 export function getTokenAddress(chainId: number | undefined): `0x${string}` {
-  if (!chainId) return TOKEN_ADDRESSES[8453]; // Default to Base mainnet
-  return TOKEN_ADDRESSES[chainId] || TOKEN_ADDRESSES[8453];
+  if (!chainId) return TOKEN_ADDRESSES[8453] as `0x${string}`; // Default to Base mainnet
+  return (TOKEN_ADDRESSES[chainId] || TOKEN_ADDRESSES[8453]) as `0x${string}`;
 }
 
 export function isTestnet(chainId: number | undefined): boolean {

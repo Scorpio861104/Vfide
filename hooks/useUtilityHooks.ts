@@ -100,7 +100,7 @@ export function useActivityFeed() {
       
       const newActivity: ActivityItem = {
         id: Date.now().toString(),
-        type: randomType,
+        type: randomType as ActivityItem['type'],
         from: `0x${Math.random().toString(16).substr(2, 40)}`,
         to: randomType === 'endorsement' || randomType === 'vault_created' ? undefined : `0x${Math.random().toString(16).substr(2, 40)}`,
         amount: randomType === 'transfer' || randomType === 'merchant_payment' ? (Math.random() * 1000).toFixed(2) : undefined,

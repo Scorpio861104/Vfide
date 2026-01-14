@@ -84,7 +84,7 @@ export function useFocusTrap(isActive: boolean = true) {
     // Focus first element
     const focusableElements = getFocusableElements();
     if (focusableElements.length > 0) {
-      focusableElements[0].focus();
+      focusableElements[0]?.focus();
     }
 
     // Handle tab navigation

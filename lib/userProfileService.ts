@@ -89,7 +89,8 @@ export class UserProfileService {
       
       // Remove old username if exists
       Object.keys(registry).forEach(key => {
-        if (registry[key].toLowerCase() === address.toLowerCase()) {
+        const value = registry[key];
+        if (value && value.toLowerCase() === address.toLowerCase()) {
           delete registry[key];
         }
       });

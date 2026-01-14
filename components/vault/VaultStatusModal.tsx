@@ -46,11 +46,13 @@ export function VaultStatusModal() {
   // Auto-close modal after successful vault creation
   useEffect(() => {
     if (hasVault && isCreating) {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         setShowModal(false);
         setIsCreating(false);
       }, 3000);
+      return () => clearTimeout(timeout);
     }
+    return undefined;
   }, [hasVault, isCreating]);
 
   // Handle Escape key to close modal
@@ -65,6 +67,7 @@ export function VaultStatusModal() {
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
+    return undefined;
   }, [showModal, isCreatingVault, isCreating]);
 
   const handleCreateVault = async () => {

@@ -39,7 +39,7 @@ function Confetti() {
     const colors = ['#00F0FF', '#FFD700', '#50C878', '#FF6B6B', '#A78BFA', '#0080FF']
     const newParticles = Array.from({ length: 50 }, (_, i) => ({
       id: i,
-      color: colors[Math.floor(Math.random() * colors.length)],
+      color: colors[Math.floor(Math.random() * colors.length)] || '#00F0FF',
       x: Math.random() * 100,
       delay: Math.random() * 0.5,
       duration: 2 + Math.random() * 2,
@@ -104,6 +104,7 @@ export function TransactionSuccess({
       }, 5000)
       return () => clearTimeout(timeout)
     }
+    return undefined
   }, [isOpen, onClose])
 
   const titles: Record<string, string> = {

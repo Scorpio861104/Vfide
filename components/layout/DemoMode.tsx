@@ -48,7 +48,7 @@ export function DemoMode() {
     },
   ];
 
-  const handleStepAction = () => {
+  const handleStepAction = (): void => {
     if (currentStep === 0) {
       setDemoBalance(25);
     } else if (currentStep === 1) {
@@ -56,16 +56,14 @@ export function DemoMode() {
     } else if (currentStep === 2) {
       setDemoBalance(10);
       setShowConfetti(true);
-      const confettiTimer = setTimeout(() => setShowConfetti(false), 3000);
-      return () => clearTimeout(confettiTimer);
+      setTimeout(() => setShowConfetti(false), 3000);
     } else if (currentStep === 3) {
       setShowDemo(false);
       // Trigger real onboarding
     }
 
     if (currentStep < steps.length - 1) {
-      const stepTimer = setTimeout(() => setCurrentStep(currentStep + 1), 1000);
-      return () => clearTimeout(stepTimer);
+      setTimeout(() => setCurrentStep(currentStep + 1), 1000);
     }
   };
 
@@ -129,13 +127,13 @@ export function DemoMode() {
 
                   <div className="text-center mb-8">
                     <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-[#00F0FF]/10 rounded-full border border-[#00F0FF]/30">
-                      {steps[currentStep].icon}
+                      {steps[currentStep]?.icon}
                     </div>
                     <h2 className="text-3xl font-bold text-[#F5F3E8] mb-3 font-[family-name:var(--font-display)]">
-                      {steps[currentStep].title}
+                      {steps[currentStep]?.title}
                     </h2>
                     <p className="text-lg text-[#A0A0A5] leading-relaxed font-[family-name:var(--font-body)]">
-                      {steps[currentStep].description}
+                      {steps[currentStep]?.description}
                     </p>
                   </div>
 
@@ -145,7 +143,7 @@ export function DemoMode() {
                     whileTap={{ scale: 0.95 }}
                     className="w-full px-6 py-4 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#1A1A1D] font-bold rounded-lg text-lg hover:shadow-lg hover:shadow-[#FFD700]/50 transition-all"
                   >
-                    {steps[currentStep].action} →
+                    {steps[currentStep]?.action} →
                   </motion.button>
 
                   <div className="flex gap-2 mt-6">

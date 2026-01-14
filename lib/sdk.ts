@@ -345,6 +345,7 @@ class VFIDESDK {
     }
 
     donateBtn?.addEventListener('click', async () => {
+      if (!selectedAmount) return;
       await this.processPayment({
         recipient: donation.recipient,
         amount: selectedAmount,

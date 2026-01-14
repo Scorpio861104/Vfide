@@ -214,6 +214,7 @@ export function useErrorTracking(): UseErrorTrackingResult {
         window.removeEventListener('unhandledrejection', handleUnhandledRejection);
       };
     }
+    return undefined;
   }, [addError]);
 
   return {

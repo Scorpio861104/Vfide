@@ -376,8 +376,8 @@ function TimeSeriesChart({ title, type, range }: TimeSeriesChartProps) {
 
       {/* X-axis labels */}
       <div className="flex items-center justify-between mt-4 text-xs text-gray-400">
-        <div>{new Date(data[0].timestamp).toLocaleDateString()}</div>
-        <div>{new Date(data[data.length - 1].timestamp).toLocaleDateString()}</div>
+        <div>{new Date(data[0]?.timestamp ?? 0).toLocaleDateString()}</div>
+        <div>{new Date(data[data.length - 1]?.timestamp ?? 0).toLocaleDateString()}</div>
       </div>
 
       {/* Summary stats */}

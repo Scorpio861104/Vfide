@@ -149,7 +149,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
                     {/* Avatar */}
                     <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold shrink-0">
                       {request.fromAlias
-                        ? request.fromAlias[0].toUpperCase()
+                        ? request.fromAlias?.[0]?.toUpperCase()
                         : request.from.slice(2, 4).toUpperCase()}
                     </div>
 

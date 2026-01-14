@@ -42,6 +42,7 @@ export function SecurityProvider() {
 
       return () => observer.disconnect();
     }
+    return undefined;
   }, []);
 
   // No UI, just security initialization

@@ -119,10 +119,13 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
           end: event.timestamp,
         };
       }
-      sessionDurations[event.sessionId].end = Math.max(
-        sessionDurations[event.sessionId].end,
-        event.timestamp
-      );
+      const session = sessionDurations[event.sessionId];
+      if (session) {
+        session.end = Math.max(
+          session.end,
+          event.timestamp
+        );
+      }
     });
 
     const avgDuration =
@@ -141,7 +144,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
       pageViews[event.page] = (pageViews[event.page] || 0) + 1;
       if (event.duration) {
         if (!pageDurations[event.page]) pageDurations[event.page] = [];
-        pageDurations[event.page].push(event.duration);
+        pageDurations[event.page]!.push(event.duration);
       }
     });
 
@@ -152,8 +155,8 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
         page,
         views,
         duration:
-          pageDurations[page]?.reduce((a, b) => a + b, 0) /
-          pageDurations[page]?.length || 0,
+          (pageDurations[page]?.reduce((a, b) => a + b, 0) ?? 0) /
+          (pageDurations[page]?.length || 1),
       }));
 
     // Get top events
@@ -285,6 +288,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
       window.addEventListener('popstate', handlePageChange);
       return () => window.removeEventListener('popstate', handlePageChange);
     }
+    return undefined;
   }, [trackEvent, sessionId]);
 
   return {

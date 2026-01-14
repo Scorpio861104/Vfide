@@ -126,7 +126,7 @@ export function ContractLink({
  * Get explorer URL for a chain
  */
 export function getExplorerUrl(chainId: number): string {
-  return EXPLORER_URLS[chainId] || EXPLORER_URLS[11155111];
+  return EXPLORER_URLS[chainId] ?? EXPLORER_URLS[11155111] ?? 'https://sepolia.etherscan.io';
 }
 
 /**

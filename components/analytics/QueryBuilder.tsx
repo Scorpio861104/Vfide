@@ -40,8 +40,11 @@ export function QueryBuilder({
 
   const updateFilter = (index: number, updates: Partial<FilterCondition>) => {
     const newFilters = [...filters];
-    newFilters[index] = { ...newFilters[index], ...updates };
-    setFilters(newFilters);
+    const currentFilter = newFilters[index];
+    if (currentFilter) {
+      newFilters[index] = { ...currentFilter, ...updates };
+      setFilters(newFilters);
+    }
   };
 
   const removeFilter = (index: number) => {
@@ -52,14 +55,17 @@ export function QueryBuilder({
     const numericFields = fields.filter(f => f.type === 'number');
     setAggregations([
       ...aggregations,
-      { field: numericFields[0]?.name || fields[0]?.name, function: 'sum' }
+      { field: numericFields[0]?.name || fields[0]?.name || '', function: 'sum' }
     ]);
   };
 
   const updateAggregation = (index: number, updates: Partial<AggregationConfig>) => {
     const newAggregations = [...aggregations];
-    newAggregations[index] = { ...newAggregations[index], ...updates };
-    setAggregations(newAggregations);
+    const currentAgg = newAggregations[index];
+    if (currentAgg) {
+      newAggregations[index] = { ...currentAgg, ...updates };
+      setAggregations(newAggregations);
+    }
   };
 
   const removeAggregation = (index: number) => {

@@ -245,7 +245,7 @@ export default function HeadhunterPage() {
               <div className="bg-[#2A2A2F] rounded-xl p-6 mb-4">
                 <div className="text-center mb-4">
                   <div className="text-sm text-[#A0A0A5] mb-2">Your Current Rank</div>
-                  <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#50C878] mb-2">#{stats.estimatedRank || '?'}</div></div>
+                  <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#50C878] mb-2">#{stats.estimatedRank || '?'}</div>
                   <div className="text-sm text-[#FFD700]">
                     {stats.estimatedRank > 0 && stats.estimatedRank <= 20 ? 'Top 20 Qualified ✨' : 'Keep recruiting to qualify!'}
                   </div>

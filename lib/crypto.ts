@@ -517,6 +517,7 @@ export function useWallet() {
         window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
       };
     }
+    return undefined;
   }, [connect, disconnect]);
 
   return {

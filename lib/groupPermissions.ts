@@ -290,7 +290,7 @@ export function getPermissionsByCategory(): Record<string, Permission[]> {
     if (!categories[info.category]) {
       categories[info.category] = [];
     }
-    categories[info.category].push(permission as Permission);
+    categories[info.category]!.push(permission as Permission);
   });
 
   return categories;

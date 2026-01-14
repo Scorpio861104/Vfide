@@ -389,9 +389,11 @@ export function getUserAnalytics(userId: string, range: TimeRange = TimeRange.AL
   );
   const sessionDurations: number[] = [];
   for (let i = 0; i < sessions.length - 1; i++) {
-    if (sessions[i].type === MetricType.SESSION_START && 
-        sessions[i + 1].type === MetricType.SESSION_END) {
-      sessionDurations.push(sessions[i + 1].timestamp - sessions[i].timestamp);
+    const currentSession = sessions[i];
+    const nextSession = sessions[i + 1];
+    if (currentSession?.type === MetricType.SESSION_START && 
+        nextSession?.type === MetricType.SESSION_END) {
+      sessionDurations.push(nextSession.timestamp - currentSession.timestamp);
     }
   }
   const averageSessionDuration = sessionDurations.length > 0
@@ -448,9 +450,11 @@ export function getPlatformAnalytics(range: TimeRange = TimeRange.DAY): Platform
   );
   const sessionDurations: number[] = [];
   for (let i = 0; i < sessions.length - 1; i++) {
-    if (sessions[i].type === MetricType.SESSION_START && 
-        sessions[i + 1].type === MetricType.SESSION_END) {
-      sessionDurations.push(sessions[i + 1].timestamp - sessions[i].timestamp);
+    const currentSession = sessions[i];
+    const nextSession = sessions[i + 1];
+    if (currentSession?.type === MetricType.SESSION_START && 
+        nextSession?.type === MetricType.SESSION_END) {
+      sessionDurations.push(nextSession.timestamp - currentSession.timestamp);
     }
   }
   const averageSessionDuration = sessionDurations.length > 0

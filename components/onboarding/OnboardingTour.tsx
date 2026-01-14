@@ -113,7 +113,7 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
       handleComplete();
     } else {
       const nextStep = tourSteps[currentStepIndex + 1];
-      if (nextStep.targetUrl && nextStep.targetUrl !== window.location.pathname) {
+      if (nextStep?.targetUrl && nextStep?.targetUrl !== window.location.pathname) {
         router.push(nextStep.targetUrl);
       }
       setCurrentStepIndex(prev => prev + 1);
@@ -176,11 +176,11 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
               <div className="p-4 sm:p-6 border-b border-[#3A3A3F] flex items-center justify-between">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#00F0FF]/10 rounded-xl flex items-center justify-center">
-                    {currentStep.icon}
+                    {currentStep?.icon}
                   </div>
                   <div>
                     <h3 className="text-lg sm:text-2xl font-bold text-[#F5F3E8] font-[family-name:var(--font-display)]">
-                      {currentStep.title}
+                      {currentStep?.title}
                     </h3>
                     <p className="text-sm text-[#A0A0A5]">
                       Step {currentStepIndex + 1} of {tourSteps.length}
@@ -199,11 +199,11 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
               {/* Content */}
               <div className="p-4 sm:p-8">
                 <p className="text-base sm:text-lg text-[#F5F3E8] leading-relaxed">
-                  {currentStep.description}
+                  {currentStep?.description}
                 </p>
 
                 {/* Special content for specific steps */}
-                {currentStep.id === "get-started" && (
+                {currentStep?.id === "get-started" && (
                   <div className="mt-6 p-4 bg-[#00F0FF]/10 border border-[#00F0FF] rounded-lg">
                     <p className="text-[#00F0FF] font-bold mb-2">Pro Tip:</p>
                     <p className="text-[#A0A0A5] text-sm">
@@ -213,7 +213,7 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
                   </div>
                 )}
 
-                {currentStep.id === "merchant-portal" && (
+                {currentStep?.id === "merchant-portal" && (
                   <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="p-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-center">
                       <svg className="w-6 h-6 mx-auto mb-1 text-[#00F0FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
@@ -230,7 +230,7 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
                   </div>
                 )}
 
-                {currentStep.id === "vault-security" && (
+                {currentStep?.id === "vault-security" && (
                   <div className="mt-6 space-y-3">
                     <div className="flex items-start gap-3 p-3 bg-[#1A1A1D] border border-[#50C878] rounded-lg">
                       <svg className="w-6 h-6 text-[#50C878] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>

@@ -10,7 +10,8 @@ const RATE_LIMIT_MAX_REQUESTS = 100; // requests per window
 function getRateLimitKey(request: NextRequest): string {
   // Use IP address as key (in production, consider user authentication)
   const forwardedFor = request.headers.get('x-forwarded-for');
-  const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+  const firstIp = forwardedFor?.split(',')[0];
+  const ip = firstIp ?? 'unknown';
   return ip;
 }
 

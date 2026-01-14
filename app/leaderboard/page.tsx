@@ -142,7 +142,7 @@ function PodiumCard({
 
 // Table row for leaderboard entries
 function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: number }) {
-  const tierStyle = tierColors[entry.tier] || tierColors['NEUTRAL']
+  const tierStyle = tierColors[entry.tier] ?? tierColors['NEUTRAL']
   
   return (
     <motion.div
@@ -181,9 +181,9 @@ function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: numb
         <div className="col-span-4 flex items-center gap-3">
           <div 
             className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${tierColors[entry.tier]?.gradient.split(' ')[0].replace('from-[', '').replace(']', '')}20, transparent)` }}
+            style={{ background: `linear-gradient(135deg, ${tierColors[entry.tier]?.gradient?.split(' ')[0]?.replace('from-[', '')?.replace(']', '') ?? '#00F0FF'}20, transparent)` }}
           >
-            <Shield className={`w-5 h-5 ${tierStyle.text}`} />
+            <Shield className={`w-5 h-5 ${tierStyle?.text ?? ''}`} />
           </div>
           <span className="font-mono text-[#F5F3E8]">
             {entry.address.slice(0, 8)}...{entry.address.slice(-6)}
@@ -195,8 +195,8 @@ function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: numb
         </div>
         
         <div className="col-span-2 text-center">
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${tierStyle.text}`}
-            style={{ background: `linear-gradient(135deg, ${tierColors[entry.tier]?.gradient.split(' ')[0].replace('from-[', '').replace(']', '')}20, transparent)` }}
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${tierStyle?.text ?? ''}`}
+            style={{ background: `linear-gradient(135deg, ${tierColors[entry.tier]?.gradient?.split(' ')[0]?.replace('from-[', '')?.replace(']', '') ?? '#00F0FF'}20, transparent)` }}
           >
             <Sparkles size={12} />
             {entry.tier}
@@ -221,7 +221,7 @@ export default function LeaderboardPage() {
   
   // Fetch real leaderboard data from Seer contract
   const { entries, isLoading, error, totalParticipants, refetch } = useLeaderboard(50)
-  const { userRank } = useUserRank()
+  const { rank: userRank } = useUserRank()
 
   // Calculate stats from real data
   const avgScore = entries.length > 0 
@@ -312,7 +312,7 @@ export default function LeaderboardPage() {
             {/* Error State */}
             {error && (
               <div className="bg-[#FF4444]/10 border border-[#FF4444]/30 rounded-xl p-6 text-center mb-8">
-                <p className="text-[#FF4444] mb-4">{error}</p>
+                <p className="text-[#FF4444] mb-4">{error.message}</p>
                 <button
                   onClick={() => refetch()}
                   className="px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] hover:border-[#00F0FF]"
@@ -401,7 +401,7 @@ export default function LeaderboardPage() {
 
                 {/* Table Body */}
                 {entries.map((entry, index) => {
-                  const tierStyle = tierColors[entry.tier] || tierColors['NEUTRAL']
+                  const tierStyle = (tierColors[entry.tier] || tierColors['NEUTRAL'])!
                   return (
                     <motion.div
                       key={entry.address}

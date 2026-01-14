@@ -560,35 +560,35 @@ function SocialFeatures({ className = '' }: SocialFeaturesProps) {
   const handleFollow = useCallback((userId: string) => {
     setRelationships((prev) => ({
       ...prev,
-      [userId]: { ...prev[userId], status: 'following' },
+      [userId]: { ...prev[userId], status: 'following' } as UserRelationship,
     }));
   }, []);
 
   const handleUnfollow = useCallback((userId: string) => {
     setRelationships((prev) => ({
       ...prev,
-      [userId]: { ...prev[userId], status: 'none' },
+      [userId]: { ...prev[userId], status: 'none' } as UserRelationship,
     }));
   }, []);
 
   const handleAddFriend = useCallback((userId: string) => {
     setRelationships((prev) => ({
       ...prev,
-      [userId]: { ...prev[userId], status: 'friend_requested' },
+      [userId]: { ...prev[userId], status: 'friend_requested' } as UserRelationship,
     }));
   }, []);
 
   const handleRemoveFriend = useCallback((userId: string) => {
     setRelationships((prev) => ({
       ...prev,
-      [userId]: { ...prev[userId], status: 'none' },
+      [userId]: { ...prev[userId], status: 'none' } as UserRelationship,
     }));
   }, []);
 
   const handleBlock = useCallback((userId: string) => {
     setRelationships((prev) => ({
       ...prev,
-      [userId]: { ...prev[userId], status: 'blocked' },
+      [userId]: { ...prev[userId], status: 'blocked' } as UserRelationship,
     }));
   }, []);
 

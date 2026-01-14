@@ -181,7 +181,7 @@ export function OnboardingTooltip() {
             <div
               key={stepId}
               className={`h-1 flex-1 rounded-full transition-colors ${
-                steps[stepId].completed
+                steps[stepId]?.completed
                   ? 'bg-green-500'
                   : stepId === currentStep
                   ? 'bg-blue-500'

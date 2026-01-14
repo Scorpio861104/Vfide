@@ -32,6 +32,7 @@ export function ErrorMonitoringProvider() {
 
       return unsubscribe;
     }
+    return undefined;
   }, [address]);
 
   // No UI, just monitoring initialization

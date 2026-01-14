@@ -191,6 +191,7 @@ export function useVoiceCommands(options?: {
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
+        if (!result || !result[0]) continue;
         const transcript = result[0].transcript;
         const confidence = result[0].confidence;
 

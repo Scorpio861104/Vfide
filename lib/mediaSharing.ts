@@ -227,7 +227,9 @@ export async function uploadFiles(
   const attachments: MediaAttachment[] = [];
 
   for (let i = 0; i < files.length; i++) {
-    const attachment = await uploadFile(files[i], (progress) => {
+    const file = files[i];
+    if (!file) continue;
+    const attachment = await uploadFile(file, (progress) => {
       if (onProgress) {
         onProgress(i, progress);
       }

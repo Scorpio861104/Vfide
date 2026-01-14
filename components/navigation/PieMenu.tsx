@@ -65,7 +65,7 @@ interface NavItem {
   id: string;
   label: string;
   href?: string;
-  icon: React.ComponentType<{ className?: string; size?: number }>;
+  icon: React.ComponentType<{ className?: string; size?: number; style?: React.CSSProperties }>;
   color: string;
   children?: NavItem[];
   badge?: string;

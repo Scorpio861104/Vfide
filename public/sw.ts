@@ -244,9 +244,15 @@ async function queueRequest(request: Request): Promise<Response> {
 // Background Sync
 // ============================================================================
 
-self.addEventListener('sync', (event: SyncEvent) => {
-  if (event.tag === 'sync-queue') {
-    event.waitUntil(processQueue());
+// Type definition for SyncEvent
+interface SyncEvent extends ExtendableEvent {
+  tag: string;
+}
+
+self.addEventListener('sync', (event: Event) => {
+  const syncEvent = event as SyncEvent;
+  if (syncEvent.tag === 'sync-queue') {
+    syncEvent.waitUntil(processQueue());
   }
 });
 
@@ -272,13 +278,10 @@ self.addEventListener('push', (event: PushEvent) => {
     body: data.body,
     icon: '/icons/icon-192x192.png',
     badge: '/icons/badge-72x72.png',
-    vibrate: [100, 50, 100],
     data: {
       url: data.url || '/',
     },
-    actions: data.actions || [],
     tag: data.tag || 'vfide-notification',
-    renotify: true,
   };
 
   event.waitUntil(
@@ -292,16 +295,17 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   const url = event.notification.data?.url || '/';
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then((clientList) => {
+    self.clients.matchAll({ type: 'window' }).then(async (clientList) => {
       // Check if there's already a window open
       for (const client of clientList) {
         if (client.url === url && 'focus' in client) {
-          return client.focus();
+          await client.focus();
+          return;
         }
       }
       // Open new window
       if (self.clients.openWindow) {
-        return self.clients.openWindow(url);
+        await self.clients.openWindow(url);
       }
     })
   );

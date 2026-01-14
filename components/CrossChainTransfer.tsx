@@ -34,7 +34,7 @@ export default function CrossChainTransfer() {
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
 
   // Debounce route finding
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout>(undefined);
 
   useEffect(() => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -71,7 +71,7 @@ export default function CrossChainTransfer() {
     const recommended = routes.find((r) => r.tags.includes('recommended'));
     if (recommended) {
       setSelectedRoute(recommended);
-    } else if (routes.length > 0) {
+    } else if (routes.length > 0 && routes[0]) {
       setSelectedRoute(routes[0]);
     }
   }, [routes]);

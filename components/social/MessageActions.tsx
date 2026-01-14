@@ -60,6 +60,7 @@ export function MessageActions({
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+    return undefined;
   }, [isOpen]);
 
   const handleEdit = () => {

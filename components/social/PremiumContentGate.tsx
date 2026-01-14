@@ -162,10 +162,9 @@ export function PremiumContentGate({
               <span className="text-3xl font-bold text-[#F5F3E8]">{price}</span>
               <span className="text-xl font-medium text-purple-400">{currency}</span>
             </div>
-            {wallet && (
+            {isConnected && (
               <div className="text-xs text-[#6B6B78] mt-2">
-                Your balance: {currency === 'ETH' ? wallet.balance : wallet.tokenBalance}{' '}
-                {currency}
+                Connected to {address?.slice(0, 6)}...{address?.slice(-4)}
               </div>
             )}
           </div>

@@ -22,7 +22,7 @@ export function TypewriterText({
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const currentText = texts[currentIndex];
+    const currentText = texts[currentIndex] ?? '';
 
     if (!isDeleting && displayText === currentText) {
       // Pause before deleting

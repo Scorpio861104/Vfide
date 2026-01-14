@@ -90,7 +90,7 @@ export default function CommandBar() {
   }, [isListening, startListening, stopListening]);
 
   const handleExecute = useCallback(async () => {
-    if (!executionPlan || executionPlan.length === 0) {
+    if (!executionPlan || executionPlan.steps.length === 0) {
       toast.error('No valid actions to execute');
       return;
     }
@@ -99,7 +99,7 @@ export default function CommandBar() {
     speak('Executing your request');
 
     // In production, this would actually execute the transactions
-    for (const step of executionPlan) {
+    for (const step of executionPlan.steps) {
       toast.info(`Executing: ${step.description}`);
       // Simulate delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -221,7 +221,7 @@ export default function CommandBar() {
                     <div className="flex flex-wrap gap-1">
                       {parsedIntent.recipients.map((r, i) => (
                         <span key={i} className="px-2 py-0.5 bg-primary/10 rounded font-mono text-xs">
-                          {r.address || r.identifier}
+                          {r.identifier}
                         </span>
                       ))}
                     </div>
@@ -241,9 +241,9 @@ export default function CommandBar() {
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">Schedule:</span>
                     <span>{parsedIntent.schedule.type}</span>
-                    {parsedIntent.schedule.dateTime && (
+                    {parsedIntent.schedule.date && (
                       <span className="text-muted-foreground">
-                        ({new Date(parsedIntent.schedule.dateTime).toLocaleString()})
+                        ({new Date(parsedIntent.schedule.date).toLocaleString()})
                       </span>
                     )}
                   </div>
@@ -258,21 +258,16 @@ export default function CommandBar() {
               </div>
 
               {/* Execution Plan */}
-              {executionPlan && executionPlan.length > 0 && (
+              {executionPlan && executionPlan.steps.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Execution Plan:</h4>
                   <div className="space-y-1">
-                    {executionPlan.map((step, i) => (
+                    {executionPlan.steps.map((step, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm">
                         <span className="w-5 h-5 flex items-center justify-center bg-primary/10 rounded-full text-xs">
                           {i + 1}
                         </span>
                         <span>{step.description}</span>
-                        {step.gasEstimate && (
-                          <span className="text-xs text-muted-foreground">
-                            (~{step.gasEstimate} gas)
-                          </span>
-                        )}
                       </div>
                     ))}
                   </div>

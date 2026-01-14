@@ -58,7 +58,7 @@ export function StoryCreator({
         userAddress,
         userName,
         textContent,
-        STORY_BACKGROUNDS[selectedBackground].gradient,
+        STORY_BACKGROUNDS[selectedBackground]?.gradient,
         '#FFFFFF'
       );
 
@@ -141,7 +141,7 @@ export function StoryCreator({
               {/* Preview */}
               <div
                 className="aspect-[9/16] max-w-sm mx-auto rounded-xl overflow-hidden flex items-center justify-center p-8"
-                style={{ background: STORY_BACKGROUNDS[selectedBackground].gradient }}
+                style={{ background: STORY_BACKGROUNDS[selectedBackground]?.gradient }}
               >
                 <textarea
                   value={textContent}

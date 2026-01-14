@@ -147,6 +147,7 @@ export function useThemeManager(): UseThemeManagerReturn {
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     }
+    return undefined;
   }, [settings]);
 
   // Build current theme config

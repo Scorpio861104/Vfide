@@ -126,7 +126,7 @@ export function formatFileSize(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + (sizes[i] ?? 'Bytes');
 }
 
 /**
@@ -134,7 +134,8 @@ export function formatFileSize(bytes: number): string {
  */
 export function getFileExtension(fileName: string): string {
   const parts = fileName.split('.');
-  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+  const lastPart = parts[parts.length - 1];
+  return parts.length > 1 && lastPart ? lastPart.toLowerCase() : '';
 }
 
 /**

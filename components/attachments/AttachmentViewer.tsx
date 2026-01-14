@@ -254,6 +254,10 @@ function ImageLightbox({ images, initialIndex, onClose }: ImageLightboxProps) {
     setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
   };
 
+  if (!currentImage) {
+    return null;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}

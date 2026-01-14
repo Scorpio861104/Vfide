@@ -69,7 +69,7 @@ export function createTextStory(
     userName,
     type: 'text',
     content,
-    backgroundColor: backgroundColor || STORY_BACKGROUNDS[0].gradient,
+    backgroundColor: backgroundColor || STORY_BACKGROUNDS[0]?.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     textColor: textColor || '#FFFFFF',
     createdAt: Date.now(),
     expiresAt: Date.now() + STORY_DURATION_MS,

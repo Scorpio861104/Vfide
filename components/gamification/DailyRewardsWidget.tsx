@@ -92,7 +92,7 @@ export default function DailyRewardsWidget() {
 
   if (!isConnected) return null;
 
-  const todayReward = weekRewards[streak - 1] || weekRewards[0];
+  const todayReward = weekRewards[streak - 1] ?? weekRewards[0] ?? { day: 1, vfide: 15, xp: 50, claimed: false };
   const timeUntilNext = nextRewardTime ? nextRewardTime - Date.now() : 0;
   const hoursLeft = Math.floor(timeUntilNext / (1000 * 60 * 60));
   const minutesLeft = Math.floor((timeUntilNext % (1000 * 60 * 60)) / (1000 * 60));

@@ -96,6 +96,7 @@ export default function GovernancePage() {
       const timer = setTimeout(() => setLastAction(''), 3000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isSuccess, lastAction]);
 
   // Read active proposals (used in UI - keep for feature)

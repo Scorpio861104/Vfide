@@ -71,7 +71,7 @@ function parseContractError(error: unknown): string {
     }
     
     // Return a cleaner version of the error (truncate if too long)
-    const cleanMessage = error.message.split('\n')[0].substring(0, 100);
+    const cleanMessage = error.message?.split('\n')[0]?.substring(0, 100);
     return cleanMessage || 'An unexpected error occurred';
   }
   
