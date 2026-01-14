@@ -112,7 +112,8 @@ const testnetConfig = createConfig({
   },
   ssr: true,
   storage: wagmiStorage,
-  multiInjectedProviderDiscovery: false, // Disable auto-discovery to avoid duplicates
+  // Enable EIP-6963 wallet discovery - required for MetaMask and other modern wallets
+  multiInjectedProviderDiscovery: true,
 })
 
 const mainnetConfig = createConfig({
@@ -125,7 +126,8 @@ const mainnetConfig = createConfig({
   },
   ssr: true,
   storage: wagmiStorage,
-  multiInjectedProviderDiscovery: false,
+  // Enable EIP-6963 wallet discovery - required for MetaMask and other modern wallets
+  multiInjectedProviderDiscovery: true,
 })
 
 // Export the appropriate config based on environment
