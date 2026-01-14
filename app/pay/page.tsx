@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -231,7 +230,6 @@ function PayContent() {
 export default function PayPage() {
   return (
     <>
-      <GlobalNav />
       <Suspense fallback={
         <div className="min-h-screen bg-[#0D0D0F] pt-20 flex items-center justify-center relative overflow-hidden">
           <div className="fixed inset-0 pointer-events-none">

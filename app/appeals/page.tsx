@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { Gavel, CheckCircle2, Clock, XCircle, AlertTriangle, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useAccount } from 'wagmi'
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { useAppealStatus, useFileAppeal } from '@/lib/vfide-hooks'
 
@@ -33,7 +32,6 @@ export default function AppealsPage() {
 
   return (
     <>
-      <GlobalNav />
       <div className="min-h-screen bg-black text-white pt-24 pb-16">
         <div className="max-w-5xl mx-auto px-4 md:px-8 space-y-10">
           <section className="relative overflow-hidden rounded-2xl bg-linear-to-br from-[#0f1117] via-[#0a0c12] to-[#05060a] border border-white/10 p-8">

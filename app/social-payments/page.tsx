@@ -7,7 +7,6 @@
 
 'use client';
 
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { SocialFeed } from '@/components/social/SocialFeed';
 import { UnifiedActivityFeed } from '@/components/social/UnifiedActivityFeed';
 import { useWallet } from '@/lib/crypto';
@@ -46,7 +45,6 @@ export default function SocialPaymentsDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0F]">
-      <GlobalNav />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 pt-24 pb-12">
         {/* Header */}

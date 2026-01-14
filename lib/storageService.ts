@@ -59,9 +59,13 @@ export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
 // ============================================================================
 
 interface StorageItem<T> {
-  value: T;
-  timestamp: number;
-  ttl?: number; // Time-to-live in milliseconds
+  _data: T;
+  _timestamp: number;
+  _ttl?: number; // Time-to-live in milliseconds
+  // Legacy format support
+  value?: T;
+  timestamp?: number;
+  ttl?: number;
 }
 
 // ============================================================================
@@ -97,13 +101,27 @@ class StorageServiceClass {
 
       const item: StorageItem<T> = JSON.parse(raw);
       
-      // Check if item has expired
-      if (item.ttl && Date.now() - item.timestamp > item.ttl) {
-        this.remove(key);
-        return defaultValue;
+      // Check for new format (_ttl/_data)
+      if ('_data' in item) {
+        // Check if item has expired
+        if (item._ttl && item._timestamp && Date.now() - item._timestamp > item._ttl) {
+          this.remove(key);
+          return defaultValue;
+        }
+        return item._data ?? defaultValue;
+      }
+      
+      // Legacy format support (value/timestamp/ttl)
+      if ('value' in item && 'timestamp' in item) {
+        if (item.ttl && item.timestamp && Date.now() - item.timestamp > item.ttl) {
+          this.remove(key);
+          return defaultValue;
+        }
+        return item.value ?? defaultValue;
       }
 
-      return item.value ?? defaultValue;
+      // Direct value (not wrapped)
+      return item as unknown as T ?? defaultValue;
     } catch {
       // If parsing fails, try to return raw value for backwards compatibility
       try {
@@ -125,27 +143,37 @@ class StorageServiceClass {
   /**
    * Set an item in storage with optional TTL
    */
-  set<T>(key: StorageKey, value: T, options?: { ttl?: number }): boolean {
+  set<T>(key: StorageKey, value: T, options?: { ttl?: number; maxItems?: number }): boolean {
     if (typeof window === 'undefined') return false;
 
     try {
+      // Apply maxItems limit for arrays
+      let finalValue = value;
+      if (Array.isArray(value) && options?.maxItems && value.length > options.maxItems) {
+        finalValue = value.slice(-options.maxItems) as unknown as T;
+      }
+
       const item: StorageItem<T> = {
-        value,
-        timestamp: Date.now(),
-        ttl: options?.ttl,
+        _data: finalValue,
+        _timestamp: Date.now(),
+        _ttl: options?.ttl,
       };
       localStorage.setItem(key, JSON.stringify(item));
       return true;
     } catch (error) {
       // Handle quota exceeded
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      if (error instanceof DOMException || (error as Error)?.name === 'QuotaExceededError') {
         this.handleQuotaExceeded();
         // Try again after cleanup
         try {
+          let finalValue = value;
+          if (Array.isArray(value) && options?.maxItems && value.length > options.maxItems) {
+            finalValue = value.slice(-options.maxItems) as unknown as T;
+          }
           const item: StorageItem<T> = {
-            value,
-            timestamp: Date.now(),
-            ttl: options?.ttl,
+            _data: finalValue,
+            _timestamp: Date.now(),
+            _ttl: options?.ttl,
           };
           localStorage.setItem(key, JSON.stringify(item));
           return true;
@@ -223,6 +251,29 @@ class StorageServiceClass {
   }
 
   /**
+   * Get storage usage info (alias for getUsage with different property names)
+   */
+  getUsageInfo(): { used: number; available: number; percentUsed: number } {
+    const usage = this.getUsage();
+    return {
+      used: usage.used,
+      available: usage.available,
+      percentUsed: usage.percentage,
+    };
+  }
+
+  /**
+   * Get multiple keys at once
+   */
+  getBatch<T>(keys: StorageKey[], defaultValue: T): Record<StorageKey, T> {
+    const results: Record<string, T> = {};
+    for (const key of keys) {
+      results[key] = this.get(key, defaultValue);
+    }
+    return results as Record<StorageKey, T>;
+  }
+
+  /**
    * Handle quota exceeded by removing old/expired items
    */
   private handleQuotaExceeded(): void {
@@ -240,7 +291,9 @@ class StorageServiceClass {
           if (!raw) continue;
 
           const item = JSON.parse(raw);
-          if (item.ttl && item.timestamp && Date.now() - item.timestamp > item.ttl) {
+          // Check both new and legacy formats
+          if ((item._ttl && item._timestamp && Date.now() - item._timestamp > item._ttl) ||
+              (item.ttl && item.timestamp && Date.now() - item.timestamp > item.ttl)) {
             expiredKeys.push(key);
           }
         } catch {
@@ -352,7 +405,8 @@ export function useLocalStorage<T>(
       if (e.key === key && e.newValue !== null) {
         try {
           const item = JSON.parse(e.newValue);
-          setStoredValue(item.value ?? initialValue);
+          // Support both new and legacy formats
+          setStoredValue(item._data ?? item.value ?? initialValue);
         } catch {
           setStoredValue(initialValue);
         }

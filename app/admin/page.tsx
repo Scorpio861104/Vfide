@@ -1,7 +1,6 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { safeBigIntToNumber, safeParseInt } from '@/lib/validation';
 import { useEffect, useState } from 'react';
 import { formatEther } from 'viem';
@@ -864,7 +863,6 @@ export default function AdminPanel() {
 
   return (
     <>
-      <GlobalNav />
       <div className="min-h-screen bg-linear-to-br from-gray-900 via-purple-900 to-violet-900 py-12 px-4 pt-24">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 mb-8">

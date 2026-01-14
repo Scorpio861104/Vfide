@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -374,7 +373,6 @@ export default function TokenLaunchPage() {
 
   return (
     <>
-      <GlobalNav />
       
       <main className="min-h-screen bg-[#0D0D0F] pt-20 relative overflow-hidden">
         {/* Premium Background Effects */}

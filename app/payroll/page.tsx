@@ -22,7 +22,6 @@ import {
 } from 'lucide-react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { parseUnits, isAddress } from 'viem'
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { usePayroll } from '@/hooks/usePayroll'
 import { Loader2 } from 'lucide-react'
@@ -186,7 +185,6 @@ export default function PayrollPage() {
 
   return (
     <>
-      <GlobalNav />
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">

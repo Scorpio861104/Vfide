@@ -7,7 +7,6 @@
  * The main social experience is now consolidated in /social-hub.
  */
 
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
 import { SocialFeed } from '@/components/social/SocialFeed';
@@ -22,7 +21,6 @@ export default function FeedPage() {
 
   return (
     <>
-      <GlobalNav />
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20">
           {/* Header with link to Social Hub */}

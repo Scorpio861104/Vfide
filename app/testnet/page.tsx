@@ -6,7 +6,6 @@ import { useEffect } from 'react'
 import { useAccount, useChainId } from 'wagmi'
 import { FAUCET_URLS } from '@/lib/testnet'
 import { isTestnetChainId } from '@/lib/chains'
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 
 export default function TestnetPage() {
@@ -30,7 +29,6 @@ export default function TestnetPage() {
 
   return (
     <>
-      <GlobalNav />
       <div className="min-h-screen bg-[#0F0F12] text-white pt-20">
         <div className="max-w-2xl mx-auto px-4 py-12">
           <h1 className="text-3xl font-bold mb-2">Get Test ETH</h1>

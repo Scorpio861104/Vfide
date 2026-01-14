@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, TrendingUp, Zap } from 'lucide-react';
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
 import { useAccount } from 'wagmi';
@@ -19,7 +18,6 @@ export default function AchievementsPage() {
   if (!isConnected || !address) {
     return (
       <>
-        <GlobalNav />
         <PageWrapper variant="cosmic" showOrbs showGrid>
           <main className="pt-20 pb-20">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,7 +49,6 @@ export default function AchievementsPage() {
 
   return (
     <>
-      <GlobalNav />
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

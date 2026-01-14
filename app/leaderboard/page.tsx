@@ -1,6 +1,5 @@
 'use client'
 
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { GlassCard } from '@/components/ui/PageLayout'
 import { Badge } from '@/components/ui/FormElements'
@@ -232,7 +231,6 @@ export default function LeaderboardPage() {
 
   return (
     <>
-      <GlobalNav />
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Header */}

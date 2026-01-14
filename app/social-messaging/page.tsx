@@ -1,6 +1,5 @@
 'use client';
 
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
 import React, { useState } from 'react';
@@ -121,7 +120,6 @@ export default function SocialPage() {
 
   return (
     <>
-      <GlobalNav />
 
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20">

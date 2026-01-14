@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
@@ -153,7 +152,6 @@ export default function CouncilPage() {
 
   return (
     <>
-      <GlobalNav />
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">

@@ -23,7 +23,6 @@ import {
 } from 'lucide-react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { parseUnits } from 'viem'
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { useEscrow } from '@/lib/escrow/useEscrow'
 import { Loader2 } from 'lucide-react'
@@ -170,7 +169,6 @@ export default function EscrowPage() {
 
   return (
     <>
-      <GlobalNav />
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">

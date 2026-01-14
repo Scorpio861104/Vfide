@@ -5,7 +5,6 @@
 
 'use client'
 
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
 import { LiveActivityFeed } from '@/components/trust/LiveActivityFeed'
@@ -40,7 +39,6 @@ export default function LiveDemoPage() {
   
   return (
     <>
-      <GlobalNav />
       <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-[#1A1A2E] py-16 sm:py-20 px-3 sm:px-4 pt-20 sm:pt-24 overflow-x-hidden">
       <TransactionNotification 
         notification={notification}

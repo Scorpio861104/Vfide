@@ -2,7 +2,6 @@
 
 // Rewards & Staking Management System
 import { Footer } from '@/components/layout/Footer'
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { safeParseFloat } from '@/lib/validation'
 import { motion } from 'framer-motion'
 import {
@@ -224,7 +223,6 @@ export default function RewardsPage() {
 
   return (
     <>
-      <GlobalNav />
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">

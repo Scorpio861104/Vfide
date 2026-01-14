@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import {
+  Home,
   LayoutDashboard,
   Shield,
   Wallet,
@@ -30,6 +31,30 @@ import {
   Search,
   ShieldCheck,
   KeyRound,
+  Zap,
+  ArrowLeftRight,
+  Eye,
+  Clock,
+  Users,
+  TrendingUp,
+  PiggyBank,
+  FileText,
+  Code,
+  Settings,
+  User,
+  Bell,
+  HelpCircle,
+  Gift,
+  Repeat,
+  Send,
+  BarChart3,
+  ClipboardList,
+  TestTube,
+  Compass,
+  Scale,
+  Rocket,
+  Star,
+  UserPlus,
 } from 'lucide-react';
 
 // ============================================================================
@@ -43,31 +68,21 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string; size?: number }>;
   color: string;
   children?: NavItem[];
+  badge?: string;
 }
 
 // ============================================================================
 // NAVIGATION STRUCTURE
 // ============================================================================
 
-/**
- * VFIDE ECOSYSTEM NAVIGATION
- * ==========================
- * 
- * A cryptocurrency ecosystem with integrated social platform, merchant services,
- * and decentralized governance. The navigation is organized into 6 core categories:
- * 
- * 1. DASHBOARD - Central hub for user overview and quick actions
- * 2. VAULT & WALLET - Asset management, security, and transactions  
- * 3. MERCHANT & PAY - Business tools: POS, QR payments, escrow
- * 4. SOCIAL - Full social media platform with feed, stories, messaging
- * 5. GOVERNANCE - DAO proposals, council, appeals, treasury
- * 6. REWARDS & COMMUNITY - Gamification, referrals, reputation
- */
-
 const navigationItems: NavItem[] = [
-  // ────────────────────────────────────────────────────────────────────────────
-  // DASHBOARD - Central User Hub
-  // ────────────────────────────────────────────────────────────────────────────
+  {
+    id: 'home',
+    label: 'Home',
+    href: '/',
+    icon: Home,
+    color: '#F8F8FC',
+  },
   {
     id: 'dashboard',
     label: 'Dashboard',
@@ -75,11 +90,6 @@ const navigationItems: NavItem[] = [
     icon: LayoutDashboard,
     color: '#00F0FF',
   },
-  
-  // ────────────────────────────────────────────────────────────────────────────
-  // VAULT & WALLET - Asset Security & Management
-  // Secure storage, recovery, guardians, and wallet operations
-  // ────────────────────────────────────────────────────────────────────────────
   {
     id: 'vault',
     label: 'Vault',
@@ -90,13 +100,11 @@ const navigationItems: NavItem[] = [
       { id: 'wallet', label: 'Wallet', href: '/crypto', icon: Wallet, color: '#8B5CF6' },
       { id: 'guardians', label: 'Guardians', href: '/guardians', icon: ShieldCheck, color: '#8B5CF6' },
       { id: 'vault-recover', label: 'Recovery', href: '/vault/recover', icon: KeyRound, color: '#8B5CF6' },
+      { id: 'multisig', label: 'Multi-Sig', href: '/multisig', icon: Users, color: '#8B5CF6' },
+      { id: 'time-locks', label: 'Time Locks', href: '/time-locks', icon: Clock, color: '#8B5CF6' },
+      { id: 'vesting', label: 'Vesting', href: '/vesting', icon: Gift, color: '#8B5CF6' },
     ],
   },
-  
-  // ────────────────────────────────────────────────────────────────────────────
-  // MERCHANT & PAY - Business & Payment Tools
-  // Full POS system, QR payments, escrow protection, payroll streaming
-  // ────────────────────────────────────────────────────────────────────────────
   {
     id: 'merchant',
     label: 'Merchant',
@@ -107,13 +115,13 @@ const navigationItems: NavItem[] = [
       { id: 'pos', label: 'POS Terminal', href: '/pos', icon: CreditCard, color: '#10B981' },
       { id: 'escrow', label: 'Escrow', href: '/escrow', icon: Lock, color: '#10B981' },
       { id: 'payroll', label: 'Payroll', href: '/payroll', icon: Banknote, color: '#10B981' },
+      { id: 'streaming', label: 'Streaming', href: '/streaming', icon: Zap, color: '#10B981', badge: 'NEW' },
+      { id: 'cross-chain', label: 'Cross-Chain', href: '/cross-chain', icon: ArrowLeftRight, color: '#10B981' },
+      { id: 'stealth', label: 'Private Pay', href: '/stealth', icon: Eye, color: '#10B981' },
+      { id: 'pay', label: 'Quick Pay', href: '/pay', icon: Send, color: '#10B981' },
+      { id: 'subscriptions', label: 'Subscriptions', href: '/subscriptions', icon: Repeat, color: '#10B981' },
     ],
   },
-  
-  // ────────────────────────────────────────────────────────────────────────────
-  // SOCIAL - Full Social Media Platform
-  // Posts, stories, messaging, payments, and social analytics
-  // ────────────────────────────────────────────────────────────────────────────
   {
     id: 'social',
     label: 'Social',
@@ -121,16 +129,12 @@ const navigationItems: NavItem[] = [
     color: '#F59E0B',
     children: [
       { id: 'social-hub', label: 'Social Hub', href: '/social-hub', icon: Rss, color: '#F59E0B' },
+      { id: 'feed', label: 'Feed', href: '/feed', icon: Rss, color: '#F59E0B' },
       { id: 'stories', label: 'Stories', href: '/stories', icon: Camera, color: '#F59E0B' },
       { id: 'messages', label: 'Messages', href: '/social-messaging', icon: Mail, color: '#F59E0B' },
       { id: 'social-pay', label: 'Social Pay', href: '/social-payments', icon: Banknote, color: '#F59E0B' },
     ],
   },
-  
-  // ────────────────────────────────────────────────────────────────────────────
-  // GOVERNANCE - DAO & Protocol Management
-  // Proposals, voting, council, appeals, treasury oversight
-  // ────────────────────────────────────────────────────────────────────────────
   {
     id: 'governance',
     label: 'Governance',
@@ -143,11 +147,6 @@ const navigationItems: NavItem[] = [
       { id: 'treasury', label: 'Treasury', href: '/treasury', icon: Landmark, color: '#6366F1' },
     ],
   },
-  
-  // ────────────────────────────────────────────────────────────────────────────
-  // REWARDS & COMMUNITY - Gamification & Reputation
-  // Quests, achievements, leaderboards, referrals, endorsements
-  // ────────────────────────────────────────────────────────────────────────────
   {
     id: 'rewards',
     label: 'Rewards',
@@ -159,272 +158,347 @@ const navigationItems: NavItem[] = [
       { id: 'leaderboard', label: 'Leaderboard', href: '/leaderboard', icon: Crown, color: '#EC4899' },
       { id: 'headhunter', label: 'Referrals', href: '/headhunter', icon: Search, color: '#EC4899' },
       { id: 'endorsements', label: 'Endorsements', href: '/endorsements', icon: Medal, color: '#EC4899' },
+      { id: 'badges', label: 'Badges', href: '/badges', icon: Star, color: '#EC4899' },
+      { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },
+    ],
+  },
+  {
+    id: 'insights',
+    label: 'Insights',
+    icon: TrendingUp,
+    color: '#14B8A6',
+    children: [
+      { id: 'insights-main', label: 'Analytics', href: '/insights', icon: TrendingUp, color: '#14B8A6' },
+      { id: 'taxes', label: 'Tax Report', href: '/taxes', icon: FileText, color: '#14B8A6' },
+      { id: 'budgets', label: 'Budgets', href: '/budgets', icon: PiggyBank, color: '#14B8A6' },
+      { id: 'performance', label: 'Performance', href: '/performance', icon: BarChart3, color: '#14B8A6' },
+      { id: 'reporting', label: 'Reports', href: '/reporting', icon: ClipboardList, color: '#14B8A6' },
+    ],
+  },
+  {
+    id: 'developer',
+    label: 'Developer',
+    icon: Code,
+    color: '#64748B',
+    children: [
+      { id: 'developer-main', label: 'Dev Hub', href: '/developer', icon: Code, color: '#64748B' },
+      { id: 'testnet', label: 'Testnet', href: '/testnet', icon: TestTube, color: '#64748B' },
+      { id: 'explorer', label: 'Explorer', href: '/explorer', icon: Compass, color: '#64748B' },
+      { id: 'token-launch', label: 'Token Launch', href: '/token-launch', icon: Rocket, color: '#64748B' },
+    ],
+  },
+  {
+    id: 'account',
+    label: 'Account',
+    icon: User,
+    color: '#94A3B8',
+    children: [
+      { id: 'profile', label: 'Profile', href: '/profile', icon: User, color: '#94A3B8' },
+      { id: 'notifications', label: 'Notifications', href: '/notifications', icon: Bell, color: '#94A3B8' },
+      { id: 'security', label: 'Security', href: '/security-center', icon: ShieldCheck, color: '#94A3B8' },
+      { id: 'settings', label: 'Settings', href: '/setup', icon: Settings, color: '#94A3B8' },
+      { id: 'help', label: 'Help & Docs', href: '/docs', icon: HelpCircle, color: '#94A3B8' },
+      { id: 'legal', label: 'Legal', href: '/legal', icon: Scale, color: '#94A3B8' },
     ],
   },
 ];
 
 // ============================================================================
-// BRUSHED METAL TILE COMPONENT
+// COMPACT TILE COMPONENT
 // ============================================================================
 
-interface MetalTileProps {
+interface CompactTileProps {
   item: NavItem;
-  angle: number;
-  radius: number;
+  index: number;
+  total: number;
   isActive: boolean;
   isHovered: boolean;
   onClick: () => void;
   onHover: (hovered: boolean) => void;
-  size?: 'sm' | 'md' | 'lg';
+  isSubmenu?: boolean;
 }
 
-function MetalTile({ 
+function CompactTile({ 
   item, 
-  angle, 
-  radius, 
+  index,
   isActive, 
   isHovered,
   onClick, 
   onHover,
-  size = 'md' 
-}: MetalTileProps) {
+  isSubmenu = false,
+}: CompactTileProps) {
   const Icon = item.icon;
   
-  // Calculate position from center
-  const angleRad = (angle - 90) * (Math.PI / 180); // -90 to start from top
-  const x = Math.cos(angleRad) * radius;
-  const y = Math.sin(angleRad) * radius;
+  // Stagger delay based on index
+  const delay = index * 0.03;
   
-  const sizeClasses = {
-    sm: 'w-12 h-12',
-    md: 'w-16 h-16',
-    lg: 'w-20 h-20',
-  };
-  
-  const iconSizes = {
-    sm: 18,
-    md: 24,
-    lg: 28,
-  };
-
   return (
     <motion.button
-      initial={{ scale: 0, opacity: 0 }}
+      initial={{ opacity: 0, x: 50, scale: 0.8 }}
       animate={{ 
-        scale: 1, 
-        opacity: 1,
-        x,
-        y,
+        opacity: 1, 
+        x: 0,
+        scale: 1,
       }}
-      exit={{ scale: 0, opacity: 0 }}
-      whileHover={{ scale: 1.15 }}
-      whileTap={{ scale: 0.95 }}
+      exit={{ opacity: 0, x: 30, scale: 0.9 }}
+      whileHover={{ scale: 1.02, x: -4 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ 
         type: 'spring', 
-        stiffness: 400, 
-        damping: 25,
-        delay: angle / 1000,
+        stiffness: 500, 
+        damping: 30,
+        delay,
       }}
       onClick={onClick}
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
+      aria-label={`Navigate to ${item.label}${item.children ? ' (has submenu)' : ''}`}
+      aria-current={isActive ? 'page' : undefined}
       className={`
-        absolute ${sizeClasses[size]} rounded-2xl
-        flex flex-col items-center justify-center gap-1
-        cursor-pointer select-none
-        transition-shadow duration-300
-        ${isActive ? 'ring-2 ring-offset-2 ring-offset-[#0A0A0F]' : ''}
+        relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+        transition-all duration-200 group overflow-hidden
+        ${isSubmenu ? 'pl-4' : ''}
       `}
       style={{
-        // Brushed metal base
-        background: `
-          linear-gradient(135deg, 
-            #2A2A35 0%, 
-            #1A1A22 25%, 
-            #252530 50%, 
-            #1A1A22 75%, 
-            #2A2A35 100%
-          )
-        `,
-        // Brushed metal texture overlay
-        backgroundImage: `
-          linear-gradient(135deg, 
-            #2A2A35 0%, 
-            #1A1A22 25%, 
-            #252530 50%, 
-            #1A1A22 75%, 
-            #2A2A35 100%
-          ),
-          repeating-linear-gradient(
+        background: isHovered || isActive
+          ? `linear-gradient(135deg, ${item.color}12 0%, rgba(40,40,50,0.6) 50%, ${item.color}08 100%)`
+          : 'linear-gradient(135deg, rgba(35,35,45,0.4) 0%, rgba(25,25,35,0.3) 100%)',
+        borderLeft: isActive ? `2px solid ${item.color}` : '2px solid transparent',
+        boxShadow: isHovered || isActive
+          ? `inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2)`
+          : 'inset 0 1px 0 rgba(255,255,255,0.03)',
+      }}
+    >
+      {/* Brushed metal texture */}
+      <div 
+        className="absolute inset-0 opacity-30 pointer-events-none"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
             90deg,
             transparent 0px,
             transparent 1px,
-            rgba(255,255,255,0.02) 1px,
-            rgba(255,255,255,0.02) 2px
-          )
-        `,
-        boxShadow: isHovered
-          ? `
-              0 0 20px ${item.color}40,
-              inset 0 1px 0 rgba(255,255,255,0.1),
-              inset 0 -1px 0 rgba(0,0,0,0.3),
-              0 4px 12px rgba(0,0,0,0.4)
-            `
-          : `
-              inset 0 1px 0 rgba(255,255,255,0.08),
-              inset 0 -1px 0 rgba(0,0,0,0.3),
-              0 2px 8px rgba(0,0,0,0.3)
-            `,
-        border: `1px solid ${isHovered || isActive ? item.color + '60' : '#3A3A4520'}`,
-        // Ring color handled via Tailwind ring-* classes with dynamic color
-        ['--tw-ring-color' as string]: item.color,
-      }}
-    >
-      {/* Brushed metal highlight line */}
-      <div 
-        className="absolute inset-x-2 top-1 h-px rounded-full opacity-30"
-        style={{ 
-          background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)` 
+            rgba(255,255,255,0.015) 1px,
+            rgba(255,255,255,0.015) 2px
+          )`,
         }}
       />
       
-      {/* Icon */}
+      {/* Top highlight */}
       <div 
-        className="transition-colors duration-200"
-        style={{ color: isHovered || isActive ? item.color : '#8A8A8F' }}
+        className="absolute top-0 left-2 right-2 h-px opacity-40"
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+        }}
+      />
+      
+      {/* Scan line effect on hover */}
+      {isHovered && (
+        <motion.div
+          initial={{ x: '-100%' }}
+          animate={{ x: '200%' }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+          className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+      
+      {/* Icon Container */}
+      <div
+        className={`
+          relative w-8 h-8 rounded-lg flex items-center justify-center
+          transition-all duration-200 shrink-0
+        `}
+        style={{
+          background: isActive || isHovered 
+            ? `${item.color}20` 
+            : 'rgba(255,255,255,0.03)',
+          boxShadow: isActive || isHovered
+            ? `0 0 16px ${item.color}50, 0 0 8px ${item.color}30, inset 0 1px 0 rgba(255,255,255,0.1)`
+            : `0 0 8px ${item.color}20, inset 0 1px 0 rgba(255,255,255,0.05)`,
+        }}
       >
-        <Icon size={iconSizes[size]} />
+        {/* Outer glow ring */}
+        <div 
+          className="absolute inset-0 rounded-lg transition-opacity duration-300"
+          style={{ 
+            background: `radial-gradient(circle at center, ${item.color}15 0%, transparent 70%)`,
+            opacity: isActive || isHovered ? 1 : 0.4,
+          }}
+        />
+        {/* Inner glow effect */}
+        {(isActive || isHovered) && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute inset-0 rounded-lg blur-sm"
+            style={{ background: `${item.color}40` }}
+          />
+        )}
+        <Icon 
+          size={16} 
+          className="relative z-10 transition-all duration-200"
+          style={{ 
+            color: isActive || isHovered ? item.color : item.color,
+            filter: `drop-shadow(0 0 ${isActive || isHovered ? '6px' : '3px'} ${item.color}${isActive || isHovered ? '80' : '40'})`,
+          }}
+        />
       </div>
       
-      {/* Label - only show on hover or for larger sizes */}
-      {size !== 'sm' && (
-        <span 
-          className="text-[10px] font-medium transition-colors duration-200 truncate max-w-full px-1"
-          style={{ color: isHovered || isActive ? item.color : '#8A8A8F' }}
+      {/* Label */}
+      <span 
+        className={`
+          flex-1 text-sm font-medium transition-colors duration-200 truncate
+          ${isActive ? 'text-[#F8F8FC]' : 'text-[#A0A0A5] group-hover:text-[#F8F8FC]'}
+        `}
+      >
+        {item.label}
+      </span>
+      
+      {/* Badge */}
+      {item.badge && (
+        <span
+          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+          style={{
+            background: `${item.color}20`,
+            color: item.color,
+            boxShadow: `0 0 8px ${item.color}30`,
+          }}
         >
-          {item.label}
+          {item.badge}
         </span>
       )}
       
       {/* Has children indicator */}
       {item.children && item.children.length > 0 && (
-        <div 
-          className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-          style={{ backgroundColor: item.color }}
-        />
+        <motion.div
+          animate={{ x: isHovered ? 2 : 0 }}
+          className="w-4 h-4 flex items-center justify-center shrink-0"
+        >
+          <ChevronLeft 
+            size={14} 
+            className="rotate-180 transition-colors duration-200"
+            style={{ color: isHovered ? item.color : '#4A4A4F' }}
+          />
+        </motion.div>
       )}
     </motion.button>
   );
 }
 
 // ============================================================================
-// CENTER BUTTON COMPONENT
+// CENTER TRIGGER BUTTON
 // ============================================================================
 
-interface CenterButtonProps {
+interface TriggerButtonProps {
   isOpen: boolean;
   onClick: () => void;
-  showBack: boolean;
-  onBack: () => void;
   activeCategory?: NavItem;
 }
 
-function CenterButton({ isOpen, onClick, showBack, onBack, activeCategory }: CenterButtonProps) {
+function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) {
   return (
     <motion.button
-      onClick={showBack ? onBack : onClick}
+      onClick={onClick}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className="relative w-14 h-14 rounded-full flex items-center justify-center cursor-pointer z-10"
+      aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+      aria-expanded={isOpen}
+      className="relative w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
       style={{
-        // Brushed metal center button
-        background: `
-          radial-gradient(ellipse at 30% 30%, 
-            #3A3A45 0%, 
-            #252530 40%, 
-            #1A1A22 100%
-          )
-        `,
-        backgroundImage: `
-          radial-gradient(ellipse at 30% 30%, 
-            #3A3A45 0%, 
-            #252530 40%, 
-            #1A1A22 100%
-          ),
-          repeating-linear-gradient(
-            45deg,
-            transparent 0px,
-            transparent 1px,
-            rgba(255,255,255,0.015) 1px,
-            rgba(255,255,255,0.015) 2px
-          )
-        `,
+        background: isOpen
+          ? `linear-gradient(145deg, ${activeCategory?.color || '#6366f1'}25 0%, #2a2a38 40%, #1e1e28 100%)`
+          : 'linear-gradient(145deg, #3a3a4a 0%, #2a2a38 50%, #1e1e28 100%)',
         boxShadow: isOpen
           ? `
-              0 0 30px ${activeCategory?.color || '#00F0FF'}50,
-              inset 0 2px 0 rgba(255,255,255,0.1),
-              inset 0 -2px 0 rgba(0,0,0,0.3),
-              0 4px 20px rgba(0,0,0,0.5)
-            `
+            0 0 30px ${activeCategory?.color || '#6366f1'}40,
+            0 8px 24px rgba(0,0,0,0.5),
+            inset 0 1px 0 rgba(255,255,255,0.12),
+            inset 0 -1px 0 rgba(0,0,0,0.3)
+          `
           : `
-              inset 0 2px 0 rgba(255,255,255,0.08),
-              inset 0 -2px 0 rgba(0,0,0,0.3),
-              0 4px 16px rgba(0,0,0,0.4)
-            `,
-        border: `2px solid ${isOpen ? (activeCategory?.color || '#00F0FF') + '60' : '#3A3A4540'}`,
+            0 8px 24px rgba(0,0,0,0.5),
+            0 2px 6px rgba(0,0,0,0.3),
+            inset 0 1px 0 rgba(255,255,255,0.1),
+            inset 0 -1px 0 rgba(0,0,0,0.3)
+          `,
+        border: `1px solid ${isOpen ? (activeCategory?.color || '#6366f1') + '50' : '#3a3a4a'}`,
       }}
     >
-      {/* Brushed metal highlight */}
+      {/* Brushed metal horizontal lines */}
       <div 
-        className="absolute inset-2 top-1 h-4 rounded-full opacity-20"
-        style={{ 
-          background: `radial-gradient(ellipse at center top, rgba(255,255,255,0.4), transparent)` 
+        className="absolute inset-0 opacity-50 pointer-events-none"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            transparent 1px,
+            rgba(255,255,255,0.04) 1px,
+            rgba(255,255,255,0.04) 2px
+          )`,
         }}
       />
       
-      <AnimatePresence mode="wait">
-        {showBack ? (
-          <motion.div
-            key="back"
-            initial={{ rotate: -90, opacity: 0 }}
-            animate={{ rotate: 0, opacity: 1 }}
-            exit={{ rotate: 90, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ChevronLeft 
-              size={24} 
-              style={{ color: activeCategory?.color || '#00F0FF' }}
-            />
-          </motion.div>
-        ) : isOpen ? (
-          <motion.div
-            key="close"
-            initial={{ rotate: -90, opacity: 0 }}
-            animate={{ rotate: 0, opacity: 1 }}
-            exit={{ rotate: 90, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <X size={24} className="text-[#FF6B6B]" />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="logo"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.5, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="text-[#00F0FF] font-bold text-lg"
-          >
-            V
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Corner bevels - top highlight */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-b from-white/12 to-transparent rounded-t-2xl" />
+      
+      {/* Corner bevels - bottom shadow */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-t from-black/30 to-transparent rounded-b-2xl" />
+      
+      {/* Left edge highlight */}
+      <div className="absolute top-2 bottom-2 left-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+      
+      {/* Rotating border effect when open */}
+      {isOpen && (
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-0"
+          style={{
+            background: `conic-gradient(from 0deg, transparent, ${activeCategory?.color || '#6366f1'}40, transparent)`,
+            borderRadius: '1rem',
+          }}
+        />
+      )}
+      
+      {/* Inner content */}
+      <div className="relative z-10 flex items-center justify-center w-full h-full">
+        <AnimatePresence mode="wait">
+          {isOpen ? (
+            <motion.div
+              key="close"
+              initial={{ rotate: -90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: 90, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <X size={20} className="text-[#FF6B6B]" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="logo"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="font-bold text-lg"
+              style={{
+                background: 'linear-gradient(135deg, #c0c5d0 0%, #9ca3b0 40%, #7a8290 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+              }}
+            >
+              V
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.button>
   );
 }
 
 // ============================================================================
-// MAIN PIE MENU COMPONENT
+// MAIN PIE MENU - SLIDE OUT STYLE
 // ============================================================================
 
 export function PieMenu() {
@@ -478,10 +552,8 @@ export function PieMenu() {
 
   const handleItemClick = useCallback((item: NavItem) => {
     if (item.children && item.children.length > 0) {
-      // Has children - show submenu
       setActiveCategory(item);
     } else if (item.href) {
-      // No children - navigate directly
       router.push(item.href);
       setIsOpen(false);
       setActiveCategory(null);
@@ -499,112 +571,229 @@ export function PieMenu() {
     }
   }, [isOpen]);
 
-  // Determine which items to show
   const itemsToShow = activeCategory?.children || navigationItems;
-  const itemCount = itemsToShow.length;
-  const angleStep = 360 / itemCount;
-  const radius = activeCategory ? 100 : 120; // Slightly smaller radius for submenu
 
-  // Check if current path is active
   const isPathActive = (href?: string) => {
     if (!href) return false;
     return pathname?.startsWith(href);
   };
 
   return (
-    <div 
+    <nav 
       ref={menuRef}
-      className="fixed bottom-6 right-6 z-[100]"
+      className="fixed bottom-4 right-4 z-[100] sm:bottom-6 sm:right-6"
+      aria-label="Main navigation"
     >
-      {/* Backdrop blur when open */}
+      {/* Backdrop */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm -z-10"
-            style={{ pointerEvents: 'none' }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm -z-10"
           />
         )}
       </AnimatePresence>
       
       {/* Menu Container */}
-      <div className="relative flex items-center justify-center">
-        {/* Category Label */}
-        <AnimatePresence>
-          {activeCategory && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap"
-              style={{
-                backgroundColor: activeCategory.color + '20',
-                color: activeCategory.color,
-                border: `1px solid ${activeCategory.color}40`,
-              }}
-            >
-              {activeCategory.label}
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div className="relative flex items-end justify-end gap-3">
         
-        {/* Pie Menu Items */}
-        <AnimatePresence mode="wait">
+        {/* Slide-out Menu Panel */}
+        <AnimatePresence>
           {isOpen && (
             <motion.div
-              key={activeCategory?.id || 'main'}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-0 flex items-center justify-center"
+              initial={{ opacity: 0, x: 60, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 40, scale: 0.98 }}
+              transition={{ 
+                type: 'spring', 
+                stiffness: 400, 
+                damping: 30,
+              }}
+              className="relative overflow-hidden rounded-2xl"
+              style={{
+                background: 'linear-gradient(145deg, #2a2a38 0%, #222230 30%, #1a1a26 70%, #161620 100%)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                boxShadow: `
+                  0 25px 50px -12px rgba(0, 0, 0, 0.6),
+                  0 0 0 1px rgba(255,255,255,0.05),
+                  inset 0 1px 0 rgba(255,255,255,0.12),
+                  inset 0 -2px 0 rgba(0,0,0,0.3)
+                `,
+                minWidth: '200px',
+                maxWidth: '240px',
+              }}
             >
-              {itemsToShow.map((item, index) => {
-                const angle = index * angleStep;
-                return (
-                  <MetalTile
-                    key={item.id}
-                    item={item}
-                    angle={angle}
-                    radius={radius}
-                    isActive={isPathActive(item.href)}
-                    isHovered={hoveredItem === item.id}
-                    onClick={() => handleItemClick(item)}
-                    onHover={(hovered) => setHoveredItem(hovered ? item.id : null)}
-                    size={activeCategory ? 'sm' : 'md'}
-                  />
-                );
-              })}
+              {/* Brushed metal vertical texture */}
+              <div 
+                className="absolute inset-0 opacity-40 pointer-events-none"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(
+                    90deg,
+                    transparent 0px,
+                    transparent 1px,
+                    rgba(255,255,255,0.02) 1px,
+                    rgba(255,255,255,0.02) 2px
+                  )`,
+                }}
+              />
+              
+              {/* Secondary horizontal brush strokes */}
+              <div 
+                className="absolute inset-0 opacity-20 pointer-events-none"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(
+                    0deg,
+                    transparent 0px,
+                    transparent 3px,
+                    rgba(255,255,255,0.015) 3px,
+                    rgba(255,255,255,0.015) 4px
+                  )`,
+                }}
+              />
+              
+              {/* Top edge highlight bevel */}
+              <div 
+                className="absolute top-0 left-0 right-0 h-1 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to bottom, rgba(255,255,255,0.15), transparent)',
+                }}
+              />
+              
+              {/* Left edge highlight */}
+              <div 
+                className="absolute top-4 bottom-4 left-0 w-px pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.1), transparent)',
+                }}
+              />
+              
+              {/* Top glow line */}
+              <div 
+                className="absolute top-0 left-4 right-4 h-px"
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${activeCategory?.color || '#6366f1'}60, transparent)`,
+                }}
+              />
+              
+              {/* Grid pattern overlay */}
+              <div 
+                className="absolute inset-0 opacity-[0.02] pointer-events-none"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+                  `,
+                  backgroundSize: '20px 20px',
+                }}
+              />
+              
+              {/* Header for submenu */}
+              <AnimatePresence>
+                {activeCategory && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="relative border-b border-white/5 overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(50,50,65,0.4) 0%, rgba(35,35,48,0.3) 100%)',
+                    }}
+                  >
+                    {/* Brushed texture for header */}
+                    <div 
+                      className="absolute inset-0 opacity-30 pointer-events-none"
+                      style={{
+                        backgroundImage: `repeating-linear-gradient(
+                          90deg,
+                          transparent 0px,
+                          transparent 1px,
+                          rgba(255,255,255,0.02) 1px,
+                          rgba(255,255,255,0.02) 2px
+                        )`,
+                      }}
+                    />
+                    <motion.button
+                      onClick={handleBack}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left group relative z-10"
+                    >
+                      <motion.div
+                        animate={{ x: [-2, 0, -2] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        <ChevronLeft 
+                          size={16} 
+                          style={{ color: activeCategory.color }}
+                        />
+                      </motion.div>
+                      <span 
+                        className="text-sm font-semibold"
+                        style={{ color: activeCategory.color }}
+                      >
+                        {activeCategory.label}
+                      </span>
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Menu Items */}
+              <div className="py-2 max-h-[60vh] overflow-y-auto scrollbar-hide">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeCategory?.id || 'main'}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-0.5 px-1.5"
+                  >
+                    {itemsToShow.map((item, index) => (
+                      <CompactTile
+                        key={item.id}
+                        item={item}
+                        index={index}
+                        total={itemsToShow.length}
+                        isActive={isPathActive(item.href)}
+                        isHovered={hoveredItem === item.id}
+                        onClick={() => handleItemClick(item)}
+                        onHover={(hovered) => setHoveredItem(hovered ? item.id : null)}
+                        isSubmenu={!!activeCategory}
+                      />
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              
+              {/* Bottom accent line */}
+              <div 
+                className="absolute bottom-0 left-4 right-4 h-px"
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${activeCategory?.color || '#6366f1'}40, transparent)`,
+                }}
+              />
+              
+              {/* Bottom bevel shadow */}
+              <div 
+                className="absolute bottom-0 left-0 right-0 h-1 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.3), transparent)',
+                }}
+              />
             </motion.div>
           )}
         </AnimatePresence>
         
-        {/* Center Button */}
-        <CenterButton
+        {/* Trigger Button */}
+        <TriggerButton
           isOpen={isOpen}
           onClick={toggleMenu}
-          showBack={!!activeCategory}
-          onBack={handleBack}
           activeCategory={activeCategory || undefined}
         />
       </div>
-      
-      {/* Tooltip for hovered item */}
-      <AnimatePresence>
-        {hoveredItem && activeCategory && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            className="absolute -top-16 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap bg-[#1A1A22] border border-[#3A3A45] text-[#F8F8FC]"
-          >
-            {itemsToShow.find(i => i.id === hoveredItem)?.label}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    </nav>
   );
 }
 

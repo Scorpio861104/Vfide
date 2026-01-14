@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { motion } from "framer-motion";
 import { Shield, Users, Zap, Heart } from "lucide-react";
@@ -8,7 +7,6 @@ import { Shield, Users, Zap, Heart } from "lucide-react";
 export default function AboutPage() {
   return (
     <>
-      <GlobalNav />
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Hero */}

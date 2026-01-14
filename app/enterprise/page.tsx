@@ -1,7 +1,6 @@
 "use client";
 
 import { Footer } from "@/components/layout/Footer";
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { useVfidePrice } from "@/hooks/usePriceHooks";
 import {
     ArrowUpDown,
@@ -31,7 +30,6 @@ export default function EnterprisePage() {
 
   return (
     <>
-      <GlobalNav />
       <main className="min-h-screen bg-[#0D0D0F] pt-24 pb-16">
         <div className="container mx-auto px-3 sm:px-4">
           {/* Header */}

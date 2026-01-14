@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import { useAccount } from 'wagmi';
@@ -13,7 +12,6 @@ export default function ProfilePage() {
   if (!isConnected) {
     return (
       <>
-        <GlobalNav />
         <main className="min-h-screen bg-[#0F0F12] pt-20">
           <div className="flex flex-col items-center justify-center py-20 px-4">
             <div className="text-center max-w-md">
@@ -34,7 +32,6 @@ export default function ProfilePage() {
 
   return (
     <>
-      <GlobalNav />
       <main className="min-h-screen bg-[#0F0F12] pt-20 pb-20">
         <ProfileSettings />
       </main>

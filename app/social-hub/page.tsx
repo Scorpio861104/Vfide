@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -695,7 +694,6 @@ export default function SocialHubPage() {
 
   return (
     <>
-      <GlobalNav />
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20 min-h-screen">
           <div className="container mx-auto px-4">

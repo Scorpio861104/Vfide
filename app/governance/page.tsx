@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect, useMemo } from "react";
 import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
@@ -164,7 +163,6 @@ export default function GovernancePage() {
   
   return (
     <>
-      <GlobalNav />
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">

@@ -1,7 +1,6 @@
 "use client";
 
 import { Footer } from '@/components/layout/Footer';
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
@@ -147,7 +146,6 @@ function Step({ number, title, description }: { number: number; title: string; d
 export default function MerchantPage() {
   return (
     <>
-      <GlobalNav />
       
       {/* Background effects */}
       <div className="fixed inset-0 -z-10">

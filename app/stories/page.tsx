@@ -1,6 +1,5 @@
 'use client';
 
-import { GlobalNav } from '@/components/layout/GlobalNav';
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
 import { StoryViewer } from '@/components/social/StoryViewer';
@@ -223,7 +222,6 @@ export default function StoriesPage() {
 
   return (
     <>
-      <GlobalNav />
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20">
           {/* Header */}

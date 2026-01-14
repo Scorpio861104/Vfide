@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 
@@ -11,7 +10,6 @@ export default function LegalPage() {
 
   return (
     <>
-      <GlobalNav />
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         <section className="py-12 bg-[#2A2A2F] border-b border-[#3A3A3F]">

@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { SimpleWalletConnect } from "@/components/wallet/SimpleWalletConnect";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -167,7 +166,6 @@ export default function DashboardPage() {
   if (!isConnected) {
     return (
       <>
-        <GlobalNav />
         <main className="min-h-screen bg-[#08080A] pt-20 flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
@@ -201,7 +199,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <GlobalNav />
       
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20">

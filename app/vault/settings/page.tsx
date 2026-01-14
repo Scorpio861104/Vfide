@@ -4,7 +4,6 @@
 
 'use client'
 
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { VaultSettingsPanel } from '@/components/vault/VaultSettingsPanel'
 import { GuardianManagementPanel } from '@/components/security/GuardianManagementPanel'
@@ -14,7 +13,6 @@ import { motion } from 'framer-motion'
 export default function VaultSettingsPage() {
   return (
     <>
-      <GlobalNav />
       <div className="min-h-screen bg-linear-to-b from-gray-950 to-black text-white pt-20">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           {/* Header */}

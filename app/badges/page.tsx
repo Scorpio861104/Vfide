@@ -1,6 +1,5 @@
 'use client'
 
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
@@ -177,7 +176,6 @@ export default function BadgesPage() {
 
   return (
     <>
-      <GlobalNav />
       
       <main className="min-h-screen bg-[#08080A] pt-20 relative">
         {/* Ambient Background */}

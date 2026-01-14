@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
@@ -145,7 +144,6 @@ export default function VestingPage() {
 
   return (
     <>
-      <GlobalNav />
       <motion.main 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

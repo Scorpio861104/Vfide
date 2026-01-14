@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
@@ -930,7 +929,6 @@ export default function VaultRecoveryPage() {
     <main className="min-h-screen bg-[#050507] relative overflow-hidden">
       <AuroraBackground />
       <FloatingParticles />
-      <GlobalNav />
       
       {/* Hero Section */}
       <section className="relative pt-28 pb-8">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -213,7 +212,6 @@ export default function DocsPage() {
 
   return (
     <>
-      <GlobalNav />
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Header */}

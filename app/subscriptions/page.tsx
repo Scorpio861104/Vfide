@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
@@ -98,7 +97,6 @@ export default function SubscriptionsPage() {
 
   return (
     <>
-      <GlobalNav />
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Header */}

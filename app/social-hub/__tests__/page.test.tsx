@@ -61,10 +61,6 @@ jest.mock('next/link', () => {
 });
 
 // Mock components
-jest.mock('@/components/layout/GlobalNav', () => ({
-  GlobalNav: () => <nav data-testid="global-nav">GlobalNav</nav>,
-}));
-
 jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <footer data-testid="footer">Footer</footer>,
 }));
@@ -76,9 +72,86 @@ jest.mock('@/components/ui/PageLayout', () => ({
 // Import after mocks
 import SocialHubPage from '../page';
 
+// Mock fetch for API calls
+const mockPosts = [
+  {
+    id: '1',
+    author: {
+      address: '0xCrypto...King',
+      name: 'CryptoKing',
+      avatar: '👑',
+      verified: true,
+      proofScore: 95,
+    },
+    content: 'Just hit 1000 successful transactions on VFIDE! The trust protocol is working exactly as designed.',
+    timestamp: Date.now() - 1000 * 60 * 30,
+    likes: 234,
+    comments: 45,
+    shares: 12,
+    views: 1420,
+    liked: false,
+    bookmarked: false,
+    isFollowing: true,
+    tags: ['VFIDE', 'DeFi'],
+  },
+  {
+    id: '2',
+    author: {
+      address: '0xDeFi...Queen',
+      name: 'DeFiQueen',
+      avatar: '💎',
+      verified: true,
+      proofScore: 88,
+    },
+    content: 'Always check ProofScore before transacting with new addresses.',
+    timestamp: Date.now() - 1000 * 60 * 120,
+    likes: 567,
+    comments: 89,
+    shares: 156,
+    views: 3240,
+    liked: true,
+    bookmarked: true,
+    isFollowing: false,
+    tags: ['Security', 'ProofScore'],
+  },
+];
+
+const mockApiResponse = (url: string) => {
+  if (url.includes('/api/community/posts')) {
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ posts: mockPosts }),
+    });
+  }
+  if (url.includes('/api/community/stories')) {
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ stories: [] }),
+    });
+  }
+  if (url.includes('/api/community/trending')) {
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ topics: [] }),
+    });
+  }
+  if (url.includes('/api/friends/suggested')) {
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ users: [] }),
+    });
+  }
+  return Promise.reject(new Error('Not found'));
+};
+
 describe('SocialHubPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    global.fetch = jest.fn(mockApiResponse as typeof fetch);
+  });
+  
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('renders the Social Hub header', () => {
@@ -91,9 +164,8 @@ describe('SocialHubPage', () => {
     expect(screen.getByText(/Connect, share, and engage with the VFIDE community/)).toBeInTheDocument();
   });
 
-  it('renders GlobalNav and Footer', () => {
+  it('renders Footer', () => {
     render(<SocialHubPage />);
-    expect(screen.getByTestId('global-nav')).toBeInTheDocument();
     expect(screen.getByTestId('footer')).toBeInTheDocument();
   });
 
@@ -113,14 +185,13 @@ describe('SocialHubPage', () => {
     it('renders story circles', () => {
       render(<SocialHubPage />);
       expect(screen.getByText('You')).toBeInTheDocument();
-      // CryptoKing appears in both stories and posts
-      expect(screen.getAllByText('CryptoKing').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText('DeFiQueen').length).toBeGreaterThanOrEqual(1);
     });
 
-    it('renders mock posts', () => {
+    it('renders mock posts', async () => {
       render(<SocialHubPage />);
-      expect(screen.getByText(/Just hit 1000 successful transactions on VFIDE!/)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Just hit 1000 successful transactions on VFIDE!/)).toBeInTheDocument();
+      });
       expect(screen.getByText(/Always check ProofScore before transacting/)).toBeInTheDocument();
     });
 
@@ -184,11 +255,15 @@ describe('SocialHubPage', () => {
       expect(screen.getByRole('button', { name: /Load More Posts/i })).toBeInTheDocument();
     });
 
-    it('allows liking a post', () => {
+    it('allows liking a post', async () => {
       render(<SocialHubPage />);
-      // Find a like button and click it
+      // Wait for posts to load
+      await waitFor(() => {
+        expect(screen.getByText(/Just hit 1000 successful transactions on VFIDE!/)).toBeInTheDocument();
+      });
+      // Find like buttons by looking for Heart icon class
       const likeButtons = screen.getAllByRole('button').filter(btn => 
-        btn.querySelector('svg.lucide-heart')
+        btn.querySelector('svg.lucide-heart') || btn.textContent?.includes('234')
       );
       expect(likeButtons.length).toBeGreaterThan(0);
       fireEvent.click(likeButtons[0]);

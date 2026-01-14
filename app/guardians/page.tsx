@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useState, useMemo } from "react";
 import { useAccount } from "wagmi";
@@ -25,7 +24,6 @@ export default function GuardiansPage() {
 
   return (
     <>
-      <GlobalNav />
       
       <motion.main 
         initial={{ opacity: 0 }}

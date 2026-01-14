@@ -9,7 +9,6 @@ import { ToastProvider } from "@/components/ui/toast";
 import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
 import { DemoModeBanner } from "@/components/layout/DemoModeBanner";
 import { TestnetNotification } from "@/components/ui/TestnetNotification";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { PresenceManager } from "@/components/social/PresenceManager";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
@@ -109,7 +108,6 @@ export default function RootLayout({
                 {children}
                 <CommandBar />
                 <PieMenu />
-                <MobileBottomNav />
                 <OnboardingManager />
                 <HelpCenter />
               </ToastProvider>

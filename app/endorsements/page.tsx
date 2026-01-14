@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { GlobalNav } from '@/components/layout/GlobalNav'
 import { Footer } from '@/components/layout/Footer'
 import { SurfaceCard, SectionHeading } from '@/components/ui/primitives'
 import { useAccount, useReadContract } from 'wagmi'
@@ -78,7 +77,6 @@ export default function EndorsementsPage() {
 
   return (
     <>
-      <GlobalNav />
       
       <div className="min-h-screen bg-black text-white pt-24 pb-16">
         <div className="max-w-6xl mx-auto px-4 md:px-8">

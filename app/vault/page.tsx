@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobalNav } from "@/components/layout/GlobalNav";
 import { Footer } from "@/components/layout/Footer";
 import { useVaultRecovery } from "@/hooks/useVaultRecovery";
 import { useVaultHub } from "@/hooks/useVaultHub";
@@ -388,7 +387,6 @@ function VaultContent() {
   
   return (
     <>
-      <GlobalNav />
       
       <main className="min-h-screen bg-[#08080A] pt-20 relative">
         {/* Ambient Background */}
