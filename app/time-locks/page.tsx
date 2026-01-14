@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 
 interface TimeLock {
   id: string;
@@ -14,8 +14,7 @@ interface TimeLock {
 }
 
 export default function TimeLocksPage() {
-  const { wallet, isConnected } = useWallet();
-  const address = wallet?.address;
+  const { address, isConnected } = useAccount();
   const [timeLocks, setTimeLocks] = useState<TimeLock[]>([]);
   const [_settings, _setSettings] = useState({
     tier1: { threshold: 0.1, delay: 0 },

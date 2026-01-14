@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useFinancialIntelligence, SpendingCategory, FinancialHealth } from '@/lib/financialIntelligence';
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 // ============================================================================
@@ -10,8 +10,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 // ============================================================================
 
 export default function FinancialDashboard() {
-  const { wallet } = useWallet();
-  const address = wallet?.address;
+  const { address } = useAccount();
   const {
     loading,
     spendingByCategory,

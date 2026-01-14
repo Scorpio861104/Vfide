@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useCrossChain, Route, TransferRequest } from '@/lib/crossChain';
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
 
 // ============================================================================
@@ -10,8 +10,7 @@ import { toast } from '@/lib/toast';
 // ============================================================================
 
 export default function CrossChainTransfer() {
-  const { wallet } = useWallet();
-  const address = wallet?.address;
+  const { address } = useAccount();
   const {
     balances,
     routes,

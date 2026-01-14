@@ -2,11 +2,10 @@
 
 import React, { useState } from 'react';
 import { useFinancialIntelligence } from '@/lib/financialIntelligence';
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 
 export default function TaxesPage() {
-  const { wallet } = useWallet();
-  const address = wallet?.address;
+  const { address } = useAccount();
   const { taxEvents, taxSummary, loading } = useFinancialIntelligence(address);
   const [year, setYear] = useState(new Date().getFullYear());
 

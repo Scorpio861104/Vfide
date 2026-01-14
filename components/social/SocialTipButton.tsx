@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 import { useTipping } from '@/lib/socialPayments';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DollarSign, Send, Sparkles, X } from 'lucide-react';
@@ -38,7 +38,7 @@ export function SocialTipButton({
   const [message, setMessage] = useState('');
 
   const { tips, total, isLoading, sendTip } = useTipping(postId, commentId);
-  const { wallet, isConnected } = useWallet();
+  const { address, isConnected } = useAccount();
 
   const handleTip = async () => {
     if (!isConnected) {

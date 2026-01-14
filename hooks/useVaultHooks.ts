@@ -113,11 +113,17 @@ export function useTransferVFIDE() {
       throw new Error(validation.error || 'Invalid recipient vault address')
     }
     
-    // UserVault uses 'transfer' function
+    // Validate amount
+    const amountNum = parseFloat(amount)
+    if (isNaN(amountNum) || amountNum <= 0) {
+      throw new Error('Amount must be a positive number')
+    }
+    
+    // UserVault uses 'transferVFIDE' function (matches ABI)
     writeContract({
       address: vaultAddress as `0x${string}`,
       abi: VAULT_ABI,
-      functionName: 'transfer',
+      functionName: 'transferVFIDE',
       args: [toVault, parseEther(amount)],
     })
   }
@@ -172,9 +178,10 @@ export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddres
 }
 
 /**
- * Add or remove guardian (UserVault uses slot-based guardians)
- * @param slot Guardian slot (0-2)
- * @param guardian Address to set (use zero address to clear)
+ * Add or remove guardian
+ * UserVault uses address-based guardian management: setGuardian(address g, bool active)
+ * @param guardianAddress Address of the guardian
+ * @param active True to add, false to remove
  */
 export function useSetGuardian(vaultAddress: `0x${string}`) {
   const { writeContractAsync } = useWriteContract()
@@ -185,12 +192,12 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
     hash: txHash || undefined,
   })
 
-  // C-4 Fix: Updated signature to match UserVault: setGuardian(uint8 slot, address guardian)
-  const setGuardian = async (slot: number, guardianAddress: `0x${string}`) => {
+  // Fixed: setGuardian(address g, bool active) matches actual ABI
+  const setGuardian = async (guardianAddress: `0x${string}`, active: boolean) => {
     setError(null)
     
-    // Validate guardian address
-    const addressValidation = validateAddress(guardianAddress, { allowZeroAddress: true })
+    // Validate guardian address (don't allow zero address for adding)
+    const addressValidation = validateAddress(guardianAddress, { allowZeroAddress: !active })
     if (!addressValidation.valid) {
       setError(addressValidation.error || 'Invalid guardian address')
       return { success: false, error: addressValidation.error }
@@ -201,7 +208,7 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
         address: vaultAddress,
         abi: VAULT_ABI,
         functionName: 'setGuardian',
-        args: [slot, guardianAddress],
+        args: [guardianAddress, active],
       })
       setTxHash(hash)
       return { success: true, txHash: hash }
@@ -213,18 +220,19 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
     }
   }
 
-  // Convenience wrapper for legacy code that uses (address, bool) signature
-  const setGuardianLegacy = async (guardianAddress: `0x${string}`, active: boolean) => {
-    // Find first empty slot if adding, or find the guardian's slot if removing
-    // For simplicity, use slot 0 for add, clear by setting to zero address
-    const slot = 0
-    const addr = active ? guardianAddress : ZERO_ADDRESS
-    return setGuardian(slot, addr)
+  // Convenience wrappers for add/remove
+  const addGuardian = async (guardianAddress: `0x${string}`) => {
+    return setGuardian(guardianAddress, true)
+  }
+
+  const removeGuardian = async (guardianAddress: `0x${string}`) => {
+    return setGuardian(guardianAddress, false)
   }
 
   return {
     setGuardian,
-    setGuardianLegacy,
+    addGuardian,
+    removeGuardian,
     txHash,
     isSuccess,
     isLoading,

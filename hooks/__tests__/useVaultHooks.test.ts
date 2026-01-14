@@ -541,8 +541,8 @@ describe('useSetGuardian', () => {
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
     
     await act(async () => {
-      // New signature: setGuardian(slot: number, guardianAddress)
-      await result.current.setGuardian(0, ZERO_ADDRESS as `0x${string}`)
+      // New signature: setGuardian(guardianAddress, active: boolean)
+      await result.current.setGuardian(mockGuardianAddress, true)
     })
 
     expect(result.current.error).toBe('Cannot modify guardians during active recovery')
@@ -561,7 +561,7 @@ describe('useSetGuardian', () => {
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
     
     await act(async () => {
-      await result.current.setGuardian(0, mockGuardianAddress)
+      await result.current.setGuardian(mockGuardianAddress, true)
     })
 
     expect(result.current.error).toBe('Vault is currently locked')
@@ -583,7 +583,7 @@ describe('useSetGuardian', () => {
     let response: { success: boolean; txHash?: `0x${string}` }
     
     await act(async () => {
-      response = await result.current.setGuardian(0, mockGuardianAddress)
+      response = await result.current.setGuardian(mockGuardianAddress, true)
     })
 
     expect(response!.success).toBe(true)
@@ -603,7 +603,7 @@ describe('useSetGuardian', () => {
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
     
     await act(async () => {
-      await result.current.setGuardian(0, mockGuardianAddress)
+      await result.current.setGuardian(mockGuardianAddress, true)
     })
 
     expect(result.current.error).toBe('User rejected transaction')
@@ -624,7 +624,7 @@ describe('useSetGuardian', () => {
     let response: { success: boolean; error?: string }
     
     await act(async () => {
-      response = await result.current.setGuardian(0, mockGuardianAddress)
+      response = await result.current.setGuardian(mockGuardianAddress, true)
     })
 
     expect(response!.success).toBe(false)
@@ -643,7 +643,7 @@ describe('useSetGuardian', () => {
 
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
     await act(async () => {
-      await result.current.setGuardian(0, mockGuardianAddress)
+      await result.current.setGuardian(mockGuardianAddress, true)
     })
 
     expect(result.current.error).toBe('Only vault owner can modify guardians')
@@ -1351,7 +1351,7 @@ describe('useSetGuardian edge cases', () => {
     expect(response!.error).toBeTruthy()
   })
 
-  it('uses setGuardianLegacy wrapper (line 220-222)', async () => {
+  it('uses addGuardian wrapper', async () => {
     const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash' as `0x${string}`)
     ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
       writeContractAsync: mockWriteContract,
@@ -1360,19 +1360,19 @@ describe('useSetGuardian edge cases', () => {
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
 
     await act(async () => {
-      // This calls the legacy wrapper which uses slot 0 (line 220-222)
-      await result.current.setGuardianLegacy(mockGuardianAddress, true)
+      // This calls the addGuardian wrapper
+      await result.current.addGuardian(mockGuardianAddress)
     })
 
     expect(mockWriteContract).toHaveBeenCalledWith({
       address: mockVaultAddress,
       abi: expect.any(Array),
       functionName: 'setGuardian',
-      args: [0, mockGuardianAddress],
+      args: [mockGuardianAddress, true],
     })
   })
 
-  it('uses setGuardianLegacy to remove guardian (line 220-222)', async () => {
+  it('uses removeGuardian wrapper', async () => {
     const mockWriteContract = jest.fn().mockResolvedValue('0xtxhash' as `0x${string}`)
     ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
       writeContractAsync: mockWriteContract,
@@ -1381,15 +1381,15 @@ describe('useSetGuardian edge cases', () => {
     const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
 
     await act(async () => {
-      // This should use ZERO_ADDRESS when active=false (line 220-222)
-      await result.current.setGuardianLegacy(mockGuardianAddress, false)
+      // This calls the removeGuardian wrapper
+      await result.current.removeGuardian(mockGuardianAddress)
     })
 
     expect(mockWriteContract).toHaveBeenCalledWith({
       address: mockVaultAddress,
       abi: expect.any(Array),
       functionName: 'setGuardian',
-      args: [0, ZERO_ADDRESS],
+      args: [mockGuardianAddress, false],
     })
   })
 })

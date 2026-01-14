@@ -2,12 +2,11 @@
 
 import React, { useState, useCallback } from 'react';
 import { useFinancialIntelligence, Budget } from '@/lib/financialIntelligence';
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
 
 export default function BudgetsPage() {
-  const { wallet } = useWallet();
-  const address = wallet?.address;
+  const { address } = useAccount();
   const { budgets, spendingByCategory, setBudget, loading: _loading } = useFinancialIntelligence(address);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newBudget, setNewBudget] = useState({

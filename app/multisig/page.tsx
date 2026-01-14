@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 
 interface Signer {
   address: string;
@@ -22,8 +22,7 @@ interface Transaction {
 }
 
 export default function MultisigPage() {
-  const { wallet, isConnected } = useWallet();
-  const address = wallet?.address;
+  const { address, isConnected } = useAccount();
   const [signers, setSigners] = useState<Signer[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [required, _setRequired] = useState(2);

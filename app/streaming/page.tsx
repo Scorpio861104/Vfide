@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
 
 interface Stream {
@@ -18,8 +18,7 @@ interface Stream {
 }
 
 export default function StreamingPage() {
-  const { wallet, isConnected } = useWallet();
-  const address = wallet?.address;
+  const { address, isConnected } = useAccount();
   const [streams, setStreams] = useState<Stream[]>([]);
   const [activeTab, setActiveTab] = useState<'outgoing' | 'incoming'>('outgoing');
   const [showCreateModal, setShowCreateModal] = useState(false);

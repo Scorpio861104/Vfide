@@ -9,7 +9,7 @@
 
 import { SocialFeed } from '@/components/social/SocialFeed';
 import { UnifiedActivityFeed } from '@/components/social/UnifiedActivityFeed';
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import {
     ArrowDownLeft,
@@ -26,7 +26,7 @@ import {
 import { useState } from 'react';
 
 export default function SocialPaymentsDashboard() {
-  const {} = useWallet();
+  const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'feed' | 'activity' | 'earnings'>('feed');
 
   // Mock stats for demo

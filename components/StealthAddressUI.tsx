@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useStealth } from '@/lib/stealthAddresses';
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
 
 // ============================================================================
@@ -10,8 +10,7 @@ import { toast } from '@/lib/toast';
 // ============================================================================
 
 export default function StealthAddressUI() {
-  const { wallet } = useWallet();
-  const address = wallet?.address;
+  const { address } = useAccount();
   const {
     profile,
     loading,

@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useWallet } from '@/lib/crypto';
+import { useAccount } from 'wagmi';
 import { usePremiumContent } from '@/lib/socialPayments';
 import { motion } from 'framer-motion';
 import { Check, Loader, Lock, Unlock } from 'lucide-react';
@@ -36,10 +36,10 @@ export function PremiumContentGate({
   preview,
   className = '',
 }: PremiumContentGateProps) {
-  const { wallet, isConnected } = useWallet();
+  const { address, isConnected } = useAccount();
   const { hasAccess, isChecking, isPurchasing, purchase } = usePremiumContent(
     contentId,
-    wallet?.address
+    address
   );
 
   const handlePurchase = async () => {
