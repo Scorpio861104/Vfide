@@ -131,7 +131,7 @@ export function OverviewTab({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+            className="bg-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
           >
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <div className="p-2 rounded-xl bg-linear-to-br from-red-500/20 to-orange-500/20">

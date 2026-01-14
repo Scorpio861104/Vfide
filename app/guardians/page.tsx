@@ -32,9 +32,9 @@ export default function GuardiansPage() {
       >
         {/* Premium Background Effects */}
         <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 -right-32 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[150px]" />
+          <div className="absolute top-1/4 -left-32 w-125 h-125 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 -right-32 w-100 h-100 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-blue-500/5 rounded-full blur-[150px]" />
         </div>
 
         {/* Header */}
@@ -151,7 +151,7 @@ function OverviewTab() {
       </div>
 
       {/* How Recovery Works */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
           <Clock className="w-7 h-7 text-cyan-400" />
           How Recovery Works
@@ -258,7 +258,7 @@ function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6 max-w-4xl mx-auto"
       >
-        <div className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
+        <div className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
           <motion.div
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -284,7 +284,7 @@ function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6 max-w-4xl mx-auto"
     >
-      <div className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+      <div className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
           <Users className="w-5 h-5 text-cyan-400" />
           Vaults You&apos;re Guarding ({vaultsGuarding.length})
@@ -427,7 +427,7 @@ function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.1 }}
-          className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-yellow-500/50 rounded-2xl p-6"
+          className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-yellow-500/50 rounded-2xl p-6"
         >
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -552,7 +552,7 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -630,7 +630,7 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <h3 className="text-xl font-bold text-white mb-4">Your Guardians</h3>
         <div className="space-y-3">
@@ -750,7 +750,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-white">Current Next of Kin</h3>
@@ -851,7 +851,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <h3 className="text-xl font-bold text-white mb-4">Inheritance Process</h3>
         <div className="space-y-3">
@@ -993,7 +993,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+          className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-white">Request Recovery</h3>
@@ -1056,7 +1056,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <h3 className="text-xl font-bold text-white mb-4">Recovery Timeline</h3>
         <div className="relative">
@@ -1096,7 +1096,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-linear-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
       >
         <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
           <Lock size={18} className="text-yellow-400" />
