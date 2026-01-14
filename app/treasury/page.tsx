@@ -273,7 +273,7 @@ function SanctumTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Sanctum Overview */}
-      <div className="bg-linear-to-br from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Heart className="w-12 h-12 text-pink-400" />
           <div>
@@ -370,7 +370,7 @@ function EcosystemTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Ecosystem Overview */}
-      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Users className="w-12 h-12 text-cyan-400" />
           <div>
@@ -455,7 +455,7 @@ function RevenueTab() {
   return (
     <div className="space-y-8">
       {/* Revenue Splitter Overview */}
-      <div className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <TrendingUp className="w-12 h-12 text-yellow-400" />
           <div>
@@ -531,7 +531,7 @@ function VestingTab() {
   return (
     <div className="space-y-8">
       {/* Vesting Overview */}
-      <div className="bg-linear-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Clock className="w-12 h-12 text-purple-400" />
           <div>

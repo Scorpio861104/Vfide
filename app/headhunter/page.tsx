@@ -219,7 +219,7 @@ export default function HeadhunterPage() {
               </div>
 
               {/* Share Buttons */}
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 {shareOptions.map((option) => (
                   <a
                     key={option.name}
@@ -245,7 +245,7 @@ export default function HeadhunterPage() {
               <div className="bg-[#2A2A2F] rounded-xl p-6 mb-4">
                 <div className="text-center mb-4">
                   <div className="text-sm text-[#A0A0A5] mb-2">Your Current Rank</div>
-                  <div className="text-5xl font-bold text-[#50C878] mb-2">#{stats.estimatedRank || '?'}</div>
+                  <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#50C878] mb-2">#{stats.estimatedRank || '?'}</div></div>
                   <div className="text-sm text-[#FFD700]">
                     {stats.estimatedRank > 0 && stats.estimatedRank <= 20 ? 'Top 20 Qualified ✨' : 'Keep recruiting to qualify!'}
                   </div>
@@ -438,8 +438,8 @@ export default function HeadhunterPage() {
 
                         {/* Info */}
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-mono text-white text-sm">{activity.address}</span>
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <span className="font-mono text-white text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[180px]">{activity.address}</span>
                             <span className={`px-2 py-0.5 text-xs font-semibold rounded ${
                               activity.status === 'credited'
                                 ? 'bg-[#50C878]/20 text-[#50C878]'

@@ -449,7 +449,7 @@ function MembersTab() {
                 </div>
                 <div>
                   <div className="text-white font-bold">{member.name}</div>
-                  <div className="text-xs text-gray-400 font-mono">{member.address}</div>
+                  <div className="text-xs text-gray-400 font-mono truncate max-w-[120px] sm:max-w-[200px]">{member.address}</div>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
@@ -526,7 +526,7 @@ function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 p-8"
+        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 p-4 sm:p-6 md:p-8"
       >
         <div className="flex items-center gap-4 mb-6">
           <div className="p-3 rounded-2xl bg-linear-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20">
@@ -630,7 +630,7 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-red-500/10 to-orange-500/5 backdrop-blur-xl border border-red-500/20 p-8"
+        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-red-500/10 to-orange-500/5 backdrop-blur-xl border border-red-500/20 p-4 sm:p-6 md:p-8"
       >
         <div className="flex items-center gap-4 mb-6">
           <div className="p-3 rounded-2xl bg-linear-to-br from-red-500/20 to-red-500/5 border border-red-500/20">

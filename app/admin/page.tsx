@@ -865,11 +865,11 @@ export default function AdminPanel() {
     <>
       <div className="min-h-screen bg-linear-to-br from-gray-900 via-purple-900 to-violet-900 py-12 px-4 pt-24">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 mb-8">
-          <div className="flex items-center justify-between">
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 md:p-8 mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">VFIDE Owner Control Panel</h1>
-              <p className="text-gray-300">Contract: <span className="font-mono text-sm">{TOKEN_ADDRESS}</span></p>
+              <p className="text-gray-300">Contract: <span className="font-mono text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none inline-block align-bottom">{TOKEN_ADDRESS}</span></p>
             </div>
             <div className="bg-green-500/20 border border-green-500 rounded-lg px-4 py-2">
               <p className="text-green-400 text-sm font-bold">👑 Owner Access</p>
@@ -1008,7 +1008,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Control Panels */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           
           {/* Exchange Whitelisting */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
@@ -1449,7 +1449,7 @@ export default function AdminPanel() {
             {/* Current Policy Display */}
             <div className="bg-black/30 rounded-lg p-4 mb-4">
               <h3 className="text-white font-bold mb-3">Current Policy (Basis Points)</h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="text-gray-400">Base Burn:</span>
                   <span className="text-white font-bold ml-2">{Number(baseBurnBps) || 0} bps ({((Number(baseBurnBps) || 0) / 100).toFixed(2)}%)</span>
@@ -1479,7 +1479,7 @@ export default function AdminPanel() {
 
             {/* Update Form */}
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-300 text-xs mb-1">Base Burn (bps)</label>
                   <input

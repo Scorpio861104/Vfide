@@ -1074,7 +1074,7 @@ export default function VaultRecoveryPage() {
                     disabled={isSearching}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-10 py-5 bg-linear-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px] shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
+                    className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-linear-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 sm:min-w-[200px] shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
                   >
                     {isSearching ? (
                       <>

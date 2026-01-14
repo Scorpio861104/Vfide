@@ -384,7 +384,7 @@ export default function SocialAnalyticsPage() {
               </div>
 
               {/* Legend */}
-              <div className="flex justify-center gap-6 text-sm">
+              <div className="flex justify-center gap-3 sm:gap-6 text-sm flex-wrap">
                 {mockEngagementData.map((data) => (
                   <div key={data.date} className="text-center">
                     <div className="text-[#F5F3E8] font-semibold">{data.date}</div>

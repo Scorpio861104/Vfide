@@ -107,7 +107,7 @@ function OverviewTab() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="bg-linear-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-xl p-8 text-center">
+      <div className="bg-linear-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-xl p-4 sm:p-6 md:p-8 text-center">
         <Building2 className="w-16 h-16 text-blue-400 mx-auto mb-4" />
         <h2 className="text-2xl sm:text-3xl font-bold text-[#F5F3E8] mb-4">Enterprise-Grade Infrastructure</h2>
         <p className="text-[#A0A0A5] max-w-2xl mx-auto">
@@ -194,7 +194,7 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Gateway Overview */}
-      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Globe className="w-12 h-12 text-cyan-400" />
           <div>
@@ -263,7 +263,7 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
           </button>
         </div>
       ) : (
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-8 text-center">
+        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 sm:p-6 md:p-8 text-center">
           <p className="text-[#A0A0A5]">Connect wallet to create orders</p>
         </div>
       )}
@@ -329,7 +329,7 @@ function FiatTab({ isConnected: _isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Fiat Overview */}
-      <div className="bg-linear-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <CreditCard className="w-12 h-12 text-green-400" />
           <div>
@@ -403,7 +403,7 @@ function FinanceTab() {
   return (
     <div className="space-y-8">
       {/* Finance Overview */}
-      <div className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-8">
+      <div className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <TrendingUp className="w-12 h-12 text-yellow-400" />
           <div>

@@ -155,7 +155,7 @@ function FeatureCard({ icon, title, description, color, delay = 0 }: FeatureCard
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl -z-10"
         style={{ background: `linear-gradient(135deg, ${color}20, transparent)` }} 
       />
-      <div className="glass-card rounded-2xl p-8 h-full relative overflow-hidden">
+      <div className="glass-card rounded-2xl p-5 sm:p-6 md:p-8 h-full relative overflow-hidden">
         {/* Top accent line */}
         <div 
           className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity"
@@ -412,7 +412,7 @@ export default function Home() {
             <span className="text-sm text-[#6B6B78] uppercase tracking-widest">Live Network</span>
           </motion.div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-12">
             <StatItem value={2847} label="Vaults Created" color="#00F0FF" />
             <StatItem value={12} prefix="$" suffix="M" label="Total Volume" color="#22C55E" />
             <StatItem value={12459} label="Transactions" color="#FFD700" />
@@ -566,12 +566,12 @@ export default function Home() {
       <section className="py-24 bg-[#08080A] relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1F1F2A] to-transparent" />
         
-        <div className="container mx-auto px-4 max-w-4xl text-center">
+        <div className="container mx-auto px-3 sm:px-4 max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="glass-card rounded-3xl p-12 relative"
+            className="glass-card rounded-3xl p-6 sm:p-8 md:p-12 relative"
           >
             <div className="flex justify-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
@@ -603,7 +603,7 @@ export default function Home() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#00F0FF]/5 rounded-full blur-[150px]" />
         </div>
         
-        <div className="relative z-10 container mx-auto px-4 text-center max-w-3xl">
+        <div className="relative z-10 container mx-auto px-3 sm:px-4 text-center max-w-3xl">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

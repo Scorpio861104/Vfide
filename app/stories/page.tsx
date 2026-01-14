@@ -261,7 +261,7 @@ export default function StoriesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-6 mb-8"
               >
-                <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-[#3A3A4F] scrollbar-track-transparent">
+                <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-[#3A3A4F] scrollbar-track-transparent">
                   {/* Add Story Button */}
                   <motion.div
                     whileHover={{ scale: 1.05 }}

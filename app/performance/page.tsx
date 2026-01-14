@@ -158,12 +158,12 @@ export default function PerformanceDashboardPage() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-8"
+            className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8"
           >
             <div>
               <p className="text-sm text-slate-400 mb-2">System Health Score</p>
               <div className="flex items-baseline gap-3">
-                <span className="text-5xl font-bold text-white">{healthScore}</span>
+                <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">{healthScore}</span>
                 <span className="text-sm text-slate-400">/100</span>
               </div>
             </div>

@@ -238,7 +238,7 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
 
 function OverviewTab() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
       {/* How It Works */}
       <GlassCard className="p-8">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
