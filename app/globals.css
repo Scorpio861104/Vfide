@@ -712,3 +712,17 @@
     }
   }
 }
+
+/* RainbowKit Modal z-index fix - ensure wallet modal appears above all other content */
+[data-rk] {
+  z-index: 99999 !important;
+}
+
+/* RainbowKit overlay and modal container */
+[data-rk-modal-overlay] {
+  z-index: 99998 !important;
+}
+
+[data-rk-modal] {
+  z-index: 99999 !important;
+}
