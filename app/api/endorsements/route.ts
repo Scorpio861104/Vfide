@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
 interface Endorsement {
   id: number;
@@ -22,6 +23,17 @@ interface Endorsement {
  * Get endorsements
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting: 60 requests per minute
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 60, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const endorsedAddress = searchParams.get('endorsedAddress');
