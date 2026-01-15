@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
@@ -232,34 +232,40 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
     return () => observer.disconnect();
   }, [isLoadingMore]);
 
-  const filteredPosts = posts.filter((post) => {
-    if (filter.type && filter.type !== 'all' && post.type !== filter.type) {
-      return false;
-    }
+  // Memoize filtered posts to avoid recalculating on every render
+  const filteredPosts = useMemo(() => {
+    return posts.filter((post) => {
+      if (filter.type && filter.type !== 'all' && post.type !== filter.type) {
+        return false;
+      }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        post.content.toLowerCase().includes(query) ||
-        post.author.name.toLowerCase().includes(query) ||
-        post.tags?.some((tag) => tag.toLowerCase().includes(query))
-      );
-    }
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          post.content.toLowerCase().includes(query) ||
+          post.author.name.toLowerCase().includes(query) ||
+          post.tags?.some((tag) => tag.toLowerCase().includes(query))
+        );
+      }
 
-    return true;
-  });
+      return true;
+    });
+  }, [posts, filter.type, searchQuery]);
 
-  const sortedPosts = [...filteredPosts].sort((a, b) => {
-    switch (filter.sortBy) {
-      case 'trending':
-        return (b.metrics?.engagement || 0) - (a.metrics?.engagement || 0);
-      case 'mostEngaged':
-        return (b.likes + b.comments + b.shares) - (a.likes + a.comments + a.shares);
-      case 'latest':
-      default:
-        return b.timestamp.getTime() - a.timestamp.getTime();
-    }
-  });
+  // Memoize sorted posts to avoid expensive sort on every render
+  const sortedPosts = useMemo(() => {
+    return [...filteredPosts].sort((a, b) => {
+      switch (filter.sortBy) {
+        case 'trending':
+          return (b.metrics?.engagement || 0) - (a.metrics?.engagement || 0);
+        case 'mostEngaged':
+          return (b.likes + b.comments + b.shares) - (a.likes + a.comments + a.shares);
+        case 'latest':
+        default:
+          return b.timestamp.getTime() - a.timestamp.getTime();
+      }
+    });
+  }, [filteredPosts, filter.sortBy]);
 
   const handleLike = useCallback((postId: string) => {
     setLikedPosts((prev) => {
