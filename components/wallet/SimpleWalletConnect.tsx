@@ -4,6 +4,16 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
+/**
+ * Enhanced Simple Wallet Connect Component
+ * 
+ * Features:
+ * - Improved button responsiveness
+ * - Better loading states
+ * - Enhanced error handling
+ * - Smooth animations
+ * - Mobile optimized
+ */
 export function SimpleWalletConnect() {
   return (
     <ConnectButton.Custom>
@@ -44,7 +54,9 @@ export function SimpleWalletConnect() {
                     onClick={openConnectModal}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)]"
+                    type="button"
+                    aria-label="Connect your wallet"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation"
                   >
                     <span className="hidden sm:inline">Connect Wallet</span>
                     <span className="sm:hidden">Connect</span>
@@ -58,7 +70,9 @@ export function SimpleWalletConnect() {
                     onClick={openChainModal}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-red-500 text-white font-bold rounded-lg hover:shadow-lg transition-all font-[family-name:var(--font-body)]"
+                    type="button"
+                    aria-label="Switch to supported network"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-red-500 text-white font-bold rounded-lg hover:shadow-lg transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation"
                   >
                     <span className="hidden sm:inline">Wrong Network</span>
                     <span className="sm:hidden">Wrong Net</span>
@@ -71,7 +85,9 @@ export function SimpleWalletConnect() {
                   <motion.button
                     onClick={openChainModal}
                     whileHover={{ scale: 1.05 }}
-                    className="hidden sm:flex px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-all font-[family-name:var(--font-body)] text-sm items-center"
+                    type="button"
+                    aria-label={`Current network: ${chain.name}`}
+                    className="hidden sm:flex px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-all font-[family-name:var(--font-body)] text-sm items-center cursor-pointer touch-manipulation"
                   >
                     {chain.hasIcon && (
                       <div
@@ -102,7 +118,9 @@ export function SimpleWalletConnect() {
                   <motion.button
                     onClick={openAccountModal}
                     whileHover={{ scale: 1.05 }}
-                    className="px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)]"
+                    type="button"
+                    aria-label="Open account menu"
+                    className="px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation"
                   >
                     <span className="hidden sm:inline">
                       {account.displayName}

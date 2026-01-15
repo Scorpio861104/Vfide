@@ -1,5 +1,10 @@
 import { connectorsForWallets } from '@rainbow-me/rainbowkit'
-import { walletConnectWallet, metaMaskWallet, coinbaseWallet } from '@rainbow-me/rainbowkit/wallets'
+import { 
+  walletConnectWallet, 
+  metaMaskWallet, 
+  coinbaseWallet,
+  injectedWallet,
+} from '@rainbow-me/rainbowkit/wallets'
 import { createConfig, http, createStorage } from 'wagmi'
 import { 
   base, 
@@ -78,16 +83,26 @@ const wagmiStorage = createStorage({
 // ========================================
 // WALLET CONNECTORS
 // ========================================
+// Prioritize MetaMask and browser wallets for best user experience
+// MetaMask is the most popular wallet and should be shown first
 
 const connectors = connectorsForWallets(
   [
     {
-      groupName: 'Recommended',
-      wallets: hasWalletConnect ? [walletConnectWallet, coinbaseWallet] : [coinbaseWallet],
+      groupName: 'Popular',
+      wallets: [
+        // MetaMask first for best compatibility and user familiarity
+        metaMaskWallet,
+        // Injected wallet catches other browser wallets (Brave, etc.)
+        injectedWallet,
+        // Coinbase Wallet is also widely used
+        coinbaseWallet,
+      ],
     },
     {
-      groupName: 'Others',
-      wallets: [metaMaskWallet],
+      groupName: 'Other Wallets',
+      // Only include WalletConnect if we have a valid project ID
+      wallets: hasWalletConnect ? [walletConnectWallet] : [],
     },
   ],
   {
