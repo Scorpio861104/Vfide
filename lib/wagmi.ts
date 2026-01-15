@@ -1,6 +1,11 @@
 import { connectorsForWallets } from '@rainbow-me/rainbowkit'
-import { walletConnectWallet, metaMaskWallet, coinbaseWallet } from '@rainbow-me/rainbowkit/wallets'
-import { createConfig, http, createStorage } from 'wagmi'
+import { 
+  walletConnectWallet, 
+  metaMaskWallet, 
+  coinbaseWallet,
+  injectedWallet,
+} from '@rainbow-me/rainbowkit/wallets'
+import { createConfig, http, fallback, createStorage } from 'wagmi'
 import { 
   base, 
   baseSepolia, 
@@ -78,16 +83,28 @@ const wagmiStorage = createStorage({
 // ========================================
 // WALLET CONNECTORS
 // ========================================
+// Prioritize MetaMask and browser wallets for best user experience
+// MetaMask is the most popular wallet and should be shown first
+// Note: injectedWallet is configured to exclude MetaMask to avoid duplication
 
 const connectors = connectorsForWallets(
   [
     {
-      groupName: 'Recommended',
-      wallets: hasWalletConnect ? [walletConnectWallet, coinbaseWallet] : [coinbaseWallet],
+      groupName: 'Popular',
+      wallets: [
+        // MetaMask first for best compatibility and user familiarity
+        metaMaskWallet,
+        // Injected wallet catches other browser wallets (Brave, Trust Wallet, etc.)
+        // Note: This won't duplicate MetaMask as RainbowKit handles deduplication
+        injectedWallet,
+        // Coinbase Wallet is also widely used
+        coinbaseWallet,
+      ],
     },
     {
-      groupName: 'Others',
-      wallets: [metaMaskWallet],
+      groupName: 'Other Wallets',
+      // Only include WalletConnect if we have a valid project ID
+      wallets: hasWalletConnect ? [walletConnectWallet] : [],
     },
   ],
   {
@@ -99,16 +116,31 @@ const connectors = connectorsForWallets(
 )
 
 // ========================================
-// WAGMI CONFIG
+// WAGMI CONFIG WITH RPC FALLBACKS
 // ========================================
+// Multiple RPC endpoints for reliability - automatically fails over if primary is down
 
 const testnetConfig = createConfig({
   connectors,
   chains: testnetChains,
   transports: {
-    [baseSepolia.id]: http(),
-    [polygonAmoy.id]: http(),
-    [zkSyncSepoliaTestnet.id]: http('https://sepolia.era.zksync.dev'),
+    // Base Sepolia with fallback RPCs
+    [baseSepolia.id]: fallback([
+      http('https://sepolia.base.org'),
+      http('https://base-sepolia.blockpi.network/v1/rpc/public'),
+      http(),
+    ]),
+    // Polygon Amoy with fallback RPCs
+    [polygonAmoy.id]: fallback([
+      http('https://rpc-amoy.polygon.technology'),
+      http('https://polygon-amoy.blockpi.network/v1/rpc/public'),
+      http(),
+    ]),
+    // zkSync Sepolia with fallback RPCs
+    [zkSyncSepoliaTestnet.id]: fallback([
+      http('https://sepolia.era.zksync.dev'),
+      http('https://zksync-sepolia.blockpi.network/v1/rpc/public'),
+    ]),
   },
   ssr: true,
   storage: wagmiStorage,
@@ -120,9 +152,26 @@ const mainnetConfig = createConfig({
   connectors,
   chains: mainnetChains,
   transports: {
-    [base.id]: http(),
-    [polygon.id]: http(),
-    [zkSync.id]: http(),
+    // Base with fallback RPCs
+    [base.id]: fallback([
+      http('https://mainnet.base.org'),
+      http('https://base.blockpi.network/v1/rpc/public'),
+      http('https://base.llamarpc.com'),
+      http(),
+    ]),
+    // Polygon with fallback RPCs
+    [polygon.id]: fallback([
+      http('https://polygon-rpc.com'),
+      http('https://polygon.llamarpc.com'),
+      http('https://polygon.blockpi.network/v1/rpc/public'),
+      http(),
+    ]),
+    // zkSync with fallback RPCs
+    [zkSync.id]: fallback([
+      http('https://mainnet.era.zksync.io'),
+      http('https://zksync.blockpi.network/v1/rpc/public'),
+      http('https://zksync.meowrpc.com'),
+    ]),
   },
   ssr: true,
   storage: wagmiStorage,
