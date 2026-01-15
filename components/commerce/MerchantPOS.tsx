@@ -131,8 +131,8 @@ export function MerchantPOS() {
           const receivedAmount = args.amount ? safeParseFloat(formatEther(args.amount), 0) : 0
           const expectedAmount = safeParseFloat(pendingPaymentRef.current.expectedAmount, 0)
           
-          // Allow 1% tolerance for rounding
-          if (Math.abs(receivedAmount - expectedAmount) / expectedAmount < 0.01) {
+          // Allow 1% tolerance for rounding (only if expectedAmount > 0)
+          if (expectedAmount > 0 && Math.abs(receivedAmount - expectedAmount) / expectedAmount < 0.01) {
             // Payment confirmed! Complete the sale automatically
             handlePaymentConfirmed(args.customer || '0x0000000000000000000000000000000000000000', receivedAmount.toFixed(2))
           }

@@ -82,7 +82,6 @@ export function useErrorTracking(): UseErrorTrackingResult {
   }, []);
 
   // Clear all errors
-  // Clear all errors
   const clearErrors = useCallback(() => {
     setErrors([]);
   }, []);

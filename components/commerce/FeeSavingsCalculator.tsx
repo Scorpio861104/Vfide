@@ -16,6 +16,8 @@ export function FeeSavingsCalculator() {
   const calculator = useFeeCalculator(amount)
   
   const amountNum = safeParseFloat(amount, 0)
+  const stripeFeePercent = amountNum > 0 ? (safeParseFloat(calculator.stripeFee, 0) / amountNum) * 100 : 0
+  const vfideFeePercent = amountNum > 0 ? (safeParseFloat(calculator.vfideFee, 0) / amountNum) * 100 : 0
   
   return (
     <div className="space-y-3 sm:space-y-4 md:space-y-6 overflow-hidden">
@@ -87,12 +89,12 @@ export function FeeSavingsCalculator() {
                 <motion.div
                   className="h-full bg-[#FF4444]"
                   initial={{ width: 0 }}
-                  animate={{ width: `${(safeParseFloat(calculator.stripeFee, 0) / amountNum) * 100}%` }}
+                  animate={{ width: `${stripeFeePercent}%` }}
                   transition={{ duration: 0.5 }}
                 />
               </div>
               <p className="text-[8px] sm:text-[10px] md:text-xs text-[#F5F3E8]/40 text-center">
-                {((safeParseFloat(calculator.stripeFee, 0) / amountNum) * 100).toFixed(1)}% fee
+                {stripeFeePercent.toFixed(1)}% fee
               </p>
             </div>
           </div>
@@ -147,12 +149,12 @@ export function FeeSavingsCalculator() {
                   className="h-full"
                   style={{ backgroundColor: color }}
                   initial={{ width: 0 }}
-                  animate={{ width: `${(safeParseFloat(calculator.vfideFee, 0) / amountNum) * 100}%` }}
+                  animate={{ width: `${vfideFeePercent}%` }}
                   transition={{ duration: 0.5 }}
                 />
               </div>
               <p className="text-[8px] sm:text-[10px] md:text-xs text-[#F5F3E8]/40 text-center">
-                {((safeParseFloat(calculator.vfideFee, 0) / amountNum) * 100).toFixed(1)}% burn
+                {vfideFeePercent.toFixed(1)}% burn
               </p>
             </div>
           </div>
