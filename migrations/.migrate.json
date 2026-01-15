@@ -1,0 +1,12 @@
+{
+  "databaseUrl": "${DATABASE_URL}",
+  "migrationsTable": "pgmigrations",
+  "dir": "migrations",
+  "checkOrder": true,
+  "verbose": true,
+  "log": console.log,
+  "direction": "up",
+  "count": Infinity,
+  "ignorePattern": "^node_modules/",
+  "schema": "public"
+}

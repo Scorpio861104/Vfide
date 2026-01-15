@@ -1,0 +1,15 @@
+{
+  "name": "vfide-migrations",
+  "version": "1.0.0",
+  "description": "Database migration scripts for VFIDE",
+  "private": true,
+  "scripts": {
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down",
+    "migrate:create": "node-pg-migrate create",
+    "migrate:status": "node-pg-migrate status"
+  },
+  "devDependencies": {
+    "node-pg-migrate": "^7.0.0"
+  }
+}
