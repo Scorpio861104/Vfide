@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useCrossChain, Route, TransferRequest } from '@/lib/crossChain';
 import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
@@ -23,6 +23,11 @@ export default function CrossChainTransfer() {
     getChain,
     refreshBalances,
   } = useCrossChain(address);
+
+  // Cache filtered mainnet chains to avoid filtering on every render
+  const mainnetChains = useMemo(() => {
+    return supportedChains.filter((c) => !c.isTestnet);
+  }, [supportedChains]);
 
   // Form state
   const [fromChain, setFromChain] = useState(8453); // Base
@@ -166,7 +171,7 @@ export default function CrossChainTransfer() {
               onChange={(e) => setFromChain(Number(e.target.value))}
               className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm"
             >
-              {supportedChains.filter((c) => !c.isTestnet).map((chain) => (
+              {mainnetChains.map((chain) => (
                 <option key={chain.id} value={chain.id}>
                   {chain.name}
                 </option>
@@ -213,7 +218,7 @@ export default function CrossChainTransfer() {
               onChange={(e) => setToChain(Number(e.target.value))}
               className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm"
             >
-              {supportedChains.filter((c) => !c.isTestnet).map((chain) => (
+              {mainnetChains.map((chain) => (
                 <option key={chain.id} value={chain.id}>
                   {chain.name}
                 </option>

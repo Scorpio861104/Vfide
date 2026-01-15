@@ -92,9 +92,8 @@ export default function SocialPage() {
       proofScore: request.fromProofScore || 0,
     };
 
-    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
-    const existingFriends: Friend[] = stored ? JSON.parse(stored) : [];
-    const updated = [...existingFriends, newFriend];
+    // Use current state instead of reparsing from localStorage
+    const updated = [...friends, newFriend];
     setFriends(updated);
     localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(updated));
 

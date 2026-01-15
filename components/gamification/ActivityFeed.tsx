@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { Award, TrendingUp, Users, Zap } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 interface ActivityItem {
   id: string
@@ -70,11 +70,13 @@ export function ActivityFeed({ limit = 10 }: { limit?: number }) {
   }, [baseNow, limit])
 
   useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 30_000)
+    // Update every 60 seconds instead of 30 to reduce unnecessary re-renders
+    const interval = setInterval(() => setNow(Date.now()), 60_000)
     return () => clearInterval(interval)
   }, [])
 
-  const formatTime = (timestamp: number) => {
+  // Memoize formatTime function to avoid recreation on every render
+  const formatTime = useCallback((timestamp: number) => {
     const diff = now - timestamp
     const minutes = Math.floor(diff / 1000 / 60)
     if (minutes < 1) return 'Just now'
@@ -82,7 +84,7 @@ export function ActivityFeed({ limit = 10 }: { limit?: number }) {
     const hours = Math.floor(minutes / 60)
     if (hours < 24) return `${hours}h ago`
     return `${Math.floor(hours / 24)}d ago`
-  }
+  }, [now])
 
   return (
     <div className="space-y-3">

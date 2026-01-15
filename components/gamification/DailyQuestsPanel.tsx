@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { 
   Target, Flame, Gift, CheckCircle2, Lock, 
@@ -120,6 +120,26 @@ export default function DailyQuestsPanel() {
     return `${hours}h ${minutes}m`;
   };
 
+  // Memoize filtered quests to avoid recalculating on every render
+  const filteredQuests = useMemo(() => {
+    return quests.filter(q => q.type === activeTab);
+  }, [quests, activeTab]);
+
+  // Memoize badge counts to avoid recalculating on every render
+  const questCounts = useMemo(() => {
+    const counts: Record<'daily' | 'weekly' | 'monthly', number> = {
+      daily: 0,
+      weekly: 0,
+      monthly: 0
+    };
+    quests.forEach(q => {
+      if (q.completed && !q.claimed) {
+        counts[q.type]++;
+      }
+    });
+    return counts;
+  }, [quests]);
+
   if (!isConnected) {
     return (
       <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-8 text-center">
@@ -187,7 +207,7 @@ export default function DailyQuestsPanel() {
           >
             {tab}
             <span className="ml-2 text-xs">
-              ({quests.filter(q => q.type === tab && q.completed && !q.claimed).length})
+              ({questCounts[tab]})
             </span>
           </button>
         ))}
@@ -195,7 +215,7 @@ export default function DailyQuestsPanel() {
 
       {/* Quests Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {quests.filter(q => q.type === activeTab).map((quest) => (
+        {filteredQuests.map((quest) => (
           <QuestCard 
             key={quest.id}
             quest={quest}
