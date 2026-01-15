@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, RefreshCw, ArrowRight } from 'lucide-react';
+import { safeParseFloat } from '@/lib/validation';
 
 interface SwapModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export default function SwapModal({
   const [loading, setLoading] = useState(false);
 
   const handleSwap = async () => {
-    if (!amount || parseFloat(amount) <= 0) return;
+    if (!amount || safeParseFloat(amount, 0) <= 0) return;
 
     setLoading(true);
     try {
@@ -133,7 +134,7 @@ export default function SwapModal({
                   <option value="USDT">USDT</option>
                 </select>
                 <span className="text-white text-lg">
-                  {amount ? (parseFloat(amount) * 0.95).toFixed(4) : '0.00'}
+                  {amount ? (safeParseFloat(amount, 0) * 0.95).toFixed(4) : '0.00'}
                 </span>
               </div>
               <p className="text-xs text-gray-500">Balance: 0 {toToken}</p>
@@ -148,7 +149,7 @@ export default function SwapModal({
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-400">Fee (0.3%)</span>
-              <span className="text-white">{amount ? (parseFloat(amount) * 0.003).toFixed(6) : '0'} {fromToken}</span>
+              <span className="text-white">{amount ? (safeParseFloat(amount, 0) * 0.003).toFixed(6) : '0'} {fromToken}</span>
             </div>
           </div>
 
@@ -163,7 +164,7 @@ export default function SwapModal({
             </button>
             <button
               onClick={handleSwap}
-              disabled={loading || !amount || parseFloat(amount) <= 0 || fromToken === toToken}
+              disabled={loading || !amount || safeParseFloat(amount, 0) <= 0 || fromToken === toToken}
               className="px-4 py-3 bg-[#00F0FF] text-black rounded-lg font-medium hover:bg-[#00D0DF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? 'Swapping...' : (

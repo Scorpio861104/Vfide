@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { safeParseInt } from '@/lib/validation';
 
 interface FilterCondition {
   field: string;
@@ -350,7 +351,7 @@ export function QueryBuilder({
           <input
             type="number"
             value={limit}
-            onChange={(e) => setLimit(Number(e.target.value))}
+            onChange={(e) => setLimit(safeParseInt(e.target.value, 100, { min: 1 }))}
             min={1}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           />

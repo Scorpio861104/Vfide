@@ -6,6 +6,7 @@
 'use client';
 
 import React from 'react';
+import { safeParseInt } from '@/lib/validation';
 
 interface MobileInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -502,7 +503,7 @@ export function MobileNumberInput({
         <input
           type="number"
           value={current}
-          onChange={(e) => handleChange(parseInt(e.target.value, 10) || min)}
+          onChange={(e) => handleChange(safeParseInt(e.target.value, min, { min, max }))}
           min={min}
           max={max}
           className="flex-1 py-3 px-4 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] text-center font-semibold"

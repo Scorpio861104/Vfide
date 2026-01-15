@@ -16,6 +16,7 @@ import {
 import { useAccount } from 'wagmi';
 import { PrivacySettings as PrivacySettingsType, DEFAULT_PRIVACY_SETTINGS, BlockedUser } from '@/types/friendRequests';
 import { STORAGE_KEYS, formatAddress } from '@/lib/messageEncryption';
+import { safeParseInt } from '@/lib/validation';
 
 export function PrivacySettings() {
   const { address } = useAccount();
@@ -288,7 +289,7 @@ export function PrivacySettings() {
                 max="10000"
                 step="100"
                 value={settings.minimumProofScoreForRequests}
-                onChange={(e) => setSettings({ ...settings, minimumProofScoreForRequests: parseInt(e.target.value) })}
+                onChange={(e) => setSettings({ ...settings, minimumProofScoreForRequests: safeParseInt(e.target.value, 0, { min: 0, max: 10000 }) })}
                 disabled={!settings.requireProofScoreForRequests}
                 className="w-full"
               />

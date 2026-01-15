@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, Send, Loader2, Check, X } from 'lucide-react';
 import { sendPayment, tipMessage } from '@/lib/crypto';
 import { useAnnounce } from '@/lib/accessibility';
+import { safeParseFloat } from '@/lib/validation';
 
 interface PaymentButtonProps {
   recipientAddress: string;
@@ -39,7 +40,7 @@ export function PaymentButton({
   const { announce } = useAnnounce();
 
   const handleSend = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!amount || safeParseFloat(amount, 0) <= 0) {
       setError('Enter a valid amount');
       return;
     }
