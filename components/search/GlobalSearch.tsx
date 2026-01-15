@@ -28,6 +28,8 @@ export function GlobalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Cache parsed friends and groups to avoid repeated JSON.parse on every search
+  // Note: Cache updates when address changes. For real-time updates from other tabs,
+  // consider adding storage event listeners if needed in the future.
   const cachedFriends = useMemo<Friend[]>(() => {
     if (!address || typeof window === 'undefined') return [];
     try {

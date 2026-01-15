@@ -39,32 +39,37 @@ export function RealtimeMetrics({
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  // Memoize metric IDs to avoid recreating the array on every render
-  const metricIds = useMemo(() => metrics.map(m => m.id), [metrics]);
-
   // Memoize the fetch function to avoid recreating on every render
   const fetchUpdates = useCallback(async () => {
     if (!onUpdate) return;
 
-    const updates = await Promise.all(
-      metricIds.map(async (metricId) => {
-        const newValue = await onUpdate(metricId);
-        return { metricId, newValue };
-      })
-    );
+    // Get current metric IDs at call time to avoid stale closure
+    setMetrics(prev => {
+      const metricIds = prev.map(m => m.id);
+      
+      // Kick off async updates
+      Promise.all(
+        metricIds.map(async (metricId) => {
+          const newValue = await onUpdate(metricId);
+          return { metricId, newValue };
+        })
+      ).then(updates => {
+        setMetrics(current =>
+          current.map((metric) => {
+            const update = updates.find(u => u.metricId === metric.id);
+            const newHistory = [...metric.history, update?.newValue ?? metric.value].slice(-maxHistoryLength);
+            return {
+              ...metric,
+              value: update?.newValue ?? metric.value,
+              history: newHistory
+            };
+          })
+        );
+      });
 
-    setMetrics(prev =>
-      prev.map((metric) => {
-        const update = updates.find(u => u.metricId === metric.id);
-        const newHistory = [...metric.history, update?.newValue ?? metric.value].slice(-maxHistoryLength);
-        return {
-          ...metric,
-          value: update?.newValue ?? metric.value,
-          history: newHistory
-        };
-      })
-    );
-  }, [onUpdate, metricIds, maxHistoryLength]);
+      return prev;
+    });
+  }, [onUpdate, maxHistoryLength]);
 
   useEffect(() => {
     if (isPaused || !onUpdate) return;
