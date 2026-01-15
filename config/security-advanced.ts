@@ -152,6 +152,10 @@ export const getThreatLevel = (score: number): ThreatLevel => {
 
 export const SECURITY_STORAGE_KEYS = {
   twoFactor: 'vfide:security:2fa',
+  twoFactorSecret: 'vfide:2fa:secret',
+  twoFactorPhone: 'vfide:2fa:phone',
+  twoFactorEmail: 'vfide:2fa:email',
+  twoFactorBackupCodes: 'vfide:2fa:backup-codes',
   biometric: 'vfide:security:biometric',
   logs: 'vfide:security:logs',
   threats: 'vfide:security:threats',

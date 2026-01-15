@@ -137,8 +137,8 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
     // Store secret securely (in production, encrypt or use secure storage)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('vfide:2fa:secret', totpSecret);
-      localStorage.setItem('vfide:2fa:backup-codes', JSON.stringify(backupCodes));
+      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorSecret, totpSecret);
+      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(backupCodes));
     }
 
     updateConfig({
@@ -158,8 +158,8 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     setBackupCodes(codes);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('vfide:2fa:phone', phoneNumber);
-      localStorage.setItem('vfide:2fa:backup-codes', JSON.stringify(codes));
+      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorPhone, phoneNumber);
+      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
     }
 
     updateConfig({
@@ -178,8 +178,8 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     setBackupCodes(codes);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('vfide:2fa:email', email);
-      localStorage.setItem('vfide:2fa:backup-codes', JSON.stringify(codes));
+      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorEmail, email);
+      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
     }
 
     updateConfig({
@@ -194,7 +194,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
   const verifyTOTP = useCallback(async (code: string): Promise<boolean> => {
     if (typeof window === 'undefined') return false;
-    const secret = localStorage.getItem('vfide:2fa:secret');
+    const secret = localStorage.getItem(SECURITY_STORAGE_KEYS.twoFactorSecret);
     if (!secret) return false;
 
     const valid = verifyTOTPInternal(secret, code);
@@ -226,7 +226,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     if (typeof window === 'undefined') return false;
     if (!validateBackupCode(code)) return false;
 
-    const stored = localStorage.getItem('vfide:2fa:backup-codes');
+    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes);
     if (!stored) return false;
 
     try {
@@ -236,7 +236,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
       // Remove used code
       codes.splice(index, 1);
-      localStorage.setItem('vfide:2fa:backup-codes', JSON.stringify(codes));
+      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
 
       updateConfig({
         backupCodesRemaining: codes.length,
@@ -251,10 +251,10 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
   const disable = useCallback(async (): Promise<void> => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('vfide:2fa:secret');
-      localStorage.removeItem('vfide:2fa:phone');
-      localStorage.removeItem('vfide:2fa:email');
-      localStorage.removeItem('vfide:2fa:backup-codes');
+      localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorSecret);
+      localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorPhone);
+      localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorEmail);
+      localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes);
     }
 
     updateConfig({
@@ -270,7 +270,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     setBackupCodes(codes);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('vfide:2fa:backup-codes', JSON.stringify(codes));
+      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
     }
 
     updateConfig({ backupCodesRemaining: codes.length });
