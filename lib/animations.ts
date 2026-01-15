@@ -313,3 +313,92 @@ export const getListItemAnimation = (index: number) => ({
   animate: { opacity: 1, y: 0 },
   transition: { delay: getStaggerDelay(index), ...springTransition },
 });
+
+// ==================== PHASE 4: WALLET CONNECTION ANIMATIONS ====================
+
+/**
+ * Connection state transition animations
+ * For smooth transitions between wallet connection states
+ */
+export const connectionStateAnimations = {
+  disconnected: {
+    scale: 1,
+    opacity: 1,
+  },
+  connecting: {
+    scale: [1, 1.05, 1],
+    opacity: [1, 0.8, 1],
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+  connected: {
+    scale: [1, 1.1, 1],
+    transition: {
+      duration: 0.3,
+    },
+  },
+  error: {
+    x: [-5, 5, -5, 5, 0],
+    transition: {
+      duration: 0.4,
+    },
+  },
+};
+
+/**
+ * Success checkmark animation
+ * For successful wallet connection
+ */
+export const successCheck: Variants = {
+  hidden: { scale: 0, rotate: -180 },
+  show: {
+    scale: 1,
+    rotate: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 260,
+      damping: 20,
+    },
+  },
+};
+
+/**
+ * Shake animation for errors
+ * For connection failures or validation errors
+ */
+export const shake: Variants = {
+  animate: {
+    x: [-10, 10, -10, 10, 0],
+    transition: {
+      duration: 0.5,
+    },
+  },
+};
+
+/**
+ * Optimistic UI transition
+ * For instant feedback before confirmation
+ */
+export const optimisticTransition: Variants = {
+  initial: { opacity: 0.7, scale: 0.98 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.2,
+      ease: 'easeOut',
+    },
+  },
+  confirmed: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.3,
+      ease: 'easeInOut',
+    },
+  },
+};
+

@@ -1,7 +1,7 @@
 "use client";
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Copy, Check, Clock, Circle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
@@ -10,6 +10,8 @@ import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
 import { useENS } from '@/hooks/useENS';
 import { measureLatency, getCachedLatency, getLatencyColor } from '@/lib/networkLatency';
 import { addConnectionToHistory } from '@/lib/connectionHistory';
+import { connectionStateAnimations, fadeIn, scaleIn } from '@/lib/animations';
+import { scrollToTop } from '@/lib/focusTrap';
 
 /**
  * Enhanced Simple Wallet Connect Component
@@ -33,6 +35,12 @@ import { addConnectionToHistory } from '@/lib/connectionHistory';
  * - ENS name resolution and display
  * - Connection history tracking
  * - Hover tooltips for wallet information
+ * 
+ * Phase 4 Enhancements:
+ * - Micro-animations for state transitions
+ * - Optimistic UI updates
+ * - Smooth scroll-to-top after connection
+ * - Gas price estimates in tooltips
  */
 export function SimpleWalletConnect() {
   const [copied, setCopied] = useState(false);
@@ -131,6 +139,9 @@ export function SimpleWalletConnect() {
               chainId: chain.id,
               success: true,
             });
+            
+            // Phase 4: Scroll to top after successful connection
+            setTimeout(() => scrollToTop(), 500);
           }
         }, [connected, account, chain, connector]);
 
@@ -149,15 +160,21 @@ export function SimpleWalletConnect() {
               if (isLoading) {
                 return (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="show"
                     className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-[#A0A0A5] font-bold rounded-lg border border-[#3A3A3F] cursor-wait"
                   >
                     <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <motion.svg 
+                        className="h-4 w-4"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        viewBox="0 0 24 24"
+                      >
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
+                      </motion.svg>
                       Connecting...
                     </span>
                   </motion.div>
@@ -176,6 +193,9 @@ export function SimpleWalletConnect() {
                         }
                       }
                     }}
+                    variants={scaleIn}
+                    initial="hidden"
+                    animate="show"
                     whileHover={{ scale: isInCooldown ? 1 : 1.05 }}
                     whileTap={{ scale: isInCooldown ? 1 : 0.95 }}
                     type="button"
@@ -188,17 +208,32 @@ export function SimpleWalletConnect() {
                         : 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] hover:shadow-lg hover:shadow-[#00F0FF]/50 cursor-pointer focus:ring-[#00F0FF]'
                     }`}
                   >
-                    {isInCooldown ? (
-                      <span className="flex items-center gap-2">
-                        <Clock size={16} />
-                        Retry in {Math.ceil(cooldownRemaining / 1000)}s
-                      </span>
-                    ) : (
-                      <>
-                        <span className="hidden sm:inline">Connect Wallet</span>
-                        <span className="sm:hidden">Connect</span>
-                      </>
-                    )}
+                    <AnimatePresence mode="wait">
+                      {isInCooldown ? (
+                        <motion.span
+                          key="cooldown"
+                          variants={fadeIn}
+                          initial="hidden"
+                          animate="show"
+                          exit="hidden"
+                          className="flex items-center gap-2"
+                        >
+                          <Clock size={16} />
+                          Retry in {Math.ceil(cooldownRemaining / 1000)}s
+                        </motion.span>
+                      ) : (
+                        <motion.span
+                          key="connect"
+                          variants={fadeIn}
+                          initial="hidden"
+                          animate="show"
+                          exit="hidden"
+                        >
+                          <span className="hidden sm:inline">Connect Wallet</span>
+                          <span className="sm:hidden">Connect</span>
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   </motion.button>
                 );
               }
