@@ -310,3 +310,121 @@ CREATE INDEX IF NOT EXISTS idx_merchant_kyc_status ON merchant_kyc(status);
 CREATE INDEX IF NOT EXISTS idx_merchant_transactions_merchant ON merchant_transactions(merchant_id);
 CREATE INDEX IF NOT EXISTS idx_merchant_transactions_customer ON merchant_transactions(customer_id);
 CREATE INDEX IF NOT EXISTS idx_merchant_transactions_status ON merchant_transactions(status);
+
+-- ============================================
+-- VAULT & WALLET INFRASTRUCTURE TABLES
+-- ============================================
+
+-- Vault registry for quick lookups
+CREATE TABLE IF NOT EXISTS vaults (
+  id SERIAL PRIMARY KEY,
+  vault_address VARCHAR(42) UNIQUE NOT NULL,
+  owner_address VARCHAR(42) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  guardian_count INTEGER DEFAULT 0,
+  has_next_of_kin BOOLEAN DEFAULT FALSE,
+  next_of_kin_address VARCHAR(42),
+  is_locked BOOLEAN DEFAULT FALSE,
+  last_activity_at TIMESTAMP,
+  CONSTRAINT idx_vaults_owner UNIQUE (owner_address)
+);
+
+-- Guardian tracking
+CREATE TABLE IF NOT EXISTS vault_guardians (
+  id SERIAL PRIMARY KEY,
+  vault_address VARCHAR(42) NOT NULL,
+  guardian_address VARCHAR(42) NOT NULL,
+  added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_mature BOOLEAN DEFAULT FALSE,
+  maturity_date TIMESTAMP,
+  removed_at TIMESTAMP,
+  is_active BOOLEAN DEFAULT TRUE,
+  CONSTRAINT unique_vault_guardian UNIQUE (vault_address, guardian_address)
+);
+
+-- Recovery events
+CREATE TABLE IF NOT EXISTS vault_recovery_events (
+  id SERIAL PRIMARY KEY,
+  vault_address VARCHAR(42) NOT NULL,
+  event_type VARCHAR(50) NOT NULL, -- 'initiated', 'approved', 'denied', 'cancelled', 'completed'
+  proposed_owner VARCHAR(42),
+  guardian_address VARCHAR(42), -- Guardian who took action
+  approval_count INTEGER,
+  expiry_timestamp BIGINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  transaction_hash VARCHAR(66)
+);
+
+-- Inheritance events
+CREATE TABLE IF NOT EXISTS vault_inheritance_events (
+  id SERIAL PRIMARY KEY,
+  vault_address VARCHAR(42) NOT NULL,
+  event_type VARCHAR(50) NOT NULL, -- 'nok_set', 'nok_removed', 'claim_initiated', 'approved', 'denied', 'completed'
+  next_of_kin_address VARCHAR(42),
+  claimant_address VARCHAR(42),
+  guardian_address VARCHAR(42), -- Guardian who took action
+  approval_count INTEGER,
+  denial_count INTEGER,
+  expiry_timestamp BIGINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  transaction_hash VARCHAR(66)
+);
+
+-- Vault transactions (deposits, withdrawals, transfers from vault)
+CREATE TABLE IF NOT EXISTS vault_transactions (
+  id SERIAL PRIMARY KEY,
+  vault_address VARCHAR(42) NOT NULL,
+  transaction_type VARCHAR(50) NOT NULL, -- 'deposit', 'withdrawal', 'transfer_in', 'transfer_out'
+  token_address VARCHAR(42) NOT NULL,
+  amount DECIMAL(36, 18) NOT NULL,
+  from_address VARCHAR(42),
+  to_address VARCHAR(42),
+  transaction_hash VARCHAR(66) UNIQUE NOT NULL,
+  block_number BIGINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Vault security events
+CREATE TABLE IF NOT EXISTS vault_security_events (
+  id SERIAL PRIMARY KEY,
+  vault_address VARCHAR(42) NOT NULL,
+  event_type VARCHAR(50) NOT NULL, -- 'locked', 'unlocked', 'panic', 'suspicious_activity'
+  triggered_by VARCHAR(42), -- Address that triggered event
+  details JSONB,
+  severity VARCHAR(20) DEFAULT 'medium', -- 'low', 'medium', 'high', 'critical'
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  resolved_at TIMESTAMP
+);
+
+-- Vault notifications
+CREATE TABLE IF NOT EXISTS vault_notifications (
+  id SERIAL PRIMARY KEY,
+  vault_address VARCHAR(42) NOT NULL,
+  user_address VARCHAR(42) NOT NULL, -- Who should receive notification
+  notification_type VARCHAR(50) NOT NULL, -- 'guardian_approval_needed', 'recovery_initiated', etc.
+  title VARCHAR(200) NOT NULL,
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  action_url VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  read_at TIMESTAMP
+);
+
+-- Vault indexes for performance
+CREATE INDEX IF NOT EXISTS idx_vaults_vault_address ON vaults(vault_address);
+CREATE INDEX IF NOT EXISTS idx_vaults_owner_address ON vaults(owner_address);
+CREATE INDEX IF NOT EXISTS idx_vault_guardians_vault ON vault_guardians(vault_address);
+CREATE INDEX IF NOT EXISTS idx_vault_guardians_guardian ON vault_guardians(guardian_address);
+CREATE INDEX IF NOT EXISTS idx_recovery_vault ON vault_recovery_events(vault_address);
+CREATE INDEX IF NOT EXISTS idx_recovery_created ON vault_recovery_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_inheritance_vault ON vault_inheritance_events(vault_address);
+CREATE INDEX IF NOT EXISTS idx_inheritance_created ON vault_inheritance_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vault_tx_vault ON vault_transactions(vault_address);
+CREATE INDEX IF NOT EXISTS idx_vault_tx_created ON vault_transactions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vault_tx_hash ON vault_transactions(transaction_hash);
+CREATE INDEX IF NOT EXISTS idx_security_vault ON vault_security_events(vault_address);
+CREATE INDEX IF NOT EXISTS idx_security_created ON vault_security_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_security_severity ON vault_security_events(severity);
+CREATE INDEX IF NOT EXISTS idx_vault_notif_user ON vault_notifications(user_address, is_read);
+CREATE INDEX IF NOT EXISTS idx_vault_notif_vault ON vault_notifications(vault_address);
+CREATE INDEX IF NOT EXISTS idx_vault_notif_created ON vault_notifications(created_at DESC);
