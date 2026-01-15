@@ -203,7 +203,7 @@ export function SimpleWalletConnect() {
                     aria-label="Open account menu"
                     className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
                   >
-                    <span className="hidden sm:inline flex items-center gap-2">
+                    <span className="hidden sm:flex items-center gap-2">
                       {account.displayName}
                       {account.displayBalance ? ` (${account.displayBalance})` : ''}
                       {/* Copy button */}
