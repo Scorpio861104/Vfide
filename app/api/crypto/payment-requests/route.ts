@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
 export async function GET(request: NextRequest) {
+  // Rate limiting: 40 requests per minute
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 40, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -25,6 +37,17 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting: 20 requests per minute (prevent spam)
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 20, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const body = await request.json();
     const { fromUserId, toUserId, amount, token, memo } = body;

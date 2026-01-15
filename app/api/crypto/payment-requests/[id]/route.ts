@@ -1,7 +1,19 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Rate limiting: 20 requests per minute
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 20, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();

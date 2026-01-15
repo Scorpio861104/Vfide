@@ -1,5 +1,6 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
 interface GroupInvite {
   id: number;
@@ -29,6 +30,17 @@ async function generateInviteCode(): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting: 20 requests per minute (prevent spam invites)
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 20, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const body = await request.json();
     const { groupId, createdByAddress, expiresIn, maxUses, description, requireApproval } = body;

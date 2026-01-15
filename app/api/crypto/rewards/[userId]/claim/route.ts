@@ -1,7 +1,19 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  // Rate limiting: 10 requests per minute (prevent reward farming)
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 10, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const { userId } = await params;
     const body = await request.json();
