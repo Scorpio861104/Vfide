@@ -3,6 +3,10 @@ import { getClient } from '@/lib/db';
 import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 import { validateAddress, validateStringLength, createErrorResponse } from '@/lib/inputValidation';
 
+// Allowed document types for KYC
+const ALLOWED_DOCUMENT_TYPES = ['passport', 'drivers_license', 'national_id'] as const;
+type DocumentType = typeof ALLOWED_DOCUMENT_TYPES[number];
+
 /**
  * POST /api/merchant/kyc
  * Submit KYC documents for verification
@@ -40,9 +44,9 @@ export async function POST(request: NextRequest) {
     const validatedFrontUrl = validateStringLength(documentFrontUrl, 'Document front URL', 10, 500);
     const validatedSelfieUrl = validateStringLength(selfieUrl, 'Selfie URL', 10, 500);
 
-    if (!['passport', 'drivers_license', 'national_id'].includes(documentType)) {
+    if (!ALLOWED_DOCUMENT_TYPES.includes(documentType as DocumentType)) {
       return NextResponse.json(
-        createErrorResponse('Document type must be: passport, drivers_license, or national_id'),
+        createErrorResponse(`Document type must be one of: ${ALLOWED_DOCUMENT_TYPES.join(', ')}`),
         { status: 400 }
       );
     }

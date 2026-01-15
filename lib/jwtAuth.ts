@@ -12,7 +12,11 @@
 /**
  * JWT Configuration
  */
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable must be set in production!');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-DO-NOT-USE-IN-PRODUCTION';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '24h'; // 24 hours
 const JWT_REFRESH_EXPIRY = process.env.JWT_REFRESH_EXPIRY || '7d'; // 7 days
 
@@ -126,16 +130,24 @@ export function verifyTemporaryToken(token: string): { address: string; timestam
 
 /**
  * Token blacklist (for logout)
- * In production, use Redis for distributed blacklist
+ * NOTE: In production, use Redis for distributed blacklist across multiple servers
+ * Example: const redis = new Redis(process.env.REDIS_URL);
+ *          await redis.setex(`blacklist:${token}`, 86400, '1');
  */
 const tokenBlacklist = new Set<string>();
 
 export function blacklistToken(token: string): void {
   tokenBlacklist.add(token);
   
-  // Clean up expired tokens periodically (every hour)
-  if (tokenBlacklist.size > 1000) {
+  // Remove expired tokens (tokens older than 24h)
+  // In production, let Redis handle TTL automatically
+  if (tokenBlacklist.size > 10000) {
+    console.warn('[TokenBlacklist] Size exceeded 10000, clearing old tokens');
+    // In a real implementation, we'd remove only expired tokens
+    // For now, keep most recent 5000
+    const recentTokens = Array.from(tokenBlacklist).slice(-5000);
     tokenBlacklist.clear();
+    recentTokens.forEach(t => tokenBlacklist.add(t));
   }
 }
 

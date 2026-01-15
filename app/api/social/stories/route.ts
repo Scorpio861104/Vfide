@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         FROM social_stories s
         JOIN users u ON s.user_id = u.id
         LEFT JOIN story_views sv ON s.id = sv.story_id
-        WHERE s.created_at > NOW() - INTERVAL '24 hours'
+        WHERE s.expires_at > NOW()
       `;
       
       const params: (string | number)[] = [];

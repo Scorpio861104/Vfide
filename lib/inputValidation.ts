@@ -56,7 +56,11 @@ export function validateIntegerInRange(
   min: number,
   max: number
 ): number {
-  const num = validatePositiveInteger(value || '0', fieldName);
+  if (!value) {
+    throw new Error(`${fieldName} is required`);
+  }
+  
+  const num = validatePositiveInteger(value, fieldName);
   
   if (num < min || num > max) {
     throw new Error(`${fieldName} must be between ${min} and ${max}`);
@@ -184,10 +188,13 @@ export function validateTimestamp(timestamp: string | null, fieldName: string): 
 }
 
 /**
- * Sanitize text input (remove potentially dangerous characters)
+ * Sanitize text input
+ * Removes null bytes and control characters (except newlines, tabs, carriage returns)
+ * This prevents injection attacks and ensures clean text storage
  */
 export function sanitizeText(text: string): string {
-  // Remove null bytes and control characters except newlines and tabs
+  // Remove: null bytes (x00), and control chars (x01-x08, x0B-x0C, x0E-x1F, x7F)
+  // Keep: tab (x09), newline (x0A), carriage return (x0D)
   return text.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
 }
 
