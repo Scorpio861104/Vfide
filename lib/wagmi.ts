@@ -5,7 +5,7 @@ import {
   coinbaseWallet,
   injectedWallet,
 } from '@rainbow-me/rainbowkit/wallets'
-import { createConfig, http, createStorage } from 'wagmi'
+import { createConfig, http, fallback, createStorage } from 'wagmi'
 import { 
   base, 
   baseSepolia, 
@@ -116,16 +116,31 @@ const connectors = connectorsForWallets(
 )
 
 // ========================================
-// WAGMI CONFIG
+// WAGMI CONFIG WITH RPC FALLBACKS
 // ========================================
+// Multiple RPC endpoints for reliability - automatically fails over if primary is down
 
 const testnetConfig = createConfig({
   connectors,
   chains: testnetChains,
   transports: {
-    [baseSepolia.id]: http(),
-    [polygonAmoy.id]: http(),
-    [zkSyncSepoliaTestnet.id]: http('https://sepolia.era.zksync.dev'),
+    // Base Sepolia with fallback RPCs
+    [baseSepolia.id]: fallback([
+      http('https://sepolia.base.org'),
+      http('https://base-sepolia.blockpi.network/v1/rpc/public'),
+      http(),
+    ]),
+    // Polygon Amoy with fallback RPCs
+    [polygonAmoy.id]: fallback([
+      http('https://rpc-amoy.polygon.technology'),
+      http('https://polygon-amoy.blockpi.network/v1/rpc/public'),
+      http(),
+    ]),
+    // zkSync Sepolia with fallback RPCs
+    [zkSyncSepoliaTestnet.id]: fallback([
+      http('https://sepolia.era.zksync.dev'),
+      http('https://zksync-sepolia.blockpi.network/v1/rpc/public'),
+    ]),
   },
   ssr: true,
   storage: wagmiStorage,
@@ -137,9 +152,26 @@ const mainnetConfig = createConfig({
   connectors,
   chains: mainnetChains,
   transports: {
-    [base.id]: http(),
-    [polygon.id]: http(),
-    [zkSync.id]: http(),
+    // Base with fallback RPCs
+    [base.id]: fallback([
+      http('https://mainnet.base.org'),
+      http('https://base.blockpi.network/v1/rpc/public'),
+      http('https://base.llamarpc.com'),
+      http(),
+    ]),
+    // Polygon with fallback RPCs
+    [polygon.id]: fallback([
+      http('https://polygon-rpc.com'),
+      http('https://polygon.llamarpc.com'),
+      http('https://polygon.blockpi.network/v1/rpc/public'),
+      http(),
+    ]),
+    // zkSync with fallback RPCs
+    [zkSync.id]: fallback([
+      http('https://mainnet.era.zksync.io'),
+      http('https://zksync.blockpi.network/v1/rpc/public'),
+      http('https://zksync.meowrpc.com'),
+    ]),
   },
   ssr: true,
   storage: wagmiStorage,
