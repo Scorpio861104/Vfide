@@ -91,7 +91,6 @@ export default function RootLayout({
       <body 
         className="font-[family-name:var(--font-body)] antialiased bg-[#0F0F12]"
         style={{
-          ...inter.style,
           '--font-body': inter.style.fontFamily,
           '--font-display': spaceGrotesk.style.fontFamily,
         } as React.CSSProperties}
