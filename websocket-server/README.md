@@ -39,14 +39,27 @@ Create a `.env` file:
 
 ```bash
 WS_PORT=8080
-CORS_ORIGIN=http://localhost:3000
+
+# CORS Configuration
+# For development (allows localhost):
+CORS_ORIGIN=http://localhost:3000,http://127.0.0.1:3000
+
+# For production (comma-separated list of allowed origins):
+CORS_ORIGIN=https://vfide.com,https://www.vfide.com,https://app.vfide.com
+
+# To allow all origins (NOT RECOMMENDED for production):
+# CORS_ORIGIN=*
+
 NODE_ENV=production
 
 # Development only: Allow auth bypass (NEVER set in production)
 ALLOW_DEV_AUTH_BYPASS=true
 ```
 
-**Security Note**: The `ALLOW_DEV_AUTH_BYPASS` flag should ONLY be set to `true` in local development environments. Never enable this in production or staging environments.
+**Security Notes**: 
+- The `CORS_ORIGIN` can be a comma-separated list of allowed origins
+- Setting `CORS_ORIGIN=*` allows all origins and should NEVER be used in production
+- The `ALLOW_DEV_AUTH_BYPASS` flag should ONLY be set to `true` in local development environments
 
 ## Authentication
 

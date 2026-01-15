@@ -16,7 +16,30 @@ import { Server, Socket } from 'socket.io';
 import { verifyMessage } from 'viem';
 
 const PORT = process.env.WS_PORT || 8080;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+
+// CORS Configuration
+const getAllowedOrigins = (): string[] => {
+  const envOrigins = process.env.CORS_ORIGIN;
+  
+  if (envOrigins === '*') {
+    console.warn('⚠️  [Security] CORS set to allow all origins. Not recommended for production!');
+    return ['*'];
+  }
+  
+  if (!envOrigins) {
+    // Default allowed origins for development
+    return [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+    ];
+  }
+  
+  // Parse comma-separated list of origins
+  return envOrigins.split(',').map(origin => origin.trim());
+};
+
+const ALLOWED_ORIGINS = getAllowedOrigins();
+const CORS_ORIGIN = ALLOWED_ORIGINS.includes('*') ? '*' : ALLOWED_ORIGINS;
 
 interface SocketAuth {
   address?: string;
@@ -62,9 +85,28 @@ async function verifyAuth(auth: SocketAuth): Promise<boolean> {
  */
 function startWebSocketServer() {
   const httpServer = createServer();
+  
+  // Configure CORS with origin validation
+  const corsOptions = ALLOWED_ORIGINS.includes('*') 
+    ? { origin: '*', methods: ['GET', 'POST'], credentials: true }
+    : {
+        origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+          // Allow requests with no origin (like mobile apps or curl)
+          if (!origin) return callback(null, true);
+          
+          if (ALLOWED_ORIGINS.includes(origin)) {
+            callback(null, true);
+          } else {
+            console.warn(`[CORS] Blocked origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+          }
+        },
+        methods: ['GET', 'POST'],
+        credentials: true,
+      };
+  
   const io = new Server(httpServer, {
-    cors: {
-      origin: CORS_ORIGIN,
+    cors: corsOptions,
       methods: ['GET', 'POST'],
       credentials: true,
     },
