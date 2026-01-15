@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
 import { trackQuestEvent, trackDailyLogin } from '@/lib/questEvents';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
 /**
  * POST /api/auth
  * Authenticate user with wallet signature
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting: 10 auth attempts per minute per IP
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 10, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many authentication attempts. Please try again later.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const { address, message, signature } = await request.json();
 

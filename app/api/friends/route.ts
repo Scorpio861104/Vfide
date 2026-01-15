@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
+import { trackQuestEvent } from '@/lib/questEvents';
 
 interface Friendship {
   id: number;
@@ -230,6 +231,13 @@ export async function PATCH(request: NextRequest) {
       );
 
       await client.query('COMMIT');
+
+      // Track quest event for accepting friend (don't await)
+      trackQuestEvent({
+        userAddress,
+        eventType: 'friend_added',
+        metadata: { friendshipId },
+      }).catch(err => console.error('Failed to track friend quest event:', err));
 
       return NextResponse.json({
         success: true,

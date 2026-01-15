@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { trackQuestEvent } from '@/lib/questEvents';
 
 /**
  * POST /api/groups/join
@@ -113,6 +114,21 @@ export async function POST(request: NextRequest) {
     );
 
     await client.query('COMMIT');
+
+    // Get user address for quest tracking
+    const userAddrResult = await client.query(
+      'SELECT wallet_address FROM users WHERE id = $1',
+      [userId]
+    );
+    
+    if (userAddrResult.rows.length > 0) {
+      // Track quest event for joining group (don't await)
+      trackQuestEvent({
+        userAddress: userAddrResult.rows[0].wallet_address,
+        eventType: 'group_joined',
+        metadata: { groupId: link.group_id },
+      }).catch(err => console.error('Failed to track group join quest event:', err));
+    }
 
     return NextResponse.json({
       success: true,

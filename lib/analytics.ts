@@ -120,6 +120,27 @@ let eventIdCounter = 0;
 // ============================================================================
 
 /**
+ * Send event to analytics backend
+ */
+async function sendToAnalyticsBackend(event: AnalyticsEvent): Promise<void> {
+  try {
+    await fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: event.type,
+        userId: event.userId,
+        metadata: event.metadata,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send analytics event:', error);
+  }
+}
+
+/**
  * Track an analytics event
  */
 export function trackEvent(
@@ -137,8 +158,10 @@ export function trackEvent(
 
   analyticsStore.set(event.id, event);
   
-  // In production, send to analytics backend
-  // sendToAnalyticsBackend(event);
+  // Send to analytics backend (don't await to not block)
+  sendToAnalyticsBackend(event).catch(err => 
+    console.error('Analytics backend error:', err)
+  );
   
   return event;
 }
