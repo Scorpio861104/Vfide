@@ -28,7 +28,7 @@ async function fetchEthPrice(): Promise<number> {
   try {
     // CoinGecko free API - no API key required
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
+      `${process.env.NEXT_PUBLIC_COINGECKO_API_URL || 'https://api.coingecko.com/api/v3/simple/price'}?ids=ethereum&vs_currencies=usd`,
       { 
         next: { revalidate: 300 }, // Cache for 5 minutes in Next.js
         signal: AbortSignal.timeout(5000) // 5 second timeout

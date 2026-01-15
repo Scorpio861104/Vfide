@@ -3,6 +3,7 @@
 import { useState, useEffect as _useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { safeBigIntToNumber as _safeBigIntToNumber } from '@/lib/validation'
+import { toast } from '@/lib/toast'
 import { 
   Banknote, 
   Play, 
@@ -112,40 +113,50 @@ export default function PayrollPage() {
       await createStream(createForm.payee, createForm.rate, createForm.deposit);
       setShowCreateModal(false);
       setCreateForm({ payee: '', rate: '', deposit: '' });
+      toast.success('Stream created successfully');
     } catch (err) {
       console.error('Failed to create stream:', err);
+      toast.error('Failed to create stream. Please try again.');
     }
   };
 
   const handleWithdraw = async (streamId: number) => {
     try {
       await withdraw(BigInt(streamId));
+      toast.success('Withdrawal successful');
     } catch (err) {
       console.error('Failed to withdraw:', err);
+      toast.error('Failed to withdraw. Please try again.');
     }
   };
 
   const handlePauseStream = async (streamId: number) => {
     try {
       await pauseStreamAction(BigInt(streamId));
+      toast.success('Stream paused');
     } catch (err) {
       console.error('Failed to pause stream:', err);
+      toast.error('Failed to pause stream. Please try again.');
     }
   };
 
   const handleResumeStream = async (streamId: number) => {
     try {
       await resumeStreamAction(BigInt(streamId));
+      toast.success('Stream resumed');
     } catch (err) {
       console.error('Failed to resume stream:', err);
+      toast.error('Failed to resume stream. Please try again.');
     }
   };
 
   const handleTopUp = async (streamId: number, amount: string) => {
     try {
       await topUp(BigInt(streamId), amount);
+      toast.success('Top up successful');
     } catch (err) {
       console.error('Failed to top up:', err);
+      toast.error('Failed to top up. Please try again.');
     }
   };
 

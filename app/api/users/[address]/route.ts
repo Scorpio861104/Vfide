@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getAvatarUrl } from '@/lib/constants';
 
 interface User {
   wallet_address: string;
@@ -188,8 +189,8 @@ export async function POST(
     // 2. Process image (resize, optimize)
     // 3. Update user profile with image URL
 
-    // For now, generate a placeholder URL
-    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${address.toLowerCase()}`;
+    // For now, generate a placeholder URL using DiceBear
+    const avatarUrl = getAvatarUrl(address);
     
     // Update user avatar in database
     const result = await query<User>(

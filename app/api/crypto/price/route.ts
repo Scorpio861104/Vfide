@@ -88,8 +88,9 @@ export async function GET(request: NextRequest) {
     const forceRefresh = searchParams.get('refresh') === 'true';
     
     // Fetch ETH price from CoinGecko
+    const coingeckoUrl = process.env.NEXT_PUBLIC_COINGECKO_API_URL || 'https://api.coingecko.com/api/v3/simple/price';
     const ethPriceResponse = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
+      `${coingeckoUrl}?ids=ethereum&vs_currencies=usd`,
       { next: { revalidate: forceRefresh ? 0 : 60 } } // Cache for 60 seconds unless forced
     );
     

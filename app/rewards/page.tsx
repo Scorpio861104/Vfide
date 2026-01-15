@@ -3,6 +3,7 @@
 // Rewards & Staking Management System
 import { Footer } from '@/components/layout/Footer'
 import { safeParseFloat } from '@/lib/validation'
+import { toast } from '@/lib/toast'
 import { motion } from 'framer-motion'
 import {
     CheckCircle2,
@@ -703,8 +704,10 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
         args: [lpTokenAddress as `0x${string}`, parseUnits(stakeAmount, 18)],
       });
       setStakeAmount('')
+      toast.success('Staked successfully')
     } catch (error) {
       console.error('Staking failed:', error)
+      toast.error('Staking failed. Please try again.')
     } finally {
       setIsStaking(false)
       setSelectedPool(null)

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { safeParseInt as _safeParseInt, validateAddress } from '@/lib/validation'
+import { toast } from '@/lib/toast'
 import { 
   Shield, 
   Package, 
@@ -115,24 +116,30 @@ export default function EscrowPage() {
       );
       setShowCreateModal(false);
       setCreateForm({ merchant: '', amount: '', orderId: '', timeout: '7' });
+      toast.success('Escrow created successfully');
     } catch (err) {
       console.error('Failed to create escrow:', err);
+      toast.error('Failed to create escrow. Please try again.');
     }
   };
 
   const handleRelease = async (id: number) => {
     try {
       await releaseEscrow(BigInt(id));
+      toast.success('Escrow released successfully');
     } catch (err) {
       console.error('Failed to release escrow:', err);
+      toast.error('Failed to release escrow. Please try again.');
     }
   };
 
   const handleDispute = async (id: number) => {
     try {
       await raiseDispute(BigInt(id));
+      toast.success('Dispute raised successfully');
     } catch (err) {
       console.error('Failed to raise dispute:', err);
+      toast.error('Failed to raise dispute. Please try again.');
     }
   };
 

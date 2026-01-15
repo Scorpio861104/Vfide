@@ -310,3 +310,34 @@ export const SCORE_THRESHOLDS = {
   LOW: 2000,        // 2000-3999 = low (orange)
   // Below 2000 = poor (red)
 } as const;
+
+// ========================================
+// EXTERNAL API URLS
+// ========================================
+
+/**
+ * Third-party API URLs used throughout the application
+ * Centralized here for easy configuration and environment overrides
+ */
+export const API_URLS = {
+  /** CoinGecko API for ETH/crypto prices */
+  COINGECKO_PRICE: 'https://api.coingecko.com/api/v3/simple/price',
+  /** DiceBear API for generated avatars */
+  DICEBEAR_AVATAR: 'https://api.dicebear.com/7.x/avataaars/svg',
+  /** QR Code generation API */
+  QR_SERVER: 'https://api.qrserver.com/v1/create-qr-code',
+} as const;
+
+/**
+ * Generate a DiceBear avatar URL for an address
+ */
+export function getAvatarUrl(address: string): string {
+  return `${API_URLS.DICEBEAR_AVATAR}?seed=${address.toLowerCase()}`;
+}
+
+/**
+ * Generate a QR code URL
+ */
+export function getQRCodeUrl(data: string, size = 200): string {
+  return `${API_URLS.QR_SERVER}?size=${size}x${size}&data=${encodeURIComponent(data)}`;
+}

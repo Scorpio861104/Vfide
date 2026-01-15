@@ -320,7 +320,12 @@ export default function SocialPage() {
                       if (stored) {
                         try {
                           setFriends(JSON.parse(stored));
-                        } catch (_e) {}
+                        } catch (e) {
+                          // Invalid JSON in localStorage, ignore and use default empty array
+                          if (process.env.NODE_ENV === 'development') {
+                            console.warn('Failed to parse friends from localStorage:', e);
+                          }
+                        }
                       }
                     }}
                     selectedFriend={selectedFriend}
