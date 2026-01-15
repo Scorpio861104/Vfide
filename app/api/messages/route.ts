@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
 import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { trackQuestEvent } from '@/lib/questEvents';
 
 interface Message {
   id: number;
@@ -204,6 +205,13 @@ export async function POST(request: NextRequest) {
     );
 
     await client.query('COMMIT');
+
+    // Track quest event for sending message (don't await to not block response)
+    trackQuestEvent({
+      userAddress: from,
+      eventType: 'message_sent',
+      metadata: { recipientAddress: to },
+    }).catch(err => console.error('Failed to track message quest event:', err));
 
     return NextResponse.json({
       success: true,

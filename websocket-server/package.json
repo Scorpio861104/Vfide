@@ -1,0 +1,24 @@
+{
+  "name": "vfide-websocket-server",
+  "version": "1.0.0",
+  "description": "Real-time WebSocket server for VFIDE messaging and notifications",
+  "main": "server.ts",
+  "scripts": {
+    "start": "ts-node server.ts",
+    "dev": "NODE_ENV=development ts-node server.ts",
+    "build": "tsc",
+    "prod": "node dist/server.js"
+  },
+  "keywords": ["websocket", "socket.io", "vfide", "real-time"],
+  "author": "VFIDE Team",
+  "license": "MIT",
+  "dependencies": {
+    "socket.io": "^4.8.3",
+    "viem": "^2.41.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  }
+}

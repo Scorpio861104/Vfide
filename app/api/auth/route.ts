@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
+import { trackQuestEvent, trackDailyLogin } from '@/lib/questEvents';
 
 /**
  * POST /api/auth
@@ -32,6 +33,14 @@ export async function POST(request: NextRequest) {
 
     // Generate session token (in production, use JWT)
     const sessionToken = Buffer.from(`${address}:${Date.now()}`).toString('base64');
+
+    // Track wallet connection and daily login (don't await to not block response)
+    trackQuestEvent({
+      userAddress: address,
+      eventType: 'wallet_connected',
+    }).catch(err => console.error('Failed to track wallet connection:', err));
+
+    trackDailyLogin(address).catch(err => console.error('Failed to track daily login:', err));
 
     // In production, store session in Redis/database
     // For now, just return the token
