@@ -28,8 +28,6 @@ import { formatEther } from 'viem'
 import {
   useUserVault,
   useVaultBalance,
-} from '@/lib/vfide-hooks'
-import { safeParseInt } from '@/lib/validation';
   useAbnormalTransactionThreshold,
   useBalanceSnapshot,
   useSetBalanceSnapshotMode,
@@ -39,6 +37,7 @@ import { safeParseInt } from '@/lib/validation';
   useExecutePendingTransaction,
   useCleanupExpiredTransaction,
 } from '@/lib/vfide-hooks'
+import { safeParseInt } from '@/lib/validation';
 
 // Dummy address for hooks when vault is not yet available
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
