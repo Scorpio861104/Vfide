@@ -29,11 +29,18 @@ export interface Escrow {
 
 export type EscrowState = 'CREATED' | 'RELEASED' | 'REFUNDED' | 'DISPUTED';
 
+export enum EscrowStateValue {
+  CREATED = 0,
+  RELEASED = 1,
+  REFUNDED = 2,
+  DISPUTED = 3,
+}
+
 const STATE_MAP: Record<number, EscrowState> = {
-  0: 'CREATED',
-  1: 'RELEASED',
-  2: 'REFUNDED',
-  3: 'DISPUTED'
+  [EscrowStateValue.CREATED]: 'CREATED',
+  [EscrowStateValue.RELEASED]: 'RELEASED',
+  [EscrowStateValue.REFUNDED]: 'REFUNDED',
+  [EscrowStateValue.DISPUTED]: 'DISPUTED',
 };
 
 export function useEscrow() {
@@ -349,9 +356,9 @@ export function useEscrow() {
 
   // ============ COMPUTED VALUES ============
 
-  const activeEscrows = useMemo(() => escrows.filter((e: Escrow) => e.state === 0), [escrows]);
-  const completedEscrows = useMemo(() => escrows.filter((e: Escrow) => e.state === 1 || e.state === 2), [escrows]);
-  const disputedEscrows = useMemo(() => escrows.filter((e: Escrow) => e.state === 3), [escrows]);
+  const activeEscrows = useMemo(() => escrows.filter((e: Escrow) => e.state === EscrowStateValue.CREATED), [escrows]);
+  const completedEscrows = useMemo(() => escrows.filter((e: Escrow) => e.state === EscrowStateValue.RELEASED || e.state === EscrowStateValue.REFUNDED), [escrows]);
+  const disputedEscrows = useMemo(() => escrows.filter((e: Escrow) => e.state === EscrowStateValue.DISPUTED), [escrows]);
 
   return {
     // Data

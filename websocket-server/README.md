@@ -41,7 +41,12 @@ Create a `.env` file:
 WS_PORT=8080
 CORS_ORIGIN=http://localhost:3000
 NODE_ENV=production
+
+# Development only: Allow auth bypass (NEVER set in production)
+ALLOW_DEV_AUTH_BYPASS=true
 ```
+
+**Security Note**: The `ALLOW_DEV_AUTH_BYPASS` flag should ONLY be set to `true` in local development environments. Never enable this in production or staging environments.
 
 ## Authentication
 

@@ -21,6 +21,8 @@ export async function POST(request: NextRequest) {
 
     try {
       // Store analytics event in database
+      const metadataJson = metadata ? JSON.stringify(metadata) : null;
+      
       await client.query(`
         INSERT INTO analytics_events (
           event_type,
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
           created_at
         )
         VALUES ($1, $2, $3, NOW())
-      `, [type, userId, metadata ? JSON.stringify(metadata) : null]);
+      `, [type, userId, metadataJson]);
 
       return NextResponse.json({
         success: true,

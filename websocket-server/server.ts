@@ -28,6 +28,7 @@ interface SocketAuth {
 interface AuthenticatedSocket extends Socket {
   userAddress?: string;
   chainId?: number;
+  heartbeatInterval?: NodeJS.Timeout;
 }
 
 // Track connected users
@@ -75,8 +76,9 @@ function startWebSocketServer() {
   io.use(async (socket: AuthenticatedSocket, next) => {
     const auth = socket.handshake.auth as SocketAuth;
 
-    // Allow connection without auth for development
-    if (process.env.NODE_ENV === 'development' && !auth.signature) {
+    // Allow connection without auth ONLY in development with explicit flag
+    if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_AUTH_BYPASS === 'true' && !auth.signature) {
+      console.warn('[WebSocket] Development mode: Authentication bypass enabled');
       socket.userAddress = auth.address || 'dev-user';
       socket.chainId = auth.chainId || 8453;
       return next();
@@ -283,7 +285,8 @@ function startWebSocketServer() {
 
     // ============ HEARTBEAT ============
 
-    const heartbeatInterval = setInterval(() => {
+    // Store heartbeat interval on socket for better tracking
+    socket.heartbeatInterval = setInterval(() => {
       socket.emit('heartbeat:ping', { timestamp: Date.now() });
     }, 30000);
 
@@ -298,7 +301,9 @@ function startWebSocketServer() {
       console.log(`[Disconnected] ${userAddress} (${reason})`);
       
       // Cleanup tracking
-      clearInterval(heartbeatInterval);
+      if (socket.heartbeatInterval) {
+        clearInterval(socket.heartbeatInterval);
+      }
       
       const userSockets = connectedUsers.get(userAddress);
       if (userSockets) {

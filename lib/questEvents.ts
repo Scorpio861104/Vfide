@@ -46,6 +46,9 @@ export async function trackQuestEvent(data: QuestEventData): Promise<void> {
 
       if (userResult.rows.length === 0) {
         await client.query('ROLLBACK');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Quest Tracking] Skipped: user not found', userAddress);
+        }
         return; // User not found, skip quest tracking
       }
 
