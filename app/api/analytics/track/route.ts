@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     try {
       let queryText = 'SELECT * FROM analytics_events WHERE 1=1';
-      const params: any[] = [];
+      const params: (string | number)[] = [];
       let paramCount = 1;
 
       if (type) {
@@ -81,14 +81,22 @@ export async function GET(request: NextRequest) {
       }
 
       if (startTime) {
+        const timestamp = parseInt(startTime);
+        if (isNaN(timestamp)) {
+          throw new Error('Invalid startTime parameter');
+        }
         queryText += ` AND created_at >= to_timestamp($${paramCount})`;
-        params.push(parseInt(startTime) / 1000);
+        params.push(timestamp / 1000);
         paramCount++;
       }
 
       if (endTime) {
+        const timestamp = parseInt(endTime);
+        if (isNaN(timestamp)) {
+          throw new Error('Invalid endTime parameter');
+        }
         queryText += ` AND created_at <= to_timestamp($${paramCount})`;
-        params.push(parseInt(endTime) / 1000);
+        params.push(timestamp / 1000);
         paramCount++;
       }
 

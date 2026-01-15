@@ -78,10 +78,18 @@ function startWebSocketServer() {
 
     // Allow connection without auth ONLY in development with explicit flag
     if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_AUTH_BYPASS === 'true' && !auth.signature) {
-      console.warn('[WebSocket] Development mode: Authentication bypass enabled');
+      console.warn('⚠️  [WebSocket Security] Development mode: Authentication bypass is ENABLED');
+      console.warn('⚠️  This should NEVER be enabled in production!');
+      console.warn(`⚠️  Environment: ${process.env.NODE_ENV}, Bypass: ${process.env.ALLOW_DEV_AUTH_BYPASS}`);
       socket.userAddress = auth.address || 'dev-user';
       socket.chainId = auth.chainId || 8453;
       return next();
+    }
+
+    // Block any bypass attempts in non-development environments
+    if (process.env.NODE_ENV !== 'development' && !auth.signature) {
+      console.error('🚫 [WebSocket Security] Authentication required in production');
+      return next(new Error('Authentication required'));
     }
 
     // Verify wallet signature
