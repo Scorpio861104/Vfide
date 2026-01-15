@@ -236,6 +236,48 @@ export function isSupportedChainId(chainId: number): boolean {
 }
 
 /**
+ * Get all supported chain IDs for current network mode
+ */
+export function getAllSupportedChainIds(): number[] {
+  return getAllChainIds()
+}
+
+/**
+ * Get MetaMask network configuration for a specific chain ID
+ * Used for wallet_addEthereumChain requests
+ */
+export function getNetworkConfigForChainId(chainId: number) {
+  const config = getChainByChainId(chainId)
+  if (!config) return null
+  
+  const isTestnet = config.testnet.id === chainId
+  const network = isTestnet ? config.testnet : config.mainnet
+  
+  return {
+    chainId: `0x${chainId.toString(16)}`,
+    chainName: network.name,
+    nativeCurrency: network.nativeCurrency,
+    rpcUrls: network.rpcUrls.default.http,
+    blockExplorerUrls: network.blockExplorers?.default?.url ? [network.blockExplorers.default.url] : undefined,
+  }
+}
+
+/**
+ * Check if a network has RPC configured
+ */
+export function isNetworkConfigured(chainId: number): boolean {
+  const network = getNetworkConfigForChainId(chainId)
+  return network !== null && network.rpcUrls.length > 0
+}
+
+/**
+ * Check if a chain ID is supported
+ */
+export function isSupportedChainId(chainId: number): boolean {
+  return getAllChainIds().includes(chainId)
+}
+
+/**
  * Check if contracts are deployed on a chain
  */
 export function isChainReady(chain: SupportedChain): boolean {

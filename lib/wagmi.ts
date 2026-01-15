@@ -22,11 +22,9 @@ const noopStorage = {
   removeItem: (_key: string) => {},
 }
 
-// WalletConnect Project ID (optional for local/dev/test runs).
-// When missing, we fully disable the WalletConnect connector to keep env-less
-// builds/tests deterministic and avoid remote registry/config fetches.
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
-const hasWalletConnect = typeof projectId === 'string' && projectId.length > 0
+// WalletConnect Project ID with fallback for testing
+// Fallback ensures wallet discovery works even without env var
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'vfide-fallback-for-local-testing'
 
 // App metadata for wallet connections
 const appName = 'VFIDE'
@@ -83,7 +81,7 @@ const connectors = connectorsForWallets(
   [
     {
       groupName: 'Recommended',
-      wallets: hasWalletConnect ? [walletConnectWallet, coinbaseWallet] : [coinbaseWallet],
+      wallets: [walletConnectWallet, coinbaseWallet],
     },
     {
       groupName: 'Others',
@@ -92,9 +90,7 @@ const connectors = connectorsForWallets(
   ],
   {
     appName,
-    // RainbowKit expects a string here; it is only used when the WalletConnect
-    // wallet is present.
-    projectId: projectId || '00000000000000000000000000000000',
+    projectId,
   }
 )
 
@@ -106,9 +102,9 @@ const testnetConfig = createConfig({
   connectors,
   chains: testnetChains,
   transports: {
-    [baseSepolia.id]: http(),
-    [polygonAmoy.id]: http(),
-    [zkSyncSepoliaTestnet.id]: http('https://sepolia.era.zksync.dev'),
+    [baseSepolia.id]: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org'),
+    [polygonAmoy.id]: http(process.env.NEXT_PUBLIC_POLYGON_AMOY_RPC || 'https://rpc-amoy.polygon.technology'),
+    [zkSyncSepoliaTestnet.id]: http(process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_RPC || 'https://sepolia.era.zksync.dev'),
   },
   ssr: true,
   storage: wagmiStorage,
@@ -120,9 +116,9 @@ const mainnetConfig = createConfig({
   connectors,
   chains: mainnetChains,
   transports: {
-    [base.id]: http(),
-    [polygon.id]: http(),
-    [zkSync.id]: http(),
+    [base.id]: http(process.env.NEXT_PUBLIC_BASE_RPC || 'https://mainnet.base.org'),
+    [polygon.id]: http(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com'),
+    [zkSync.id]: http(process.env.NEXT_PUBLIC_ZKSYNC_RPC || 'https://mainnet.era.zksync.io'),
   },
   ssr: true,
   storage: wagmiStorage,

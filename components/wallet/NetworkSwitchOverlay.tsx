@@ -1,39 +1,13 @@
 'use client'
 
 import { CURRENT_CHAIN_ID } from '@/lib/testnet'
-import { IS_TESTNET, getSupportedChainFromId as _getSupportedChainFromId } from '@/lib/chains'
+import { IS_TESTNET, getNetworkConfigForChainId, getChainByChainId } from '@/lib/chains'
 import { base, baseSepolia } from 'wagmi/chains'
 import { safeLocalStorage } from '@/lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AlertTriangle, ArrowRight, Check, Loader2, Plus, X, Zap } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useAccount, useChainId, useSwitchChain } from 'wagmi'
-
-// Base Sepolia network configuration for MetaMask
-const BASE_SEPOLIA_CONFIG = {
-  chainId: '0x14A34', // 84532 in hex
-  chainName: 'Base Sepolia',
-  nativeCurrency: {
-    name: 'Sepolia Ether',
-    symbol: 'ETH',
-    decimals: 18,
-  },
-  rpcUrls: ['https://sepolia.base.org'],
-  blockExplorerUrls: ['https://sepolia.basescan.org'],
-}
-
-// Base Mainnet network configuration for MetaMask
-const BASE_MAINNET_CONFIG = {
-  chainId: '0x2105', // 8453 in hex
-  chainName: 'Base',
-  nativeCurrency: {
-    name: 'Ether',
-    symbol: 'ETH',
-    decimals: 18,
-  },
-  rpcUrls: ['https://mainnet.base.org'],
-  blockExplorerUrls: ['https://basescan.org'],
-}
 
 /**
  * Seamless Network Switch Overlay
@@ -114,7 +88,14 @@ export function NetworkSwitchOverlay() {
         return
       }
 
-      const networkConfig = IS_TESTNET ? BASE_SEPOLIA_CONFIG : BASE_MAINNET_CONFIG
+      // Get dynamic network config for expected chain
+      const networkConfig = getNetworkConfigForChainId(expectedChainId)
+      
+      if (!networkConfig) {
+        setAddNetworkError(`Network configuration not found for chain ID ${expectedChainId}`)
+        setIsAddingNetwork(false)
+        return
+      }
 
       // First try to switch (in case network already exists)
       try {
@@ -156,12 +137,12 @@ export function NetworkSwitchOverlay() {
       if (error.code === 4001) {
         setAddNetworkError('You rejected the request. Try again when ready.')
       } else {
-        setAddNetworkError(error.message || 'Failed to add network. Try manually in MetaMask settings.')
+        setAddNetworkError(error.message || 'Failed to add network. Try manually in wallet settings.')
       }
     } finally {
       setIsAddingNetwork(false)
     }
-  }, [])
+  }, [expectedChainId])
 
   const handleSwitch = useCallback(async (remember: boolean = false) => {
     setAddNetworkError(null)
