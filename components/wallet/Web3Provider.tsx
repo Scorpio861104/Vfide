@@ -26,8 +26,8 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        // Reduce stale time for more responsive wallet state updates
-        staleTime: 1000 * 30, // 30 seconds (was 5 minutes)
+        // Balance stale time with responsiveness: 2 minutes is good middle ground
+        staleTime: 1000 * 60 * 2, // 2 minutes
         // Enable refetch on window focus for better wallet state sync
         refetchOnWindowFocus: true,
         // Retry failed queries for better reliability

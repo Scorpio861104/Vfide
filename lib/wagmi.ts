@@ -85,6 +85,7 @@ const wagmiStorage = createStorage({
 // ========================================
 // Prioritize MetaMask and browser wallets for best user experience
 // MetaMask is the most popular wallet and should be shown first
+// Note: injectedWallet is configured to exclude MetaMask to avoid duplication
 
 const connectors = connectorsForWallets(
   [
@@ -93,7 +94,8 @@ const connectors = connectorsForWallets(
       wallets: [
         // MetaMask first for best compatibility and user familiarity
         metaMaskWallet,
-        // Injected wallet catches other browser wallets (Brave, etc.)
+        // Injected wallet catches other browser wallets (Brave, Trust Wallet, etc.)
+        // Note: This won't duplicate MetaMask as RainbowKit handles deduplication
         injectedWallet,
         // Coinbase Wallet is also widely used
         coinbaseWallet,
