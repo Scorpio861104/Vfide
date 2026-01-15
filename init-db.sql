@@ -237,6 +237,51 @@ CREATE TABLE IF NOT EXISTS story_views (
   UNIQUE(story_id, user_id)
 );
 
+-- Merchants table
+CREATE TABLE IF NOT EXISTS merchants (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  business_name VARCHAR(100) NOT NULL,
+  business_type VARCHAR(50) NOT NULL,
+  business_description TEXT NOT NULL,
+  website_url VARCHAR(200),
+  contact_email VARCHAR(100) NOT NULL,
+  contact_phone VARCHAR(20),
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Merchant KYC table
+CREATE TABLE IF NOT EXISTS merchant_kyc (
+  id SERIAL PRIMARY KEY,
+  merchant_id INTEGER UNIQUE REFERENCES merchants(id) ON DELETE CASCADE,
+  document_type VARCHAR(50) NOT NULL,
+  document_number VARCHAR(50) NOT NULL,
+  document_front_url VARCHAR(500) NOT NULL,
+  document_back_url VARCHAR(500),
+  selfie_url VARCHAR(500) NOT NULL,
+  additional_info TEXT,
+  status VARCHAR(20) DEFAULT 'pending',
+  submitted_at TIMESTAMP,
+  verified_at TIMESTAMP,
+  verified_by INTEGER REFERENCES users(id),
+  rejection_reason TEXT
+);
+
+-- Merchant transactions table
+CREATE TABLE IF NOT EXISTS merchant_transactions (
+  id SERIAL PRIMARY KEY,
+  merchant_id INTEGER REFERENCES merchants(id) ON DELETE CASCADE,
+  customer_id INTEGER REFERENCES users(id),
+  amount DECIMAL(20, 8) NOT NULL,
+  currency VARCHAR(10) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  transaction_hash VARCHAR(66),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_wallet ON users(wallet_address);
 CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_address);
@@ -258,3 +303,10 @@ CREATE INDEX IF NOT EXISTS idx_post_comments_post ON post_comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_social_stories_user ON social_stories(user_id);
 CREATE INDEX IF NOT EXISTS idx_social_stories_expires ON social_stories(expires_at);
 CREATE INDEX IF NOT EXISTS idx_story_views_story ON story_views(story_id);
+CREATE INDEX IF NOT EXISTS idx_merchants_user ON merchants(user_id);
+CREATE INDEX IF NOT EXISTS idx_merchants_status ON merchants(status);
+CREATE INDEX IF NOT EXISTS idx_merchant_kyc_merchant ON merchant_kyc(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_kyc_status ON merchant_kyc(status);
+CREATE INDEX IF NOT EXISTS idx_merchant_transactions_merchant ON merchant_transactions(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_transactions_customer ON merchant_transactions(customer_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_transactions_status ON merchant_transactions(status);
