@@ -9,6 +9,7 @@
  */
 
 import { safeLocalStorage } from './utils';
+import { CONNECTION_LIMITS } from './walletConstants';
 
 // Storage keys
 const PREFERRED_WALLET_KEY = 'vfide-preferred-wallet';
@@ -103,7 +104,10 @@ export function resetConnectionAttempts(): void {
  * Check if connection is in cooldown period
  * Returns cooldown remaining in milliseconds, or 0 if not in cooldown
  */
-export function getConnectionCooldown(maxAttempts = 5, cooldownMs = 30000): number {
+export function getConnectionCooldown(
+  maxAttempts = CONNECTION_LIMITS.MAX_ATTEMPTS,
+  cooldownMs = CONNECTION_LIMITS.COOLDOWN_DURATION
+): number {
   const attempts = getConnectionAttempts();
   
   if (attempts.count < maxAttempts) {

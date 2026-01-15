@@ -16,6 +16,7 @@ import {
   formatSessionDuration,
   clearSessionData,
 } from '@/lib/walletPreferences';
+import { CONNECTION_TIMEOUT_MS, CONNECTION_LIMITS, POLLING_INTERVALS } from '@/lib/walletConstants';
 
 /**
  * Enhanced Wallet Connection Hook
@@ -109,13 +110,13 @@ export function useEnhancedWalletConnect() {
     return `Connection error: ${error.message}`;
   }, []);
 
-  // Phase 2: Connection timeout handler (30 seconds)
+  // Phase 2: Connection timeout handler
   useEffect(() => {
     if (isConnecting || isPending) {
       const timeout = setTimeout(() => {
         showToast('Connection timeout. Please try again.', 'error', 5000);
         setLastError('Connection timed out after 30 seconds');
-      }, 30000); // 30 second timeout
+      }, CONNECTION_TIMEOUT_MS);
 
       setConnectionTimeout(timeout);
 

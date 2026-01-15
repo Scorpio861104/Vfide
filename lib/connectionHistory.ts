@@ -5,9 +5,9 @@
  */
 
 import { safeLocalStorage } from './utils';
+import { CACHE_LIMITS } from './walletConstants';
 
 const HISTORY_KEY = 'vfide-connection-history';
-const MAX_HISTORY_ITEMS = 10;
 
 export interface ConnectionHistoryItem {
   address: string;
@@ -51,7 +51,7 @@ export function addConnectionToHistory(item: Omit<ConnectionHistoryItem, 'timest
   history.unshift(newItem);
   
   // Keep only last N items
-  const trimmed = history.slice(0, MAX_HISTORY_ITEMS);
+  const trimmed = history.slice(0, CACHE_LIMITS.HISTORY);
   
   safeLocalStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
 }

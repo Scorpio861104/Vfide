@@ -12,6 +12,7 @@ import { measureLatency, getCachedLatency, getLatencyColor } from '@/lib/network
 import { addConnectionToHistory } from '@/lib/connectionHistory';
 import { connectionStateAnimations, fadeIn, scaleIn } from '@/lib/animations';
 import { scrollToTop } from '@/lib/focusTrap';
+import { POLLING_INTERVALS, ANIMATION_DURATION } from '@/lib/walletConstants';
 
 /**
  * Enhanced Simple Wallet Connect Component
@@ -123,7 +124,7 @@ export function SimpleWalletConnect() {
             };
 
             measureAndUpdate();
-            const interval = setInterval(measureAndUpdate, 30000); // Every 30s
+            const interval = setInterval(measureAndUpdate, POLLING_INTERVALS.LATENCY);
 
             return () => clearInterval(interval);
           }
@@ -141,7 +142,7 @@ export function SimpleWalletConnect() {
             });
             
             // Phase 4: Scroll to top after successful connection
-            setTimeout(() => scrollToTop(), 500);
+            setTimeout(() => scrollToTop(), ANIMATION_DURATION.SCROLL_DELAY);
           }
         }, [connected, account, chain, connector]);
 

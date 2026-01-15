@@ -4,6 +4,8 @@
  * Phase 3: Cache wallet balances to reduce RPC calls
  */
 
+import { CACHE_TTL, CACHE_LIMITS } from './walletConstants';
+
 interface CachedBalance {
   address: string;
   chainId: number;
@@ -14,7 +16,6 @@ interface CachedBalance {
 }
 
 const balanceCache = new Map<string, CachedBalance>();
-const DEFAULT_TTL = 30000; // 30 seconds
 
 /**
  * Generate cache key
@@ -29,7 +30,7 @@ function getCacheKey(address: string, chainId: number): string {
 export function getCachedBalance(
   address: string,
   chainId: number,
-  ttl: number = DEFAULT_TTL
+  ttl: number = CACHE_TTL.BALANCE
 ): CachedBalance | null {
   const key = getCacheKey(address, chainId);
   const cached = balanceCache.get(key);
@@ -68,8 +69,8 @@ export function setCachedBalance(
     timestamp: Date.now(),
   });
   
-  // Cleanup old entries if cache is too large
-  if (balanceCache.size > 100) {
+  // Cleanup old entries if cache exceeds limit
+  if (balanceCache.size > CACHE_LIMITS.BALANCE) {
     cleanupBalanceCache();
   }
 }

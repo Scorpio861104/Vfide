@@ -4,6 +4,8 @@
  * Phase 3: Monitor RPC endpoint latency and health
  */
 
+import { RPC_TIMEOUT_MS, CACHE_TTL } from './walletConstants';
+
 export type LatencyStatus = 'excellent' | 'good' | 'fair' | 'poor' | 'offline';
 
 export interface LatencyData {
@@ -56,7 +58,7 @@ export async function measureLatency(
   
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+    const timeoutId = setTimeout(() => controller.abort(), RPC_TIMEOUT_MS);
     
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -105,8 +107,8 @@ export async function measureLatency(
 export function getCachedLatency(chainId: number): LatencyData | null {
   const cached = latencyCache.get(chainId);
   
-  // Return null if cache is older than 30 seconds
-  if (cached && Date.now() - cached.timestamp < 30000) {
+  // Return null if cache is older than configured TTL
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL.LATENCY) {
     return cached;
   }
   

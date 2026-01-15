@@ -4,6 +4,8 @@
  * Phase 4: Show gas price estimates during network operations
  */
 
+import { CACHE_TTL } from './walletConstants';
+
 export interface GasEstimate {
   slow: string;
   standard: string;
@@ -63,8 +65,8 @@ export async function fetchGasPrice(rpcUrl: string, chainId: number): Promise<Ga
 export function getCachedGasPrice(chainId: number): GasEstimate | null {
   const cached = gasCache.get(chainId);
   
-  // Cache valid for 30 seconds
-  if (cached && Date.now() - cached.timestamp < 30000) {
+  // Cache valid for configured TTL
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL.GAS_PRICE) {
     return cached;
   }
   
