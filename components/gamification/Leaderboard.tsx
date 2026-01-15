@@ -21,7 +21,6 @@ type LeaderboardCategory = 'xp' | 'level' | 'achievements' | 'friends';
 export function Leaderboard() {
   const { address } = useAccount();
   const [isLoading, setIsLoading] = useState(true);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [category, setCategory] = useState<LeaderboardCategory>('xp');
   const [timeRange, _setTimeRange] = useState<'all' | 'week' | 'month'>('all');
   const [rawProgress, setRawProgress] = useState<ReturnType<typeof getAllUserProgress>>([]);
