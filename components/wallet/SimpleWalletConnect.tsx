@@ -3,9 +3,10 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Clock } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/ui/toast';
+import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
 
 /**
  * Enhanced Simple Wallet Connect Component
@@ -18,10 +19,16 @@ import { useToast } from '@/components/ui/toast';
  * - Mobile optimized
  * - Keyboard navigation support (Enter, Escape)
  * - Copy address to clipboard functionality
+ * 
+ * Phase 2 Enhancements:
+ * - Session duration display
+ * - Connection cooldown indicator
+ * - Preferred wallet auto-selection
  */
 export function SimpleWalletConnect() {
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
+  const { sessionDurationFormatted, isInCooldown, cooldownRemaining } = useEnhancedWalletConnect();
 
   // Copy address to clipboard
   const copyAddress = useCallback(async (address: string, e: React.MouseEvent) => {
@@ -111,18 +118,34 @@ export function SimpleWalletConnect() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        openConnectModal();
+                        if (!isInCooldown) {
+                          openConnectModal();
+                        }
                       }
                     }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: isInCooldown ? 1 : 1.05 }}
+                    whileTap={{ scale: isInCooldown ? 1 : 0.95 }}
                     type="button"
-                    aria-label="Connect your wallet (Ctrl+W)"
-                    title="Connect Wallet (Ctrl+W)"
-                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
+                    disabled={isInCooldown}
+                    aria-label={isInCooldown ? `Too many attempts. Retry in ${Math.ceil(cooldownRemaining / 1000)}s` : "Connect your wallet (Ctrl+W)"}
+                    title={isInCooldown ? `Please wait ${Math.ceil(cooldownRemaining / 1000)} seconds before retrying` : "Connect Wallet (Ctrl+W)"}
+                    className={`px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-bold rounded-lg transition-all font-[family-name:var(--font-body)] touch-manipulation focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F0F12] ${
+                      isInCooldown
+                        ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                        : 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] hover:shadow-lg hover:shadow-[#00F0FF]/50 cursor-pointer focus:ring-[#00F0FF]'
+                    }`}
                   >
-                    <span className="hidden sm:inline">Connect Wallet</span>
-                    <span className="sm:hidden">Connect</span>
+                    {isInCooldown ? (
+                      <span className="flex items-center gap-2">
+                        <Clock size={16} />
+                        Retry in {Math.ceil(cooldownRemaining / 1000)}s
+                      </span>
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline">Connect Wallet</span>
+                        <span className="sm:hidden">Connect</span>
+                      </>
+                    )}
                   </motion.button>
                 );
               }
@@ -201,11 +224,19 @@ export function SimpleWalletConnect() {
                     whileHover={{ scale: 1.05 }}
                     type="button"
                     aria-label="Open account menu"
+                    title={sessionDurationFormatted ? `Connected for ${sessionDurationFormatted}` : 'Open account menu'}
                     className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
                   >
                     <span className="hidden sm:flex items-center gap-2">
                       {account.displayName}
                       {account.displayBalance ? ` (${account.displayBalance})` : ''}
+                      {/* Session duration indicator */}
+                      {sessionDurationFormatted && (
+                        <span className="text-xs opacity-70 flex items-center gap-1">
+                          <Clock size={12} />
+                          {sessionDurationFormatted}
+                        </span>
+                      )}
                       {/* Copy button */}
                       <button
                         onClick={(e) => copyAddress(account.address, e)}
