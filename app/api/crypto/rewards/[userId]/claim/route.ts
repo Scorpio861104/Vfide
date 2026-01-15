@@ -32,23 +32,25 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'At least one reward ID required' }, { status: 400 });
     }
     
-    // Validate reward IDs are valid UUIDs or integers
-    const invalidIds = rewardIds.filter((id: string) => {
-      // Check if UUID or integer
-      return !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) && 
-             !/^\d+$/.test(id);
-    });
-    
-    if (invalidIds.length > 0) {
-      return NextResponse.json({ error: 'Invalid reward ID format' }, { status: 400 });
+    // Validate all reward IDs are positive integers
+    const validatedRewardIds: number[] = [];
+    for (const id of rewardIds) {
+      try {
+        const validatedId = validatePositiveInteger(String(id), 'Reward ID');
+        validatedRewardIds.push(validatedId);
+      } catch (error) {
+        return NextResponse.json({ 
+          error: `Invalid reward ID: ${id}. All reward IDs must be positive integers.` 
+        }, { status: 400 });
+      }
     }
 
     const result = await query(
       `UPDATE user_rewards
        SET status = 'claimed', claimed_at = NOW()
-       WHERE user_id = $1 AND id = ANY($2::uuid[]) AND status = 'pending'
+       WHERE user_id = $1 AND id = ANY($2::int[]) AND status = 'pending'
        RETURNING *`,
-      [validatedUserId, rewardIds]
+      [validatedUserId, validatedRewardIds]
     );
 
     const totalClaimed = result.rows.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
