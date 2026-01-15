@@ -349,9 +349,9 @@ export function useEscrow() {
 
   // ============ COMPUTED VALUES ============
 
-  const activeEscrows = useMemo(() => escrows.filter(e => e.state === 0), [escrows]);
-  const completedEscrows = useMemo(() => escrows.filter(e => e.state === 1 || e.state === 2), [escrows]);
-  const disputedEscrows = useMemo(() => escrows.filter(e => e.state === 3), [escrows]);
+  const activeEscrows = useMemo(() => escrows.filter((e: Escrow) => e.state === 0), [escrows]);
+  const completedEscrows = useMemo(() => escrows.filter((e: Escrow) => e.state === 1 || e.state === 2), [escrows]);
+  const disputedEscrows = useMemo(() => escrows.filter((e: Escrow) => e.state === 3), [escrows]);
 
   return {
     // Data
