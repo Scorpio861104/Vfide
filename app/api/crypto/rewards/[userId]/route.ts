@@ -1,6 +1,7 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { validatePositiveInteger, createErrorResponse } from '@/lib/inputValidation';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   // Rate limiting: 40 requests per minute
@@ -16,12 +17,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const { userId } = await params;
+    
+    // Validate userId is a positive integer
+    const validatedUserId = validatePositiveInteger(userId, 'userId');
 
     const result = await query(
       `SELECT * FROM user_rewards
        WHERE user_id = $1
        ORDER BY earned_at DESC`,
-      [userId]
+      [validatedUserId]
     );
 
     const total = result.rows.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
@@ -35,6 +39,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
   } catch (error) {
     console.error('[Rewards GET] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch rewards' }, { status: 500 });
+    return NextResponse.json(
+      createErrorResponse(error as Error),
+      { status: error instanceof Error && error.message.includes('must be') ? 400 : 500 }
+    );
   }
 }

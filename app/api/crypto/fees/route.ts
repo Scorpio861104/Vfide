@@ -88,6 +88,23 @@ export async function GET(request: NextRequest) {
       );
     }
     
+    // Validate amount is a positive number
+    const amountNum = parseFloat(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      return NextResponse.json(
+        { error: 'Amount must be a positive number' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate from address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(fromAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid Ethereum address format' },
+        { status: 400 }
+      );
+    }
+    
     const priceResponse = await fetch(
       `${request.nextUrl.origin}/api/crypto/price`,
       { next: { revalidate: 60 } }
