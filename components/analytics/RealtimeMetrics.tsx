@@ -38,37 +38,41 @@ export function RealtimeMetrics({
   const [metrics, setMetrics] = useState<RealtimeMetric[]>(initialMetrics);
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const metricsRef = useRef(metrics);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    metricsRef.current = metrics;
+  }, [metrics]);
 
   // Memoize the fetch function to avoid recreating on every render
   const fetchUpdates = useCallback(async () => {
     if (!onUpdate) return;
 
-    // Get current metric IDs at call time to avoid stale closure
-    setMetrics(prev => {
-      const metricIds = prev.map(m => m.id);
-      
-      // Kick off async updates
-      Promise.all(
-        metricIds.map(async (metricId) => {
-          const newValue = await onUpdate(metricId);
-          return { metricId, newValue };
-        })
-      ).then(updates => {
-        setMetrics(current =>
-          current.map((metric) => {
-            const update = updates.find(u => u.metricId === metric.id);
-            const newHistory = [...metric.history, update?.newValue ?? metric.value].slice(-maxHistoryLength);
-            return {
-              ...metric,
-              value: update?.newValue ?? metric.value,
-              history: newHistory
-            };
-          })
-        );
-      });
+    // Get current metric IDs from ref to avoid stale closure
+    const currentMetrics = metricsRef.current;
+    const metricIds = currentMetrics.map(m => m.id);
+    
+    // Fetch all updates
+    const updates = await Promise.all(
+      metricIds.map(async (metricId) => {
+        const newValue = await onUpdate(metricId);
+        return { metricId, newValue };
+      })
+    );
 
-      return prev;
-    });
+    // Apply updates to state
+    setMetrics(prev =>
+      prev.map((metric) => {
+        const update = updates.find(u => u.metricId === metric.id);
+        const newHistory = [...metric.history, update?.newValue ?? metric.value].slice(-maxHistoryLength);
+        return {
+          ...metric,
+          value: update?.newValue ?? metric.value,
+          history: newHistory
+        };
+      })
+    );
   }, [onUpdate, maxHistoryLength]);
 
   useEffect(() => {
