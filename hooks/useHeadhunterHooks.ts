@@ -63,7 +63,7 @@ const ECOSYSTEM_VAULT_ABI = [
 ] as const;
 
 // Contract address (update with deployed address)
-const ECOSYSTEM_VAULT_ADDRESS = process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS as `0x${string}` || '0x0';
+const ECOSYSTEM_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 
 export interface HeadhunterStats {
   currentYearPoints: number;
@@ -314,7 +314,14 @@ export function useQuarterlyPoolEstimate() {
 
 /**
  * Get referral activity history
- * (Would need to be tracked via events or subgraph)
+ * 
+ * NOTE: This hook returns demo data for UI preview purposes.
+ * In production with a deployed subgraph, this would fetch real
+ * on-chain referral events. The subgraph would index:
+ * - UserReferred events from EcosystemVault
+ * - MerchantReferred events from EcosystemVault
+ * 
+ * For now, mock data provides a realistic UI experience for testing.
  */
 export interface ReferralActivity {
   id: string;
@@ -371,7 +378,13 @@ export function useReferralActivity() {
 
 /**
  * Get top 20 leaderboard
- * (Would need to be tracked via subgraph)
+ * 
+ * NOTE: This hook returns demo data for UI preview purposes.
+ * In production with a deployed subgraph, this would query aggregated
+ * referral points per address, sorted by total points descending.
+ * The subgraph would maintain running totals per year/quarter.
+ * 
+ * For now, mock data provides a realistic UI experience for testing.
  */
 export interface LeaderboardEntry {
   rank: number;

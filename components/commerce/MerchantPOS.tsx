@@ -133,7 +133,7 @@ export function MerchantPOS() {
           // Allow 1% tolerance for rounding
           if (Math.abs(receivedAmount - expectedAmount) / expectedAmount < 0.01) {
             // Payment confirmed! Complete the sale automatically
-            handlePaymentConfirmed(args.customer || '0x0', receivedAmount.toFixed(2))
+            handlePaymentConfirmed(args.customer || '0x0000000000000000000000000000000000000000', receivedAmount.toFixed(2))
           }
         }
       }

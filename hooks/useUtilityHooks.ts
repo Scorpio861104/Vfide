@@ -10,9 +10,19 @@ export * from './usePriceHooks'
 // SYSTEM STATS - Live network statistics
 // ============================================
 
+/**
+ * System stats hook for dashboard display
+ * 
+ * NOTE: This hook returns animated demo data for UI preview purposes.
+ * In production, these would read from actual contract state:
+ * - TVL: Sum of all vault balances (VaultRegistry.getTotalValueLocked())
+ * - Vaults: Count of registered vaults (VaultRegistry.getVaultCount())
+ * - Merchants: Count of registered merchants (MerchantRegistry.getMerchantCount())
+ * - Transactions: Would require subgraph for 24h transaction count
+ * 
+ * The animated mock data provides a realistic "live" UI experience for demos.
+ */
 export function useSystemStats() {
-  // These would read from actual contracts in production
-  // For now, return live-updating mock data that feels real
   const [stats, setStats] = useState({
     tvl: 0,
     vaults: 0,
