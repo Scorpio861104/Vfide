@@ -11,6 +11,7 @@ import { usePublicClient, useAccount, useReadContract } from 'wagmi';
 import { CONTRACT_ADDRESSES, SEER_ABI } from '@/lib/contracts';
 import { getScoreTier as _getScoreTier } from './useProofScore';
 import { parseAbiItem } from 'viem';
+import { safeGetJSON, safeSetJSON, safeRemoveItem } from '@/lib/storage';
 
 // ============================================================================
 // TYPES
@@ -64,33 +65,24 @@ function getTierFromScore(score: number): string {
 function getCachedLeaderboard(): LeaderboardEntry[] | null {
   if (typeof window === 'undefined') return null;
   
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (!cached) return null;
-    
-    const { entries, timestamp } = JSON.parse(cached);
-    if (Date.now() - timestamp > CACHE_TTL) {
-      localStorage.removeItem(CACHE_KEY);
-      return null;
-    }
-    
-    return entries;
-  } catch {
+  const cached = safeGetJSON<{ entries: LeaderboardEntry[]; timestamp: number }>(CACHE_KEY, { entries: [], timestamp: 0 });
+  if (!cached.entries || !cached.timestamp) return null;
+  
+  if (Date.now() - cached.timestamp > CACHE_TTL) {
+    safeRemoveItem(CACHE_KEY);
     return null;
   }
+  
+  return cached.entries;
 }
 
 function setCachedLeaderboard(entries: LeaderboardEntry[]): void {
   if (typeof window === 'undefined') return;
   
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      entries,
-      timestamp: Date.now(),
-    }));
-  } catch {
-    // Storage full or unavailable
-  }
+  safeSetJSON(CACHE_KEY, {
+    entries,
+    timestamp: Date.now(),
+  });
 }
 
 // ============================================================================

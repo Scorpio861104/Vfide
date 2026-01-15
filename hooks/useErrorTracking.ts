@@ -7,6 +7,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { ErrorLog, ErrorCategory } from '@/config/performance-dashboard';
+import { safeGetJSON, safeSetJSON } from '@/lib/storage';
 
 interface UseErrorTrackingResult {
   errors: ErrorLog[];
@@ -35,26 +36,15 @@ export function useErrorTracking(): UseErrorTrackingResult {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setErrors(Array.isArray(parsed) ? parsed : []);
-      }
-    } catch (e) {
-      console.error('Failed to load error logs:', e);
-    }
+    const parsed = safeGetJSON<ErrorLog[]>(STORAGE_KEY, []);
+    setErrors(Array.isArray(parsed) ? parsed : []);
   }, []);
 
   // Save errors to localStorage whenever they change with SSR safety
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(errors));
-    } catch (e) {
-      console.error('Failed to save error logs:', e);
-    }
+    safeSetJSON(STORAGE_KEY, errors);
   }, [errors]);
 
   // Add a new error log
@@ -92,9 +82,9 @@ export function useErrorTracking(): UseErrorTrackingResult {
   }, []);
 
   // Clear all errors
+  // Clear all errors
   const clearErrors = useCallback(() => {
     setErrors([]);
-    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   // Filter by severity
