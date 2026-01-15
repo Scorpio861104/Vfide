@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http, parseEther, formatEther } from 'viem';
 import { baseSepolia } from 'viem/chains';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
 const client = createPublicClient({
   chain: baseSepolia,
@@ -65,6 +66,16 @@ function calculateTotalAmount(
 }
 
 export async function GET(request: NextRequest) {
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 50, windowMs: 60000 });
+
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const amount = searchParams.get('amount');

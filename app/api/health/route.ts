@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
 /**
  * Health check endpoint for the frontend application
@@ -11,7 +12,17 @@ import { NextResponse } from 'next/server';
  * 
  * Returns basic application status and version information
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 100, windowMs: 60000 });
+
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   const healthData = {
     status: 'ok',
     timestamp: new Date().toISOString(),
