@@ -17,6 +17,7 @@
 import React, { useState } from 'react';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
+import { safeParseInt } from '@/lib/validation';
 
 // ==================== TYPES ====================
 
@@ -578,7 +579,7 @@ export default function GovernanceUI() {
     const newDelegation: Delegation = {
       delegator: '0xuser...',
       delegatee: delegateeAddress,
-      votes: parseInt(votesAmount) * 1000000,
+      votes: safeParseInt(votesAmount, 0) * 1000000,
       timestamp: Date.now(),
       active: true,
     };

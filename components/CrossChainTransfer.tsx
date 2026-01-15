@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useCrossChain, Route, TransferRequest } from '@/lib/crossChain';
 import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
+import { safeParseInt } from '@/lib/validation';
 
 // ============================================================================
 // Cross-Chain Transfer Component
@@ -163,7 +164,7 @@ export default function CrossChainTransfer() {
           <div className="flex gap-3">
             <select
               value={fromChain}
-              onChange={(e) => setFromChain(Number(e.target.value))}
+              onChange={(e) => setFromChain(safeParseInt(e.target.value, 8453))}
               className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm"
             >
               {supportedChains.filter((c) => !c.isTestnet).map((chain) => (
@@ -210,7 +211,7 @@ export default function CrossChainTransfer() {
           <div className="flex gap-3">
             <select
               value={toChain}
-              onChange={(e) => setToChain(Number(e.target.value))}
+              onChange={(e) => setToChain(safeParseInt(e.target.value, 42161))}
               className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm"
             >
               {supportedChains.filter((c) => !c.isTestnet).map((chain) => (

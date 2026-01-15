@@ -8,13 +8,16 @@
 import { useFeeCalculator, useProofScore } from '@/lib/vfide-hooks'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
+import { safeParseFloat } from '@/lib/validation'
 
 export function FeeSavingsCalculator() {
   const [amount, setAmount] = useState('100')
   const { score, burnFee, tier, color } = useProofScore()
   const calculator = useFeeCalculator(amount)
   
-  const amountNum = parseFloat(amount) || 0
+  const amountNum = safeParseFloat(amount, 0)
+  const stripeFeePercent = amountNum > 0 ? (safeParseFloat(calculator.stripeFee, 0) / amountNum) * 100 : 0
+  const vfideFeePercent = amountNum > 0 ? (safeParseFloat(calculator.vfideFee, 0) / amountNum) * 100 : 0
   
   return (
     <div className="space-y-3 sm:space-y-4 md:space-y-6 overflow-hidden">
@@ -86,12 +89,12 @@ export function FeeSavingsCalculator() {
                 <motion.div
                   className="h-full bg-[#FF4444]"
                   initial={{ width: 0 }}
-                  animate={{ width: `${(parseFloat(calculator.stripeFee) / amountNum) * 100}%` }}
+                  animate={{ width: `${stripeFeePercent}%` }}
                   transition={{ duration: 0.5 }}
                 />
               </div>
               <p className="text-[8px] sm:text-[10px] md:text-xs text-[#F5F3E8]/40 text-center">
-                {((parseFloat(calculator.stripeFee) / amountNum) * 100).toFixed(1)}% fee
+                {stripeFeePercent.toFixed(1)}% fee
               </p>
             </div>
           </div>
@@ -146,12 +149,12 @@ export function FeeSavingsCalculator() {
                   className="h-full"
                   style={{ backgroundColor: color }}
                   initial={{ width: 0 }}
-                  animate={{ width: `${(parseFloat(calculator.vfideFee) / amountNum) * 100}%` }}
+                  animate={{ width: `${vfideFeePercent}%` }}
                   transition={{ duration: 0.5 }}
                 />
               </div>
               <p className="text-[8px] sm:text-[10px] md:text-xs text-[#F5F3E8]/40 text-center">
-                {((parseFloat(calculator.vfideFee) / amountNum) * 100).toFixed(1)}% burn
+                {vfideFeePercent.toFixed(1)}% burn
               </p>
             </div>
           </div>
@@ -190,7 +193,7 @@ export function FeeSavingsCalculator() {
                 If you process ${amount} monthly:
               </p>
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-[#00FF88] mt-1 sm:mt-2">
-                ${(parseFloat(calculator.savings) * 12).toFixed(2)}/year saved!
+                ${(safeParseFloat(calculator.savings, 0) * 12).toFixed(2)}/year saved!
               </p>
             </motion.div>
           )}

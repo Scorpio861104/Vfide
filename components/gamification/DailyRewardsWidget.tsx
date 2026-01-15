@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { Gift, Flame, Calendar, CheckCircle2 } from 'lucide-react';
+import { safeParseInt } from '@/lib/validation';
 
 interface DailyReward {
   day: number;
@@ -38,7 +39,7 @@ export default function DailyRewardsWidget() {
     // In production: Check API for last claim time
     const lastClaim = localStorage.getItem('lastDailyClaim');
     if (lastClaim) {
-      const lastClaimTime = parseInt(lastClaim);
+      const lastClaimTime = safeParseInt(lastClaim, 0);
       const now = Date.now();
       const hoursUntilNext = 24 - ((now - lastClaimTime) / (1000 * 60 * 60));
       

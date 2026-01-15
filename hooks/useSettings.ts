@@ -10,6 +10,7 @@ import {
   PreferenceSettings,
   ThemeOption
 } from '@/config/settings';
+import { safeGetItem, safeSetJSON } from '@/lib/storage';
 
 const STORAGE_KEY = 'vfide:settings';
 
@@ -33,7 +34,7 @@ const loadFromStorage = (): SettingsState => {
   if (typeof window === 'undefined') return defaultSettings;
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = safeGetItem(STORAGE_KEY, '');
     if (!raw) return defaultSettings;
 
     const parsed = safeParseSettings(raw);
@@ -74,8 +75,9 @@ export const useSettings = (): UseSettingsResult => {
         savedAt: new Date().toISOString(),
         state: next
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      setLastSaved(new Date());
+      if (safeSetJSON(STORAGE_KEY, payload)) {
+        setLastSaved(new Date());
+      }
     },
     []
   );

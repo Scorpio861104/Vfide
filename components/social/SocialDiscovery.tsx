@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { safeParseInt } from '@/lib/validation';
 import {
   Search,
   Filter,
@@ -334,7 +335,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                     <input
                       type="number"
                       value={filter.proofScoreMin || ''}
-                      onChange={(e) => setFilter({ ...filter, proofScoreMin: e.target.value ? parseInt(e.target.value) : undefined })}
+                      onChange={(e) => setFilter({ ...filter, proofScoreMin: e.target.value ? safeParseInt(e.target.value, 0, { min: 0 }) : undefined })}
                       className="w-full px-3 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded text-[#F5F3E8] focus:outline-none focus:border-[#00F0FF]"
                       placeholder="0"
                     />
@@ -345,7 +346,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                     <input
                       type="number"
                       value={filter.proofScoreMax || ''}
-                      onChange={(e) => setFilter({ ...filter, proofScoreMax: e.target.value ? parseInt(e.target.value) : undefined })}
+                      onChange={(e) => setFilter({ ...filter, proofScoreMax: e.target.value ? safeParseInt(e.target.value, undefined, { max: 10000 }) : undefined })}
                       className="w-full px-3 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded text-[#F5F3E8] focus:outline-none focus:border-[#00F0FF]"
                       placeholder="10000"
                     />

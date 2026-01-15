@@ -20,6 +20,7 @@ import {
     Users,
 } from 'lucide-react';
 import React from 'react';
+import { safeParseFloat } from '@/lib/validation';
 
 interface RewardsDisplayProps {
   userId: string;
@@ -69,7 +70,7 @@ export function RewardsDisplay({ userId }: RewardsDisplayProps) {
           </div>
         </div>
 
-        {parseFloat(totalUnclaimed) > 0 && (
+        {safeParseFloat(totalUnclaimed, 0) > 0 && (
           <button
             onClick={handleClaim}
             disabled={claiming}

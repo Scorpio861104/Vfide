@@ -13,6 +13,7 @@ import { formatEther } from 'viem'
 import { useIsMerchant, useFeeCalculator } from '@/lib/vfide-hooks'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { MerchantPortalABI } from '@/lib/abis'
+import { safeParseFloat } from '@/lib/validation'
 
 interface Product {
   id: string
@@ -84,7 +85,7 @@ export function MerchantPOS() {
     const squareFee = amount * 0.026 + 0.10
     const cloverFee = amount * 0.026 + 0.10 + 14.95 / 30 // $14.95/month averaged per day
     const paypalFee = amount * 0.0349 + 0.49
-    const vfideFee = parseFloat(calculator.vfideFee)
+    const vfideFee = safeParseFloat(calculator.vfideFee, 0)
     
     return {
       stripe: stripeFee,
@@ -127,11 +128,11 @@ export function MerchantPOS() {
         const args = (log as unknown as { args: { customer?: `0x${string}`, merchant?: `0x${string}`, amount?: bigint } }).args
         // Check if this payment is for us
         if (args.merchant?.toLowerCase() === address.toLowerCase()) {
-          const receivedAmount = args.amount ? parseFloat(formatEther(args.amount)) : 0
-          const expectedAmount = parseFloat(pendingPaymentRef.current.expectedAmount)
+          const receivedAmount = args.amount ? safeParseFloat(formatEther(args.amount), 0) : 0
+          const expectedAmount = safeParseFloat(pendingPaymentRef.current.expectedAmount, 0)
           
-          // Allow 1% tolerance for rounding
-          if (Math.abs(receivedAmount - expectedAmount) / expectedAmount < 0.01) {
+          // Allow 1% tolerance for rounding (only if expectedAmount > 0)
+          if (expectedAmount > 0 && Math.abs(receivedAmount - expectedAmount) / expectedAmount < 0.01) {
             // Payment confirmed! Complete the sale automatically
             handlePaymentConfirmed(args.customer || '0x0000000000000000000000000000000000000000', receivedAmount.toFixed(2))
           }
@@ -173,7 +174,7 @@ export function MerchantPOS() {
     const product: Product = {
       id: Date.now().toString(),
       name: newProduct.name,
-      price: parseFloat(newProduct.price),
+      price: safeParseFloat(newProduct.price, 0),
       category: newProduct.category || 'Other',
       description: newProduct.description,
     }

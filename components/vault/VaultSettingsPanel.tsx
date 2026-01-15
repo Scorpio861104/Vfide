@@ -37,6 +37,7 @@ import {
   useExecutePendingTransaction,
   useCleanupExpiredTransaction,
 } from '@/lib/vfide-hooks'
+import { safeParseInt } from '@/lib/validation';
 
 // Dummy address for hooks when vault is not yet available
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
@@ -235,7 +236,7 @@ export function VaultSettingsPanel() {
               type="number"
               min="0"
               value={selectedTxId}
-              onChange={(e) => setSelectedTxId(parseInt(e.target.value) || 0)}
+              onChange={(e) => setSelectedTxId(safeParseInt(e.target.value, 0, { min: 0 }))}
               placeholder="Transaction ID"
               className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white"
             />

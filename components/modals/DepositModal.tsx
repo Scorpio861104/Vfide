@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowDownCircle, Wallet } from 'lucide-react';
+import { safeParseFloat } from '@/lib/validation';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export default function DepositModal({
   const [loading, setLoading] = useState(false);
 
   const handleDeposit = async () => {
-    if (!amount || parseFloat(amount) <= 0) return;
+    if (!amount || safeParseFloat(amount, 0) <= 0) return;
 
     setLoading(true);
     try {
@@ -139,7 +140,7 @@ export default function DepositModal({
             </button>
             <button
               onClick={handleDeposit}
-              disabled={loading || !amount || parseFloat(amount) <= 0}
+              disabled={loading || !amount || safeParseFloat(amount, 0) <= 0}
               className="px-4 py-3 bg-[#00F0FF] text-black rounded-lg font-medium hover:bg-[#00D0DF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Depositing...' : 'Deposit'}

@@ -28,6 +28,7 @@ import {
   formatUsageLimit,
   isInviteLinkValid,
 } from '@/lib/inviteLinks';
+import { safeParseInt } from '@/lib/validation';
 import { useAnnounce } from '@/lib/accessibility';
 
 interface InviteLinkCreatorProps {
@@ -156,7 +157,7 @@ export function InviteLinkCreator({
                   </label>
                   <select
                     value={expiresIn}
-                    onChange={(e) => setExpiresIn(Number(e.target.value))}
+                    onChange={(e) => setExpiresIn(safeParseInt(e.target.value, 86400))}
                     className="w-full px-3 py-2 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white focus:outline-none focus:border-blue-500"
                   >
                     {EXPIRATION_OPTIONS.map((option) => (
@@ -175,7 +176,7 @@ export function InviteLinkCreator({
                   </label>
                   <select
                     value={maxUses}
-                    onChange={(e) => setMaxUses(Number(e.target.value))}
+                    onChange={(e) => setMaxUses(safeParseInt(e.target.value, 0))}
                     className="w-full px-3 py-2 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white focus:outline-none focus:border-blue-500"
                   >
                     {MAX_USES_OPTIONS.map((option) => (

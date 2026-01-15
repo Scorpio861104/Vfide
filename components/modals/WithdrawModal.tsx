@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowUpCircle, Wallet, AlertCircle } from 'lucide-react';
+import { safeParseFloat } from '@/lib/validation';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export default function WithdrawModal({
   const [loading, setLoading] = useState(false);
 
   const handleWithdraw = async () => {
-    if (!amount || parseFloat(amount) <= 0 || !toAddress) return;
+    if (!amount || safeParseFloat(amount, 0) <= 0 || !toAddress) return;
 
     setLoading(true);
     try {
@@ -170,7 +171,7 @@ export default function WithdrawModal({
             </button>
             <button
               onClick={handleWithdraw}
-              disabled={loading || !amount || parseFloat(amount) <= 0 || !toAddress}
+              disabled={loading || !amount || safeParseFloat(amount, 0) <= 0 || !toAddress}
               className="px-4 py-3 bg-[#FF6B9D] text-white rounded-lg font-medium hover:bg-[#FF5B8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Withdrawing...' : 'Withdraw'}
