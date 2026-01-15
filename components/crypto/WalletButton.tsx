@@ -4,7 +4,10 @@
  * Uses RainbowKit's ConnectButton for consistent wallet management.
  * This replaces the custom implementation to ensure single source of truth.
  * 
- * Enhanced with better accessibility and responsiveness.
+ * Phase 1 Enhancements:
+ * - Better accessibility and keyboard navigation
+ * - Enhanced responsiveness
+ * - Focus indicators
  */
 
 'use client';
@@ -18,7 +21,10 @@ export function WalletButton() {
 
 /**
  * Compact wallet button for smaller spaces
- * Enhanced with better click handling and accessibility
+ * Enhanced with Phase 1 improvements:
+ * - Better click handling and accessibility
+ * - Keyboard navigation support
+ * - Focus indicators
  */
 export function WalletButtonCompact() {
   return (
@@ -50,9 +56,15 @@ export function WalletButtonCompact() {
                 return (
                   <button
                     onClick={openConnectModal}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openConnectModal();
+                      }
+                    }}
                     type="button"
                     aria-label="Connect your wallet"
-                    className="flex items-center gap-2 px-3 py-1.5 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm rounded-lg transition-all cursor-pointer touch-manipulation"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm rounded-lg transition-all cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                   >
                     Connect
                   </button>
@@ -63,9 +75,15 @@ export function WalletButtonCompact() {
                 return (
                   <button
                     onClick={openChainModal}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openChainModal();
+                      }
+                    }}
                     type="button"
                     aria-label="Switch to supported network"
-                    className="flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all cursor-pointer touch-manipulation"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                   >
                     Wrong network
                   </button>
@@ -75,9 +93,15 @@ export function WalletButtonCompact() {
               return (
                 <button
                   onClick={openAccountModal}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      openAccountModal();
+                    }
+                  }}
                   type="button"
                   aria-label="Open account menu"
-                  className="flex items-center gap-2 px-3 py-1.5 bg-[#1A1A1F] border border-[#2A2A2F] hover:border-blue-500/50 text-white text-sm rounded-lg transition-colors cursor-pointer touch-manipulation"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[#1A1A1F] border border-[#2A2A2F] hover:border-blue-500/50 text-white text-sm rounded-lg transition-colors cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                 >
                   {account.displayName}
                 </button>
