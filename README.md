@@ -268,31 +268,252 @@ VFIDE is deployed on multiple chains for flexibility and low fees:
 
 ---
 
-## 💰 Token Economics
+## 💰 Token Economics & Tokenomics
 
-### VFIDE Token
+### VFIDE Token Overview
 
 | Property | Value |
 |----------|-------|
 | 📛 **Name** | VFIDE Token |
 | 🔤 **Symbol** | VFIDE |
 | 🔢 **Decimals** | 18 |
-| 📊 **Supply** | Deflationary (burns on transfers) |
-
-### Fee Distribution
-
-When you transfer VFIDE tokens, the fee is distributed as follows:
-
-```
-Transfer Fee (0.25% - 5% based on ProofScore)
-├── 🔥 Burned (60%) — Permanently removed from circulation
-├── 🏛️ Treasury (25%) — Community governance fund
-└── 🛡️ Security Fund (15%) — Insurance against exploits
-```
+| 📊 **Total Supply** | **200,000,000 VFIDE** (Fixed, no inflation) |
+| 🔥 **Mechanism** | Deflationary (burns on every transfer) |
 
 ---
 
-## 🛡️ Security Features
+### Token Distribution
+
+| Allocation | Amount | Percentage | Details |
+|------------|--------|------------|---------|
+| 🏛️ **Treasury/Operations** | 100,000,000 | 50% | Community governance, rewards, operations |
+| 💎 **Presale** | 50,000,000 | 25% | 35M base + 15M bonus pool |
+| 👨‍💻 **Developer Reserve** | 50,000,000 | 25% | 36-month vesting, 60-day cliff |
+
+---
+
+### 💎 Presale Tiers & Pricing
+
+| Tier | Price per VFIDE | Token Cap | Total Raise |
+|------|-----------------|-----------|-------------|
+| 🏆 **Founding Tier** | $0.03 | 10,000,000 | $300,000 |
+| ⚔️ **Oath Tier** | $0.05 | 10,000,000 | $500,000 |
+| 🌐 **Public Tier** | $0.07 | 15,000,000 | $1,050,000 |
+| | | **35M Base** | **$1.85M** |
+
+**Projected Listing Price:** $0.10 – $0.14 (based on presale completion)
+
+---
+
+### 🔒 Lock Period Bonuses
+
+Buyers can choose to lock tokens for bonus rewards from the 15M bonus pool:
+
+| Lock Period | Bonus Tokens | Immediate Access | Example: 10,000 VFIDE Purchase |
+|-------------|--------------|------------------|-------------------------------|
+| 🔒 **180 Days** | +30% | 10% | Receive 13,000 (1,300 now, 11,700 at unlock) |
+| 🔒 **90 Days** | +15% | 20% | Receive 11,500 (2,300 now, 9,200 at unlock) |
+| 🔓 **No Lock** | 0% | 100% | Receive 10,000 immediately |
+
+---
+
+### 🤝 Referral Rewards
+
+| Role | Bonus | Source |
+|------|-------|--------|
+| 🎯 **Referrer** | +3% of base tokens | 15M bonus pool |
+| 👤 **Referee** | +2% of base tokens | 15M bonus pool |
+
+*Example: Refer a friend who buys 10,000 VFIDE → You get 300 VFIDE, they get 200 VFIDE extra*
+
+---
+
+### 📅 Developer Vesting Schedule
+
+| Parameter | Value |
+|-----------|-------|
+| 📊 **Total Allocation** | 50,000,000 VFIDE (25% of supply) |
+| ⏰ **Vesting Period** | 36 months |
+| 🚫 **Cliff Period** | 60 days (no tokens for first 2 months) |
+| 📆 **Unlock Frequency** | Bi-monthly (every 60 days) |
+| 📈 **Per Unlock** | ~2,778,000 VFIDE |
+
+---
+
+### 🔥 Transaction Fee Structure
+
+Every VFIDE transfer incurs a fee based on the sender's ProofScore:
+
+| ProofScore Range | Fee Rate | Example on 1,000 VFIDE |
+|------------------|----------|------------------------|
+| 🟢 8,000+ (Elite) | **0.25%** | 2.5 VFIDE |
+| 🔵 7,000-7,999 (High Trust) | **1.0%** | 10 VFIDE |
+| 🟡 5,000-6,999 (Neutral) | **2.0%** | 20 VFIDE |
+| 🟠 4,000-4,999 (Low Trust) | **3.5%** | 35 VFIDE |
+| 🔴 <4,000 (Risky) | **5.0%** | 50 VFIDE |
+
+---
+
+### 💸 Fee Distribution (Revenue Splitter)
+
+Every fee collected is automatically split by the Revenue Splitter contract:
+
+```
+Transaction Fee Collected
+│
+├── 🔥 BURN ADDRESS (62.5%)
+│   └── Permanently removed from circulation
+│   └── Deflationary pressure on token supply
+│
+├── 🏛️ SANCTUM VAULT (31.25%)
+│   └── Community charity fund
+│   └── Supports verified charitable causes
+│   └── DAO-governed disbursements
+│
+└── ⚙️ ECOSYSTEM VAULT (6.25%)
+    └── Funds ongoing operations & rewards
+```
+
+**Alternative View (Basis Points):**
+- Burn: 200/320 = 62.5%
+- Sanctum: 100/320 = 31.25%
+- Ecosystem: 20/320 = 6.25%
+
+---
+
+### ⚙️ Ecosystem Vault Allocation
+
+The Ecosystem Vault funds are allocated to support the platform:
+
+| Category | Percentage | Annual Estimate* |
+|----------|------------|------------------|
+| 🏛️ **Council Salaries** | 40% | ~7,400,000 VFIDE |
+| 🛒 **Merchant Rewards** | 25% | ~4,600,000 VFIDE |
+| 🎯 **Headhunter Bounties** | 20% | ~3,700,000 VFIDE |
+| 🔧 **Operations** | 15% | ~2,800,000 VFIDE |
+
+*Based on estimated annual ecosystem vault inflows of ~18.5M VFIDE*
+
+---
+
+### 🎯 Headhunter (Referral) Rewards
+
+The Headhunter program rewards users who bring new members to VFIDE:
+
+| Referral Type | Points Earned |
+|---------------|---------------|
+| 👤 **User Referral** | 1 point |
+| 🏪 **Merchant Referral** | 3 points |
+
+**Quarterly Leaderboard Rewards (Top 20):**
+
+| Rank | Share of Quarterly Pool |
+|------|------------------------|
+| 🥇 **1st Place** | 15.0% |
+| 🥈 **2nd Place** | 12.0% |
+| 🥉 **3rd Place** | 10.0% |
+| 4th | 8.0% |
+| 5th | 7.0% |
+| 6th-10th | 6.0% - 3.5% (decreasing) |
+| 11th-20th | 3.0% - 1.2% (decreasing) |
+
+---
+
+### 🏪 Merchant Fees
+
+| Fee Type | Rate |
+|----------|------|
+| 🛒 **Protocol Processing Fee** | **0%** |
+| 💱 **Auto-Convert (STABLE-PAY)** | DEX swap fees only (~0.3%) |
+| ⏳ **Escrow** | No additional fees |
+
+**Comparison to Traditional Processors:**
+
+| Platform | Processing Fee |
+|----------|---------------|
+| ✅ **VFIDE** | 0% protocol fee |
+| Stripe | 2.9% + $0.30 |
+| Square | 2.6% + $0.10 |
+| PayPal | 2.9% + $0.30 |
+
+---
+
+### 📊 Deflationary Mechanics
+
+Every transaction burns tokens, reducing the total supply over time:
+
+```
+Starting Supply: 200,000,000 VFIDE
+                      │
+                      ▼
+    ┌─────────────────────────────────┐
+    │     Continuous Burns from:      │
+    │   • Every transfer (0.25-5%)    │
+    │   • Fee portion sent to burn    │
+    │   • No new tokens ever minted   │
+    └─────────────────────────────────┘
+                      │
+                      ▼
+         Decreasing Supply Over Time
+                (Deflationary)
+```
+
+**Key Deflationary Features:**
+- ✅ **Fixed supply** — No inflation, no new minting
+- ✅ **Burn on every transfer** — 62.5% of fees burned permanently
+- ✅ **Higher fees for risky users** — More burns from untrusted activity
+- ✅ **Long-term scarcity** — Supply can only decrease
+
+---
+
+## � Escrow System
+
+VFIDE offers a built-in escrow system for secure transactions between parties who don't yet trust each other.
+
+### How Escrow Works
+
+```
+1. BUYER creates escrow
+   │  Funds locked in smart contract
+   │
+   ▼
+2. MERCHANT fulfills order
+   │  Ships product or delivers service
+   │
+   ▼
+3. BUYER releases funds
+   │  One-click confirmation
+   │  Funds sent to merchant instantly
+   │
+   OR
+   │
+3b. DISPUTE raised
+    │  Arbiter reviews case
+    │  Funds allocated based on ruling
+```
+
+### Escrow States
+
+| State | Description |
+|-------|-------------|
+| 🟡 **Pending** | Funds locked, awaiting fulfillment |
+| 🟢 **Released** | Buyer confirmed, funds sent to merchant |
+| 🔴 **Refunded** | Order canceled, funds returned to buyer |
+| ⚖️ **Disputed** | Under review by arbiter |
+| ⏰ **Timed Out** | Release time passed, merchant can claim |
+
+### Escrow Features
+
+| Feature | Details |
+|---------|---------|
+| ⏳ **Release Timer** | Configurable auto-release window |
+| ⚖️ **Dispute Resolution** | Trusted arbiters resolve conflicts |
+| 🔐 **Non-Custodial** | Smart contract holds funds, not VFIDE |
+| 💰 **No Escrow Fees** | 0% additional protocol fees |
+
+---
+
+## �🛡️ Security Features
 
 ### Smart Contract Security
 
