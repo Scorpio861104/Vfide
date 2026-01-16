@@ -1,9 +1,16 @@
 'use client';
 
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { Search, Compass, TrendingUp, Users, Activity } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+// Note: metadata export doesn't work with 'use client', handled in parent layout
+// export const metadata: Metadata = {
+//   title: 'VFIDE Explorer - Search Addresses & Transactions',
+//   description: 'Explore the VFIDE network. Search wallet addresses, view user profiles, ProofScores, badges, and network activity.',
+// };
 
 export default function ExplorerPage() {
   const [searchInput, setSearchInput] = useState('');
