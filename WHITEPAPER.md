@@ -1,0 +1,1046 @@
+# VFIDE Protocol Whitepaper
+
+**Version 1.0 | January 2026**
+
+<div align="center">
+
+## A Trust-Based Decentralized Payment Protocol
+
+*Building the Future of Reputation-Driven Commerce*
+
+</div>
+
+---
+
+## Table of Contents
+
+1. [Executive Summary](#1-executive-summary)
+2. [Introduction & Problem Statement](#2-introduction--problem-statement)
+3. [The VFIDE Solution](#3-the-vfide-solution)
+4. [ProofScore System](#4-proofscore-system)
+5. [Token Economics](#5-token-economics)
+6. [Fee Structure & Revenue Distribution](#6-fee-structure--revenue-distribution)
+7. [Smart Contract Architecture](#7-smart-contract-architecture)
+8. [Governance System](#8-governance-system)
+9. [Merchant Portal](#9-merchant-portal)
+10. [Escrow System](#10-escrow-system)
+11. [Vault System](#11-vault-system)
+12. [Badge & Gamification System](#12-badge--gamification-system)
+13. [Mentorship Program](#13-mentorship-program)
+14. [Headhunter Referral Program](#14-headhunter-referral-program)
+15. [Multi-Chain Deployment](#15-multi-chain-deployment)
+16. [Security Model](#16-security-model)
+17. [Technical Implementation](#17-technical-implementation)
+18. [Roadmap](#18-roadmap)
+19. [Legal Considerations](#19-legal-considerations)
+20. [Conclusion](#20-conclusion)
+
+---
+
+## 1. Executive Summary
+
+VFIDE is a **trust-based decentralized payment protocol** that fundamentally reimagines how transaction fees are calculated. Unlike traditional payment systems where all users pay identical fees regardless of their behavior or history, VFIDE implements a dynamic fee structure based on each user's **ProofScore** — a transparent, on-chain reputation metric.
+
+### Core Innovation
+
+**The VFIDE Premise:** Users who demonstrate trustworthy behavior pay lower transaction fees, while users with poor reputations pay higher fees. This creates a positive-sum game where:
+
+- Good actors are rewarded with reduced costs
+- Bad actors bear higher costs that fund ecosystem development
+- The community self-regulates through endorsements and governance
+- Token supply is deflationary through continuous burns
+
+### Key Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total Token Supply | 200,000,000 VFIDE (Fixed) |
+| Fee Range | 0.25% – 5.0% (based on ProofScore) |
+| Burn Rate | 62.5% of all fees |
+| Governance Threshold | 5,400+ ProofScore |
+| Merchant Threshold | 5,600+ ProofScore |
+| Council Threshold | 7,000+ ProofScore |
+
+---
+
+## 2. Introduction & Problem Statement
+
+### 2.1 The Trust Problem in Digital Payments
+
+Traditional payment systems treat all participants equally, regardless of their history or behavior. A first-time user with no track record pays the same 2.9% + $0.30 as a verified merchant with 10,000 successful transactions. This creates several problems:
+
+1. **No incentive for good behavior** — Users gain nothing from maintaining positive reputations
+2. **Fraud externalities** — Honest users subsidize fraud losses through uniform fees
+3. **Centralized trust** — Platforms like PayPal act as trust authorities, extracting fees for this service
+4. **Chargeback abuse** — Merchants lose billions annually to fraudulent chargebacks
+5. **Limited recourse** — Dispute resolution is slow, opaque, and biased toward buyers
+
+### 2.2 The Crypto Payment Problem
+
+Existing cryptocurrency payment solutions haven't solved these problems:
+
+- **Flat fees** — Same gas costs for trusted and untrusted users
+- **No reputation** — No on-chain identity or trust scoring
+- **Payment friction** — Complex wallet interactions deter mainstream adoption
+- **Volatility risk** — Merchants hesitate to accept volatile assets
+
+### 2.3 The Opportunity
+
+VFIDE addresses these gaps by creating a **trust layer** for blockchain payments. By encoding reputation on-chain and dynamically adjusting fees based on behavior, we create:
+
+- **Aligned incentives** — Users want to build trust to reduce costs
+- **Self-regulating ecosystem** — Community identifies bad actors
+- **Transparent scoring** — All reputation data is verifiable on-chain
+- **Merchant confidence** — Trust scores enable informed decisions
+
+---
+
+## 3. The VFIDE Solution
+
+### 3.1 Core Components
+
+VFIDE is built on five foundational pillars:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      VFIDE PROTOCOL                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  ProofScore  │  │    Vault     │  │   Merchant   │      │
+│  │    Engine    │  │    System    │  │    Portal    │      │
+│  │   (Seer)     │  │  (VaultHub)  │  │              │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │     DAO      │  │    Escrow    │  │    Badge     │      │
+│  │  Governance  │  │    System    │  │    System    │      │
+│  │              │  │              │  │              │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │              Revenue Splitter                       │    │
+│  │    (Burn + Sanctum + Ecosystem Distribution)        │    │
+│  └────────────────────────────────────────────────────┘    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 3.2 User Journey
+
+1. **Connect Wallet** → User connects MetaMask, Coinbase, or WalletConnect
+2. **Create Vault** → Personal smart contract wallet deployed
+3. **Build Reputation** → ProofScore starts at 5,000 (neutral)
+4. **Transact** → Fees calculated based on current ProofScore
+5. **Participate** → Vote on governance, earn badges, mentor others
+6. **Unlock Benefits** → Higher scores unlock lower fees and more features
+
+---
+
+## 4. ProofScore System
+
+### 4.1 Overview
+
+The **ProofScore** is VFIDE's reputation metric, ranging from 0 to 10,000. It is calculated and stored on-chain by the **Seer** smart contract. Every user action that affects trust is recorded immutably.
+
+### 4.2 Score Tiers
+
+| Tier | Score Range | Fee Rate | Permissions |
+|------|-------------|----------|-------------|
+| 🔴 Risky | 0 – 3,499 | 5.0% | Basic transfers only |
+| 🟠 Low Trust | 3,500 – 4,999 | 3.5% | Basic transfers only |
+| 🟡 Neutral | 5,000 – 5,399 | 2.0% | New user default |
+| 🔵 Governance | 5,400 – 5,599 | 2.0% | + DAO voting |
+| 🟢 Trusted | 5,600 – 6,999 | 2.0% | + Merchant registration |
+| 🟢 Council | 7,000 – 7,999 | 1.0% | + Council candidacy, mentorship |
+| 🟢 Elite | 8,000 – 10,000 | 0.25% | + Endorsing, all features |
+
+### 4.3 Score Components
+
+ProofScore is calculated from multiple weighted factors:
+
+```solidity
+ProofScore = BaseScore 
+           + VaultBonus 
+           + TransactionPoints 
+           + GovernancePoints 
+           + BadgePoints 
+           + EndorsementPoints 
+           - PenaltyPoints
+           - InactivityDecay
+```
+
+| Component | Max Points | Description |
+|-----------|------------|-------------|
+| Base Score | 5,000 | All users start here |
+| Vault Bonus | 500 | Awarded when vault is created |
+| Transaction Points | 1,500 | Earned from successful transfers |
+| Governance Points | 500 | Earned from voting on proposals |
+| Badge Points | 1,000 | Earned from achievement badges |
+| Endorsement Points | 1,500 | Received from Elite user endorsements |
+| Penalty Points | -2,000 | Deducted for disputes, fraud |
+| Inactivity Decay | -500 | Gradual decay if inactive >30 days |
+
+### 4.4 Score Calculation Formula
+
+The Seer contract calculates fees using basis points (1 bps = 0.01%):
+
+```solidity
+function calculateFee(address user, uint256 amount) public view returns (uint256) {
+    uint256 score = proofScore[user];
+    uint256 feeBPS;
+    
+    if (score >= 8000) {
+        feeBPS = 25;      // 0.25%
+    } else if (score >= 7000) {
+        feeBPS = 100;     // 1.0%
+    } else if (score >= 5000) {
+        feeBPS = 200;     // 2.0%
+    } else if (score >= 4000) {
+        feeBPS = 350;     // 3.5%
+    } else {
+        feeBPS = 500;     // 5.0%
+    }
+    
+    return (amount * feeBPS) / 10000;
+}
+```
+
+### 4.5 Score Update Events
+
+ProofScore changes are triggered by on-chain events:
+
+| Event | Points | Direction |
+|-------|--------|-----------|
+| Vault created | +500 | Increase |
+| Successful transaction | +5-20 | Increase |
+| Governance vote cast | +10-25 | Increase |
+| Badge earned | +15-100 | Increase |
+| Endorsement received | +30-50 | Increase |
+| Mentee reaches 7,000 | +50 | Increase |
+| Dispute lost | -50-200 | Decrease |
+| Community report verified | -25-100 | Decrease |
+| 30 days inactive | -5/day | Decrease |
+
+---
+
+## 5. Token Economics
+
+### 5.1 Token Overview
+
+| Property | Value |
+|----------|-------|
+| Name | VFIDE Token |
+| Symbol | VFIDE |
+| Decimals | 18 |
+| Total Supply | 200,000,000 (Fixed, no inflation) |
+| Token Standard | ERC-20 |
+| Mechanism | Deflationary (burn on transfer) |
+
+### 5.2 Token Distribution
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                 TOTAL SUPPLY: 200,000,000 VFIDE            │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │         TREASURY / OPERATIONS (50%)                 │  │
+│  │                 100,000,000 VFIDE                   │  │
+│  │  • Community rewards                                │  │
+│  │  • Ecosystem development                            │  │
+│  │  • DAO-governed allocations                         │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                            │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │              PRESALE (25%)                          │  │
+│  │                 50,000,000 VFIDE                    │  │
+│  │  • 35M base allocation                              │  │
+│  │  • 15M bonus pool (locks + referrals)               │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                            │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │           DEVELOPER RESERVE (25%)                   │  │
+│  │                 50,000,000 VFIDE                    │  │
+│  │  • 36-month vesting                                 │  │
+│  │  • 60-day cliff                                     │  │
+│  │  • Bi-monthly unlocks                               │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+### 5.3 Presale Structure
+
+#### 5.3.1 Presale Tiers
+
+| Tier | Price | Token Cap | Total Raise | Discount vs Listing |
+|------|-------|-----------|-------------|---------------------|
+| Founding | $0.03 | 10,000,000 | $300,000 | 70-78% |
+| Oath | $0.05 | 10,000,000 | $500,000 | 50-64% |
+| Public | $0.07 | 15,000,000 | $1,050,000 | 30-50% |
+| **Total** | — | **35,000,000** | **$1,850,000** | — |
+
+**Projected Listing Price:** $0.10 – $0.14 (based on presale completion %)
+
+#### 5.3.2 Lock Period Bonuses
+
+From the 15,000,000 bonus pool:
+
+| Lock Period | Bonus Tokens | Immediate Access | Unlock Schedule |
+|-------------|--------------|------------------|-----------------|
+| 180 Days | +30% | 10% | Full unlock at 180 days |
+| 90 Days | +15% | 20% | Full unlock at 90 days |
+| No Lock | 0% | 100% | Immediate delivery |
+
+**Example:** Purchase 10,000 VFIDE with 180-day lock:
+- Receive: 13,000 VFIDE total (+30%)
+- Immediately: 1,300 VFIDE (10%)
+- At unlock: 11,700 VFIDE
+
+#### 5.3.3 Referral Bonuses
+
+From the 15,000,000 bonus pool:
+
+| Role | Bonus |
+|------|-------|
+| Referrer | +3% of referee's base purchase |
+| Referee | +2% bonus on their purchase |
+
+### 5.4 Developer Vesting Schedule
+
+| Parameter | Value |
+|-----------|-------|
+| Total Allocation | 50,000,000 VFIDE |
+| Vesting Period | 36 months |
+| Cliff Period | 60 days |
+| Unlock Frequency | Every 60 days (bi-monthly) |
+| Per Unlock | ~2,778,000 VFIDE |
+| Total Unlocks | 18 tranches |
+
+```
+Month 0-2:   No tokens (cliff period)
+Month 2:     First unlock: 2,778,000 VFIDE
+Month 4:     Second unlock: 2,778,000 VFIDE
+...
+Month 36:    Final unlock: 2,778,000 VFIDE
+```
+
+### 5.5 Deflationary Mechanism
+
+VFIDE is designed to be **deflationary** — the total supply can only decrease over time:
+
+1. **Fixed supply** — No new tokens can ever be minted
+2. **Burn on transfer** — 62.5% of all fees are permanently burned
+3. **Higher fees for risky users** — More tokens burned from untrusted activity
+4. **Long-term scarcity** — Circulating supply continuously decreases
+
+---
+
+## 6. Fee Structure & Revenue Distribution
+
+### 6.1 Transfer Fee Calculation
+
+Every VFIDE transfer incurs a fee based on the sender's ProofScore:
+
+| ProofScore | Fee Rate | Basis Points | Example (1,000 VFIDE) |
+|------------|----------|--------------|----------------------|
+| 8,000+ | 0.25% | 25 BPS | 2.5 VFIDE |
+| 7,000-7,999 | 1.0% | 100 BPS | 10 VFIDE |
+| 5,000-6,999 | 2.0% | 200 BPS | 20 VFIDE |
+| 4,000-4,999 | 3.5% | 350 BPS | 35 VFIDE |
+| <4,000 | 5.0% | 500 BPS | 50 VFIDE |
+
+### 6.2 Revenue Splitter Contract
+
+All collected fees are automatically distributed by the Revenue Splitter:
+
+```
+┌─────────────────────────────────────────────┐
+│           COLLECTED TRANSFER FEE            │
+│                (100%)                       │
+└───────────────────┬─────────────────────────┘
+                    │
+        ┌───────────┼───────────┐
+        │           │           │
+        ▼           ▼           ▼
+┌───────────┐ ┌───────────┐ ┌───────────┐
+│   BURN    │ │  SANCTUM  │ │ ECOSYSTEM │
+│  ADDRESS  │ │   VAULT   │ │   VAULT   │
+│           │ │           │ │           │
+│   62.5%   │ │   31.25%  │ │   6.25%   │
+│ (200/320) │ │ (100/320) │ │ (20/320)  │
+└───────────┘ └───────────┘ └───────────┘
+      │             │             │
+      ▼             ▼             ▼
+  Permanently   Community      Operations
+   Destroyed     Charity       & Rewards
+```
+
+### 6.3 Ecosystem Vault Allocation
+
+The 6.25% flowing to the Ecosystem Vault is further allocated:
+
+| Category | Percentage | Purpose |
+|----------|------------|---------|
+| Council Salaries | 40% | Compensation for council members |
+| Merchant Rewards | 25% | Incentives for merchant adoption |
+| Headhunter Bounties | 20% | Referral program rewards |
+| Operations | 15% | Development, infrastructure, marketing |
+
+### 6.4 Sanctum Vault (Charity Fund)
+
+The Sanctum Vault (31.25% of fees) is a community charity fund:
+
+- DAO-governed disbursements
+- Supports verified charitable causes
+- Quarterly voting on allocation
+- Full transparency on all transfers
+
+---
+
+## 7. Smart Contract Architecture
+
+### 7.1 Contract Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    VFIDE CONTRACT SUITE                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  CORE CONTRACTS                                             │
+│  ├── VFIDEToken.sol        ERC-20 token with burn hooks    │
+│  ├── Seer.sol              ProofScore oracle & calculator  │
+│  ├── VaultHub.sol          User vault factory & registry   │
+│  └── RevenueSplitter.sol   Fee distribution logic          │
+│                                                             │
+│  COMMERCE CONTRACTS                                         │
+│  ├── MerchantPortal.sol    Merchant registration & mgmt    │
+│  ├── Escrow.sol            Secure payment escrow           │
+│  └── PaymentRouter.sol     Direct & escrow routing         │
+│                                                             │
+│  GOVERNANCE CONTRACTS                                       │
+│  ├── DAO.sol               Proposal & voting logic         │
+│  ├── DAOTimelock.sol       Execution delay for safety      │
+│  ├── Council.sol           Council member management       │
+│  └── CouncilElection.sol   Election mechanics              │
+│                                                             │
+│  AUXILIARY CONTRACTS                                        │
+│  ├── VFIDEBadgeNFT.sol     Achievement badge NFTs          │
+│  ├── EcosystemVault.sol    Rewards & headhunter pool       │
+│  ├── SanctumVault.sol      Charity fund management         │
+│  ├── DevReserveVesting.sol Developer token vesting         │
+│  └── VFIDEPresale.sol      Presale tier & bonus logic      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 7.2 Core Contract Details
+
+#### 7.2.1 VFIDEToken.sol
+
+```solidity
+// Key functions
+function transfer(address to, uint256 amount) external returns (bool);
+function transferFrom(address from, address to, uint256 amount) external returns (bool);
+function burn(uint256 amount) external;
+
+// Hooks
+function _beforeTransfer(address from, uint256 amount) internal {
+    uint256 fee = seer.calculateFee(from, amount);
+    _processFee(fee);
+}
+```
+
+#### 7.2.2 Seer.sol (ProofScore Oracle)
+
+```solidity
+// Key functions
+function getScore(address account) external view returns (uint256);
+function calculateFee(address account, uint256 amount) external view returns (uint256);
+function updateScore(address account, int256 delta) external onlyAuthorized;
+function endorseUser(address target) external;
+
+// Score thresholds
+uint256 constant GOVERNANCE_THRESHOLD = 5400;
+uint256 constant MERCHANT_THRESHOLD = 5600;
+uint256 constant COUNCIL_THRESHOLD = 7000;
+uint256 constant ELITE_THRESHOLD = 8000;
+```
+
+#### 7.2.3 VaultHub.sol
+
+```solidity
+// Key functions
+function createVault() external returns (address);
+function getVault(address owner) external view returns (address);
+function deposit(uint256 amount) external;
+function withdraw(uint256 amount) external;
+function getVaultInfo(address vault) external view returns (VaultInfo);
+```
+
+### 7.3 Upgrade Strategy
+
+All upgradeable contracts use the **UUPS proxy pattern**:
+
+- Allows bug fixes and improvements
+- 48-hour timelock on all upgrades
+- Requires DAO approval for upgrades
+- Upgrade keys held by council multisig (5/7)
+
+---
+
+## 8. Governance System
+
+### 8.1 DAO Structure
+
+VFIDE is governed by a Decentralized Autonomous Organization (DAO) where token holders with sufficient ProofScore can participate in protocol decisions.
+
+### 8.2 Governance Thresholds
+
+| Action | Minimum ProofScore | Additional Requirements |
+|--------|-------------------|------------------------|
+| Vote on proposals | 5,400+ | None |
+| Create proposals | 7,000+ | Council member |
+| Run for Council | 7,000+ | 30+ days at threshold |
+| Endorse candidates | 8,000+ | Elite status |
+
+### 8.3 Proposal Types
+
+| Type | Voting Period | Timelock | Quorum | Use Case |
+|------|---------------|----------|--------|----------|
+| Parameter Change | 7 days | 48 hours | 5,000 votes | Fee adjustments, thresholds |
+| Treasury Spend | 14 days | 48 hours | 7,500 votes | Fund allocation |
+| Emergency | 3 days | 24 hours | 3,000 votes | Security fixes |
+| Constitution | 21 days | 7 days | 10,000 votes | Major governance changes |
+
+### 8.4 Proposal Lifecycle
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PROPOSAL LIFECYCLE                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. CREATION          Council member submits proposal       │
+│         │                                                   │
+│         ▼                                                   │
+│  2. DISCUSSION        24-48 hour comment period             │
+│         │                                                   │
+│         ▼                                                   │
+│  3. VOTING DELAY      1 day before voting opens             │
+│         │                                                   │
+│         ▼                                                   │
+│  4. VOTING OPEN       Users cast For/Against/Abstain        │
+│         │             (7-21 days based on type)             │
+│         ▼                                                   │
+│  5. VOTING CLOSED     Tally votes, check quorum             │
+│         │                                                   │
+│         ├── FAILED (quorum not met or majority against)     │
+│         │                                                   │
+│         ▼                                                   │
+│  6. QUEUED            Proposal enters timelock              │
+│         │             (24 hours - 7 days)                   │
+│         ▼                                                   │
+│  7. EXECUTED          On-chain actions performed            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 8.5 Voting Power
+
+Voting power is calculated as:
+
+```
+VotingPower = TokenBalance × ScoreMultiplier
+
+Where ScoreMultiplier:
+- Elite (8,000+):     1.5x
+- Council (7,000+):   1.25x
+- Governance (5,400+): 1.0x
+```
+
+### 8.6 Council System
+
+The Council is a group of 7 elected members with special privileges:
+
+| Responsibility | Description |
+|----------------|-------------|
+| Propose | Submit new governance proposals |
+| Emergency | Trigger emergency pauses if needed |
+| Arbiter | Resolve escalated disputes |
+| Upgrade | Approve contract upgrades (5/7 multisig) |
+
+**Council Elections:**
+- Held quarterly
+- Candidates must have 7,000+ ProofScore for 30+ days
+- Top 7 vote-getters become council members
+- 2-term limit (6 months max)
+
+---
+
+## 9. Merchant Portal
+
+### 9.1 Overview
+
+The Merchant Portal enables businesses to accept VFIDE payments with industry-leading terms.
+
+### 9.2 Registration Requirements
+
+| Requirement | Value |
+|-------------|-------|
+| Minimum ProofScore | 5,600 |
+| Registration Fee | None (gas only) |
+| KYC Required | No (on-chain reputation) |
+| Approval Time | Instant (automatic) |
+
+### 9.3 Merchant Features
+
+| Feature | Description |
+|---------|-------------|
+| Direct Payments | Receive VFIDE instantly to wallet |
+| Escrow Mode | Optional buyer protection with escrow |
+| QR Code Payments | Generate payment QR codes |
+| STABLE-PAY | Auto-convert to stablecoins (USDC/USDT) |
+| Custom Payout | Route funds to any address |
+| Analytics Dashboard | Track volume, transactions, ratings |
+| Customer Reviews | Build reputation through feedback |
+
+### 9.4 Fee Comparison
+
+| Platform | Processing Fee | Settlement | Chargebacks |
+|----------|---------------|------------|-------------|
+| **VFIDE** | **0%** | **Instant** | **None** |
+| Stripe | 2.9% + $0.30 | 2-7 days | Yes ($15 fee) |
+| Square | 2.6% + $0.10 | 1-2 days | Yes |
+| PayPal | 2.9% + $0.30 | 1-3 days | Yes |
+
+### 9.5 Merchant Categories
+
+- Retail
+- Food & Beverage
+- Digital Services
+- Gaming & Entertainment
+- Art & Collectibles
+- Education
+- Professional Services
+- Other
+
+---
+
+## 10. Escrow System
+
+### 10.1 Overview
+
+The VFIDE Escrow system provides trustless transaction protection between parties who don't yet have established trust.
+
+### 10.2 Escrow Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     ESCROW LIFECYCLE                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. BUYER CREATES ESCROW                                    │
+│     └── Funds locked in smart contract                      │
+│         └── Order ID, merchant, amount recorded             │
+│                                                             │
+│  2. MERCHANT FULFILLS ORDER                                 │
+│     └── Ships product or delivers service                   │
+│                                                             │
+│  3a. BUYER RELEASES FUNDS                                   │
+│      └── One-click confirmation                             │
+│          └── Funds sent to merchant instantly               │
+│                                                             │
+│  3b. BUYER RAISES DISPUTE                                   │
+│      └── Arbiter (Council) reviews case                     │
+│          └── Evidence submitted by both parties             │
+│              └── Ruling determines fund allocation          │
+│                                                             │
+│  3c. TIMEOUT REACHED                                        │
+│      └── Auto-release to merchant after deadline            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 10.3 Escrow States
+
+| State | Description |
+|-------|-------------|
+| CREATED | Funds locked, awaiting fulfillment |
+| RELEASED | Buyer confirmed, funds sent to merchant |
+| REFUNDED | Order canceled, funds returned to buyer |
+| DISPUTED | Under review by arbiter |
+| TIMEOUT_CLAIMED | Release time passed, merchant claimed |
+
+### 10.4 Dispute Resolution
+
+1. Either party raises dispute
+2. 48-hour evidence submission period
+3. Council arbiter reviews case
+4. Ruling issued with fund allocation (0-100% to each party)
+5. ProofScore adjustments for losing party
+
+---
+
+## 11. Vault System
+
+### 11.1 Overview
+
+Every VFIDE user can create a personal **Vault** — a smart contract wallet that holds VFIDE tokens securely on-chain.
+
+### 11.2 Vault Features
+
+| Feature | Description |
+|---------|-------------|
+| Deposit | Transfer VFIDE from wallet to vault |
+| Withdraw | Transfer VFIDE from vault to any address |
+| Auto-Pay | Set up recurring payments |
+| Spending Limits | Optional daily/weekly limits |
+| Recovery | Social recovery through guardians |
+
+### 11.3 Social Recovery
+
+Vaults support social recovery for lost wallet access:
+
+| Parameter | Value |
+|-----------|-------|
+| Required Guardians | 3-7 (user configured) |
+| Recovery Threshold | 60% of guardians |
+| Guardian Maturity | 7 days before voting |
+| Recovery Expiry | 7 days to complete |
+
+---
+
+## 12. Badge & Gamification System
+
+### 12.1 Overview
+
+Users earn NFT badges for completing achievements. Badges increase ProofScore and demonstrate accomplishments.
+
+### 12.2 Badge Categories
+
+| Category | Examples | ProofScore Bonus |
+|----------|----------|------------------|
+| Activity & Streaks | Daily Active, Streak Master | 10-25 |
+| Trust & Community | Trusted Endorser, Community Builder | 25-40 |
+| Commerce & Merchants | Verified Merchant, Elite Merchant | 30-60 |
+| Governance | Active Voter, Council Member | 25-50 |
+| Special Achievements | Early Adopter, Bug Hunter | 50-100 |
+
+### 12.3 Badge Rarities
+
+| Rarity | ProofScore | Duration | Drop Rate |
+|--------|------------|----------|-----------|
+| Common | 10-15 | Temporary | High |
+| Rare | 25-35 | 1 Year | Medium |
+| Epic | 40-50 | Permanent | Low |
+| Legendary | 75-100 | Permanent | Very Low |
+
+### 12.4 Example Badges
+
+| Badge | Requirement | Points | Rarity |
+|-------|-------------|--------|--------|
+| Daily Active | Login 7 consecutive days | 15 | Common |
+| Trusted Endorser | Give 10 endorsements | 30 | Rare |
+| Verified Merchant | Register as merchant | 35 | Rare |
+| Community Builder | Refer 10 users to 600+ score | 35 | Epic |
+| Council Member | Elected to council | 50 | Epic |
+| Founding Member | Participated in presale | 75 | Legendary |
+
+---
+
+## 13. Mentorship Program
+
+### 13.1 Overview
+
+High-trust users can become Mentors to help newcomers succeed in the VFIDE ecosystem.
+
+### 13.2 Requirements
+
+| Requirement | Value |
+|-------------|-------|
+| Minimum ProofScore | 7,000+ |
+| Good Standing | No disputes in last 90 days |
+| Capacity | Up to 10 active mentees |
+
+### 13.3 Mentor Rewards
+
+| Event | Reward |
+|-------|--------|
+| Mentee reaches 5,400 (Governance) | +25 ProofScore |
+| Mentee reaches 7,000 (Council) | +50 ProofScore |
+| Mentee completes 50 transactions | +20 ProofScore |
+| Mentor badge earned | Display badge on profile |
+
+### 13.4 Mentee Benefits
+
+| Benefit | Description |
+|---------|-------------|
+| Guided Onboarding | Personalized introduction to VFIDE |
+| Priority Support | Mentor assists with questions |
+| Reputation Boost | +100 starting ProofScore bonus |
+| Early Endorsement | Mentor endorsement after milestones |
+
+---
+
+## 14. Headhunter Referral Program
+
+### 14.1 Overview
+
+The Headhunter program rewards users who bring new members and merchants to VFIDE.
+
+### 14.2 Point System
+
+| Referral Type | Points Earned |
+|---------------|---------------|
+| User Referral | 1 point |
+| Merchant Referral | 3 points |
+
+### 14.3 Quarterly Leaderboard
+
+Top 20 referrers each quarter share the Headhunter Pool:
+
+| Rank | Pool Share | Estimated Reward* |
+|------|------------|-------------------|
+| 1st | 15.0% | ~$4,500 |
+| 2nd | 12.0% | ~$3,600 |
+| 3rd | 10.0% | ~$3,000 |
+| 4th | 8.0% | ~$2,400 |
+| 5th | 7.0% | ~$2,100 |
+| 6th | 6.0% | ~$1,800 |
+| 7th | 5.0% | ~$1,500 |
+| 8th | 4.5% | ~$1,350 |
+| 9th | 4.0% | ~$1,200 |
+| 10th | 3.5% | ~$1,050 |
+| 11th-20th | 1.2-3.0% | ~$360-$900 |
+
+*Based on estimated quarterly pool of ~$30,000
+
+### 14.4 Claim Process
+
+1. Quarter ends
+2. Pool snapshot taken
+3. Rankings finalized
+4. 7-day claim window opens
+5. Users claim rewards on-chain
+
+---
+
+## 15. Multi-Chain Deployment
+
+### 15.1 Supported Chains
+
+VFIDE is deployed on multiple EVM-compatible chains for flexibility and low fees:
+
+| Chain | Type | Status | Use Case |
+|-------|------|--------|----------|
+| Base | Coinbase L2 | ✅ Live | Coinbase users, low fees |
+| Polygon | Ethereum L2 | ✅ Live | High speed, low fees |
+| zkSync Era | ZK Rollup | ✅ Live | Privacy, security |
+
+### 15.2 Testnet Availability
+
+| Chain | Network | Faucet |
+|-------|---------|--------|
+| Base Sepolia | Testnet | [Link](https://www.coinbase.com/faucets/base-ethereum-goerli-faucet) |
+| Polygon Amoy | Testnet | [Link](https://faucet.polygon.technology/) |
+| zkSync Sepolia | Testnet | [Link](https://portal.zksync.io/faucet) |
+
+### 15.3 Cross-Chain Considerations
+
+- ProofScore is chain-specific (not bridged)
+- Tokens can be bridged using standard bridges
+- Vaults are chain-specific
+- Governance is unified (votes aggregated)
+
+---
+
+## 16. Security Model
+
+### 16.1 Smart Contract Security
+
+| Measure | Description |
+|---------|-------------|
+| Audits | Third-party security audits before mainnet |
+| Bug Bounty | Up to $100,000 for critical vulnerabilities |
+| Formal Verification | Key functions mathematically proven |
+| Timelock | 48-hour delay on all upgrades |
+| Multisig | 5/7 council signature for critical actions |
+
+### 16.2 Emergency Procedures
+
+| Scenario | Response |
+|----------|----------|
+| Critical vulnerability | Emergency pause (council can trigger) |
+| Exploit in progress | Circuit breaker halts transfers |
+| Oracle failure | Fallback to default fee tier |
+
+### 16.3 User Security
+
+| Feature | Description |
+|---------|-------------|
+| Non-Custodial | Users always control their keys |
+| Wallet-Based Auth | No passwords to hack |
+| Transaction Signing | All actions require wallet approval |
+| Social Recovery | Recover vault without seed phrase |
+
+---
+
+## 17. Technical Implementation
+
+### 17.1 Technology Stack
+
+| Layer | Technology |
+|-------|------------|
+| Smart Contracts | Solidity 0.8.x |
+| Frontend | Next.js 15, React 19, TypeScript |
+| Styling | Tailwind CSS, Framer Motion |
+| Wallet Integration | wagmi v2, RainbowKit |
+| State Management | React Query, Zustand |
+| Testing | Jest, Playwright |
+| Deployment | Vercel, IPFS |
+
+### 17.2 API Endpoints
+
+```
+# ProofScore
+GET  /api/proofScore/current
+GET  /api/proofScore/tier
+GET  /api/proofScore/history
+GET  /api/proofScore/breakdown
+
+# Badges
+GET  /api/badges/user
+GET  /api/badges/all
+
+# Governance
+GET  /api/proposals
+GET  /api/proposals/:id
+POST /api/proposals/:id/vote
+
+# Merchant
+GET  /api/merchant/:address
+GET  /api/merchant/transactions
+
+# Treasury
+GET  /api/treasury/balance
+GET  /api/treasury/allocations
+```
+
+### 17.3 Event Indexing
+
+VFIDE uses The Graph for event indexing:
+
+```graphql
+type Transfer @entity {
+  id: ID!
+  from: Bytes!
+  to: Bytes!
+  amount: BigInt!
+  fee: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type ProofScoreUpdate @entity {
+  id: ID!
+  user: Bytes!
+  oldScore: Int!
+  newScore: Int!
+  reason: String!
+  timestamp: BigInt!
+}
+```
+
+---
+
+## 18. Roadmap
+
+### Phase 1: Foundation (Q1 2026)
+- [x] Core smart contracts deployed
+- [x] Testnet launch (Base Sepolia, Polygon Amoy, zkSync Sepolia)
+- [x] Frontend MVP
+- [x] Presale contracts ready
+- [ ] Security audits
+
+### Phase 2: Launch (Q2 2026)
+- [ ] Presale begins
+- [ ] Mainnet deployment
+- [ ] DEX liquidity provision
+- [ ] Mobile wallet app (beta)
+- [ ] First governance proposals
+
+### Phase 3: Growth (Q3 2026)
+- [ ] Merchant SDK release
+- [ ] WooCommerce plugin
+- [ ] Shopify integration
+- [ ] 1,000+ merchants onboarded
+- [ ] Bridge to additional chains
+
+### Phase 4: Scale (Q4 2026)
+- [ ] Mobile app launch (iOS/Android)
+- [ ] Fiat on/off ramp partnerships
+- [ ] Enterprise merchant features
+- [ ] 10,000+ active users
+- [ ] DAO treasury grants program
+
+### Phase 5: Ecosystem (2027)
+- [ ] VFIDE debit card
+- [ ] Cross-chain ProofScore
+- [ ] AI-powered fraud detection
+- [ ] Institutional features
+- [ ] Global expansion
+
+---
+
+## 19. Legal Considerations
+
+### 19.1 Regulatory Compliance
+
+VFIDE is designed as a decentralized protocol with no central operator. Users are responsible for complying with their local regulations regarding cryptocurrency usage.
+
+### 19.2 Token Classification
+
+VFIDE tokens are utility tokens used for:
+- Transaction fee payment
+- Governance participation
+- Reputation staking
+- Access to platform features
+
+VFIDE tokens are **not** securities and provide no ownership, dividends, or profit-sharing rights.
+
+### 19.3 User Responsibilities
+
+Users acknowledge that:
+- Cryptocurrency involves risk of loss
+- Smart contracts may have undiscovered vulnerabilities
+- Regulatory status may change over time
+- Users are responsible for tax obligations
+- Private key security is the user's responsibility
+
+---
+
+## 20. Conclusion
+
+VFIDE represents a fundamental reimagining of digital payments. By aligning economic incentives with trustworthy behavior, we create an ecosystem where:
+
+- **Users benefit** from lower fees as they build reputation
+- **Merchants benefit** from zero-fee payments and no chargebacks
+- **The community benefits** from self-regulation and transparent governance
+- **The token benefits** from deflationary mechanics and growing utility
+
+We invite you to join us in building the future of trust-based commerce.
+
+---
+
+<div align="center">
+
+**VFIDE Protocol**
+
+*Trust is earned, not given. Start building yours today.*
+
+---
+
+[Website](https://vfide.vercel.app) • [GitHub](https://github.com/Scorpio861104/Vfide) • [Documentation](./docs/)
+
+</div>
