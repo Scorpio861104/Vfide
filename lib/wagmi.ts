@@ -83,22 +83,27 @@ const wagmiStorage = createStorage({
 // ========================================
 // WALLET CONNECTORS
 // ========================================
-// Include explicit wallet options for best user experience
-// injectedWallet: Detects browser extensions (MetaMask, Rabby, Brave, etc.)
+// Wallet order matters - RainbowKit uses EIP-6963 for wallet discovery.
+// metaMaskWallet: Explicitly connects to MetaMask extension
 // coinbaseWallet: Direct Coinbase SDK connection
 // walletConnectWallet: Mobile/QR code connections (requires project ID)
+//
+// NOTE: Do NOT include injectedWallet alongside metaMaskWallet - it causes
+// a conflict where injectedWallet claims MetaMask first, making the
+// metaMaskWallet button appear as a dead/duplicate button.
 
 // Build wallet groups dynamically - only include groups with wallets
 const walletGroups = [
   {
     groupName: 'Popular',
     wallets: [
-      // injectedWallet detects all browser extensions (MetaMask, Rabby, Brave, etc.)
-      injectedWallet,
-      // Explicit MetaMask wallet for better UX
+      // MetaMask - most popular browser extension wallet
       metaMaskWallet,
-      // Coinbase Wallet is also widely used
+      // Coinbase Wallet - second most popular
       coinbaseWallet,
+      // Injected wallet as fallback for other extensions (Rabby, Brave, etc.)
+      // This will only show if there are OTHER injected wallets besides MetaMask
+      injectedWallet,
     ],
   },
   // Only add WalletConnect group if we have a valid project ID

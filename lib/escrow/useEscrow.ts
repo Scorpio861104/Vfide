@@ -11,8 +11,9 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits } from 'viem';
-import { ESCROW_ABI, VFIDE_TOKEN_ABI } from './abis';
+import { CommerceEscrowABI, VFIDETokenABI } from '@/lib/abis';
 import { getEscrowAddress, getTokenAddress } from './addresses';
+import { parseContractError } from '@/lib/errorHandling';
 
 export interface Escrow {
   id: bigint;
@@ -47,7 +48,7 @@ export function useEscrow() {
   // Get total escrow count
   const { data: escrowCount, refetch: refetchCount } = useReadContract({
     address: escrowAddress,
-    abi: ESCROW_ABI,
+    abi: CommerceEscrowABI,
     functionName: 'escrowCount',
   });
 
@@ -68,7 +69,7 @@ export function useEscrow() {
   const approveToken = useCallback(async (spender: `0x${string}`, amount: bigint) => {
     writeContract({
       address: tokenAddress,
-      abi: VFIDE_TOKEN_ABI,
+      abi: VFIDETokenABI,
       functionName: 'approve',
       args: [spender, amount],
     });
@@ -184,7 +185,7 @@ export function useEscrow() {
       // Step 2: Create escrow
       writeContract({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'createEscrow',
         args: [merchant, tokenAddress, amountWei, orderId],
       });
@@ -205,7 +206,7 @@ export function useEscrow() {
     try {
       writeContract({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'release',
         args: [id],
       });
@@ -225,7 +226,7 @@ export function useEscrow() {
     try {
       writeContract({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'refund',
         args: [id],
       });
@@ -245,7 +246,7 @@ export function useEscrow() {
     try {
       writeContract({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'claimTimeout',
         args: [id],
       });
@@ -265,7 +266,7 @@ export function useEscrow() {
     try {
       writeContract({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'raiseDispute',
         args: [id],
       });
@@ -290,7 +291,7 @@ export function useEscrow() {
   // Error handling
   useEffect(() => {
     if (writeError) {
-      setError(writeError.message);
+      setError(parseContractError(writeError));
     }
   }, [writeError]);
 

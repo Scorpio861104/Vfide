@@ -10,26 +10,13 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, isAddress } from 'viem';
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { PayrollManagerABI, VFIDETokenABI } from '@/lib/abis';
+import { parseContractError } from '@/lib/errorHandling';
 
-// PayrollManager ABI - the deployed contract or placeholder
-const PAYROLL_MANAGER_ABI = [
-  { name: 'createStream', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'payee', type: 'address' }, { name: 'token', type: 'address' }, { name: 'rate', type: 'uint256' }, { name: 'initialDeposit', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
-  { name: 'topUp', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'streamId', type: 'uint256' }, { name: 'amount', type: 'uint256' }], outputs: [] },
-  { name: 'pauseStream', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [] },
-  { name: 'resumeStream', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [] },
-  { name: 'withdraw', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [] },
-  { name: 'cancelStream', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [] },
-  { name: 'claimable', type: 'function', stateMutability: 'view', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
-  { name: 'getStream', type: 'function', stateMutability: 'view', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [{ name: 'stream', type: 'tuple', components: [{ name: 'payer', type: 'address' }, { name: 'payee', type: 'address' }, { name: 'token', type: 'address' }, { name: 'ratePerSecond', type: 'uint256' }, { name: 'startTime', type: 'uint256' }, { name: 'lastWithdrawTime', type: 'uint256' }, { name: 'depositBalance', type: 'uint256' }, { name: 'active', type: 'bool' }, { name: 'paused', type: 'bool' }, { name: 'pausedAt', type: 'uint256' }, { name: 'pausedAccrued', type: 'uint256' }] }] },
-  { name: 'getPayerStreams', type: 'function', stateMutability: 'view', inputs: [{ name: 'payer', type: 'address' }], outputs: [{ type: 'uint256[]' }] },
-  { name: 'getPayeeStreams', type: 'function', stateMutability: 'view', inputs: [{ name: 'payee', type: 'address' }], outputs: [{ type: 'uint256[]' }] },
-  { name: 'getStreamStatus', type: 'function', stateMutability: 'view', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [{ name: 'claimableAmount', type: 'uint256' }, { name: 'totalStreamed', type: 'uint256' }, { name: 'remainingDeposit', type: 'uint256' }, { name: 'isActive', type: 'bool' }, { name: 'isPaused', type: 'bool' }] },
-  { name: 'estimateEndTime', type: 'function', stateMutability: 'view', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
-] as const;
-
-// Contract addresses from environment
-const PAYROLL_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
+// Contract addresses from centralized config
+const PAYROLL_MANAGER_ADDRESS = CONTRACT_ADDRESSES.PayrollManager;
+const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
 
 // Check if contract is deployed
 const IS_DEPLOYED = PAYROLL_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
@@ -66,22 +53,24 @@ export function usePayroll() {
   // Read payer streams
   const { data: payerStreamIds, refetch: refetchPayerStreams } = useReadContract({
     address: PAYROLL_MANAGER_ADDRESS,
-    abi: PAYROLL_MANAGER_ABI,
+    abi: PayrollManagerABI,
     functionName: 'getPayerStreams',
     args: address ? [address] : undefined,
     query: {
       enabled: IS_DEPLOYED && !!address,
+      staleTime: 15_000, // Streams don't change often
     }
   });
 
   // Read payee streams
   const { data: payeeStreamIds, refetch: refetchPayeeStreams } = useReadContract({
     address: PAYROLL_MANAGER_ADDRESS,
-    abi: PAYROLL_MANAGER_ABI,
+    abi: PayrollManagerABI,
     functionName: 'getPayeeStreams',
     args: address ? [address] : undefined,
     query: {
       enabled: IS_DEPLOYED && !!address,
+      staleTime: 15_000, // Streams don't change often
     }
   });
 
@@ -190,7 +179,7 @@ export function usePayroll() {
 
     writeContract({
       address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
+      abi: PayrollManagerABI,
       functionName: 'createStream',
       args: [payee as `0x${string}`, VFIDE_TOKEN_ADDRESS, ratePerSecond, deposit],
     });
@@ -202,7 +191,7 @@ export function usePayroll() {
 
     writeContract({
       address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
+      abi: PayrollManagerABI,
       functionName: 'withdraw',
       args: [streamId],
     });
@@ -214,7 +203,7 @@ export function usePayroll() {
 
     writeContract({
       address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
+      abi: PayrollManagerABI,
       functionName: 'pauseStream',
       args: [streamId],
     });
@@ -226,7 +215,7 @@ export function usePayroll() {
 
     writeContract({
       address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
+      abi: PayrollManagerABI,
       functionName: 'resumeStream',
       args: [streamId],
     });
@@ -238,7 +227,7 @@ export function usePayroll() {
 
     writeContract({
       address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
+      abi: PayrollManagerABI,
       functionName: 'cancelStream',
       args: [streamId],
     });
@@ -252,7 +241,7 @@ export function usePayroll() {
     
     writeContract({
       address: PAYROLL_MANAGER_ADDRESS,
-      abi: PAYROLL_MANAGER_ABI,
+      abi: PayrollManagerABI,
       functionName: 'topUp',
       args: [streamId, amountWei],
     });
@@ -274,7 +263,7 @@ export function usePayroll() {
   // Error handling
   useEffect(() => {
     if (writeError) {
-      setError(writeError.message);
+      setError(parseContractError(writeError));
     }
   }, [writeError]);
 

@@ -3,6 +3,7 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { VFIDEBadgeNFTABI } from '../lib/abis'
+import { parseContractError } from '@/lib/errorHandling'
 
 // ============================================
 // BADGE HOOKS - Badge system integration
@@ -27,6 +28,8 @@ export function useUserBadges(_address?: `0x${string}`) {
     isLoading: false,
     refetch: () => Promise.resolve(),
     isAvailable: false, // Flag that this hook is not functional
+    isError: false,
+    error: null as string | null,
   }
 }
 
@@ -34,13 +37,14 @@ export function useBadgeNFTs(address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
   
-  const { data: tokenIds, isLoading, refetch } = useReadContract({
+  const { data: tokenIds, isLoading, isError, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.BadgeNFT,
     abi: VFIDEBadgeNFTABI,
     functionName: 'getBadgesOfUser',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
       enabled: !!targetAddress && !!CONTRACT_ADDRESSES.BadgeNFT,
+      staleTime: 120_000, // Badges don't change often, cache for 2 min
     }
   })
   
@@ -48,12 +52,14 @@ export function useBadgeNFTs(address?: `0x${string}`) {
     tokenIds: (tokenIds as bigint[]) || [],
     count: tokenIds ? (tokenIds as bigint[]).length : 0,
     isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
     refetch,
   }
 }
 
 export function useMintBadge() {
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContract, data, isPending, error: writeError } = useWriteContract()
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -73,6 +79,8 @@ export function useMintBadge() {
     isMinting: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    isError: !!writeError,
+    error: writeError ? parseContractError(writeError).userMessage : null,
   }
 }
 
@@ -80,7 +88,7 @@ export function useCanMintBadge(badgeId: `0x${string}`, address?: `0x${string}`)
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
   
-  const { data, isLoading } = useReadContract({
+  const { data, isLoading, isError, error } = useReadContract({
     address: CONTRACT_ADDRESSES.BadgeNFT,
     abi: VFIDEBadgeNFTABI,
     functionName: 'canMintBadge',
@@ -94,5 +102,7 @@ export function useCanMintBadge(badgeId: `0x${string}`, address?: `0x${string}`)
     canMint: data ? (data as [boolean, string])[0] : false,
     reason: data ? (data as [boolean, string])[1] : '',
     isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
   }
 }

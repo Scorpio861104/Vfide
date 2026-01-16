@@ -260,3 +260,150 @@ export async function POST(request: NextRequest) {
     client.release();
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  const client = await getClient();
+  
+  try {
+    const body = await request.json();
+    const { orderId, merchantId, status, txHash, notes, completedAt } = body;
+
+    if (!orderId || !merchantId) {
+      return NextResponse.json(
+        { error: 'orderId and merchantId are required' },
+        { status: 400 }
+      );
+    }
+
+    const numericId = parseInt(orderId.replace('order_', ''));
+
+    await client.query('BEGIN');
+
+    // Verify merchant ownership
+    const ownerCheck = await client.query<{ merchant_address: string }>(
+      'SELECT merchant_address FROM enterprise_orders WHERE id = $1',
+      [numericId]
+    );
+
+    if (ownerCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    if (ownerCheck.rows[0].merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Build update query
+    const updates: string[] = [];
+    const params: (string | null | number)[] = [];
+    let paramIndex = 1;
+
+    if (status !== undefined) {
+      updates.push(`status = $${paramIndex++}`);
+      params.push(status);
+    }
+    if (txHash !== undefined) {
+      updates.push(`tx_hash = $${paramIndex++}`);
+      params.push(txHash);
+    }
+    if (notes !== undefined) {
+      updates.push(`notes = $${paramIndex++}`);
+      params.push(notes);
+    }
+    if (completedAt !== undefined) {
+      updates.push(`completed_at = $${paramIndex++}`);
+      params.push(completedAt);
+    }
+
+    if (updates.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
+    }
+
+    params.push(numericId);
+    
+    await client.query(
+      `UPDATE enterprise_orders SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+      params
+    );
+
+    await client.query('COMMIT');
+
+    return NextResponse.json({ success: true, orderId });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error updating order:', error);
+    return NextResponse.json(
+      { error: 'Failed to update order' },
+      { status: 500 }
+    );
+  } finally {
+    client.release();
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const client = await getClient();
+  
+  try {
+    const { searchParams } = new URL(request.url);
+    const orderId = searchParams.get('orderId');
+    const merchantId = searchParams.get('merchantId');
+
+    if (!orderId || !merchantId) {
+      return NextResponse.json(
+        { error: 'orderId and merchantId are required' },
+        { status: 400 }
+      );
+    }
+
+    const numericId = parseInt(orderId.replace('order_', ''));
+
+    await client.query('BEGIN');
+
+    // Verify ownership and check status
+    const ownerCheck = await client.query<{ merchant_address: string; status: string }>(
+      'SELECT merchant_address, status FROM enterprise_orders WHERE id = $1',
+      [numericId]
+    );
+
+    if (ownerCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    if (ownerCheck.rows[0].merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Only allow cancellation of pending orders
+    if (!['pending', 'processing'].includes(ownerCheck.rows[0].status)) {
+      await client.query('ROLLBACK');
+      return NextResponse.json(
+        { error: 'Can only cancel pending or processing orders' },
+        { status: 400 }
+      );
+    }
+
+    await client.query(
+      'UPDATE enterprise_orders SET status = $1 WHERE id = $2',
+      ['cancelled', numericId]
+    );
+
+    await client.query('COMMIT');
+
+    return NextResponse.json({ success: true, cancelled: orderId });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error cancelling order:', error);
+    return NextResponse.json(
+      { error: 'Failed to cancel order' },
+      { status: 500 }
+    );
+  } finally {
+    client.release();
+  }
+}

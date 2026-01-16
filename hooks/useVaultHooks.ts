@@ -28,7 +28,7 @@ const VAULT_ABI = UserVaultABI
 export function useUserVault() {
   const { address } = useAccount()
   
-  const { data: vaultAddress, isLoading } = useReadContract({
+  const { data: vaultAddress, isLoading, isError, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.VaultHub,
     abi: HUB_ABI,
     functionName: 'vaultOf',
@@ -44,12 +44,15 @@ export function useUserVault() {
     vaultAddress: hasVault ? (vaultAddress as `0x${string}`) : null,
     hasVault,
     isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
+    refetch,
   }
 }
 
 export function useCreateVault() {
   const { address } = useAccount()
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContract, data, isPending, error: writeError } = useWriteContract()
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -71,20 +74,23 @@ export function useCreateVault() {
     isCreating: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    error: writeError ? parseContractError(writeError).userMessage : null,
+    isError: !!writeError,
   }
 }
 
 export function useVaultBalance() {
   const { vaultAddress } = useUserVault()
   
-  const { data: balance, isLoading, refetch } = useReadContract({
+  const { data: balance, isLoading, isError, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken,
     abi: VFIDETokenABI,
     functionName: 'balanceOf',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
       enabled: !!vaultAddress,
-      refetchInterval: 2000, // Refresh every 2 seconds
+      refetchInterval: 5000, // Refresh every 5 seconds (balance changes are not instant)
+      staleTime: 3000, // Consider fresh for 3s
     }
   })
   
@@ -92,13 +98,15 @@ export function useVaultBalance() {
     balance: balance ? formatEther(balance as bigint) : '0',
     balanceRaw: (balance as bigint) || 0n,
     isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
     refetch,
   }
 }
 
 export function useTransferVFIDE() {
   const { vaultAddress } = useUserVault()
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContract, data, isPending, error: writeError } = useWriteContract()
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -133,6 +141,8 @@ export function useTransferVFIDE() {
     isTransferring: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    error: writeError ? parseContractError(writeError).userMessage : null,
+    isError: !!writeError,
   }
 }
 
@@ -144,17 +154,22 @@ export function useTransferVFIDE() {
  * Get vault's guardian info with maturity status
  */
 export function useVaultGuardiansDetailed(vaultAddress?: `0x${string}`) {
-  const { data: guardianCount } = useReadContract({
+  const { data: guardianCount, isLoading, isError, error, refetch } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'guardianCount',
     query: {
       enabled: !!vaultAddress,
+      staleTime: 30_000, // Cache for 30s to reduce RPC calls
     }
   })
 
   return {
-    guardianCount: guardianCount || 0,
+    guardianCount: guardianCount ? Number(guardianCount) : 0,
+    isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
+    refetch,
   }
 }
 
@@ -162,18 +177,23 @@ export function useVaultGuardiansDetailed(vaultAddress?: `0x${string}`) {
  * Check if guardian is mature (past 7-day maturity period)
  */
 export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddress?: `0x${string}`) {
-  const { data: isMature } = useReadContract({
+  const { data: isMature, isLoading, isError, error, refetch } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'isGuardianMature',
     args: guardianAddress ? [guardianAddress] : undefined,
     query: {
       enabled: !!vaultAddress && !!guardianAddress,
+      staleTime: 60_000, // Guardian maturity doesn't change often
     }
   })
 
   return {
     isMature: isMature || false,
+    isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
+    refetch,
   }
 }
 
@@ -244,7 +264,7 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
  * Get abnormal transaction threshold (dynamic based on settings)
  */
 export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
-  const { data: threshold } = useReadContract({
+  const { data: threshold, isError: thresholdError, error: tError } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'getAbnormalTransactionThreshold',
@@ -275,6 +295,8 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
     threshold: (threshold as bigint) || 0n,
     usePercentage: usePercentage || false,
     percentageBps: percentageBps ? Number(percentageBps) : 0,
+    isError: thresholdError,
+    error: tError ? parseContractError(tError).userMessage : null,
   }
 }
 
@@ -353,7 +375,7 @@ export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
  * Get balance snapshot info
  */
 export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
-  const { data: useSnapshot } = useReadContract({
+  const { data: useSnapshot, isError: snapshotModeError } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'useBalanceSnapshot',
@@ -362,7 +384,7 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
     }
   })
 
-  const { data: snapshot } = useReadContract({
+  const { data: snapshot, isError: snapshotError, error } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'balanceSnapshot',
@@ -374,6 +396,8 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
   return {
     useSnapshot: useSnapshot || false,
     snapshot: (snapshot as bigint) || 0n,
+    isError: snapshotModeError || snapshotError,
+    error: error ? parseContractError(error).userMessage : null,
   }
 }
 
@@ -381,7 +405,7 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
  * Get pending transaction details
  */
 export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: number) {
-  const { data: pendingTx } = useReadContract({
+  const { data: pendingTx, isError: txError, error: pError } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'pendingTransactions',
@@ -391,7 +415,7 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
     }
   })
 
-  const { data: pendingTxCount } = useReadContract({
+  const { data: pendingTxCount, isError: countError, error: cError } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'pendingTxCount',
@@ -411,6 +435,8 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
       executed: tx[4],
     } : null,
     pendingTxCount: (pendingTxCount as bigint) || 0n,
+    isError: txError || countError,
+    error: (pError || cError) ? parseContractError(pError || cError).userMessage : null,
   }
 }
 
@@ -559,7 +585,7 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
  * Get inheritance request status with cancellation tracking
  */
 export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
-  const { data: nextOfKin } = useReadContract({
+  const { data: nextOfKin, isLoading, isError, error } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'nextOfKin',
@@ -571,5 +597,8 @@ export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
   return {
     nextOfKin: (nextOfKin as `0x${string}`) || ZERO_ADDRESS,
     hasNextOfKin: nextOfKin !== ZERO_ADDRESS,
+    isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
   }
 }

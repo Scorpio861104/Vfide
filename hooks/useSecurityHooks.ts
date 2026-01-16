@@ -10,6 +10,7 @@ import {
   EmergencyBreakerABI,
   VaultHubABI 
 } from '../lib/abis'
+import { parseContractError } from '@/lib/errorHandling'
 
 // ============================================
 // SECURITY SYSTEM HOOKS - VFIDESecurity.sol
@@ -20,7 +21,7 @@ import {
  * Priority: EmergencyBreaker > GuardianLock > PanicGuard > GlobalRisk
  */
 export function useIsVaultLocked(vaultAddress?: `0x${string}`) {
-  const { data: isLocked, isLoading, refetch } = useReadContract({
+  const { data: isLocked, isLoading, isError, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.SecurityHub,
     abi: SecurityHubABI,
     functionName: 'isLocked',
@@ -33,6 +34,8 @@ export function useIsVaultLocked(vaultAddress?: `0x${string}`) {
   return {
     isLocked: isLocked || false,
     isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
     refetch,
   }
 }
@@ -41,7 +44,7 @@ export function useIsVaultLocked(vaultAddress?: `0x${string}`) {
  * Get quarantine status and expiry time for a vault
  */
 export function useQuarantineStatus(vaultAddress?: `0x${string}`) {
-  const { data: quarantineUntil, isLoading } = useReadContract({
+  const { data: quarantineUntil, isLoading, isError, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.PanicGuard,
     abi: PanicGuardABI,
     functionName: 'quarantineUntil',
@@ -58,6 +61,9 @@ export function useQuarantineStatus(vaultAddress?: `0x${string}`) {
     quarantineUntil: until,
     // Components should calculate these using: until > Date.now() / 1000
     isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
+    refetch,
   }
 }
 
@@ -121,9 +127,9 @@ export function useCanSelfPanic() {
  * NOTE: Returns isAvailable=false if PanicGuard is not deployed
  */
 export function useSelfPanic() {
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContract, data, isPending, error: writeError, isError: isWriteError } = useWriteContract()
   
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess, error: txError } = useWaitForTransactionReceipt({
     hash: data,
   })
   
@@ -152,6 +158,8 @@ export function useSelfPanic() {
     isSuccess,
     txHash: data,
     isAvailable, // New: indicates if the feature is available
+    error: (writeError || txError) ? parseContractError(writeError || txError).userMessage : null,
+    isError: isWriteError,
   }
 }
 
@@ -159,7 +167,7 @@ export function useSelfPanic() {
  * Get vault guardians list and threshold
  */
 export function useVaultGuardians(vaultAddress?: `0x${string}`) {
-  const { data: guardianCount } = useReadContract({
+  const { data: guardianCount, isError: isCountError, error: countError } = useReadContract({
     address: CONTRACT_ADDRESSES.GuardianRegistry,
     abi: GuardianRegistryABI,
     functionName: 'guardianCount',
@@ -169,7 +177,7 @@ export function useVaultGuardians(vaultAddress?: `0x${string}`) {
     }
   })
   
-  const { data: threshold } = useReadContract({
+  const { data: threshold, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.GuardianRegistry,
     abi: GuardianRegistryABI,
     functionName: 'guardiansNeeded',
@@ -182,6 +190,10 @@ export function useVaultGuardians(vaultAddress?: `0x${string}`) {
   return {
     guardianCount: guardianCount ? Number(guardianCount) : 0,
     threshold: threshold ? Number(threshold) : 0,
+    isLoading,
+    isError: isCountError,
+    error: countError ? parseContractError(countError).userMessage : null,
+    refetch,
   }
 }
 
@@ -206,7 +218,7 @@ export function useIsGuardian(vaultAddress?: `0x${string}`, guardianAddress?: `0
  * Get guardian lock status and approval count
  */
 export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
-  const { data: locked } = useReadContract({
+  const { data: locked, isError: isLockedError, error: lockedError } = useReadContract({
     address: CONTRACT_ADDRESSES.GuardianLock,
     abi: GuardianLockABI,
     functionName: 'locked',
@@ -216,7 +228,7 @@ export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
     }
   })
   
-  const { data: approvals } = useReadContract({
+  const { data: approvals, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.GuardianLock,
     abi: GuardianLockABI,
     functionName: 'approvals',
@@ -229,6 +241,10 @@ export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
   return {
     isLocked: locked || false,
     approvals: approvals ? Number(approvals) : 0,
+    isLoading,
+    isError: isLockedError,
+    error: lockedError ? parseContractError(lockedError).userMessage : null,
+    refetch,
   }
 }
 
@@ -236,9 +252,9 @@ export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
  * Cast guardian lock vote
  */
 export function useCastGuardianLock(vaultAddress: `0x${string}`) {
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContract, data, isPending, error: writeError, isError: isWriteError } = useWriteContract()
   
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess, error: txError } = useWaitForTransactionReceipt({
     hash: data,
   })
   
@@ -256,6 +272,8 @@ export function useCastGuardianLock(vaultAddress: `0x${string}`) {
     isCasting: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    error: (writeError || txError) ? parseContractError(writeError || txError).userMessage : null,
+    isError: isWriteError,
   }
 }
 
@@ -263,7 +281,7 @@ export function useCastGuardianLock(vaultAddress: `0x${string}`) {
  * Check global emergency breaker status
  */
 export function useEmergencyStatus() {
-  const { data: halted, refetch } = useReadContract({
+  const { data: halted, refetch, isLoading: isHaltedLoading, isError: isHaltedError } = useReadContract({
     address: CONTRACT_ADDRESSES.EmergencyBreaker,
     abi: EmergencyBreakerABI,
     functionName: 'halted',
@@ -273,7 +291,7 @@ export function useEmergencyStatus() {
     }
   })
   
-  const { data: globalRisk } = useReadContract({
+  const { data: globalRisk, isLoading: isRiskLoading, isError: isRiskError } = useReadContract({
     address: CONTRACT_ADDRESSES.PanicGuard,
     abi: PanicGuardABI,
     functionName: 'globalRisk',
@@ -288,5 +306,7 @@ export function useEmergencyStatus() {
     isGlobalRisk: globalRisk || false,
     isEmergency: halted || globalRisk || false,
     refetch,
+    isLoading: isHaltedLoading || isRiskLoading,
+    isError: isHaltedError || isRiskError,
   }
 }

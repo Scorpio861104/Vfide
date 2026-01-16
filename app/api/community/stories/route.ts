@@ -242,3 +242,60 @@ export async function POST(request: NextRequest) {
     client.release();
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  const client = await getClient();
+  
+  try {
+    const { searchParams } = new URL(request.url);
+    const storyId = searchParams.get('storyId');
+    const authorId = searchParams.get('authorId');
+
+    if (!storyId || !authorId) {
+      return NextResponse.json(
+        { error: 'storyId and authorId are required' },
+        { status: 400 }
+      );
+    }
+
+    const numericId = parseInt(storyId.replace('story_', ''));
+
+    await client.query('BEGIN');
+
+    // Verify ownership
+    const ownerCheck = await client.query<{ wallet_address: string }>(
+      `SELECT u.wallet_address 
+       FROM stories s 
+       JOIN users u ON s.author_id = u.id 
+       WHERE s.id = $1`,
+      [numericId]
+    );
+
+    if (ownerCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Story not found' }, { status: 404 });
+    }
+
+    if (ownerCheck.rows[0].wallet_address.toLowerCase() !== authorId.toLowerCase()) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Delete story views first
+    await client.query('DELETE FROM story_views WHERE story_id = $1', [numericId]);
+    await client.query('DELETE FROM stories WHERE id = $1', [numericId]);
+
+    await client.query('COMMIT');
+
+    return NextResponse.json({ success: true, deleted: storyId });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting story:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete story' },
+      { status: 500 }
+    );
+  } finally {
+    client.release();
+  }
+}

@@ -230,3 +230,140 @@ export async function POST(request: NextRequest) {
     client.release();
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  const client = await getClient();
+  
+  try {
+    const body = await request.json();
+    const { postId, authorId, content, tags, isPinned } = body;
+
+    if (!postId || !authorId) {
+      return NextResponse.json(
+        { error: 'postId and authorId are required' },
+        { status: 400 }
+      );
+    }
+
+    // Extract numeric ID from post_123 format
+    const numericId = parseInt(postId.replace('post_', ''));
+
+    await client.query('BEGIN');
+
+    // Verify ownership
+    const ownerCheck = await client.query<{ author_id: number; wallet_address: string }>(
+      `SELECT p.author_id, u.wallet_address 
+       FROM community_posts p 
+       JOIN users u ON p.author_id = u.id 
+       WHERE p.id = $1`,
+      [numericId]
+    );
+
+    if (ownerCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    if (ownerCheck.rows[0].wallet_address.toLowerCase() !== authorId.toLowerCase()) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Build update query
+    const updates: string[] = [];
+    const params: (string | string[] | boolean | number)[] = [];
+    let paramIndex = 1;
+
+    if (content !== undefined) {
+      updates.push(`content = $${paramIndex++}`);
+      params.push(content);
+    }
+    if (tags !== undefined) {
+      updates.push(`tags = $${paramIndex++}`);
+      params.push(tags);
+    }
+    if (isPinned !== undefined) {
+      updates.push(`is_pinned = $${paramIndex++}`);
+      params.push(isPinned);
+    }
+    updates.push(`updated_at = NOW()`);
+
+    params.push(numericId);
+    
+    await client.query(
+      `UPDATE community_posts SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+      params
+    );
+
+    await client.query('COMMIT');
+
+    return NextResponse.json({ success: true, postId });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error updating post:', error);
+    return NextResponse.json(
+      { error: 'Failed to update post' },
+      { status: 500 }
+    );
+  } finally {
+    client.release();
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const client = await getClient();
+  
+  try {
+    const { searchParams } = new URL(request.url);
+    const postId = searchParams.get('postId');
+    const authorId = searchParams.get('authorId');
+
+    if (!postId || !authorId) {
+      return NextResponse.json(
+        { error: 'postId and authorId are required' },
+        { status: 400 }
+      );
+    }
+
+    const numericId = parseInt(postId.replace('post_', ''));
+
+    await client.query('BEGIN');
+
+    // Verify ownership
+    const ownerCheck = await client.query<{ wallet_address: string }>(
+      `SELECT u.wallet_address 
+       FROM community_posts p 
+       JOIN users u ON p.author_id = u.id 
+       WHERE p.id = $1`,
+      [numericId]
+    );
+
+    if (ownerCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    if (ownerCheck.rows[0].wallet_address.toLowerCase() !== authorId.toLowerCase()) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Delete related data first
+    await client.query('DELETE FROM post_comments WHERE post_id = $1', [numericId]);
+    await client.query('DELETE FROM post_likes WHERE post_id = $1', [numericId]);
+    await client.query('DELETE FROM community_posts WHERE id = $1', [numericId]);
+
+    await client.query('COMMIT');
+
+    return NextResponse.json({ success: true, deleted: postId });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting post:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete post' },
+      { status: 500 }
+    );
+  } finally {
+    client.release();
+  }
+}

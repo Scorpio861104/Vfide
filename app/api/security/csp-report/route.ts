@@ -2,9 +2,11 @@
  * CSP Report API Route
  * 
  * Receives and logs Content Security Policy violation reports.
+ * Stores violations in PostgreSQL database.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
 interface CSPViolation {
   'document-uri'?: string;
@@ -22,12 +24,35 @@ interface CSPReport {
   'csp-report': CSPViolation;
 }
 
-// In-memory store for violations (in production, use database)
-const violations: Array<CSPViolation & { timestamp: number; userAgent: string }> = [];
-const MAX_VIOLATIONS = 1000;
+// Ensure CSP violations table exists (run in init-db.sql ideally)
+const ensureTable = async () => {
+  await query(`
+    CREATE TABLE IF NOT EXISTS csp_violations (
+      id SERIAL PRIMARY KEY,
+      document_uri TEXT,
+      violated_directive TEXT,
+      effective_directive TEXT,
+      blocked_uri TEXT,
+      source_file TEXT,
+      line_number INTEGER,
+      column_number INTEGER,
+      status_code INTEGER,
+      user_agent TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+};
+
+let tableEnsured = false;
 
 export async function POST(request: NextRequest) {
   try {
+    // Ensure table exists on first request
+    if (!tableEnsured) {
+      await ensureTable();
+      tableEnsured = true;
+    }
+
     const body: CSPReport = await request.json();
     const violation = body['csp-report'];
     
@@ -35,19 +60,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid report' }, { status: 400 });
     }
 
-    // Store violation with metadata
-    const record = {
-      ...violation,
-      timestamp: Date.now(),
-      userAgent: request.headers.get('user-agent') || 'unknown',
-    };
+    const userAgent = request.headers.get('user-agent') || 'unknown';
 
-    violations.push(record);
+    // Store violation in database
+    await query(
+      `INSERT INTO csp_violations (
+        document_uri, violated_directive, effective_directive, 
+        blocked_uri, source_file, line_number, column_number, 
+        status_code, user_agent
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        violation['document-uri'] || null,
+        violation['violated-directive'] || null,
+        violation['effective-directive'] || null,
+        violation['blocked-uri'] || null,
+        violation['source-file'] || null,
+        violation['line-number'] || null,
+        violation['column-number'] || null,
+        violation['status-code'] || null,
+        userAgent,
+      ]
+    );
 
-    // Keep only recent violations
-    if (violations.length > MAX_VIOLATIONS) {
-      violations.shift();
-    }
+    // Clean up old violations (keep last 10000)
+    await query(`
+      DELETE FROM csp_violations 
+      WHERE id NOT IN (
+        SELECT id FROM csp_violations 
+        ORDER BY created_at DESC 
+        LIMIT 10000
+      )
+    `);
 
     // Log in development
     if (process.env.NODE_ENV === 'development') {
@@ -58,10 +101,6 @@ export async function POST(request: NextRequest) {
         line: violation['line-number'],
       });
     }
-
-    // In production, you would send to monitoring service:
-    // await sendToSentry(record);
-    // await sendToDatadog(record);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
@@ -76,22 +115,73 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not available' }, { status: 404 });
   }
 
-  const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50');
-  const recentViolations = violations.slice(-limit).reverse();
-
-  // Group by directive
-  const grouped = recentViolations.reduce((acc, v) => {
-    const directive = v['violated-directive'] || 'unknown';
-    if (!acc[directive]) {
-      acc[directive] = [];
+  try {
+    if (!tableEnsured) {
+      await ensureTable();
+      tableEnsured = true;
     }
-    acc[directive].push(v);
-    return acc;
-  }, {} as Record<string, typeof violations>);
 
-  return NextResponse.json({
-    total: violations.length,
-    recent: recentViolations,
-    grouped,
-  });
+    const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50');
+    
+    const result = await query<{
+      id: number;
+      document_uri: string;
+      violated_directive: string;
+      blocked_uri: string;
+      source_file: string;
+      line_number: number;
+      user_agent: string;
+      created_at: string;
+    }>(
+      `SELECT * FROM csp_violations ORDER BY created_at DESC LIMIT $1`,
+      [limit]
+    );
+
+    const countResult = await query<{ count: string }>(
+      'SELECT COUNT(*) FROM csp_violations'
+    );
+
+    // Group by directive
+    const grouped = result.rows.reduce((acc, v) => {
+      const directive = v.violated_directive || 'unknown';
+      if (!acc[directive]) {
+        acc[directive] = [];
+      }
+      acc[directive].push(v);
+      return acc;
+    }, {} as Record<string, typeof result.rows>);
+
+    return NextResponse.json({
+      total: parseInt(countResult.rows[0].count),
+      recent: result.rows,
+      grouped,
+    });
+  } catch (error) {
+    console.error('Error fetching CSP violations:', error);
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  // Clear old violations (admin only in production)
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'Not available' }, { status: 404 });
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const olderThanDays = parseInt(searchParams.get('olderThanDays') || '30');
+
+    const result = await query(
+      `DELETE FROM csp_violations WHERE created_at < NOW() - INTERVAL '${olderThanDays} days' RETURNING id`
+    );
+
+    return NextResponse.json({ 
+      success: true, 
+      deleted: result.rowCount 
+    });
+  } catch (error) {
+    console.error('Error clearing CSP violations:', error);
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
 }

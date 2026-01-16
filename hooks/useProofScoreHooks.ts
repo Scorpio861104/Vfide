@@ -16,13 +16,14 @@ export function useProofScore(userAddress?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = userAddress || connectedAddress
   
-  const { data: score, isLoading, refetch } = useReadContract({
+  const { data: score, isLoading, isError, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'getScore',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
       enabled: !!targetAddress,
+      staleTime: 30_000, // ProofScore updates occasionally, cache 30s
     }
   })
   
@@ -61,6 +62,8 @@ export function useProofScore(userAddress?: `0x${string}`) {
     canEndorse: scoreNum >= 8000,
     isElite: scoreNum >= 8000,
     isLoading,
+    isError,
+    error: error ? parseContractError(error).userMessage : null,
     refetch,
   }
 }

@@ -21,7 +21,7 @@ import {
     Vote,
     Zap
 } from 'lucide-react'
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { formatUnits, parseUnits } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 
@@ -265,26 +265,26 @@ export default function RewardsPage() {
               </div>
               
               {isConnected && (
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
-                    className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 flex-1 min-w-0"
+                    className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 flex-1 min-w-[160px]"
                   >
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-emerald-400" />
                       Total Claimable
                     </div>
-                    <div className="text-2xl font-bold text-emerald-400">{totalClaimable.toLocaleString()} VFIDE</div>
+                    <div className="text-xl sm:text-2xl font-bold text-emerald-400">{totalClaimable.toLocaleString()} VFIDE</div>
                   </motion.div>
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
-                    className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 flex-1 min-w-0"
+                    className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 flex-1 min-w-[160px]"
                   >
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-amber-400" />
                       Total Earned
                     </div>
-                    <div className="text-2xl font-bold text-amber-400">{totalEarned.toLocaleString()} VFIDE</div>
+                    <div className="text-xl sm:text-2xl font-bold text-amber-400">{totalEarned.toLocaleString()} VFIDE</div>
                   </motion.div>
                 </div>
               )}
@@ -405,31 +405,31 @@ function OverviewTab({ isConnected, totalClaimable, dutyClaimable, onClaim, clai
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6"
+            className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 flex flex-col justify-between min-h-[180px]"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: `${source.color}20` }}
-                >
-                  <source.icon size={24} style={{ color: source.color }} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#F5F3E8]">{source.name}</h3>
-                  <p className="text-sm text-[#A0A0A5]">{source.description}</p>
-                </div>
+            <div className="flex items-start gap-3 mb-4">
+              <div 
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: `${source.color}20` }}
+              >
+                <source.icon size={24} style={{ color: source.color }} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-lg font-bold text-[#F5F3E8] truncate">{source.name}</h3>
+                <p className="text-sm text-[#A0A0A5] line-clamp-2">{source.description}</p>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
                 <div className="text-[#A0A0A5] text-sm">Claimable</div>
-                <div className="text-2xl font-bold" style={{ color: source.color }}>{source.amount.toLocaleString()} VFIDE</div>
+                <div className="text-xl sm:text-2xl font-bold truncate" style={{ color: source.color }}>
+                  {source.amount.toLocaleString()} VFIDE
+                </div>
               </div>
               <button 
                 onClick={() => onClaim(source.id)}
                 disabled={claimingId === source.id || source.amount === 0}
-                className={`px-6 py-2 rounded-lg font-bold transition-all ${
+                className={`px-4 sm:px-6 py-2 rounded-lg font-bold transition-all shrink-0 ${
                   source.amount === 0
                     ? 'bg-[#3A3A3F] text-[#8A8A8F] cursor-not-allowed'
                     : claimingId === source.id
@@ -479,16 +479,19 @@ function DutyRewardsTab({ isConnected, dutyClaimable, onClaim, claimingId }: {
   
   // Fetch voting history from API
   const [votingHistory, setVotingHistory] = useState<Array<{id: number; proposal: string; date: string; points: number; claimed: boolean}>>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Fetch on mount
-  useState(() => {
+  // Fetch on mount - use useEffect instead of useState
+  React.useEffect(() => {
     if (address) {
+      setIsLoading(true);
       fetch(`/api/governance/votes/${address}`)
         .then(res => res.ok ? res.json() : { votes: [] })
         .then(data => setVotingHistory(data.votes || []))
-        .catch(() => setVotingHistory([]));
+        .catch(() => setVotingHistory([]))
+        .finally(() => setIsLoading(false));
     }
-  });
+  }, [address]);
 
   if (!isConnected) {
     return (
@@ -504,22 +507,19 @@ function DutyRewardsTab({ isConnected, dutyClaimable, onClaim, claimingId }: {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-          <div className="text-[#A0A0A5] text-sm mb-1">Total Points</div>
-          <div className="text-2xl font-bold text-[#00F0FF]">{votingHistory.reduce((sum, v) => sum + v.points, 0)}</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-          <div className="text-[#A0A0A5] text-sm mb-1">Claimable</div>
-          <div className="text-2xl font-bold text-[#50C878]">{dutyClaimable.toFixed(2)} VFIDE</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-          <div className="text-[#A0A0A5] text-sm mb-1">Votes (Month)</div>
-          <div className="text-2xl font-bold text-[#F5F3E8]">{votingHistory.length}</div>
-        </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
-          <div className="text-[#A0A0A5] text-sm mb-1">Participation</div>
-          <div className="text-2xl font-bold text-[#FFD700]">{votingHistory.length > 0 ? '100' : '0'}%</div>
-        </div>
+        {[
+          { label: 'Total Points', value: votingHistory.reduce((sum, v) => sum + v.points, 0), color: '#00F0FF', suffix: '' },
+          { label: 'Claimable', value: dutyClaimable.toFixed(2), color: '#50C878', suffix: ' VFIDE' },
+          { label: 'Votes (Month)', value: votingHistory.length, color: '#F5F3E8', suffix: '' },
+          { label: 'Participation', value: votingHistory.length > 0 ? '100' : '0', color: '#FFD700', suffix: '%' },
+        ].map((stat) => (
+          <div key={stat.label} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 flex flex-col justify-between min-h-[100px]">
+            <div className="text-[#A0A0A5] text-sm mb-1">{stat.label}</div>
+            <div className="text-2xl font-bold" style={{ color: stat.color }}>
+              {isLoading ? '...' : `${stat.value}${stat.suffix}`}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Claim Section */}
@@ -577,13 +577,46 @@ function PromotionalTab({ isConnected, onClaim, claimingId }: {
   onClaim: (id: string) => void;
   claimingId: string | null;
 }) {
-  const promotionalRewards = [
-    { id: 'pioneer', name: 'Pioneer Badge', amount: 500, icon: Star, status: 'claimable', desc: 'Early adopter reward for joining before mainnet' },
-    { id: 'education1', name: 'Complete Profile', amount: 100, icon: GraduationCap, status: 'claimable', desc: 'Set up your vault and profile' },
-    { id: 'education2', name: 'First Vote', amount: 100, icon: Vote, status: 'claimable', desc: 'Participate in your first governance vote' },
-    { id: 'education3', name: 'Guardian Setup', amount: 200, icon: Lock, status: 'locked', desc: 'Add at least 2 guardians to your vault', progress: 50 },
-    { id: 'milestone1', name: '1,000 VFIDE Held', amount: 300, icon: Coins, status: 'claimed', desc: 'Hold 1,000+ VFIDE for 30 days' },
-  ]
+  const { address } = useAccount();
+  const [promotionalRewards, setPromotionalRewards] = useState<Array<{
+    id: string;
+    name: string;
+    amount: number;
+    icon: React.ElementType;
+    status: 'claimable' | 'locked' | 'claimed';
+    desc: string;
+    progress?: number;
+  }>>([
+    { id: 'pioneer', name: 'Pioneer Badge', amount: 500, icon: Star, status: 'locked', desc: 'Early adopter reward for joining before mainnet' },
+    { id: 'education1', name: 'Complete Profile', amount: 100, icon: GraduationCap, status: 'locked', desc: 'Set up your vault and profile' },
+    { id: 'education2', name: 'First Vote', amount: 100, icon: Vote, status: 'locked', desc: 'Participate in your first governance vote' },
+    { id: 'education3', name: 'Guardian Setup', amount: 200, icon: Lock, status: 'locked', desc: 'Add at least 2 guardians to your vault', progress: 0 },
+    { id: 'milestone1', name: '1,000 VFIDE Held', amount: 300, icon: Coins, status: 'locked', desc: 'Hold 1,000+ VFIDE for 30 days' },
+  ]);
+  const [budgetInfo, setBudgetInfo] = useState({ distributed: 0, total: 2000000 });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch promotional rewards status from API
+  React.useEffect(() => {
+    if (address) {
+      setIsLoading(true);
+      fetch(`/api/rewards/promotional/${address}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.rewards) {
+            setPromotionalRewards(prev => prev.map(r => {
+              const found = data.rewards.find((dr: { id: string }) => dr.id === r.id);
+              return found ? { ...r, ...found } : r;
+            }));
+          }
+          if (data?.budget) {
+            setBudgetInfo(data.budget);
+          }
+        })
+        .catch(() => {/* keep defaults */})
+        .finally(() => setIsLoading(false));
+    }
+  }, [address]);
 
   if (!isConnected) {
     return (
@@ -603,10 +636,15 @@ function PromotionalTab({ isConnected, onClaim, claimingId }: {
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <div className="h-3 bg-[#3A3A3F] rounded-full overflow-hidden">
-              <div className="h-full bg-linear-to-r from-[#FFD700] to-[#FFA500]" style={{ width: '35%' }} />
+              <div 
+                className="h-full bg-linear-to-r from-[#FFD700] to-[#FFA500] transition-all" 
+                style={{ width: `${budgetInfo.total > 0 ? (budgetInfo.distributed / budgetInfo.total) * 100 : 0}%` }} 
+              />
             </div>
           </div>
-          <div className="text-[#F5F3E8] font-bold">700K / 2M VFIDE distributed</div>
+          <div className="text-[#F5F3E8] font-bold text-sm sm:text-base whitespace-nowrap">
+            {isLoading ? '...' : `${(budgetInfo.distributed / 1000).toFixed(0)}K / ${(budgetInfo.total / 1000000).toFixed(0)}M VFIDE`}
+          </div>
         </div>
       </div>
 
@@ -681,15 +719,41 @@ function LiquidityTab({ isConnected, onClaim, claimingId }: {
   onClaim: (id: string) => void;
   claimingId: string | null;
 }) {
+  const { address } = useAccount();
   const [stakeAmount, setStakeAmount] = useState('')
   const [isStaking, setIsStaking] = useState(false)
   const [_selectedPool, setSelectedPool] = useState<string | null>(null)
+  const [pools, setPools] = useState<Array<{
+    id: string;
+    address: string;
+    name: string;
+    estimatedRate: number;
+    tvl: string;
+    yourStake: number;
+    earned: number;
+    multiplier: string;
+  }>>([
+    { id: 'vfide-eth', address: process.env.NEXT_PUBLIC_VFIDE_ETH_LP || '', name: 'VFIDE/ETH', estimatedRate: 0, tvl: '0', yourStake: 0, earned: 0, multiplier: '2x' },
+    { id: 'vfide-usdc', address: process.env.NEXT_PUBLIC_VFIDE_USDC_LP || '', name: 'VFIDE/USDC', estimatedRate: 0, tvl: '0', yourStake: 0, earned: 0, multiplier: '1.5x' },
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
   const { writeContractAsync } = useWriteContract();
 
-  const pools = [
-    { id: 'vfide-eth', address: process.env.NEXT_PUBLIC_VFIDE_ETH_LP || '0x0000000000000000000000000000000000000000', name: 'VFIDE/ETH', estimatedRate: 42.5, tvl: '2.4M', yourStake: 0, earned: 0, multiplier: '2x' },
-    { id: 'vfide-usdc', address: process.env.NEXT_PUBLIC_VFIDE_USDC_LP || '0x0000000000000000000000000000000000000000', name: 'VFIDE/USDC', estimatedRate: 28.3, tvl: '1.8M', yourStake: 0, earned: 0, multiplier: '1.5x' },
-  ]
+  // Fetch pool data from API
+  React.useEffect(() => {
+    if (address) {
+      setIsLoading(true);
+      fetch(`/api/staking/pools?userAddress=${address}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.pools) {
+            setPools(data.pools);
+          }
+        })
+        .catch(() => {/* keep defaults */})
+        .finally(() => setIsLoading(false));
+    }
+  }, [address]);
 
   const handleStake = async (lpTokenAddress: string) => {
     if (!stakeAmount || !lpTokenAddress) return
@@ -833,15 +897,49 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
   onClaim: (id: string) => void;
   claimingId: string | null;
 }) {
+  const { address } = useAccount();
   const [copied, setCopied] = useState(false)
+  const [referralStats, setReferralStats] = useState({
+    code: '',
+    totalReferrals: 0,
+    activeReferrals: 0,
+    earned: 0,
+    claimable: 0,
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const referralStats = {
-    code: 'VFIDE-X7K9M2',
-    totalReferrals: 12,
-    activeReferrals: 8,
-    earned: 1450.00,
-    claimable: 350.00,
-  }
+  // Fetch referral data from API
+  React.useEffect(() => {
+    if (address) {
+      setIsLoading(true);
+      fetch(`/api/referrals/${address}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            setReferralStats({
+              code: data.code || `VFIDE-${address.slice(2, 8).toUpperCase()}`,
+              totalReferrals: data.totalReferrals || 0,
+              activeReferrals: data.activeReferrals || 0,
+              earned: data.earned || 0,
+              claimable: data.claimable || 0,
+            });
+          } else {
+            // Generate code from address if no data
+            setReferralStats(prev => ({
+              ...prev,
+              code: `VFIDE-${address.slice(2, 8).toUpperCase()}`,
+            }));
+          }
+        })
+        .catch(() => {
+          setReferralStats(prev => ({
+            ...prev,
+            code: `VFIDE-${address.slice(2, 8).toUpperCase()}`,
+          }));
+        })
+        .finally(() => setIsLoading(false));
+    }
+  }, [address]);
 
   const copyToClipboard = async (text: string) => {
     try {

@@ -416,3 +416,122 @@ INSERT INTO badges (badge_type, badge_name, name, description, category, rarity)
   ('philanthropist', 'Philanthropist', 'Philanthropist', 'Contributed to Sanctum charity', 'social', 'rare')
 ON CONFLICT DO NOTHING;
 
+-- CSP Violations table for security monitoring
+CREATE TABLE IF NOT EXISTS csp_violations (
+  id SERIAL PRIMARY KEY,
+  document_uri TEXT,
+  violated_directive TEXT,
+  effective_directive TEXT,
+  blocked_uri TEXT,
+  source_file TEXT,
+  line_number INTEGER,
+  column_number INTEGER,
+  status_code INTEGER,
+  user_agent TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_csp_violations_created ON csp_violations(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_csp_violations_directive ON csp_violations(violated_directive);
+
+-- =====================================================
+-- REWARDS SYSTEM TABLES
+-- =====================================================
+
+-- Governance Votes table (track individual votes for rewards)
+CREATE TABLE IF NOT EXISTS governance_votes (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  proposal_id INTEGER NOT NULL,
+  vote_type VARCHAR(20) NOT NULL, -- 'for', 'against', 'abstain'
+  points_earned INTEGER DEFAULT 10,
+  claimed BOOLEAN DEFAULT FALSE,
+  voted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  tx_hash VARCHAR(66),
+  UNIQUE(user_id, proposal_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_governance_votes_user ON governance_votes(user_id);
+CREATE INDEX IF NOT EXISTS idx_governance_votes_proposal ON governance_votes(proposal_id);
+
+-- Governance Proposals table (for joining with votes)
+CREATE TABLE IF NOT EXISTS governance_proposals (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  proposer_address VARCHAR(42),
+  status VARCHAR(20) DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ends_at TIMESTAMP
+);
+
+-- Promotional Claims table
+CREATE TABLE IF NOT EXISTS promotional_claims (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  reward_id VARCHAR(50) NOT NULL,
+  amount DECIMAL(18, 6) NOT NULL,
+  claimed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  tx_hash VARCHAR(66),
+  UNIQUE(user_id, reward_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_promotional_claims_user ON promotional_claims(user_id);
+
+-- Add promotional tracking columns to users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS has_vault BOOLEAN DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS guardian_count INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS has_voted BOOLEAN DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS vfide_balance DECIMAL(18, 6) DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_pioneer BOOLEAN DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20);
+
+-- Referrals table
+CREATE TABLE IF NOT EXISTS referrals (
+  id SERIAL PRIMARY KEY,
+  referrer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  referee_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_active BOOLEAN DEFAULT FALSE,
+  reward_earned DECIMAL(18, 6) DEFAULT 50,
+  reward_claimed BOOLEAN DEFAULT FALSE,
+  UNIQUE(referrer_id, referee_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referee ON referrals(referee_id);
+
+-- Staking Pools table
+CREATE TABLE IF NOT EXISTS staking_pools (
+  id VARCHAR(50) PRIMARY KEY,
+  address VARCHAR(42) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  reward_rate DECIMAL(10, 4) DEFAULT 0, -- Estimated APY percentage
+  total_staked DECIMAL(36, 18) DEFAULT 0,
+  multiplier VARCHAR(10) DEFAULT '1x',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User Stakes table
+CREATE TABLE IF NOT EXISTS user_stakes (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  pool_id VARCHAR(50) REFERENCES staking_pools(id) ON DELETE CASCADE,
+  amount_staked DECIMAL(36, 18) DEFAULT 0,
+  rewards_earned DECIMAL(36, 18) DEFAULT 0,
+  staked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_claim_at TIMESTAMP,
+  UNIQUE(user_id, pool_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_stakes_user ON user_stakes(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_stakes_pool ON user_stakes(pool_id);
+
+-- Insert default staking pools
+INSERT INTO staking_pools (id, address, name, reward_rate, multiplier) VALUES
+  ('vfide-eth', '0x0000000000000000000000000000000000000000', 'VFIDE/ETH', 12.5, '2x'),
+  ('vfide-usdc', '0x0000000000000000000000000000000000000000', 'VFIDE/USDC', 8.5, '1.5x')
+ON CONFLICT (id) DO NOTHING;

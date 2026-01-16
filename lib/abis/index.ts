@@ -22,6 +22,7 @@ import MerchantPortalABI from './MerchantPortal.json'
 import ProofScoreBurnRouterABI from './ProofScoreBurnRouter.json'
 import ProofLedgerABI from './ProofLedger.json'
 import CommerceEscrowABI from './CommerceEscrow.json'
+import PayrollManagerABI from './PayrollManager.json'
 
 // VaultHub ABI - use VaultInfrastructure for full features
 const VaultHubABI = VaultInfrastructureABI
@@ -49,4 +50,5 @@ export {
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
   CommerceEscrowABI,
+  PayrollManagerABI,
 }
