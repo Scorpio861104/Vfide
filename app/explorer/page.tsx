@@ -38,7 +38,7 @@ export default function ExplorerPage() {
 
         {/* Search Bar */}
         <div className="mb-16">
-          <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+          <form onSubmit={handleSearch} className="max-w-3xl mx-auto" role="search">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B6B78]" />
               <input
@@ -46,11 +46,13 @@ export default function ExplorerPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search by address (0x...) or username"
+                aria-label="Search by wallet address or username"
                 className="w-full pl-12 pr-4 py-4 bg-[#1A1A26] border border-[#2A2A38] rounded-xl text-white placeholder:text-[#6B6B78] focus:outline-none focus:border-[#00F0FF] transition-colors"
               />
             </div>
             <button
               type="submit"
+              aria-label="Search for address or username"
               className="w-full mt-3 py-3 bg-gradient-to-r from-[#00F0FF] to-[#0080FF] rounded-xl font-semibold hover:shadow-lg hover:shadow-[#00F0FF]/20 transition-all"
             >
               Search

@@ -262,7 +262,7 @@ VFIDE is deployed on multiple chains for flexibility and low fees:
 
 | Chain | Network | Faucet |
 |-------|---------|--------|
-| 🔵 **Base Sepolia** | Testnet | [Get Test ETH](https://www.coinbase.com/faucets/base-ethereum-goerli-faucet) |
+| 🔵 **Base Sepolia** | Testnet | [Get Test ETH](https://www.coinbase.com/faucets/base-sepolia-faucet) |
 | 🟣 **Polygon Amoy** | Testnet | [Get Test MATIC](https://faucet.polygon.technology/) |
 | ⚡ **zkSync Sepolia** | Testnet | [Get Test ETH](https://portal.zksync.io/faucet) |
 
