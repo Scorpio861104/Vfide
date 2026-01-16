@@ -87,7 +87,7 @@ export async function measureLatency(
     
     latencyCache.set(chainId, data);
     return data;
-  } catch (error) {
+  } catch (_error) {
     const data: LatencyData = {
       chainId,
       latency: -1,

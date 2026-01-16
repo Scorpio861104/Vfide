@@ -8,12 +8,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { useToast } from '@/components/ui/toast';
 import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
-import { useENS } from '@/hooks/useENS';
-import { measureLatency, getCachedLatency, getLatencyColor } from '@/lib/networkLatency';
 import { addConnectionToHistory } from '@/lib/connectionHistory';
-import { connectionStateAnimations, fadeIn, scaleIn } from '@/lib/animations';
-import { scrollToTop } from '@/lib/focusTrap';
-import { POLLING_INTERVALS, ANIMATION_DURATION } from '@/lib/walletConstants';
+import { connectionStateAnimations as _connectionStateAnimations, fadeIn, scaleIn } from '@/lib/animations';
 
 /**
  * Enhanced Simple Wallet Connect Component
@@ -59,7 +55,7 @@ export function SimpleWalletConnect() {
       setCopied(true);
       showToast('Address copied to clipboard', 'success', 2000);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to copy address', 'error', 2000);
     }
   }, [showToast]);
@@ -102,49 +98,15 @@ export function SimpleWalletConnect() {
         // Show loading state
         const isLoading = authenticationStatus === 'loading';
 
-        // Phase 3: ENS resolution
-        const { ensName } = useENS(account?.address);
-
-        // Phase 3: Network latency monitoring
-        const [latencyData, setLatencyData] = useState(chain?.id ? getCachedLatency(chain.id) : null);
-
-        useEffect(() => {
-          if (chain?.id && connected) {
-            // Check cached first
-            const cached = getCachedLatency(chain.id);
-            if (cached) {
-              setLatencyData(cached);
-            }
-
-            // Measure latency periodically
-            const measureAndUpdate = async () => {
-              // Only measure if we have a valid RPC endpoint
-              // Type assertion needed because RainbowKit chain has limited type info
-              const chainWithRpc = chain as typeof chain & {
-                rpcUrls?: {
-                  default?: {
-                    http?: readonly string[];
-                  };
-                };
-              };
-              const rpcUrl = chainWithRpc.rpcUrls?.default?.http?.[0];
-              if (rpcUrl) {
-                const data = await measureLatency(rpcUrl, chain.id);
-                setLatencyData(data);
-              }
-            };
-
-            measureAndUpdate();
-            const interval = setInterval(measureAndUpdate, POLLING_INTERVALS.LATENCY);
-
-            return () => clearInterval(interval);
-          }
-          return undefined;
-        }, [chain?.id, connected, chain]);
-
-        // Phase 3: Track connection in history
-        useEffect(() => {
-          if (connected && account && chain) {
+        // Note: ENS and latency features temporarily disabled due to React hooks limitations in render props
+        // These features should be refactored into a separate component to use hooks properly
+        const ensName = null;
+        const latencyData = null;
+        
+        // Track connection history when connected changes
+        if (connected && account && chain) {
+          // Use Promise to avoid blocking render
+          Promise.resolve().then(() => {
             addConnectionToHistory({
               address: account.address,
               connectorId: connector?.id || 'unknown',
@@ -152,11 +114,8 @@ export function SimpleWalletConnect() {
               chainId: chain.id,
               success: true,
             });
-            
-            // Phase 4: Scroll to top after successful connection
-            setTimeout(() => scrollToTop(), ANIMATION_DURATION.SCROLL_DELAY);
-          }
-        }, [connected, account, chain, connector]);
+          });
+        }
 
         return (
           <div
