@@ -1,7 +1,6 @@
 import { connectorsForWallets } from '@rainbow-me/rainbowkit'
 import { 
   walletConnectWallet, 
-  metaMaskWallet, 
   coinbaseWallet,
   injectedWallet,
 } from '@rainbow-me/rainbowkit/wallets'
@@ -83,30 +82,31 @@ const wagmiStorage = createStorage({
 // ========================================
 // WALLET CONNECTORS
 // ========================================
-// Prioritize MetaMask and browser wallets for best user experience
-// MetaMask is the most popular wallet and should be shown first
-// Note: injectedWallet is configured to exclude MetaMask to avoid duplication
+// Prioritize browser extension wallets for best user experience
+// injectedWallet auto-detects MetaMask, Rabby, Brave Wallet, etc.
+
+// Build wallet groups dynamically - only include groups that have wallets
+// This prevents the "No wallets provided for group" error during SSR
+const walletGroups = [
+  {
+    groupName: 'Popular',
+    wallets: [
+      // injectedWallet detects all browser extensions (MetaMask, Rabby, Brave, etc.)
+      injectedWallet,
+      // Coinbase Wallet direct SDK
+      coinbaseWallet,
+    ],
+  },
+  // Only add WalletConnect group if we have a valid project ID
+  // Spreading empty array when no projectId avoids empty group error
+  ...(hasWalletConnect ? [{
+    groupName: 'Mobile & QR',
+    wallets: [walletConnectWallet],
+  }] : []),
+]
 
 const connectors = connectorsForWallets(
-  [
-    {
-      groupName: 'Popular',
-      wallets: [
-        // MetaMask first for best compatibility and user familiarity
-        metaMaskWallet,
-        // Injected wallet catches other browser wallets (Brave, Trust Wallet, etc.)
-        // Note: This won't duplicate MetaMask as RainbowKit handles deduplication
-        injectedWallet,
-        // Coinbase Wallet is also widely used
-        coinbaseWallet,
-      ],
-    },
-    {
-      groupName: 'Other Wallets',
-      // Only include WalletConnect if we have a valid project ID
-      wallets: hasWalletConnect ? [walletConnectWallet] : [],
-    },
-  ],
+  walletGroups,
   {
     appName,
     // RainbowKit expects a string here; it is only used when the WalletConnect
