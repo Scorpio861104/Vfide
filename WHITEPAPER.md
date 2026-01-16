@@ -993,13 +993,333 @@ type ProofScoreUpdate @entity {
 
 ---
 
-## 19. Legal Considerations
+## 19. Streaming Payments (Payroll)
 
-### 19.1 Regulatory Compliance
+### 19.1 Overview
+
+The Streaming Payments system allows continuous, real-time payment flows for salaries, subscriptions, and other recurring payments. Instead of waiting for monthly payday, recipients can withdraw earned funds at any time.
+
+### 19.2 How Streaming Works
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PAYMENT STREAM                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  PAYER                                                      │
+│  ├── Creates stream with: payee, rate, initial deposit     │
+│  ├── Tokens locked in PayrollManager contract              │
+│  └── Can pause, resume, or cancel stream                   │
+│                                                             │
+│  STREAM (Running)                                           │
+│  ├── Rate: X VFIDE per second                              │
+│  ├── Accrues continuously 24/7                             │
+│  └── Deposit balance decreases over time                   │
+│                                                             │
+│  PAYEE                                                      │
+│  ├── Views real-time claimable balance                     │
+│  ├── Withdraws any amount up to claimable                  │
+│  └── Multiple streams from different payers                │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 19.3 Stream Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| Payer | Address funding the stream |
+| Payee | Recipient address |
+| Token | VFIDE (or supported token) |
+| Rate per Second | Amount accrued each second |
+| Start Time | When streaming begins |
+| Deposit Balance | Funds available in stream |
+| Active | Whether stream is running |
+| Paused | Temporarily stopped |
+
+### 19.4 Use Cases
+
+- **Payroll** — Stream salaries to employees continuously
+- **Subscriptions** — Pay for services in real-time
+- **Rent** — Continuous rental payments
+- **Royalties** — Stream creator earnings
+- **Vesting** — Token vesting schedules
+
+---
+
+## 20. STABLE-PAY (Auto-Conversion)
+
+### 20.1 Overview
+
+STABLE-PAY allows merchants to automatically convert received VFIDE payments to stablecoins (USDC, USDT) to protect against price volatility.
+
+### 20.2 How It Works
+
+```
+Customer pays VFIDE → Merchant receives VFIDE
+                              │
+                    ┌─────────┴─────────┐
+                    │  STABLE-PAY ON?   │
+                    └─────────┬─────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              │               │               │
+              ▼               ▼               ▼
+           [OFF]          [ON: USDC]      [ON: USDT]
+              │               │               │
+              ▼               ▼               ▼
+     Merchant keeps     DEX Swap to      DEX Swap to
+         VFIDE           USDC             USDT
+```
+
+### 20.3 Conversion Fees
+
+| Fee Type | Amount | Description |
+|----------|--------|-------------|
+| Protocol Fee | 0% | No VFIDE protocol fee |
+| DEX Swap Fee | ~0.3% | Standard DEX fee |
+| Slippage Protection | 5% max | Protects against price impact |
+| Gas | Variable | Network transaction cost |
+
+### 20.4 Enabling STABLE-PAY
+
+1. Register as merchant (5,600+ ProofScore)
+2. Navigate to Merchant Dashboard
+3. Toggle "Auto-Convert Enabled"
+4. Select target stablecoin (USDC or USDT)
+5. All future payments auto-convert
+
+---
+
+## 21. Stealth Addresses (Private Pay)
+
+### 21.1 Overview
+
+Stealth Addresses provide privacy for VFIDE transactions. Recipients can receive payments without revealing their main wallet address on-chain.
+
+### 21.2 How Stealth Addresses Work
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   STEALTH PAYMENT FLOW                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. RECIPIENT generates stealth meta-address               │
+│     ├── Spending public key                                │
+│     ├── Viewing public key                                 │
+│     └── Published once, reusable                           │
+│                                                             │
+│  2. SENDER creates payment                                  │
+│     ├── Generates ephemeral keypair                        │
+│     ├── Derives one-time stealth address                   │
+│     └── Sends funds to stealth address                     │
+│                                                             │
+│  3. RECIPIENT scans for payments                            │
+│     ├── Uses viewing key to scan chain                     │
+│     ├── Detects payments using view tag                    │
+│     └── Derives spending key for each payment              │
+│                                                             │
+│  4. RECIPIENT claims                                        │
+│     └── Signs with derived spending key                    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 21.3 Privacy Features
+
+| Feature | Description |
+|---------|-------------|
+| Unlinkable Addresses | Each payment uses a unique address |
+| Scanning | Only recipient can identify their payments |
+| View Tags | Efficient scanning (no false positives) |
+| Meta-Address | Single address to share publicly |
+
+### 21.4 Privacy Score
+
+Users receive a Privacy Score based on their usage patterns:
+
+- % of payments received via stealth addresses
+- Address diversity (unique addresses used)
+- Overall transaction privacy
+
+---
+
+## 22. Guardian System
+
+### 22.1 Overview
+
+Guardians are trusted individuals who can help vault owners recover access in case of lost wallet keys. This provides a social recovery mechanism without relying on centralized services.
+
+### 22.2 Guardian Types
+
+| Type | Description |
+|------|-------------|
+| Personal Guardians | Friends, family, trusted contacts |
+| Institutional | Hardware wallet services, custodians |
+| Protocol Guardians | High-reputation community members |
+
+### 22.3 Recovery Mechanisms
+
+#### Chain of Return (Lost Wallet)
+
+For living users who lost access to their wallet:
+
+1. Owner initiates recovery to new address
+2. Guardians verify owner identity (off-chain)
+3. Guardians approve on-chain (2/3 or 3/5 threshold)
+4. 7-day waiting period (challenge window)
+5. Recovery executed to new wallet
+
+#### Next of Kin (Inheritance)
+
+For inheritance/death scenarios:
+
+1. Pre-designated beneficiary initiates claim
+2. Extended waiting period (90-180 days)
+3. Original owner can cancel if alive
+4. Guardians can expedite with proof of death
+5. Assets transfer to beneficiary
+
+### 22.4 Guardian Parameters
+
+| Parameter | Value |
+|-----------|-------|
+| Minimum Guardians | 3 |
+| Maximum Guardians | 7 |
+| Approval Threshold | 60% (configurable) |
+| Maturity Period | 7 days before voting |
+| Recovery Expiry | 7 days to complete |
+| Challenge Period | 7 days |
+
+### 22.5 Guardian Responsibilities
+
+- Verify identity of recovery requestor
+- Vote on recovery requests within timeframe
+- Cannot access funds directly
+- Receive no financial compensation (trust-based)
+
+---
+
+## 23. Multi-Signature Operations
+
+### 23.1 Overview
+
+Multi-signature (multisig) operations require multiple parties to approve transactions, adding security for high-value or sensitive operations.
+
+### 23.2 Multisig Use Cases
+
+| Operation | Typical Threshold |
+|-----------|------------------|
+| Council Emergency Actions | 5/7 |
+| Treasury Disbursements | 3/5 |
+| Contract Upgrades | 5/7 |
+| Sanctum Charity Payments | 3/5 |
+| Large Escrow Disputes | 2/3 |
+
+### 23.3 Council Multisig
+
+The 7-member Council operates a 5/7 multisig for critical operations:
+
+```
+Council Multisig (5 of 7 Required)
+├── Contract upgrades
+├── Emergency pauses
+├── Parameter changes outside normal governance
+└── Sanctum disbursement approval
+```
+
+---
+
+## 24. Time Locks
+
+### 24.1 Overview
+
+Time locks add mandatory waiting periods before certain actions can be executed, providing time for review and intervention if needed.
+
+### 24.2 Time Lock Periods
+
+| Operation | Delay | Purpose |
+|-----------|-------|---------|
+| Governance Proposal Execution | 48 hours | Review passed proposals |
+| Contract Upgrades | 48 hours | Security review |
+| Emergency Proposals | 24 hours | Faster response to threats |
+| Constitution Changes | 7 days | Maximum scrutiny |
+| Guardian Recovery | 7 days | Prevent unauthorized recovery |
+
+### 24.3 Time Lock Benefits
+
+- **Transparency** — All pending actions visible on-chain
+- **Intervention** — Time to detect and prevent malicious actions
+- **Trust** — Users can verify before execution
+- **Security** — Attackers cannot execute immediately
+
+---
+
+## 25. Liquidity Incentives
+
+### 25.1 Overview
+
+VFIDE incentivizes liquidity providers who add VFIDE to decentralized exchange pools.
+
+### 25.2 Supported Pools
+
+| Pool | DEX | Reward Multiplier |
+|------|-----|-------------------|
+| VFIDE/ETH | Uniswap | 1.0x |
+| VFIDE/USDC | Uniswap | 1.5x |
+| VFIDE/MATIC | QuickSwap | 1.0x |
+
+### 25.3 How It Works
+
+1. User adds liquidity to supported pool
+2. Receives LP tokens
+3. Stakes LP tokens in LiquidityIncentives contract
+4. Earns VFIDE rewards proportional to stake
+5. Unstake anytime (no lock required)
+
+### 25.4 Reward Distribution
+
+- Rewards funded from Ecosystem Vault
+- Distributed per-second (streaming)
+- Higher rewards for less liquid pools
+- Rewards decrease as TVL increases (supply/demand)
+
+---
+
+## 26. Cross-Chain Features
+
+### 26.1 Current Status
+
+VFIDE is natively deployed on multiple chains:
+- Base (Coinbase L2)
+- Polygon (Ethereum L2)
+- zkSync Era (ZK Rollup)
+
+### 26.2 Cross-Chain Considerations
+
+| Feature | Status |
+|---------|--------|
+| Token Bridging | Via standard bridges |
+| ProofScore | Chain-specific (not bridged) |
+| Vaults | Chain-specific |
+| Governance | Unified across chains |
+
+### 26.3 Future: Cross-Chain ProofScore
+
+Planned for Phase 5 (2027):
+- Unified ProofScore across all chains
+- Cross-chain reputation portability
+- Single identity, multi-chain activity
+
+---
+
+## 27. Legal Considerations
+
+### 27.1 Regulatory Compliance
 
 VFIDE is designed as a decentralized protocol with no central operator. Users are responsible for complying with their local regulations regarding cryptocurrency usage.
 
-### 19.2 Token Classification
+### 27.2 Token Classification
 
 VFIDE tokens are utility tokens used for:
 - Transaction fee payment
@@ -1009,7 +1329,7 @@ VFIDE tokens are utility tokens used for:
 
 VFIDE tokens are **not** securities and provide no ownership, dividends, or profit-sharing rights.
 
-### 19.3 User Responsibilities
+### 27.3 User Responsibilities
 
 Users acknowledge that:
 - Cryptocurrency involves risk of loss
@@ -1020,7 +1340,7 @@ Users acknowledge that:
 
 ---
 
-## 20. Conclusion
+## 28. Conclusion
 
 VFIDE represents a fundamental reimagining of digital payments. By aligning economic incentives with trustworthy behavior, we create an ecosystem where:
 
