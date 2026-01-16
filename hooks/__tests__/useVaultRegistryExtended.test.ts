@@ -1,5 +1,5 @@
 // Extended tests for useVaultRegistry.ts - covering additional search and recovery functions
-import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
+import { describe, it, expect, beforeEach, Mock } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi before importing hooks

@@ -167,11 +167,11 @@ export function SimpleWalletConnect() {
                     variants={fadeIn}
                     initial="hidden"
                     animate="show"
-                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-[#A0A0A5] font-bold rounded-lg border border-[#3A3A3F] cursor-wait"
+                    className="px-2.5 xs:px-4 sm:px-6 py-1.5 xs:py-2 sm:py-2.5 text-xs xs:text-sm sm:text-base bg-[#2A2A2F] text-[#A0A0A5] font-bold rounded-lg border border-[#3A3A3F] cursor-wait"
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 xs:gap-2">
                       <motion.svg 
-                        className="h-4 w-4"
+                        className="h-3 w-3 xs:h-4 xs:w-4"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                         viewBox="0 0 24 24"
@@ -179,7 +179,8 @@ export function SimpleWalletConnect() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </motion.svg>
-                      Connecting...
+                      <span className="hidden xs:inline">Connecting...</span>
+                      <span className="xs:hidden">...</span>
                     </span>
                   </motion.div>
                 );
@@ -206,7 +207,7 @@ export function SimpleWalletConnect() {
                     disabled={isInCooldown}
                     aria-label={isInCooldown ? `Too many attempts. Retry in ${Math.ceil(cooldownRemaining / 1000)}s` : "Connect your wallet (Ctrl+W)"}
                     title={isInCooldown ? `Please wait ${Math.ceil(cooldownRemaining / 1000)} seconds before retrying` : "Connect Wallet (Ctrl+W)"}
-                    className={`px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-bold rounded-lg transition-all font-[family-name:var(--font-body)] touch-manipulation focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F0F12] ${
+                    className={`px-2.5 xs:px-4 sm:px-6 py-1.5 xs:py-2 sm:py-2.5 text-xs xs:text-sm sm:text-base font-bold rounded-lg transition-all font-[family-name:var(--font-body)] touch-manipulation focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F0F12] ${
                       isInCooldown
                         ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
                         : 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] hover:shadow-lg hover:shadow-[#00F0FF]/50 cursor-pointer focus:ring-[#00F0FF]'
@@ -220,10 +221,11 @@ export function SimpleWalletConnect() {
                           initial="hidden"
                           animate="show"
                           exit="hidden"
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-1.5 xs:gap-2"
                         >
-                          <Clock size={16} />
-                          Retry in {Math.ceil(cooldownRemaining / 1000)}s
+                          <Clock size={14} className="xs:w-4 xs:h-4" />
+                          <span className="hidden xs:inline">Retry in {Math.ceil(cooldownRemaining / 1000)}s</span>
+                          <span className="xs:hidden">{Math.ceil(cooldownRemaining / 1000)}s</span>
                         </motion.span>
                       ) : (
                         <motion.span
@@ -234,7 +236,8 @@ export function SimpleWalletConnect() {
                           exit="hidden"
                         >
                           <span className="hidden sm:inline">Connect Wallet</span>
-                          <span className="sm:hidden">Connect</span>
+                          <span className="hidden xs:inline sm:hidden">Connect</span>
+                          <span className="xs:hidden">💳</span>
                         </motion.span>
                       )}
                     </AnimatePresence>
@@ -256,16 +259,17 @@ export function SimpleWalletConnect() {
                     whileTap={{ scale: 0.95 }}
                     type="button"
                     aria-label="Switch to supported network"
-                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-red-500 text-white font-bold rounded-lg hover:shadow-lg transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
+                    className="px-2.5 xs:px-4 sm:px-6 py-1.5 xs:py-2 sm:py-2.5 text-xs xs:text-sm sm:text-base bg-red-500 text-white font-bold rounded-lg hover:shadow-lg transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                   >
                     <span className="hidden sm:inline">Wrong Network</span>
-                    <span className="sm:hidden">Wrong Net</span>
+                    <span className="hidden xs:inline sm:hidden">Wrong Net</span>
+                    <span className="xs:hidden">⚠️</span>
                   </motion.button>
                 );
               }
 
               return (
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 xs:gap-2">
                   <motion.button
                     onClick={openChainModal}
                     onKeyDown={(e) => {
@@ -278,7 +282,7 @@ export function SimpleWalletConnect() {
                     type="button"
                     aria-label={`Current network: ${chain.name}${latencyData ? ` - ${latencyData.status} (${latencyData.latency}ms)` : ''}`}
                     title={latencyData ? `Network latency: ${latencyData.latency}ms (${latencyData.status})` : chain.name}
-                    className="hidden sm:flex px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-all font-[family-name:var(--font-body)] text-sm items-center cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
+                    className="hidden sm:flex px-3 xs:px-4 py-1.5 xs:py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-all font-[family-name:var(--font-body)] text-xs xs:text-sm items-center cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                   >
                     {/* Phase 3: Network latency indicator */}
                     {latencyData && (
@@ -327,34 +331,35 @@ export function SimpleWalletConnect() {
                     type="button"
                     aria-label="Open account menu"
                     title={sessionDurationFormatted ? `Connected for ${sessionDurationFormatted}` : 'Open account menu'}
-                    className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
+                    className="relative px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 text-xs xs:text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
                   >
-                    <span className="hidden sm:flex items-center gap-2">
+                    <span className="hidden sm:flex items-center gap-1.5 xs:gap-2">
                       {/* Phase 3: Show ENS name if available */}
                       {ensName || account.displayName}
                       {account.displayBalance ? ` (${account.displayBalance})` : ''}
                       {/* Session duration indicator */}
                       {sessionDurationFormatted && (
-                        <span className="text-xs opacity-70 flex items-center gap-1">
-                          <Clock size={12} />
+                        <span className="text-[10px] xs:text-xs opacity-70 flex items-center gap-1">
+                          <Clock size={10} className="xs:w-3 xs:h-3" />
                           {sessionDurationFormatted}
                         </span>
                       )}
                       {/* Copy button */}
                       <button
                         onClick={(e) => copyAddress(account.address, e)}
-                        className="ml-1 p-1 hover:bg-[#1A1A1D]/20 rounded transition-colors"
+                        className="ml-0.5 xs:ml-1 p-0.5 xs:p-1 hover:bg-[#1A1A1D]/20 rounded transition-colors"
                         title={`Copy address${ensName ? ` (${account.address})` : ''}`}
                         aria-label="Copy wallet address"
                       >
                         {copied ? (
-                          <Check size={14} className="text-[#50C878]" />
+                          <Check size={12} className="text-[#50C878] xs:w-3.5 xs:h-3.5" />
                         ) : (
-                          <Copy size={14} />
+                          <Copy size={12} className="xs:w-3.5 xs:h-3.5" />
                         )}
                       </button>
                     </span>
-                    <span className="sm:hidden">{account.displayName}</span>
+                    <span className="hidden xs:inline sm:hidden truncate max-w-[80px]">{account.displayName}</span>
+                    <span className="xs:hidden">👤</span>
                   </motion.button>
                 </div>
               );

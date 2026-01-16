@@ -2,7 +2,7 @@
  * Tests for useMentorHooks
  * Mentor system hooks for helping new users succeed
  */
-import { describe, expect, it, vi, beforeEach } from '@jest/globals'
+import { describe, expect, it, beforeEach } from '@jest/globals'
 import { renderHook, waitFor } from '@testing-library/react'
 
 // Mock wagmi

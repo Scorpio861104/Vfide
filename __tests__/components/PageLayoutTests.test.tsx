@@ -2,7 +2,7 @@
  * PageLayout Tests
  * Tests for PageLayout UI components (20% coverage)
  */
-import { describe, it, expect, vi } from '@jest/globals'
+import { describe, it, expect } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 

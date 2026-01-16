@@ -3,7 +3,7 @@
  * Tests for useMentorHooks to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from '@jest/globals'
+import { describe, it, expect, beforeEach } from '@jest/globals'
 import { renderHook } from '@testing-library/react'
 
 // Mock wagmi

@@ -2,7 +2,7 @@
  * DashboardCards Tests
  * Tests for StatCard component with 0% coverage
  */
-import { describe, it, expect, vi } from '@jest/globals'
+import { describe, it, expect } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { StatCard } from '@/components/ui/DashboardCards'
 import { ChevronRight, Activity } from 'lucide-react'

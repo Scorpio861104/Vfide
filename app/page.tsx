@@ -152,10 +152,10 @@ function FeatureCard({ icon, title, description, color, delay = 0 }: FeatureCard
       whileHover={{ y: -8, transition: { duration: 0.3 } }}
       className="group relative"
     >
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl -z-10"
+      <div className="absolute inset-0 rounded-xl xs:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl -z-10"
         style={{ background: `linear-gradient(135deg, ${color}20, transparent)` }} 
       />
-      <div className="glass-card rounded-2xl p-5 sm:p-6 md:p-8 h-full relative overflow-hidden">
+      <div className="glass-card rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 md:p-8 h-full relative overflow-hidden">
         {/* Top accent line */}
         <div 
           className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity"
@@ -163,17 +163,17 @@ function FeatureCard({ icon, title, description, color, delay = 0 }: FeatureCard
         />
         
         <div 
-          className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 duration-300"
+          className="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 rounded-lg xs:rounded-xl flex items-center justify-center mb-3 xs:mb-4 sm:mb-5 transition-transform group-hover:scale-110 duration-300"
           style={{ background: `${color}15` }}
         >
           <div style={{ color }}>{icon}</div>
         </div>
         
-        <h3 className="text-xl font-semibold text-[#F8F8FC] mb-3 group-hover:text-white transition-colors">
+        <h3 className="text-base xs:text-lg sm:text-xl font-semibold text-[#F8F8FC] mb-2 xs:mb-3 group-hover:text-white transition-colors">
           {title}
         </h3>
         
-        <p className="text-[#A8A8B3] leading-relaxed group-hover:text-[#B8B8C3] transition-colors">
+        <p className="text-xs xs:text-sm sm:text-base text-[#A8A8B3] leading-relaxed group-hover:text-[#B8B8C3] transition-colors">
           {description}
         </p>
       </div>
@@ -202,12 +202,12 @@ function StatItem({ value, label, prefix = "", suffix = "", color }: StatItemPro
       className="text-center relative"
     >
       <div 
-        className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 counter"
+        className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-1 xs:mb-2 counter"
         style={{ color }}
       >
         {prefix}{count.toLocaleString()}{suffix}
       </div>
-      <div className="text-sm text-[#6B6B78] uppercase tracking-wider">{label}</div>
+      <div className="text-[10px] xs:text-xs sm:text-sm text-[#6B6B78] uppercase tracking-wider">{label}</div>
     </motion.div>
   );
 }
@@ -228,31 +228,31 @@ function Step({ number, title, description, time, index }: StepProps) {
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: index * 0.15 }}
-      className="relative flex gap-6 group"
+      className="relative flex gap-3 xs:gap-4 sm:gap-6 group"
     >
       {/* Connection line */}
       {index < 2 && (
-        <div className="absolute left-7 top-16 bottom-0 w-px bg-linear-to-b from-[#00F0FF]/30 to-transparent" />
+        <div className="absolute left-5 xs:left-6 sm:left-7 top-12 xs:top-14 sm:top-16 bottom-0 w-px bg-linear-to-b from-[#00F0FF]/30 to-transparent" />
       )}
       
       {/* Step number */}
       <motion.div 
         whileHover={{ scale: 1.1, rotate: 5 }}
-        className="relative z-10 w-14 h-14 rounded-2xl bg-linear-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold text-xl shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
+        className="relative z-10 w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 rounded-xl xs:rounded-2xl bg-linear-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold text-base xs:text-lg sm:text-xl shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
       >
         {number}
       </motion.div>
       
       {/* Content */}
-      <div className="flex-1 pb-8">
-        <h3 className="text-xl font-semibold text-[#F8F8FC] mb-2 group-hover:text-[#00F0FF] transition-colors">
+      <div className="flex-1 pb-6 xs:pb-8 min-w-0">
+        <h3 className="text-base xs:text-lg sm:text-xl font-semibold text-[#F8F8FC] mb-1.5 xs:mb-2 group-hover:text-[#00F0FF] transition-colors">
           {title}
         </h3>
-        <p className="text-[#A8A8B3] mb-3 leading-relaxed">
+        <p className="text-xs xs:text-sm sm:text-base text-[#A8A8B3] mb-2 xs:mb-3 leading-relaxed">
           {description}
         </p>
-        <div className="inline-flex items-center gap-2 text-sm text-[#00F0FF] font-medium">
-          <Zap className="w-4 h-4" />
+        <div className="inline-flex items-center gap-1.5 xs:gap-2 text-xs xs:text-sm text-[#00F0FF] font-medium">
+          <Zap className="w-3 h-3 xs:w-4 xs:h-4" />
           {time}
         </div>
       </div>
@@ -263,7 +263,7 @@ function Step({ number, title, description, time, index }: StepProps) {
 // Trust indicators
 function TrustBadge({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#0F0F14]/80 border border-[#1F1F2A] text-sm text-[#A8A8B3]">
+    <div className="flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-3 sm:px-4 py-1.5 xs:py-2 rounded-full bg-[#0F0F14]/80 border border-[#1F1F2A] text-[10px] xs:text-xs sm:text-sm text-[#A8A8B3]">
       {children}
     </div>
   );
@@ -293,18 +293,18 @@ export default function Home() {
         
         <motion.div 
           style={{ opacity: heroOpacity, y: heroY }}
-          className="relative z-10 container mx-auto px-3 sm:px-4"
+          className="relative z-10 container mx-auto px-2 xs:px-3 sm:px-4"
         >
-          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 xs:gap-10 sm:gap-12 items-center max-w-7xl mx-auto">
             {/* Left: Text content */}
             <div className="text-center lg:text-left">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00F0FF]/10 border border-[#00F0FF]/20 text-[#00F0FF] text-sm font-medium mb-8"
+                className="inline-flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-3 sm:px-4 py-1.5 xs:py-2 rounded-full bg-[#00F0FF]/10 border border-[#00F0FF]/20 text-[#00F0FF] text-xs xs:text-sm font-medium mb-4 xs:mb-6 sm:mb-8"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-3 h-3 xs:w-4 xs:h-4" />
                 Now Live on Base
               </motion.div>
               
@@ -312,7 +312,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-5xl sm:text-6xl lg:text-7xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-6 leading-[1.1]"
+                className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-4 xs:mb-5 sm:mb-6 leading-[1.1]"
               >
                 Accept Crypto.
                 <br />
@@ -323,7 +323,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl text-[#A8A8B3] mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
+                className="text-base xs:text-lg sm:text-xl text-[#A8A8B3] mb-6 xs:mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
               >
                 The first payment protocol where merchants pay <strong className="text-[#F8F8FC]">zero processing fees</strong>. 
                 Token transfers have behavioral fees (0.25-5%) that reward trust. Own your funds.
@@ -333,18 +333,18 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10"
+                className="flex flex-col xs:flex-row gap-3 xs:gap-4 justify-center lg:justify-start mb-6 xs:mb-8 sm:mb-10"
               >
                 <Link 
                   href="/token-launch"
-                  className="group inline-flex items-center justify-center gap-2 btn-primary text-lg"
+                  className="group inline-flex items-center justify-center gap-2 btn-primary text-sm xs:text-base sm:text-lg px-4 xs:px-6 sm:px-8 py-3 xs:py-3.5 sm:py-4"
                 >
                   Get Started
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 xs:w-5 xs:h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link 
                   href="/live-demo"
-                  className="group inline-flex items-center justify-center gap-2 btn-secondary text-lg"
+                  className="group inline-flex items-center justify-center gap-2 btn-secondary text-sm xs:text-base sm:text-lg px-4 xs:px-6 sm:px-8 py-3 xs:py-3.5 sm:py-4"
                 >
                   <Play className="w-5 h-5" />
                   Watch Demo
@@ -356,15 +356,15 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
-                className="flex flex-wrap gap-3 justify-center lg:justify-start"
+                className="flex flex-wrap gap-2 xs:gap-3 justify-center lg:justify-start"
               >
                 <TrustBadge>
-                  <div className="w-2 h-2 bg-[#22C55E] rounded-full animate-pulse" />
-                  14 Contracts Deployed
+                  <div className="w-1.5 xs:w-2 h-1.5 xs:h-2 bg-[#22C55E] rounded-full animate-pulse" />
+                  <span className="text-[10px] xs:text-xs sm:text-sm">14 Contracts</span>
                 </TrustBadge>
                 <TrustBadge>
-                  <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                  Audited &amp; Open Source
+                  <CheckCircle2 className="w-3 h-3 xs:w-4 xs:h-4 text-[#22C55E]" />
+                  <span className="text-[10px] xs:text-xs sm:text-sm">Audited</span>
                 </TrustBadge>
               </motion.div>
             </div>
@@ -399,20 +399,20 @@ export default function Home() {
       </section>
 
       {/* Live Stats Section */}
-      <section className="relative py-20 bg-[#0A0A0F] overflow-hidden">
+      <section className="relative py-12 xs:py-16 sm:py-20 bg-[#0A0A0F] overflow-hidden">
         <div className="absolute inset-0 aurora-bg" />
         
-        <div className="relative z-10 container mx-auto px-3 sm:px-4 max-w-6xl">
+        <div className="relative z-10 container mx-auto px-2 xs:px-3 sm:px-4 max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8 xs:mb-10 sm:mb-12"
           >
-            <span className="text-sm text-[#6B6B78] uppercase tracking-widest">Live Network</span>
+            <span className="text-xs xs:text-sm text-[#6B6B78] uppercase tracking-widest">Live Network</span>
           </motion.div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 xs:gap-4 sm:gap-6 md:gap-12">
             <StatItem value={2847} label="Vaults Created" color="#00F0FF" />
             <StatItem value={12} prefix="$" suffix="M" label="Total Volume" color="#22C55E" />
             <StatItem value={12459} label="Transactions" color="#FFD700" />
@@ -423,10 +423,10 @@ export default function Home() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center text-sm text-[#4A4A55] mt-12"
+            className="text-center text-[10px] xs:text-xs sm:text-sm text-[#4A4A55] mt-8 xs:mt-10 sm:mt-12"
           >
-            <span className="inline-flex items-center gap-2">
-              <span className="w-2 h-2 bg-[#00F0FF] rounded-full animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 xs:gap-2">
+              <span className="w-1.5 xs:w-2 h-1.5 xs:h-2 bg-[#00F0FF] rounded-full animate-pulse" />
               Live data • Updates in real-time
             </span>
           </motion.p>
@@ -434,25 +434,25 @@ export default function Home() {
       </section>
 
       {/* Why VFIDE Section */}
-      <section className="py-24 bg-[#08080A] relative overflow-hidden">
+      <section className="py-16 xs:py-20 sm:py-24 bg-[#08080A] relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
         
-        <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
+        <div className="container mx-auto px-2 xs:px-3 sm:px-4 max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-10 xs:mb-12 sm:mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-4">
+            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-3 xs:mb-4">
               Why VFIDE?
             </h2>
-            <p className="text-lg text-[#6B6B78] max-w-2xl mx-auto">
+            <p className="text-sm xs:text-base sm:text-lg text-[#6B6B78] max-w-2xl mx-auto">
               Built for the future of commerce. Designed for trust.
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-5 sm:gap-6">
             <FeatureCard
               icon={<TrendingDown className="w-7 h-7" />}
               title="Zero Processing Fees"
@@ -500,20 +500,20 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 bg-[#0A0A0F] relative">
+      <section className="py-16 xs:py-20 sm:py-24 bg-[#0A0A0F] relative">
         <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
         
-        <div className="container mx-auto px-4 max-w-3xl">
+        <div className="container mx-auto px-2 xs:px-3 sm:px-4 max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-10 xs:mb-12 sm:mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-4">
+            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-3 xs:mb-4">
               Get Started in Seconds
             </h2>
-            <p className="text-lg text-[#6B6B78]">
+            <p className="text-sm xs:text-base sm:text-lg text-[#6B6B78]">
               No signup, no verification, no waiting
             </p>
           </motion.div>

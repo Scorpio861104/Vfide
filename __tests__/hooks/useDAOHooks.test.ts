@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from '@jest/globals'
+import { describe, it, expect, beforeEach } from '@jest/globals'
 
 // Mock wagmi hooks
 jest.mock('wagmi', () => ({

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
+import { describe, expect, it, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, act } from '@testing-library/react'
 import React from 'react'
 

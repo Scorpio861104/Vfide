@@ -77,25 +77,25 @@ function StatCard({
   const styles = colorMap[color];
   
   const content = (
-    <GlassCard className={`p-5 ${href ? 'cursor-pointer hover:border-white/20' : ''}`}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-white/60 text-sm font-medium">{label}</span>
-        <div className={`p-2 rounded-xl ${styles.bg} shadow-lg ${styles.glow}`}>
-          <Icon className={styles.text} size={18} />
+    <GlassCard className={`p-3 xs:p-4 sm:p-5 ${href ? 'cursor-pointer hover:border-white/20' : ''}`}>
+      <div className="flex items-center justify-between mb-2 xs:mb-3 gap-1">
+        <span className="text-white/60 text-[10px] xs:text-xs sm:text-sm font-medium truncate">{label}</span>
+        <div className={`p-1.5 xs:p-2 rounded-lg xs:rounded-xl ${styles.bg} shadow-lg ${styles.glow} shrink-0`}>
+          <Icon className={styles.text} size={14} />
         </div>
       </div>
       {loading ? (
         <>
-          <Skeleton height={32} className="w-24 mb-1 bg-white/10" />
-          <Skeleton height={14} className="w-16 bg-white/5" />
+          <Skeleton height={24} className="w-16 xs:w-20 sm:w-24 mb-1 bg-white/10" />
+          <Skeleton height={12} className="w-12 xs:w-14 sm:w-16 bg-white/5" />
         </>
       ) : (
         <>
-          <div className="text-2xl font-bold text-white mb-1">{value}</div>
+          <div className="text-lg xs:text-xl sm:text-2xl font-bold text-white mb-0.5 xs:mb-1 truncate">{value}</div>
           {subValue && (
-            <div className={`text-sm ${styles.text} flex items-center gap-1`}>
-              {href && <ChevronRight size={14} />}
-              {subValue}
+            <div className={`text-[10px] xs:text-xs sm:text-sm ${styles.text} flex items-center gap-1 truncate`}>
+              {href && <ChevronRight size={12} className="shrink-0" />}
+              <span className="truncate">{subValue}</span>
             </div>
           )}
         </>
@@ -124,14 +124,14 @@ function QuickAction({
       <motion.div
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.98 }}
-        className={`p-4 rounded-2xl font-semibold transition-all flex flex-col items-center gap-3 text-center ${isPrimary 
+        className={`p-2 xs:p-3 sm:p-4 rounded-xl xs:rounded-2xl font-semibold transition-all flex flex-col items-center gap-1.5 xs:gap-2 sm:gap-3 text-center ${isPrimary 
           ? 'bg-linear-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25' 
           : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20'}`}
       >
-        <div className={`p-3 rounded-xl ${isPrimary ? 'bg-white/20' : 'bg-linear-to-br from-white/10 to-white/5'}`}>
-          <Icon size={24} />
+        <div className={`p-2 xs:p-2.5 sm:p-3 rounded-lg xs:rounded-xl ${isPrimary ? 'bg-white/20' : 'bg-linear-to-br from-white/10 to-white/5'}`}>
+          <Icon size={18} className="xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
         </div>
-        <span className="text-sm">{label}</span>
+        <span className="text-[10px] xs:text-xs sm:text-sm">{label}</span>
       </motion.div>
     </Link>
   );
@@ -208,57 +208,59 @@ export default function DashboardPage() {
           </div>
 
         <section className="relative py-8 border-b border-white/5">
-          <div className="container mx-auto px-3 sm:px-4">
+          <div className="container mx-auto px-2 xs:px-3 sm:px-4">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8"
+              className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 xs:gap-6 mb-6 xs:mb-8"
             >
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 flex items-center gap-3">
+              <div className="min-w-0 w-full lg:w-auto">
+                <h1 className="text-2xl xs:text-3xl md:text-4xl font-bold text-white mb-2 xs:mb-3 flex items-center gap-2 xs:gap-3">
                   Dashboard
                   <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}>
-                    <Sparkles className="text-amber-400" size={28} />
+                    <Sparkles className="text-amber-400" size={24} />
                   </motion.span>
                 </h1>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 max-w-full">
+                <div className="flex items-center gap-2 xs:gap-3 flex-wrap">
+                  <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 flex items-center gap-1.5 xs:gap-2 sm:gap-3 max-w-full min-w-0">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                    <span className="text-white font-mono text-xs sm:text-sm truncate">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
-                    <button onClick={copyAddress} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+                    <span className="text-white font-mono text-[10px] xs:text-xs sm:text-sm truncate">{walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}</span>
+                    <button onClick={copyAddress} className="p-0.5 xs:p-1 hover:bg-white/10 rounded-lg transition-colors shrink-0">
                       <AnimatePresence mode="wait">
                         {copiedAddress ? (
                           <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                            <CheckCircle2 className="text-emerald-400" size={14} />
+                            <CheckCircle2 className="text-emerald-400" size={12} />
                           </motion.div>
                         ) : (
                           <motion.div key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                            <Copy className="text-white/60" size={14} />
+                            <Copy className="text-white/60" size={12} />
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </button>
-                    <a href={`${explorerUrl}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-white/10 rounded-lg transition-colors">
-                      <ExternalLink className="text-white/60" size={14} />
+                    <a href={`${explorerUrl}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-0.5 xs:p-1 hover:bg-white/10 rounded-lg transition-colors shrink-0">
+                      <ExternalLink className="text-white/60" size={12} />
                     </a>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-linear-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
-                    <span className="text-cyan-400 font-bold text-sm flex items-center gap-2">
-                      <Zap size={14} />
-                      ProofScore {proofscore}
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 bg-linear-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
+                    <span className="text-cyan-400 font-bold text-[10px] xs:text-xs sm:text-sm flex items-center gap-1 xs:gap-2">
+                      <Zap size={12} />
+                      <span className="hidden xs:inline">ProofScore</span> {proofscore}
                     </span>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-linear-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
-                    <span className="text-emerald-400 font-bold text-sm">{currentFeeRate.toFixed(2)}% fee</span>
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 bg-linear-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
+                    <span className="text-emerald-400 font-bold text-[10px] xs:text-xs sm:text-sm">{currentFeeRate.toFixed(2)}% fee</span>
                   </motion.div>
                 </div>
               </div>
-              <SimpleWalletConnect />
+              <div className="hidden lg:block">
+                <SimpleWalletConnect />
+              </div>
             </motion.div>
 
-            <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-3 sm:gap-4">
               <motion.div variants={itemVariants}>
                 <StatCard icon={Wallet} label="Wallet Balance" value={walletBalance} subValue={`≈ \$${usdValue}`} color="cyan" loading={vaultLoading} />
               </motion.div>
@@ -276,12 +278,12 @@ export default function DashboardPage() {
         </section>
 
         <section className="sticky top-20 z-40 bg-[#08080A]/80 backdrop-blur-xl border-b border-white/5">
-          <div className="container mx-auto px-3 sm:px-4">
-            <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide" role="tablist">
+          <div className="container mx-auto px-2 xs:px-3 sm:px-4">
+            <div className="flex gap-1 overflow-x-auto py-2 xs:py-3 scrollbar-hide" role="tablist">
               {[
                 { id: 'overview' as const, label: 'Overview', icon: Activity },
-                { id: 'fee-simulator' as const, label: 'Fee Simulator', icon: Calculator },
-                { id: 'score-simulator' as const, label: 'Score Simulator', icon: Sliders },
+                { id: 'fee-simulator' as const, label: 'Fee Sim', icon: Calculator },
+                { id: 'score-simulator' as const, label: 'Score Sim', icon: Sliders },
                 { id: 'badges' as const, label: 'Badges', icon: Trophy },
               ].map(tab => (
                 <motion.button
@@ -291,13 +293,13 @@ export default function DashboardPage() {
                   onClick={() => setActiveTab(tab.id)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`px-5 py-3 rounded-xl font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
+                  className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 sm:py-3 rounded-lg xs:rounded-xl font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 xs:gap-2 text-xs xs:text-sm ${
                     activeTab === tab.id
                       ? 'bg-linear-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                       : 'bg-transparent text-white/60 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <tab.icon size={18} />
+                  <tab.icon size={14} className="xs:w-[18px] xs:h-[18px]" />
                   {tab.label}
                 </motion.button>
               ))}
@@ -305,7 +307,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <div className="container mx-auto px-3 sm:px-4 py-8 relative z-10">
+        <div className="container mx-auto px-2 xs:px-3 sm:px-4 py-4 xs:py-6 sm:py-8 relative z-10">
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
               <motion.div key="overview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
@@ -339,36 +341,36 @@ export default function DashboardPage() {
 
 function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: number }) {
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-4 xs:space-y-6 sm:space-y-8">
       <motion.div variants={itemVariants}>
-        <GlassCard className="p-6" hover={false}>
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Zap className="text-amber-400" size={24} />
+        <GlassCard className="p-3 xs:p-4 sm:p-6" hover={false}>
+          <h2 className="text-base xs:text-lg sm:text-xl font-bold text-white mb-3 xs:mb-4 sm:mb-6 flex items-center gap-2">
+            <Zap className="text-amber-400" size={20} />
             Quick Actions
           </h2>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 xs:grid-cols-3 md:grid-cols-6 gap-2 xs:gap-3 sm:gap-4">
             <QuickAction icon={ArrowUpRight} label="Send" href="/pay" variant="primary" />
             <QuickAction icon={Shield} label="Vault" href="/vault" />
             <QuickAction icon={Lock} label="Escrow" href="/escrow" />
             <QuickAction icon={Banknote} label="Payroll" href="/payroll" />
-            <QuickAction icon={Vote} label="Governance" href="/governance" />
+            <QuickAction icon={Vote} label="Gov" href="/governance" />
             <QuickAction icon={Gift} label="Rewards" href="/rewards" />
           </div>
         </GlassCard>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xs:gap-5 sm:gap-6">
         <motion.div variants={itemVariants}>
-          <GlassCard className="p-6" hover={false}>
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <TrendingUp className="text-cyan-400" size={24} />
+          <GlassCard className="p-3 xs:p-4 sm:p-6" hover={false}>
+            <h2 className="text-base xs:text-lg sm:text-xl font-bold text-white mb-3 xs:mb-4 sm:mb-6 flex items-center gap-2">
+              <TrendingUp className="text-cyan-400" size={20} />
               Your ProofScore
             </h2>
-            <div className="flex flex-col items-center py-6">
+            <div className="flex flex-col items-center py-3 xs:py-4 sm:py-6">
               <ProofScoreRing score={proofscore} size="lg" />
-              <div className="mt-6 text-center">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" as const, delay: 0.5 }} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
-                  <span className="text-emerald-400 font-bold">{feeRate.toFixed(2)}% transfer fee</span>
+              <div className="mt-4 xs:mt-5 sm:mt-6 text-center">
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" as const, delay: 0.5 }} className="inline-flex items-center gap-2 px-3 xs:px-4 py-1.5 xs:py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                  <span className="text-emerald-400 font-bold text-xs xs:text-sm">{feeRate.toFixed(2)}% transfer fee</span>
                 </motion.div>
               </div>
             </div>
@@ -376,12 +378,12 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <GlassCard className="p-6" hover={false}>
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <Star className="text-amber-400" size={24} />
+          <GlassCard className="p-3 xs:p-4 sm:p-6" hover={false}>
+            <h2 className="text-base xs:text-lg sm:text-xl font-bold text-white mb-3 xs:mb-4 sm:mb-6 flex items-center gap-2">
+              <Star className="text-amber-400" size={20} />
               Score Breakdown
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3 xs:space-y-4">
               {[
                 { label: "Transaction Volume", value: 2500, max: 3000, color: "cyan" },
                 { label: "Account Age", value: 1200, max: 2000, color: "emerald" },

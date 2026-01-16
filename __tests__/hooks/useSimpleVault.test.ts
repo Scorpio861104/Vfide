@@ -2,7 +2,7 @@
  * Tests for useSimpleVault hook
  * Simple vault interface for executing vault actions
  */
-import { describe, expect, it, vi, beforeEach } from '@jest/globals'
+import { describe, expect, it, beforeEach } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock wagmi

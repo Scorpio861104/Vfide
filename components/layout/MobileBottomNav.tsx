@@ -77,19 +77,19 @@ export function MobileBottomNav() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="fixed bottom-20 left-3 right-3 glass rounded-2xl z-50 md:hidden p-4"
+              className="fixed bottom-16 xs:bottom-20 left-2 xs:left-3 right-2 xs:right-3 glass rounded-xl xs:rounded-2xl z-50 md:hidden p-2 xs:p-3 sm:p-4 max-h-[60vh] overflow-y-auto"
               role="dialog"
               aria-modal="true"
               aria-labelledby="more-menu-title"
             >
-              <div className="flex items-center justify-between mb-4">
-                <span id="more-menu-title" className="text-sm font-semibold text-[#F8F8FC]">More Options</span>
+              <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
+                <span id="more-menu-title" className="text-xs xs:text-sm font-semibold text-[#F8F8FC]">More Options</span>
                 <button 
                   onClick={() => setShowMore(false)}
-                  className="w-8 h-8 rounded-lg bg-[#1F1F2A] flex items-center justify-center text-[#6B6B78] hover:text-[#F8F8FC] transition-colors"
+                  className="w-7 xs:w-8 h-7 xs:h-8 rounded-lg bg-[#1F1F2A] flex items-center justify-center text-[#6B6B78] hover:text-[#F8F8FC] transition-colors"
                   aria-label="Close menu"
                 >
-                  <X size={16} />
+                  <X size={14} className="xs:w-4 xs:h-4" />
                 </button>
               </div>
               
@@ -99,11 +99,11 @@ export function MobileBottomNav() {
                 if (categoryItems.length === 0) return null;
                 
                 return (
-                  <div key={category} className="mb-4 last:mb-0">
-                    <div className="px-2 mb-2 text-xs font-semibold text-[#6B6B78] uppercase tracking-wider">
+                  <div key={category} className="mb-3 xs:mb-4 last:mb-0">
+                    <div className="px-1.5 xs:px-2 mb-1.5 xs:mb-2 text-[10px] xs:text-xs font-semibold text-[#6B6B78] uppercase tracking-wider">
                       {category}
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 xs:grid-cols-3 gap-1.5 xs:gap-2">
                       {categoryItems.map((item, index) => (
                         <motion.div
                           key={item.href}
@@ -114,14 +114,14 @@ export function MobileBottomNav() {
                           <Link
                             href={item.href}
                             onClick={() => setShowMore(false)}
-                            className={`flex flex-col items-center gap-2 p-3 rounded-xl text-center transition-all ${
+                            className={`flex flex-col items-center gap-1 xs:gap-2 p-2 xs:p-3 rounded-lg xs:rounded-xl text-center transition-all ${
                               pathname === item.href
                                 ? 'bg-[#00F0FF]/20 border border-[#00F0FF]/30'
                                 : 'bg-[#16161D] border border-[#1F1F2A] hover:border-[#00F0FF]/20'
                             }`}
                           >
-                            <span className="text-xl">{item.emoji}</span>
-                            <span className={`text-[10px] font-medium leading-tight ${
+                            <span className="text-base xs:text-xl">{item.emoji}</span>
+                            <span className={`text-[8px] xs:text-[10px] font-medium leading-tight ${
                               pathname === item.href ? 'text-[#00F0FF]' : 'text-[#A8A8B3]'
                             }`}>
                               {item.label}
@@ -140,7 +140,7 @@ export function MobileBottomNav() {
 
       {/* Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-[#1F1F2A] md:hidden safe-area-bottom">
-        <div className="flex items-center justify-around h-16 px-2">
+        <div className="flex items-center justify-around h-14 xs:h-16 px-1 xs:px-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href || 
               (item.href !== '/' && pathname.startsWith(item.href))
@@ -150,7 +150,7 @@ export function MobileBottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all ${
+                className={`relative flex flex-col items-center justify-center w-12 xs:w-14 sm:w-16 h-12 xs:h-14 rounded-lg xs:rounded-xl transition-all ${
                   isActive 
                     ? 'text-[#00F0FF]' 
                     : 'text-[#6B6B78] active:text-[#F8F8FC]'
@@ -160,13 +160,13 @@ export function MobileBottomNav() {
                   whileTap={{ scale: 0.9 }}
                   className="flex flex-col items-center"
                 >
-                  <Icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
-                  <span className="text-[10px] mt-1 font-medium">{item.label}</span>
+                  <Icon size={18} strokeWidth={isActive ? 2.5 : 1.5} className="xs:w-[22px] xs:h-[22px]" />
+                  <span className="text-[8px] xs:text-[10px] mt-0.5 xs:mt-1 font-medium truncate max-w-[48px]">{item.label}</span>
                 </motion.div>
                 {isActive && (
                   <motion.div
                     layoutId="bottomNavIndicator"
-                    className="absolute top-0 w-10 h-1 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
+                    className="absolute top-0 w-8 xs:w-10 h-0.5 xs:h-1 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -177,7 +177,7 @@ export function MobileBottomNav() {
           {/* More Button */}
           <button
             onClick={() => setShowMore(!showMore)}
-            className={`relative flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all ${
+            className={`relative flex flex-col items-center justify-center w-12 xs:w-14 sm:w-16 h-12 xs:h-14 rounded-lg xs:rounded-xl transition-all ${
               showMore ? 'text-[#00F0FF]' : 'text-[#6B6B78] active:text-[#F8F8FC]'
             }`}
             aria-label={showMore ? 'Close more options' : 'Open more options'}
@@ -188,13 +188,13 @@ export function MobileBottomNav() {
               animate={{ rotate: showMore ? 90 : 0 }}
               className="flex flex-col items-center"
             >
-              <MoreHorizontal size={22} strokeWidth={showMore ? 2.5 : 1.5} />
-              <span className="text-[10px] mt-1 font-medium">More</span>
+              <MoreHorizontal size={18} strokeWidth={showMore ? 2.5 : 1.5} className="xs:w-[22px] xs:h-[22px]" />
+              <span className="text-[8px] xs:text-[10px] mt-0.5 xs:mt-1 font-medium">More</span>
             </motion.div>
             {showMore && (
               <motion.div
                 layoutId="bottomNavIndicator"
-                className="absolute top-0 w-10 h-1 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
+                className="absolute top-0 w-8 xs:w-10 h-0.5 xs:h-1 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}

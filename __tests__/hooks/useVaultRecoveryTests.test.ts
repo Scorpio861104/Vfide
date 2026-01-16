@@ -2,7 +2,7 @@
  * Tests for useVaultRecovery hook
  * Vault recovery functionality including guardians and next of kin
  */
-import { describe, expect, it, vi, beforeEach } from '@jest/globals'
+import { describe, expect, it, beforeEach } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi

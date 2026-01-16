@@ -3,7 +3,7 @@
  * Tests for actual merchant hook implementations to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from '@jest/globals'
+import { describe, it, expect, beforeEach } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi

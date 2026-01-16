@@ -3,7 +3,9 @@
  */
 
 import React, { ReactNode } from 'react'
-import { vi } from 'vitest'
+
+// Use Jest's global mocking functions
+const mockFn = jest.fn
 
 // ============================================
 // MOCK DATA
@@ -51,7 +53,7 @@ export function createWagmiMocks(config: MockWagmiConfig = {}) {
   } = config
 
   return {
-    useAccount: vi.fn(() => ({
+    useAccount: mockFn(() => ({
       address: isConnected ? address : undefined,
       isConnected,
       isConnecting: false,
@@ -59,51 +61,51 @@ export function createWagmiMocks(config: MockWagmiConfig = {}) {
       connector: isConnected ? { id: 'mock', name: 'Mock Wallet' } : undefined,
     })),
 
-    useChainId: vi.fn(() => chainId),
+    useChainId: mockFn(() => chainId),
 
-    useReadContract: vi.fn(() => ({
+    useReadContract: mockFn(() => ({
       data: readContractData,
       isLoading: isReadLoading,
       error: readError,
-      refetch: vi.fn().mockResolvedValue({ data: readContractData }),
+      refetch: mockFn().mockResolvedValue({ data: readContractData }),
       isSuccess: !isReadLoading && !readError && readContractData !== undefined,
       isFetching: false,
     })),
 
-    useWriteContract: vi.fn(() => ({
-      writeContract: vi.fn(),
-      writeContractAsync: vi.fn().mockResolvedValue(writeContractData || MOCK_TX_HASH),
+    useWriteContract: mockFn(() => ({
+      writeContract: mockFn(),
+      writeContractAsync: mockFn().mockResolvedValue(writeContractData || MOCK_TX_HASH),
       data: writeContractData,
       isPending: isWritePending,
       error: null,
-      reset: vi.fn(),
+      reset: mockFn(),
     })),
 
-    useWaitForTransactionReceipt: vi.fn(() => ({
+    useWaitForTransactionReceipt: mockFn(() => ({
       isLoading: isConfirming,
       isSuccess,
       data: isSuccess ? { status: 'success', transactionHash: writeContractData || MOCK_TX_HASH } : undefined,
     })),
 
-    useBalance: vi.fn(() => ({
+    useBalance: mockFn(() => ({
       data: { value: BigInt('1000000000000000000'), formatted: '1.0', symbol: 'ETH' },
       isLoading: false,
     })),
 
-    useConnect: vi.fn(() => ({
-      connect: vi.fn(),
+    useConnect: mockFn(() => ({
+      connect: mockFn(),
       connectors: [{ id: 'mock', name: 'Mock Wallet' }],
       isPending: false,
       error: null,
     })),
 
-    useDisconnect: vi.fn(() => ({
-      disconnect: vi.fn(),
+    useDisconnect: mockFn(() => ({
+      disconnect: mockFn(),
       isPending: false,
     })),
 
-    useSwitchChain: vi.fn(() => ({
-      switchChain: vi.fn(),
+    useSwitchChain: mockFn(() => ({
+      switchChain: mockFn(),
       isPending: false,
       error: null,
     })),
@@ -220,10 +222,10 @@ export const MOCK_CONTRACT_DATA = {
 // ============================================
 
 export function mockWagmiModule(mocks: ReturnType<typeof createWagmiMocks>) {
-  vi.mock('wagmi', () => mocks)
+  jest.mock('wagmi', () => mocks)
 }
 
 export function resetAllMocks() {
-  vi.clearAllMocks()
-  vi.resetAllMocks()
+  jest.clearAllMocks()
+  jest.resetAllMocks()
 }

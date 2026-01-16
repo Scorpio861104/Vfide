@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from '@jest/globals'
+import { describe, expect, it, beforeEach } from '@jest/globals'
 
 describe('wagmi configuration', () => {
   describe('noopStorage', () => {

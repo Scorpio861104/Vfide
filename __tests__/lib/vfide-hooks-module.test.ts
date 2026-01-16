@@ -2,7 +2,7 @@
  * vfide-hooks Tests
  * Tests for lib/vfide-hooks.ts re-export module (0% coverage)
  */
-import { describe, it, expect, vi } from '@jest/globals'
+import { describe, it, expect } from '@jest/globals'
 
 // Mock all the sub-hooks
 jest.mock('@/hooks/useVaultHooks', () => ({

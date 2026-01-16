@@ -3,7 +3,7 @@
  * Tests for useUtilityHooks to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock the useProofScore hook

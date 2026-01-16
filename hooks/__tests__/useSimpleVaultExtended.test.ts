@@ -3,7 +3,7 @@
  * Covers executeVaultAction flow and ProofScore tiers
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from '@jest/globals'
+import { describe, it, expect, beforeEach, afterEach, Mock } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock useVaultHub

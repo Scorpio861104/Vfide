@@ -3,7 +3,7 @@
  * Tests for wallet connection and management components
  */
 
-import { describe, it, expect, vi, beforeEach } from '@jest/globals'
+import { describe, it, expect, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock wagmi

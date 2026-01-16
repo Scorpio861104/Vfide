@@ -1,7 +1,6 @@
 import { connectorsForWallets } from '@rainbow-me/rainbowkit'
 import { 
   walletConnectWallet, 
-  metaMaskWallet,
   coinbaseWallet,
   injectedWallet,
 } from '@rainbow-me/rainbowkit/wallets'
@@ -105,6 +104,24 @@ const walletGroups = [
   },
   // Only add WalletConnect group if we have a valid project ID
   // Spreading empty array when no projectId avoids empty group error
+  ...(hasWalletConnect ? [{
+    groupName: 'Mobile & QR',
+    wallets: [walletConnectWallet],
+  }] : []),
+]
+
+// Build wallet groups dynamically - only include groups with wallets
+const walletGroups = [
+  {
+    groupName: 'Popular',
+    wallets: [
+      // injectedWallet detects all browser extensions (MetaMask, Rabby, Brave, etc.)
+      injectedWallet,
+      // Coinbase Wallet is also widely used
+      coinbaseWallet,
+    ],
+  },
+  // Only add WalletConnect group if we have a valid project ID
   ...(hasWalletConnect ? [{
     groupName: 'Mobile & QR',
     wallets: [walletConnectWallet],

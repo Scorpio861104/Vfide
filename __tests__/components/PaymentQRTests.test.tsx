@@ -2,7 +2,7 @@
  * PaymentQR Tests
  * Tests for PaymentQR component (0% coverage)
  */
-import { describe, it, expect, vi, beforeEach } from '@jest/globals'
+import { describe, it, expect, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { PaymentQR } from '@/components/merchant/PaymentQR'
 

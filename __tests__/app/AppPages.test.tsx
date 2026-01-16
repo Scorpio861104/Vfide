@@ -2,7 +2,7 @@
  * Tests for app-level error, loading, and not-found components
  * Core Next.js page components
  */
-import { describe, expect, it, vi, beforeEach } from '@jest/globals'
+import { describe, expect, it, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import React from 'react'

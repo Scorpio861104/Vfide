@@ -3,7 +3,7 @@
  * Tests for actual onboarding components with mocked dependencies
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, act } from '@testing-library/react'
 import React from 'react'
 

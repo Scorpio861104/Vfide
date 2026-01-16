@@ -1,5 +1,5 @@
 // Extended tests for useMerchantHooks.ts - covering all remaining functions
-import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
+import { describe, it, expect, beforeEach, Mock } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi before importing hooks

@@ -3,7 +3,7 @@
  * Tests for security panel and emergency control components
  */
 
-import { describe, it, expect, vi } from '@jest/globals'
+import { describe, it, expect } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion

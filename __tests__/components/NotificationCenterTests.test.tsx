@@ -2,7 +2,7 @@
  * NotificationCenter Tests
  * Tests for NotificationCenter component (0% coverage)
  */
-import { describe, it, expect, vi } from '@jest/globals'
+import { describe, it, expect } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { NotificationCenter } from '@/components/ui/NotificationCenter'
 

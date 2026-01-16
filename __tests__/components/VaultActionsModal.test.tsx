@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { VaultActionsModal } from '@/components/vault/VaultActionsModal';
 

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from '@jest/globals'
+import { describe, expect, it, beforeEach } from '@jest/globals'
 
 // Mock all external dependencies first
 jest.mock('@rainbow-me/rainbowkit', () => ({

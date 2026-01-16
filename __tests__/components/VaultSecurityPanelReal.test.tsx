@@ -3,7 +3,7 @@
  * Tests for actual security components with mocked hooks
  */
 
-import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
+import { describe, it, expect, beforeEach, Mock } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 

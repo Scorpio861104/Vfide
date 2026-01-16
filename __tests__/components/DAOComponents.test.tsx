@@ -3,7 +3,7 @@
  * Tests for DAO governance components like proposals, voting, etc.
  */
 
-import { describe, it, expect, vi } from '@jest/globals'
+import { describe, it, expect } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock framer-motion

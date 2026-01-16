@@ -123,10 +123,11 @@ export function GlobalNav() {
   
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-[#1F1F2A]">
-      <div className="container mx-auto px-3 sm:px-4 py-3">
-        <div className="flex items-center justify-between gap-2">
+      <div className="container mx-auto px-2 xs:px-3 sm:px-4 py-2 xs:py-3">
+        <div className="flex items-center justify-between gap-1 xs:gap-2">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">\n            <motion.svg 
+          <Link href="/" className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 group shrink-0">
+            <motion.svg 
               width="40" 
               height="40" 
               viewBox="0 0 40 40" 
@@ -167,7 +168,7 @@ export function GlobalNav() {
                 </linearGradient>
               </defs>
             </motion.svg>
-            <span className="text-2xl font-(family-name:--font-display) font-bold text-[#F8F8FC] group-hover:text-[#00F0FF] transition-colors">
+            <span className="text-lg xs:text-xl sm:text-2xl font-(family-name:--font-display) font-bold text-[#F8F8FC] group-hover:text-[#00F0FF] transition-colors truncate">
               VFIDE
             </span>
           </Link>
@@ -286,7 +287,7 @@ export function GlobalNav() {
           </div>
 
           {/* Mobile: Just wallet essentials (navigation is in bottom nav) */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-1 xs:gap-2 min-w-0">
             <NotificationCenter />
             <SimpleWalletConnect />
           </div>

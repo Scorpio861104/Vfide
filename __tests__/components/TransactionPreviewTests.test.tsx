@@ -2,7 +2,7 @@
  * TransactionPreview Tests
  * Tests for TransactionPreview and GasEstimate components (0% coverage)
  */
-import { describe, it, expect, vi } from '@jest/globals'
+import { describe, it, expect } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { TransactionPreview, GasEstimate } from '@/components/ui/TransactionPreview'
 
