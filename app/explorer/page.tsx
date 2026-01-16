@@ -5,7 +5,7 @@ import { Search, Compass, TrendingUp, Users, Activity } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Ethereum address length constant
+// Ethereum address length constant (0x prefix + 40 hex characters)
 const ETHEREUM_ADDRESS_LENGTH = 42;
 
 // Note: Metadata export doesn't work with 'use client', handled in parent layout
