@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+// Replaced Google Fonts with system font fallbacks for build compatibility
+// import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Web3Provider } from "@/components/wallet/Web3Provider";
 import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
@@ -19,17 +20,17 @@ import { AchievementToastContainer } from "@/components/gamification/Achievement
 import { PieMenu } from "@/components/navigation/PieMenu";
 import CommandBar from "@/components/CommandBar";
 
-const inter = Inter({
+// Use system font stacks as fallback (compatible with any environment)
+// These provide excellent cross-platform compatibility without network requests
+const inter = {
   variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+  style: { fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' },
+};
 
-const spaceGrotesk = Space_Grotesk({
+const spaceGrotesk = {
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+  style: { fontFamily: 'ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono", monospace' },
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://vfide.io"),
@@ -87,7 +88,13 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${spaceGrotesk.variable} font-[family-name:var(--font-body)] antialiased bg-[#0F0F12]`}>
+      <body 
+        className="font-[family-name:var(--font-body)] antialiased bg-[#0F0F12]"
+        style={{
+          '--font-body': inter.style.fontFamily,
+          '--font-display': spaceGrotesk.style.fontFamily,
+        } as React.CSSProperties}
+      >
         {isE2E ? (
           children
         ) : (
