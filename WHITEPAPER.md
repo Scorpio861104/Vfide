@@ -32,8 +32,26 @@
 16. [Security Model](#16-security-model)
 17. [Technical Implementation](#17-technical-implementation)
 18. [Roadmap](#18-roadmap)
-19. [Legal Considerations](#19-legal-considerations)
-20. [Conclusion](#20-conclusion)
+19. [Streaming Payments (Payroll)](#19-streaming-payments-payroll)
+20. [STABLE-PAY (Auto-Conversion)](#20-stable-pay-auto-conversion)
+21. [Stealth Addresses (Private Pay)](#21-stealth-addresses-private-pay)
+22. [Guardian System](#22-guardian-system)
+23. [Multi-Signature Operations](#23-multi-signature-operations)
+24. [Time Locks](#24-time-locks)
+25. [Liquidity Incentives](#25-liquidity-incentives)
+26. [Cross-Chain Features](#26-cross-chain-features)
+27. [Subscriptions (Recurring Payments)](#27-subscriptions-recurring-payments)
+28. [Budgets & Spending Limits](#28-budgets--spending-limits)
+29. [Tax Reporting](#29-tax-reporting)
+30. [Endorsement System](#30-endorsement-system)
+31. [Social Features](#31-social-features)
+32. [Reward Rate Limits (Anti-Farming)](#32-reward-rate-limits-anti-farming)
+33. [Enterprise Gateway](#33-enterprise-gateway)
+34. [Invite System](#34-invite-system)
+35. [Complete Fee Reference](#35-complete-fee-reference)
+36. [Glossary](#36-glossary)
+37. [Legal Considerations](#37-legal-considerations)
+38. [Conclusion](#38-conclusion)
 
 ---
 
@@ -1313,13 +1331,369 @@ Planned for Phase 5 (2027):
 
 ---
 
-## 27. Legal Considerations
+## 27. Subscriptions (Recurring Payments)
 
-### 27.1 Regulatory Compliance
+### 27.1 Overview
+
+The Subscription system allows merchants to set up recurring payments that automatically execute on-chain at specified intervals.
+
+### 27.2 How Subscriptions Work
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  SUBSCRIPTION LIFECYCLE                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. USER CREATES SUBSCRIPTION                               │
+│     ├── Selects merchant                                    │
+│     ├── Sets amount per interval                            │
+│     ├── Sets interval (daily/weekly/monthly)                │
+│     └── Sets max payments (or unlimited)                    │
+│                                                             │
+│  2. APPROVAL                                                │
+│     └── User approves token spending allowance              │
+│                                                             │
+│  3. AUTOMATED EXECUTION                                     │
+│     ├── Keeper calls executePayment when due                │
+│     ├── Funds transfer from user → merchant                 │
+│     └── Counter increments, next payment scheduled          │
+│                                                             │
+│  4. USER CONTROLS                                           │
+│     ├── Pause (temporarily stop)                            │
+│     ├── Resume (restart paused subscription)                │
+│     └── Cancel (permanently end)                            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 27.3 Subscription Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| Subscriber | User paying for subscription |
+| Merchant | Recipient of payments |
+| Token | VFIDE or supported token |
+| Amount | Per-interval payment amount |
+| Interval | Seconds between payments |
+| Max Payments | Total payments before auto-cancel |
+| Payments Made | Counter of completed payments |
+| Total Paid | Running total amount paid |
+| Active | Whether subscription is live |
+| Paused | Temporarily stopped |
+
+### 27.4 Common Intervals
+
+| Interval | Seconds |
+|----------|---------|
+| Daily | 86,400 |
+| Weekly | 604,800 |
+| Monthly | 2,592,000 |
+| Yearly | 31,536,000 |
+
+---
+
+## 28. Budgets & Spending Limits
+
+### 28.1 Overview
+
+Users can set spending budgets to control their expenses and avoid overspending. The system tracks spending by category and alerts users when approaching limits.
+
+### 28.2 Budget Features
+
+| Feature | Description |
+|---------|-------------|
+| Category Budgets | Set limits per category (food, shopping, etc.) |
+| Period | Daily, weekly, or monthly limits |
+| Progress Tracking | Real-time spending vs. budget |
+| Alerts | Notifications at 75%, 90%, 100% |
+| History | View past spending patterns |
+
+### 28.3 How Budgets Work
+
+1. User creates budget with category, limit, and period
+2. System tracks all payments in that category
+3. Dashboard shows spending progress
+4. Alerts trigger at configurable thresholds
+5. Budget resets at end of period
+
+---
+
+## 29. Tax Reporting
+
+### 29.1 Overview
+
+VFIDE provides tools to help users track taxable events for reporting purposes. **Note: VFIDE is not a tax advisor—consult a professional.**
+
+### 29.2 Tracked Tax Events
+
+| Event Type | Description |
+|------------|-------------|
+| Token Swaps | Trading VFIDE for other tokens |
+| Sales | Selling VFIDE for fiat equivalent |
+| Staking Rewards | Rewards received from staking |
+| Referral Rewards | Headhunter/referral bonuses |
+| Badge Rewards | Token rewards from badges |
+
+### 29.3 Tax Summary
+
+The Tax Report page shows:
+- **Short-Term Gains**: Tokens held < 1 year
+- **Long-Term Gains**: Tokens held > 1 year
+- **Total Losses**: Deductible losses
+- **Net Gain/Loss**: Overall position
+- **Event List**: Itemized taxable events
+
+### 29.4 Export Options
+
+- CSV download for tax software
+- Yearly breakdown
+- Cost basis calculation
+
+---
+
+## 30. Endorsement System
+
+### 30.1 Overview
+
+Endorsements are a social reputation feature where users can vouch for other users, contributing to their ProofScore.
+
+### 30.2 How Endorsements Work
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   ENDORSEMENT FLOW                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ENDORSER                     RECIPIENT                     │
+│  ├── Finds trusted user       ├── Receives endorsement      │
+│  ├── Clicks "Endorse"         ├── ProofScore bonus (+10-50) │
+│  ├── Optional: Attach tip     ├── Shows on profile          │
+│  └── Stake reputation         └── Badge progress            │
+│                                                             │
+│  ENDORSEMENT REWARDS                                        │
+│  ├── If recipient maintains 700+ score for 6 months:        │
+│  │   └── Endorser earns "Talent Scout" badge                │
+│  └── If recipient's score drops <400:                       │
+│      └── Endorser's score takes small penalty               │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 30.3 Endorsement Limits
+
+| User ProofScore | Daily Endorsements |
+|-----------------|-------------------|
+| 0-4,000 | 2 |
+| 4,000-6,000 | 5 |
+| 6,000-8,000 | 10 |
+| 8,000+ | 20 |
+
+### 30.4 Endorsement Value
+
+- **Credibility matters**: High-score endorsers provide more score boost
+- **Reputation stake**: Bad endorsements hurt endorser's score
+- **Network effects**: Well-endorsed users become trusted community members
+
+---
+
+## 31. Social Features
+
+### 31.1 Overview
+
+VFIDE includes social features to build community and enable peer-to-peer interactions beyond payments.
+
+### 31.2 Social Hub
+
+| Feature | Description |
+|---------|-------------|
+| Activity Feed | See friend activity, payments, badges |
+| Direct Messages | Encrypted chat with other users |
+| Group Chats | Create groups for communities |
+| Stories | Share ephemeral content (24hr) |
+| Social Payments | Pay friends with messages |
+
+### 31.3 Social Payments
+
+Send payments with:
+- Personal messages
+- Emoji reactions
+- Split payments (divide among group)
+- Request payments from friends
+
+### 31.4 Privacy Controls
+
+| Setting | Options |
+|---------|---------|
+| Profile Visibility | Public / Friends / Private |
+| Payment Activity | Show All / Friends / None |
+| Searchability | Anyone / Friends / Disabled |
+| Message Requests | Anyone / Friends / Disabled |
+
+---
+
+## 32. Reward Rate Limits (Anti-Farming)
+
+### 32.1 Overview
+
+To prevent abuse and token farming, rewards are subject to rate limits and daily caps.
+
+### 32.2 Reward Cooldowns
+
+| Action | Cooldown | Daily Limit | Reward |
+|--------|----------|-------------|--------|
+| Message Sent | 60 sec | 100/day | 10 VFIDE |
+| Reaction Given | 30 sec | 200/day | 2 VFIDE |
+| Reaction Received | 30 sec | 500/day | 5 VFIDE |
+| Daily Login | 24 hours | 1/day | 50 VFIDE |
+| Profile Complete | One-time | Once | 100 VFIDE |
+| First Payment | One-time | Once | 200 VFIDE |
+| Referral | 1 hour | 10/day | 500 VFIDE |
+| Group Created | 1 hour | 5/day | 100 VFIDE |
+| Badge Earned | One-time per badge | 10/day | 50 VFIDE |
+
+### 32.3 Anti-Farming Protections
+
+- **Cooldowns**: Minimum time between same action
+- **Daily Caps**: Maximum rewards per action type
+- **Unique Interactions**: Same user pair limited
+- **Velocity Checks**: Unusual patterns flagged
+- **IP/Device Limits**: Multi-account detection
+
+---
+
+## 33. Enterprise Gateway
+
+### 33.1 Overview
+
+Enterprise Gateway provides business-grade features for larger organizations.
+
+### 33.2 Enterprise Features
+
+| Feature | Description |
+|---------|-------------|
+| Fiat Integration | On/off ramp via partners |
+| Treasury Management | Multi-sig corporate wallets |
+| API Access | Programmatic payment processing |
+| Bulk Payments | Payroll, vendor payments |
+| Compliance Tools | KYC/AML integration options |
+| Dedicated Support | Priority assistance |
+
+### 33.3 Enterprise Tiers
+
+| Tier | Monthly Volume | Features |
+|------|----------------|----------|
+| Starter | <$50K | Basic API, standard support |
+| Growth | $50K-$500K | + Analytics, priority support |
+| Enterprise | $500K+ | + Custom integration, SLA |
+
+---
+
+## 34. Invite System
+
+### 34.1 Overview
+
+Users can generate invite links to bring new users to VFIDE, earning referral bonuses.
+
+### 34.2 Invite Link Features
+
+| Feature | Description |
+|---------|-------------|
+| Unique Codes | Personal referral codes |
+| Expiration | Optional time limit |
+| Usage Limit | Max uses per link |
+| Tracking | See who joined via your link |
+| Bonuses | Headhunter rewards on sign-up |
+
+### 34.3 Invite Flow
+
+1. User generates invite link (with optional code)
+2. Share link via social/messaging
+3. New user clicks link and creates account
+4. Both referrer and referee receive bonuses
+5. Ongoing rewards based on referee activity
+
+---
+
+## 35. Complete Fee Reference
+
+### 35.1 Transaction Fees (by ProofScore)
+
+| ProofScore | Fee Rate | Example on $100 |
+|------------|----------|-----------------|
+| 0-3,999 | 2.9% | $2.90 |
+| 4,000-4,999 | 2.0% | $2.00 |
+| 5,000-6,999 | 1.0% | $1.00 |
+| 7,000-7,999 | 0.5% | $0.50 |
+| 8,000+ | 0.4% | $0.40 |
+| Merchant (≥5,600) | 0% | $0.00 |
+
+### 35.2 Fee Distribution
+
+| Recipient | Percentage | Purpose |
+|-----------|------------|---------|
+| Burn | 62.5% | Reduce supply |
+| Sanctum | 31.25% | Charity fund |
+| Ecosystem | 6.25% | Development |
+
+### 35.3 Other Fees
+
+| Service | Fee | Notes |
+|---------|-----|-------|
+| Escrow Release | 1% | Paid by buyer |
+| STABLE-PAY Swap | ~0.3% | DEX fee |
+| Bridge | Variable | Network dependent |
+| Vault Deposit | 0% | No deposit fee |
+| Vault Withdraw | 0% | No withdrawal fee |
+| Governance Voting | 0% | Free to vote |
+| Proposal Creation | 0% | Free (min stake required) |
+
+### 35.4 Limits & Thresholds
+
+| Parameter | Value |
+|-----------|-------|
+| Max Transaction Fee | 10% (1,000 bps) |
+| High Trust Threshold | 8,000 ProofScore |
+| Low Trust Threshold | 4,000 ProofScore |
+| Merchant Threshold | 5,600 ProofScore |
+| DAO Voting Threshold | 4,000 ProofScore |
+| Council Threshold | 9,000 ProofScore |
+| Vesting Cliff | 90 days (team) |
+| Max Lock Bonus | 30% (180 days) |
+| Minimum Escrow | 10 VFIDE |
+| Escrow Auto-Release | 7 days |
+
+---
+
+## 36. Glossary
+
+| Term | Definition |
+|------|------------|
+| **ProofScore** | Reputation score (0-10,000) based on on-chain behavior |
+| **Vault** | Personal token storage contract with guardian recovery |
+| **Escrow** | 3-party holding contract for buyer-seller transactions |
+| **Sanctum** | Community charity fund receiving 31.25% of fees |
+| **Guardian** | Trusted address that can help recover lost vault access |
+| **Next of Kin** | Designated beneficiary for inheritance |
+| **Council** | 7-member elected body for protocol governance |
+| **Headhunter** | User who recruits new users for rewards |
+| **STABLE-PAY** | Merchant feature to auto-convert VFIDE to stablecoins |
+| **Stealth Address** | Privacy feature for receiving payments anonymously |
+| **Streaming Payment** | Continuous per-second payment flow |
+| **Multi-Sig** | Transaction requiring multiple signatures |
+| **Time Lock** | Mandatory delay before action execution |
+| **Badge** | On-chain achievement token |
+| **Endorsement** | User-to-user reputation vouching |
+| **Bridge** | Cross-chain asset transfer mechanism |
+
+---
+
+## 37. Legal Considerations
+
+### 37.1 Regulatory Compliance
 
 VFIDE is designed as a decentralized protocol with no central operator. Users are responsible for complying with their local regulations regarding cryptocurrency usage.
 
-### 27.2 Token Classification
+### 37.2 Token Classification
 
 VFIDE tokens are utility tokens used for:
 - Transaction fee payment
@@ -1329,7 +1703,7 @@ VFIDE tokens are utility tokens used for:
 
 VFIDE tokens are **not** securities and provide no ownership, dividends, or profit-sharing rights.
 
-### 27.3 User Responsibilities
+### 37.3 User Responsibilities
 
 Users acknowledge that:
 - Cryptocurrency involves risk of loss
@@ -1340,7 +1714,7 @@ Users acknowledge that:
 
 ---
 
-## 28. Conclusion
+## 38. Conclusion
 
 VFIDE represents a fundamental reimagining of digital payments. By aligning economic incentives with trustworthy behavior, we create an ecosystem where:
 
