@@ -466,7 +466,7 @@ Starting Supply: 200,000,000 VFIDE
 
 ---
 
-## � Escrow System
+## 🔒 Escrow System
 
 VFIDE offers a built-in escrow system for secure transactions between parties who don't yet trust each other.
 
@@ -513,7 +513,7 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 
 ---
 
-## �🛡️ Security Features
+## 🛡️ Security Features
 
 ### Smart Contract Security
 
