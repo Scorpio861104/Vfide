@@ -765,6 +765,179 @@ Users earn NFT badges for completing achievements. Badges increase ProofScore an
 | Council Member | Elected to council | 50 | Epic |
 | Founding Member | Participated in presale | 75 | Legendary |
 
+### 12.5 XP & Leveling System
+
+Users earn **Experience Points (XP)** from all activities. XP accumulates toward levels.
+
+#### XP Sources
+
+| Action | XP Earned |
+|--------|-----------|
+| Daily Login | 10 XP |
+| Send Payment | 5 XP |
+| Receive Payment | 3 XP |
+| Cast Vote | 15 XP |
+| Complete Quest | 20-100 XP |
+| Earn Badge | 50 XP |
+| Give Endorsement | 5 XP |
+| Receive Endorsement | 10 XP |
+
+#### Level Thresholds
+
+| Level | XP Required | Title |
+|-------|-------------|-------|
+| 1 | 0 | Newcomer |
+| 2 | 100 | Explorer |
+| 3 | 300 | Contributor |
+| 4 | 600 | Trusted |
+| 5 | 1,000 | Established |
+| 6 | 1,500 | Respected |
+| 7 | 2,500 | Authority |
+| 8 | 4,000 | Elite |
+| 9 | 6,000 | Legendary |
+| 10 | 10,000 | Champion |
+
+#### Level-Up Rewards
+
+Each level-up grants:
+- Notification celebration
+- ProofScore bonus (Level × 5)
+- Unlock new features at certain levels
+
+### 12.6 Daily/Weekly/Monthly Quests
+
+The Quest system provides structured challenges to drive engagement.
+
+#### Quest Types
+
+| Type | Reset Period | Rewards |
+|------|--------------|---------|
+| Daily | Every 24 hours | 10-50 VFIDE + XP |
+| Weekly | Every 7 days | 50-200 VFIDE + XP |
+| Monthly | Every 30 days | 200-1,000 VFIDE + Badge |
+
+#### Quest Difficulty
+
+| Difficulty | Examples | VFIDE Reward |
+|------------|----------|--------------|
+| Easy | "Send 1 payment" | 10 VFIDE |
+| Medium | "Complete 5 transactions" | 25 VFIDE |
+| Hard | "Earn 3 endorsements" | 50 VFIDE |
+| Legendary | "Reach top 100 leaderboard" | 100 VFIDE |
+
+#### Example Quests
+
+**Daily:**
+- Login to VFIDE ✅ (10 VFIDE)
+- Send 1 payment (15 VFIDE)
+- Give 3 reactions (10 VFIDE)
+
+**Weekly:**
+- Complete 10 transactions (50 VFIDE)
+- Vote on 3 proposals (75 VFIDE)
+- Endorse 5 users (60 VFIDE)
+
+**Monthly:**
+- Reach new ProofScore tier (200 VFIDE)
+- Recruit 5 new users (500 VFIDE + Recruiter Badge)
+- Complete 100 transactions (1,000 VFIDE + Power Trader Badge)
+
+### 12.7 Login Streaks
+
+Consecutive daily logins are tracked and rewarded.
+
+#### Streak Milestones
+
+| Streak Days | XP Reward | VFIDE Reward |
+|-------------|-----------|--------------|
+| 7 days | 70 XP | 35 VFIDE |
+| 14 days | 140 XP | 70 VFIDE |
+| 30 days | 300 XP | 150 VFIDE |
+| 60 days | 600 XP | 300 VFIDE |
+| 90 days | 900 XP | 450 VFIDE |
+| 100 days | 1,000 XP | 500 VFIDE + Streak Master Badge |
+
+#### Streak Multipliers
+
+Longer streaks increase reward multipliers:
+
+| Streak Length | Multiplier |
+|---------------|------------|
+| 1-6 days | 1.0x |
+| 7-13 days | 1.1x |
+| 14-29 days | 1.15x |
+| 30-59 days | 1.25x |
+| 60-89 days | 1.35x |
+| 90+ days | 1.5x |
+
+#### Streak Protection
+
+- Missing 1 day resets streak to 0
+- Future: "Streak Shield" item to protect streak (1 per month)
+
+### 12.8 Leaderboards
+
+Competitive leaderboards rank users across multiple categories.
+
+#### Leaderboard Types
+
+| Leaderboard | Ranking Metric | Reset |
+|-------------|----------------|-------|
+| ProofScore | Highest ProofScore | Never |
+| Monthly XP | XP earned this month | Monthly |
+| Transactions | Volume this month | Monthly |
+| Referrals | Users recruited | Quarterly |
+| Governance | Proposals + Votes | Quarterly |
+
+#### Tier Colors
+
+| Tier | ProofScore Range | Color |
+|------|------------------|-------|
+| Champion | 9,000+ | Gold 🥇 |
+| Guardian | 8,000-8,999 | Silver 🥈 |
+| Delegate | 7,000-7,999 | Bronze 🥉 |
+| Advocate | 5,600-6,999 | Cyan |
+| Merchant | 5,600+ (registered) | Green |
+| Neutral | Below 5,600 | Gray |
+
+#### Leaderboard Rewards
+
+Top performers each month receive bonus VFIDE from the Ecosystem Vault:
+
+| Rank | Monthly Reward |
+|------|----------------|
+| 1st | 1,000 VFIDE |
+| 2nd | 750 VFIDE |
+| 3rd | 500 VFIDE |
+| 4th-10th | 250 VFIDE |
+| 11th-50th | 100 VFIDE |
+
+### 12.9 Onboarding Checklist
+
+New users see a guided checklist to learn the platform:
+
+| Step | Action | Reward |
+|------|--------|--------|
+| 1 | Connect Wallet | 10 XP |
+| 2 | Complete Profile | 100 VFIDE + 50 XP |
+| 3 | Make First Deposit | 25 XP |
+| 4 | Send First Payment | 200 VFIDE + 50 XP |
+| 5 | Give First Endorsement | 25 XP |
+| 6 | Vote on First Proposal | 50 XP |
+| 7 | Create Vault | 50 XP |
+| 8 | Add Guardian | 25 XP |
+| **Complete All** | | **Pioneer Badge (Legendary)** |
+
+### 12.10 Achievement Toast System
+
+Real-time notifications celebrate user achievements:
+
+- **Level Up** — Animated celebration with new title
+- **Badge Earned** — Badge icon with rarity glow
+- **Quest Complete** — Reward summary with claim button
+- **Streak Milestone** — Fire animation with multiplier
+- **Leaderboard Rank** — Position change notification
+
 ---
 
 ## 13. Mentorship Program
