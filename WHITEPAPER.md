@@ -50,8 +50,10 @@
 34. [Invite System](#34-invite-system)
 35. [Complete Fee Reference](#35-complete-fee-reference)
 36. [Glossary](#36-glossary)
-37. [Legal Considerations](#37-legal-considerations)
-38. [Conclusion](#38-conclusion)
+37. [Testnet & Development](#37-testnet--development)
+38. [User Profile](#38-user-profile)
+39. [Legal Considerations](#39-legal-considerations)
+40. [Conclusion](#40-conclusion)
 
 ---
 
@@ -1075,6 +1077,49 @@ VFIDE is deployed on multiple EVM-compatible chains for flexibility and low fees
 | Transaction Signing | All actions require wallet approval |
 | Social Recovery | Recover vault without seed phrase |
 
+### 16.4 Two-Factor Authentication (2FA)
+
+Optional 2FA adds an extra security layer for sensitive operations.
+
+#### Supported 2FA Methods
+
+| Method | Description |
+|--------|-------------|
+| TOTP (Authenticator App) | Time-based codes via Google/Authy |
+| SMS | Text message verification codes |
+| Email | Verification link sent to email |
+| Backup Codes | One-time recovery codes (8 codes) |
+
+#### 2FA-Protected Actions
+
+| Action | 2FA Required |
+|--------|--------------|
+| Large Withdrawals (>$1,000) | Optional |
+| Guardian Changes | Recommended |
+| Recovery Initiation | Required |
+| Export Private Data | Required |
+
+### 16.5 Biometric Authentication
+
+For supported devices, biometric login provides passwordless security.
+
+#### Supported Biometrics
+
+| Type | Platform |
+|------|----------|
+| Fingerprint | iOS, Android, Windows Hello |
+| Face ID | iOS, Android |
+| Hardware Key | YubiKey, Titan |
+| WebAuthn | All modern browsers |
+
+#### Enrollment Flow
+
+1. User navigates to Security Center
+2. Clicks "Add Biometric"
+3. Browser prompts for biometric scan
+4. Credential stored locally (private key never leaves device)
+5. Future logins use biometric verification
+
 ---
 
 ## 17. Technical Implementation
@@ -1141,6 +1186,118 @@ type ProofScoreUpdate @entity {
   reason: String!
   timestamp: BigInt!
 }
+```
+
+### 17.4 Developer SDK
+
+VFIDE provides a JavaScript/TypeScript SDK for integration.
+
+#### Installation
+
+```bash
+npm install @vfide/sdk
+```
+
+#### Payment Button Widget
+
+```tsx
+import { VFIDEWidget } from '@vfide/sdk';
+
+<VFIDEWidget.PaymentButton
+  to="0x1234..."
+  amount="0.01"
+  token="ETH"
+  onSuccess={(tx) => console.log('Paid!', tx)}
+/>
+```
+
+#### Request Payment via API
+
+```typescript
+const payment = await VFIDE.requestPayment({
+  to: merchantAddress,
+  amount: '10.00',
+  token: 'USDC',
+  metadata: { orderId: '12345' }
+});
+```
+
+#### Create Streaming Payment
+
+```typescript
+const stream = await VFIDE.createStream({
+  to: recipientAddress,
+  amount: '100',
+  token: 'USDC',
+  duration: 30 * 24 * 60 * 60 // 30 days
+});
+```
+
+#### Webhook Events
+
+| Event | Description |
+|-------|-------------|
+| `payment.completed` | Payment confirmed on-chain |
+| `payment.failed` | Payment failed or reverted |
+| `stream.started` | Streaming payment began |
+| `stream.depleted` | Stream funds exhausted |
+| `escrow.created` | New escrow initiated |
+| `escrow.released` | Escrow funds released |
+| `escrow.disputed` | Dispute filed on escrow |
+
+### 17.5 Notification System
+
+Real-time notifications keep users informed.
+
+#### Notification Types
+
+| Type | Description | Default |
+|------|-------------|---------|
+| Message | DM or group message | On |
+| Mention | @mentioned in post | On |
+| Reaction | Someone reacted to post | On |
+| Group Invite | Invited to group | On |
+| Badge Earned | Achievement unlocked | On |
+| Announcement | System announcements | On |
+| Payment | Payment received | On |
+| Governance | Proposal updates | Off |
+
+#### Delivery Channels
+
+| Channel | Description |
+|---------|-------------|
+| In-App | Notification bell in header |
+| Push | Browser/mobile push notifications |
+| Email | Email digest (configurable frequency) |
+| SMS | Critical alerts only |
+
+#### Notification Preferences
+
+Users can customize per-type:
+- Enable/disable
+- Sound on/off
+- Push notifications
+- Email notifications
+- Quiet hours
+
+### 17.6 ENS Integration
+
+VFIDE integrates with Ethereum Name Service for human-readable addresses.
+
+#### Features
+
+| Feature | Description |
+|---------|-------------|
+| Name Resolution | Display ENS names instead of 0x addresses |
+| Avatar Display | Show ENS avatar images |
+| Pay by ENS | Send payments to `name.eth` |
+| Reverse Lookup | Show user's ENS name in UI |
+
+#### Example
+
+```
+Instead of: 0x742d35Cc6634C0532925a3b844Bc9e7595f...
+Display as: alice.eth
 ```
 
 ---
@@ -1857,10 +2014,84 @@ Users can generate invite links to bring new users to VFIDE, earning referral bo
 | **Badge** | On-chain achievement token |
 | **Endorsement** | User-to-user reputation vouching |
 | **Bridge** | Cross-chain asset transfer mechanism |
+| **XP** | Experience Points earned from activities |
+| **Quest** | Daily/weekly/monthly challenge with rewards |
+| **Streak** | Consecutive login days tracked for bonuses |
+| **2FA** | Two-Factor Authentication for extra security |
+| **ENS** | Ethereum Name Service (e.g., alice.eth) |
+| **Webhook** | Automated HTTP callback for payment events |
+| **SDK** | Software Development Kit for integrations |
+| **Faucet** | Testnet source for free test tokens |
 
 ---
 
-## 37. Legal Considerations
+## 37. Testnet & Development
+
+### 37.1 Testnet Networks
+
+| Network | Chain ID | Faucet |
+|---------|----------|--------|
+| Base Sepolia | 84532 | basefaucet.coinbase.com |
+| Polygon Amoy | 80002 | faucet.polygon.technology |
+| zkSync Sepolia | 300 | faucet.zksync.io |
+
+### 37.2 Getting Test Tokens
+
+1. Connect wallet to testnet
+2. Navigate to `/testnet` page
+3. Copy your wallet address
+4. Visit faucet link
+5. Paste address and request tokens
+6. Tokens arrive in ~30 seconds
+
+### 37.3 Testnet Features
+
+All features work on testnet with test tokens:
+- ProofScore builds normally
+- Governance proposals can be created
+- Escrow and Vault contracts deployed
+- Badges can be earned
+- No real money required
+
+---
+
+## 38. User Profile
+
+### 38.1 Profile Information
+
+| Field | Description |
+|-------|-------------|
+| Display Name | Customizable username |
+| Avatar | Profile picture (or ENS avatar) |
+| Bio | Short description |
+| ENS Name | Ethereum Name Service display |
+| ProofScore | Current reputation score |
+| Level | XP-based level (1-10) |
+| Member Since | Account creation date |
+
+### 38.2 Profile Stats
+
+| Stat | Description |
+|------|-------------|
+| Total Transactions | Payments sent + received |
+| Badges Earned | NFT achievement count |
+| Endorsements Given | Endorsements to others |
+| Endorsements Received | Endorsements from others |
+| Governance Votes | Proposals voted on |
+| Streak Record | Longest login streak |
+
+### 38.3 Profile Privacy
+
+| Setting | Options |
+|---------|---------|
+| Profile Visibility | Public / Friends / Private |
+| Activity Visibility | Show All / Friends / Hidden |
+| Transaction History | Visible / Hidden |
+| Badge Display | Show All / Featured Only |
+
+---
+
+## 39. Legal Considerations
 
 ### 37.1 Regulatory Compliance
 
@@ -1887,7 +2118,7 @@ Users acknowledge that:
 
 ---
 
-## 38. Conclusion
+## 40. Conclusion
 
 VFIDE represents a fundamental reimagining of digital payments. By aligning economic incentives with trustworthy behavior, we create an ecosystem where:
 
