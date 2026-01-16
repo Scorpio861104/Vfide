@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Copy, Check, Clock, Circle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
+import { useAccount } from 'wagmi';
 import { useToast } from '@/components/ui/toast';
 import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
 import { useENS } from '@/hooks/useENS';
@@ -47,6 +48,8 @@ export function SimpleWalletConnect() {
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
   const { sessionDurationFormatted, isInCooldown, cooldownRemaining } = useEnhancedWalletConnect();
+  // Get connector info from wagmi
+  const { connector } = useAccount();
 
   // Copy address to clipboard
   const copyAddress = useCallback(async (address: string, e: React.MouseEvent) => {
