@@ -100,8 +100,6 @@ export function SimpleWalletConnect() {
 
         // Note: ENS and latency features temporarily disabled due to React hooks limitations in render props
         // These features should be refactored into a separate component to use hooks properly
-        const ensName = null;
-        const _latencyData = null;
         
         // Track connection history when connected changes
         if (connected && account && chain) {
@@ -294,8 +292,7 @@ export function SimpleWalletConnect() {
                     className="relative px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 text-xs xs:text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
                   >
                     <span className="hidden sm:flex items-center gap-1.5 xs:gap-2">
-                      {/* Phase 3: Show ENS name if available */}
-                      {ensName || account.displayName}
+                      {account.displayName}
                       {account.displayBalance ? ` (${account.displayBalance})` : ''}
                       {/* Session duration indicator */}
                       {sessionDurationFormatted && (
@@ -308,7 +305,7 @@ export function SimpleWalletConnect() {
                       <button
                         onClick={(e) => copyAddress(account.address, e)}
                         className="ml-0.5 xs:ml-1 p-0.5 xs:p-1 hover:bg-[#1A1A1D]/20 rounded transition-colors"
-                        title={`Copy address${ensName ? ` (${account.address})` : ''}`}
+                        title="Copy wallet address"
                         aria-label="Copy wallet address"
                       >
                         {copied ? (
