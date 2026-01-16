@@ -98,10 +98,7 @@ function cleanupBalanceCache(): void {
   const toRemove = Math.floor(entries.length * 0.2);
   
   for (let i = 0; i < toRemove; i++) {
-    const entry = entries[i];
-    if (entry) {
-      balanceCache.delete(entry[0]);
-    }
+    balanceCache.delete(entries[i]![0]);
   }
 }
 

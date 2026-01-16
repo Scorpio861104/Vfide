@@ -3,13 +3,13 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { Copy, Check, Clock, Circle } from 'lucide-react';
+import { Copy, Check, Clock } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { useToast } from '@/components/ui/toast';
 import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
 import { addConnectionToHistory } from '@/lib/connectionHistory';
-import { connectionStateAnimations as _connectionStateAnimations, fadeIn, scaleIn } from '@/lib/animations';
+import { fadeIn, scaleIn } from '@/lib/animations';
 
 /**
  * Enhanced Simple Wallet Connect Component
@@ -100,8 +100,6 @@ export function SimpleWalletConnect() {
 
         // Note: ENS and latency features temporarily disabled due to React hooks limitations in render props
         // These features should be refactored into a separate component to use hooks properly
-        const ensName = null;
-        const latencyData = null;
         
         // Track connection history when connected changes
         if (connected && account && chain) {
@@ -248,19 +246,11 @@ export function SimpleWalletConnect() {
                     }}
                     whileHover={{ scale: 1.05 }}
                     type="button"
-                    aria-label={`Current network: ${chain.name}${latencyData ? ` - ${latencyData.status} (${latencyData.latency}ms)` : ''}`}
-                    title={latencyData ? `Network latency: ${latencyData.latency}ms (${latencyData.status})` : chain.name}
+                    aria-label={`Current network: ${chain.name}`}
+                    title={chain.name}
                     className="hidden sm:flex px-3 xs:px-4 py-1.5 xs:py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-all font-[family-name:var(--font-body)] text-xs xs:text-sm items-center cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                   >
-                    {/* Phase 3: Network latency indicator */}
-                    {latencyData && (
-                      <Circle 
-                        size={8}
-                        fill={getLatencyColor(latencyData.status)}
-                        color={getLatencyColor(latencyData.status)}
-                        className="mr-2"
-                      />
-                    )}
+                    {/* Note: Network latency indicator temporarily disabled */}
                     {chain.hasIcon && (
                       <div
                         style={{

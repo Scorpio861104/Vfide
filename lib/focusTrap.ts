@@ -40,13 +40,11 @@ export function useFocusTrap(isActive: boolean) {
       return;
     }
 
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
+    const firstElement = focusableElements[0]!;
+    const lastElement = focusableElements[focusableElements.length - 1]!;
 
-    // Focus first element if it exists
-    if (firstElement) {
-      firstElement.focus();
-    }
+    // Focus first element
+    firstElement.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') {
@@ -55,14 +53,14 @@ export function useFocusTrap(isActive: boolean) {
 
       // Shift + Tab (backwards)
       if (e.shiftKey) {
-        if (lastElement && document.activeElement === firstElement) {
+        if (document.activeElement === firstElement) {
           e.preventDefault();
           lastElement.focus();
         }
       }
       // Tab (forwards)
       else {
-        if (firstElement && document.activeElement === lastElement) {
+        if (document.activeElement === lastElement) {
           e.preventDefault();
           firstElement.focus();
         }
