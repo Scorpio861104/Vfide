@@ -119,7 +119,15 @@ export function SimpleWalletConnect() {
             // Measure latency periodically
             const measureAndUpdate = async () => {
               // Only measure if we have a valid RPC endpoint
-              const rpcUrl = chain.rpcUrls?.default?.http?.[0];
+              // Type assertion needed because RainbowKit chain has limited type info
+              const chainWithRpc = chain as typeof chain & {
+                rpcUrls?: {
+                  default?: {
+                    http?: readonly string[];
+                  };
+                };
+              };
+              const rpcUrl = chainWithRpc.rpcUrls?.default?.http?.[0];
               if (rpcUrl) {
                 const data = await measureLatency(rpcUrl, chain.id);
                 setLatencyData(data);
@@ -131,6 +139,7 @@ export function SimpleWalletConnect() {
 
             return () => clearInterval(interval);
           }
+          return undefined;
         }, [chain?.id, connected, chain]);
 
         // Phase 3: Track connection in history

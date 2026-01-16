@@ -48,7 +48,10 @@ export async function GET(request: NextRequest) {
         [userId.toLowerCase()]
       );
       if (userResult.rows.length > 0) {
-        requestingUserId = userResult.rows[0].id;
+        const userRow = userResult.rows[0];
+        if (userRow) {
+          requestingUserId = userRow.id;
+        }
       }
     }
 
@@ -118,7 +121,10 @@ export async function GET(request: NextRequest) {
         if (!badgesMap[row.user_id]) {
           badgesMap[row.user_id] = [];
         }
-        badgesMap[row.user_id].push(row.badge_name);
+        const badgeName = row.badge_name;
+        if (badgeName) {
+          badgesMap[row.user_id]!.push(badgeName);
+        }
       });
     }
 
@@ -137,7 +143,8 @@ export async function GET(request: NextRequest) {
       if (reason) return reason as SuggestedUser['reason'];
       if (row.mutual_count > 5) return 'mutual_friends';
       if (row.proof_score >= 8000) return 'high_score';
-      if (badgesMap[row.id]?.length > 3) return 'same_badges';
+      const badges = badgesMap[row.id];
+      if (badges && badges.length > 3) return 'same_badges';
       if (row.is_verified) return 'trending';
       return 'similar_activity';
     };

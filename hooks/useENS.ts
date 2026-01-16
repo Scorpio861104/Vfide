@@ -9,16 +9,17 @@ import { mainnet } from 'wagmi/chains';
  * ENS Name Resolution Hook
  * 
  * Phase 3: Resolve ENS names for addresses
+ * Note: ENS resolution uses mainnet even if not in active chain list
  */
 export function useENS(address: string | undefined) {
   const [ensName, setEnsName] = useState<string | null>(null);
   const [ensAvatar, setEnsAvatar] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Use wagmi's ENS hooks
+  // Use wagmi's ENS hooks with explicit type assertion for chainId
   const { data: resolvedName, isLoading: nameLoading } = useEnsName({
     address: address as `0x${string}` | undefined,
-    chainId: mainnet.id,
+    chainId: mainnet.id as any, // ENS is on mainnet (1), type assertion needed due to chain config
     query: {
       enabled: !!address,
       staleTime: 1000 * 60 * 60, // 1 hour cache
@@ -27,7 +28,7 @@ export function useENS(address: string | undefined) {
 
   const { data: resolvedAvatar, isLoading: avatarLoading } = useEnsAvatar({
     name: resolvedName ? normalize(resolvedName) : undefined,
-    chainId: mainnet.id,
+    chainId: mainnet.id as any, // ENS is on mainnet (1), type assertion needed due to chain config
     query: {
       enabled: !!resolvedName,
       staleTime: 1000 * 60 * 60, // 1 hour cache

@@ -43,8 +43,10 @@ export function useFocusTrap(isActive: boolean) {
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
-    // Focus first element
-    firstElement.focus();
+    // Focus first element if it exists
+    if (firstElement) {
+      firstElement.focus();
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') {
@@ -53,14 +55,14 @@ export function useFocusTrap(isActive: boolean) {
 
       // Shift + Tab (backwards)
       if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
+        if (lastElement && document.activeElement === firstElement) {
           e.preventDefault();
           lastElement.focus();
         }
       }
       // Tab (forwards)
       else {
-        if (document.activeElement === lastElement) {
+        if (firstElement && document.activeElement === lastElement) {
           e.preventDefault();
           firstElement.focus();
         }

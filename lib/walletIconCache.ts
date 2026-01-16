@@ -18,6 +18,15 @@ interface CachedIcon {
   url: string;
 }
 
+// Cache configuration constants
+const CACHE_TTL = {
+  ICONS: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+};
+
+const CACHE_LIMITS = {
+  ICONS: 50, // Maximum number of icons to cache
+};
+
 class WalletIconCache {
   private cache: Map<string, CachedIcon> = new Map();
   private readonly CACHE_DURATION = CACHE_TTL.ICONS;

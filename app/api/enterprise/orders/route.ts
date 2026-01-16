@@ -227,8 +227,13 @@ export async function POST(request: NextRequest) {
 
     await client.query('COMMIT');
 
+    const orderRow = orderResult.rows[0];
+    if (!orderRow) {
+      throw new Error('Failed to insert order');
+    }
+
     const newOrder = {
-      id: `order_${orderResult.rows[0].id}`,
+      id: `order_${orderRow.id}`,
       merchantId,
       merchantName: merchantName || 'Unknown Merchant',
       customerId,
@@ -239,7 +244,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       paymentMethod: paymentMethod || 'crypto',
       metadata,
-      createdAt: orderResult.rows[0].created_at,
+      createdAt: orderRow.created_at,
       notes,
     };
 
