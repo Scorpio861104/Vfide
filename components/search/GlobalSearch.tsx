@@ -6,7 +6,7 @@ import { Friend } from '@/types/messaging';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Command, MessageSquare, Search, TrendingUp, Users, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 interface SearchResult {
@@ -26,6 +26,31 @@ export function GlobalSearch() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Cache parsed friends and groups to avoid repeated JSON.parse on every search
+  // Note: Cache updates when address changes. For real-time updates from other tabs,
+  // consider adding storage event listeners if needed in the future.
+  const cachedFriends = useMemo<Friend[]>(() => {
+    if (!address || typeof window === 'undefined') return [];
+    try {
+      const storedFriends = localStorage.getItem(`vfide_friends_${address}`);
+      return storedFriends ? JSON.parse(storedFriends) : [];
+    } catch (e) {
+      console.error('Failed to load friends:', e);
+      return [];
+    }
+  }, [address]);
+
+  const cachedGroups = useMemo<Group[]>(() => {
+    if (!address || typeof window === 'undefined') return [];
+    try {
+      const storedGroups = localStorage.getItem(`vfide_groups_${address}`);
+      return storedGroups ? JSON.parse(storedGroups) : [];
+    } catch (e) {
+      console.error('Failed to load groups:', e);
+      return [];
+    }
+  }, [address]);
 
   // Keyboard shortcut to open search
   useKeyboardShortcuts([
@@ -100,69 +125,49 @@ export function GlobalSearch() {
       }
     });
 
-    // Search friends (if available)
-    if (address && typeof window !== 'undefined') {
-      try {
-        const storedFriends = localStorage.getItem(`vfide_friends_${address}`);
-        if (storedFriends) {
-          const friends: Friend[] = JSON.parse(storedFriends);
-          friends.forEach(friend => {
-            const matches = 
-              friend.alias?.toLowerCase().includes(query) ||
-              friend.address.toLowerCase().includes(query);
-            
-            if (matches) {
-              searchResults.push({
-                type: 'friend',
-                id: friend.address,
-                title: friend.alias || friend.address,
-                subtitle: friend.address,
-                icon: <Users className="w-5 h-5" />,
-                action: () => {
-                  router.push(`/social-messaging?friend=${friend.address}`);
-                },
-              });
-            }
-          });
-        }
-      } catch (e) {
-        console.error('Failed to search friends:', e);
+    // Search friends using cached data
+    cachedFriends.forEach(friend => {
+      const matches = 
+        friend.alias?.toLowerCase().includes(query) ||
+        friend.address.toLowerCase().includes(query);
+      
+      if (matches) {
+        searchResults.push({
+          type: 'friend',
+          id: friend.address,
+          title: friend.alias || friend.address,
+          subtitle: friend.address,
+          icon: <Users className="w-5 h-5" />,
+          action: () => {
+            router.push(`/social-messaging?friend=${friend.address}`);
+          },
+        });
       }
-    }
+    });
 
-    // Search groups
-    if (address && typeof window !== 'undefined') {
-      try {
-        const storedGroups = localStorage.getItem(`vfide_groups_${address}`);
-        if (storedGroups) {
-          const groups: Group[] = JSON.parse(storedGroups);
-          groups.forEach(group => {
-            const matches =
-              group.name.toLowerCase().includes(query) ||
-              group.description?.toLowerCase().includes(query);
-            
-            if (matches) {
-              searchResults.push({
-                type: 'group',
-                id: group.id,
-                title: group.name,
-                subtitle: `${group.members.length} members`,
-                icon: <MessageSquare className="w-5 h-5" />,
-                action: () => {
-                  router.push(`/social-messaging?group=${group.id}`);
-                },
-              });
-            }
-          });
-        }
-      } catch (e) {
-        console.error('Failed to search groups:', e);
+    // Search groups using cached data
+    cachedGroups.forEach(group => {
+      const matches =
+        group.name.toLowerCase().includes(query) ||
+        group.description?.toLowerCase().includes(query);
+      
+      if (matches) {
+        searchResults.push({
+          type: 'group',
+          id: group.id,
+          title: group.name,
+          subtitle: `${group.members.length} members`,
+          icon: <MessageSquare className="w-5 h-5" />,
+          action: () => {
+            router.push(`/social-messaging?group=${group.id}`);
+          },
+        });
       }
-    }
+    });
 
     setResults(searchResults.slice(0, 8)); // Limit to 8 results
     setSelectedIndex(0);
-  }, [address, router]);
+  }, [cachedFriends, cachedGroups, router]);
 
   // Debounced search
   useEffect(() => {

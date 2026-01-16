@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
 // Exported for use elsewhere
 export interface MetricUpdate {
@@ -38,30 +38,45 @@ export function RealtimeMetrics({
   const [metrics, setMetrics] = useState<RealtimeMetric[]>(initialMetrics);
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const metricsRef = useRef(metrics);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    metricsRef.current = metrics;
+  }, [metrics]);
+
+  // Memoize the fetch function to avoid recreating on every render
+  const fetchUpdates = useCallback(async () => {
+    if (!onUpdate) return;
+
+    // Get current metric IDs from ref to avoid stale closure
+    const currentMetrics = metricsRef.current;
+    const metricIds = currentMetrics.map(m => m.id);
+    
+    // Fetch all updates
+    const updates = await Promise.all(
+      metricIds.map(async (metricId) => {
+        const newValue = await onUpdate(metricId);
+        return { metricId, newValue };
+      })
+    );
+
+    // Apply updates to state
+    setMetrics(prev =>
+      prev.map((metric) => {
+        const update = updates.find(u => u.metricId === metric.id);
+        const newHistory = [...metric.history, update?.newValue ?? metric.value].slice(-maxHistoryLength);
+        return {
+          ...metric,
+          value: update?.newValue ?? metric.value,
+          history: newHistory
+        };
+      })
+    );
+  }, [onUpdate, maxHistoryLength]);
 
   useEffect(() => {
     if (isPaused || !onUpdate) return;
-
-    const fetchUpdates = async () => {
-      const updates = await Promise.all(
-        metrics.map(async (metric) => {
-          const newValue = await onUpdate(metric.id);
-          return { ...metric, newValue };
-        })
-      );
-
-      setMetrics(prev =>
-        prev.map((metric, index) => {
-          const update = updates[index];
-          const newHistory = [...metric.history, update?.newValue ?? metric.value].slice(-maxHistoryLength);
-          return {
-            ...metric,
-            value: update?.newValue ?? metric.value,
-            history: newHistory
-          };
-        })
-      );
-    };
 
     fetchUpdates();
     intervalRef.current = setInterval(fetchUpdates, updateInterval);
@@ -71,7 +86,7 @@ export function RealtimeMetrics({
         clearInterval(intervalRef.current);
       }
     };
-  }, [isPaused, onUpdate, updateInterval, maxHistoryLength]);
+  }, [isPaused, onUpdate, updateInterval, fetchUpdates]);
 
   const getStatus = (metric: RealtimeMetric): 'normal' | 'warning' | 'critical' => {
     if (!metric.threshold) return 'normal';
