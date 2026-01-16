@@ -1,162 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
 /**
- * Community Trending Topics API
- * GET - Retrieve trending topics and hashtags
+ * Community Trending Topics API - PostgreSQL Database
+ * GET - Retrieve trending topics and hashtags from database
  */
 
-interface TrendingTopic {
-  id: string;
+interface TrendingTopicRow {
+  id: number;
   tag: string;
-  displayName: string;
-  postCount: number;
-  change24h: number; // percentage change
-  category: 'governance' | 'commerce' | 'social' | 'tech' | 'general';
-  isPromoted?: boolean;
+  post_count: number;
+  engagement_score: number;
+  category: string;
+  is_promoted: boolean;
+  updated_at: string;
 }
 
-interface TrendingUser {
-  id: string;
-  address: string;
-  name: string;
-  avatar?: string;
-  proofScore: number;
-  followersGained24h: number;
-  isVerified: boolean;
+interface TrendingUserRow {
+  id: number;
+  wallet_address: string;
+  username: string | null;
+  avatar_url: string | null;
+  proof_score: number;
+  is_verified: boolean;
+  follower_count: number;
 }
-
-// In-memory trending data (use Redis/analytics in production)
-const trendingTopics: TrendingTopic[] = [
-  {
-    id: 'trend_1',
-    tag: 'ProofScore',
-    displayName: '#ProofScore',
-    postCount: 1247,
-    change24h: 45,
-    category: 'tech',
-  },
-  {
-    id: 'trend_2',
-    tag: 'VFIDEGovernance',
-    displayName: '#VFIDEGovernance',
-    postCount: 892,
-    change24h: 120,
-    category: 'governance',
-    isPromoted: true,
-  },
-  {
-    id: 'trend_3',
-    tag: 'StreamingPayments',
-    displayName: '#StreamingPayments',
-    postCount: 756,
-    change24h: 35,
-    category: 'commerce',
-  },
-  {
-    id: 'trend_4',
-    tag: 'Web3Commerce',
-    displayName: '#Web3Commerce',
-    postCount: 634,
-    change24h: 22,
-    category: 'commerce',
-  },
-  {
-    id: 'trend_5',
-    tag: 'Sanctum',
-    displayName: '#Sanctum',
-    postCount: 523,
-    change24h: 67,
-    category: 'social',
-  },
-  {
-    id: 'trend_6',
-    tag: 'MerchantMonday',
-    displayName: '#MerchantMonday',
-    postCount: 412,
-    change24h: 200,
-    category: 'commerce',
-  },
-  {
-    id: 'trend_7',
-    tag: 'EscrowSuccess',
-    displayName: '#EscrowSuccess',
-    postCount: 389,
-    change24h: 15,
-    category: 'commerce',
-  },
-  {
-    id: 'trend_8',
-    tag: 'DAOVoting',
-    displayName: '#DAOVoting',
-    postCount: 345,
-    change24h: 88,
-    category: 'governance',
-  },
-  {
-    id: 'trend_9',
-    tag: 'Headhunter',
-    displayName: '#Headhunter',
-    postCount: 298,
-    change24h: 42,
-    category: 'social',
-  },
-  {
-    id: 'trend_10',
-    tag: 'BadgeHunting',
-    displayName: '#BadgeHunting',
-    postCount: 267,
-    change24h: 31,
-    category: 'social',
-  },
-];
-
-const trendingUsers: TrendingUser[] = [
-  {
-    id: 'user_1',
-    address: '0x1234567890abcdef1234567890abcdef12345678',
-    name: 'CryptoWhale',
-    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=whale',
-    proofScore: 8500,
-    followersGained24h: 127,
-    isVerified: true,
-  },
-  {
-    id: 'user_2',
-    address: '0x9876543210fedcba9876543210fedcba98765432',
-    name: 'MerchantDAO',
-    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=merchant',
-    proofScore: 9100,
-    followersGained24h: 98,
-    isVerified: true,
-  },
-  {
-    id: 'user_3',
-    address: '0xabcdef1234567890abcdef1234567890abcdef12',
-    name: 'DeFiTrader',
-    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=trader',
-    proofScore: 7200,
-    followersGained24h: 76,
-    isVerified: false,
-  },
-  {
-    id: 'user_4',
-    address: '0xfedcba9876543210fedcba9876543210fedcba98',
-    name: 'PayrollPro',
-    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=payroll',
-    proofScore: 6800,
-    followersGained24h: 54,
-    isVerified: false,
-  },
-  {
-    id: 'user_5',
-    address: '0x1111222233334444555566667777888899990000',
-    name: 'EscrowExpert',
-    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=escrow',
-    proofScore: 7800,
-    followersGained24h: 43,
-    isVerified: true,
-  },
-];
 
 export async function GET(request: NextRequest) {
   try {
@@ -165,40 +33,120 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const type = searchParams.get('type') || 'all'; // 'topics', 'users', 'all'
 
-    let filteredTopics = [...trendingTopics];
-
-    // Filter by category
-    if (category) {
-      filteredTopics = filteredTopics.filter(
-        topic => topic.category === category
-      );
-    }
-
-    // Sort by post count (most popular first)
-    filteredTopics.sort((a, b) => b.postCount - a.postCount);
-
-    // Limit results
-    filteredTopics = filteredTopics.slice(0, limit);
-
-    // Sort users by followers gained
-    const sortedUsers = [...trendingUsers]
-      .sort((a, b) => b.followersGained24h - a.followersGained24h)
-      .slice(0, limit);
-
     const response: {
-      topics?: TrendingTopic[];
-      users?: TrendingUser[];
+      topics?: {
+        id: string;
+        tag: string;
+        displayName: string;
+        postCount: number;
+        change24h: number;
+        category: string;
+        isPromoted: boolean;
+      }[];
+      users?: {
+        id: string;
+        address: string;
+        name: string;
+        avatar: string;
+        proofScore: number;
+        followersGained24h: number;
+        isVerified: boolean;
+      }[];
       updatedAt: string;
     } = {
       updatedAt: new Date().toISOString(),
     };
 
+    // Get trending topics
     if (type === 'topics' || type === 'all') {
-      response.topics = filteredTopics;
+      let topicsQuery = `
+        SELECT 
+          id,
+          tag,
+          post_count,
+          engagement_score,
+          COALESCE(category, 'general') as category,
+          COALESCE(is_promoted, false) as is_promoted,
+          updated_at
+        FROM trending_topics
+        WHERE 1=1
+      `;
+      const topicsParams: (string | number)[] = [];
+      let paramIndex = 1;
+
+      if (category) {
+        topicsParams.push(category);
+        topicsQuery += ` AND category = $${paramIndex++}`;
+      }
+
+      topicsQuery += ` ORDER BY is_promoted DESC, engagement_score DESC, post_count DESC`;
+      topicsParams.push(limit);
+      topicsQuery += ` LIMIT $${paramIndex}`;
+
+      const topicsResult = await query<TrendingTopicRow>(topicsQuery, topicsParams);
+
+      response.topics = topicsResult.rows.map(row => ({
+        id: `trend_${row.id}`,
+        tag: row.tag,
+        displayName: `#${row.tag}`,
+        postCount: row.post_count,
+        change24h: Math.round(row.engagement_score), // Use engagement as change indicator
+        category: row.category as 'governance' | 'commerce' | 'social' | 'tech' | 'general',
+        isPromoted: row.is_promoted,
+      }));
+
+      // If no trending topics in DB, compute from community_posts
+      if (response.topics.length === 0) {
+        const computedResult = await query<{ tag: string; post_count: string }>(
+          `SELECT UNNEST(tags) as tag, COUNT(*) as post_count
+           FROM community_posts
+           WHERE created_at > NOW() - INTERVAL '7 days'
+           GROUP BY UNNEST(tags)
+           ORDER BY post_count DESC
+           LIMIT $1`,
+          [limit]
+        );
+
+        response.topics = computedResult.rows.map((row, idx) => ({
+          id: `trend_computed_${idx}`,
+          tag: row.tag,
+          displayName: `#${row.tag}`,
+          postCount: parseInt(row.post_count),
+          change24h: 0,
+          category: 'general' as const,
+          isPromoted: false,
+        }));
+      }
     }
 
+    // Get trending users (by ProofScore and activity)
     if (type === 'users' || type === 'all') {
-      response.users = sortedUsers;
+      const usersResult = await query<TrendingUserRow>(
+        `SELECT 
+          u.id,
+          u.wallet_address,
+          COALESCE(u.username, CONCAT('User_', SUBSTRING(u.wallet_address, 1, 8))) as username,
+          u.avatar_url,
+          COALESCE(u.proof_score, 0) as proof_score,
+          COALESCE(u.is_verified, false) as is_verified,
+          COUNT(DISTINCT f.id) as follower_count
+        FROM users u
+        LEFT JOIN friends f ON f.friend_id = u.id AND f.status = 'accepted'
+        GROUP BY u.id, u.wallet_address, u.username, u.avatar_url, u.proof_score, u.is_verified
+        ORDER BY u.proof_score DESC, follower_count DESC
+        LIMIT $1`,
+        [limit]
+      );
+
+      response.users = usersResult.rows.map(row => ({
+        id: `user_${row.id}`,
+        address: row.wallet_address,
+        name: row.username || `User_${row.wallet_address.substring(0, 8)}`,
+        avatar: row.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${row.wallet_address}`,
+        proofScore: row.proof_score,
+        followersGained24h: row.follower_count, // Approximate with total followers
+        isVerified: row.is_verified,
+      }));
     }
 
     return NextResponse.json(response);

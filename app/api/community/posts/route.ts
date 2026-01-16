@@ -1,108 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query, getClient } from '@/lib/db';
 
 /**
- * Community Posts API
- * GET - Retrieve community posts
- * POST - Create a new post
+ * Community Posts API - PostgreSQL Database
+ * GET - Retrieve community posts from database
+ * POST - Create a new post in database
  */
 
-interface Post {
-  id: string;
-  authorId: string;
-  authorName: string;
-  authorAvatar?: string;
-  authorProofScore: number;
+interface PostRow {
+  id: number;
+  author_id: number;
+  wallet_address: string;
+  username: string | null;
+  avatar_url: string | null;
+  proof_score: number;
   content: string;
-  mediaUrls?: string[];
+  media_urls: string[] | null;
   likes: number;
   comments: number;
   reposts: number;
-  tips: number;
-  createdAt: string;
-  tags?: string[];
-  isPinned?: boolean;
-  isVerified?: boolean;
+  tips: string;
+  tags: string[] | null;
+  is_pinned: boolean;
+  is_verified: boolean;
+  created_at: string;
 }
-
-// In-memory store (use Redis/DB in production)
-const postsStore: Post[] = [
-  {
-    id: 'post_1',
-    authorId: '0x1234567890abcdef1234567890abcdef12345678',
-    authorName: 'CryptoWhale',
-    authorAvatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=whale',
-    authorProofScore: 8500,
-    content: 'Just completed my 100th VFIDE transaction! The 0% merchant fees are incredible. Building trust in Web3 commerce one payment at a time. 🚀',
-    likes: 142,
-    comments: 23,
-    reposts: 15,
-    tips: 5,
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-    tags: ['VFIDE', 'Web3Commerce', 'ProofScore'],
-    isVerified: true,
-  },
-  {
-    id: 'post_2',
-    authorId: '0xabcdef1234567890abcdef1234567890abcdef12',
-    authorName: 'DeFiTrader',
-    authorAvatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=trader',
-    authorProofScore: 7200,
-    content: 'Pro tip: Stack your endorsements early! I went from 4000 to 7000 ProofScore in just 2 months by consistently endorsing quality users. Lower fees feel good. 💪',
-    likes: 89,
-    comments: 31,
-    reposts: 22,
-    tips: 3,
-    createdAt: new Date(Date.now() - 7200000).toISOString(),
-    tags: ['ProofScore', 'Tips', 'Endorsements'],
-    isVerified: false,
-  },
-  {
-    id: 'post_3',
-    authorId: '0x9876543210fedcba9876543210fedcba98765432',
-    authorName: 'MerchantDAO',
-    authorAvatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=merchant',
-    authorProofScore: 9100,
-    content: 'New governance proposal: Increase Sanctum charity allocation from 31.25% to 35%. Every fee helps someone in need. Vote now! 🗳️ #VFIDEGovernance',
-    likes: 256,
-    comments: 67,
-    reposts: 45,
-    tips: 12,
-    createdAt: new Date(Date.now() - 14400000).toISOString(),
-    tags: ['Governance', 'Sanctum', 'Charity'],
-    isPinned: true,
-    isVerified: true,
-  },
-  {
-    id: 'post_4',
-    authorId: '0xfedcba9876543210fedcba9876543210fedcba98',
-    authorName: 'PayrollPro',
-    authorAvatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=payroll',
-    authorProofScore: 6800,
-    content: 'Streaming payments are a game changer! My employees love getting paid in real-time. No more waiting for payday. VFIDE payroll is the future of work. 💰⏰',
-    likes: 178,
-    comments: 42,
-    reposts: 28,
-    tips: 8,
-    createdAt: new Date(Date.now() - 28800000).toISOString(),
-    tags: ['Streaming', 'Payroll', 'FutureOfWork'],
-    isVerified: false,
-  },
-  {
-    id: 'post_5',
-    authorId: '0x1111222233334444555566667777888899990000',
-    authorName: 'EscrowExpert',
-    authorAvatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=escrow',
-    authorProofScore: 7800,
-    content: 'Just used VFIDE escrow for a $50k freelance contract. 7-day auto-release worked perfectly. No disputes, no stress. This is how Web3 commerce should work! ✅',
-    likes: 312,
-    comments: 56,
-    reposts: 67,
-    tips: 15,
-    createdAt: new Date(Date.now() - 43200000).toISOString(),
-    tags: ['Escrow', 'Freelance', 'Success'],
-    isVerified: true,
-  },
-];
 
 export async function GET(request: NextRequest) {
   try {
@@ -111,41 +33,95 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const tag = searchParams.get('tag');
     const authorId = searchParams.get('authorId');
+    const offset = (page - 1) * limit;
 
-    let filteredPosts = [...postsStore];
+    // Build dynamic query
+    let queryText = `
+      SELECT 
+        p.id,
+        p.author_id,
+        u.wallet_address,
+        COALESCE(u.username, CONCAT('User_', SUBSTRING(u.wallet_address, 1, 8))) as username,
+        u.avatar_url,
+        COALESCE(u.proof_score, 0) as proof_score,
+        p.content,
+        p.media_urls,
+        p.likes,
+        p.comments,
+        p.reposts,
+        p.tips,
+        p.tags,
+        p.is_pinned,
+        p.is_verified,
+        p.created_at
+      FROM community_posts p
+      JOIN users u ON p.author_id = u.id
+      WHERE 1=1
+    `;
+    const params: (string | number)[] = [];
+    let paramIndex = 1;
 
-    // Filter by tag
-    if (tag) {
-      filteredPosts = filteredPosts.filter(post => 
-        post.tags?.some(t => t.toLowerCase() === tag.toLowerCase())
-      );
-    }
-
-    // Filter by author
     if (authorId) {
-      filteredPosts = filteredPosts.filter(post => 
-        post.authorId.toLowerCase() === authorId.toLowerCase()
-      );
+      params.push(authorId.toLowerCase());
+      queryText += ` AND LOWER(u.wallet_address) = $${paramIndex++}`;
     }
 
-    // Sort: pinned first, then by date
-    filteredPosts.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    if (tag) {
+      params.push(tag);
+      queryText += ` AND $${paramIndex++} = ANY(p.tags)`;
+    }
 
-    // Paginate
-    const startIndex = (page - 1) * limit;
-    const paginatedPosts = filteredPosts.slice(startIndex, startIndex + limit);
+    queryText += ` ORDER BY p.is_pinned DESC, p.created_at DESC`;
+    
+    params.push(limit);
+    queryText += ` LIMIT $${paramIndex++}`;
+    
+    params.push(offset);
+    queryText += ` OFFSET $${paramIndex}`;
+
+    const result = await query<PostRow>(queryText, params);
+
+    const posts = result.rows.map(row => ({
+      id: `post_${row.id}`,
+      authorId: row.wallet_address,
+      authorName: row.username || `User_${row.wallet_address.substring(0, 8)}`,
+      authorAvatar: row.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${row.wallet_address}`,
+      authorProofScore: row.proof_score,
+      content: row.content,
+      mediaUrls: row.media_urls || [],
+      likes: row.likes,
+      comments: row.comments,
+      reposts: row.reposts,
+      tips: parseFloat(row.tips || '0'),
+      tags: row.tags || [],
+      isPinned: row.is_pinned,
+      isVerified: row.is_verified,
+      createdAt: row.created_at,
+    }));
+
+    // Get total count for pagination
+    let countQuery = 'SELECT COUNT(*) FROM community_posts p JOIN users u ON p.author_id = u.id WHERE 1=1';
+    const countParams: string[] = [];
+    
+    if (authorId) {
+      countParams.push(authorId.toLowerCase());
+      countQuery += ` AND LOWER(u.wallet_address) = $${countParams.length}`;
+    }
+    if (tag) {
+      countParams.push(tag);
+      countQuery += ` AND $${countParams.length} = ANY(p.tags)`;
+    }
+
+    const countResult = await query<{ count: string }>(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].count);
 
     return NextResponse.json({
-      posts: paginatedPosts,
+      posts,
       pagination: {
         page,
         limit,
-        total: filteredPosts.length,
-        totalPages: Math.ceil(filteredPosts.length / limit),
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
@@ -158,6 +134,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const client = await getClient();
+  
   try {
     const body = await request.json();
     const { authorId, authorName, content, mediaUrls, tags } = body;
@@ -169,32 +147,69 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newPost: Post = {
-      id: `post_${Date.now()}`,
+    await client.query('BEGIN');
+
+    // Get or create user by wallet address
+    const userResult = await client.query<{ id: number; username: string | null; avatar_url: string | null; proof_score: number }>(
+      'SELECT id, username, avatar_url, COALESCE(proof_score, 0) as proof_score FROM users WHERE LOWER(wallet_address) = $1',
+      [authorId.toLowerCase()]
+    );
+
+    let userId: number;
+    let userInfo = { username: authorName, avatar_url: null as string | null, proof_score: 0 };
+
+    if (userResult.rows.length === 0) {
+      const insertUser = await client.query<{ id: number }>(
+        'INSERT INTO users (wallet_address, username) VALUES ($1, $2) RETURNING id',
+        [authorId.toLowerCase(), authorName || null]
+      );
+      userId = insertUser.rows[0].id;
+    } else {
+      userId = userResult.rows[0].id;
+      userInfo = {
+        username: userResult.rows[0].username || authorName,
+        avatar_url: userResult.rows[0].avatar_url,
+        proof_score: userResult.rows[0].proof_score,
+      };
+    }
+
+    // Insert the post
+    const postResult = await client.query<{ id: number; created_at: string }>(
+      `INSERT INTO community_posts (author_id, content, media_urls, tags)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, created_at`,
+      [userId, content, mediaUrls || [], tags || []]
+    );
+
+    await client.query('COMMIT');
+
+    const newPost = {
+      id: `post_${postResult.rows[0].id}`,
       authorId,
-      authorName: authorName || 'Anonymous',
-      authorAvatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${authorId}`,
-      authorProofScore: 5000, // In production: fetch from ProofScore contract
+      authorName: userInfo.username || `User_${authorId.substring(0, 8)}`,
+      authorAvatar: userInfo.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${authorId}`,
+      authorProofScore: userInfo.proof_score,
       content,
       mediaUrls: mediaUrls || [],
       likes: 0,
       comments: 0,
       reposts: 0,
       tips: 0,
-      createdAt: new Date().toISOString(),
       tags: tags || [],
       isPinned: false,
       isVerified: false,
+      createdAt: postResult.rows[0].created_at,
     };
-
-    postsStore.unshift(newPost);
 
     return NextResponse.json({ post: newPost }, { status: 201 });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error creating post:', error);
     return NextResponse.json(
       { error: 'Failed to create post' },
       { status: 500 }
     );
+  } finally {
+    client.release();
   }
 }

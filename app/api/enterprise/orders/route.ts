@@ -1,30 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query, getClient } from '@/lib/db';
 
 /**
- * Enterprise Orders API
- * GET - Retrieve enterprise orders/transactions
- * POST - Create a new enterprise order
+ * Enterprise Orders API - PostgreSQL Database
+ * GET - Retrieve enterprise orders/transactions from database
+ * POST - Create a new enterprise order in database
  */
 
-interface EnterpriseOrder {
-  id: string;
-  merchantId: string;
-  merchantName: string;
-  customerId?: string;
-  customerEmail?: string;
+interface OrderRow {
+  id: number;
+  merchant_address: string;
+  merchant_name: string;
+  customer_address: string | null;
+  customer_email: string | null;
   amount: string;
-  currency: 'VFIDE' | 'USDC' | 'ETH';
-  fiatEquivalent?: {
-    amount: string;
-    currency: 'USD' | 'EUR' | 'GBP';
-  };
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
-  paymentMethod: 'crypto' | 'fiat' | 'hybrid';
-  metadata?: Record<string, string>;
-  txHash?: string;
-  createdAt: string;
-  completedAt?: string;
-  notes?: string;
+  currency: string;
+  fiat_amount: string | null;
+  fiat_currency: string | null;
+  status: string;
+  payment_method: string;
+  metadata: Record<string, string> | null;
+  tx_hash: string | null;
+  notes: string | null;
+  created_at: string;
+  completed_at: string | null;
 }
 
 interface OrderStats {
@@ -35,81 +34,7 @@ interface OrderStats {
   pendingOrders: number;
 }
 
-// In-memory store (use database in production)
-const ordersStore: EnterpriseOrder[] = [
-  {
-    id: 'order_1001',
-    merchantId: '0x9876543210fedcba9876543210fedcba98765432',
-    merchantName: 'TechSupply Co.',
-    customerId: '0x1234567890abcdef1234567890abcdef12345678',
-    customerEmail: 'buyer@example.com',
-    amount: '5000',
-    currency: 'VFIDE',
-    fiatEquivalent: { amount: '500', currency: 'USD' },
-    status: 'completed',
-    paymentMethod: 'crypto',
-    metadata: { orderId: 'INV-2026-001', productId: 'TECH-001' },
-    txHash: '0xabcd1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    completedAt: new Date(Date.now() - 85800000).toISOString(),
-  },
-  {
-    id: 'order_1002',
-    merchantId: '0x9876543210fedcba9876543210fedcba98765432',
-    merchantName: 'TechSupply Co.',
-    customerId: '0xabcdef1234567890abcdef1234567890abcdef12',
-    amount: '12500',
-    currency: 'VFIDE',
-    fiatEquivalent: { amount: '1250', currency: 'USD' },
-    status: 'completed',
-    paymentMethod: 'crypto',
-    metadata: { orderId: 'INV-2026-002', productId: 'TECH-002' },
-    txHash: '0xef123456789012345678901234567890123456789012345678901234567890ef',
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    completedAt: new Date(Date.now() - 172200000).toISOString(),
-  },
-  {
-    id: 'order_1003',
-    merchantId: '0x9876543210fedcba9876543210fedcba98765432',
-    merchantName: 'TechSupply Co.',
-    amount: '3000',
-    currency: 'USDC',
-    fiatEquivalent: { amount: '3000', currency: 'USD' },
-    status: 'pending',
-    paymentMethod: 'crypto',
-    metadata: { orderId: 'INV-2026-003' },
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: 'order_1004',
-    merchantId: '0x9876543210fedcba9876543210fedcba98765432',
-    merchantName: 'TechSupply Co.',
-    customerEmail: 'enterprise@corp.com',
-    amount: '50000',
-    currency: 'VFIDE',
-    fiatEquivalent: { amount: '5000', currency: 'USD' },
-    status: 'processing',
-    paymentMethod: 'crypto',
-    metadata: { orderId: 'INV-2026-004', department: 'IT' },
-    createdAt: new Date(Date.now() - 7200000).toISOString(),
-    notes: 'Bulk order for Q1 supplies',
-  },
-  {
-    id: 'order_1005',
-    merchantId: '0x9876543210fedcba9876543210fedcba98765432',
-    merchantName: 'TechSupply Co.',
-    amount: '7500',
-    currency: 'ETH',
-    fiatEquivalent: { amount: '15000', currency: 'USD' },
-    status: 'completed',
-    paymentMethod: 'crypto',
-    txHash: '0x5678901234567890123456789012345678901234567890123456789012345678',
-    createdAt: new Date(Date.now() - 259200000).toISOString(),
-    completedAt: new Date(Date.now() - 258600000).toISOString(),
-  },
-];
-
-function calculateStats(orders: EnterpriseOrder[]): OrderStats {
+function calculateStats(orders: OrderRow[]): OrderStats {
   const completedOrders = orders.filter(o => o.status === 'completed');
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'processing');
   
@@ -136,60 +61,100 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const offset = (page - 1) * limit;
 
-    let filteredOrders = [...ordersStore];
+    // Build dynamic query
+    let queryText = `
+      SELECT 
+        id,
+        merchant_address,
+        COALESCE(merchant_name, 'Unknown Merchant') as merchant_name,
+        customer_address,
+        customer_email,
+        amount,
+        currency,
+        fiat_amount,
+        fiat_currency,
+        status,
+        COALESCE(payment_method, 'crypto') as payment_method,
+        metadata,
+        tx_hash,
+        notes,
+        created_at,
+        completed_at
+      FROM enterprise_orders
+      WHERE 1=1
+    `;
+    const params: (string | number)[] = [];
+    let paramIndex = 1;
 
-    // Filter by merchant
     if (merchantId) {
-      filteredOrders = filteredOrders.filter(
-        order => order.merchantId.toLowerCase() === merchantId.toLowerCase()
-      );
+      params.push(merchantId.toLowerCase());
+      queryText += ` AND LOWER(merchant_address) = $${paramIndex++}`;
     }
 
-    // Filter by status
     if (status) {
-      filteredOrders = filteredOrders.filter(order => order.status === status);
+      params.push(status);
+      queryText += ` AND status = $${paramIndex++}`;
     }
 
-    // Filter by currency
     if (currency) {
-      filteredOrders = filteredOrders.filter(order => order.currency === currency);
+      params.push(currency);
+      queryText += ` AND currency = $${paramIndex++}`;
     }
 
-    // Filter by date range
     if (startDate) {
-      const start = new Date(startDate);
-      filteredOrders = filteredOrders.filter(
-        order => new Date(order.createdAt) >= start
-      );
+      params.push(startDate);
+      queryText += ` AND created_at >= $${paramIndex++}::timestamp`;
     }
+
     if (endDate) {
-      const end = new Date(endDate);
-      filteredOrders = filteredOrders.filter(
-        order => new Date(order.createdAt) <= end
-      );
+      params.push(endDate);
+      queryText += ` AND created_at <= $${paramIndex++}::timestamp`;
     }
 
-    // Sort by date (newest first)
-    filteredOrders.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    // Get all matching orders for stats (before pagination)
+    const statsResult = await query<OrderRow>(queryText, params);
+    const stats = calculateStats(statsResult.rows);
 
-    // Calculate stats before pagination
-    const stats = calculateStats(filteredOrders);
+    // Add pagination
+    queryText += ` ORDER BY created_at DESC`;
+    params.push(limit);
+    queryText += ` LIMIT $${paramIndex++}`;
+    params.push(offset);
+    queryText += ` OFFSET $${paramIndex}`;
 
-    // Paginate
-    const startIndex = (page - 1) * limit;
-    const paginatedOrders = filteredOrders.slice(startIndex, startIndex + limit);
+    const result = await query<OrderRow>(queryText, params);
+
+    const orders = result.rows.map(row => ({
+      id: `order_${row.id}`,
+      merchantId: row.merchant_address,
+      merchantName: row.merchant_name,
+      customerId: row.customer_address,
+      customerEmail: row.customer_email,
+      amount: row.amount,
+      currency: row.currency as 'VFIDE' | 'USDC' | 'ETH',
+      fiatEquivalent: row.fiat_amount && row.fiat_currency ? {
+        amount: row.fiat_amount,
+        currency: row.fiat_currency as 'USD' | 'EUR' | 'GBP',
+      } : undefined,
+      status: row.status as 'pending' | 'processing' | 'completed' | 'failed' | 'refunded',
+      paymentMethod: row.payment_method as 'crypto' | 'fiat' | 'hybrid',
+      metadata: row.metadata,
+      txHash: row.tx_hash,
+      notes: row.notes,
+      createdAt: row.created_at,
+      completedAt: row.completed_at,
+    }));
 
     return NextResponse.json({
-      orders: paginatedOrders,
+      orders,
       stats,
       pagination: {
         page,
         limit,
-        total: filteredOrders.length,
-        totalPages: Math.ceil(filteredOrders.length / limit),
+        total: statsResult.rows.length,
+        totalPages: Math.ceil(statsResult.rows.length / limit),
       },
     });
   } catch (error) {
@@ -202,6 +167,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const client = await getClient();
+
   try {
     const body = await request.json();
     const { 
@@ -224,8 +191,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newOrder: EnterpriseOrder = {
-      id: `order_${Date.now()}`,
+    await client.query('BEGIN');
+
+    const orderResult = await client.query<{ id: number; created_at: string }>(
+      `INSERT INTO enterprise_orders (
+        merchant_address, 
+        merchant_name, 
+        customer_address, 
+        customer_email,
+        amount, 
+        currency, 
+        fiat_amount,
+        fiat_currency,
+        status,
+        payment_method,
+        metadata,
+        notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING id, created_at`,
+      [
+        merchantId.toLowerCase(),
+        merchantName || 'Unknown Merchant',
+        customerId?.toLowerCase() || null,
+        customerEmail || null,
+        amount.toString(),
+        currency,
+        fiatEquivalent?.amount || null,
+        fiatEquivalent?.currency || null,
+        'pending',
+        paymentMethod || 'crypto',
+        metadata ? JSON.stringify(metadata) : null,
+        notes || null,
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    const newOrder = {
+      id: `order_${orderResult.rows[0].id}`,
       merchantId,
       merchantName: merchantName || 'Unknown Merchant',
       customerId,
@@ -236,18 +239,19 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       paymentMethod: paymentMethod || 'crypto',
       metadata,
-      createdAt: new Date().toISOString(),
+      createdAt: orderResult.rows[0].created_at,
       notes,
     };
 
-    ordersStore.unshift(newOrder);
-
     return NextResponse.json({ order: newOrder }, { status: 201 });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error creating order:', error);
     return NextResponse.json(
       { error: 'Failed to create order' },
       { status: 500 }
     );
+  } finally {
+    client.release();
   }
 }
