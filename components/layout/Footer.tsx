@@ -16,6 +16,8 @@ const footerLinks = {
   ],
   resources: [
     { href: "/docs", label: "Documentation" },
+    { href: "https://github.com/Scorpio861104/Vfide/blob/main/WHITEPAPER.md", label: "Whitepaper", external: true },
+    { href: "https://github.com/Scorpio861104/Vfide/blob/main/README.md", label: "README", external: true },
     { href: "/about", label: "About" },
     { href: "/live-demo", label: "Live Demo" },
   ],
@@ -133,13 +135,25 @@ export function Footer() {
             <h4 className="text-[#F8F8FC] font-semibold mb-4 text-sm">Resources</h4>
             <ul className="space-y-3">
               {footerLinks.resources.map((link) => (
-                <li key={link.href}>
-                  <Link 
-                    href={link.href}
-                    className="text-[#6B6B78] hover:text-[#00F0FF] text-sm transition-colors"
-                  >
-                    {link.label}
-                  </Link>
+                <li key={link.label}>
+                  {'external' in link && link.external ? (
+                    <a 
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#6B6B78] hover:text-[#00F0FF] text-sm transition-colors inline-flex items-center gap-1"
+                    >
+                      {link.label}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <Link 
+                      href={link.href}
+                      className="text-[#6B6B78] hover:text-[#00F0FF] text-sm transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

@@ -114,6 +114,14 @@ const moreLinks = [
       { href: "/admin", label: "Admin" },
       { href: "/developer", label: "Developer", accent: true },
     ]
+  },
+  {
+    category: "Documentation",
+    items: [
+      { href: "https://github.com/Scorpio861104/Vfide/blob/main/WHITEPAPER.md", label: "Whitepaper", accent: true, external: true },
+      { href: "https://github.com/Scorpio861104/Vfide/blob/main/README.md", label: "README", external: true },
+      { href: "/docs", label: "Docs" },
+    ]
   }
 ];
 
@@ -240,21 +248,43 @@ export function GlobalNav() {
                           {section.items.map((link) => {
                             const isActive = pathname?.startsWith(link.href);
                             const IconComponent = navIcons[link.label];
+                            const isExternal = 'external' in link && link.external;
+                            
+                            const linkClasses = `
+                              flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all
+                              ${link.accent 
+                                ? 'text-[#00F0FF] hover:bg-[#00F0FF]/10' 
+                                : isActive 
+                                  ? 'text-[#F8F8FC] bg-[#1F1F2A]' 
+                                  : 'text-[#A8A8B3] hover:text-[#F8F8FC] hover:bg-[#16161D]'
+                              }
+                            `;
+                            
+                            if (isExternal) {
+                              return (
+                                <a
+                                  key={link.href}
+                                  href={link.href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => setShowMoreMenu(false)}
+                                  className={linkClasses}
+                                >
+                                  {IconComponent && <IconComponent size={18} className="opacity-70 flex-shrink-0" />}
+                                  {link.label}
+                                  <svg className="w-3 h-3 ml-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                  </svg>
+                                </a>
+                              );
+                            }
                             
                             return (
                               <Link
                                 key={link.href}
                                 href={link.href}
                                 onClick={() => setShowMoreMenu(false)}
-                                className={`
-                                  flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all
-                                  ${link.accent 
-                                    ? 'text-[#00F0FF] hover:bg-[#00F0FF]/10' 
-                                    : isActive 
-                                      ? 'text-[#F8F8FC] bg-[#1F1F2A]' 
-                                      : 'text-[#A8A8B3] hover:text-[#F8F8FC] hover:bg-[#16161D]'
-                                  }
-                                `}
+                                className={linkClasses}
                               >
                                 {IconComponent && <IconComponent size={18} className="opacity-70 flex-shrink-0" />}
                                 {link.label}
