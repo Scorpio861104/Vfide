@@ -477,7 +477,7 @@ export default function Home() {
             <FeatureCard
               icon={<Shield className="w-7 h-7" />}
               title="ProofScore Trust System"
-              description="Build reputation through actions, not wealth. Higher trust scores (0-100%) unlock lower fees and greater privileges."
+              description="Build reputation through actions, not wealth. Higher trust scores (0-10,000) unlock lower fees and greater privileges."
               color="#A78BFA"
               delay={0.3}
             />

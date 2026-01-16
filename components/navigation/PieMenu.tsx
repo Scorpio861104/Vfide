@@ -159,7 +159,7 @@ const navigationItems: NavItem[] = [
       { id: 'headhunter', label: 'Referrals', href: '/headhunter', icon: Search, color: '#EC4899' },
       { id: 'endorsements', label: 'Endorsements', href: '/endorsements', icon: Medal, color: '#EC4899' },
       { id: 'badges', label: 'Badges', href: '/badges', icon: Star, color: '#EC4899' },
-      { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },
+      { id: 'invite', label: 'Invite Friends', href: '/headhunter', icon: UserPlus, color: '#EC4899' },
     ],
   },
   {
@@ -183,7 +183,7 @@ const navigationItems: NavItem[] = [
     children: [
       { id: 'developer-main', label: 'Dev Hub', href: '/developer', icon: Code, color: '#64748B' },
       { id: 'testnet', label: 'Testnet', href: '/testnet', icon: TestTube, color: '#64748B' },
-      { id: 'explorer', label: 'Explorer', href: '/explorer', icon: Compass, color: '#64748B' },
+      { id: 'explorer', label: 'Explorer', href: '/developer', icon: Compass, color: '#64748B' },
       { id: 'token-launch', label: 'Token Launch', href: '/token-launch', icon: Rocket, color: '#64748B' },
     ],
   },

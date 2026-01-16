@@ -246,7 +246,7 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
       `}>
         <div className="w-14 h-14 rounded-full bg-[#1A1A2E] flex items-center justify-center text-2xl overflow-hidden">
           {story.preview ? (
-            <img src={story.preview} alt="" className="w-full h-full object-cover" />
+            <img src={story.preview} alt={`${story.author}'s story preview`} className="w-full h-full object-cover" />
           ) : isYou ? (
             <Plus className="w-6 h-6 text-[#00F0FF]" />
           ) : (
@@ -410,11 +410,11 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
       {/* Media */}
       {post.media && post.media.length > 0 && (
         <div className={`grid ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-0.5`}>
-          {post.media.map((m) => (
+          {post.media.map((m, idx) => (
             <img
               key={m.url}
               src={m.url}
-              alt=""
+              alt={`Post media ${idx + 1} by ${post.author.name}`}
               className="w-full h-64 object-cover"
             />
           ))}

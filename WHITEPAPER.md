@@ -1035,7 +1035,7 @@ VFIDE is deployed on multiple EVM-compatible chains for flexibility and low fees
 
 | Chain | Network | Faucet |
 |-------|---------|--------|
-| Base Sepolia | Testnet | [Link](https://www.coinbase.com/faucets/base-ethereum-goerli-faucet) |
+| Base Sepolia | Testnet | [Link](https://www.coinbase.com/faucets/base-sepolia-faucet) |
 | Polygon Amoy | Testnet | [Link](https://faucet.polygon.technology/) |
 | zkSync Sepolia | Testnet | [Link](https://portal.zksync.io/faucet) |
 
@@ -1135,6 +1135,34 @@ For supported devices, biometric login provides passwordless security.
 | State Management | React Query, Zustand |
 | Testing | Jest, Playwright |
 | Deployment | Vercel, IPFS |
+
+### 17.1.1 Navigation System
+
+The VFIDE platform uses a **PieMenu** navigation system located in the bottom-right corner:
+
+**Features:**
+- Slide-out menu with 9 main categories
+- Hierarchical submenu structure
+- Keyboard navigation support (Arrow keys, Enter, Escape)
+- Accessibility: ARIA labels, screen reader compatible
+- Visual feedback: Hover effects, active states, animations
+- Mobile-responsive design
+
+**Main Categories:**
+1. **Vault** - Security & asset management (7 sub-items)
+2. **Merchant** - Payment services (9 sub-items)
+3. **Social** - Community features (5 sub-items)
+4. **Governance** - DAO participation (4 sub-items)
+5. **Rewards** - Gamification (7 sub-items including Invite)
+6. **Insights** - Analytics & reporting (5 sub-items)
+7. **Developer** - Technical tools (4 sub-items including Explorer)
+8. **Account** - User settings (6 sub-items)
+9. **Home** & **Dashboard** - Quick access
+
+**Navigation Links:**
+- `/invite` → Redirects to `/headhunter` (Referral program)
+- `/explorer` → Redirects to `/developer` (Developer tools)
+- Landing pages at `/invite` and `/explorer` provide helpful information
 
 ### 17.2 API Endpoints
 
@@ -1922,7 +1950,13 @@ Enterprise Gateway provides business-grade features for larger organizations.
 
 ### 34.1 Overview
 
-Users can generate invite links to bring new users to VFIDE, earning referral bonuses.
+Users can generate invite links to bring new users to VFIDE, earning referral bonuses through the Headhunter program.
+
+**Landing Page**: `/invite` provides comprehensive information about the referral program, including:
+- Benefits of inviting friends (earn rewards, boost ProofScore, build community)
+- How the referral system works (3-step process)
+- Reward tiers (+3% for referrer, +2% for referee)
+- Direct link to Headhunter program at `/headhunter`
 
 ### 34.2 Invite Link Features
 
@@ -1933,14 +1967,24 @@ Users can generate invite links to bring new users to VFIDE, earning referral bo
 | Usage Limit | Max uses per link |
 | Tracking | See who joined via your link |
 | Bonuses | Headhunter rewards on sign-up |
+| Landing Page | `/invite/[code]` for group invites |
 
 ### 34.3 Invite Flow
 
-1. User generates invite link (with optional code)
-2. Share link via social/messaging
-3. New user clicks link and creates account
-4. Both referrer and referee receive bonuses
-5. Ongoing rewards based on referee activity
+1. User generates invite link at `/headhunter` (referral program)
+2. Share link via social media, email, or messaging
+3. New user clicks link and lands on `/invite` or `/invite/[code]`
+4. New user connects wallet and creates account
+5. Both referrer and referee receive bonuses from 15M token pool
+6. Ongoing rewards based on referee's activity and milestones
+
+### 34.4 Referral Rewards
+
+From the 15M bonus token pool:
+- **Referrer**: +3% of referee's base token purchase
+- **Referee**: +2% bonus on their purchase
+- **Additional**: Points toward Headhunter leaderboard
+- **Quarterly**: Top 20 referrers share quarterly reward pool
 
 ---
 
@@ -1948,14 +1992,15 @@ Users can generate invite links to bring new users to VFIDE, earning referral bo
 
 ### 35.1 Transaction Fees (by ProofScore)
 
-| ProofScore | Fee Rate | Example on $100 |
-|------------|----------|-----------------|
-| 0-3,999 | 2.9% | $2.90 |
-| 4,000-4,999 | 2.0% | $2.00 |
-| 5,000-6,999 | 1.0% | $1.00 |
-| 7,000-7,999 | 0.5% | $0.50 |
-| 8,000+ | 0.4% | $0.40 |
-| Merchant (≥5,600) | 0% | $0.00 |
+| ProofScore Range | Fee Rate | Example on 1,000 VFIDE |
+|------------------|----------|------------------------|
+| 8,000-10,000 (Elite) | 0.25% | 2.5 VFIDE |
+| 7,000-7,999 (Council) | 1.0% | 10 VFIDE |
+| 5,000-6,999 (Neutral/Trusted) | 2.0% | 20 VFIDE |
+| 3,500-4,999 (Low Trust) | 3.5% | 35 VFIDE |
+| 0-3,499 (Risky) | 5.0% | 50 VFIDE |
+
+> **Note:** Merchant payment processing is 0% protocol fee. Only token transfers have ProofScore-based fees.
 
 ### 35.2 Fee Distribution
 
@@ -2088,6 +2133,22 @@ All features work on testnet with test tokens:
 | Activity Visibility | Show All / Friends / Hidden |
 | Transaction History | Visible / Hidden |
 | Badge Display | Show All / Featured Only |
+
+### 38.4 Profile Explorer
+
+The VFIDE Explorer (`/explorer`) allows users to search and view profiles:
+
+**Features:**
+- **Search by Address**: Enter any wallet address (0x...) to view their profile
+- **Search by Username**: Find users by display name
+- **Public Statistics**: View ProofScore, badges, endorsements, and activity
+- **Quick Links**: Navigate to leaderboard, social hub, and network stats
+- **Developer Tools**: Access blockchain explorer and technical documentation
+
+**Access:**
+- Available at `/explorer` (landing page with search)
+- Direct profile access via `/explorer/[address]`
+- Integrated with leaderboard and social features
 
 ---
 

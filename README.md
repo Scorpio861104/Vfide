@@ -262,7 +262,7 @@ VFIDE is deployed on multiple chains for flexibility and low fees:
 
 | Chain | Network | Faucet |
 |-------|---------|--------|
-| 🔵 **Base Sepolia** | Testnet | [Get Test ETH](https://www.coinbase.com/faucets/base-ethereum-goerli-faucet) |
+| 🔵 **Base Sepolia** | Testnet | [Get Test ETH](https://www.coinbase.com/faucets/base-sepolia-faucet) |
 | 🟣 **Polygon Amoy** | Testnet | [Get Test MATIC](https://faucet.polygon.technology/) |
 | ⚡ **zkSync Sepolia** | Testnet | [Get Test ETH](https://portal.zksync.io/faucet) |
 
@@ -466,7 +466,7 @@ Starting Supply: 200,000,000 VFIDE
 
 ---
 
-## � Escrow System
+## 🔒 Escrow System
 
 VFIDE offers a built-in escrow system for secure transactions between parties who don't yet trust each other.
 
@@ -513,7 +513,7 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 
 ---
 
-## �🛡️ Security Features
+## 🛡️ Security Features
 
 ### Smart Contract Security
 
