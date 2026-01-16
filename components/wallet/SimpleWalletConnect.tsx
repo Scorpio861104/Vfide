@@ -100,6 +100,8 @@ export function SimpleWalletConnect() {
 
         // Note: ENS and latency features temporarily disabled due to React hooks limitations in render props
         // These features should be refactored into a separate component to use hooks properly
+        const ensName = null;
+        const _latencyData = null;
         
         // Track connection history when connected changes
         if (connected && account && chain) {
