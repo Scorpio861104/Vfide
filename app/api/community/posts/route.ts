@@ -113,7 +113,11 @@ export async function GET(request: NextRequest) {
     }
 
     const countResult = await query<{ count: string }>(countQuery, countParams);
-    const total = parseInt(countResult.rows[0].count);
+    const countRow = countResult.rows[0];
+    if (!countRow) {
+      throw new Error('Failed to get post count');
+    }
+    const total = parseInt(countRow.count);
 
     return NextResponse.json({
       posts,
@@ -163,13 +167,21 @@ export async function POST(request: NextRequest) {
         'INSERT INTO users (wallet_address, username) VALUES ($1, $2) RETURNING id',
         [authorId.toLowerCase(), authorName || null]
       );
-      userId = insertUser.rows[0].id;
+      const insertedRow = insertUser.rows[0];
+      if (!insertedRow) {
+        throw new Error('Failed to insert user');
+      }
+      userId = insertedRow.id;
     } else {
-      userId = userResult.rows[0].id;
+      const userRow = userResult.rows[0];
+      if (!userRow) {
+        throw new Error('User row not found');
+      }
+      userId = userRow.id;
       userInfo = {
-        username: userResult.rows[0].username || authorName,
-        avatar_url: userResult.rows[0].avatar_url,
-        proof_score: userResult.rows[0].proof_score,
+        username: userRow.username || authorName,
+        avatar_url: userRow.avatar_url,
+        proof_score: userRow.proof_score,
       };
     }
 
@@ -183,8 +195,13 @@ export async function POST(request: NextRequest) {
 
     await client.query('COMMIT');
 
+    const postRow = postResult.rows[0];
+    if (!postRow) {
+      throw new Error('Failed to insert post');
+    }
+
     const newPost = {
-      id: `post_${postResult.rows[0].id}`,
+      id: `post_${postRow.id}`,
       authorId,
       authorName: userInfo.username || `User_${authorId.substring(0, 8)}`,
       authorAvatar: userInfo.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${authorId}`,
@@ -198,7 +215,7 @@ export async function POST(request: NextRequest) {
       tags: tags || [],
       isPinned: false,
       isVerified: false,
-      createdAt: postResult.rows[0].created_at,
+      createdAt: postRow.created_at,
     };
 
     return NextResponse.json({ post: newPost }, { status: 201 });

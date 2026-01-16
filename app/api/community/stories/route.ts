@@ -75,11 +75,14 @@ export async function GET(request: NextRequest) {
         [viewerId.toLowerCase()]
       );
       if (viewerResult.rows.length > 0) {
-        const viewsResult = await query<{ story_id: number }>(
-          `SELECT story_id FROM story_views WHERE viewer_id = $1`,
-          [viewerResult.rows[0].id]
-        );
-        viewedStoryIds = new Set(viewsResult.rows.map(r => r.story_id));
+        const viewerRow = viewerResult.rows[0];
+        if (viewerRow) {
+          const viewsResult = await query<{ story_id: number }>(
+            `SELECT story_id FROM story_views WHERE viewer_id = $1`,
+            [viewerRow.id]
+          );
+          viewedStoryIds = new Set(viewsResult.rows.map(r => r.story_id));
+        }
       }
     }
 
@@ -116,9 +119,12 @@ export async function GET(request: NextRequest) {
           hasUnviewed: false,
         };
       }
-      acc[story.authorId].stories.push(story);
-      if (!story.isViewed) {
-        acc[story.authorId].hasUnviewed = true;
+      const authorStories = acc[story.authorId];
+      if (authorStories) {
+        authorStories.stories.push(story);
+        if (!story.isViewed) {
+          authorStories.hasUnviewed = true;
+        }
       }
       return acc;
     }, {} as Record<string, {
@@ -174,13 +180,21 @@ export async function POST(request: NextRequest) {
         'INSERT INTO users (wallet_address, username) VALUES ($1, $2) RETURNING id',
         [authorId.toLowerCase(), authorName || null]
       );
-      userId = insertUser.rows[0].id;
+      const insertedRow = insertUser.rows[0];
+      if (!insertedRow) {
+        throw new Error('Failed to insert user');
+      }
+      userId = insertedRow.id;
     } else {
-      userId = userResult.rows[0].id;
+      const userRow = userResult.rows[0];
+      if (!userRow) {
+        throw new Error('User row not found');
+      }
+      userId = userRow.id;
       userInfo = {
-        username: userResult.rows[0].username || authorName,
-        avatar_url: userResult.rows[0].avatar_url,
-        proof_score: userResult.rows[0].proof_score,
+        username: userRow.username || authorName,
+        avatar_url: userRow.avatar_url,
+        proof_score: userRow.proof_score,
       };
     }
 
@@ -195,8 +209,13 @@ export async function POST(request: NextRequest) {
 
     await client.query('COMMIT');
 
+    const storyRow = storyResult.rows[0];
+    if (!storyRow) {
+      throw new Error('Failed to insert story');
+    }
+
     const newStory = {
-      id: `story_${storyResult.rows[0].id}`,
+      id: `story_${storyRow.id}`,
       authorId,
       authorName: userInfo.username || `User_${authorId.substring(0, 8)}`,
       authorAvatar: userInfo.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${authorId}`,
@@ -206,8 +225,8 @@ export async function POST(request: NextRequest) {
       caption,
       viewCount: 0,
       reactions: { fire: 0, heart: 0, rocket: 0, clap: 0 },
-      createdAt: storyResult.rows[0].created_at,
-      expiresAt: storyResult.rows[0].expires_at,
+      createdAt: storyRow.created_at,
+      expiresAt: storyRow.expires_at,
       isViewed: false,
     };
 

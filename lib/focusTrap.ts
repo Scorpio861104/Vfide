@@ -40,8 +40,8 @@ export function useFocusTrap(isActive: boolean) {
       return;
     }
 
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
+    const firstElement = focusableElements[0]!;
+    const lastElement = focusableElements[focusableElements.length - 1]!;
 
     // Focus first element
     firstElement.focus();

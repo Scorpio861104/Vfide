@@ -91,7 +91,6 @@ export function clearBalanceCache(address?: string, chainId?: number): void {
  * Cleanup old cache entries
  */
 function cleanupBalanceCache(): void {
-  const now = Date.now();
   const entries = Array.from(balanceCache.entries());
   
   // Sort by timestamp and remove oldest 20%
@@ -99,7 +98,7 @@ function cleanupBalanceCache(): void {
   const toRemove = Math.floor(entries.length * 0.2);
   
   for (let i = 0; i < toRemove; i++) {
-    balanceCache.delete(entries[i][0]);
+    balanceCache.delete(entries[i]![0]);
   }
 }
 

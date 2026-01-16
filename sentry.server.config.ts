@@ -33,7 +33,7 @@ Sentry.init({
   ],
 
   // Before sending an event, you can modify it here
-  beforeSend(event, hint) {
+  beforeSend(event, _hint) {
     // Don't send events in development unless specifically enabled
     if (process.env.NODE_ENV === "development" && !process.env.SENTRY_DEBUG) {
       return null;

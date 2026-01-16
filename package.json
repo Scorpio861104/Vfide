@@ -128,6 +128,7 @@
     },
     "use-sync-external-store": {
       "react": "^19.2.3"
-    }
+    },
+    "h3": "^1.15.5"
   }
 }

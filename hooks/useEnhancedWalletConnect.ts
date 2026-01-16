@@ -16,7 +16,7 @@ import {
   formatSessionDuration,
   clearSessionData,
 } from '@/lib/walletPreferences';
-import { CONNECTION_TIMEOUT_MS, CONNECTION_LIMITS, POLLING_INTERVALS } from '@/lib/walletConstants';
+import { CONNECTION_TIMEOUT_MS } from '@/lib/walletConstants';
 
 /**
  * Enhanced Wallet Connection Hook
@@ -73,6 +73,7 @@ export function useEnhancedWalletConnect() {
 
       return () => clearInterval(timer);
     }
+    return undefined;
   }, [connectionStatus]);
 
   // Enhanced error messages
@@ -131,6 +132,7 @@ export function useEnhancedWalletConnect() {
         setConnectionTimeout(null);
       }
     }
+    return undefined;
   }, [isConnecting, isPending, showToast, connectionTimeout]);
 
   // Show toast notifications for connection events
@@ -178,7 +180,7 @@ export function useEnhancedWalletConnect() {
       await navigator.clipboard.writeText(addressToCopy);
       showToast('Address copied to clipboard', 'success', 2000);
       return true;
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to copy address', 'error', 2000);
       return false;
     }

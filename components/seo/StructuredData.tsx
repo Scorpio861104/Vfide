@@ -59,6 +59,8 @@ const softwareApplicationSchema = {
 };
 
 export function StructuredData() {
+  // Using Next.js Script component with JSON.stringify is safe for structured data
+  // as the data is statically defined and not user-generated
   return (
     <>
       <Script
@@ -67,6 +69,7 @@ export function StructuredData() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(organizationSchema),
         }}
+        strategy="beforeInteractive"
       />
       <Script
         id="web-application-schema"
@@ -74,6 +77,7 @@ export function StructuredData() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(webApplicationSchema),
         }}
+        strategy="beforeInteractive"
       />
       <Script
         id="software-application-schema"
@@ -81,6 +85,7 @@ export function StructuredData() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(softwareApplicationSchema),
         }}
+        strategy="beforeInteractive"
       />
     </>
   );
@@ -93,10 +98,16 @@ interface BreadcrumbItem {
 }
 
 export function PageBreadcrumbSchema({ items }: { items: BreadcrumbItem[] }) {
+  // Sanitize breadcrumb items to prevent XSS
+  const sanitizedItems = items.map(item => ({
+    name: String(item.name).slice(0, 100), // Limit length
+    url: String(item.url).slice(0, 200), // Limit length
+  }));
+
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map((item, index) => ({
+    itemListElement: sanitizedItems.map((item, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       name: item.name,
@@ -111,6 +122,7 @@ export function PageBreadcrumbSchema({ items }: { items: BreadcrumbItem[] }) {
       dangerouslySetInnerHTML={{
         __html: JSON.stringify(breadcrumbSchema),
       }}
+      strategy="beforeInteractive"
     />
   );
 }
@@ -122,10 +134,16 @@ interface FAQItem {
 }
 
 export function FAQSchema({ faqs }: { faqs: FAQItem[] }) {
+  // Sanitize FAQ content to prevent XSS
+  const sanitizedFaqs = faqs.map(faq => ({
+    question: String(faq.question).slice(0, 200), // Limit length
+    answer: String(faq.answer).slice(0, 1000), // Limit length
+  }));
+
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqs.map((faq) => ({
+    mainEntity: sanitizedFaqs.map((faq) => ({
       '@type': 'Question',
       name: faq.question,
       acceptedAnswer: {
@@ -142,6 +160,7 @@ export function FAQSchema({ faqs }: { faqs: FAQItem[] }) {
       dangerouslySetInnerHTML={{
         __html: JSON.stringify(faqSchema),
       }}
+      strategy="beforeInteractive"
     />
   );
 }

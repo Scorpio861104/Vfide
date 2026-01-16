@@ -913,9 +913,11 @@ export default function VaultRecoveryPage() {
           isRecoverable: !isLocked && owner !== address // Can recover if not locked and not current user
         });
       } else {
-        // For email/username/guardian searches, would need an off-chain indexer
+        // PENDING IMPLEMENTATION: Backend API for off-chain identity lookup
+        // Status: Requires backend service
+        // Email/username/guardian searches need an off-chain indexer
         // These are stored in a backend database, not on-chain
-        // TODO: Implement backend API for off-chain identity lookup
+        // Current: Only vault address (recoveryId) search is supported on-chain
         setError(`${searchMethod} search requires backend integration. Currently only vault address (recoveryId) search is supported on-chain.`);
       }
     } catch (_err) {

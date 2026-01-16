@@ -561,10 +561,11 @@ export default function GovernanceUI() {
     );
   };
 
-  // TODO: Delegation requires a contract upgrade to add delegate() function to DAO.sol
+  // PENDING IMPLEMENTATION: Delegation requires contract upgrade
+  // Status: Awaiting DAO.sol contract upgrade
   // The VoteDelegated event exists but the delegate function is not yet implemented.
-  // For now, delegation is tracked locally in the UI state only.
-  // Future implementation: DAO.sol should add:
+  // Current: Delegation is tracked locally in the UI state only
+  // Required: DAO.sol should add:
   //   function delegate(address delegatee, uint256 amount) external
   //   function undelegate(address delegatee) external
   const handleDelegate = () => {

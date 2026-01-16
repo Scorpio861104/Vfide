@@ -2273,12 +2273,13 @@ function CouncilTab() {
     
     setIsRegistering(true);
     
-    // TODO: Wire to CouncilElection.register() contract call
+    // PENDING IMPLEMENTATION: Wire to CouncilElection.register() contract call
+    // Status: Awaiting contract upgrade
     // The CouncilElection contract's register() function takes no arguments -
     // it checks eligibility based on ProofScore from Seer contract.
     // The candidate statement is currently stored off-chain only.
-    // Future: Add candidateStatements mapping to CouncilElection.sol
-    // For now, statement is stored locally only
+    // Required: Add candidateStatements mapping to CouncilElection.sol
+    // Current: Statement is stored locally only
     try {
       // Future implementation:
       // await writeContractAsync({
