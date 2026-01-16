@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VFIDE Protocol Whitepaper - Version 1.0</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        @media print {
+            body {
+                font-size: 11pt;
+                line-height: 1.5;
+            }
+            
+            h1 {
+                page-break-before: always;
+                font-size: 24pt;
+                margin-top: 0;
+            }
+            
+            h1:first-of-type {
+                page-break-before: avoid;
+            }
+            
+            h2 {
+                page-break-after: avoid;
+                font-size: 18pt;
+                margin-top: 20pt;
+            }
+            
+            h3 {
+                page-break-after: avoid;
+                font-size: 14pt;
+            }
+            
+            table, pre, figure {
+                page-break-inside: avoid;
+            }
+            
+            a {
+                color: #000;
+                text-decoration: none;
+            }
+            
+            a[href]:after {
+                content: " (" attr(href) ")";
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+        
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            background: #fff;
+        }
+        
+        h1 {
+            color: #00F0FF;
+            border-bottom: 3px solid #00F0FF;
+            padding-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        h2 {
+            color: #0080FF;
+            border-bottom: 2px solid #0080FF;
+            padding-bottom: 8px;
+            margin-top: 40px;
+            font-size: 24px;
+        }
+        
+        h3 {
+            color: #00F0FF;
+            margin-top: 30px;
+            font-size: 18px;
+        }
+        
+        h4 {
+            color: #666;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        table th {
+            background: #00F0FF;
+            color: #000;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        pre {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        blockquote {
+            border-left: 4px solid #00F0FF;
+            padding-left: 20px;
+            margin: 20px 0;
+            color: #666;
+            font-style: italic;
+        }
+        
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        
+        li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .toc {
+            background: #f9f9f9;
+            border: 2px solid #00F0FF;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+        
+        .toc h2 {
+            margin-top: 0;
+            border-bottom: none;
+        }
+        
+        .toc ol {
+            column-count: 2;
+            column-gap: 30px;
+        }
+        
+        .cover-page {
+            text-align: center;
+            padding: 100px 0;
+        }
+        
+        .cover-page h1 {
+            font-size: 48px;
+            border-bottom: none;
+            margin-bottom: 20px;
+        }
+        
+        .cover-page .subtitle {
+            font-size: 24px;
+            color: #666;
+            margin: 20px 0;
+        }
+        
+        .cover-page .version {
+            font-size: 18px;
+            color: #999;
+            margin: 40px 0;
+        }
+        
+        .print-instructions {
+            background: #fffacd;
+            border: 2px solid #ffd700;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        @media print {
+            .print-instructions {
+                display: none;
+            }
+        }
+        
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="print-instructions">
+        <h3>📄 Printing Instructions</h3>
+        <p><strong>To save as PDF:</strong></p>
+        <ol>
+            <li>Press <kbd>Ctrl+P</kbd> (Windows/Linux) or <kbd>Cmd+P</kbd> (Mac)</li>
+            <li>Select "Save as PDF" as the destination</li>
+            <li>Choose "A4" or "Letter" paper size</li>
+            <li>Enable "Background graphics" for colored headers</li>
+            <li>Set margins to "Default" (recommended)</li>
+            <li>Click "Save" and choose your location</li>
+        </ol>
+        <p><strong>File info:</strong> This document is ~77KB markdown converted to ~2,200 lines covering 40 sections.</p>
+    </div>
+
+    <!-- Content will be injected here by script -->
+    <div id="content"></div>
+
+    <script>
+        // Fetch and convert the markdown content
+        fetch('WHITEPAPER.md')
+            .then(response => response.text())
+            .then(markdown => {
+                // Basic markdown to HTML conversion
+                let html = markdown
+                    // Headers
+                    .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    // Bold and italic
+                    .replace(/\*\*\*(.*?)\*\*\*/gim, '<strong><em>$1</em></strong>')
+                    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                    // Links
+                    .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2">$1</a>')
+                    // Code blocks
+                    .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+                    // Inline code
+                    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+                    // Lists
+                    .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                    .replace(/^- (.*$)/gim, '<li>$1</li>')
+                    .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
+                    // Blockquotes
+                    .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+                    // Horizontal rules
+                    .replace(/^---$/gim, '<hr>')
+                    // Paragraphs
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\|(.+)\|/g, function(match) {
+                        // Simple table handling
+                        return match;
+                    });
+                
+                // Wrap bare text in paragraphs
+                html = '<p>' + html + '</p>';
+                
+                // Clean up empty paragraphs
+                html = html.replace(/<p><\/p>/g, '');
+                html = html.replace(/<p>(<h[1-6]>)/g, '$1');
+                html = html.replace(/(<\/h[1-6]>)<\/p>/g, '$1');
+                html = html.replace(/<p>(<pre>)/g, '$1');
+                html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+                html = html.replace(/<p>(<ul>|<ol>)/g, '$1');
+                html = html.replace(/(<\/ul>|<\/ol>)<\/p>/g, '$1');
+                
+                // Wrap lists
+                html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+                html = html.replace(/<\/ul><ul>/g, '');
+                
+                document.getElementById('content').innerHTML = html;
+                
+                // Add cover page programmatically
+                const coverPage = `
+                    <div class="cover-page">
+                        <h1>VFIDE Protocol</h1>
+                        <div class="subtitle">A Trust-Based Decentralized Payment Protocol</div>
+                        <div class="subtitle"><em>Building the Future of Reputation-Driven Commerce</em></div>
+                        <div class="version">Version 1.0 | January 2026</div>
+                    </div>
+                    <hr style="margin: 60px 0;">
+                `;
+                
+                document.getElementById('content').innerHTML = coverPage + document.getElementById('content').innerHTML;
+            })
+            .catch(error => {
+                console.error('Error loading whitepaper:', error);
+                document.getElementById('content').innerHTML = `
+                    <div style="color: red; padding: 40px; text-align: center;">
+                        <h2>Error Loading Whitepaper</h2>
+                        <p>Could not load WHITEPAPER.md. Please ensure the file exists in the same directory.</p>
+                        <p>Alternative: Open WHITEPAPER.md directly in your browser or use a markdown viewer.</p>
+                    </div>
+                `;
+            });
+    </script>
+</body>
+</html>
