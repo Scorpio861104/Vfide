@@ -1,6 +1,7 @@
 import { connectorsForWallets } from '@rainbow-me/rainbowkit'
 import { 
   walletConnectWallet, 
+  metaMaskWallet,
   coinbaseWallet,
   injectedWallet,
 } from '@rainbow-me/rainbowkit/wallets'
@@ -83,32 +84,9 @@ const wagmiStorage = createStorage({
 // WALLET CONNECTORS
 // ========================================
 // Include explicit wallet options for best user experience
-// metaMaskWallet: Shows MetaMask with install prompt if not installed
-// injectedWallet: Detects other browser extensions (Rabby, Brave, etc.)
+// injectedWallet: Detects browser extensions (MetaMask, Rabby, Brave, etc.)
 // coinbaseWallet: Direct Coinbase SDK connection
 // walletConnectWallet: Mobile/QR code connections (requires project ID)
-
-// Build wallet groups dynamically - only include groups that have wallets
-// This prevents the "No wallets provided for group" error during SSR
-const walletGroups = [
-  {
-    groupName: 'Popular',
-    wallets: [
-      // MetaMask first - shows install prompt if not installed
-      metaMaskWallet,
-      // Coinbase Wallet direct SDK
-      coinbaseWallet,
-      // Catch other browser extensions (Rabby, Brave Wallet, etc.)
-      injectedWallet,
-    ],
-  },
-  // Only add WalletConnect group if we have a valid project ID
-  // Spreading empty array when no projectId avoids empty group error
-  ...(hasWalletConnect ? [{
-    groupName: 'Mobile & QR',
-    wallets: [walletConnectWallet],
-  }] : []),
-]
 
 // Build wallet groups dynamically - only include groups with wallets
 const walletGroups = [
@@ -117,6 +95,8 @@ const walletGroups = [
     wallets: [
       // injectedWallet detects all browser extensions (MetaMask, Rabby, Brave, etc.)
       injectedWallet,
+      // Explicit MetaMask wallet for better UX
+      metaMaskWallet,
       // Coinbase Wallet is also widely used
       coinbaseWallet,
     ],
