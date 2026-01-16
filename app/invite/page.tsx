@@ -1,15 +1,12 @@
 'use client';
 
-import { Metadata } from 'next';
 import Link from 'next/link';
 import { UserPlus, Gift, Share2, TrendingUp, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Note: metadata export doesn't work with 'use client', handled in parent layout
-// export const metadata: Metadata = {
-//   title: 'Invite Friends - VFIDE Referral Program',
-//   description: 'Share VFIDE with friends and earn rewards together. Get bonus tokens, boost your ProofScore, and build the community.',
-// };
+// Note: Metadata export doesn't work with 'use client', handled in parent layout
+// For SEO, consider: title: 'Invite Friends - VFIDE Referral Program'
+// description: 'Share VFIDE with friends and earn rewards together. Get bonus tokens, boost your ProofScore, and build the community.'
 
 export default function InviteLandingPage() {
   return (

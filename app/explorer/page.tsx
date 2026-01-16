@@ -1,16 +1,16 @@
 'use client';
 
-import { Metadata } from 'next';
 import Link from 'next/link';
 import { Search, Compass, TrendingUp, Users, Activity } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Note: metadata export doesn't work with 'use client', handled in parent layout
-// export const metadata: Metadata = {
-//   title: 'VFIDE Explorer - Search Addresses & Transactions',
-//   description: 'Explore the VFIDE network. Search wallet addresses, view user profiles, ProofScores, badges, and network activity.',
-// };
+// Ethereum address length constant
+const ETHEREUM_ADDRESS_LENGTH = 42;
+
+// Note: Metadata export doesn't work with 'use client', handled in parent layout
+// For SEO, consider: title: 'VFIDE Explorer - Search Addresses & Transactions'
+// description: 'Explore the VFIDE network. Search wallet addresses, view user profiles, ProofScores, badges, and network activity.'
 
 export default function ExplorerPage() {
   const [searchInput, setSearchInput] = useState('');
@@ -20,7 +20,7 @@ export default function ExplorerPage() {
     e.preventDefault();
     if (searchInput.trim()) {
       // Check if it's a valid address format
-      if (searchInput.startsWith('0x') && searchInput.length === 42) {
+      if (searchInput.startsWith('0x') && searchInput.length === ETHEREUM_ADDRESS_LENGTH) {
         router.push(`/explorer/${searchInput}`);
       } else {
         // Could also search for usernames, transaction hashes, etc.
