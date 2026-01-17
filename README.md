@@ -237,24 +237,58 @@ Users can **endorse** each other to build a web of trust throughout the ecosyste
 
 Earn **badges** by completing achievements. Badges increase your ProofScore and show your accomplishments.
 
+### Badge Features
+
+**✅ Complete Implementation:**
+- 24 unique badges across 6 categories
+- Comprehensive eligibility tracking
+- Real-time progress monitoring
+- Badge claiming interface
+- NFT minting for permanent badges
+- ProofScore rewards for earning badges
+
+**Pages:**
+- `/badges` - Browse all badges and mint NFTs
+- `/badge-progress` - Track progress and claim eligible badges
+- `/achievements` - View your achievements
+
 ### Badge Categories
 
-| Category | Examples |
-|----------|----------|
-| 📊 **Activity & Streaks** | Daily Active, Streak Master, Power User |
-| 🤝 **Trust & Community** | Trusted Endorser, Community Builder, Mentor |
-| 💼 **Commerce & Merchants** | Verified Merchant, High Volume Seller |
-| 🏛️ **Governance** | Active Voter, Proposal Creator, Council Member |
-| 🎯 **Special Achievements** | Early Adopter, Bug Hunter, Ambassador |
+| Category | Badges | Examples |
+|----------|--------|----------|
+| 🏁 **Pioneer & Foundation** | 3 badges | Pioneer (first 10K users), Genesis Presale, Founding Member |
+| ⚡ **Activity & Participation** | 6 badges | Active Trader (50+ trades), Governance Voter, Power User, Daily Champion |
+| 🤝 **Trust & Community** | 4 badges | Trusted Endorser, Community Builder, Mentor Extraordinaire |
+| 💼 **Commerce & Merchants** | 3 badges | Verified Merchant, Trade Master (100+ trades), Whale (200+ trades) |
+| 🛡️ **Security & Integrity** | 2 badges | Guardian (9000+ score), Security Researcher |
+| 🎖️ **Achievements & Milestones** | 3 badges | Elite Status (8000+ score), Council Member, Veteran (1 year) |
+| 📚 **Education & Contribution** | 3 badges | Bug Hunter, Security Researcher, Translator |
 
-### Badge Rarities
+### Badge Rarity & Rewards
 
-| Rarity | Points | Duration | Examples |
-|--------|--------|----------|----------|
-| ⚪ **Common** | 10-15 | Temporary | Daily Active, First Transaction |
-| 🔵 **Rare** | 25-35 | 1 Year | Trusted Endorser, Mentor |
-| 🟣 **Epic** | 40-50 | Permanent | Community Builder, Council Member |
-| 🟡 **Legendary** | 75-100 | Permanent | Founding Member, Protocol Guardian |
+| Rarity | Points | Duration | Count | Examples |
+|--------|--------|----------|-------|----------|
+| ⚪ **Common** | 10-15 | Temporary | 3 | Daily Champion |
+| 🟢 **Uncommon** | 20-25 | 90-180 days | 5 | Active Trader, Governance Voter |
+| 🔵 **Rare** | 30-35 | Permanent | 7 | Trusted Endorser, Power User |
+| 🟣 **Epic** | 40-45 | Permanent | 5 | Community Builder, Council Member |
+| 🟡 **Legendary** | 50-75 | Permanent | 3 | Pioneer, Genesis Presale, Guardian |
+| 🔴 **Mythic** | 100+ | Permanent | 1 | Founding Member |
+
+### How Badge Eligibility Works
+
+Badges are earned automatically based on your activity:
+- **Score-based**: Elite Status (8000+), Council Member (7000+), Guardian (9000+)
+- **Activity-based**: Transactions, votes, endorsements tracked on-chain
+- **Time-based**: Account age, consecutive activity streaks
+- **Role-based**: Merchant status, mentor status
+- **Special**: Bug reports, security disclosures, presale participation
+
+**Badge Progress Tracking:** Visit `/badge-progress` to see:
+- Which badges you've earned
+- Which badges you can claim now
+- Your progress towards locked badges
+- Detailed requirements for each badge
 
 ---
 
@@ -559,12 +593,12 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 - **Governance Voting** - Vote on DAO proposals
 - **Proposal Creation** - Council members can create proposals
 - **QR Code Payments** - Merchant payment QR generation with amount/order tracking
-- **Badge System** - Badge gallery, claiming interface, and NFT minting
+- **Badge System** - Complete badge system with 24 badges, eligibility tracking, progress monitoring, claiming interface, and NFT minting
+- **Badge Progress Tracking** - Real-time progress dashboard showing earned, eligible, in-progress, and locked badges
 - **Mentorship Program** - Mentor registration and mentee sponsorship
 - **Endorsement System** - Social trust endorsements
 
 ### 🚧 Beta / In Development
-- **Badge Auto-Detection** - Automatic badge eligibility tracking (requires backend)
 - **Council Elections** - Candidate nominations and voting
 
 ### 📅 Coming Soon
