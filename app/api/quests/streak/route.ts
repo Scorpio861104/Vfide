@@ -1,17 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { validateQueryParams, validateAddress, checkRateLimit, validateRequest } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * GET /api/quests/streak
  * Get user's login streak information
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`quest-streak:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
 
-    if (!userAddress) {
-      return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    // Validate required parameter
+    const validation = validateQueryParams(searchParams, {
+      userAddress: { required: true, type: 'string' }
+    });
+    if (!validation.valid) {
+      return validation.errorResponse;
+    }
+
+    // Validate address format
+    const addressValidation = validateAddress(userAddress!);
+    if (!addressValidation.valid) {
+      return addressValidation.errorResponse;
     }
 
     const client = await getClient();
@@ -91,7 +111,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching streak:', error);
+    apiLogger.error('Error fetching streak', { error });
     return NextResponse.json(
       { error: 'Failed to fetch streak' },
       { status: 500 }
@@ -104,12 +124,35 @@ export async function GET(request: NextRequest) {
  * Manually update streak (for testing or specific events)
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`quest-streak-update:${clientId}`, { maxRequests: 30, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
   try {
     const body = await request.json();
     const { userAddress, streakType = 'login' } = body;
 
-    if (!userAddress) {
-      return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    // Validate required field
+    const validation = validateRequest(body, {
+      userAddress: { required: true, type: 'string' }
+    });
+    if (!validation.valid) {
+      return validation.errorResponse;
+    }
+
+    // Validate address format
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) {
+      return addressValidation.errorResponse;
     }
 
     const client = await getClient();
@@ -166,7 +209,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating streak:', error);
+    apiLogger.error('Error updating streak', { error });
     return NextResponse.json(
       { error: 'Failed to update streak' },
       { status: 500 }

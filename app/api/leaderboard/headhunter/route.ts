@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateQueryParams, checkRateLimit } from '@/lib/api-validation';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * GET /api/leaderboard/headhunter
@@ -39,17 +41,26 @@ function calculateReward(rank: number, points: number, totalPoints: number): str
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`leaderboard-headhunter:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const year = searchParams.get('year');
     const quarter = searchParams.get('quarter');
     const userAddress = searchParams.get('userAddress')?.toLowerCase();
 
-    if (!year || !quarter) {
-      return NextResponse.json(
-        { error: 'Year and quarter are required' },
-        { status: 400 }
-      );
+    // Validate required parameters
+    const validation = validateQueryParams(searchParams, {
+      year: { required: true, type: 'string' },
+      quarter: { required: true, type: 'string' }
+    });
+    if (!validation.valid) {
+      return validation.errorResponse;
     }
 
     // In production: Query subgraph or aggregate contract events
@@ -146,7 +157,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Leaderboard API] Error:', error);
+    apiLogger.error('[Leaderboard API] Error', { error });
     return NextResponse.json(
       { error: 'Failed to fetch leaderboard data' },
       { status: 500 }

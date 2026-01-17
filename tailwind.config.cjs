@@ -9,7 +9,8 @@ module.exports = {
   ],
   theme: {
     screens: {
-      'xs': '400px',      // Z Fold 5 front screen + buffer
+      'xxs': '340px',    // Z Fold 5 front screen (344px) + safety margin
+      'xs': '400px',      // Small phones
       'sm': '640px',
       'md': '768px',
       'lg': '1024px',

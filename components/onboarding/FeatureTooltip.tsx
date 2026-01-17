@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lightbulb } from "lucide-react";
 import { safeLocalStorage } from "@/lib/utils";
+import { useSafeTimeout } from "@/hooks/useMemoryLeak";
 
 interface FeatureTooltipProps {
   id: string;
@@ -28,6 +29,8 @@ export function FeatureTooltip({
 }: FeatureTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
 
+  const safeTimeout = useSafeTimeout();
+
   useEffect(() => {
     // Check if this tooltip has been dismissed before
     const dismissedTooltips = JSON.parse(
@@ -35,13 +38,11 @@ export function FeatureTooltip({
     );
 
     if (!dismissedTooltips.includes(id) && autoShow) {
-      const timer = setTimeout(() => {
+      safeTimeout(() => {
         setIsVisible(true);
       }, delay);
-      return () => clearTimeout(timer);
     }
-    return undefined;
-  }, [id, autoShow, delay]);
+  }, [id, autoShow, delay, safeTimeout]);
 
   const handleClose = () => {
     setIsVisible(false);
@@ -119,9 +120,11 @@ export function useFeatureTooltip(id: string) {
   // M-4 Fix: Initialize as false to avoid SSR hydration mismatch
   const [isVisible, setIsVisible] = useState(false);
   
+  const safeTimeout = useSafeTimeout();
+  
   // Check localStorage after mount to avoid hydration issues
   useEffect(() => {
-    const timer = setTimeout(() => {
+    safeTimeout(() => {
       try {
         const dismissedTooltips = JSON.parse(
           safeLocalStorage.getItem("vfide_dismissed_tooltips") || "[]"
@@ -131,8 +134,7 @@ export function useFeatureTooltip(id: string) {
         setIsVisible(true); // Default to showing tooltip if localStorage fails
       }
     }, 0);
-    return () => clearTimeout(timer);
-  }, [id]);
+  }, [id, safeTimeout]);
 
   const dismiss = () => {
     setIsVisible(false);

@@ -17,6 +17,7 @@ import {
   useReferralActivity
 } from '@/hooks/useHeadhunterHooks';
 import { formatEther } from 'viem';
+import { useSafeTimeout } from '@/hooks/useMemoryLeak';
 
 /**
  * HEADHUNTER COMPETITION PAGE
@@ -46,11 +47,13 @@ export default function HeadhunterPage() {
   // Calculate days until quarter end
   const quarterEndsAtMs = Number(stats.quarterEndsAt) * 1000;
   const daysUntilQuarterEnd = Math.max(0, Math.ceil((quarterEndsAtMs - Date.now()) / (1000 * 60 * 60 * 24)));
+  const safeTimeout = useSafeTimeout();
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // Auto-cleanup timeout on unmount
+    safeTimeout(() => setCopied(false), 2000);
   };
 
   const shareOptions = [

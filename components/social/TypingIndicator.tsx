@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket, getWebSocketURL } from '@/lib/websocket';
+import { useSafeTimeout } from '@/hooks/useMemoryLeak';
 
 interface TypingIndicatorProps {
   conversationId: string;
@@ -13,6 +14,7 @@ interface TypingIndicatorProps {
 export function TypingIndicator({ conversationId, currentUserAddress, otherUserName }: TypingIndicatorProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const safeTimeout = useSafeTimeout();
   const { subscribe, isConnected } = useWebSocket(
     { url: getWebSocketURL() },
     currentUserAddress
@@ -43,13 +45,11 @@ export function TypingIndicator({ conversationId, currentUserAddress, otherUserN
       return;
     }
 
-    const timer = setTimeout(() => {
+    safeTimeout(() => {
       setTypingUsers([]);
       setIsTyping(false);
     }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [typingUsers]);
+  }, [typingUsers, safeTimeout]);
 
   return (
     <AnimatePresence>

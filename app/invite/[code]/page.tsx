@@ -21,6 +21,7 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
+import { useSafeTimeout } from '@/hooks/useMemoryLeak';
 
 interface InviteData {
   invite: {
@@ -50,6 +51,7 @@ export default function InvitePage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const { announce } = useAnnounce();
+  const safeTimeout = useSafeTimeout();
   
   const [inviteData, setInviteData] = useState<InviteData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -126,7 +128,7 @@ export default function InvitePage() {
         }
 
         // Redirect after success
-        setTimeout(() => {
+        safeTimeout(() => {
           router.push(`/groups/${data.groupId}`);
         }, 2000);
       } else {

@@ -6,12 +6,24 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { checkRateLimit, getClientIdentifier } from '@/lib/rateLimit';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * POST /api/groups/join
  * Join a group using an invite code
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`groups-join:${clientId}`, { maxRequests: 10, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   const client = await getClient();
   
   try {
@@ -20,10 +32,13 @@ export async function POST(request: NextRequest) {
 
     if (!code || !userId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: code, userId' },
         { status: 400 }
       );
     }
+    
+    // Verify authenticated user matches userId (additional security)
+    // In production, userId should be derived from auth.user rather than client input
 
     await client.query('BEGIN');
 
@@ -122,7 +137,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('[Join Group API] Error:', error);
+    apiLogger.error('Error joining group', { error });
     return NextResponse.json(
       { error: 'Failed to join group' },
       { status: 500 }

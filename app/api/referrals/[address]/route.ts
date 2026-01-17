@@ -3,16 +3,28 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateAddress, checkRateLimit } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ address: string }> }
 ) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`referrals:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+    if (!rateLimit.success) {
+      return rateLimit.errorResponse;
+    }
+
     const { address } = await params;
 
-    if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      return NextResponse.json({ error: 'Invalid address' }, { status: 400 });
+    // Validate address
+    const addressValidation = validateAddress(address);
+    if (!addressValidation.valid) {
+      return addressValidation.errorResponse;
     }
 
     // Get or create referral code
@@ -94,7 +106,7 @@ export async function GET(
       })),
     });
   } catch (error) {
-    console.error('[Referrals API] Error:', error);
+    apiLogger.error('Failed to fetch referrals', { error });
     // Return defaults with generated code
     const { address } = await params;
     return NextResponse.json({
@@ -113,15 +125,43 @@ export async function POST(
   { params }: { params: Promise<{ address: string }> }
 ) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`referrals:post:${clientId}`, { maxRequests: 10, windowMs: 60000 });
+    if (!rateLimit.success) {
+      return rateLimit.errorResponse;
+    }
+
+    // Authentication required
+    const auth = await requireAuth(request);
+    if (!auth.authenticated) {
+      return auth.errorResponse;
+    }
+
     const { address } = await params;
     const { refereeAddress } = await request.json();
 
-    if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      return NextResponse.json({ error: 'Invalid referrer address' }, { status: 400 });
+    // Validate referrer address
+    const referrerValidation = validateAddress(address);
+    if (!referrerValidation.valid) {
+      return referrerValidation.errorResponse;
     }
 
-    if (!refereeAddress || !/^0x[a-fA-F0-9]{40}$/.test(refereeAddress)) {
-      return NextResponse.json({ error: 'Invalid referee address' }, { status: 400 });
+    // Verify ownership
+    if (auth.user?.address.toLowerCase() !== address.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'Cannot create referral for another user' },
+        { status: 403 }
+      );
+    }
+
+    // Validate referee address
+    const refereeValidation = validateAddress(refereeAddress);
+    if (!refereeValidation.valid) {
+      return NextResponse.json(
+        { error: 'Invalid referee address' },
+        { status: 400 }
+      );
     }
 
     // Create referral relationship
@@ -138,7 +178,7 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Referrals API] Create error:', error);
+    apiLogger.error('Failed to create referral', { error });
     return NextResponse.json({ error: 'Failed to create referral' }, { status: 500 });
   }
 }

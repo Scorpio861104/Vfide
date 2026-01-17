@@ -24,6 +24,7 @@ import {
 import React, { useState, useEffect } from 'react'
 import { formatUnits, parseUnits } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { useSafeTimeout } from '@/hooks/useMemoryLeak'
 
 // Contract ABIs
 const LIQUIDITY_INCENTIVES_ABI = [
@@ -268,7 +269,7 @@ export default function RewardsPage() {
                 <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
-                    className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 flex-1 min-w-[160px]"
+                    className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 flex-1 min-w-0"
                   >
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-emerald-400" />
@@ -278,7 +279,7 @@ export default function RewardsPage() {
                   </motion.div>
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
-                    className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 flex-1 min-w-[160px]"
+                    className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 flex-1 min-w-0"
                   >
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-amber-400" />
@@ -942,10 +943,13 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
   }, [address]);
 
   const copyToClipboard = async (text: string) => {
+    const safeTimeout = useSafeTimeout();
+    
     try {
       await navigator.clipboard.writeText(text)
       setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
+      // Auto-cleanup timeout on unmount
+      safeTimeout(() => setCopied(false), 2000)
       return
     } catch {
       // Ignore and try fallback
@@ -965,7 +969,8 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
 
       if (ok) {
         setCopied(true)
-        window.setTimeout(() => setCopied(false), 2000)
+        // Auto-cleanup timeout on unmount
+        safeTimeout(() => setCopied(false), 2000)
       }
     } catch {
       // If copying fails, do nothing.

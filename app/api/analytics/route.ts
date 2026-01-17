@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { checkRateLimit } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`analytics:${clientId}`, { maxRequests: 30, windowMs: 60000 });
+    if (!rateLimit.success) {
+      return rateLimit.errorResponse;
+    }
+
     const { searchParams } = new URL(request.url);
     const eventType = searchParams.get('eventType');
     const userId = searchParams.get('userId');
@@ -28,13 +38,26 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ events: result.rows, total: result.rows.length });
   } catch (error) {
-    console.error('[Analytics] Error:', error);
+    apiLogger.error('Failed to fetch analytics', { error });
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`analytics:post:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+    if (!rateLimit.success) {
+      return rateLimit.errorResponse;
+    }
+
+    // Authentication (admin only - TODO: add admin check)
+    const auth = await requireAuth(request);
+    if (!auth.authenticated) {
+      return auth.errorResponse;
+    }
+
     const body = await request.json();
     const { userId, eventType, eventData } = body;
 
@@ -51,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, event: result.rows[0] });
   } catch (error) {
-    console.error('[Analytics POST] Error:', error);
+    apiLogger.error('Failed to log analytics event', { error });
     return NextResponse.json({ error: 'Failed to log event' }, { status: 500 });
   }
 }

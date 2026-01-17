@@ -95,11 +95,83 @@ We regularly run `npm audit` and update dependencies. Low severity vulnerabiliti
 
 ### Planned Enhancements
 
-- ⏳ Rate limiting on API endpoints
+- ✅ Rate limiting on API endpoints (implemented in auth)
+- ✅ Structured logging service (implemented)
+- ✅ Improved token security with HMAC (implemented)
 - ⏳ Advanced monitoring and alerting
 - ⏳ Bug bounty program
 - ⏳ Regular security audits
 - ⏳ Penetration testing
+
+## Recent Security Improvements (2026-01-17)
+
+### Fixed Vulnerabilities
+
+1. **XSS Prevention Enhanced**
+   - Replaced unsafe `innerHTML` usage with safer `DOMParser` in `lib/security.ts`
+   - Improved HTML sanitization methods
+   - Reduced XSS attack surface
+
+2. **Authentication Security**
+   - Implemented HMAC-based token generation with cryptographic randomness
+   - Added rate limiting to prevent brute force attacks (5 attempts per minute)
+   - Improved token expiration validation
+   - Tokens now include signature verification
+
+3. **Sensitive Data Protection**
+   - Created centralized logging service that sanitizes sensitive data
+   - Removed detailed error logging that could leak information
+   - Added security warnings for localStorage usage
+   - Implemented token expiration checks in client storage
+
+4. **Type Safety**
+   - Replaced `any` types with proper TypeScript interfaces
+   - Created type-safe API client with defined response types
+   - Improved type checking across authentication flows
+
+### Security Best Practices for Developers
+
+#### Environment Variables
+
+**CRITICAL**: Always set secure environment variables in production:
+
+```bash
+# Generate strong secrets (32+ characters):
+openssl rand -base64 32
+
+# Required in production:
+SESSION_SECRET=<your-generated-secret>
+```
+
+#### Token Storage
+
+- **Do NOT** store sensitive tokens in localStorage if possible
+- Consider using httpOnly cookies for authentication
+- Implement proper CSRF protection
+- Rotate tokens regularly
+
+#### API Security
+
+- Always validate and sanitize user input
+- Use rate limiting on all public endpoints
+- Implement proper authentication checks
+- Never log sensitive information (passwords, tokens, keys)
+- Use the centralized `logger.service.ts` for all logging
+
+#### Code Review Checklist
+
+Before merging security-sensitive code:
+
+- [ ] No sensitive data in logs
+- [ ] Input validation on all user data
+- [ ] Proper error handling without information leakage
+- [ ] Type safety (no `any` types)
+- [ ] Rate limiting on new endpoints
+- [ ] Sanitization of all user-generated content
+- [ ] Secure random generation for tokens/IDs
+- [ ] Environment variables for secrets (never hardcoded)
+
+## Planned Enhancements
 
 ## Responsible Disclosure
 

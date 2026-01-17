@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateQueryParams, checkRateLimit } from '@/lib/api-validation';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * Suggested Friends API - PostgreSQL Database
@@ -34,11 +36,26 @@ interface SuggestedUser {
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`friends:suggested:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+    if (!rateLimit.success) {
+      return rateLimit.errorResponse;
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const limit = parseInt(searchParams.get('limit') || '10');
     const reason = searchParams.get('reason');
     const minScore = parseInt(searchParams.get('minScore') || '0');
+
+    // Validate pagination
+    if (limit < 1 || limit > 100) {
+      return NextResponse.json(
+        { error: 'Limit must be between 1 and 100' },
+        { status: 400 }
+      );
+    }
 
     // Get the requesting user's ID if provided
     let requestingUserId: number | null = null;
@@ -175,7 +192,7 @@ export async function GET(request: NextRequest) {
       forUser: userId || 'anonymous',
     });
   } catch (error) {
-    console.error('Error fetching suggestions:', error);
+    apiLogger.error('Failed to fetch friend suggestions', { error });
     return NextResponse.json(
       { error: 'Failed to fetch friend suggestions' },
       { status: 500 }

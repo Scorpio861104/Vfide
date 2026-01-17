@@ -1,6 +1,7 @@
 "use client";
 
 import { Footer } from "@/components/layout/Footer";
+import { ApiErrorBoundary } from "@/components/error/ApiErrorBoundary";
 import { useState, useEffect, useMemo } from "react";
 import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
@@ -174,6 +175,7 @@ export default function GovernancePage() {
       </div>
 
       <main className="min-h-screen pt-20">
+        <ApiErrorBoundary>
         {/* Hero Header */}
         <motion.section 
           initial={{ opacity: 0, y: -20 }}
@@ -324,6 +326,7 @@ export default function GovernancePage() {
         {activeTab === 'members' && <MembersTab searchQuery={searchQuery} />}
         {activeTab === 'history' && <HistoryTab searchQuery={searchQuery} />}
         {activeTab === 'stats' && <StatsTab />}
+        </ApiErrorBoundary>
       </main>
 
       <Footer />

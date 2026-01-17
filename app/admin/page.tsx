@@ -5,6 +5,7 @@ import { safeBigIntToNumber, safeParseInt } from '@/lib/validation';
 import { useEffect, useState } from 'react';
 import { formatEther } from 'viem';
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useSafeTimeout } from '@/hooks/useMemoryLeak';
 
 // Transaction history type
 type AdminTransaction = {
@@ -357,6 +358,7 @@ const BURN_ROUTER_ABI = [
 
 export default function AdminPanel() {
   const { address, isConnected } = useAccount();
+  const safeTimeout = useSafeTimeout();
   const [whitelistAddress, setWhitelistAddress] = useState('');
   const [checkAddress, setCheckAddress] = useState('');
   const [exemptAddress, setExemptAddress] = useState('');
@@ -570,13 +572,11 @@ export default function AdminPanel() {
   // Reset success message after 5 seconds
   useEffect(() => {
     if (isSuccess) {
-      const timer = setTimeout(() => {
+      safeTimeout(() => {
         window.location.reload();
       }, 3000);
-      return () => clearTimeout(timer);
     }
-    return undefined;
-  }, [isSuccess]);
+  }, [isSuccess, safeTimeout]);
 
   const handleWhitelistAdd = () => {
     if (!whitelistAddress) return;
@@ -869,7 +869,7 @@ export default function AdminPanel() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">VFIDE Owner Control Panel</h1>
-              <p className="text-gray-300">Contract: <span className="font-mono text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none inline-block align-bottom">{TOKEN_ADDRESS}</span></p>
+              <p className="text-gray-300">Contract: <span className="font-mono text-xs sm:text-sm truncate max-w-full sm:max-w-none inline-block align-bottom break-all">{TOKEN_ADDRESS}</span></p>
             </div>
             <div className="bg-green-500/20 border border-green-500 rounded-lg px-4 py-2">
               <p className="text-green-400 text-sm font-bold">👑 Owner Access</p>

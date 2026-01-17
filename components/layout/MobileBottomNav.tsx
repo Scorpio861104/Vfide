@@ -160,8 +160,8 @@ export function MobileBottomNav() {
                   whileTap={{ scale: 0.9 }}
                   className="flex flex-col items-center"
                 >
-                  <Icon size={18} strokeWidth={isActive ? 2.5 : 1.5} className="xs:w-[22px] xs:h-[22px]" />
-                  <span className="text-[8px] xs:text-[10px] mt-0.5 xs:mt-1 font-medium truncate max-w-[48px]">{item.label}</span>
+                  <Icon size={18} strokeWidth={isActive ? 2.5 : 1.5} className="w-[18px] h-[18px] xs:w-[22px] xs:h-[22px] flex-shrink-0" />
+                  <span className="text-[8px] xs:text-[10px] mt-0.5 xs:mt-1 font-medium truncate w-full">{item.label}</span>
                 </motion.div>
                 {isActive && (
                   <motion.div
@@ -188,7 +188,7 @@ export function MobileBottomNav() {
               animate={{ rotate: showMore ? 90 : 0 }}
               className="flex flex-col items-center"
             >
-              <MoreHorizontal size={18} strokeWidth={showMore ? 2.5 : 1.5} className="xs:w-[22px] xs:h-[22px]" />
+              <MoreHorizontal size={18} strokeWidth={showMore ? 2.5 : 1.5} className="w-[18px] h-[18px] xs:w-[22px] xs:h-[22px] flex-shrink-0" />
               <span className="text-[8px] xs:text-[10px] mt-0.5 xs:mt-1 font-medium">More</span>
             </motion.div>
             {showMore && (

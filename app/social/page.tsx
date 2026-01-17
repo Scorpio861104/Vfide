@@ -21,6 +21,7 @@ import {
   ArrowDown,
   ArrowRight,
 } from 'lucide-react';
+import { ApiErrorBoundary } from '@/components/error/ApiErrorBoundary';
 
 // ==================== TYPES ====================
 
@@ -172,7 +173,8 @@ export default function SocialAnalyticsPage() {
     <>
 
       <PageWrapper variant="cosmic" showOrbs showGrid>
-        <main className="pt-20 pb-20">
+        <ApiErrorBoundary>
+          <main className="pt-20 pb-20">
           {/* Header */}
           <motion.section
             initial={{ opacity: 0, y: -20 }}
@@ -493,6 +495,7 @@ export default function SocialAnalyticsPage() {
             </div>
           </motion.section>
         </main>
+        </ApiErrorBoundary>
 
         <Footer />
       </PageWrapper>

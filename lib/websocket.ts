@@ -16,12 +16,12 @@ export type WSMessageType =
   | 'notification'
   | 'error';
 
-export interface WSMessage {
+export interface WSMessage<T = unknown> {
   type: WSMessageType;
   from: string;
   to?: string;
   conversationId?: string;
-  data: any;
+  data: T;
   timestamp: number;
 }
 
@@ -46,7 +46,7 @@ export interface WSConfig {
 export class WebSocketManager {
   private socket: Socket | null = null;
   private config: WSConfig;
-  private messageHandlers: Map<string, Set<(data: any) => void>> = new Map();
+  private messageHandlers: Map<string, Set<(data: unknown) => void>> = new Map();
   private isConnecting = false;
   private isClosed = false;
 
@@ -137,7 +137,7 @@ export class WebSocketManager {
   /**
    * Emit event to Socket.IO server
    */
-  emit(event: string, data: any): boolean {
+  emit(event: string, data: unknown): boolean {
     if (!this.socket || !this.socket.connected) {
       console.error('[Socket.IO] Not connected');
       return false;
@@ -155,7 +155,7 @@ export class WebSocketManager {
   /**
    * Send message through WebSocket (backward compatibility)
    */
-  send(message: Omit<WSMessage, 'timestamp'>): boolean {
+  send(message: Omit<WSMessage<unknown>, 'timestamp'>): boolean {
     return this.emit('message', {
       ...message,
       timestamp: Date.now(),
@@ -165,7 +165,7 @@ export class WebSocketManager {
   /**
    * Subscribe to Socket.IO event
    */
-  on(event: string, handler: (data: any) => void) {
+  on(event: string, handler: (data: unknown) => void) {
     if (!this.socket) {
       console.warn('[Socket.IO] Not initialized');
       return () => {};
@@ -175,7 +175,7 @@ export class WebSocketManager {
       this.messageHandlers.set(event, new Set());
       
       // Register Socket.IO listener
-      this.socket.on(event, (data: any) => {
+      this.socket.on(event, (data: unknown) => {
         const handlers = this.messageHandlers.get(event);
         if (handlers) {
           handlers.forEach(h => h(data));

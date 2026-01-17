@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateQueryParams, validateAddress, checkRateLimit } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 interface Activity {
   id: number;
@@ -20,11 +23,26 @@ interface Activity {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`activities:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+    if (!rateLimit.success) {
+      return rateLimit.errorResponse;
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
     const activityType = searchParams.get('type');
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
+
+    // Validate address if provided
+    if (userAddress) {
+      const addressValidation = validateAddress(userAddress);
+      if (!addressValidation.valid) {
+        return addressValidation.errorResponse;
+      }
+    }
 
     let queryText = `
       SELECT 
@@ -81,7 +99,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('[Activities GET API] Error:', error);
+    apiLogger.error('Failed to fetch activities', { error });
     return NextResponse.json(
       { error: 'Failed to fetch activities' },
       { status: 500 }
@@ -95,6 +113,19 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`activities:post:${clientId}`, { maxRequests: 20, windowMs: 60000 });
+    if (!rateLimit.success) {
+      return rateLimit.errorResponse;
+    }
+
+    // Authentication required
+    const auth = await requireAuth(request);
+    if (!auth.authenticated) {
+      return auth.errorResponse;
+    }
+
     const body = await request.json();
     const { userAddress, activityType, title, description, data } = body;
 
@@ -102,6 +133,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields: userAddress, activityType, title' },
         { status: 400 }
+      );
+    }
+
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) {
+      return addressValidation.errorResponse;
+    }
+
+    // Verify ownership
+    if (auth.user?.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'Cannot create activity for another user' },
+        { status: 403 }
       );
     }
 
@@ -139,7 +184,7 @@ export async function POST(request: NextRequest) {
       activity: result.rows[0],
     }, { status: 201 });
   } catch (error) {
-    console.error('[Activities POST API] Error:', error);
+    apiLogger.error('Failed to create activity', { error });
     return NextResponse.json(
       { error: 'Failed to create activity' },
       { status: 500 }

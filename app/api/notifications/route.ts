@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { validateQueryParams, validateAddress, schemas } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 interface Notification {
   id: number;
@@ -33,16 +36,25 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-    const unreadOnly = searchParams.get('unreadOnly') === 'true';
-
+    
     if (!userAddress) {
       return NextResponse.json(
         { error: 'userAddress is required' },
         { status: 400 }
       );
     }
+    
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
+    
+    // Validate pagination
+    const paginationValidation = validateQueryParams(searchParams, schemas.pagination);
+    if (!paginationValidation.valid) return paginationValidation.errorResponse;
+    
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
+    const unreadOnly = searchParams.get('unreadOnly') === 'true';
 
     let queryText = `
       SELECT n.*
@@ -86,7 +98,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('[Notifications GET API] Error:', error);
+    apiLogger.error('Error fetching notifications', { error });
     return NextResponse.json(
       { error: 'Failed to fetch notifications' },
       { status: 500 }
@@ -96,9 +108,18 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/notifications
- * Create a new notification
+ * Create a new notification (system use only)
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`notifications-post:${clientId}`, { maxRequests: 10, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required (system/admin only in production)
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body = await request.json();
     const { userAddress, type, title, message, data } = body;
@@ -109,6 +130,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
 
     // Get user ID
     const userResult = await query(
@@ -144,7 +169,7 @@ export async function POST(request: NextRequest) {
       notification: result.rows[0],
     }, { status: 201 });
   } catch (error) {
-    console.error('[Notifications POST API] Error:', error);
+    apiLogger.error('Error creating notification', { error });
     return NextResponse.json(
       { error: 'Failed to create notification' },
       { status: 500 }
@@ -157,6 +182,15 @@ export async function POST(request: NextRequest) {
  * Mark notifications as read
  */
 export async function PATCH(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`notifications-patch:${clientId}`, { maxRequests: 30, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body = await request.json();
     const { notificationIds, userAddress, markAllRead } = body;
@@ -214,7 +248,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('[Notifications PATCH API] Error:', error);
+    apiLogger.error('Error updating notifications', { error });
     return NextResponse.json(
       { error: 'Failed to update notifications' },
       { status: 500 }
@@ -227,6 +261,15 @@ export async function PATCH(request: NextRequest) {
  * Delete notifications
  */
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`notifications-delete:${clientId}`, { maxRequests: 20, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body = await request.json();
     const { notificationIds, userAddress, deleteAll } = body;
@@ -280,7 +323,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('[Notifications DELETE API] Error:', error);
+    apiLogger.error('Error deleting notifications', { error });
     return NextResponse.json(
       { error: 'Failed to delete notifications' },
       { status: 500 }

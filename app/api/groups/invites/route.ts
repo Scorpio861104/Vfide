@@ -1,5 +1,8 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, validateAddress } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 interface GroupInvite {
   id: number;
@@ -29,6 +32,20 @@ async function generateInviteCode(): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+  const clientId = request.headers.get('x-forwarded-for') || 'anonymous';
+
+  // Rate limiting
+  const rateLimit = checkRateLimit(`group-invites-post:${clientId}`, { maxRequests: 10, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
   try {
     const body = await request.json();
     const { groupId, createdByAddress, expiresIn, maxUses, description, requireApproval } = body;
@@ -38,6 +55,12 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields: groupId, createdByAddress' },
         { status: 400 }
       );
+    }
+
+    // Validate address
+    const addressValidation = validateAddress(createdByAddress);
+    if (!addressValidation.valid) {
+      return addressValidation.errorResponse;
     }
 
     const userResult = await query(
@@ -76,12 +99,20 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, invite: result.rows[0] }, { status: 201 });
   } catch (error) {
-    console.error('[Group Invites POST] Error:', error);
+    apiLogger.error('Failed to create group invite', { error });
     return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
+  const clientId = request.headers.get('x-forwarded-for') || 'anonymous';
+
+  // Rate limiting
+  const rateLimit = checkRateLimit(`group-invites-get:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');
@@ -116,7 +147,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: 'groupId or code required' }, { status: 400 });
   } catch (error) {
-    console.error('[Group Invites GET] Error:', error);
+    apiLogger.error('Failed to fetch group invites', { error });
     return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
   }
 }
@@ -126,6 +157,20 @@ export async function GET(request: NextRequest) {
  * Update invite link (revoke, etc.)
  */
 export async function PATCH(request: NextRequest) {
+  const clientId = request.headers.get('x-forwarded-for') || 'anonymous';
+
+  // Rate limiting
+  const rateLimit = checkRateLimit(`group-invites-patch:${clientId}`, { maxRequests: 30, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
   try {
     const body = await request.json();
     const { code, action } = body;
@@ -177,7 +222,7 @@ export async function PATCH(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('Error updating invite link:', error);
+    apiLogger.error('Failed to update invite link', { error });
     return NextResponse.json(
       { error: 'Failed to update invite link' },
       { status: 500 }
@@ -190,6 +235,20 @@ export async function PATCH(request: NextRequest) {
  * Delete an invite link
  */
 export async function DELETE(request: NextRequest) {
+  const clientId = request.headers.get('x-forwarded-for') || 'anonymous';
+
+  // Rate limiting
+  const rateLimit = checkRateLimit(`group-invites-delete:${clientId}`, { maxRequests: 20, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
   try {
     const code = request.nextUrl.searchParams.get('code');
 
@@ -217,7 +276,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Invite link deleted',
     });
   } catch (error) {
-    console.error('Error deleting invite link:', error);
+    apiLogger.error('Failed to delete invite link', { error });
     return NextResponse.json(
       { error: 'Failed to delete invite link' },
       { status: 500 }

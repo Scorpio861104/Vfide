@@ -1,8 +1,18 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/api-validation';
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const clientId = request.headers.get('x-forwarded-for') || 'anonymous';
+
+  // Rate limiting
+  const rateLimit = checkRateLimit(`health:${clientId}`, { maxRequests: 30, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+
   try {
     const health = {
       status: 'healthy',

@@ -1,8 +1,12 @@
 /**
  * Staking Pools API - Get LP staking pool information
+ * Enhanced with: validation, rate limiting, secure logging
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateAddress } from '@/lib/validation';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { apiLogger } from '@/lib/logger.service';
 
 interface Pool {
   id: string;
@@ -16,9 +20,31 @@ interface Pool {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 60, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
+    
+    // Validate address if provided
+    if (userAddress) {
+      const addressValidation = validateAddress(userAddress);
+      if (!addressValidation.valid) {
+        return NextResponse.json(
+          { error: `Invalid address: ${addressValidation.error}` },
+          { status: 400 }
+        );
+      }
+    }
 
     // Get pool data from database
     const poolsResult = await query<{

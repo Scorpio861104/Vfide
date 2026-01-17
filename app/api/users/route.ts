@@ -3,6 +3,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateQueryParams, validateRequest, schemas } from '@/lib/api-validation';
+import { checkRateLimit, getClientIdentifier } from '@/lib/rateLimit';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 interface User {
   id: string;
@@ -21,8 +25,18 @@ interface User {
 
 // GET /api/users - Get all users
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`users:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
   try {
     const searchParams = request.nextUrl.searchParams;
+    
+    // Validate pagination parameters
+    const validation = validateQueryParams(searchParams, schemas.pagination);
+    if (!validation.valid) return validation.errorResponse;
+    
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
     const search = searchParams.get('search');
@@ -55,9 +69,9 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error: unknown) {
-    console.error('Error fetching users:', error);
+    apiLogger.error('Error fetching users', { error });
     return NextResponse.json(
-      { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to fetch users' },
       { status: 500 }
     );
   }
@@ -65,14 +79,28 @@ export async function GET(request: NextRequest) {
 
 // POST /api/users - Create or update user
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`users-post:${clientId}`, { maxRequests: 10, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
-    const body = await request.json();
+    // Validate request body
+    const validation = await validateRequest(request, schemas.userProfile);
+    if (!validation.valid) return validation.errorResponse;
+    
+    const body = validation.data;
     const { wallet_address, username, display_name, bio, avatar_url } = body;
 
-    if (!wallet_address) {
+    // Verify authenticated user matches wallet_address
+    if (auth.user?.address.toLowerCase() !== wallet_address.toLowerCase()) {
       return NextResponse.json(
-        { error: 'Wallet address is required' },
-        { status: 400 }
+        { error: 'Cannot update another user\'s profile' },
+        { status: 403 }
       );
     }
 
@@ -112,9 +140,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user });
   } catch (error: unknown) {
-    console.error('Error creating/updating user:', error);
+    apiLogger.error('Error creating/updating user', { error });
     return NextResponse.json(
-      { error: 'Failed to create/update user', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to create/update user' },
       { status: 500 }
     );
   }

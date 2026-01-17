@@ -1,20 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { validateRequest, validateAddress, checkRateLimit } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * POST /api/quests/claim
  * Claim a completed daily quest reward
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`quest-claim:${clientId}`, { maxRequests: 20, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
   try {
     const body = await request.json();
     const { questId, userAddress } = body;
 
-    if (!questId || !userAddress) {
-      return NextResponse.json(
-        { error: 'Quest ID and user address required' },
-        { status: 400 }
-      );
+    // Validate required fields
+    const validation = validateRequest(body, {
+      questId: { required: true, type: 'string' },
+      userAddress: { required: true, type: 'string' }
+    });
+    if (!validation.valid) {
+      return validation.errorResponse;
+    }
+
+    // Validate address format
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) {
+      return addressValidation.errorResponse;
     }
 
     const client = await getClient();
@@ -114,7 +138,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error claiming quest reward:', error);
+    apiLogger.error('Error claiming quest reward', { error });
     return NextResponse.json(
       { error: 'Failed to claim reward' },
       { status: 500 }

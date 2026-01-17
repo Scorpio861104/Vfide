@@ -6,6 +6,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth-middleware';
+import { validateRequest, checkRateLimit } from '@/lib/api-validation';
+import { apiLogger } from '@/services/logger.service';
 
 interface ReactionRequest {
   messageId: string;
@@ -18,8 +21,25 @@ interface ReactionRequest {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`messages-reaction-post:${clientId}`, { maxRequests: 30, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body: ReactionRequest = await request.json();
+
+    // Validation
+    const validation = validateRequest(body, {
+      messageId: { required: true, type: 'string' },
+      conversationId: { required: true, type: 'string' },
+      userAddress: { required: true, type: 'address' }
+    });
+    if (!validation.valid) return validation.errorResponse;
     const { messageId, conversationId, reactionType = 'emoji', emoji, imageUrl, imageName, userAddress } = body;
 
     if (!messageId || !conversationId || !userAddress) {
@@ -162,7 +182,7 @@ export async function POST(request: NextRequest) {
       reactions,
     });
   } catch (error) {
-    console.error('Error updating reaction:', error);
+    apiLogger.error('Error updating reaction', { error });
     return NextResponse.json(
       { error: 'Failed to update reaction' },
       { status: 500 }
@@ -171,8 +191,25 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`messages-reaction-delete:${clientId}`, { maxRequests: 30, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body: ReactionRequest = await request.json();
+
+    // Validation
+    const validation = validateRequest(body, {
+      messageId: { required: true, type: 'string' },
+      conversationId: { required: true, type: 'string' },
+      userAddress: { required: true, type: 'address' }
+    });
+    if (!validation.valid) return validation.errorResponse;
     const { messageId, conversationId, emoji, userAddress } = body;
 
     if (!messageId || !conversationId || !emoji || !userAddress) {
@@ -198,7 +235,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Reaction removed',
     });
   } catch (error) {
-    console.error('Error removing reaction:', error);
+    apiLogger.error('Error removing reaction', { error });
     return NextResponse.json(
       { error: 'Failed to remove reaction' },
       { status: 500 }

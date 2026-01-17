@@ -1,9 +1,22 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/api-validation';
+import { apiLogger } from '@/lib/logger.service';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`rewards:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const { userId } = await params;
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    }
 
     const result = await query(
       `SELECT * FROM user_rewards
@@ -22,7 +35,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       claimed: total - unclaimed
     });
   } catch (error) {
-    console.error('[Rewards GET] Error:', error);
+    apiLogger.error('[Rewards GET] Error', { error });
     return NextResponse.json({ error: 'Failed to fetch rewards' }, { status: 500 });
   }
 }

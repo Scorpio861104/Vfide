@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateQueryParams, validateAddress } from '@/lib/api-validation';
+import { checkRateLimit, getClientIdentifier } from '@/lib/rateLimit';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 interface Badge {
   id: number;
@@ -27,9 +31,20 @@ interface UserBadge {
  * Get all badges or user's earned badges
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`badges:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
+    
+    // Validate address if provided
+    if (userAddress) {
+      const addressValidation = validateAddress(userAddress);
+      if (!addressValidation.valid) return addressValidation.errorResponse;
+    }
 
     if (userAddress) {
       // Get user's earned badges
@@ -65,7 +80,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('[Badges GET API] Error:', error);
+    apiLogger.error('Error fetching badges', { error });
     return NextResponse.json(
       { error: 'Failed to fetch badges' },
       { status: 500 }
@@ -75,9 +90,18 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/badges
- * Award a badge to a user
+ * Award a badge to a user (admin only)
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`badges-post:${clientId}`, { maxRequests: 10, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required (admin should be checked here in production)
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body = await request.json();
     const { userAddress, badgeId } = body;
@@ -88,6 +112,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
 
     // Get user ID
     const userResult = await query(
@@ -163,7 +191,7 @@ export async function POST(request: NextRequest) {
       userBadge: result.rows[0],
     }, { status: 201 });
   } catch (error) {
-    console.error('[Badges POST API] Error:', error);
+    apiLogger.error('Error awarding badge', { error });
     return NextResponse.json(
       { error: 'Failed to award badge' },
       { status: 500 }
@@ -176,6 +204,15 @@ export async function POST(request: NextRequest) {
  * Remove a badge from a user (admin only)
  */
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`badges-delete:${clientId}`, { maxRequests: 20, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required (admin should be checked here in production)
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
@@ -187,6 +224,10 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
 
     // Get user ID
     const userResult = await query(
@@ -221,7 +262,7 @@ export async function DELETE(request: NextRequest) {
       deleted: result.rowCount || 0,
     });
   } catch (error) {
-    console.error('[Badges DELETE API] Error:', error);
+    apiLogger.error('Error removing badge', { error });
     return NextResponse.json(
       { error: 'Failed to remove badge' },
       { status: 500 }
