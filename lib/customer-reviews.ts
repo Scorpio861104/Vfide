@@ -304,10 +304,13 @@ function generateMockReviews(merchantAddress: string): Review[] {
     const rating = Math.floor(Math.random() * 3) + 3; // 3-5 stars mostly
     const hasResponse = Math.random() > 0.4;
 
+    // Generate mock Ethereum address (40 hex chars + 0x prefix = 42 total)
+    const mockAddress = `0x${Math.random().toString(16).slice(2).padEnd(40, '0')}`;
+
     reviews.push({
       id: `review_${i}`,
       merchantAddress,
-      customerAddress: `0x${Math.random().toString(16).slice(2, 42)}`,
+      customerAddress: mockAddress,
       rating,
       title: sampleTitles[Math.floor(Math.random() * sampleTitles.length)],
       comment: sampleComments[Math.floor(Math.random() * sampleComments.length)],

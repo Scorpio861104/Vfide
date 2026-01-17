@@ -99,9 +99,13 @@ export async function convertToStablecoin(
     // TODO: Integrate with DEX aggregator (e.g., 1inch, Uniswap)
     // For now, simulate conversion
 
+    // TODO: Replace with actual DEX integration (1inch, Uniswap, etc.)
+    // WARNING: Mock implementation below - not for production use
+    // Production should use BigNumber libraries for precise calculations
+    
     // Mock exchange rate (1 VFIDE = 0.95 USD)
     const mockRate = 0.95;
-    const vfideNum = parseFloat(vfideAmount);
+    const vfideNum = parseFloat(vfideAmount); // TODO: Use BigNumber for production
     const stablecoinAmount = (vfideNum * mockRate).toFixed(6);
     const actualSlippage = 0.1; // 0.1% slippage
 
@@ -112,7 +116,7 @@ export async function convertToStablecoin(
       stablecoinSymbol: targetStablecoin,
       exchangeRate: mockRate.toString(),
       slippage: actualSlippage,
-      transactionHash: `0x${Math.random().toString(16).slice(2)}`, // Mock tx hash
+      transactionHash: `0x${Math.random().toString(16).slice(2).padStart(64, '0')}`, // Mock tx hash - use crypto.randomUUID() in production
       timestamp: new Date(),
     };
   } catch (error) {
