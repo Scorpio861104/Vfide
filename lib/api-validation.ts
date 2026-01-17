@@ -246,7 +246,7 @@ export const schemas = {
       validateNumberField(v, 'limit', {
         required: false,
         min: 1,
-        max: VALIDATION_CONFIG.MAX_LENGTHS.PROPOSAL_DESCRIPTION,
+        max: VALIDATION_CONFIG.MAX_PAGE_SIZE || 100,
         integer: true,
       }) || 30,
     offset: (v: unknown) =>

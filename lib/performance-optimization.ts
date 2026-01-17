@@ -37,10 +37,42 @@ export function shallowPropsAreEqual<P>(prevProps: P, nextProps: P): boolean {
 
 /**
  * Deep compare props for React.memo
- * Use this when props contain objects or arrays
+ * Uses a simple but reliable comparison
+ * Note: For complex objects, consider using a dedicated library
  */
 export function deepPropsAreEqual<P>(prevProps: P, nextProps: P): boolean {
-  return JSON.stringify(prevProps) === JSON.stringify(nextProps);
+  if (prevProps === nextProps) return true;
+  
+  if (typeof prevProps !== 'object' || typeof nextProps !== 'object') {
+    return false;
+  }
+  
+  if (prevProps === null || nextProps === null) {
+    return prevProps === nextProps;
+  }
+  
+  const prevKeys = Object.keys(prevProps as object);
+  const nextKeys = Object.keys(nextProps as object);
+  
+  if (prevKeys.length !== nextKeys.length) {
+    return false;
+  }
+  
+  // Recursive comparison for nested objects
+  for (const key of prevKeys) {
+    const prevVal = (prevProps as Record<string, unknown>)[key];
+    const nextVal = (nextProps as Record<string, unknown>)[key];
+    
+    if (typeof prevVal === 'object' && typeof nextVal === 'object') {
+      if (!deepPropsAreEqual(prevVal, nextVal)) {
+        return false;
+      }
+    } else if (prevVal !== nextVal) {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 /**
@@ -107,35 +139,34 @@ export function useMemoizedCallback<T extends (...args: never[]) => unknown>(
 
 /**
  * Memoize expensive calculation with cache
+ * Uses a simple string key based on input
  */
-export function createMemoizedCalculation<TInput, TOutput>(
+export function createMemoizedCalculation<TInput extends string | number, TOutput>(
   calculate: (input: TInput) => TOutput,
   maxCacheSize = 10
 ): (input: TInput) => TOutput {
-  const cache = new Map<string, TOutput>();
-  const accessOrder: string[] = [];
+  const cache = new Map<TInput, TOutput>();
+  const accessOrder: TInput[] = [];
 
   return (input: TInput) => {
-    const key = JSON.stringify(input);
-
-    if (cache.has(key)) {
+    if (cache.has(input)) {
       // Move to end (most recently used)
-      const index = accessOrder.indexOf(key);
+      const index = accessOrder.indexOf(input);
       if (index > -1) {
         accessOrder.splice(index, 1);
       }
-      accessOrder.push(key);
-      return cache.get(key)!;
+      accessOrder.push(input);
+      return cache.get(input)!;
     }
 
     const result = calculate(input);
-    cache.set(key, result);
-    accessOrder.push(key);
+    cache.set(input, result);
+    accessOrder.push(input);
 
     // Evict oldest if cache is full
     if (cache.size > maxCacheSize) {
       const oldest = accessOrder.shift();
-      if (oldest) {
+      if (oldest !== undefined) {
         cache.delete(oldest);
       }
     }
