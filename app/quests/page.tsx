@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ApiErrorBoundary } from '@/components/error/ApiErrorBoundary';
 import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
 import DailyRewardsWidget from '@/components/gamification/DailyRewardsWidget';
 import OnboardingChecklist from '@/components/gamification/OnboardingChecklist';
@@ -58,15 +59,19 @@ export default function QuestsPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeSection === 'quests' ? (
-          <DailyQuestsPanel />
-        ) : (
-          <DailyRewardsWidget />
-        )}
+        <ApiErrorBoundary>
+          {activeSection === 'quests' ? (
+            <DailyQuestsPanel />
+          ) : (
+            <DailyRewardsWidget />
+          )}
+        </ApiErrorBoundary>
       </div>
 
       {/* Onboarding Checklist (floating) */}
-      <OnboardingChecklist />
+      <ApiErrorBoundary>
+        <OnboardingChecklist />
+      </ApiErrorBoundary>
     </div>
   );
 }
