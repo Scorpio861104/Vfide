@@ -14,6 +14,7 @@ import { useProofScore } from '@/lib/vfide-hooks'
 import { getAllBadges, getBadgeCategories } from '@/lib/badge-registry'
 import { UserStats, getBadgesWithProgress, EligibilityResult } from '@/lib/badge-eligibility'
 import { BadgeDisplay } from '@/components/badge/BadgeDisplay'
+import { MetallicBadgeCard } from '@/components/badge/MetallicBadgeCard'
 import { BadgeMetadata } from '@/lib/badge-registry'
 import { 
   Award, 
@@ -316,109 +317,17 @@ function BadgeSection({
         <span className="text-[#A0A0A5]">({badges.length})</span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {badges.map(({ badge, eligibility }) => (
-          <BadgeCard
+          <MetallicBadgeCard
             key={badge.id}
             badge={badge}
             eligibility={eligibility}
             isEarned={earnedIds.has(badge.id)}
-            onClaim={onClaim}
+            onClaim={onClaim ? () => onClaim(badge.id) : undefined}
             isClaiming={isMinting && claimingId === badge.id}
-            claimSuccess={mintSuccess && claimingId === badge.id}
-            showProgress={showProgress}
-            isLocked={isLocked}
           />
         ))}
-      </div>
-    </div>
-  )
-}
-
-function BadgeCard({ 
-  badge, 
-  eligibility, 
-  isEarned, 
-  onClaim,
-  isClaiming,
-  claimSuccess,
-  showProgress,
-  isLocked
-}: {
-  badge: BadgeMetadata
-  eligibility: EligibilityResult
-  isEarned: boolean
-  onClaim?: (id: `0x${string}`) => void
-  isClaiming?: boolean
-  claimSuccess?: boolean
-  showProgress?: boolean
-  isLocked?: boolean
-}) {
-  return (
-    <div className={`bg-[#2A2A2F] border rounded-xl p-4 ${
-      isEarned ? 'border-[#00FF88]' : 
-      eligibility.eligible ? 'border-[#00F0FF]' : 
-      'border-[#3A3A3F]'
-    } ${isLocked ? 'opacity-60' : ''}`}>
-      <div className="relative mb-3">
-        <BadgeDisplay badgeId={badge.id} size="md" />
-        {isLocked && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
-            <Lock className="w-8 h-8 text-[#A0A0A5]" />
-          </div>
-        )}
-      </div>
-
-      <div className="text-center space-y-2">
-        <div className="font-bold text-[#F5F3E8]">{badge.displayName}</div>
-        <div className="text-xs text-[#A0A0A5]">+{badge.points} points</div>
-        
-        {showProgress && eligibility.progress > 0 && !isEarned && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-[#A0A0A5]">Progress</span>
-              <span className="text-[#00F0FF]">{Math.round(eligibility.progress)}%</span>
-            </div>
-            <div className="h-2 bg-[#1A1A1D] rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#00F0FF] to-[#00FF88] transition-all duration-500"
-                style={{ width: `${eligibility.progress}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {!isEarned && (
-          <div className="text-xs text-[#707075] min-h-[3rem]">
-            {eligibility.reason}
-          </div>
-        )}
-
-        {isEarned && (
-          <div className="flex items-center justify-center gap-1 text-[#00FF88] text-sm font-semibold">
-            <CheckCircle className="w-4 h-4" />
-            Earned
-          </div>
-        )}
-
-        {!isEarned && eligibility.eligible && onClaim && (
-          <button
-            onClick={() => onClaim(badge.id)}
-            disabled={isClaiming || claimSuccess}
-            className="w-full px-4 py-2 bg-[#00F0FF] hover:bg-[#00D0DD] disabled:bg-[#3A3A3F] disabled:text-[#6A6A6F] text-[#1A1A1D] font-bold rounded-lg transition-colors text-sm"
-          >
-            {claimSuccess ? (
-              <>
-                <CheckCircle className="w-4 h-4 inline mr-1" />
-                Claimed!
-              </>
-            ) : isClaiming ? (
-              'Claiming...'
-            ) : (
-              'Claim Badge'
-            )}
-          </button>
-        )}
       </div>
     </div>
   )
