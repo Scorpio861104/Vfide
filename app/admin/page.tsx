@@ -869,7 +869,7 @@ export default function AdminPanel() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">VFIDE Owner Control Panel</h1>
-              <p className="text-gray-300">Contract: <span className="font-mono text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none inline-block align-bottom">{TOKEN_ADDRESS}</span></p>
+              <p className="text-gray-300">Contract: <span className="font-mono text-xs sm:text-sm truncate max-w-full sm:max-w-none inline-block align-bottom break-all">{TOKEN_ADDRESS}</span></p>
             </div>
             <div className="bg-green-500/20 border border-green-500 rounded-lg px-4 py-2">
               <p className="text-green-400 text-sm font-bold">👑 Owner Access</p>

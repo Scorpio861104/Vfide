@@ -449,7 +449,7 @@ function MembersTab() {
                 </div>
                 <div>
                   <div className="text-white font-bold">{member.name}</div>
-                  <div className="text-xs text-gray-400 font-mono truncate max-w-[120px] sm:max-w-[200px]">{member.address}</div>
+                  <div className="text-xs text-gray-400 font-mono truncate max-w-full sm:max-w-[200px] break-all">{member.address}</div>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">

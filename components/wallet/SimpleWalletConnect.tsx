@@ -315,7 +315,7 @@ export function SimpleWalletConnect() {
                         )}
                       </button>
                     </span>
-                    <span className="hidden xs:inline sm:hidden truncate max-w-[80px]">{account.displayName}</span>
+                    <span className="hidden xs:inline sm:hidden truncate max-w-full">{account.displayName}</span>
                     <span className="xs:hidden">👤</span>
                   </motion.button>
                 </div>
