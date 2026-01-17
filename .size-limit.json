@@ -1,26 +1,22 @@
 [
   {
-    "name": "Client-side bundle",
-    "path": ".next/static/**/*.js",
-    "limit": "500 KB",
-    "webpack": false
+    "name": "Main App Bundle",
+    "path": ".next/static/chunks/pages/_app-*.js",
+    "limit": "150 KB"
   },
   {
-    "name": "Main page",
-    "path": ".next/static/chunks/pages/index*.js",
-    "limit": "150 KB",
-    "webpack": false
+    "name": "Homepage",
+    "path": ".next/static/chunks/pages/index-*.js",
+    "limit": "50 KB"
   },
   {
-    "name": "Wallet components",
-    "path": ".next/static/chunks/pages/wallet*.js",
-    "limit": "200 KB",
-    "webpack": false
+    "name": "Dashboard",
+    "path": ".next/static/chunks/pages/dashboard-*.js",
+    "limit": "75 KB"
   },
   {
-    "name": "Social components",
-    "path": ".next/static/chunks/pages/social*.js",
-    "limit": "180 KB",
-    "webpack": false
+    "name": "Wallet Integration",
+    "path": ".next/static/chunks/*wallet*.js",
+    "limit": "100 KB"
   }
 ]
