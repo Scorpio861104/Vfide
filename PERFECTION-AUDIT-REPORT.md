@@ -3,6 +3,8 @@
 **Requested By:** @Scorpio861104  
 **Objective:** Ensure VFIDE is "100% perfect with what it is, what it does, and what it's trying to do"
 
+> **Note:** This audit report was originally created as part of PR #45. Many of the documentation issues identified in this report (such as the ProofScore tier table mismatch) have since been resolved in the main branch through subsequent PRs. This report is included for historical reference and to document the comprehensive platform audit findings.
+
 ---
 
 ## Executive Summary
