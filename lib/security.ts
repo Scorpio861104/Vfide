@@ -198,21 +198,31 @@ export const XSSProtection = {
   },
   
   /**
-   * Decode HTML entities
+   * Decode HTML entities - using safer DOMParser
    */
   decodeHTML(str: string): string {
-    const div = document.createElement('div');
-    div.innerHTML = str;
-    return div.textContent || '';
+    if (typeof DOMParser !== 'undefined') {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(str, 'text/html');
+      return doc.documentElement.textContent || '';
+    }
+    // Fallback for environments without DOMParser
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = str;
+    return textarea.value;
   },
   
   /**
-   * Remove all HTML tags
+   * Remove all HTML tags - using safer DOMParser
    */
   stripHTML(str: string): string {
-    const div = document.createElement('div');
-    div.innerHTML = str;
-    return div.textContent || '';
+    if (typeof DOMParser !== 'undefined') {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(str, 'text/html');
+      return doc.documentElement.textContent || '';
+    }
+    // Fallback: use a safer regex-based approach
+    return str.replace(/<[^>]*>/g, '');
   },
   
   /**
