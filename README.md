@@ -557,9 +557,10 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 - **Governance Voting** - Vote on DAO proposals
 - **Proposal Creation** - Council members can create proposals
 - **QR Code Payments** - Merchant payment QR generation with amount/order tracking
+- **Badge System** - Badge gallery, claiming interface, and NFT minting
 
 ### 🚧 Beta / In Development
-- **Badge System** - Achievement tracking and rewards
+- **Badge Auto-Detection** - Automatic badge eligibility tracking (requires backend)
 - **Council Elections** - Candidate nominations and voting
 
 ### 📅 Coming Soon
