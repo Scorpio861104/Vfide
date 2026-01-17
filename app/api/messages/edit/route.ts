@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { validateRequest, checkRateLimit } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 interface MessageEditRequest {
   messageId: string;
@@ -9,17 +12,34 @@ interface MessageEditRequest {
 }
 
 export async function PATCH(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`message-edit:${clientId}`, { maxRequests: 20, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
   const client = await getClient();
   
   try {
     const body: MessageEditRequest = await request.json();
     const { messageId, conversationId, newContent, userAddress } = body;
 
-    if (!messageId || !conversationId || !newContent || !userAddress) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+    // Validate all required fields
+    const validation = validateRequest(body, {
+      messageId: { required: true, type: 'string' },
+      conversationId: { required: true, type: 'string' },
+      newContent: { required: true, type: 'string' },
+      userAddress: { required: true, type: 'string' }
+    });
+    if (!validation.valid) {
+      return validation.errorResponse;
     }
 
     await client.query('BEGIN');
@@ -71,7 +91,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, message: updateResult.rows[0] });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('[Message Edit] Error:', error);
+    apiLogger.error('[Message Edit] Error', { error });
     return NextResponse.json({ error: 'Failed to edit message' }, { status: 500 });
   } finally {
     client.release();
