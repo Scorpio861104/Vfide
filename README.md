@@ -47,7 +47,7 @@ Your **ProofScore** is a number from 0 to 10,000 that represents your reputation
 
 > **New users start at 5,000 (Neutral)** — you have a clean slate to build from!
 > 
-> **Note:** Tier boundaries are exclusive at the upper end (e.g., 3,499 is the max for Risky, 3,500 starts Low Trust). To vote on proposals, you need at least 5,400 score. To become a merchant, you need at least 5,600 score.
+> **Understanding Score Ranges:** Score ranges use the format [minimum, maximum) where the maximum is not included. For example, the Risky tier includes scores from 0 to 3,499. When you reach exactly 3,500, you move to Low Trust. To vote on proposals, you need at least 5,400 score. To become a merchant, you need at least 5,600 score.
 
 ### How Fees Work
 
