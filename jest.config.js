@@ -83,7 +83,7 @@ const customJestConfig = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/__mocks__/',
-    '<rootDir>/__tests__/(?!(contract-interactions|network-resilience|security|integration|multi-chain|load-stress|accessibility|websocket|storage|error-boundary)\\.test\\.tsx?)',
+    '<rootDir>/__tests__/(?!(contract-interactions|network-resilience|security|integration|multi-chain|load-stress|accessibility|websocket|storage|error-boundary|crypto-social-integration)\\.test\\.tsx?)',
     '<rootDir>/hooks/__tests__/.*Extended\\.test\\.[jt]sx?$',
     '<rootDir>/hooks/__tests__/.*Real\\.test\\.[jt]sx?$',
     '<rootDir>/playwright/',
