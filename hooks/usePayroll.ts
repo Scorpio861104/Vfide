@@ -109,11 +109,11 @@ export function usePayroll() {
 
       const allIds = new Set<bigint>();
       
-      if (payerStreamIds) {
-        payerStreamIds.forEach(id => allIds.add(id));
+      if (payerStreamIds && Array.isArray(payerStreamIds)) {
+        (payerStreamIds as bigint[]).forEach(id => allIds.add(id));
       }
-      if (payeeStreamIds) {
-        payeeStreamIds.forEach(id => allIds.add(id));
+      if (payeeStreamIds && Array.isArray(payeeStreamIds)) {
+        (payeeStreamIds as bigint[]).forEach(id => allIds.add(id));
       }
 
       if (allIds.size === 0) {
@@ -263,7 +263,8 @@ export function usePayroll() {
   // Error handling
   useEffect(() => {
     if (writeError) {
-      setError(parseContractError(writeError));
+      const parsedError = parseContractError(writeError);
+      setError(parsedError.userMessage);
     }
   }, [writeError]);
 

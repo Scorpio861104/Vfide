@@ -175,11 +175,19 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
+      const user = userResult.rows[0];
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
       const result = await query(
         `UPDATE notifications 
          SET is_read = true, updated_at = NOW()
          WHERE user_id = $1 AND is_read = false`,
-        [userResult.rows[0].id]
+        [user.id]
       );
 
       return NextResponse.json({
@@ -237,9 +245,17 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
+      const user = userResult.rows[0];
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
       const result = await query(
         'DELETE FROM notifications WHERE user_id = $1',
-        [userResult.rows[0].id]
+        [user.id]
       );
 
       return NextResponse.json({

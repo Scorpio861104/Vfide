@@ -308,8 +308,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const user1Id = user1Result.rows[0].id;
-    const user2Id = user2Result.rows[0].id;
+    const user1Row = user1Result.rows[0];
+    const user2Row = user2Result.rows[0];
+    if (!user1Row || !user2Row) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const user1Id = user1Row.id;
+    const user2Id = user2Row.id;
 
     // Delete friendship
     const result = await query(

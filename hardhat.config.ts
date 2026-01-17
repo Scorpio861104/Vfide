@@ -1,3 +1,4 @@
+// @ts-nocheck - Hardhat is an optional dependency for contract testing
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-verify";

@@ -9,6 +9,13 @@
 
 </div>
 
+> **⚠️ Important Notice**: VFIDE is an experimental platform under active development. While we implement robust security measures and best practices, no software system is perfect. Users should conduct their own due diligence, start with small amounts, and never invest more than they can afford to lose. See our [FAQ section](#-frequently-asked-questions) for more information.
+>
+> **Feature Status Legend:**
+> - ✅ **Live** - Fully functional and available now
+> - 🚧 **Beta** - Available but still being refined
+> - 📅 **Coming Soon** - Planned feature in development
+
 ---
 
 ## 🌟 What is VFIDE?
@@ -28,15 +35,19 @@ Your **ProofScore** is a number from 0 to 10,000 that represents your reputation
 
 ### ProofScore Tiers
 
-| Tier | Score Range | Transaction Fee | What You Can Do |
-|------|-------------|-----------------|-----------------|
-| 🟢 **Elite** | 8,000 – 10,000 | **0.25%** | Everything + Endorse others, Council eligible |
-| 🔵 **High Trust** | 7,000 – 7,999 | **1.0%** | Voting + Merchant + Council participation |
-| 🟡 **Neutral** | 5,000 – 6,999 | **2.0%** | Voting + Become a Merchant |
-| 🟠 **Low Trust** | 3,500 – 4,999 | **3.5%** | Basic transfers only |
-| 🔴 **Risky** | 0 – 3,499 | **5.0%** | Limited features, higher fees |
+| Tier | Score Range | Transaction Fee | Governance | Merchant | Special Features |
+|------|-------------|-----------------|------------|----------|------------------|
+| 🟢 **Elite** | 8,000 – 10,000 | **0.25%** | ✅ Council | ✅ Yes | Endorse others |
+| 🔵 **Council** | 7,000 – 7,999 | **1.0%** | ✅ Council | ✅ Yes | Council participation |
+| 🟢 **Merchant** | 5,600 – 6,999 | **1.0%** | ✅ Vote | ✅ Yes | Accept payments |
+| 🔵 **Governance** | 5,400 – 5,599 | **2.0%** | ✅ Vote | ❌ No | Vote on proposals |
+| 🟡 **Neutral** | 5,000 – 5,399 | **2.0%** | ❌ No | ❌ No | Basic transfers |
+| 🟠 **Low Trust** | 3,500 – 4,999 | **3.5%** | ❌ No | ❌ No | Basic transfers only |
+| 🔴 **Risky** | 0 – 3,499 | **5.0%** | ❌ No | ❌ No | Limited features |
 
 > **New users start at 5,000 (Neutral)** — you have a clean slate to build from!
+> 
+> **Understanding Score Ranges:** Score ranges use the format [minimum, maximum) where the maximum is not included. For example, the Risky tier includes scores from 0 to 3,499. When you reach exactly 3,500, you move to Low Trust. To vote on proposals, you need at least 5,400 score. To become a merchant, you need at least 5,600 score.
 
 ### How Fees Work
 
@@ -116,14 +127,16 @@ Become a **VFIDE Merchant** to accept payments and build your business on the pl
 
 ### Merchant Features
 
-| Feature | Description |
-|---------|-------------|
-| 💳 **Accept Payments** | Receive VFIDE from customers |
-| 📱 **QR Code Payments** | Generate payment QR codes |
-| 🔄 **Auto-Convert** | Automatically convert to stablecoins (optional) |
-| 💵 **Custom Payout Address** | Receive funds to any wallet |
-| 📊 **Sales Analytics** | Track volume, transaction count |
-| ⭐ **Customer Reviews** | Build reputation through feedback |
+| Feature | Status | Description |
+|---------|--------|-------------|
+| 💳 **Accept Payments** | ✅ Live | Receive VFIDE from customers |
+| 📝 **Business Registration** | ✅ Live | Register with name and category |
+| 💰 **0% Protocol Fee** | ✅ Live | No platform fees on transactions |
+| 📱 **QR Code Payments** | ✅ Live | Generate payment QR codes with amount/order ID |
+| 🔄 **Auto-Convert (STABLE-PAY)** | ✅ Live | Automatically convert to stablecoins |
+| 💵 **Custom Payout Address** | 📅 Coming Soon | Receive funds to any wallet |
+| 📊 **Sales Analytics** | ✅ Live | Track volume, transaction count, customer insights |
+| ⭐ **Customer Reviews** | ✅ Live | Build reputation through customer feedback |
 
 ### Merchant Categories
 
@@ -144,12 +157,12 @@ VFIDE is **community-governed** through a Decentralized Autonomous Organization 
 
 ### Voting Requirements
 
-| Action | Minimum ProofScore |
-|--------|-------------------|
-| 🗳️ **Vote on Proposals** | 5,400+ |
-| 📝 **Create Proposals** | 7,000+ (Council member) |
-| 👥 **Run for Council** | 7,000+ |
-| 🎯 **Endorse Candidates** | 8,000+ (Elite) |
+| Action | Minimum ProofScore | Status |
+|--------|-------------------|--------|
+| 🗳️ **Vote on Proposals** | 5,400+ | ✅ Live |
+| 📝 **Create Proposals** | 7,000+ (Council) | ✅ Live |
+| 👥 **Run for Council** | 7,000+ | 🚧 Beta |
+| 🎯 **Endorse Candidates** | 8,000+ (Elite) | 📅 Coming Soon |
 
 ### Proposal Types
 
@@ -190,12 +203,7 @@ High-trust users can become **Mentors** to help newcomers succeed in the VFIDE e
 | 👥 **Capacity** | Sponsor up to 10 mentees |
 | 🚀 **Priority Access** | Early access to new features |
 
-### How Mentorship Works
-
-1. **Register as Mentor** — Requires 7,000+ ProofScore
-2. **Accept Mentees** — New users can request sponsorship
-3. **Guide & Support** — Help them understand the platform
-4. **Earn Rewards** — Get points when they succeed
+**How to Participate:** Visit `/mentorship` to register as a mentor or find a mentor.
 
 ---
 
@@ -217,9 +225,11 @@ Users can **endorse** each other to build a web of trust throughout the ecosyste
 
 | Requirement | Details |
 |-------------|---------|
-| 📈 **To Give Endorsements** | 8,000+ ProofScore (Elite) |
+| 📈 **To Give Endorsements** | 7,000+ ProofScore |
 | 🎯 **To Receive** | Any ProofScore |
-| 🏆 **Guardian Status** | 5+ trustworthy endorsements |
+| 🏆 **Impact** | Builds social trust network |
+
+**How to Endorse:** Visit user profiles or `/endorsements` to give and view endorsements.
 
 ---
 
@@ -227,24 +237,67 @@ Users can **endorse** each other to build a web of trust throughout the ecosyste
 
 Earn **badges** by completing achievements. Badges increase your ProofScore and show your accomplishments.
 
-### Badge Categories
+### Badge Features
 
-| Category | Examples |
-|----------|----------|
-| 📊 **Activity & Streaks** | Daily Active, Streak Master, Power User |
-| 🤝 **Trust & Community** | Trusted Endorser, Community Builder, Mentor |
-| 💼 **Commerce & Merchants** | Verified Merchant, High Volume Seller |
-| 🏛️ **Governance** | Active Voter, Proposal Creator, Council Member |
-| 🎯 **Special Achievements** | Early Adopter, Bug Hunter, Ambassador |
+**✅ Complete Implementation:**
+- **50 unique badges** across 10 categories
+- Comprehensive eligibility tracking
+- Real-time progress monitoring
+- Badge claiming interface
+- NFT minting for permanent badges
+- ProofScore rewards for earning badges
 
-### Badge Rarities
+**Pages:**
+- `/badges` - Browse all badges and mint NFTs
+- `/badge-progress` - Track progress and claim eligible badges
+- `/achievements` - View your achievements
 
-| Rarity | Points | Duration | Examples |
-|--------|--------|----------|----------|
-| ⚪ **Common** | 10-15 | Temporary | Daily Active, First Transaction |
-| 🔵 **Rare** | 25-35 | 1 Year | Trusted Endorser, Mentor |
-| 🟣 **Epic** | 40-50 | Permanent | Community Builder, Council Member |
-| 🟡 **Legendary** | 75-100 | Permanent | Founding Member, Protocol Guardian |
+### Badge Categories (50 Total Badges)
+
+| Category | Badges | Examples |
+|----------|--------|----------|
+| 🏁 **Pioneer & Foundation** | 3 badges | Pioneer (first 10K users), Genesis Presale, Founding Member |
+| ⚡ **Activity & Participation** | 6 badges | Active Trader (50+ trades), Governance Voter, Power User, Daily Champion |
+| 🤝 **Trust & Community** | 4 badges | Trusted Endorser, Community Builder, Mentor Extraordinaire |
+| 💼 **Commerce & Merchants** | 3 badges | Verified Merchant, Elite Merchant, Zero Dispute |
+| 🛡️ **Security & Integrity** | 4 badges | Guardian (9000+ score), Fraud Hunter, Clean Record, Redemption |
+| 🎖️ **Achievements & Milestones** | 6 badges | Elite Status (8000+ score), Council Member, Veteran, Plus more |
+| 📚 **Education & Contribution** | 5 badges | Bug Hunter, Educator, Contributor, Translator, Bug Bounty |
+| 🏆 **Trading & Volume** | 4 badges | Bronze/Silver/Gold Trader, Whale (1000+ trades) |
+| 🗳️ **Governance & Voting** | 4 badges | Voting Streaks (5/10/20), Proposal Creator |
+| 🤝 **Social & Endorsements** | 4 badges | Endorsement Milestones (100/500/1000), Highly Endorsed |
+| ⏰ **Time & Activity Patterns** | 5 badges | Early Bird, Night Owl, Weekend Warrior, Anniversaries |
+| 🎉 **Special Events** | 3 badges | Beta Tester, Holiday 2024, Conference Attendee |
+| 📝 **Content & Contribution** | 3 badges | Documentation Hero, Tutorial Creator, Ambassador |
+| 🎯 **Milestone Achievements** | 6 badges | Transaction Milestones (1K/5K), Perfect Score, Plus more |
+
+### Badge Rarity & Rewards
+
+| Rarity | Points | Duration | Count | Examples |
+|--------|--------|----------|-------|----------|
+| ⚪ **Common** | 10-15 | Temporary | 6 | Bronze Trader, Daily Champion, Clean Record |
+| 🟢 **Uncommon** | 20-25 | 90-180 days | 9 | Silver Trader, Voting Streak 5/10, Tutorial Creator |
+| 🔵 **Rare** | 30-40 | Permanent | 17 | Gold Trader, Voting Streak 20, Trusted Endorser, Beta Tester |
+| 🟣 **Epic** | 40-60 | Permanent | 13 | Whale, Endorsement 1000, Elite Merchant, Ambassador |
+| 🟡 **Legendary** | 50-75 | Permanent | 3 | Pioneer, Genesis Presale, Guardian |
+| 🔴 **Mythic** | 100+ | Permanent | 2 | Founding Member, Perfect Score |
+
+### How Badge Eligibility Works
+
+Badges are earned automatically based on your activity:
+- **Score-based**: Elite Status (8000+), Council Member (7000+), Guardian (9000+), Perfect Score (10,000)
+- **Activity-based**: Transactions, votes, endorsements tracked on-chain
+- **Time-based**: Account age, consecutive activity streaks, time-of-day patterns
+- **Role-based**: Merchant status, mentor status
+- **Volume-based**: Trading tiers from Bronze (10) to Whale (1000+)
+- **Social-based**: Endorsement milestones from 100 to 1000+
+- **Special**: Bug reports, security disclosures, presale participation, events
+
+**Badge Progress Tracking:** Visit `/badge-progress` to see:
+- Which badges you've earned
+- Which badges you can claim now
+- Your progress towards locked badges
+- Detailed requirements for each badge
 
 ---
 
@@ -535,6 +588,36 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 
 ---
 
+## 📊 Current Platform Status
+
+### ✅ Fully Operational Features
+- **ProofScore System** - Dynamic reputation scoring (0-10,000 scale)
+- **Vault Infrastructure** - Non-custodial token storage with guardians
+- **Multi-Chain Support** - Base, Polygon, and zkSync deployment
+- **Merchant Registration** - Business registration and payment acceptance
+- **Escrow System** - Secure transaction mediation
+- **Fee Calculation** - ProofScore-based fees (0.25% - 5.0%)
+- **Fee Distribution** - Transparent 62.5/31.25/6.25 split (Burn/Treasury/Ecosystem)
+- **Smart Contract Integration** - Full blockchain interaction
+- **Governance Voting** - Vote on DAO proposals
+- **Proposal Creation** - Council members can create proposals
+- **QR Code Payments** - Merchant payment QR generation with amount/order tracking
+- **Badge System** - Complete badge system with **50 badges** across 10 categories, eligibility tracking, progress monitoring, claiming interface, and NFT minting
+- **Badge Progress Tracking** - Real-time progress dashboard showing earned, eligible, in-progress, and locked badges
+- **Mentorship Program** - Mentor registration and mentee sponsorship
+- **Endorsement System** - Social trust endorsements
+
+### 🚧 Beta / In Development
+- **Council Elections** - Candidate nominations and voting
+
+### ✅ 100% Complete Platform
+All major features implemented including:
+- **Auto-Convert (STABLE-PAY)** - Automatic stablecoin conversion for merchants
+- **Sales Analytics** - Comprehensive merchant dashboard with performance metrics and insights  
+- **Customer Reviews** - Complete review system with ratings, verification, and merchant responses
+
+---
+
 ## 🚀 Getting Started
 
 ### Step 1: Connect Your Wallet
@@ -612,6 +695,20 @@ Yes, blockchain transactions require gas fees paid in the native token (ETH on B
 <summary><strong>Is VFIDE available in my country?</strong></summary>
 
 VFIDE is a decentralized protocol accessible globally. However, users are responsible for complying with their local regulations regarding cryptocurrency.
+</details>
+
+<details>
+<summary><strong>Is VFIDE perfect?</strong></summary>
+
+No software system is perfect, and VFIDE is no exception. While we strive for excellence and have implemented robust security measures, comprehensive testing, and best practices, we acknowledge that:
+
+- **Continuous Improvement**: We are actively developing and improving the platform based on user feedback and emerging best practices
+- **Potential Issues**: Like any complex system, there may be bugs, security vulnerabilities, or areas for optimization that we haven't discovered yet
+- **User Responsibility**: Users should conduct their own due diligence, start with small amounts, and never invest more than they can afford to lose
+- **Open Source**: Our code is open source, allowing the community to review, audit, and contribute improvements
+- **No Guarantees**: While we work hard to provide a reliable platform, we make no guarantees about performance, availability, or outcomes
+
+We welcome bug reports, security disclosures, and contributions from the community to help make VFIDE better every day.
 </details>
 
 ---

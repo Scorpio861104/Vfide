@@ -119,6 +119,47 @@ export default function AboutPage() {
               </motion.div>
             </div>
 
+            {/* Fee Distribution Transparency */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-8 mb-12"
+            >
+              <h2 className="text-3xl font-[family-name:var(--font-display)] font-bold text-[#00F0FF] mb-6">
+                Fee Distribution
+              </h2>
+              <p className="text-lg text-[#F5F3E8] leading-relaxed mb-6">
+                VFIDE transaction fees are based on your ProofScore (0.25% - 5.0%). 
+                These fees are automatically distributed on-chain by the Revenue Splitter smart contract:
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-[#1A1A1D] border border-[#00F0FF]/30 rounded-lg p-6 text-center">
+                  <div className="text-4xl font-bold text-[#00F0FF] mb-2">62.5%</div>
+                  <div className="text-sm text-[#A0A0A5] mb-2">Burned Forever</div>
+                  <p className="text-xs text-[#707075]">Tokens permanently removed from circulation, making VFIDE deflationary</p>
+                </div>
+                
+                <div className="bg-[#1A1A1D] border border-[#00FF88]/30 rounded-lg p-6 text-center">
+                  <div className="text-4xl font-bold text-[#00FF88] mb-2">31.25%</div>
+                  <div className="text-sm text-[#A0A0A5] mb-2">Sanctum Treasury</div>
+                  <p className="text-xs text-[#707075]">Funds platform development, security audits, and infrastructure</p>
+                </div>
+                
+                <div className="bg-[#1A1A1D] border border-[#FFD700]/30 rounded-lg p-6 text-center">
+                  <div className="text-4xl font-bold text-[#FFD700] mb-2">6.25%</div>
+                  <div className="text-sm text-[#A0A0A5] mb-2">Ecosystem Fund</div>
+                  <p className="text-xs text-[#707075]">Supports grants, partnerships, and community initiatives</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-[#707075] mt-6 text-center">
+                <strong>Note:</strong> This distribution is handled automatically by the Revenue Splitter smart contract. 
+                All transactions are transparent and verifiable on the blockchain.
+              </p>
+            </motion.div>
+
             {/* Philosophy */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}

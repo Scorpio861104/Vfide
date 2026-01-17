@@ -276,7 +276,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Story not found' }, { status: 404 });
     }
 
-    if (ownerCheck.rows[0].wallet_address.toLowerCase() !== authorId.toLowerCase()) {
+    const storyOwner = ownerCheck.rows[0];
+    if (!storyOwner || storyOwner.wallet_address.toLowerCase() !== authorId.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
