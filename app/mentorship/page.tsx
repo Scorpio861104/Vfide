@@ -36,7 +36,7 @@ export default function MentorshipPage() {
     <>
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Hero */}
-        <section className="py-20 bg-linear-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+        <section className="py-20 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
           <div className="container mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -193,7 +193,7 @@ export default function MentorshipPage() {
                   </div>
 
                   {/* How It Works */}
-                  <div className="bg-linear-to-br from-[#00F0FF]/10 to-[#0080FF]/10 border-2 border-[#00F0FF]/30 rounded-xl p-6">
+                  <div className="bg-gradient-to-br from-[#00F0FF]/10 to-[#0080FF]/10 border-2 border-[#00F0FF]/30 rounded-xl p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <Info className="w-5 h-5 text-[#00F0FF]" />
                       <h3 className="text-lg font-bold text-[#00F0FF]">How It Works</h3>

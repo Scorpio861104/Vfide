@@ -23,7 +23,13 @@ export function BadgeClaiming() {
   const [claimingBadgeId, setClaimingBadgeId] = useState<`0x${string}` | null>(null)
 
   const allBadges = getAllBadges()
-  const earnedBadgeIds = new Set(tokenIds.map(id => `0x${BigInt(id).toString(16)}`))
+  
+  // Utility: Convert token ID to badge ID
+  const convertTokenIdToBadgeId = (id: bigint): `0x${string}` => {
+    return `0x${id.toString(16).padStart(64, '0')}` as `0x${string}`
+  }
+  
+  const earnedBadgeIds = new Set(tokenIds.map(convertTokenIdToBadgeId))
 
   // Filter badges into categories
   const eligibleBadges = allBadges.filter(badge => {
@@ -37,6 +43,11 @@ export function BadgeClaiming() {
   })
 
   const handleClaim = (badgeId: `0x${string}`) => {
+    // Validate badge ID format
+    if (!badgeId || !badgeId.startsWith('0x') || badgeId.length !== 66) {
+      console.error('Invalid badge ID format')
+      return
+    }
     setClaimingBadgeId(badgeId)
     mintBadge(badgeId)
   }
@@ -163,33 +174,36 @@ function LockedBadgeCard({ badge }: { badge: BadgeMetadata }) {
 }
 
 /**
- * Simple eligibility check based on ProofScore
- * In a production system, this would query the blockchain for actual eligibility
+ * Check badge eligibility based on structured criteria
+ * In production, this should query the blockchain for actual eligibility
+ * 
+ * @param badge Badge metadata
+ * @param userScore User's ProofScore
+ * @returns true if user is eligible to claim the badge
  */
 function checkEligibility(badge: BadgeMetadata, userScore: number): boolean {
-  // Simple heuristic based on badge points and user score
-  // For demonstration purposes - actual eligibility should come from smart contract
+  // For demonstration: use badge points as a proxy for required score
+  // In production, each badge should have explicit eligibility criteria
   
-  const requirement = badge.earnRequirement.toLowerCase()
-  
-  // ProofScore-based badges
-  if (requirement.includes('7,000') || requirement.includes('7000')) {
-    return userScore >= 7000
+  // High-value badges require high scores
+  if (badge.points >= 50) {
+    return userScore >= 8000 // Elite tier
   }
-  if (requirement.includes('8,000') || requirement.includes('8000') || requirement.includes('elite')) {
-    return userScore >= 8000
+  if (badge.points >= 30) {
+    return userScore >= 7000 // Council tier
   }
   
-  // Activity-based badges - would need backend tracking
-  // For now, mark as not eligible (locked)
-  if (requirement.includes('transaction') || 
-      requirement.includes('vote') || 
-      requirement.includes('days') ||
-      requirement.includes('first')) {
-    return false // Requires backend tracking
+  // Activity-based badges require backend tracking
+  // These should be checked against the smart contract
+  const activityKeywords = ['transaction', 'vote', 'days', 'first', 'active']
+  const requiresTracking = activityKeywords.some(keyword => 
+    badge.earnRequirement.toLowerCase().includes(keyword)
+  )
+  
+  if (requiresTracking) {
+    return false // Requires backend/contract verification
   }
   
-  // Default: show as potentially eligible for manual claiming
-  // In production, this should always check the smart contract
-  return false
+  // Default: allow claiming for basic badges with minimum score
+  return userScore >= 5000
 }
