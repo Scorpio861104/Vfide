@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
 import { randomBytes, createHmac } from 'crypto';
 import { authLogger } from '@/lib/logger.service';
+import { AUTH_CONFIG } from '@/lib/config.constants';
 
 // Rate limiting map (in production, use Redis)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const MAX_ATTEMPTS = 5;
+const { MAX_ATTEMPTS, WINDOW_MS } = AUTH_CONFIG.RATE_LIMIT;
 
 /**
  * Simple rate limiting check
@@ -16,7 +16,7 @@ function checkRateLimit(identifier: string): boolean {
   const record = rateLimitMap.get(identifier);
 
   if (!record || now > record.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + WINDOW_MS });
     return true;
   }
 
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       success: true,
       token: sessionToken,
       address,
-      expiresIn: 86400, // 24 hours
+      expiresIn: AUTH_CONFIG.SESSION_EXPIRY_MS / 1000, // Return in seconds
     });
   } catch (error) {
     // Log error securely without exposing sensitive details
@@ -120,7 +120,7 @@ function verifyToken(token: string): { valid: boolean; address?: string } {
     
     // Check if token is expired (24 hours)
     const tokenAge = Date.now() - parseInt(timestamp || '0');
-    if (tokenAge > 86400000 || tokenAge < 0) {
+    if (tokenAge > AUTH_CONFIG.SESSION_EXPIRY_MS || tokenAge < 0) {
       return { valid: false };
     }
     

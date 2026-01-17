@@ -6,6 +6,7 @@
  */
 
 import type { Message, User, GamificationProgress, LeaderboardEntry } from './api-client.types';
+import { AUTH_CONFIG, STORAGE_KEYS } from './config.constants';
 
 export class APIError extends Error {
   constructor(
@@ -43,9 +44,9 @@ export class APIClient {
       const tokenData = {
         token,
         createdAt: Date.now(),
-        expiresIn: 86400000 // 24 hours
+        expiresIn: AUTH_CONFIG.SESSION_EXPIRY_MS
       };
-      localStorage.setItem('vfide_api_token', JSON.stringify(tokenData));
+      localStorage.setItem(STORAGE_KEYS.API_TOKEN, JSON.stringify(tokenData));
     }
   }
 
@@ -55,7 +56,7 @@ export class APIClient {
   getToken(): string | null {
     if (this.token) return this.token;
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('vfide_api_token');
+      const stored = localStorage.getItem(STORAGE_KEYS.API_TOKEN);
       if (stored) {
         try {
           const tokenData = JSON.parse(stored);
@@ -81,7 +82,7 @@ export class APIClient {
   clearToken() {
     this.token = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('vfide_api_token');
+      localStorage.removeItem(STORAGE_KEYS.API_TOKEN);
     }
   }
 
