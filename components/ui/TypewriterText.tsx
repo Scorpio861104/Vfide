@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSafeTimeout } from '@/hooks/useMemoryLeak';
 
 interface TypewriterTextProps {
   texts: string[];
@@ -20,26 +21,27 @@ export function TypewriterText({
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const safeTimeout = useSafeTimeout();
 
   useEffect(() => {
     const currentText = texts[currentIndex] ?? '';
 
     if (!isDeleting && displayText === currentText) {
       // Pause before deleting
-      const pauseTimeout = setTimeout(() => setIsDeleting(true), pauseDuration);
-      return () => clearTimeout(pauseTimeout);
+      safeTimeout(() => setIsDeleting(true), pauseDuration);
+      return;
     }
 
     if (isDeleting && displayText === "") {
       // Move to next text
-      const nextTimeout = setTimeout(() => {
+      safeTimeout(() => {
         setIsDeleting(false);
         setCurrentIndex((prev) => (prev + 1) % texts.length);
       }, 0);
-      return () => clearTimeout(nextTimeout);
+      return;
     }
 
-    const timeout = setTimeout(
+    safeTimeout(
       () => {
         setDisplayText(
           isDeleting
@@ -49,9 +51,7 @@ export function TypewriterText({
       },
       isDeleting ? deletingSpeed : typingSpeed
     );
-
-    return () => clearTimeout(timeout);
-  }, [displayText, isDeleting, currentIndex, texts, typingSpeed, deletingSpeed, pauseDuration]);
+  }, [displayText, isDeleting, currentIndex, texts, typingSpeed, deletingSpeed, pauseDuration, safeTimeout]);
 
   return (
     <span className={className}>
