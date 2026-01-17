@@ -5,6 +5,7 @@ import { safeBigIntToNumber, safeParseInt } from '@/lib/validation';
 import { useEffect, useState } from 'react';
 import { formatEther } from 'viem';
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useSafeTimeout } from '@/hooks/useMemoryLeak';
 
 // Transaction history type
 type AdminTransaction = {
@@ -357,6 +358,7 @@ const BURN_ROUTER_ABI = [
 
 export default function AdminPanel() {
   const { address, isConnected } = useAccount();
+  const safeTimeout = useSafeTimeout();
   const [whitelistAddress, setWhitelistAddress] = useState('');
   const [checkAddress, setCheckAddress] = useState('');
   const [exemptAddress, setExemptAddress] = useState('');
@@ -570,13 +572,11 @@ export default function AdminPanel() {
   // Reset success message after 5 seconds
   useEffect(() => {
     if (isSuccess) {
-      const timer = setTimeout(() => {
+      safeTimeout(() => {
         window.location.reload();
       }, 3000);
-      return () => clearTimeout(timer);
     }
-    return undefined;
-  }, [isSuccess]);
+  }, [isSuccess, safeTimeout]);
 
   const handleWhitelistAdd = () => {
     if (!whitelistAddress) return;
