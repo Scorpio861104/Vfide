@@ -290,7 +290,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    if (ownerCheck.rows[0].merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
+    const orderOwner = ownerCheck.rows[0];
+    if (!orderOwner || orderOwner.merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -374,13 +375,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    if (ownerCheck.rows[0].merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
+    const orderOwner = ownerCheck.rows[0];
+    if (!orderOwner || orderOwner.merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     // Only allow cancellation of pending orders
-    if (!['pending', 'processing'].includes(ownerCheck.rows[0].status)) {
+    if (!orderOwner || !['pending', 'processing'].includes(orderOwner.status)) {
       await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'Can only cancel pending or processing orders' },

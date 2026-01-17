@@ -122,6 +122,12 @@ export async function POST(request: NextRequest) {
     }
 
     const proposer = proposerResult.rows[0];
+    if (!proposer) {
+      return NextResponse.json(
+        { error: 'Proposer not found' },
+        { status: 404 }
+      );
+    }
 
     // In production, verify proposer has sufficient tokens or is council member
     // For now, allow all proposals
