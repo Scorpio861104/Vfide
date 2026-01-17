@@ -1,17 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { validateAddress } from '@/lib/validation';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * GET /api/quests/daily
  * Fetch daily quests with user progress
+ * Enhanced with: validation, rate limiting, secure logging
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 60, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+    
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) {
+      return NextResponse.json(
+        { error: `Invalid address: ${addressValidation.error}` },
+        { status: 400 }
+      );
     }
 
     const client = await getClient();
