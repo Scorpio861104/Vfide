@@ -1,17 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { checkRateLimit, getClientIdentifier } from '@/lib/rateLimit';
+import { validateQueryParams, validateRequest } from '@/lib/api-validation';
+import { apiLogger } from '@/lib/logger.service';
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`gamification:${clientId}`, { windowMs: 60000, maxRequests: 60 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
-    const userAddress = searchParams.get('userAddress');
-
-    if (!userAddress) {
-      return NextResponse.json(
-        { error: 'User address is required' },
-        { status: 400 }
-      );
+    
+    // Validate required address parameter
+    const validation = validateQueryParams(searchParams, {
+      userAddress: { required: true, type: 'address' }
+    });
+    if (!validation.valid) {
+      return validation.errorResponse;
     }
+
+    const userAddress = searchParams.get('userAddress')!;
 
     // Get user gamification data with achievements
     const result = await query(
@@ -68,7 +80,7 @@ export async function GET(request: NextRequest) {
       xpProgress,
     });
   } catch (error) {
-    console.error('[Gamification GET] Error:', error);
+    apiLogger.error('Gamification GET error', { error });
     return NextResponse.json(
       { error: 'Failed to fetch gamification data' },
       { status: 500 }
@@ -77,16 +89,27 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting - stricter for POST
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`gamification-post:${clientId}`, { windowMs: 60000, maxRequests: 30 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const body = await request.json();
-    const { userAddress, xpAmount, reason } = body;
-
-    if (!userAddress || !xpAmount) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+    
+    // Validate request body
+    const validation = await validateRequest(request, {
+      userAddress: { required: true, type: 'address' },
+      xpAmount: { required: true, type: 'number' },
+      reason: { required: false, type: 'string' }
+    });
+    if (!validation.valid) {
+      return validation.errorResponse;
     }
+
+    const { userAddress, xpAmount, reason } = body;
 
     // Update XP and calculate new level
     const result = await query(
@@ -120,7 +143,7 @@ export async function POST(request: NextRequest) {
       ...userData,
     });
   } catch (error) {
-    console.error('[Gamification POST] Error:', error);
+    apiLogger.error('Gamification POST error', { error });
     return NextResponse.json(
       { error: 'Failed to award XP' },
       { status: 500 }

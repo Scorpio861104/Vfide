@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http, parseEther, formatEther } from 'viem';
 import { baseSepolia } from 'viem/chains';
+import { checkRateLimit, getClientIdentifier } from '@/lib/rateLimit';
+import { validateQueryParams } from '@/lib/api-validation';
+import { apiLogger } from '@/lib/logger.service';
+import { schemas } from '@/lib/api-validation';
 
 const client = createPublicClient({
   chain: baseSepolia,
@@ -65,17 +69,27 @@ function calculateTotalAmount(
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`fees:${clientId}`, { windowMs: 60000, maxRequests: 60 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
-    const amount = searchParams.get('amount');
-    const fromAddress = searchParams.get('from');
     
-    if (!amount || !fromAddress) {
-      return NextResponse.json(
-        { error: 'Missing required params: amount, from' },
-        { status: 400 }
-      );
+    // Validate required parameters
+    const amountValidation = validateQueryParams(searchParams, {
+      amount: { required: true, type: 'string' },
+      from: { required: true, type: 'address' }
+    });
+    if (!amountValidation.valid) {
+      return amountValidation.errorResponse;
     }
+
+    const amount = searchParams.get('amount')!;
+    const fromAddress = searchParams.get('from')!;
     
     const priceResponse = await fetch(
       `${request.nextUrl.origin}/api/crypto/price`,
@@ -149,7 +163,7 @@ export async function GET(request: NextRequest) {
       note: 'Burn fee varies based on ProofScore (higher score = lower fees)',
     });
   } catch (error) {
-    console.error('[Fee API] Error:', error);
+    apiLogger.error('Fee API error', { error });
     return NextResponse.json({ error: 'Failed to calculate fees' }, { status: 500 });
   }
 }
