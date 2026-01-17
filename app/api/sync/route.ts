@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { checkRateLimit } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 export async function GET(request: NextRequest) {
+  const clientId = request.headers.get('x-forwarded-for') || 'anonymous';
+
+  // Rate limiting
+  const rateLimit = checkRateLimit(`sync-get:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -17,12 +28,26 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ syncState: result.rows[0] || null });
   } catch (error) {
-    console.error('[Sync GET] Error:', error);
+    apiLogger.error('Failed to fetch sync state', { error });
     return NextResponse.json({ error: 'Failed to fetch sync state' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
+  const clientId = request.headers.get('x-forwarded-for') || 'anonymous';
+
+  // Rate limiting
+  const rateLimit = checkRateLimit(`sync-post:${clientId}`, { maxRequests: 30, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
   try {
     const body = await request.json();
     const { userId, entity, lastSyncTimestamp } = body;
@@ -42,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, syncState: result.rows[0] });
   } catch (error) {
-    console.error('[Sync POST] Error:', error);
+    apiLogger.error('Failed to update sync state', { error });
     return NextResponse.json({ error: 'Failed to update sync state' }, { status: 500 });
   }
 }
