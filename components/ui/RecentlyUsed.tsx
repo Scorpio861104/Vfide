@@ -43,10 +43,19 @@ export function RecentlyUsed({
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
-        const parsed: RecentItem[] = JSON.parse(saved);
-        // Sort by timestamp, most recent first
-        const sorted = parsed.sort((a, b) => b.timestamp - a.timestamp);
-        setItems(sorted.slice(0, maxItems));
+        const parsed = JSON.parse(saved);
+        // Validate data structure
+        if (Array.isArray(parsed) && parsed.every(item => 
+          typeof item === 'object' && 
+          item.id && 
+          item.title && 
+          item.href && 
+          typeof item.timestamp === 'number'
+        )) {
+          // Sort by timestamp, most recent first
+          const sorted = parsed.sort((a, b) => b.timestamp - a.timestamp);
+          setItems(sorted.slice(0, maxItems));
+        }
       }
     } catch (error) {
       console.error('Failed to load recent items:', error);

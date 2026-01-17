@@ -37,9 +37,15 @@ export function OnboardingWizard({ onComplete, onDismiss }: OnboardingWizardProp
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Check if user has completed onboarding
-    const onboardingComplete = localStorage.getItem('vfide_onboarding_complete');
-    if (!onboardingComplete) {
+    try {
+      // Check if user has completed onboarding
+      const onboardingComplete = localStorage.getItem('vfide_onboarding_complete');
+      if (!onboardingComplete) {
+        setIsVisible(true);
+      }
+    } catch (error) {
+      console.error('Failed to check onboarding status:', error);
+      // Default to showing onboarding if localStorage fails
       setIsVisible(true);
     }
   }, []);
