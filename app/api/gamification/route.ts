@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       [userAddress.toLowerCase()]
     );
 
-    let userData;
+    let userData: { xp?: number; level?: number; [key: string]: unknown };
     if (result.rows.length === 0) {
       // Create default entry
       const insertResult = await query(
@@ -59,8 +59,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate progress to next level
-    const xpForNextLevel = Math.pow(userData.level, 2) * 100;
-    const xpProgress = userData.xp - (Math.pow(userData.level - 1, 2) * 100);
+    const userLevel = userData.level || 1;
+    const userXP = userData.xp || 0;
+    const xpForNextLevel = Math.pow(userLevel, 2) * 100;
+    const xpProgress = userXP - (Math.pow(userLevel - 1, 2) * 100);
 
     return NextResponse.json({
       ...userData,
@@ -108,14 +110,14 @@ export async function POST(request: NextRequest) {
     }
 
     const userData = result.rows[0];
-    const leveledUp = userData.leveled_up;
+    const leveledUp = userData?.leveled_up;
 
     return NextResponse.json({
       success: true,
       xpAwarded: xpAmount,
       reason,
-      newXP: userData.xp,
-      newLevel: userData.level,
+      newXP: userData?.xp || 0,
+      newLevel: userData?.level || 1,
       leveledUp,
       ...userData,
     });

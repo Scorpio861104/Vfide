@@ -46,7 +46,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   delay: number
 ) {
   const [isPending, setIsPending] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
 
@@ -232,7 +232,7 @@ export function useCopyFeedback(options: UseCopyFeedbackOptions = {}) {
   
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const copy = useCallback(async (text: string) => {
     try {
@@ -383,7 +383,7 @@ export function useLongPress(
 ) {
   const { delay = 500, onStart, onCancel } = options;
   
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isLongPressRef = useRef(false);
 
   const start = useCallback(() => {
