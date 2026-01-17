@@ -10,6 +10,11 @@
 </div>
 
 > **⚠️ Important Notice**: VFIDE is an experimental platform under active development. While we implement robust security measures and best practices, no software system is perfect. Users should conduct their own due diligence, start with small amounts, and never invest more than they can afford to lose. See our FAQ section below for more information.
+>
+> **Feature Status Legend:**
+> - ✅ **Live** - Fully functional and available now
+> - 🚧 **Beta** - Available but still being refined
+> - 📅 **Coming Soon** - Planned feature in development
 
 ---
 
@@ -30,15 +35,19 @@ Your **ProofScore** is a number from 0 to 10,000 that represents your reputation
 
 ### ProofScore Tiers
 
-| Tier | Score Range | Transaction Fee | What You Can Do |
-|------|-------------|-----------------|-----------------|
-| 🟢 **Elite** | 8,000 – 10,000 | **0.25%** | Everything + Endorse others, Council eligible |
-| 🔵 **High Trust** | 7,000 – 7,999 | **1.0%** | Voting + Merchant + Council participation |
-| 🟡 **Neutral** | 5,000 – 6,999 | **2.0%** | Voting + Become a Merchant |
-| 🟠 **Low Trust** | 3,500 – 4,999 | **3.5%** | Basic transfers only |
-| 🔴 **Risky** | 0 – 3,499 | **5.0%** | Limited features, higher fees |
+| Tier | Score Range | Transaction Fee | Governance | Merchant | Special Features |
+|------|-------------|-----------------|------------|----------|------------------|
+| 🟢 **Elite** | 8,000 – 10,000 | **0.25%** | ✅ Council | ✅ Yes | Endorse others |
+| 🔵 **Council** | 7,000 – 7,999 | **1.0%** | ✅ Council | ✅ Yes | Council participation |
+| 🟢 **Merchant** | 5,600 – 6,999 | **1.0%** | ✅ Vote | ✅ Yes | Accept payments |
+| 🔵 **Governance** | 5,400 – 5,599 | **2.0%** | ✅ Vote | ❌ No | Vote on proposals |
+| 🟡 **Neutral** | 5,000 – 5,399 | **2.0%** | ❌ No | ❌ No | Basic transfers |
+| 🟠 **Low Trust** | 3,500 – 4,999 | **3.5%** | ❌ No | ❌ No | Basic transfers only |
+| 🔴 **Risky** | 0 – 3,499 | **5.0%** | ❌ No | ❌ No | Limited features |
 
 > **New users start at 5,000 (Neutral)** — you have a clean slate to build from!
+> 
+> **Note:** To vote on proposals, you need at least 5,400 score. To become a merchant, you need at least 5,600 score.
 
 ### How Fees Work
 
@@ -118,14 +127,16 @@ Become a **VFIDE Merchant** to accept payments and build your business on the pl
 
 ### Merchant Features
 
-| Feature | Description |
-|---------|-------------|
-| 💳 **Accept Payments** | Receive VFIDE from customers |
-| 📱 **QR Code Payments** | Generate payment QR codes |
-| 🔄 **Auto-Convert** | Automatically convert to stablecoins (optional) |
-| 💵 **Custom Payout Address** | Receive funds to any wallet |
-| 📊 **Sales Analytics** | Track volume, transaction count |
-| ⭐ **Customer Reviews** | Build reputation through feedback |
+| Feature | Status | Description |
+|---------|--------|-------------|
+| 💳 **Accept Payments** | ✅ Live | Receive VFIDE from customers |
+| 📝 **Business Registration** | ✅ Live | Register with name and category |
+| 💰 **0% Protocol Fee** | ✅ Live | No platform fees on transactions |
+| 📱 **QR Code Payments** | 🚧 Beta | Generate payment QR codes (in development) |
+| 🔄 **Auto-Convert (STABLE-PAY)** | 📅 Coming Soon | Automatically convert to stablecoins |
+| 💵 **Custom Payout Address** | 📅 Coming Soon | Receive funds to any wallet |
+| 📊 **Sales Analytics** | 📅 Coming Soon | Track volume, transaction count |
+| ⭐ **Customer Reviews** | 📅 Coming Soon | Build reputation through feedback |
 
 ### Merchant Categories
 
@@ -144,14 +155,16 @@ Become a **VFIDE Merchant** to accept payments and build your business on the pl
 
 VFIDE is **community-governed** through a Decentralized Autonomous Organization (DAO). Token holders can propose and vote on changes to the protocol.
 
+> **⚠️ Status:** Governance smart contracts are deployed. Frontend voting interface is currently in development. Full governance features will be available soon.
+
 ### Voting Requirements
 
-| Action | Minimum ProofScore |
-|--------|-------------------|
-| 🗳️ **Vote on Proposals** | 5,400+ |
-| 📝 **Create Proposals** | 7,000+ (Council member) |
-| 👥 **Run for Council** | 7,000+ |
-| 🎯 **Endorse Candidates** | 8,000+ (Elite) |
+| Action | Minimum ProofScore | Status |
+|--------|-------------------|--------|
+| 🗳️ **Vote on Proposals** | 5,400+ | 📅 Coming Soon |
+| 📝 **Create Proposals** | 7,000+ (Council) | 📅 Coming Soon |
+| 👥 **Run for Council** | 7,000+ | 📅 Coming Soon |
+| 🎯 **Endorse Candidates** | 8,000+ (Elite) | 📅 Coming Soon |
 
 ### Proposal Types
 
@@ -174,16 +187,18 @@ VFIDE is **community-governed** through a Decentralized Autonomous Organization 
 
 ## 👨‍🏫 Mentorship Program
 
-High-trust users can become **Mentors** to help newcomers succeed in the VFIDE ecosystem.
+> **📅 Coming Soon:** The mentorship program will allow high-trust users to guide newcomers and earn rewards.
 
-### Mentor Requirements
+High-trust users will be able to become **Mentors** to help newcomers succeed in the VFIDE ecosystem.
+
+### Planned Mentor Requirements
 
 | Requirement | Details |
 |-------------|---------|
 | 📈 **Minimum ProofScore** | 7,000+ |
 | 🎖️ **Good Standing** | No recent disputes or reports |
 
-### Mentor Benefits
+### Planned Mentor Benefits
 
 | Benefit | Details |
 |---------|---------|
@@ -192,20 +207,13 @@ High-trust users can become **Mentors** to help newcomers succeed in the VFIDE e
 | 👥 **Capacity** | Sponsor up to 10 mentees |
 | 🚀 **Priority Access** | Early access to new features |
 
-### How Mentorship Works
-
-1. **Register as Mentor** — Requires 7,000+ ProofScore
-2. **Accept Mentees** — New users can request sponsorship
-3. **Guide & Support** — Help them understand the platform
-4. **Earn Rewards** — Get points when they succeed
-
 ---
 
 ## 🤝 Endorsements & Social Trust
 
-Users can **endorse** each other to build a web of trust throughout the ecosystem.
+> **📅 Coming Soon:** Users will be able to endorse each other to build a web of trust throughout the ecosystem.
 
-### Endorsement Categories
+### Planned Endorsement Categories
 
 | Category | Description |
 |----------|-------------|
@@ -215,7 +223,7 @@ Users can **endorse** each other to build a web of trust throughout the ecosyste
 | 🚀 **Innovative** | Creates valuable contributions |
 | 🤝 **Collaborative** | Great team player |
 
-### Endorsement Requirements
+### Planned Endorsement Requirements
 
 | Requirement | Details |
 |-------------|---------|
@@ -534,6 +542,31 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 | 📱 **Multi-Wallet Support** | MetaMask, Coinbase, WalletConnect |
 | 🔄 **Session Management** | Automatic disconnection |
 | 🛡️ **Transaction Signing** | All actions require wallet approval |
+
+---
+
+## 📊 Current Platform Status
+
+### ✅ Fully Operational Features
+- **ProofScore System** - Dynamic reputation scoring (0-10,000 scale)
+- **Vault Infrastructure** - Non-custodial token storage with guardians
+- **Multi-Chain Support** - Base, Polygon, and zkSync deployment
+- **Merchant Registration** - Business registration and payment acceptance
+- **Escrow System** - Secure transaction mediation
+- **Fee Calculation** - ProofScore-based fees (0.25% - 5.0%)
+- **Smart Contract Integration** - Full blockchain interaction
+
+### 🚧 Beta / In Development
+- **QR Code Payments** - Merchant payment generation
+- **Badge System** - Achievement tracking and rewards
+
+### 📅 Coming Soon
+- **Governance Voting** - DAO proposal creation and voting interface
+- **Mentorship Program** - Veteran users guide newcomers
+- **Endorsement System** - Social trust network
+- **Auto-Convert (STABLE-PAY)** - Automatic stablecoin conversion for merchants
+- **Sales Analytics** - Merchant dashboard and reporting
+- **Customer Reviews** - Merchant reputation system
 
 ---
 
