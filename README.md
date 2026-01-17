@@ -9,7 +9,7 @@
 
 </div>
 
-> **⚠️ Important Notice**: VFIDE is an experimental platform under active development. While we implement robust security measures and best practices, no software system is perfect. Users should conduct their own due diligence, start with small amounts, and never invest more than they can afford to lose. See our [FAQ](#-frequently-asked-questions) for more information.
+> **⚠️ Important Notice**: VFIDE is an experimental platform under active development. While we implement robust security measures and best practices, no software system is perfect. Users should conduct their own due diligence, start with small amounts, and never invest more than they can afford to lose. See our FAQ section below for more information.
 
 ---
 
