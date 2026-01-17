@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
 import { randomBytes, createHmac } from 'crypto';
+import { authLogger } from '@/lib/logger.service';
 
 // Rate limiting map (in production, use Redis)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     // Log error securely without exposing sensitive details
-    console.error('[Auth API] Authentication failed');
+    authLogger.error('Authentication failed');
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 500 }
@@ -168,7 +169,7 @@ export async function GET(request: NextRequest) {
       address: verification.address,
     });
   } catch (error) {
-    console.error('[Auth Verify API] Token verification failed');
+    authLogger.error('Token verification failed');
     return NextResponse.json(
       { error: 'Invalid token' },
       { status: 401 }
