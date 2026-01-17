@@ -285,13 +285,13 @@ export function usePullToRefresh(options: UsePullToRefreshOptions) {
   const startYRef = useRef<number | null>(null);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (window.scrollY === 0) {
+    if (window.scrollY === 0 && e.touches[0]) {
       startYRef.current = e.touches[0].clientY;
     }
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (startYRef.current === null || isRefreshing) return;
+    if (startYRef.current === null || isRefreshing || !e.touches[0]) return;
     
     const currentY = e.touches[0].clientY;
     const diff = currentY - startYRef.current;

@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         achievements: [],
       };
     } else {
-      userData = result.rows[0];
+      userData = result.rows[0] as { xp?: number; level?: number; [key: string]: unknown };
     }
 
     // Calculate progress to next level
