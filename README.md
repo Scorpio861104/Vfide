@@ -155,15 +155,13 @@ Become a **VFIDE Merchant** to accept payments and build your business on the pl
 
 VFIDE is **community-governed** through a Decentralized Autonomous Organization (DAO). Token holders can propose and vote on changes to the protocol.
 
-> **⚠️ Status:** Governance smart contracts are deployed. Frontend voting interface is currently in development. Full governance features will be available soon.
-
 ### Voting Requirements
 
 | Action | Minimum ProofScore | Status |
 |--------|-------------------|--------|
-| 🗳️ **Vote on Proposals** | 5,400+ | 📅 Coming Soon |
-| 📝 **Create Proposals** | 7,000+ (Council) | 📅 Coming Soon |
-| 👥 **Run for Council** | 7,000+ | 📅 Coming Soon |
+| 🗳️ **Vote on Proposals** | 5,400+ | ✅ Live |
+| 📝 **Create Proposals** | 7,000+ (Council) | ✅ Live |
+| 👥 **Run for Council** | 7,000+ | 🚧 Beta |
 | 🎯 **Endorse Candidates** | 8,000+ (Elite) | 📅 Coming Soon |
 
 ### Proposal Types
@@ -555,13 +553,15 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 - **Escrow System** - Secure transaction mediation
 - **Fee Calculation** - ProofScore-based fees (0.25% - 5.0%)
 - **Smart Contract Integration** - Full blockchain interaction
+- **Governance Voting** - Vote on DAO proposals
+- **Proposal Creation** - Council members can create proposals
 
 ### 🚧 Beta / In Development
 - **QR Code Payments** - Merchant payment generation
 - **Badge System** - Achievement tracking and rewards
+- **Council Elections** - Candidate nominations and voting
 
 ### 📅 Coming Soon
-- **Governance Voting** - DAO proposal creation and voting interface
 - **Mentorship Program** - Veteran users guide newcomers
 - **Endorsement System** - Social trust network
 - **Auto-Convert (STABLE-PAY)** - Automatic stablecoin conversion for merchants
