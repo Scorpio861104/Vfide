@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Story, isStoryExpired as _isStoryExpired, getStoryTimeRemaining } from '@/lib/storiesSystem';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSafeInterval } from '@/hooks/useMemoryLeak';
 
 interface StoryViewerProps {
   stories: Story[];
@@ -29,12 +30,14 @@ export function StoryViewer({
   const currentStory = stories[currentIndex];
   const STORY_DURATION = 5000; // 5 seconds per story
 
+  const safeInterval = useSafeInterval();
+
   // Auto-progress story
   useEffect(() => {
     if (isPaused || !currentStory) return;
 
     const startTime = Date.now();
-    const interval = setInterval(() => {
+    safeInterval(() => {
       const elapsed = Date.now() - startTime;
       const progressPercent = (elapsed / STORY_DURATION) * 100;
 
@@ -44,9 +47,7 @@ export function StoryViewer({
         setProgress(progressPercent);
       }
     }, 50);
-
-    return () => clearInterval(interval);
-  }, [currentIndex, isPaused, currentStory]);
+  }, [currentIndex, isPaused, currentStory, safeInterval]);
 
   // Mark story as viewed
   useEffect(() => {

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import { getChainByChainId, isTestnetChainId } from '@/lib/chains';
 import { safeParseInt } from '@/lib/validation';
+import { useSafeTimeout } from '@/hooks/useMemoryLeak';
 
 const DISMISS_KEY = 'vfide-network-warning-dismissed';
 const DISMISS_DURATION = 1000 * 60 * 60; // 1 hour
@@ -29,9 +30,11 @@ export function NetworkWarning() {
     ? (isTestnet ? expectedChainConfig.testnet.name : expectedChainConfig.mainnet.name)
     : 'Base';
   
+  const safeTimeout = useSafeTimeout();
+  
   // Check localStorage on mount
   useEffect(() => {
-    const timer = setTimeout(() => {
+    safeTimeout(() => {
       const dismissedUntil = localStorage.getItem(DISMISS_KEY);
       if (dismissedUntil && Date.now() < safeParseInt(dismissedUntil, 0)) {
         setDismissed(prev => prev !== true ? true : prev);
@@ -39,18 +42,17 @@ export function NetworkWarning() {
         setDismissed(prev => prev !== false ? false : prev);
       }
     }, 0);
-    return () => clearTimeout(timer);
-  }, []);
+  }, [safeTimeout]);
 
   // Clear dismissal when user switches to correct chain
   useEffect(() => {
     if (chainId === expectedChainId) {
       localStorage.removeItem(DISMISS_KEY);
-      setTimeout(() => {
+      safeTimeout(() => {
         setDismissed(prev => prev !== false ? false : prev);
       }, 0);
     }
-  }, [chainId, expectedChainId]);
+  }, [chainId, expectedChainId, safeTimeout]);
 
   const handleDismiss = () => {
     setDismissed(true);
