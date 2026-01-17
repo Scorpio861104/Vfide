@@ -115,7 +115,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get all reactions for the message
-    const reactionsResult = await query(
+    interface ReactionRow {
+      reaction_type: 'emoji' | 'custom_image';
+      emoji: string | null;
+      image_url: string | null;
+      image_name: string | null;
+      users: Array<{ address: string; username: string; avatar: string }>;
+    }
+    
+    const reactionsResult = await query<ReactionRow>(
       `SELECT 
          mr.reaction_type,
          mr.emoji,
@@ -132,14 +140,6 @@ export async function POST(request: NextRequest) {
        GROUP BY mr.reaction_type, mr.emoji, mr.image_url, mr.image_name`,
       [messageId]
     );
-
-    interface ReactionRow {
-      reaction_type: 'emoji' | 'custom_image';
-      emoji: string | null;
-      image_url: string | null;
-      image_name: string | null;
-      users: Array<{ address: string; username: string; avatar: string }>;
-    }
 
     const reactions = reactionsResult.rows.reduce((acc: Record<string, unknown>, row: ReactionRow) => {
       const key = row.reaction_type === 'emoji' ? row.emoji! : row.image_url!;

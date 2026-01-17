@@ -291,7 +291,8 @@ export function useEscrow() {
   // Error handling
   useEffect(() => {
     if (writeError) {
-      setError(parseContractError(writeError));
+      const parsedError = parseContractError(writeError);
+      setError(parsedError.userMessage);
     }
   }, [writeError]);
 
