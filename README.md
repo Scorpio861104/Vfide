@@ -9,6 +9,8 @@
 
 </div>
 
+> **⚠️ Important Notice**: VFIDE is an experimental platform under active development. While we implement robust security measures and best practices, no software system is perfect. Users should conduct their own due diligence, start with small amounts, and never invest more than they can afford to lose. See our [FAQ](#-frequently-asked-questions) for more information.
+
 ---
 
 ## 🌟 What is VFIDE?
@@ -612,6 +614,20 @@ Yes, blockchain transactions require gas fees paid in the native token (ETH on B
 <summary><strong>Is VFIDE available in my country?</strong></summary>
 
 VFIDE is a decentralized protocol accessible globally. However, users are responsible for complying with their local regulations regarding cryptocurrency.
+</details>
+
+<details>
+<summary><strong>Is VFIDE perfect?</strong></summary>
+
+No software system is perfect, and VFIDE is no exception. While we strive for excellence and have implemented robust security measures, comprehensive testing, and best practices, we acknowledge that:
+
+- **Continuous Improvement**: We are actively developing and improving the platform based on user feedback and emerging best practices
+- **Potential Issues**: Like any complex system, there may be bugs, security vulnerabilities, or areas for optimization that we haven't discovered yet
+- **User Responsibility**: Users should conduct their own due diligence, start with small amounts, and never invest more than they can afford to lose
+- **Open Source**: Our code is open source, allowing the community to review, audit, and contribute improvements
+- **No Guarantees**: While we work hard to provide a reliable platform, we make no guarantees about performance, availability, or outcomes
+
+We welcome bug reports, security disclosures, and contributions from the community to help make VFIDE better every day.
 </details>
 
 ---
