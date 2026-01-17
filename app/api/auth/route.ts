@@ -7,6 +7,7 @@ import { AUTH_CONFIG } from '@/lib/config.constants';
 // Rate limiting map (in production, use Redis)
 // WARNING: In-memory rate limiting does not persist across server restarts
 // and will not work correctly in multi-instance deployments.
+// TODO: Implement Redis-based rate limiting for production
 // For production, implement distributed rate limiting using:
 // - Redis with node-rate-limiter-flexible
 // - Upstash Redis

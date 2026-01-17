@@ -198,12 +198,14 @@ export const XSSProtection = {
   },
   
   /**
-   * Decode HTML entities - using safer DOMParser with text/plain
+   * Decode HTML entities - using DOMParser with text/html
+   * Note: We use 'text/html' and extract textContent from body to handle
+   * HTML entities properly while avoiding script execution
    */
   decodeHTML(str: string): string {
     if (typeof DOMParser !== 'undefined') {
       const parser = new DOMParser();
-      // Use text/plain to prevent any potential script execution
+      // Parse as text/html but extract only textContent from body
       const doc = parser.parseFromString(str, 'text/html');
       return doc.body?.textContent || '';
     }

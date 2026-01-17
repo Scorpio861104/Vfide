@@ -26,7 +26,7 @@ class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
   private isTest = process.env.NODE_ENV === 'test';
   
-  // Pre-compile sensitive keys as a Set for O(1) lookup
+  // Pre-compile sensitive keys as a Set for fast lookup
   private sensitiveKeys = new Set([
     'password',
     'privatekey',
@@ -39,6 +39,7 @@ class Logger {
 
   /**
    * Sanitize log data to prevent leaking sensitive information
+   * Uses Set for O(1) exact key matching
    */
   private sanitize(data: unknown): unknown {
     if (typeof data !== 'object' || data === null) {
@@ -48,11 +49,9 @@ class Logger {
     const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
       const lowerKey = key.toLowerCase();
-      // O(1) lookup using Set
-      const isSensitive = this.sensitiveKeys.has(lowerKey) || 
-        Array.from(this.sensitiveKeys).some(sensitive => lowerKey.includes(sensitive));
       
-      if (isSensitive) {
+      // Check exact match first (O(1))
+      if (this.sensitiveKeys.has(lowerKey)) {
         sanitized[key] = '[REDACTED]';
       } else if (typeof value === 'object' && value !== null) {
         sanitized[key] = this.sanitize(value);

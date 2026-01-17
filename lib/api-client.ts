@@ -204,7 +204,7 @@ export class APIClient {
     reaction: { type?: 'emoji' | 'custom_image'; emoji?: string; imageUrl?: string; imageName?: string }, 
     userAddress: string
   ) {
-    return this.request<{ success: boolean; message: any }>('/messages/reaction', {
+    return this.request<{ success: boolean; message: Message }>('/messages/reaction', {
       method: 'POST',
       body: JSON.stringify({ 
         messageId, 
