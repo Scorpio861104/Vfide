@@ -382,7 +382,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Only allow cancellation of pending orders
-    if (!orderOwner || !['pending', 'processing'].includes(orderOwner.status)) {
+    if (!['pending', 'processing'].includes(orderOwner.status)) {
       await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'Can only cancel pending or processing orders' },

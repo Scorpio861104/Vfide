@@ -83,9 +83,13 @@ export async function POST(request: NextRequest) {
     }
 
     const user = userResult.rows[0];
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
     const result = await query<GroupMember>(
       'INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, $3) RETURNING *',
-      [groupId, user?.id, role]
+      [groupId, user.id, role]
     );
     
     await query('UPDATE groups SET member_count = member_count + 1 WHERE id = $1', [groupId]);
