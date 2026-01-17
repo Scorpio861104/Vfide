@@ -552,6 +552,7 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 - **Merchant Registration** - Business registration and payment acceptance
 - **Escrow System** - Secure transaction mediation
 - **Fee Calculation** - ProofScore-based fees (0.25% - 5.0%)
+- **Fee Distribution** - Transparent 62.5/31.25/6.25 split (Burn/Treasury/Ecosystem)
 - **Smart Contract Integration** - Full blockchain interaction
 - **Governance Voting** - Vote on DAO proposals
 - **Proposal Creation** - Council members can create proposals
