@@ -24,6 +24,7 @@ import {
 import React, { useState, useEffect } from 'react'
 import { formatUnits, parseUnits } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { useSafeTimeout } from '@/hooks/useMemoryLeak'
 
 // Contract ABIs
 const LIQUIDITY_INCENTIVES_ABI = [
@@ -942,10 +943,13 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
   }, [address]);
 
   const copyToClipboard = async (text: string) => {
+    const safeTimeout = useSafeTimeout();
+    
     try {
       await navigator.clipboard.writeText(text)
       setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
+      // Auto-cleanup timeout on unmount
+      safeTimeout(() => setCopied(false), 2000)
       return
     } catch {
       // Ignore and try fallback
@@ -965,7 +969,8 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
 
       if (ok) {
         setCopied(true)
-        window.setTimeout(() => setCopied(false), 2000)
+        // Auto-cleanup timeout on unmount
+        safeTimeout(() => setCopied(false), 2000)
       }
     } catch {
       // If copying fails, do nothing.
