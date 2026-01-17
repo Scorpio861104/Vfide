@@ -185,18 +185,16 @@ VFIDE is **community-governed** through a Decentralized Autonomous Organization 
 
 ## 👨‍🏫 Mentorship Program
 
-> **📅 Coming Soon:** The mentorship program will allow high-trust users to guide newcomers and earn rewards.
+High-trust users can become **Mentors** to help newcomers succeed in the VFIDE ecosystem.
 
-High-trust users will be able to become **Mentors** to help newcomers succeed in the VFIDE ecosystem.
-
-### Planned Mentor Requirements
+### Mentor Requirements
 
 | Requirement | Details |
 |-------------|---------|
 | 📈 **Minimum ProofScore** | 7,000+ |
 | 🎖️ **Good Standing** | No recent disputes or reports |
 
-### Planned Mentor Benefits
+### Mentor Benefits
 
 | Benefit | Details |
 |---------|---------|
@@ -205,13 +203,15 @@ High-trust users will be able to become **Mentors** to help newcomers succeed in
 | 👥 **Capacity** | Sponsor up to 10 mentees |
 | 🚀 **Priority Access** | Early access to new features |
 
+**How to Participate:** Visit `/mentorship` to register as a mentor or find a mentor.
+
 ---
 
 ## 🤝 Endorsements & Social Trust
 
-> **📅 Coming Soon:** Users will be able to endorse each other to build a web of trust throughout the ecosystem.
+Users can **endorse** each other to build a web of trust throughout the ecosystem.
 
-### Planned Endorsement Categories
+### Endorsement Categories
 
 | Category | Description |
 |----------|-------------|
@@ -221,13 +221,15 @@ High-trust users will be able to become **Mentors** to help newcomers succeed in
 | 🚀 **Innovative** | Creates valuable contributions |
 | 🤝 **Collaborative** | Great team player |
 
-### Planned Endorsement Requirements
+### Endorsement Requirements
 
 | Requirement | Details |
 |-------------|---------|
-| 📈 **To Give Endorsements** | 8,000+ ProofScore (Elite) |
+| 📈 **To Give Endorsements** | 7,000+ ProofScore |
 | 🎯 **To Receive** | Any ProofScore |
-| 🏆 **Guardian Status** | 5+ trustworthy endorsements |
+| 🏆 **Impact** | Builds social trust network |
+
+**How to Endorse:** Visit user profiles or `/endorsements` to give and view endorsements.
 
 ---
 
@@ -558,14 +560,14 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 - **Proposal Creation** - Council members can create proposals
 - **QR Code Payments** - Merchant payment QR generation with amount/order tracking
 - **Badge System** - Badge gallery, claiming interface, and NFT minting
+- **Mentorship Program** - Mentor registration and mentee sponsorship
+- **Endorsement System** - Social trust endorsements
 
 ### 🚧 Beta / In Development
 - **Badge Auto-Detection** - Automatic badge eligibility tracking (requires backend)
 - **Council Elections** - Candidate nominations and voting
 
 ### 📅 Coming Soon
-- **Mentorship Program** - Veteran users guide newcomers
-- **Endorsement System** - Social trust network
 - **Auto-Convert (STABLE-PAY)** - Automatic stablecoin conversion for merchants
 - **Sales Analytics** - Merchant dashboard and reporting
 - **Customer Reviews** - Merchant reputation system
