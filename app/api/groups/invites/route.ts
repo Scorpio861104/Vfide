@@ -49,7 +49,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID not found' },
+        { status: 500 }
+      );
+    }
     const memberResult = await query(
       'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
       [groupId, userId]

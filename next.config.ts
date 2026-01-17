@@ -11,9 +11,9 @@ const nextConfig: NextConfig = {
   // Fix for pino/thread-stream compatibility
   serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
 
-  // Ignore TypeScript errors during build
+  // Enforce TypeScript type safety
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // Ensure Turbopack treats `frontend/` as the workspace root.

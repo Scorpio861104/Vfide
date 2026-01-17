@@ -2,6 +2,10 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -39,6 +43,17 @@
     "test:a11y": "jest --testPathPatterns=a11y --passWithNoTests",
     "test:a11y:watch": "jest --testPathPatterns=a11y --watch",
     "test:visual": "percy exec -- npm run test:e2e",
+    "test:comprehensive": "./scripts/run-comprehensive-tests.sh",
+    "test:comprehensive:quick": "./scripts/run-comprehensive-tests.sh --quick",
+    "test:comprehensive:full": "./scripts/run-comprehensive-tests.sh --full",
+    "dev:debug": "NODE_OPTIONS='--inspect' next dev",
+    "dev:turbo": "next dev --turbo",
+    "clean": "rm -rf .next out coverage test-results node_modules/.cache .eslintcache",
+    "clean:all": "npm run clean && rm -rf node_modules",
+    "setup": "npm install",
+    "validate": "npm run typecheck && npm run lint && npm test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build",
     "circular-deps": "madge --circular --extensions ts,tsx ./",

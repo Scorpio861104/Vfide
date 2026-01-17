@@ -43,6 +43,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -57,3 +58,8 @@ next-env.d.ts
 
 .turbo
 .next
+
+# hardhat / smart contract artifacts
+/artifacts/
+/cache/
+typechain-types/

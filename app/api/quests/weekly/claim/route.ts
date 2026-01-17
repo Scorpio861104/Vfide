@@ -32,7 +32,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
-      const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID not found' },
+        { status: 500 }
+      );
+    }
 
       // Check if challenge is completed and not claimed
       const progressResult = await client.query(`

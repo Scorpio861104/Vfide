@@ -27,7 +27,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
-      const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID not found' },
+        { status: 500 }
+      );
+    }
 
       // Get or create onboarding progress
       const onboardingResult = await client.query(`
@@ -112,7 +118,13 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
-      const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID not found' },
+        { status: 500 }
+      );
+    }
 
       // Convert camelCase to snake_case for database column
       const columnName = `step_${step.replace(/([A-Z])/g, '_$1').toLowerCase()}`;
@@ -212,7 +224,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
-      const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID not found' },
+        { status: 500 }
+      );
+    }
 
       // Check if onboarding is complete and reward not claimed
       const onboardingResult = await client.query(`
