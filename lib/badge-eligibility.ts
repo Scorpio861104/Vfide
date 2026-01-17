@@ -19,6 +19,18 @@ export interface UserStats {
   hasReportedSecurity: boolean
   presaleParticipant: boolean
   accountNumber: number // What number user they were (for pioneer badges)
+  // Additional fields for badge event tracking
+  transactionCount?: number
+  votesCount?: number
+  proposalsCreated?: number
+  endorsementsGiven?: number
+  endorsementsReceived?: number
+  mentees?: number
+  bugReports?: number
+  securityReports?: number
+  documentationContributions?: number
+  tutorialsCreated?: number
+  betaTester?: boolean
 }
 
 export interface EligibilityResult {

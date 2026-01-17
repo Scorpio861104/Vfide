@@ -11,7 +11,7 @@
  * - Badge showcase animations
  */
 
-import { badgeRegistry } from './badge-registry';
+import { BADGE_REGISTRY } from './badge-registry';
 
 export interface BadgeNotification {
   badgeId: string;
@@ -34,7 +34,7 @@ export function createBadgeNotification(
   userId: string,
   badgeId: string
 ): BadgeNotification | null {
-  const badge = badgeRegistry[badgeId];
+  const badge = Object.values(BADGE_REGISTRY).find(b => b.id === badgeId);
   if (!badge) return null;
 
   const notification: BadgeNotification = {

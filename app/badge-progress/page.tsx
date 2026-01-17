@@ -73,12 +73,12 @@ export default function BadgeProgressPage() {
     const inProgress = filteredBadges.filter(item => 
       !earnedBadgeIds.has(item.badge.id) && 
       !item.eligibility.eligible && 
-      item.eligibility.progress > 0
+      (item.eligibility.progress || 0) > 0
     )
     const locked = filteredBadges.filter(item => 
       !earnedBadgeIds.has(item.badge.id) && 
       !item.eligibility.eligible && 
-      item.eligibility.progress === 0
+      (item.eligibility.progress || 0) === 0
     )
     
     return { earned, eligible, inProgress, locked }

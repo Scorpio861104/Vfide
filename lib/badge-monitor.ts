@@ -13,7 +13,7 @@
  */
 
 import { checkBadgeEligibility, UserStats } from './badge-eligibility';
-import { badgeRegistry } from './badge-registry';
+import { BADGE_REGISTRY, BadgeMetadata } from './badge-registry';
 
 // Types
 export interface BadgeEvent {
@@ -66,18 +66,18 @@ export async function checkForNewBadges(
   const newBadges: string[] = [];
 
   // Check each badge in registry
-  for (const [badgeId, badgeMetadata] of Object.entries(badgeRegistry)) {
+  for (const [badgeKey, badgeMetadata] of Object.entries(BADGE_REGISTRY)) {
     // Skip if user already has this badge
-    if (hasBadge(userId, badgeId)) {
+    if (hasBadge(userId, badgeMetadata.id)) {
       continue;
     }
 
     // Check eligibility
-    const eligibility = checkBadgeEligibility(badgeId, userStats);
+    const eligibility = checkBadgeEligibility(badgeMetadata, userStats);
     
     // If eligible, add to new badges list
-    if (eligibility.isEligible) {
-      newBadges.push(badgeId);
+    if (eligibility.eligible) {
+      newBadges.push(badgeMetadata.id);
     }
   }
 
@@ -192,7 +192,7 @@ async function processPendingBadges(userId: string): Promise<void> {
  * Emit badge earned event for notifications
  */
 function emitBadgeEarnedEvent(userId: string, walletAddress: string, badgeId: string): void {
-  const badge = badgeRegistry[badgeId];
+  const badge = Object.values(BADGE_REGISTRY).find(b => b.id === badgeId);
   if (!badge) return;
 
   // Dispatch custom event for UI updates

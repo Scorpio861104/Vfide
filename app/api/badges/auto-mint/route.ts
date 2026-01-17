@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { badgeRegistry } from '@/lib/badge-registry';
+import { BADGE_REGISTRY } from '@/lib/badge-registry';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate badge exists
-    const badge = badgeRegistry[badgeId];
+    const badge = BADGE_REGISTRY[badgeId];
     if (!badge) {
       return NextResponse.json(
         { success: false, error: 'Invalid badge ID' },

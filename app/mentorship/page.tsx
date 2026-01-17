@@ -27,7 +27,7 @@ export default function MentorshipPage() {
   const mentorInfo = useMentorInfo(address)
   const { becomeMentor, isLoading: becomingMentor, isSuccess: becameMentor } = useBecomeMentor()
   const [menteeAddress, setMenteeAddress] = useState('')
-  const { sponsorMentee, isLoading: sponsoring } = useSponsorMentee(menteeAddress as `0x${string}`)
+  const { sponsorMentee, isSponsoring: sponsoring } = useSponsorMentee(menteeAddress as `0x${string}`)
 
   const canBecomeMentor = score >= 7000
   const isMentor = mentorInfo.isMentor
