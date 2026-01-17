@@ -14,6 +14,7 @@ import { TransactionHistory } from '@/components/crypto/TransactionHistory';
 import { RewardsDisplay } from '@/components/crypto/RewardsDisplay';
 import { useAccount, useBalance } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { CryptoErrorBoundary } from '@/components/error/ApiErrorBoundary';
 
 export default function CryptoDashboard() {
   const { address, isConnected } = useAccount();
@@ -125,8 +126,10 @@ export default function CryptoDashboard() {
 
         {/* Content */}
         <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
-          {activeTab === 'transactions' && <TransactionHistory userId={address} />}
-          {activeTab === 'rewards' && <RewardsDisplay userId={address} />}
+          <CryptoErrorBoundary>
+            {activeTab === 'transactions' && <TransactionHistory userId={address} />}
+            {activeTab === 'rewards' && <RewardsDisplay userId={address} />}
+          </CryptoErrorBoundary>
         </div>
       </div>
     </div>

@@ -37,6 +37,7 @@ import { STORAGE_KEYS } from '@/lib/messageEncryption';
 import { analytics } from '@/lib/socialAnalytics';
 import { gamification, useGamification } from '@/lib/gamification';
 import { UserStatsWidget } from '@/components/gamification/GamificationWidgets';
+import { MessagingErrorBoundary } from '@/components/error/ApiErrorBoundary';
 
 type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'privacy' | 'discover' | 'activity';
 
@@ -334,7 +335,9 @@ export default function SocialPage() {
                 {/* Messaging Center */}
                 <div className="lg:col-span-2">
                   {selectedFriend ? (
-                    <MessagingCenter friend={selectedFriend} hasVault={hasVault} />
+                    <MessagingErrorBoundary>
+                      <MessagingCenter friend={selectedFriend} hasVault={hasVault} />
+                    </MessagingErrorBoundary>
                   ) : (
                     <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col items-center justify-center p-12 text-center">
                       <div className="w-24 h-24 rounded-full bg-[#00F0FF]/10 flex items-center justify-center mb-6">
@@ -395,7 +398,9 @@ export default function SocialPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <GroupMessaging />
+                <MessagingErrorBoundary>
+                  <GroupMessaging />
+                </MessagingErrorBoundary>
               </motion.div>
             )}
 
