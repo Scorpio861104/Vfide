@@ -1,14 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth-middleware';
+import { validateRequest, validateAddress, checkRateLimit } from '@/lib/api-validation';
+import { apiLogger } from '@/services/logger.service';
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`notifications-push-post:${clientId}`, { maxRequests: 10, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body = await request.json();
-    const { userAddress, subscription } = body;
 
-    if (!userAddress || !subscription) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
+    // Validation
+    const addressValidation = validateAddress(body.userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
+
+    const validation = validateRequest(body, {
+      userAddress: { required: true, type: 'address' },
+      subscription: { required: true, type: 'object' }
+    });
+    if (!validation.valid) return validation.errorResponse;
+
+    const { userAddress, subscription } = body;
 
     const result = await query(
       `INSERT INTO push_subscriptions (user_id, endpoint, keys, created_at)
@@ -23,19 +42,35 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, subscription: result.rows[0] });
   } catch (error) {
-    console.error('[Push Subscribe] Error:', error);
+    apiLogger.error('[Push Subscribe] Error', { error });
     return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`notifications-push-delete:${clientId}`, { maxRequests: 20, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body = await request.json();
-    const { userAddress, endpoint } = body;
 
-    if (!userAddress || !endpoint) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
+    // Validation
+    const addressValidation = validateAddress(body.userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
+
+    const validation = validateRequest(body, {
+      userAddress: { required: true, type: 'address' },
+      endpoint: { required: true, type: 'string' }
+    });
+    if (!validation.valid) return validation.errorResponse;
+
+    const { userAddress, endpoint } = body;
 
     await query(
       `DELETE FROM push_subscriptions ps
@@ -46,7 +81,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Push Unsubscribe] Error:', error);
+    apiLogger.error('[Push Unsubscribe] Error', { error });
     return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 });
   }
 }

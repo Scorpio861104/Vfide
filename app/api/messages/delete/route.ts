@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth-middleware';
+import { validateRequest, checkRateLimit } from '@/lib/api-validation';
+import { apiLogger } from '@/services/logger.service';
 
 interface MessageDeleteRequest {
   messageId: string;
@@ -9,8 +12,25 @@ interface MessageDeleteRequest {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`messages-delete:${clientId}`, { maxRequests: 20, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body: MessageDeleteRequest = await request.json();
+
+    // Validation
+    const validation = validateRequest(body, {
+      messageId: { required: true, type: 'string' },
+      conversationId: { required: true, type: 'string' },
+      userAddress: { required: true, type: 'address' }
+    });
+    if (!validation.valid) return validation.errorResponse;
     const { messageId, conversationId, userAddress, hardDelete = false } = body;
 
     if (!messageId || !conversationId || !userAddress) {
@@ -45,7 +65,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: true, data: result.rows[0] });
     }
   } catch (error) {
-    console.error('[Message Delete] Error:', error);
+    apiLogger.error('[Message Delete] Error', { error });
     return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 });
   }
 }
