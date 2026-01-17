@@ -58,3 +58,8 @@ next-env.d.ts
 
 .turbo
 .next
+
+# hardhat / smart contract artifacts
+/artifacts/
+/cache/
+typechain-types/
