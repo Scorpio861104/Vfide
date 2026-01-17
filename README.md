@@ -240,7 +240,7 @@ Earn **badges** by completing achievements. Badges increase your ProofScore and 
 ### Badge Features
 
 **✅ Complete Implementation:**
-- 24 unique badges across 6 categories
+- **50 unique badges** across 10 categories
 - Comprehensive eligibility tracking
 - Real-time progress monitoring
 - Badge claiming interface
@@ -252,37 +252,46 @@ Earn **badges** by completing achievements. Badges increase your ProofScore and 
 - `/badge-progress` - Track progress and claim eligible badges
 - `/achievements` - View your achievements
 
-### Badge Categories
+### Badge Categories (50 Total Badges)
 
 | Category | Badges | Examples |
 |----------|--------|----------|
 | 🏁 **Pioneer & Foundation** | 3 badges | Pioneer (first 10K users), Genesis Presale, Founding Member |
 | ⚡ **Activity & Participation** | 6 badges | Active Trader (50+ trades), Governance Voter, Power User, Daily Champion |
 | 🤝 **Trust & Community** | 4 badges | Trusted Endorser, Community Builder, Mentor Extraordinaire |
-| 💼 **Commerce & Merchants** | 3 badges | Verified Merchant, Trade Master (100+ trades), Whale (200+ trades) |
-| 🛡️ **Security & Integrity** | 2 badges | Guardian (9000+ score), Security Researcher |
-| 🎖️ **Achievements & Milestones** | 3 badges | Elite Status (8000+ score), Council Member, Veteran (1 year) |
-| 📚 **Education & Contribution** | 3 badges | Bug Hunter, Security Researcher, Translator |
+| 💼 **Commerce & Merchants** | 3 badges | Verified Merchant, Elite Merchant, Zero Dispute |
+| 🛡️ **Security & Integrity** | 4 badges | Guardian (9000+ score), Fraud Hunter, Clean Record, Redemption |
+| 🎖️ **Achievements & Milestones** | 6 badges | Elite Status (8000+ score), Council Member, Veteran, Plus more |
+| 📚 **Education & Contribution** | 5 badges | Bug Hunter, Educator, Contributor, Translator, Bug Bounty |
+| 🏆 **Trading & Volume** | 4 badges | Bronze/Silver/Gold Trader, Whale (1000+ trades) |
+| 🗳️ **Governance & Voting** | 4 badges | Voting Streaks (5/10/20), Proposal Creator |
+| 🤝 **Social & Endorsements** | 4 badges | Endorsement Milestones (100/500/1000), Highly Endorsed |
+| ⏰ **Time & Activity Patterns** | 5 badges | Early Bird, Night Owl, Weekend Warrior, Anniversaries |
+| 🎉 **Special Events** | 3 badges | Beta Tester, Holiday 2024, Conference Attendee |
+| 📝 **Content & Contribution** | 3 badges | Documentation Hero, Tutorial Creator, Ambassador |
+| 🎯 **Milestone Achievements** | 6 badges | Transaction Milestones (1K/5K), Perfect Score, Plus more |
 
 ### Badge Rarity & Rewards
 
 | Rarity | Points | Duration | Count | Examples |
 |--------|--------|----------|-------|----------|
-| ⚪ **Common** | 10-15 | Temporary | 3 | Daily Champion |
-| 🟢 **Uncommon** | 20-25 | 90-180 days | 5 | Active Trader, Governance Voter |
-| 🔵 **Rare** | 30-35 | Permanent | 7 | Trusted Endorser, Power User |
-| 🟣 **Epic** | 40-45 | Permanent | 5 | Community Builder, Council Member |
+| ⚪ **Common** | 10-15 | Temporary | 6 | Bronze Trader, Daily Champion, Clean Record |
+| 🟢 **Uncommon** | 20-25 | 90-180 days | 9 | Silver Trader, Voting Streak 5/10, Tutorial Creator |
+| 🔵 **Rare** | 30-40 | Permanent | 17 | Gold Trader, Voting Streak 20, Trusted Endorser, Beta Tester |
+| 🟣 **Epic** | 40-60 | Permanent | 13 | Whale, Endorsement 1000, Elite Merchant, Ambassador |
 | 🟡 **Legendary** | 50-75 | Permanent | 3 | Pioneer, Genesis Presale, Guardian |
-| 🔴 **Mythic** | 100+ | Permanent | 1 | Founding Member |
+| 🔴 **Mythic** | 100+ | Permanent | 2 | Founding Member, Perfect Score |
 
 ### How Badge Eligibility Works
 
 Badges are earned automatically based on your activity:
-- **Score-based**: Elite Status (8000+), Council Member (7000+), Guardian (9000+)
+- **Score-based**: Elite Status (8000+), Council Member (7000+), Guardian (9000+), Perfect Score (10,000)
 - **Activity-based**: Transactions, votes, endorsements tracked on-chain
-- **Time-based**: Account age, consecutive activity streaks
+- **Time-based**: Account age, consecutive activity streaks, time-of-day patterns
 - **Role-based**: Merchant status, mentor status
-- **Special**: Bug reports, security disclosures, presale participation
+- **Volume-based**: Trading tiers from Bronze (10) to Whale (1000+)
+- **Social-based**: Endorsement milestones from 100 to 1000+
+- **Special**: Bug reports, security disclosures, presale participation, events
 
 **Badge Progress Tracking:** Visit `/badge-progress` to see:
 - Which badges you've earned
@@ -593,7 +602,7 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 - **Governance Voting** - Vote on DAO proposals
 - **Proposal Creation** - Council members can create proposals
 - **QR Code Payments** - Merchant payment QR generation with amount/order tracking
-- **Badge System** - Complete badge system with 24 badges, eligibility tracking, progress monitoring, claiming interface, and NFT minting
+- **Badge System** - Complete badge system with **50 badges** across 10 categories, eligibility tracking, progress monitoring, claiming interface, and NFT minting
 - **Badge Progress Tracking** - Real-time progress dashboard showing earned, eligible, in-progress, and locked badges
 - **Mentorship Program** - Mentor registration and mentee sponsorship
 - **Endorsement System** - Social trust endorsements
