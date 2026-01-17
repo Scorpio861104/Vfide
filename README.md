@@ -132,7 +132,7 @@ Become a **VFIDE Merchant** to accept payments and build your business on the pl
 | 💳 **Accept Payments** | ✅ Live | Receive VFIDE from customers |
 | 📝 **Business Registration** | ✅ Live | Register with name and category |
 | 💰 **0% Protocol Fee** | ✅ Live | No platform fees on transactions |
-| 📱 **QR Code Payments** | 🚧 Beta | Generate payment QR codes |
+| 📱 **QR Code Payments** | ✅ Live | Generate payment QR codes with amount/order ID |
 | 🔄 **Auto-Convert (STABLE-PAY)** | 📅 Coming Soon | Automatically convert to stablecoins |
 | 💵 **Custom Payout Address** | 📅 Coming Soon | Receive funds to any wallet |
 | 📊 **Sales Analytics** | 📅 Coming Soon | Track volume, transaction count |
@@ -556,9 +556,9 @@ VFIDE offers a built-in escrow system for secure transactions between parties wh
 - **Smart Contract Integration** - Full blockchain interaction
 - **Governance Voting** - Vote on DAO proposals
 - **Proposal Creation** - Council members can create proposals
+- **QR Code Payments** - Merchant payment QR generation with amount/order tracking
 
 ### 🚧 Beta / In Development
-- **QR Code Payments** - Merchant payment generation
 - **Badge System** - Achievement tracking and rewards
 - **Council Elections** - Candidate nominations and voting
 
