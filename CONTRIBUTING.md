@@ -76,7 +76,7 @@ cp .env.example .env.local
 # NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
 ```
 
-See [WALLET-CONNECTION-SETUP.md](WALLET-CONNECTION-SETUP.md) for detailed setup.
+See [WALLET-CONNECTION-SETUP.md](docs/guides/WALLET-CONNECTION-SETUP.md) for detailed setup.
 
 ### 4. Start Development Server
 
@@ -167,7 +167,7 @@ describe('ComponentName', () => {
 })
 ```
 
-See [TESTING.md](TESTING.md) and [COMPREHENSIVE-TESTING-PLAN.md](COMPREHENSIVE-TESTING-PLAN.md) for more details.
+See [TESTING.md](docs/testing/TESTING.md) and [COMPREHENSIVE-TESTING-PLAN.md](COMPREHENSIVE-TESTING-PLAN.md) for more details.
 
 ---
 
@@ -340,8 +340,8 @@ We use Husky for pre-commit hooks:
 ### Documentation Files
 
 - `README.md` - Project overview
-- `WALLET-CONNECTION-SETUP.md` - Wallet setup guide
-- `TESTING.md` - Testing documentation
+- `docs/guides/WALLET-CONNECTION-SETUP.md` - Wallet setup guide
+- `docs/testing/TESTING.md` - Testing documentation
 - `COMPREHENSIVE-TESTING-PLAN.md` - Testing strategy
 - `SYSTEM-ENHANCEMENTS.md` - Enhancement recommendations
 

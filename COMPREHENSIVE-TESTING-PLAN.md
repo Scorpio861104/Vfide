@@ -619,7 +619,7 @@ npm run test:coverage:html
 
 For questions about testing:
 - Review existing tests in `__tests__/` directory
-- Check `TESTING.md` for detailed test documentation
+- Check `docs/testing/TESTING.md` for detailed test documentation
 - See `TESTING_STRATEGY.md` for testing philosophy
 
 ---

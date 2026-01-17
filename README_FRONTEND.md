@@ -27,13 +27,13 @@ cp .env.example .env.local
 2. **Important:** Add your WalletConnect Project ID (required for wallet connections):
    - Get a free Project ID from https://cloud.walletconnect.com
    - Add to `.env.local`: `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here`
-   - See [WALLET-CONNECTION-SETUP.md](WALLET-CONNECTION-SETUP.md) for detailed setup instructions
+   - See [WALLET-CONNECTION-SETUP.md](docs/guides/WALLET-CONNECTION-SETUP.md) for detailed setup instructions
 
 3. Update other environment variables as needed:
    - Add your RPC URLs (get free keys from Alchemy or Infura)
    - Update contract addresses after deployment
 
-> **⚠️ Important:** Without a valid WalletConnect Project ID, wallet connections (especially MetaMask) may not work properly. See [WALLET-CONNECTION-SETUP.md](WALLET-CONNECTION-SETUP.md) for troubleshooting.
+> **⚠️ Important:** Without a valid WalletConnect Project ID, wallet connections (especially MetaMask) may not work properly. See [WALLET-CONNECTION-SETUP.md](docs/guides/WALLET-CONNECTION-SETUP.md) for troubleshooting.
 
 ### Development
 
