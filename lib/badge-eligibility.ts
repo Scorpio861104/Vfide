@@ -67,7 +67,10 @@ export function checkBadgeEligibility(
 
   if (name === 'FOUNDING_MEMBER') {
     const eligible = stats.accountNumber <= 1000 && stats.proofScore >= 8000
-    const progress = stats.proofScore >= 8000 ? 100 : (stats.proofScore / 8000) * 100
+    // Progress considers both requirements
+    const scoreProgress = Math.min((stats.proofScore / 8000) * 100, 100)
+    const accountProgress = stats.accountNumber <= 1000 ? 100 : 0
+    const progress = Math.min((scoreProgress + accountProgress) / 2, 100)
     return {
       eligible,
       reason: eligible
@@ -184,7 +187,7 @@ export function checkBadgeEligibility(
         ...(stats.menteeCount >= 10 ? ['10+ mentees'] : []),
       ],
       requirementsPending: [
-        ...(! stats.isMentor ? ['Become a mentor'] : []),
+        ...(!stats.isMentor ? ['Become a mentor'] : []),
         ...(stats.menteeCount < 10 ? [`Recruit ${10 - stats.menteeCount} more mentees`] : []),
       ],
     }
@@ -259,7 +262,7 @@ export function checkBadgeEligibility(
   // Security & Integrity badges
   if (name === 'GUARDIAN') {
     const eligible = stats.proofScore >= 9000
-    const progress = (stats.proofScore / 9000) * 100
+    const progress = Math.min((stats.proofScore / 9000) * 100, 100)
     return {
       eligible,
       reason: eligible
@@ -287,7 +290,7 @@ export function checkBadgeEligibility(
   // Achievements & Milestones
   if (name === 'ELITE_STATUS') {
     const eligible = stats.proofScore >= 8000
-    const progress = (stats.proofScore / 8000) * 100
+    const progress = Math.min((stats.proofScore / 8000) * 100, 100)
     return {
       eligible,
       reason: eligible ? 'Elite status achieved!' : `${stats.proofScore}/8,000 score`,
@@ -299,7 +302,7 @@ export function checkBadgeEligibility(
 
   if (name === 'COUNCIL_MEMBER') {
     const eligible = stats.proofScore >= 7000
-    const progress = (stats.proofScore / 7000) * 100
+    const progress = Math.min((stats.proofScore / 7000) * 100, 100)
     return {
       eligible,
       reason: eligible ? 'Council eligibility achieved!' : `${stats.proofScore}/7,000 score`,

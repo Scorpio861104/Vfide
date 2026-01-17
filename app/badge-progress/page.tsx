@@ -12,8 +12,9 @@ import { useAccount } from 'wagmi'
 import { useBadgeNFTs, useMintBadge } from '@/hooks/useBadgeHooks'
 import { useProofScore } from '@/lib/vfide-hooks'
 import { getAllBadges, getBadgeCategories } from '@/lib/badge-registry'
-import { UserStats, getBadgesWithProgress } from '@/lib/badge-eligibility'
+import { UserStats, getBadgesWithProgress, EligibilityResult } from '@/lib/badge-eligibility'
 import { BadgeDisplay } from '@/components/badge/BadgeDisplay'
+import { BadgeMetadata } from '@/lib/badge-registry'
 import { 
   Award, 
   TrendingUp, 
@@ -298,7 +299,7 @@ function BadgeSection({
 }: {
   title: string
   icon: React.ReactNode
-  badges: Array<{ badge: any; eligibility: any }>
+  badges: Array<{ badge: BadgeMetadata; eligibility: EligibilityResult }>
   earnedIds: Set<string>
   onClaim?: (id: `0x${string}`) => void
   claimingId?: `0x${string}` | null
@@ -344,8 +345,8 @@ function BadgeCard({
   showProgress,
   isLocked
 }: {
-  badge: any
-  eligibility: any
+  badge: BadgeMetadata
+  eligibility: EligibilityResult
   isEarned: boolean
   onClaim?: (id: `0x${string}`) => void
   isClaiming?: boolean
