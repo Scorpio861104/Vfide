@@ -47,7 +47,7 @@ Your **ProofScore** is a number from 0 to 10,000 that represents your reputation
 
 > **New users start at 5,000 (Neutral)** — you have a clean slate to build from!
 > 
-> **Note:** To vote on proposals, you need at least 5,400 score. To become a merchant, you need at least 5,600 score.
+> **Note:** Tier boundaries are exclusive at the upper end (e.g., 3,499 is the max for Risky, 3,500 starts Low Trust). To vote on proposals, you need at least 5,400 score. To become a merchant, you need at least 5,600 score.
 
 ### How Fees Work
 
@@ -132,7 +132,7 @@ Become a **VFIDE Merchant** to accept payments and build your business on the pl
 | 💳 **Accept Payments** | ✅ Live | Receive VFIDE from customers |
 | 📝 **Business Registration** | ✅ Live | Register with name and category |
 | 💰 **0% Protocol Fee** | ✅ Live | No platform fees on transactions |
-| 📱 **QR Code Payments** | 🚧 Beta | Generate payment QR codes (in development) |
+| 📱 **QR Code Payments** | 🚧 Beta | Generate payment QR codes |
 | 🔄 **Auto-Convert (STABLE-PAY)** | 📅 Coming Soon | Automatically convert to stablecoins |
 | 💵 **Custom Payout Address** | 📅 Coming Soon | Receive funds to any wallet |
 | 📊 **Sales Analytics** | 📅 Coming Soon | Track volume, transaction count |

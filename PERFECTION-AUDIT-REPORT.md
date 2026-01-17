@@ -64,14 +64,14 @@ VFIDE successfully embodies its core identity as:
 
 **Implementation:**
 ```typescript
-// Code: lib/constants.ts
-RISKY:       0-3,500    (5.0% fee) ✅
-LOW_TRUST:   3,500-5,000 (3.5% fee) ✅
-NEUTRAL:     5,000-5,400 (2.0% fee) ⚠️
-GOVERNANCE:  5,400-5,600 (2.0% fee, can vote) ⚠️
-MERCHANT:    5,600-7,000 (1.0% fee, can merchant) ⚠️
-COUNCIL:     7,000-8,000 (1.0% fee, council eligible) ✅
-ELITE:       8,000-10,000 (0.25% fee, can endorse) ✅
+// Code: lib/constants.ts (boundaries are inclusive at min, exclusive at max)
+RISKY:       0-3,499    (5.0% fee) ✅  // [0, 3500)
+LOW_TRUST:   3,500-4,999 (3.5% fee) ✅  // [3500, 5000)
+NEUTRAL:     5,000-5,399 (2.0% fee) ⚠️  // [5000, 5400)
+GOVERNANCE:  5,400-5,599 (2.0% fee, can vote) ⚠️  // [5400, 5600)
+MERCHANT:    5,600-6,999 (1.0% fee, can merchant) ⚠️  // [5600, 7000)
+COUNCIL:     7,000-7,999 (1.0% fee, council eligible) ✅  // [7000, 8000)
+ELITE:       8,000-10,000 (0.25% fee, can endorse) ✅  // [8000, 10000]
 ```
 
 **Documentation (README.md):**
