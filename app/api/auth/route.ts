@@ -5,6 +5,13 @@ import { authLogger } from '@/lib/logger.service';
 import { AUTH_CONFIG } from '@/lib/config.constants';
 
 // Rate limiting map (in production, use Redis)
+// WARNING: In-memory rate limiting does not persist across server restarts
+// and will not work correctly in multi-instance deployments.
+// For production, implement distributed rate limiting using:
+// - Redis with node-rate-limiter-flexible
+// - Upstash Redis
+// - Database-backed rate limiting
+// - API Gateway rate limiting (Vercel, CloudFlare, AWS API Gateway)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const { MAX_ATTEMPTS, WINDOW_MS } = AUTH_CONFIG.RATE_LIMIT;
 
@@ -29,6 +36,30 @@ function checkRateLimit(identifier: string): boolean {
 }
 
 /**
+ * Get secure session secret
+ * Throws error in production if not configured properly
+ */
+function getSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  
+  // In production, require a proper secret
+  if (process.env.NODE_ENV === 'production' && (!secret || secret.length < 32)) {
+    throw new Error(
+      'SESSION_SECRET environment variable must be set with at least 32 characters in production. ' +
+      'Generate one with: openssl rand -base64 32'
+    );
+  }
+  
+  // In development, allow fallback but warn
+  if (!secret && process.env.NODE_ENV === 'development') {
+    console.warn('⚠️  WARNING: Using default SESSION_SECRET. Set SESSION_SECRET environment variable for security.');
+    return 'dev-secret-change-this-in-production-min-32-chars';
+  }
+  
+  return secret || 'dev-secret-change-this-in-production-min-32-chars';
+}
+
+/**
  * Generate a secure session token with HMAC
  */
 function generateSecureToken(address: string): string {
@@ -36,8 +67,7 @@ function generateSecureToken(address: string): string {
   const randomSalt = randomBytes(16).toString('hex');
   const payload = `${address}:${timestamp}:${randomSalt}`;
   
-  // In production, use a secure secret from environment variables
-  const secret = process.env.SESSION_SECRET || 'change-this-in-production';
+  const secret = getSessionSecret();
   const hmac = createHmac('sha256', secret);
   hmac.update(payload);
   const signature = hmac.digest('hex');
@@ -125,7 +155,7 @@ function verifyToken(token: string): { valid: boolean; address?: string } {
     }
     
     // Verify HMAC signature
-    const secret = process.env.SESSION_SECRET || 'change-this-in-production';
+    const secret = getSessionSecret();
     const hmac = createHmac('sha256', secret);
     hmac.update(`${address}:${timestamp}:${randomSalt}`);
     const expectedSignature = hmac.digest('hex');

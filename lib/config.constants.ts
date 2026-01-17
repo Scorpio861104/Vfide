@@ -240,7 +240,13 @@ export const UI_CONFIG = {
 
 /**
  * Feature Flags
- * Can be overridden by environment variables
+ * 
+ * WARNING: These flags are exposed to client-side code when using NEXT_PUBLIC_ prefix.
+ * Only use for non-sensitive feature toggles. Do NOT expose security-related flags.
+ * 
+ * Can be overridden by environment variables:
+ * - NEXT_PUBLIC_FEATURE_STAKING=true
+ * - etc.
  */
 export const FEATURE_FLAGS = {
   ENABLE_STAKING: process.env.NEXT_PUBLIC_FEATURE_STAKING === 'true',

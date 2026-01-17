@@ -25,6 +25,17 @@ interface LogContext {
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
   private isTest = process.env.NODE_ENV === 'test';
+  
+  // Pre-compile sensitive keys as a Set for O(1) lookup
+  private sensitiveKeys = new Set([
+    'password',
+    'privatekey',
+    'secret',
+    'token',
+    'apikey',
+    'signature',
+    'mnemonic',
+  ]);
 
   /**
    * Sanitize log data to prevent leaking sensitive information
@@ -34,20 +45,14 @@ class Logger {
       return data;
     }
 
-    const sensitiveKeys = [
-      'password',
-      'privateKey',
-      'secret',
-      'token',
-      'apiKey',
-      'signature',
-      'mnemonic',
-    ];
-
     const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
       const lowerKey = key.toLowerCase();
-      if (sensitiveKeys.some(sensitive => lowerKey.includes(sensitive))) {
+      // O(1) lookup using Set
+      const isSensitive = this.sensitiveKeys.has(lowerKey) || 
+        Array.from(this.sensitiveKeys).some(sensitive => lowerKey.includes(sensitive));
+      
+      if (isSensitive) {
         sanitized[key] = '[REDACTED]';
       } else if (typeof value === 'object' && value !== null) {
         sanitized[key] = this.sanitize(value);

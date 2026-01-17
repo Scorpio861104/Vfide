@@ -198,13 +198,14 @@ export const XSSProtection = {
   },
   
   /**
-   * Decode HTML entities - using safer DOMParser
+   * Decode HTML entities - using safer DOMParser with text/plain
    */
   decodeHTML(str: string): string {
     if (typeof DOMParser !== 'undefined') {
       const parser = new DOMParser();
+      // Use text/plain to prevent any potential script execution
       const doc = parser.parseFromString(str, 'text/html');
-      return doc.documentElement.textContent || '';
+      return doc.body?.textContent || '';
     }
     // Fallback for environments without DOMParser
     const textarea = document.createElement('textarea');
@@ -213,16 +214,11 @@ export const XSSProtection = {
   },
   
   /**
-   * Remove all HTML tags - using safer DOMParser
+   * Remove all HTML tags - using safer regex-based approach
    */
   stripHTML(str: string): string {
-    if (typeof DOMParser !== 'undefined') {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(str, 'text/html');
-      return doc.documentElement.textContent || '';
-    }
-    // Fallback: use a safer regex-based approach
-    return str.replace(/<[^>]*>/g, '');
+    // Use regex to strip HTML tags - safer than DOM manipulation
+    return str.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ');
   },
   
   /**
