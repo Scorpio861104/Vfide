@@ -118,7 +118,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID not found' },
+        { status: 500 }
+      );
+    }
 
     // Insert activity
     const result = await query<Activity>(
