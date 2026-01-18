@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
+import { checkRateLimit, getClientIdentifier } from '@/lib/rateLimit';
+import { validateQueryParams } from '@/lib/api-validation';
+import { apiLogger } from '@/lib/logger.service';
+import { requireAuth } from '@/lib/auth-middleware';
 
 /**
  * Community Stories API - PostgreSQL Database
@@ -27,8 +31,25 @@ interface StoryRow {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`stories:${clientId}`, { windowMs: 60000, maxRequests: 60 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
+    
+    // Validate optional parameters
+    const validation = validateQueryParams(searchParams, {
+      authorId: { required: false, type: 'address' },
+      viewerId: { required: false, type: 'address' }
+    });
+    if (!validation.valid) {
+      return validation.errorResponse;
+    }
+
     const authorId = searchParams.get('authorId');
     const viewerId = searchParams.get('viewerId'); // For tracking viewed status
 
@@ -142,7 +163,7 @@ export async function GET(request: NextRequest) {
       total: stories.length,
     });
   } catch (error) {
-    console.error('Error fetching stories:', error);
+    apiLogger.error('Error fetching stories', { error });
     return NextResponse.json(
       { error: 'Failed to fetch stories' },
       { status: 500 }
@@ -151,6 +172,19 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting - stricter for POST
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`stories-post:${clientId}`, { windowMs: 60000, maxRequests: 10 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Require authentication
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
   const client = await getClient();
 
   try {
@@ -233,7 +267,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ story: newStory }, { status: 201 });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error creating story:', error);
+    apiLogger.error('Error creating story', { error });
     return NextResponse.json(
       { error: 'Failed to create story' },
       { status: 500 }
@@ -244,6 +278,19 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(`stories-delete:${clientId}`, { windowMs: 60000, maxRequests: 20 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Require authentication
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
   const client = await getClient();
   
   try {
@@ -276,7 +323,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Story not found' }, { status: 404 });
     }
 
-    if (ownerCheck.rows[0].wallet_address.toLowerCase() !== authorId.toLowerCase()) {
+    const storyOwner = ownerCheck.rows[0];
+    if (!storyOwner || storyOwner.wallet_address.toLowerCase() !== authorId.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -290,7 +338,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true, deleted: storyId });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error deleting story:', error);
+    apiLogger.error('Error deleting story', { error });
     return NextResponse.json(
       { error: 'Failed to delete story' },
       { status: 500 }

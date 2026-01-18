@@ -1,17 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { checkRateLimit, validateAddress } from '@/lib/api-validation';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * GET /api/quests/weekly
  * Fetch weekly challenges with user progress
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`quests-weekly:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) {
+      return addressValidation.errorResponse;
     }
 
     const client = await getClient();
@@ -84,7 +99,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching weekly challenges:', error);
+    apiLogger.error('Error fetching weekly challenges', { error });
     return NextResponse.json(
       { error: 'Failed to fetch weekly challenges' },
       { status: 500 }

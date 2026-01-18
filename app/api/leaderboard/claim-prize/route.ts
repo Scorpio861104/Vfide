@@ -1,20 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { requireAuth } from '@/lib/auth-middleware';
+import { validateRequest, validateAddress, checkRateLimit } from '@/lib/api-validation';
+import { apiLogger } from '@/services/logger.service';
 
 /**
  * POST /api/leaderboard/claim-prize
  * Claim monthly competition prize
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`leaderboard-claim-prize:${clientId}`, { maxRequests: 10, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const { userAddress, monthYear } = await request.json();
 
-    if (!userAddress || !monthYear) {
-      return NextResponse.json(
-        { error: 'User address and month required' },
-        { status: 400 }
-      );
-    }
+    // Validation
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
+
+    const validation = validateRequest({ monthYear }, {
+      monthYear: { required: true, type: 'string' }
+    });
+    if (!validation.valid) return validation.errorResponse;
 
     const client = await getClient();
 
@@ -123,7 +137,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error claiming monthly prize:', error);
+    apiLogger.error('Error claiming monthly prize', { error });
     return NextResponse.json(
       { error: 'Failed to claim monthly prize' },
       { status: 500 }

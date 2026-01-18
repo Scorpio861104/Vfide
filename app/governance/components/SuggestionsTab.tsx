@@ -341,7 +341,7 @@ export function SuggestionsTab() {
                 className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#50C878]/50 transition-all"
               >
                 <div className="flex gap-4">
-                  <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                  <div className="flex flex-col items-center gap-1 min-w-0 flex-shrink-0">
                     <button
                       onClick={() => handleVote(suggestion.id, true)}
                       disabled={hasVoted}

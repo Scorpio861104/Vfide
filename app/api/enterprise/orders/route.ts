@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
+import { checkRateLimit, validateAddress, validateRequest } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * Enterprise Orders API - PostgreSQL Database
@@ -52,9 +55,25 @@ function calculateStats(orders: OrderRow[]): OrderStats {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`enterprise-orders:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const merchantId = searchParams.get('merchantId');
+    
+    // Validate merchant address if provided
+    if (merchantId) {
+      const addressValidation = validateAddress(merchantId);
+      if (!addressValidation.valid) {
+        return addressValidation.errorResponse;
+      }
+    }
+
     const status = searchParams.get('status');
     const currency = searchParams.get('currency');
     const page = parseInt(searchParams.get('page') || '1');
@@ -158,7 +177,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    apiLogger.error('Error fetching orders', { error });
     return NextResponse.json(
       { error: 'Failed to fetch orders' },
       { status: 500 }
@@ -167,10 +186,35 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`enterprise-orders-create:${clientId}`, { maxRequests: 10, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
+  // Authentication required (merchant role)
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+  // TODO: Add merchant role check in production
+
   const client = await getClient();
 
   try {
     const body = await request.json();
+    
+    // Validate required fields
+    const validation = validateRequest(body, {
+      merchantId: { required: true, type: 'string' },
+      amount: { required: true, type: 'string' },
+      currency: { required: true, type: 'string' }
+    });
+    if (!validation.valid) {
+      return validation.errorResponse;
+    }
+
     const { 
       merchantId, 
       merchantName, 
@@ -184,11 +228,10 @@ export async function POST(request: NextRequest) {
       notes 
     } = body;
 
-    if (!merchantId || !amount || !currency) {
-      return NextResponse.json(
-        { error: 'merchantId, amount, and currency are required' },
-        { status: 400 }
-      );
+    // Validate merchant address
+    const addressValidation = validateAddress(merchantId);
+    if (!addressValidation.valid) {
+      return addressValidation.errorResponse;
     }
 
     await client.query('BEGIN');
@@ -251,7 +294,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ order: newOrder }, { status: 201 });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error creating order:', error);
+    apiLogger.error('Error creating order', { error });
     return NextResponse.json(
       { error: 'Failed to create order' },
       { status: 500 }
@@ -290,7 +333,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    if (ownerCheck.rows[0].merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
+    const orderOwner = ownerCheck.rows[0];
+    if (!orderOwner || orderOwner.merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -334,7 +378,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, orderId });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error updating order:', error);
+    apiLogger.error('Error updating order', { error });
     return NextResponse.json(
       { error: 'Failed to update order' },
       { status: 500 }
@@ -374,13 +418,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    if (ownerCheck.rows[0].merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
+    const orderOwner = ownerCheck.rows[0];
+    if (!orderOwner || orderOwner.merchant_address.toLowerCase() !== merchantId.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     // Only allow cancellation of pending orders
-    if (!['pending', 'processing'].includes(ownerCheck.rows[0].status)) {
+    if (!['pending', 'processing'].includes(orderOwner.status)) {
       await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'Can only cancel pending or processing orders' },
@@ -398,7 +443,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true, cancelled: orderId });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error cancelling order:', error);
+    apiLogger.error('Error cancelling order', { error });
     return NextResponse.json(
       { error: 'Failed to cancel order' },
       { status: 500 }

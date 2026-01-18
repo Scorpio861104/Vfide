@@ -198,21 +198,29 @@ export const XSSProtection = {
   },
   
   /**
-   * Decode HTML entities
+   * Decode HTML entities - using DOMParser with text/html
+   * Note: We use 'text/html' and extract textContent from body to handle
+   * HTML entities properly while avoiding script execution
    */
   decodeHTML(str: string): string {
-    const div = document.createElement('div');
-    div.innerHTML = str;
-    return div.textContent || '';
+    if (typeof DOMParser !== 'undefined') {
+      const parser = new DOMParser();
+      // Parse as text/html but extract only textContent from body
+      const doc = parser.parseFromString(str, 'text/html');
+      return doc.body?.textContent || '';
+    }
+    // Fallback for environments without DOMParser
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = str;
+    return textarea.value;
   },
   
   /**
-   * Remove all HTML tags
+   * Remove all HTML tags - using safer regex-based approach
    */
   stripHTML(str: string): string {
-    const div = document.createElement('div');
-    div.innerHTML = str;
-    return div.textContent || '';
+    // Use regex to strip HTML tags - safer than DOM manipulation
+    return str.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ');
   },
   
   /**

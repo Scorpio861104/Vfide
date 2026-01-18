@@ -1,16 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { validateQueryParams, schemas } from '@/lib/api-validation';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * GET /api/leaderboard/monthly
  * Fetch monthly leaderboard with rankings and prize pool info
+ * Enhanced with: validation, rate limiting, proper error handling
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting: 30 requests per minute
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 30, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const monthYear = searchParams.get('month') || new Date().toISOString().slice(0, 7); // Default to current month
     const userAddress = searchParams.get('userAddress');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    
+    // Validate pagination
+    const paginationValidation = validateQueryParams(searchParams, schemas.pagination);
+    if (!paginationValidation.valid) {
+      return paginationValidation.errorResponse;
+    }
+    const { limit } = paginationValidation.data;
 
     const client = await getClient();
 

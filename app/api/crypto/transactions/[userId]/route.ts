@@ -1,12 +1,22 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/api-validation';
+import { apiLogger } from '@/lib/logger.service';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  const clientId = request.headers.get('x-forwarded-for') || 'anonymous';
+
+  // Rate limiting
+  const rateLimit = checkRateLimit(`transactions:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) {
+    return rateLimit.errorResponse;
+  }
+
   try {
     const { userId } = await params;
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
 
     const result = await query(
       `SELECT t.* FROM transactions t
@@ -18,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ transactions: result.rows, total: result.rows.length });
   } catch (error) {
-    console.error('[Transactions API] Error:', error);
+    apiLogger.error('Failed to fetch transactions', { error });
     return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
+import { useSafeTimeout } from "@/hooks/useMemoryLeak";
 import { 
   Search, Shield, Key, Mail, User, Users,
   AlertCircle, ChevronRight, Clock, CheckCircle2, XCircle,
@@ -85,9 +86,10 @@ interface Particle {
 
 function FloatingParticles() {
   const [particles, setParticles] = useState<Particle[]>([]);
+  const safeTimeout = useSafeTimeout();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    safeTimeout(() => {
       setParticles([...Array(15)].map((_, i) => ({
         id: i,
         x: Math.random() * 100,
@@ -95,8 +97,7 @@ function FloatingParticles() {
         delay: Math.random() * 10
       })));
     }, 0);
-    return () => clearTimeout(timer);
-  }, []);
+  }, [safeTimeout]);
 
   if (particles.length === 0) return null;
 

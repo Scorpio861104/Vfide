@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
+import { validateQueryParams, validateRequest, schemas } from '@/lib/api-validation';
+import { requireAuth, optionalAuth } from '@/lib/auth-middleware';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { apiLogger } from '@/lib/logger.service';
+import { validateAddress } from '@/lib/validation';
 
 interface Friendship {
   id: number;
@@ -19,16 +24,37 @@ interface Friendship {
 /**
  * GET /api/friends?address=xxx&status=accepted
  * Get user's friends list or friend requests
+ * Enhanced with: validation, optional auth, rate limiting
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 60, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const address = searchParams.get('address');
     const status = searchParams.get('status') || 'accepted';
 
+    // Validate address
     if (!address) {
       return NextResponse.json(
         { error: 'address is required' },
+        { status: 400 }
+      );
+    }
+    
+    const addressValidation = validateAddress(address);
+    if (!addressValidation.valid) {
+      return NextResponse.json(
+        { error: `Invalid address: ${addressValidation.error}` },
         { status: 400 }
       );
     }
@@ -57,7 +83,9 @@ export async function GET(request: NextRequest) {
       count: result.rows.length,
     });
   } catch (error) {
-    console.error('[Friends GET API] Error:', error);
+    apiLogger.error('Friends GET failed', { 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     return NextResponse.json(
       { error: 'Failed to fetch friends' },
       { status: 500 }
@@ -68,21 +96,45 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/friends
  * Send friend request
+ * Enhanced with: validation, authentication, rate limiting
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 10, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
+  // Require authentication
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) {
+    return auth.errorResponse;
+  }
+
+  // Validate request body
+  const validation = await validateRequest(request, schemas.friendRequest);
+  if (!validation.valid) {
+    return validation.errorResponse;
+  }
+
+  const { from, to } = validation.data;
+
+  // Verify authenticated user matches 'from'
+  if (from.toLowerCase() !== auth.address) {
+    return NextResponse.json(
+      { error: 'Unauthorized: cannot send request on behalf of another user' },
+      { status: 403 }
+    );
+  }
+
   const client = await getClient();
   
   try {
-    const body = await request.json();
-    const { from, to } = body;
-
-    if (!from || !to) {
-      return NextResponse.json(
-        { error: 'Missing required fields: from, to' },
-        { status: 400 }
-      );
-    }
-
     await client.query('BEGIN');
 
     // Get user IDs
@@ -308,8 +360,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const user1Id = user1Result.rows[0].id;
-    const user2Id = user2Result.rows[0].id;
+    const user1Row = user1Result.rows[0];
+    const user2Row = user2Result.rows[0];
+    if (!user1Row || !user2Row) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const user1Id = user1Row.id;
+    const user2Id = user2Row.id;
 
     // Delete friendship
     const result = await query(

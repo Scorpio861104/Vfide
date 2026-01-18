@@ -1,6 +1,7 @@
 'use client'
 
 import { Footer } from '@/components/layout/Footer'
+import { ApiErrorBoundary } from '@/components/error/ApiErrorBoundary'
 import { GlassCard } from '@/components/ui/PageLayout'
 import { Badge } from '@/components/ui/FormElements'
 import { Counter } from '@/components/ui/Animations'
@@ -233,6 +234,7 @@ export default function LeaderboardPage() {
     <>
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
+        <ApiErrorBoundary>
         {/* Header */}
         <section className="py-12 bg-linear-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
           <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
@@ -511,6 +513,7 @@ export default function LeaderboardPage() {
             </div>
           </div>
         </section>
+        </ApiErrorBoundary>
       </main>
 
       <Footer />

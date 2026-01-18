@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, AlertCircle, AlertTriangle, Loader2, X } from 'lucide-react';
+import { useSafeTimeout } from '@/hooks/useMemoryLeak';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning' | 'loading';
 type ToastVariant = 'default' | 'destructive';
@@ -38,6 +39,7 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const safeTimeout = useSafeTimeout();
 
   const showToast = useCallback((message: string, type: ToastType = 'info', duration = 5000, action?: ToastAction): string => {
     const id = Math.random().toString(36).substring(7);
@@ -47,13 +49,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
     // Loading toasts don't auto-dismiss
     if (duration > 0 && type !== 'loading') {
-      setTimeout(() => {
+      safeTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, duration);
     }
     
     return id;
-  }, []);
+  }, [safeTimeout]);
 
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));

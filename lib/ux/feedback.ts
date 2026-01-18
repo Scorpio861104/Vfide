@@ -46,7 +46,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   delay: number
 ) {
   const [isPending, setIsPending] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
 
@@ -232,7 +232,7 @@ export function useCopyFeedback(options: UseCopyFeedbackOptions = {}) {
   
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const copy = useCallback(async (text: string) => {
     try {
@@ -285,13 +285,13 @@ export function usePullToRefresh(options: UsePullToRefreshOptions) {
   const startYRef = useRef<number | null>(null);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (window.scrollY === 0) {
+    if (window.scrollY === 0 && e.touches[0]) {
       startYRef.current = e.touches[0].clientY;
     }
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (startYRef.current === null || isRefreshing) return;
+    if (startYRef.current === null || isRefreshing || !e.touches[0]) return;
     
     const currentY = e.touches[0].clientY;
     const diff = currentY - startYRef.current;
@@ -383,7 +383,7 @@ export function useLongPress(
 ) {
   const { delay = 500, onStart, onCancel } = options;
   
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isLongPressRef = useRef(false);
 
   const start = useCallback(() => {

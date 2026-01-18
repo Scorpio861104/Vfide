@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { checkRateLimit } from '@/lib/api-validation';
+import { validateAddress } from '@/lib/api-validation';
+import { requireAuth } from '@/lib/auth-middleware';
+import { apiLogger } from '@/services/logger.service';
 
 /**
  * GET /api/quests/onboarding
@@ -7,12 +11,24 @@ import { getClient } from '@/lib/db';
  */
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`quests-onboarding:${clientId}`, {
+      maxRequests: 60,
+      windowMs: 60000,
+    });
+    if (!rateLimit.success) return rateLimit.errorResponse;
+
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
+
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
 
     const client = await getClient();
 
@@ -66,7 +82,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching onboarding progress:', error);
+    apiLogger.error('Error fetching onboarding progress:', error);
     return NextResponse.json(
       { error: 'Failed to fetch onboarding progress' },
       { status: 500 }
@@ -80,6 +96,18 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`quests-onboarding-patch:${clientId}`, {
+      maxRequests: 30,
+      windowMs: 60000,
+    });
+    if (!rateLimit.success) return rateLimit.errorResponse;
+
+    // Authentication required
+    const auth = await requireAuth(request);
+    if (!auth.authenticated) return auth.errorResponse;
+
     const { step, userAddress } = await request.json();
 
     const validSteps = [
@@ -101,6 +129,10 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
 
     const client = await getClient();
 
@@ -188,7 +220,7 @@ export async function PATCH(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating onboarding progress:', error);
+    apiLogger.error('Error updating onboarding progress:', error);
     return NextResponse.json(
       { error: 'Failed to update onboarding progress' },
       { status: 500 }
@@ -202,11 +234,27 @@ export async function PATCH(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(`quests-onboarding-claim:${clientId}`, {
+      maxRequests: 20,
+      windowMs: 60000,
+    });
+    if (!rateLimit.success) return rateLimit.errorResponse;
+
+    // Authentication required
+    const auth = await requireAuth(request);
+    if (!auth.authenticated) return auth.errorResponse;
+
     const { userAddress } = await request.json();
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
+
+    // Validate address
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
 
     const client = await getClient();
 
@@ -291,7 +339,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error claiming onboarding reward:', error);
+    apiLogger.error('Error claiming onboarding reward:', error);
     return NextResponse.json(
       { error: 'Failed to claim onboarding reward' },
       { status: 500 }

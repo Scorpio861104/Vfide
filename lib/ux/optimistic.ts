@@ -153,9 +153,14 @@ export function useOptimisticList<T extends { id: string | number }>(
     newItem: T,
     confirmFn: () => Promise<T | void>
   ) => {
+    const wrappedConfirmFn = async () => {
+      const result = await confirmFn();
+      // If confirmFn returns the new item, add it to the list; otherwise return the optimistic list
+      return result ? [...items.filter(i => i.id !== newItem.id), result] : [...items, newItem];
+    };
     return update(
       [...items, newItem],
-      confirmFn
+      wrappedConfirmFn as () => Promise<T[] | void>
     );
   }, [items, update]);
 
@@ -174,11 +179,19 @@ export function useOptimisticList<T extends { id: string | number }>(
     updates: Partial<T>,
     confirmFn: () => Promise<T | void>
   ) => {
+    const wrappedConfirmFn = async () => {
+      const result = await confirmFn();
+      // If confirmFn returns the updated item, replace it in the list; otherwise return the optimistic list
+      if (result) {
+        return items.map(item => item.id === itemId ? result : item);
+      }
+      return items.map(item => item.id === itemId ? { ...item, ...updates } : item);
+    };
     return update(
       items.map(item => 
         item.id === itemId ? { ...item, ...updates } : item
       ),
-      confirmFn
+      wrappedConfirmFn as () => Promise<T[] | void>
     );
   }, [items, update]);
 

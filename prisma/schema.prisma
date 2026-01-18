@@ -1,0 +1,163 @@
+// Prisma schema for VFIDE production database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User profile and stats
+model User {
+  id                String   @id @default(cuid())
+  walletAddress     String   @unique
+  proofScore        Int      @default(5000)
+  xp                Int      @default(0)
+  level             Int      @default(1)
+  isMerchant        Boolean  @default(false)
+  isMentor          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  badgeEvents       BadgeEvent[]
+  mintedBadges      MintedBadge[]
+  givenEndorsements Endorsement[] @relation("endorser")
+  receivedEndorsements Endorsement[] @relation("endorsed")
+  mentorships       Mentorship[] @relation("mentor")
+  mentees           Mentorship[] @relation("mentee")
+  reviews           Review[] @relation("reviewer")
+  merchantReviews   Review[] @relation("merchant")
+  transactions      Transaction[]
+  
+  @@index([walletAddress])
+  @@index([proofScore])
+}
+
+// Badge event tracking
+model BadgeEvent {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType         String
+  metadata          Json?
+  timestamp         DateTime @default(now())
+  
+  @@index([userId])
+  @@index([eventType])
+  @@index([timestamp])
+}
+
+// Minted badges (NFT records)
+model MintedBadge {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId           String
+  tokenId           String   @unique
+  mintedAt          DateTime @default(now())
+  txHash            String?
+  
+  @@index([userId])
+  @@index([badgeId])
+  @@unique([userId, badgeId])
+}
+
+// Endorsements
+model Endorsement {
+  id                String   @id @default(cuid())
+  endorserId        String
+  endorser          User     @relation("endorser", fields: [endorserId], references: [id], onDelete: Cascade)
+  endorsedId        String
+  endorsed          User     @relation("endorsed", fields: [endorsedId], references: [id], onDelete: Cascade)
+  comment           String?
+  createdAt         DateTime @default(now())
+  
+  @@index([endorserId])
+  @@index([endorsedId])
+  @@unique([endorserId, endorsedId])
+}
+
+// Mentorship relationships
+model Mentorship {
+  id                String   @id @default(cuid())
+  mentorId          String
+  mentor            User     @relation("mentor", fields: [mentorId], references: [id], onDelete: Cascade)
+  menteeId          String
+  mentee            User     @relation("mentee", fields: [menteeId], references: [id], onDelete: Cascade)
+  status            String   @default("active")
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+  
+  @@index([mentorId])
+  @@index([menteeId])
+  @@unique([mentorId, menteeId])
+}
+
+// Customer reviews
+model Review {
+  id                String   @id @default(cuid())
+  merchantId        String
+  merchant          User     @relation("merchant", fields: [merchantId], references: [id], onDelete: Cascade)
+  reviewerId        String
+  reviewer          User     @relation("reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  rating            Int
+  title             String
+  comment           String
+  verified          Boolean  @default(false)
+  helpful           Int      @default(0)
+  response          String?
+  respondedAt       DateTime?
+  createdAt         DateTime @default(now())
+  
+  @@index([merchantId])
+  @@index([reviewerId])
+  @@index([rating])
+}
+
+// Transactions
+model Transaction {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
+  amount            String
+  token             String
+  toAddress         String?
+  txHash            String?  @unique
+  status            String   @default("pending")
+  createdAt         DateTime @default(now())
+  completedAt       DateTime?
+  
+  @@index([userId])
+  @@index([txHash])
+  @@index([status])
+}
+
+// Rate limiting tracking
+model RateLimit {
+  id                String   @id @default(cuid())
+  identifier        String
+  endpoint          String
+  requestCount      Int      @default(1)
+  windowStart       DateTime @default(now())
+  
+  @@unique([identifier, endpoint])
+  @@index([identifier])
+  @@index([windowStart])
+}
+
+// Session management
+model Session {
+  id                String   @id @default(cuid())
+  userId            String
+  token             String   @unique
+  expiresAt         DateTime
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}

@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateQueryParams, schemas } from '@/lib/api-validation';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
 
 /**
  * Community Trending Topics API - PostgreSQL Database
  * GET - Retrieve trending topics and hashtags from database
+ * 
+ * Enhanced with:
+ * - Input validation
+ * - Rate limiting
+ * - Proper error handling
  */
 
 interface TrendingTopicRow {
@@ -27,10 +34,28 @@ interface TrendingUserRow {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting: 30 requests per minute for public endpoints
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 30, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
+    
+    // Validate pagination parameters
+    const paginationValidation = validateQueryParams(searchParams, schemas.pagination);
+    if (!paginationValidation.valid) {
+      return paginationValidation.errorResponse;
+    }
+    const { limit } = paginationValidation.data;
+    
     const category = searchParams.get('category');
-    const limit = parseInt(searchParams.get('limit') || '10');
     const type = searchParams.get('type') || 'all'; // 'topics', 'users', 'all'
 
     const response: {

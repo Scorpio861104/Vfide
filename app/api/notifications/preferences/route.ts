@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth-middleware';
+import { validateAddress, checkRateLimit } from '@/lib/api-validation';
+import { apiLogger } from '@/services/logger.service';
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`notifications-preferences-get:${clientId}`, { maxRequests: 60, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const userAddress = searchParams.get('userAddress');
@@ -9,6 +17,10 @@ export async function GET(request: NextRequest) {
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
+
+    // Validation
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
 
     const result = await query(
       `SELECT np.* FROM notification_preferences np
@@ -28,12 +40,21 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ preferences: result.rows[0] });
   } catch (error) {
-    console.error('[Notification Preferences GET] Error:', error);
+    apiLogger.error('[Notification Preferences GET] Error', { error });
     return NextResponse.json({ error: 'Failed to fetch preferences' }, { status: 500 });
   }
 }
 
 export async function PUT(request: NextRequest) {
+  // Rate limiting
+  const clientId = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkRateLimit(`notifications-preferences-put:${clientId}`, { maxRequests: 30, windowMs: 60000 });
+  if (!rateLimit.success) return rateLimit.errorResponse;
+
+  // Authentication required
+  const auth = await requireAuth(request);
+  if (!auth.authenticated) return auth.errorResponse;
+
   try {
     const body = await request.json();
     const { userAddress, ...preferences } = body;
@@ -41,6 +62,10 @@ export async function PUT(request: NextRequest) {
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
+
+    // Validation
+    const addressValidation = validateAddress(userAddress);
+    if (!addressValidation.valid) return addressValidation.errorResponse;
 
     const result = await query(
       `UPDATE notification_preferences np
@@ -56,7 +81,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true, preferences: result.rows[0] });
   } catch (error) {
-    console.error('[Notification Preferences PUT] Error:', error);
+    apiLogger.error('[Notification Preferences PUT] Error', { error });
     return NextResponse.json({ error: 'Failed to update preferences' }, { status: 500 });
   }
 }

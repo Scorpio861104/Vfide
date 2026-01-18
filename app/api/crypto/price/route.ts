@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { apiLogger } from '@/lib/logger.service';
 
 // VFIDE Token address - from environment or deployment
 const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x0000000000000000000000000000000000000000';
@@ -129,9 +130,9 @@ export async function GET(request: NextRequest) {
         vfidePriceInEth = liveVfidePriceInEth;
         vfidePrice = liveVfidePriceInEth * ethPrice;
         priceSource = 'uniswap';
-      } catch {
+      } catch (poolError) {
         // Pool read failed, continue with tokenomics price
-        console.warn('[Price API] Pool read failed, using tokenomics price');
+        apiLogger.warn('Pool read failed, using tokenomics price', { error: poolError });
       }
     }
 
@@ -161,7 +162,7 @@ export async function GET(request: NextRequest) {
       source: priceSource,
     });
   } catch (error) {
-    console.error('[Price API] Error:', error);
+    apiLogger.error('Price API error', { error });
     
     // Fallback to base prices
     return NextResponse.json({

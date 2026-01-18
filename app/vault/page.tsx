@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import { isAddress, parseUnits, formatUnits } from "viem";
 import { devLog } from "@/lib/utils";
 import { useVaultBalance, useSelfPanic, useQuarantineStatus, useCanSelfPanic } from "@/lib/vfide-hooks";
+import { useSafeInterval } from "@/hooks/useMemoryLeak";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Shield, AlertTriangle, Lock, Clock, Plus, UserPlus, Users, Key, 
@@ -65,17 +66,14 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
   const [showPanicConfirm, setShowPanicConfirm] = useState(false);
   const [panicDuration, setPanicDuration] = useState(24);
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  const safeInterval = useSafeInterval();
   
   useEffect(() => {
-    // Update time every minute for countdown
-    const interval = setInterval(() => {
+    // Update time every minute for countdown - auto-cleanup on unmount
+    safeInterval(() => {
       setNow(Math.floor(Date.now() / 1000));
     }, 60000);
-    
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+  }, [safeInterval]);
   
   const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now);
   const isQuarantined = quarantineRemaining > 0;

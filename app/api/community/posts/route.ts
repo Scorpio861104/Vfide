@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
+import { validateQueryParams, validateRequest, schemas } from '@/lib/api-validation';
+import { requireAuth, optionalAuth } from '@/lib/auth-middleware';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { apiLogger } from '@/lib/logger.service';
 
 /**
  * Community Posts API - PostgreSQL Database
  * GET - Retrieve community posts from database
  * POST - Create a new post in database
+ * Enhanced with: validation, auth (for POST), rate limiting
  */
 
 interface PostRow {
@@ -27,13 +32,31 @@ interface PostRow {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 60, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
+    
+    // Validate pagination
+    const paginationValidation = validateQueryParams(searchParams, schemas.pagination);
+    if (!paginationValidation.valid) {
+      return paginationValidation.errorResponse;
+    }
+    const { limit, offset } = paginationValidation.data;
+    
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
     const tag = searchParams.get('tag');
     const authorId = searchParams.get('authorId');
-    const offset = (page - 1) * limit;
+    const actualOffset = offset || (page - 1) * limit;
 
     // Build dynamic query
     let queryText = `
@@ -264,7 +287,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    if (ownerCheck.rows[0].wallet_address.toLowerCase() !== authorId.toLowerCase()) {
+    const postOwner = ownerCheck.rows[0];
+    if (!postOwner || postOwner.wallet_address.toLowerCase() !== authorId.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -343,7 +367,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    if (ownerCheck.rows[0].wallet_address.toLowerCase() !== authorId.toLowerCase()) {
+    const postOwner = ownerCheck.rows[0];
+    if (!postOwner || postOwner.wallet_address.toLowerCase() !== authorId.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }

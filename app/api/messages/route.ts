@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
 import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { validateQueryParams, schemas } from '@/lib/api-validation';
+import { validateAddress } from '@/lib/validation';
 
 interface Message {
   id: number;
@@ -37,17 +39,44 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const userAddress = searchParams.get('userAddress'); // Current user
-    const conversationWith = searchParams.get('conversationWith'); // Other user
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
+    
+    // Validate query parameters
+    const userAddress = searchParams.get('userAddress');
+    const conversationWith = searchParams.get('conversationWith');
+    
+    // Validate userAddress
     if (!userAddress) {
       return NextResponse.json(
         { error: 'userAddress is required' },
         { status: 400 }
       );
     }
+    
+    const userAddressValidation = validateAddress(userAddress);
+    if (!userAddressValidation.valid) {
+      return NextResponse.json(
+        { error: `Invalid userAddress: ${userAddressValidation.error}` },
+        { status: 400 }
+      );
+    }
+    
+    // Validate conversationWith if provided
+    if (conversationWith) {
+      const conversationValidation = validateAddress(conversationWith);
+      if (!conversationValidation.valid) {
+        return NextResponse.json(
+          { error: `Invalid conversationWith: ${conversationValidation.error}` },
+          { status: 400 }
+        );
+      }
+    }
+    
+    // Validate pagination using the schema
+    const paginationValidation = validateQueryParams(searchParams, schemas.pagination);
+    if (!paginationValidation.valid) {
+      return paginationValidation.errorResponse;
+    }
+    const { limit, offset } = paginationValidation.data;
 
     // If conversationWith is specified, get messages between two users
     if (conversationWith) {

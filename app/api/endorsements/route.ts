@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
+import { validateQueryParams, schemas } from '@/lib/api-validation';
+import { validateAddress } from '@/lib/validation';
+import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { apiLogger } from '@/lib/logger.service';
 
 interface Endorsement {
   id: number;
@@ -20,15 +24,53 @@ interface Endorsement {
 /**
  * GET /api/endorsements?endorsedAddress=0x...&proposalId=123&limit=50&offset=0
  * Get endorsements
+ * Enhanced with: validation, rate limiting, secure logging
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimit = checkRateLimit(clientId, { maxRequests: 60, windowMs: 60000 });
+  
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: getRateLimitHeaders(rateLimit) }
+    );
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
+    
+    // Validate pagination
+    const paginationValidation = validateQueryParams(searchParams, schemas.pagination);
+    if (!paginationValidation.valid) {
+      return paginationValidation.errorResponse;
+    }
+    const { limit, offset } = paginationValidation.data;
+    
     const endorsedAddress = searchParams.get('endorsedAddress');
     const endorserAddress = searchParams.get('endorserAddress');
     const proposalId = searchParams.get('proposalId');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    
+    // Validate addresses if provided
+    if (endorsedAddress) {
+      const validation = validateAddress(endorsedAddress);
+      if (!validation.valid) {
+        return NextResponse.json(
+          { error: `Invalid endorsed address: ${validation.error}` },
+          { status: 400 }
+        );
+      }
+    }
+    if (endorserAddress) {
+      const validation = validateAddress(endorserAddress);
+      if (!validation.valid) {
+        return NextResponse.json(
+          { error: `Invalid endorser address: ${validation.error}` },
+          { status: 400 }
+        );
+      }
+    }
 
     let queryText = `
       SELECT 

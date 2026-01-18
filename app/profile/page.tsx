@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Footer } from '@/components/layout/Footer';
+import { ApiErrorBoundary } from '@/components/error/ApiErrorBoundary';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -33,7 +34,9 @@ export default function ProfilePage() {
   return (
     <>
       <main className="min-h-screen bg-[#0F0F12] pt-20 pb-20">
-        <ProfileSettings />
+        <ApiErrorBoundary>
+          <ProfileSettings />
+        </ApiErrorBoundary>
       </main>
       <Footer />
     </>

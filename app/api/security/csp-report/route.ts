@@ -141,6 +141,14 @@ export async function GET(request: NextRequest) {
       'SELECT COUNT(*) FROM csp_violations'
     );
 
+    if (countResult.rows.length === 0) {
+      return NextResponse.json({
+        total: 0,
+        recent: result.rows,
+        grouped: {},
+      });
+    }
+
     // Group by directive
     const grouped = result.rows.reduce((acc, v) => {
       const directive = v.violated_directive || 'unknown';
@@ -151,8 +159,9 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {} as Record<string, typeof result.rows>);
 
+    const countRow = countResult.rows[0];
     return NextResponse.json({
-      total: parseInt(countResult.rows[0].count),
+      total: countRow ? parseInt(countRow.count) : 0,
       recent: result.rows,
       grouped,
     });
