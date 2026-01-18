@@ -1,0 +1,339 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useAccount } from 'wagmi';
+import { Coins, ChevronDown, ChevronUp, RefreshCw, ExternalLink } from 'lucide-react';
+
+/**
+ * Multi-Chain Balance View Component
+ * 
+ * Shows balances across multiple chains for the connected wallet
+ * Uses public RPC endpoints to fetch balances
+ */
+
+interface ChainBalance {
+  chainId: number;
+  name: string;
+  symbol: string;
+  balance: string;
+  balanceUSD: string;
+  icon: string;
+  explorer: string;
+  rpc: string;
+  color: string;
+}
+
+// Chain configurations
+const CHAINS: Omit<ChainBalance, 'balance' | 'balanceUSD'>[] = [
+  {
+    chainId: 1,
+    name: 'Ethereum',
+    symbol: 'ETH',
+    icon: '⟠',
+    explorer: 'https://etherscan.io',
+    rpc: 'https://eth.llamarpc.com',
+    color: '#627EEA',
+  },
+  {
+    chainId: 8453,
+    name: 'Base',
+    symbol: 'ETH',
+    icon: '🔵',
+    explorer: 'https://basescan.org',
+    rpc: 'https://mainnet.base.org',
+    color: '#0052FF',
+  },
+  {
+    chainId: 84532,
+    name: 'Base Sepolia',
+    symbol: 'ETH',
+    icon: '🔵',
+    explorer: 'https://sepolia.basescan.org',
+    rpc: 'https://sepolia.base.org',
+    color: '#0052FF',
+  },
+  {
+    chainId: 42161,
+    name: 'Arbitrum',
+    symbol: 'ETH',
+    icon: '🔷',
+    explorer: 'https://arbiscan.io',
+    rpc: 'https://arb1.arbitrum.io/rpc',
+    color: '#28A0F0',
+  },
+  {
+    chainId: 10,
+    name: 'Optimism',
+    symbol: 'ETH',
+    icon: '🔴',
+    explorer: 'https://optimistic.etherscan.io',
+    rpc: 'https://mainnet.optimism.io',
+    color: '#FF0420',
+  },
+  {
+    chainId: 137,
+    name: 'Polygon',
+    symbol: 'MATIC',
+    icon: '💜',
+    explorer: 'https://polygonscan.com',
+    rpc: 'https://polygon-rpc.com',
+    color: '#8247E5',
+  },
+];
+
+// Approximate prices (in production, fetch from price API)
+const APPROX_PRICES: Record<string, number> = {
+  ETH: 2500,
+  MATIC: 0.80,
+};
+
+interface MultiChainBalanceProps {
+  compact?: boolean;
+}
+
+export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
+  const { address, isConnected } = useAccount();
+  const [balances, setBalances] = useState<ChainBalance[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Fetch balances from all chains
+  const fetchBalances = async () => {
+    if (!address) return;
+    
+    setIsLoading(true);
+    
+    const results = await Promise.all(
+      CHAINS.map(async (chain) => {
+        try {
+          const response = await fetch(chain.rpc, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              method: 'eth_getBalance',
+              params: [address, 'latest'],
+              id: chain.chainId,
+            }),
+          });
+          
+          const data = await response.json();
+          const balanceWei = parseInt(data.result || '0', 16);
+          const balanceEth = balanceWei / 1e18;
+          const price = APPROX_PRICES[chain.symbol] || 0;
+          const balanceUSD = balanceEth * price;
+          
+          return {
+            ...chain,
+            balance: formatBalance(balanceEth),
+            balanceUSD: formatUSD(balanceUSD),
+          };
+        } catch (_err) {
+          return {
+            ...chain,
+            balance: '—',
+            balanceUSD: '—',
+          };
+        }
+      })
+    );
+    
+    setBalances(results);
+    setLastUpdated(new Date());
+    setIsLoading(false);
+  };
+
+  // Fetch on mount and when address changes
+  useEffect(() => {
+    if (isConnected && address) {
+      fetchBalances();
+    }
+  }, [address, isConnected]);
+
+  // Calculate total USD value
+  const totalUSD = balances.reduce((sum, b) => {
+    const value = parseFloat(b.balanceUSD.replace(/[^0-9.]/g, '')) || 0;
+    return sum + value;
+  }, 0);
+
+  if (!isConnected) return null;
+
+  if (compact) {
+    return (
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+      >
+        <Coins size={16} className="text-cyan-400" />
+        <span className="text-sm text-white font-medium">{formatUSD(totalUSD)}</span>
+        {isExpanded ? (
+          <ChevronUp size={14} className="text-zinc-400" />
+        ) : (
+          <ChevronDown size={14} className="text-zinc-400" />
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <div className="bg-zinc-900/50 rounded-xl border border-zinc-700 overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-zinc-800">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-cyan-500/20 rounded-lg">
+              <Coins className="text-cyan-400" size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white">Multi-Chain Balance</h3>
+              <p className="text-xs text-zinc-500">
+                {lastUpdated ? `Updated ${formatTimeAgo(lastUpdated)}` : 'Loading...'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold text-white">{formatUSD(totalUSD)}</span>
+            <button
+              onClick={fetchBalances}
+              disabled={isLoading}
+              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Chain List */}
+      <div className="divide-y divide-zinc-800">
+        {balances.map((chain, index) => (
+          <motion.div
+            key={chain.chainId}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
+            className="p-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
+                style={{ backgroundColor: `${chain.color}20` }}
+              >
+                {chain.icon}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white">{chain.name}</p>
+                <p className="text-xs text-zinc-500">{chain.symbol}</p>
+              </div>
+            </div>
+            
+            <div className="text-right flex items-center gap-3">
+              <div>
+                <p className="text-sm font-medium text-white">{chain.balance}</p>
+                <p className="text-xs text-zinc-500">{chain.balanceUSD}</p>
+              </div>
+              <a
+                href={`${chain.explorer}/address/${address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 text-zinc-500 hover:text-cyan-400 transition-colors"
+              >
+                <ExternalLink size={14} />
+              </a>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Loading state */}
+      {isLoading && balances.length === 0 && (
+        <div className="p-8 flex items-center justify-center">
+          <RefreshCw size={24} className="text-cyan-400 animate-spin" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Compact inline multi-chain indicator
+ */
+export function MultiChainIndicator() {
+  const { address, isConnected } = useAccount();
+  const [activeChains, setActiveChains] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isConnected || !address) return;
+    
+    // Quick check for chains with balance
+    const checkChains = async () => {
+      let count = 0;
+      for (const chain of CHAINS.slice(0, 4)) { // Check first 4 chains
+        try {
+          const response = await fetch(chain.rpc, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              method: 'eth_getBalance',
+              params: [address, 'latest'],
+              id: 1,
+            }),
+          });
+          const data = await response.json();
+          const balance = parseInt(data.result || '0', 16);
+          if (balance > 0) count++;
+        } catch {
+          // Ignore errors
+        }
+      }
+      setActiveChains(count);
+    };
+    
+    checkChains();
+  }, [address, isConnected]);
+
+  if (!isConnected || activeChains === 0) return null;
+
+  return (
+    <div className="flex items-center gap-1 text-xs text-zinc-500">
+      <div className="flex -space-x-1">
+        {CHAINS.slice(0, activeChains).map(chain => (
+          <div
+            key={chain.chainId}
+            className="w-4 h-4 rounded-full border border-zinc-800 flex items-center justify-center text-[8px]"
+            style={{ backgroundColor: chain.color }}
+            title={chain.name}
+          >
+            {chain.icon}
+          </div>
+        ))}
+      </div>
+      <span>{activeChains} chains</span>
+    </div>
+  );
+}
+
+// Utility functions
+function formatBalance(value: number): string {
+  if (value === 0) return '0';
+  if (value < 0.0001) return '< 0.0001';
+  if (value < 1) return value.toFixed(4);
+  return value.toFixed(3);
+}
+
+function formatUSD(value: number): string {
+  if (value === 0) return '$0.00';
+  if (value < 0.01) return '< $0.01';
+  return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatTimeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  return `${Math.floor(seconds / 3600)}h ago`;
+}

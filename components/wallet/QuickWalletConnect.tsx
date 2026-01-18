@@ -3,10 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect, useBalance, useChainId, useSwitchChain } from 'wagmi';
-import { Wallet, ChevronDown, Check, Copy, ExternalLink, LogOut, RefreshCw, Zap, Keyboard, Clock, WifiOff } from 'lucide-react';
+import { Wallet, ChevronDown, Check, Copy, ExternalLink, LogOut, RefreshCw, Zap, Keyboard, Clock, WifiOff, QrCode } from 'lucide-react';
 import { baseSepolia, base } from 'wagmi/chains';
 import { IS_TESTNET } from '@/lib/chains';
 import Link from 'next/link';
+import { WalletQRCode } from './WalletQRCode';
+import { PendingTransactionsList, usePendingTransactions } from './PendingTransactions';
+import { GasIndicator } from './GasPriceAlert';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
 interface QuickWalletConnectProps {
   size?: 'sm' | 'md' | 'lg';
@@ -29,11 +33,15 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const { data: balance } = useBalance({ address });
+  const { pendingCount } = usePendingTransactions();
+  const { playConnect, playClick } = useTransactionSounds();
   
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [showShortcutHint, setShowShortcutHint] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+  const [activeTab, setActiveTab] = useState<'menu' | 'transactions'>('menu');
 
   // Get MetaMask connector for one-click connect
   const metaMaskConnector = connectors.find(c => 
@@ -54,8 +62,9 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const handleQuickConnect = useCallback(() => {
     if (primaryConnector) {
       connect({ connector: primaryConnector });
+      playConnect();
     }
-  }, [primaryConnector, connect]);
+  }, [primaryConnector, connect, playConnect]);
 
   // Keyboard shortcut (Cmd/Ctrl + W to connect/disconnect)
   useEffect(() => {
@@ -238,7 +247,21 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
         >
           <ChevronDown size={16} className="text-zinc-500" />
         </motion.div>
+
+        {/* Pending transaction badge */}
+        {pendingCount > 0 && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center"
+          >
+            <span className="text-[10px] font-bold text-black">{pendingCount}</span>
+          </motion.div>
+        )}
       </motion.button>
+
+      {/* QR Code Modal */}
+      <WalletQRCode isOpen={showQR} onClose={() => setShowQR(false)} />
 
       {/* Dropdown menu */}
       <AnimatePresence>
@@ -248,12 +271,15 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 w-64 bg-zinc-900 rounded-xl border border-zinc-700 shadow-xl overflow-hidden z-50"
+            className="absolute right-0 top-full mt-2 w-72 bg-zinc-900 rounded-xl border border-zinc-700 shadow-xl overflow-hidden z-50"
           >
-            {/* Wallet info */}
+            {/* Wallet info header */}
             <div className="p-4 border-b border-zinc-800">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-zinc-500 uppercase tracking-wide">Connected</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-zinc-500 uppercase tracking-wide">Connected</span>
+                  <GasIndicator />
+                </div>
                 <span className="flex items-center gap-1 text-xs text-green-400">
                   <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
                   {IS_TESTNET ? 'Base Sepolia' : 'Base'}
@@ -274,14 +300,52 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="p-2">
+            {/* Tab switcher */}
+            <div className="flex border-b border-zinc-800">
               <button
-                onClick={handleCopy}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
+                onClick={() => { setActiveTab('menu'); playClick(); }}
+                className={`flex-1 py-2 text-xs font-medium transition-colors ${
+                  activeTab === 'menu' 
+                    ? 'text-cyan-400 border-b-2 border-cyan-400' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Menu
+              </button>
+              <button
+                onClick={() => { setActiveTab('transactions'); playClick(); }}
+                className={`flex-1 py-2 text-xs font-medium transition-colors flex items-center justify-center gap-1 ${
+                  activeTab === 'transactions' 
+                    ? 'text-cyan-400 border-b-2 border-cyan-400' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Transactions
+                {pendingCount > 0 && (
+                  <span className="w-4 h-4 bg-yellow-500 rounded-full text-[10px] text-black font-bold flex items-center justify-center">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Tab content */}
+            {activeTab === 'menu' ? (
+              <div className="p-2">
+                <button
+                  onClick={() => { handleCopy(); playClick(); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
               >
                 {copied ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
                 <span>{copied ? 'Copied!' : 'Copy Address'}</span>
+              </button>
+
+              <button
+                onClick={() => { setShowQR(true); setIsOpen(false); playClick(); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <QrCode size={16} />
+                <span>Show QR Code</span>
               </button>
 
               <a
@@ -293,6 +357,8 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
                 <ExternalLink size={16} />
                 <span>View on Explorer</span>
               </a>
+
+              <div className="my-2 border-t border-zinc-800" />
 
               <Link
                 href="/crypto"
@@ -331,6 +397,10 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
                 <span>Disconnect</span>
               </button>
             </div>
+            ) : (
+              /* Transactions Tab */
+              <PendingTransactionsList compact maxItems={5} />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
