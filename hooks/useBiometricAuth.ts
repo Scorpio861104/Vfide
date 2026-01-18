@@ -5,6 +5,10 @@ import {
   BiometricType,
   SECURITY_STORAGE_KEYS
 } from '@/config/security-advanced';
+import { safeLocalStorage } from '@/lib/utils';
+
+// Wallet linking storage key
+const LINKED_WALLET_KEY = 'vfide-biometric-wallet';
 
 export interface UseBiometricAuthResult {
   config: BiometricConfig;
@@ -12,6 +16,7 @@ export interface UseBiometricAuthResult {
   hasCredentials: boolean;
   credentials: BiometricCredential[];
   platformSupport: BiometricConfig['platformSupport'];
+  linkedWallet: string | null;
   
   // Setup methods
   enroll: (name: string, type?: BiometricType) => Promise<BiometricCredential | null>;
@@ -23,6 +28,10 @@ export interface UseBiometricAuthResult {
   // Management
   checkSupport: () => Promise<BiometricConfig['platformSupport']>;
   listCredentials: () => BiometricCredential[];
+  
+  // Wallet linking
+  linkWallet: (address: string) => void;
+  getLinkedWallet: () => string | null;
 }
 
 const checkPlatformSupport = async (): Promise<BiometricConfig['platformSupport']> => {
@@ -277,16 +286,29 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
     return config.credentials;
   }, [config.credentials]);
 
+  // Link wallet address to biometric credential
+  const linkWallet = useCallback((address: string) => {
+    safeLocalStorage.setItem(LINKED_WALLET_KEY, address);
+  }, []);
+
+  // Get linked wallet address
+  const getLinkedWallet = useCallback((): string | null => {
+    return safeLocalStorage.getItem(LINKED_WALLET_KEY);
+  }, []);
+
   return {
     config,
     isEnabled: config.enabled,
     hasCredentials: config.credentials.length > 0,
     credentials: config.credentials,
     platformSupport: config.platformSupport,
+    linkedWallet: getLinkedWallet(),
     enroll,
     remove,
     verify,
     checkSupport,
-    listCredentials
+    listCredentials,
+    linkWallet,
+    getLinkedWallet,
   };
 };

@@ -3,11 +3,13 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useAccount, useReconnect } from 'wagmi';
 import { safeLocalStorage } from '@/lib/utils';
+import { linkWallet, isPasskeyEnabled, authenticateWithPasskey } from '@/lib/biometricAuth';
 
 // Storage keys for session persistence
 const SESSION_KEY = 'vfide-session';
 const LAST_WALLET_KEY = 'vfide-last-wallet';
 const LAST_CHAIN_KEY = 'vfide-last-chain';
+const STAY_CONNECTED_KEY = 'vfide-stay-connected';
 
 interface SessionData {
   address: string;
@@ -15,16 +17,19 @@ interface SessionData {
   chainId: number;
   connectedAt: number;
   lastActive: number;
+  permanent: boolean; // If true, session never expires
 }
 
 /**
  * Hook to persist wallet connection across page refreshes and browser sessions
  * 
  * Features:
- * - Auto-reconnect on page load
+ * - Auto-reconnect on page load (instant, no waiting)
+ * - Permanent connection option (never expires)
  * - Session tracking with timestamps
  * - Last used wallet/chain memory
- * - Activity heartbeat to keep session fresh
+ * - Biometric authentication support
+ * - Multi-wallet linking
  * - Graceful handling of disconnects
  */
 export function useWalletPersistence() {
@@ -34,8 +39,11 @@ export function useWalletPersistence() {
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Save session data when connected
-  const saveSession = useCallback(() => {
+  const saveSession = useCallback((permanent: boolean = false) => {
     if (!isConnected || !address || !connector || !chain) return;
+
+    // Check if "Stay Connected" is enabled
+    const stayConnected = safeLocalStorage.getItem(STAY_CONNECTED_KEY) === 'true' || permanent;
 
     const session: SessionData = {
       address,
@@ -43,11 +51,15 @@ export function useWalletPersistence() {
       chainId: chain.id,
       connectedAt: Date.now(),
       lastActive: Date.now(),
+      permanent: stayConnected,
     };
 
     safeLocalStorage.setItem(SESSION_KEY, JSON.stringify(session));
     safeLocalStorage.setItem(LAST_WALLET_KEY, connector.id);
     safeLocalStorage.setItem(LAST_CHAIN_KEY, chain.id.toString());
+    
+    // Also link this wallet for multi-wallet support
+    linkWallet(address);
   }, [isConnected, address, connector, chain]);
 
   // Update last active timestamp (heartbeat)
@@ -94,11 +106,32 @@ export function useWalletPersistence() {
     return chainStr ? parseInt(chainStr, 10) : null;
   }, []);
 
-  // Check if session is valid (less than 7 days old)
+  // Check if session is valid (permanent sessions never expire, otherwise 30 days)
   const isSessionValid = useCallback((session: SessionData): boolean => {
-    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+    // Permanent sessions never expire
+    if (session.permanent) return true;
+    
+    // Regular sessions expire after 30 days of inactivity
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
     const now = Date.now();
-    return now - session.lastActive < SEVEN_DAYS;
+    return now - session.lastActive < THIRTY_DAYS;
+  }, []);
+
+  // Enable/disable permanent connection (Stay Connected)
+  const setStayConnected = useCallback((enabled: boolean) => {
+    safeLocalStorage.setItem(STAY_CONNECTED_KEY, enabled ? 'true' : 'false');
+    
+    // Update current session if connected
+    const session = getSession();
+    if (session) {
+      session.permanent = enabled;
+      safeLocalStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }
+  }, []);
+
+  // Check if Stay Connected is enabled
+  const isStayConnectedEnabled = useCallback((): boolean => {
+    return safeLocalStorage.getItem(STAY_CONNECTED_KEY) === 'true';
   }, []);
 
   // Auto-reconnect on mount
@@ -185,5 +218,7 @@ export function useWalletPersistence() {
     getLastChain,
     isSessionValid,
     clearSession,
+    setStayConnected,
+    isStayConnectedEnabled,
   };
 }
