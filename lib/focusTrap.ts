@@ -43,6 +43,11 @@ export function useFocusTrap(isActive: boolean) {
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
+    // Guard against undefined elements
+    if (!firstElement || !lastElement) {
+      return;
+    }
+
     // Focus first element
     firstElement.focus();
 

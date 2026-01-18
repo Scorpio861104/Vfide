@@ -18,7 +18,7 @@ export function useENS(address: string | undefined) {
   // Use wagmi's ENS hooks
   const { data: resolvedName, isLoading: nameLoading } = useEnsName({
     address: address as `0x${string}` | undefined,
-    chainId: mainnet.id,
+    chainId: mainnet.id as number as 8453, // Cast for wagmi type compatibility
     query: {
       enabled: !!address,
       staleTime: 1000 * 60 * 60, // 1 hour cache
@@ -27,7 +27,7 @@ export function useENS(address: string | undefined) {
 
   const { data: resolvedAvatar, isLoading: avatarLoading } = useEnsAvatar({
     name: resolvedName ? normalize(resolvedName) : undefined,
-    chainId: mainnet.id,
+    chainId: mainnet.id as number as 8453, // Cast for wagmi type compatibility
     query: {
       enabled: !!resolvedName,
       staleTime: 1000 * 60 * 60, // 1 hour cache

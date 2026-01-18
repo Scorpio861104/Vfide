@@ -11,6 +11,7 @@
 
 // Type import for React
 import * as React from 'react';
+import { CACHE_TTL, CACHE_LIMITS } from './walletConstants';
 
 interface CachedIcon {
   data: string; // base64 encoded image

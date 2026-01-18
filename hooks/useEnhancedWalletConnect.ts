@@ -73,6 +73,7 @@ export function useEnhancedWalletConnect() {
 
       return () => clearInterval(timer);
     }
+    return undefined;
   }, [connectionStatus]);
 
   // Enhanced error messages
@@ -131,6 +132,7 @@ export function useEnhancedWalletConnect() {
         setConnectionTimeout(null);
       }
     }
+    return undefined;
   }, [isConnecting, isPending, showToast, connectionTimeout]);
 
   // Show toast notifications for connection events
