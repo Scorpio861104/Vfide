@@ -3,9 +3,9 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { Copy, Check, Clock, Circle } from 'lucide-react';
+import { Copy, Check, Clock, Circle, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useReconnect } from 'wagmi';
 import { useToast } from '@/components/ui/toast';
 import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
 import { useENS } from '@/hooks/useENS';
@@ -48,8 +48,9 @@ export function SimpleWalletConnect() {
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
   const { sessionDurationFormatted, isInCooldown, cooldownRemaining } = useEnhancedWalletConnect();
-  // Get connector info from wagmi
+  // Get connector info and reconnect status from wagmi
   const { connector } = useAccount();
+  const { isPending: isReconnecting } = useReconnect();
 
   // Copy address to clipboard
   const copyAddress = useCallback(async (address: string, e: React.MouseEvent) => {
@@ -173,6 +174,29 @@ export function SimpleWalletConnect() {
             })}
           >
             {(() => {
+              // Show reconnecting state (auto-reconnect from session)
+              if (isReconnecting) {
+                return (
+                  <motion.div
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="show"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-cyan-400 font-bold rounded-lg border border-cyan-500/30"
+                  >
+                    <span className="flex items-center gap-2">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <RefreshCw size={16} />
+                      </motion.div>
+                      <span className="hidden sm:inline">Reconnecting...</span>
+                      <span className="sm:hidden">Resuming...</span>
+                    </span>
+                  </motion.div>
+                );
+              }
+
               if (isLoading) {
                 return (
                   <motion.div

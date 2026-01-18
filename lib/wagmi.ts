@@ -27,6 +27,35 @@ const noopStorage = {
   removeItem: (_key: string) => {},
 }
 
+// Enhanced storage with error handling for wallet persistence
+const safeStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      // localStorage might be blocked (incognito, security settings)
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      // Silently fail if storage is full or blocked
+    }
+  },
+  removeItem: (key: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // Silently fail
+    }
+  },
+};
+
 // WalletConnect Project ID (optional for local/dev/test runs).
 // When missing, we fully disable the WalletConnect connector to keep env-less
 // builds/tests deterministic and avoid remote registry/config fetches.
@@ -75,9 +104,10 @@ const mainnetChains = [
   zkSync,
 ] as const
 
-// Create storage that works with SSR
+// Create storage that works with SSR and handles errors gracefully
 const wagmiStorage = createStorage({
-  storage: typeof window !== 'undefined' ? window.localStorage : noopStorage,
+  storage: typeof window !== 'undefined' ? safeStorage : noopStorage,
+  key: 'vfide-wallet', // Custom key prefix for our app
 })
 
 // ========================================

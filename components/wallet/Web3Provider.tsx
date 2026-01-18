@@ -2,11 +2,22 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
 import { config } from '@/lib/wagmi';
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { RainbowKitWrapper } from './RainbowKitWrapper';
+import { useWalletPersistence } from '@/hooks/useWalletPersistence';
 
 /**
- * Web3 Provider with Enhanced Wallet Connection
+ * Internal component that uses wallet persistence hook
+ * Must be inside WagmiProvider to access wagmi hooks
+ */
+function WalletPersistenceManager({ children }: { children: ReactNode }) {
+  // This hook handles auto-reconnect and session persistence
+  useWalletPersistence();
+  return <>{children}</>;
+}
+
+/**
+ * Web3 Provider with Enhanced Wallet Connection & Persistence
  * 
  * Wraps the app with wagmi and RainbowKit for wallet connectivity.
  * Handles SSR correctly by using noopStorage during SSR phase.
@@ -16,7 +27,9 @@ import { RainbowKitWrapper } from './RainbowKitWrapper';
  * The wagmi config handles SSR correctly with ssr:true + noopStorage.
  * 
  * Enhanced Features:
- * - Automatic reconnection on mount
+ * - Automatic reconnection on mount (wagmi built-in)
+ * - Session persistence with activity tracking (7-day expiry)
+ * - Last wallet/chain memory for convenience
  * - Optimized React Query settings for wallet state
  * - Proper SSR hydration handling
  */
@@ -43,7 +56,9 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={config} reconnectOnMount={true}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitWrapper>{children}</RainbowKitWrapper>
+        <RainbowKitWrapper>
+          <WalletPersistenceManager>{children}</WalletPersistenceManager>
+        </RainbowKitWrapper>
       </QueryClientProvider>
     </WagmiProvider>
   );
