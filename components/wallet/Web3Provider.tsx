@@ -22,18 +22,20 @@ import { RainbowKitWrapper } from './RainbowKitWrapper';
  */
 export function Web3Provider({ children }: { children: ReactNode }) {
   // Create QueryClient inside component to avoid SSR hydration issues
-  // Optimized settings for wallet connection state management
+  // Optimized settings for faster wallet connection responsiveness
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        // Balance stale time with responsiveness: 2 minutes is good middle ground
-        staleTime: 1000 * 60 * 2, // 2 minutes
+        // Reduced stale time for faster updates during connection
+        staleTime: 1000 * 30, // 30 seconds (was 2 minutes)
         // Enable refetch on window focus for better wallet state sync
         refetchOnWindowFocus: true,
-        // Retry failed queries for better reliability
-        retry: 2,
-        // Shorter retry delay for faster recovery
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+        // Reduced retries for faster failure feedback
+        retry: 1,
+        // Faster retry for quicker recovery
+        retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 3000),
+        // Disable refetch on reconnect to speed up initial load
+        refetchOnReconnect: false,
       },
     },
   }));

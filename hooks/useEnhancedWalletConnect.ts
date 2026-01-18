@@ -111,12 +111,19 @@ export function useEnhancedWalletConnect() {
     return `Connection error: ${error.message}`;
   }, []);
 
-  // Phase 2: Connection timeout handler
+  // Phase 2: Connection timeout handler - optimized to avoid stuck state
   useEffect(() => {
     if (isConnecting || isPending) {
+      // Clear any existing timeout first
+      if (connectionTimeout) {
+        clearTimeout(connectionTimeout);
+      }
+      
       const timeout = setTimeout(() => {
-        showToast('Connection timeout. Please try again.', 'error', 5000);
-        setLastError('Connection timed out after 30 seconds');
+        showToast('Connection taking too long. Please check MetaMask and try again.', 'error', 4000);
+        setLastError('Connection timed out');
+        // Force disconnect to reset state
+        disconnect();
       }, CONNECTION_TIMEOUT_MS);
 
       setConnectionTimeout(timeout);

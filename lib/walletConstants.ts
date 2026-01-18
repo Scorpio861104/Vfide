@@ -9,8 +9,9 @@
 /**
  * Connection timeout in milliseconds
  * Maximum time to wait for wallet connection before showing timeout error
+ * Reduced from 30s to 15s for faster feedback
  */
-export const CONNECTION_TIMEOUT_MS = 30000; // 30 seconds
+export const CONNECTION_TIMEOUT_MS = 15000; // 15 seconds
 
 /**
  * RPC request timeout in milliseconds
@@ -44,11 +45,11 @@ export const CACHE_TTL = {
  * Polling intervals for real-time updates
  */
 export const POLLING_INTERVALS = {
-  /** Network latency check interval (30 seconds) */
-  LATENCY: 30000,
+  /** Network latency check interval (60 seconds) - reduced frequency */
+  LATENCY: 60000,
   
-  /** Balance refresh interval (30 seconds) */
-  BALANCE: 30000,
+  /** Balance refresh interval (60 seconds) - reduced frequency */
+  BALANCE: 60000,
   
   /** Cooldown countdown update interval (1 second) */
   COOLDOWN: 1000,
@@ -75,10 +76,10 @@ export const CACHE_LIMITS = {
  */
 export const CONNECTION_LIMITS = {
   /** Maximum failed attempts before cooldown */
-  MAX_ATTEMPTS: 5,
+  MAX_ATTEMPTS: 10,
   
-  /** Cooldown duration after max attempts (30 seconds) */
-  COOLDOWN_DURATION: 30000,
+  /** Cooldown duration after max attempts (15 seconds) */
+  COOLDOWN_DURATION: 15000,
 } as const;
 
 // ==================== ANIMATIONS ====================

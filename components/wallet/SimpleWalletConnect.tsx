@@ -105,32 +105,42 @@ export function SimpleWalletConnect() {
         // Phase 3: ENS resolution
         const { ensName } = useENS(account?.address);
 
-        // Phase 3: Network latency monitoring
+        // Phase 3: Network latency monitoring - deferred to avoid blocking connection
         const [latencyData, setLatencyData] = useState(chain?.id ? getCachedLatency(chain.id) : null);
 
         useEffect(() => {
           if (chain?.id && connected) {
-            // Check cached first
+            // Check cached first (instant, no blocking)
             const cached = getCachedLatency(chain.id);
             if (cached) {
               setLatencyData(cached);
             }
 
-            // Measure latency periodically
-            const measureAndUpdate = async () => {
-              // Only measure if we have a valid RPC endpoint
+            // Defer latency measurement to avoid blocking connection flow
+            // Wait 2 seconds after connection before measuring
+            const deferredMeasure = setTimeout(async () => {
               const chainWithRpc = chain as { rpcUrls?: { default?: { http?: string[] } } };
               const rpcUrl = chainWithRpc.rpcUrls?.default?.http?.[0];
               if (rpcUrl) {
                 const data = await measureLatency(rpcUrl, chain.id);
                 setLatencyData(data);
               }
+            }, 2000);
+
+            // Less frequent polling after initial measurement
+            const interval = setInterval(async () => {
+              const chainWithRpc = chain as { rpcUrls?: { default?: { http?: string[] } } };
+              const rpcUrl = chainWithRpc.rpcUrls?.default?.http?.[0];
+              if (rpcUrl) {
+                const data = await measureLatency(rpcUrl, chain.id);
+                setLatencyData(data);
+              }
+            }, POLLING_INTERVALS.LATENCY);
+
+            return () => {
+              clearTimeout(deferredMeasure);
+              clearInterval(interval);
             };
-
-            measureAndUpdate();
-            const interval = setInterval(measureAndUpdate, POLLING_INTERVALS.LATENCY);
-
-            return () => clearInterval(interval);
           }
           return undefined;
         }, [chain?.id, connected, chain]);
@@ -169,20 +179,32 @@ export function SimpleWalletConnect() {
                     variants={fadeIn}
                     initial="hidden"
                     animate="show"
-                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-[#A0A0A5] font-bold rounded-lg border border-[#3A3A3F] cursor-wait"
+                    className="flex items-center gap-2"
                   >
-                    <span className="flex items-center gap-2">
-                      <motion.svg 
-                        className="h-4 w-4"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        viewBox="0 0 24 24"
-                      >
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </motion.svg>
-                      Connecting...
-                    </span>
+                    <div className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-[#A0A0A5] font-bold rounded-lg border border-[#3A3A3F]">
+                      <span className="flex items-center gap-2">
+                        <motion.svg 
+                          className="h-4 w-4"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                          viewBox="0 0 24 24"
+                        >
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </motion.svg>
+                        <span className="hidden sm:inline">Check MetaMask...</span>
+                        <span className="sm:hidden">Waiting...</span>
+                      </span>
+                    </div>
+                    <motion.button
+                      onClick={() => window.location.reload()}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-3 py-2 text-xs sm:text-sm bg-red-500/20 text-red-400 font-medium rounded-lg border border-red-500/30 hover:bg-red-500/30 transition-colors"
+                      title="Cancel and refresh"
+                    >
+                      Cancel
+                    </motion.button>
                   </motion.div>
                 );
               }
