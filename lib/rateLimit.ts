@@ -7,6 +7,8 @@
  * - CloudFlare rate limiting
  */
 
+import { NextResponse } from 'next/server';
+
 interface RateLimitEntry {
   count: number;
   resetTime: number;
@@ -25,6 +27,7 @@ interface RateLimitResult {
   remaining: number;
   resetTime: number;
   retryAfter?: number;
+  errorResponse?: NextResponse;
 }
 
 /**
@@ -58,12 +61,24 @@ export function checkRateLimit(
   // Check if over limit
   const remaining = Math.max(0, maxRequests - entry.count);
   const success = entry.count <= maxRequests;
+  const retryAfter = success ? undefined : Math.ceil((entry.resetTime - now) / 1000);
 
   return {
     success,
     remaining,
     resetTime: entry.resetTime,
-    retryAfter: success ? undefined : Math.ceil((entry.resetTime - now) / 1000),
+    retryAfter,
+    errorResponse: success ? undefined : NextResponse.json(
+      { error: 'Too many requests', retryAfter },
+      { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Remaining': remaining.toString(),
+          'X-RateLimit-Reset': entry.resetTime.toString(),
+          'Retry-After': retryAfter?.toString() ?? '60',
+        }
+      }
+    ),
   };
 }
 
