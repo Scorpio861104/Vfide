@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect, useBalance, useChainId, useSwitchChain } from 'wagmi';
-import { Wallet, ChevronDown, Check, Copy, ExternalLink, LogOut, RefreshCw, Zap } from 'lucide-react';
+import { Wallet, ChevronDown, Check, Copy, ExternalLink, LogOut, RefreshCw, Zap, Keyboard, Clock, WifiOff } from 'lucide-react';
 import { baseSepolia, base } from 'wagmi/chains';
 import { IS_TESTNET } from '@/lib/chains';
+import Link from 'next/link';
 
 interface QuickWalletConnectProps {
   size?: 'sm' | 'md' | 'lg';
@@ -31,6 +32,8 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [showShortcutHint, setShowShortcutHint] = useState(false);
 
   // Get MetaMask connector for one-click connect
   const metaMaskConnector = connectors.find(c => 
@@ -48,11 +51,43 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const isWrongNetwork = isConnected && chainId !== expectedChain.id;
 
   // One-click connect
-  const handleQuickConnect = () => {
+  const handleQuickConnect = useCallback(() => {
     if (primaryConnector) {
       connect({ connector: primaryConnector });
     }
-  };
+  }, [primaryConnector, connect]);
+
+  // Keyboard shortcut (Cmd/Ctrl + W to connect/disconnect)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + Shift + W to toggle wallet
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'w') {
+        e.preventDefault();
+        if (isConnected) {
+          setIsOpen(prev => !prev);
+        } else {
+          handleQuickConnect();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isConnected, handleQuickConnect]);
+
+  // Network status detection
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    setIsOnline(navigator.onLine);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Copy address
   const handleCopy = async () => {
@@ -110,10 +145,39 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
     lg: 24
   };
 
+  // Offline state
+  if (!isOnline) {
+    return (
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 rounded-xl border border-red-500/30">
+        <WifiOff size={18} className="text-red-400" />
+        <span className="text-sm text-red-400">Offline</span>
+      </div>
+    );
+  }
+
   // Not connected - show one-click connect
   if (!isConnected) {
     return (
-      <div className="flex items-center gap-2">
+      <div 
+        className="relative flex items-center gap-2"
+        onMouseEnter={() => setShowShortcutHint(true)}
+        onMouseLeave={() => setShowShortcutHint(false)}
+      >
+        {/* Keyboard shortcut hint */}
+        <AnimatePresence>
+          {showShortcutHint && size !== 'lg' && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 text-xs text-zinc-500 whitespace-nowrap"
+            >
+              <Keyboard size={12} />
+              <span>⌘⇧W</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Primary one-click button */}
         <motion.button
           onClick={handleQuickConnect}
@@ -230,7 +294,31 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
                 <span>View on Explorer</span>
               </a>
 
+              <Link
+                href="/crypto"
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <Clock size={16} />
+                <span>Transaction History</span>
+              </Link>
+
+              <Link
+                href="/profile"
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <Keyboard size={16} />
+                <span>Wallet Settings</span>
+              </Link>
+
               <div className="my-2 border-t border-zinc-800" />
+
+              {/* Keyboard shortcut hint */}
+              <div className="px-3 py-2 text-xs text-zinc-600 flex items-center justify-between">
+                <span>Toggle menu</span>
+                <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-500">⌘⇧W</kbd>
+              </div>
 
               <button
                 onClick={() => {

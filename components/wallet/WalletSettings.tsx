@@ -11,10 +11,20 @@ import {
   Check,
   X,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
+  Timer
 } from 'lucide-react';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useWalletPersistence } from '@/hooks/useWalletPersistence';
+
+// Auto-disconnect time options (in minutes)
+const AUTO_DISCONNECT_OPTIONS = [
+  { value: 15, label: '15 minutes' },
+  { value: 30, label: '30 minutes' },
+  { value: 60, label: '1 hour' },
+  { value: 120, label: '2 hours' },
+  { value: 480, label: '8 hours' },
+];
 
 /**
  * Wallet Settings Panel
@@ -28,7 +38,7 @@ export function WalletSettings() {
   const { address, isConnected } = useAccount();
   const { 
     platformSupport, 
-    isEnabled: biometricEnabled,
+    isEnabled: _biometricEnabled,
     hasCredentials,
     enroll,
     remove,
@@ -36,21 +46,47 @@ export function WalletSettings() {
     linkWallet,
     credentials
   } = useBiometricAuth();
-  const { setStayConnected, isStayConnectedEnabled } = useWalletPersistence();
+  const { setStayConnected, isStayConnectedEnabled, setAutoDisconnect, isAutoDisconnectEnabled, getAutoDisconnectMinutes } = useWalletPersistence();
   
   const [stayConnected, setStayConnectedState] = useState(false);
+  const [autoDisconnect, setAutoDisconnectState] = useState(false);
+  const [autoDisconnectTime, setAutoDisconnectTimeState] = useState(30);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [verifyResult, setVerifyResult] = useState<boolean | null>(null);
 
-  // Load stay connected setting
+  // Load settings
   useEffect(() => {
     setStayConnectedState(isStayConnectedEnabled());
-  }, [isStayConnectedEnabled]);
+    setAutoDisconnectState(isAutoDisconnectEnabled());
+    setAutoDisconnectTimeState(getAutoDisconnectMinutes());
+  }, [isStayConnectedEnabled, isAutoDisconnectEnabled, getAutoDisconnectMinutes]);
 
   // Toggle stay connected
   const handleStayConnectedChange = (enabled: boolean) => {
     setStayConnectedState(enabled);
     setStayConnected(enabled);
+    // If enabling stay connected, disable auto-disconnect
+    if (enabled) {
+      setAutoDisconnectState(false);
+      setAutoDisconnect(false);
+    }
+  };
+
+  // Toggle auto-disconnect
+  const handleAutoDisconnectChange = (enabled: boolean) => {
+    setAutoDisconnectState(enabled);
+    setAutoDisconnect(enabled, autoDisconnectTime);
+    // If enabling auto-disconnect, disable stay connected
+    if (enabled) {
+      setStayConnectedState(false);
+      setStayConnected(false);
+    }
+  };
+
+  // Update auto-disconnect time
+  const handleAutoDisconnectTimeChange = (minutes: number) => {
+    setAutoDisconnectTimeState(minutes);
+    setAutoDisconnect(autoDisconnect, minutes);
   };
 
   // Enroll biometric
@@ -141,6 +177,66 @@ export function WalletSettings() {
             <div className="flex items-center gap-2 text-cyan-400 text-sm">
               <Check size={16} />
               <span>Your wallet will stay connected across browser sessions</span>
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
+
+      {/* Auto-Disconnect on Inactivity */}
+      <motion.div 
+        className="p-6 bg-zinc-900/50 rounded-xl border border-zinc-700"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-orange-500/10 rounded-lg">
+              <Timer className="text-orange-400" size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white">Auto-Disconnect</h3>
+              <p className="text-sm text-zinc-400">
+                Automatically disconnect after inactivity (for security)
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => handleAutoDisconnectChange(!autoDisconnect)}
+            className={`relative w-14 h-7 rounded-full transition-colors ${
+              autoDisconnect ? 'bg-orange-500' : 'bg-zinc-600'
+            }`}
+          >
+            <motion.div
+              className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full"
+              animate={{ x: autoDisconnect ? 28 : 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+        </div>
+        
+        {autoDisconnect && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-4"
+          >
+            <label className="block text-sm text-zinc-400 mb-2">Disconnect after:</label>
+            <div className="flex flex-wrap gap-2">
+              {AUTO_DISCONNECT_OPTIONS.map(option => (
+                <button
+                  key={option.value}
+                  onClick={() => handleAutoDisconnectTimeChange(option.value)}
+                  className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                    autoDisconnectTime === option.value
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </motion.div>
         )}

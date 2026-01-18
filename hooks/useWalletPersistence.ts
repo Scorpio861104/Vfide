@@ -1,15 +1,20 @@
 "use client";
 
 import { useEffect, useCallback, useRef } from 'react';
-import { useAccount, useReconnect } from 'wagmi';
+import { useAccount, useReconnect, useDisconnect } from 'wagmi';
 import { safeLocalStorage } from '@/lib/utils';
-import { linkWallet, isPasskeyEnabled, authenticateWithPasskey } from '@/lib/biometricAuth';
+import { linkWallet } from '@/lib/biometricAuth';
 
 // Storage keys for session persistence
 const SESSION_KEY = 'vfide-session';
 const LAST_WALLET_KEY = 'vfide-last-wallet';
 const LAST_CHAIN_KEY = 'vfide-last-chain';
 const STAY_CONNECTED_KEY = 'vfide-stay-connected';
+const AUTO_DISCONNECT_KEY = 'vfide-auto-disconnect';
+const AUTO_DISCONNECT_TIME_KEY = 'vfide-auto-disconnect-time';
+
+// Default auto-disconnect timeout in minutes
+const DEFAULT_AUTO_DISCONNECT_MINUTES = 30;
 
 interface SessionData {
   address: string;
@@ -35,8 +40,11 @@ interface SessionData {
 export function useWalletPersistence() {
   const { address, isConnected, connector, chain } = useAccount();
   const { reconnect, connectors } = useReconnect();
+  const { disconnect } = useDisconnect();
   const hasAttemptedReconnect = useRef(false);
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
+  const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
+  const lastActivityTime = useRef<number>(Date.now());
 
   // Save session data when connected
   const saveSession = useCallback((permanent: boolean = false) => {
@@ -134,6 +142,25 @@ export function useWalletPersistence() {
     return safeLocalStorage.getItem(STAY_CONNECTED_KEY) === 'true';
   }, []);
 
+  // Enable/disable auto-disconnect on inactivity
+  const setAutoDisconnect = useCallback((enabled: boolean, minutes?: number) => {
+    safeLocalStorage.setItem(AUTO_DISCONNECT_KEY, enabled ? 'true' : 'false');
+    if (minutes !== undefined) {
+      safeLocalStorage.setItem(AUTO_DISCONNECT_TIME_KEY, minutes.toString());
+    }
+  }, []);
+
+  // Check if auto-disconnect is enabled
+  const isAutoDisconnectEnabled = useCallback((): boolean => {
+    return safeLocalStorage.getItem(AUTO_DISCONNECT_KEY) === 'true';
+  }, []);
+
+  // Get auto-disconnect timeout in minutes
+  const getAutoDisconnectMinutes = useCallback((): number => {
+    const time = safeLocalStorage.getItem(AUTO_DISCONNECT_TIME_KEY);
+    return time ? parseInt(time, 10) : DEFAULT_AUTO_DISCONNECT_MINUTES;
+  }, []);
+
   // Auto-reconnect on mount
   useEffect(() => {
     if (hasAttemptedReconnect.current) return;
@@ -200,17 +227,61 @@ export function useWalletPersistence() {
   useEffect(() => {
     if (!isConnected) return;
 
-    const handleActivity = () => updateActivity();
+    const handleActivity = () => {
+      updateActivity();
+      lastActivityTime.current = Date.now();
+    };
 
     // Track meaningful user activity
     window.addEventListener('click', handleActivity, { passive: true });
     window.addEventListener('keydown', handleActivity, { passive: true });
+    window.addEventListener('mousemove', handleActivity, { passive: true });
+    window.addEventListener('scroll', handleActivity, { passive: true });
 
     return () => {
       window.removeEventListener('click', handleActivity);
       window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
     };
   }, [isConnected, updateActivity]);
+
+  // Auto-disconnect on inactivity
+  useEffect(() => {
+    if (!isConnected) {
+      if (inactivityTimer.current) {
+        clearInterval(inactivityTimer.current);
+        inactivityTimer.current = null;
+      }
+      return;
+    }
+
+    // Check if auto-disconnect is enabled
+    if (!isAutoDisconnectEnabled()) {
+      return;
+    }
+
+    // Check inactivity every minute
+    inactivityTimer.current = setInterval(() => {
+      const timeoutMinutes = getAutoDisconnectMinutes();
+      const timeoutMs = timeoutMinutes * 60 * 1000;
+      const now = Date.now();
+      const timeSinceActivity = now - lastActivityTime.current;
+
+      if (timeSinceActivity >= timeoutMs) {
+        // Auto-disconnect due to inactivity
+        console.log(`Auto-disconnecting after ${timeoutMinutes} minutes of inactivity`);
+        disconnect();
+        clearSession();
+      }
+    }, 60 * 1000); // Check every minute
+
+    return () => {
+      if (inactivityTimer.current) {
+        clearInterval(inactivityTimer.current);
+      }
+    };
+  }, [isConnected, isAutoDisconnectEnabled, getAutoDisconnectMinutes, disconnect, clearSession]);
 
   return {
     getSession,
@@ -220,5 +291,8 @@ export function useWalletPersistence() {
     clearSession,
     setStayConnected,
     isStayConnectedEnabled,
+    setAutoDisconnect,
+    isAutoDisconnectEnabled,
+    getAutoDisconnectMinutes,
   };
 }
