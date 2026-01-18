@@ -1,7 +1,7 @@
 "use client";
 
 import { Footer } from "@/components/layout/Footer";
-import { SimpleWalletConnect } from "@/components/wallet/SimpleWalletConnect";
+import { QuickWalletConnect } from "@/components/wallet/QuickWalletConnect";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ProofScoreRing } from "@/components/ui/ProofScoreRing";
 import { PageWrapper } from "@/components/ui/PageLayout";
@@ -189,7 +189,7 @@ export default function DashboardPage() {
             <p className="text-white/60 mb-8 max-w-md text-lg">
               Connect your wallet to access your dashboard, view your ProofScore, and explore the ecosystem.
             </p>
-            <SimpleWalletConnect />
+            <QuickWalletConnect size="lg" />
           </motion.div>
         </main>
         <Footer />
@@ -255,7 +255,7 @@ export default function DashboardPage() {
                   </motion.div>
                 </div>
               </div>
-              <SimpleWalletConnect />
+              <QuickWalletConnect />
             </motion.div>
 
             <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-4 gap-4">

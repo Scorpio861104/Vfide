@@ -7,6 +7,10 @@ import { Wallet, ChevronDown, Check, Copy, ExternalLink, LogOut, RefreshCw, Zap 
 import { baseSepolia, base } from 'wagmi/chains';
 import { IS_TESTNET } from '@/lib/chains';
 
+interface QuickWalletConnectProps {
+  size?: 'sm' | 'md' | 'lg';
+}
+
 /**
  * Streamlined One-Click Wallet Connection
  * 
@@ -17,7 +21,7 @@ import { IS_TESTNET } from '@/lib/chains';
  * 4. Fast network switching
  * 5. Minimal UI, maximum speed
  */
-export function QuickWalletConnect() {
+export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
@@ -93,6 +97,19 @@ export function QuickWalletConnect() {
     );
   }
 
+  // Size classes
+  const sizeClasses = {
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-5 py-2.5 text-sm',
+    lg: 'px-8 py-4 text-lg'
+  };
+
+  const iconSizes = {
+    sm: 14,
+    md: 18,
+    lg: 24
+  };
+
   // Not connected - show one-click connect
   if (!isConnected) {
     return (
@@ -102,9 +119,9 @@ export function QuickWalletConnect() {
           onClick={handleQuickConnect}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-cyan-500/25 transition-shadow"
+          className={`flex items-center gap-2 ${sizeClasses[size]} bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-cyan-500/25 transition-shadow`}
         >
-          <Zap size={18} />
+          <Zap size={iconSizes[size]} />
           <span>Connect</span>
         </motion.button>
       </div>

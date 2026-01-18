@@ -8,11 +8,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, User, Mail, MapPin, Link as LinkIcon, Calendar, Shield } from 'lucide-react';
+import { Save, User, Mail, MapPin, Link as LinkIcon, Calendar, Shield, Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { AvatarUpload } from './AvatarUpload';
 import { useUserProfile } from '@/hooks/useAPI';
 import { sanitizeInput, sanitizeURL } from '@/lib/sanitize';
+import { WalletSettings } from '@/components/wallet/WalletSettings';
 
 export function ProfileSettings() {
   const { address } = useAccount();
@@ -277,6 +278,22 @@ export function ProfileSettings() {
               )}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Wallet Connection Settings */}
+      <div className="mt-6">
+        <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-8">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="p-2 bg-cyan-500/20 rounded-lg">
+              <Wallet className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-[#F5F3E8]">Wallet Settings</h2>
+              <p className="text-sm text-[#6B6B78]">Manage your wallet connection preferences</p>
+            </div>
+          </div>
+          <WalletSettings />
         </div>
       </div>
     </div>

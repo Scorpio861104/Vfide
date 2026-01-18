@@ -10,7 +10,8 @@ import { NavbarBalance } from "../ui/TokenBalance";
 import { VaultStatusIndicator } from "../vault/VaultStatusIndicator";
 import { VaultStatusModal } from "../vault/VaultStatusModal";
 import { FaucetButton } from "../wallet/FaucetButton";
-import { SimpleWalletConnect } from "../wallet/SimpleWalletConnect";
+import { QuickWalletConnect } from "../wallet/QuickWalletConnect";
+import { NetworkSwitcher } from "../wallet/NetworkSwitcher";
 import {
   MetalDashboardIcon,
   MetalVaultIcon,
@@ -275,6 +276,7 @@ export function GlobalNav() {
             <NavbarBalance />
             <NotificationCenter />
             <VaultStatusIndicator />
+            <NetworkSwitcher />
             <Link
               href="/profile"
               className="p-2 rounded-lg text-[#8A8A8F] hover:text-[#F8F8FC] hover:bg-[#16161D] transition-all"
@@ -282,13 +284,13 @@ export function GlobalNav() {
             >
               <User className="w-5 h-5" />
             </Link>
-            <SimpleWalletConnect />
+            <QuickWalletConnect />
           </div>
 
           {/* Mobile: Just wallet essentials (navigation is in bottom nav) */}
           <div className="flex md:hidden items-center gap-2">
             <NotificationCenter />
-            <SimpleWalletConnect />
+            <QuickWalletConnect />
           </div>
         </div>
       </div>
