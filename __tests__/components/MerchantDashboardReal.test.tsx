@@ -24,9 +24,12 @@ jest.mock('wagmi', () => ({
 }))
 
 jest.mock('viem', () => ({
-  isAddress: jest.fn((addr: string) => addr.startsWith('0x') && addr.length === 42),
+  isAddress: jest.fn((addr: string) => addr && addr.startsWith('0x') && addr.length === 42),
+  getAddress: jest.fn((addr: string) => addr),
   formatEther: jest.fn((val: bigint) => (Number(val) / 1e18).toString()),
-  parseEther: jest.fn((val: string) => BigInt(Number(val) * 1e18)),
+  formatUnits: jest.fn((val: bigint, decimals?: number) => (Number(val) / Math.pow(10, decimals || 18)).toString()),
+  parseEther: jest.fn((val: string) => BigInt(Math.floor(parseFloat(val) * 1e18))),
+  parseUnits: jest.fn((val: string, decimals?: number) => BigInt(Math.floor(parseFloat(val) * Math.pow(10, decimals || 18)))),
 }))
 
 jest.mock('lucide-react', () => ({

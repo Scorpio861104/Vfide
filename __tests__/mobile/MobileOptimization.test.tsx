@@ -4,8 +4,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { renderHook } from '@testing-library/react-hooks';
+import { render, screen, fireEvent, waitFor, act, renderHook } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { 
   useMobile, 
@@ -180,7 +179,7 @@ describe('BottomNavigation Component', () => {
   ];
 
   test('renders all navigation items', () => {
-    render(<BottomNavigation items={mockItems} activeId=\"home\" />);
+    render(<BottomNavigation items={mockItems} activeId="home" />);
     
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Search')).toBeInTheDocument();
@@ -188,7 +187,7 @@ describe('BottomNavigation Component', () => {
   });
 
   test('displays icons correctly', () => {
-    render(<BottomNavigation items={mockItems} activeId=\"home\" />);
+    render(<BottomNavigation items={mockItems} activeId="home" />);
     
     expect(screen.getByText('🏠')).toBeInTheDocument();
     expect(screen.getByText('🔍')).toBeInTheDocument();
@@ -196,20 +195,20 @@ describe('BottomNavigation Component', () => {
   });
 
   test('shows badge on item', () => {
-    render(<BottomNavigation items={mockItems} activeId=\"home\" />);
+    render(<BottomNavigation items={mockItems} activeId="home" />);
     
     expect(screen.getByText('5')).toBeInTheDocument();
   });
 
   test('highlights active item', () => {
-    render(<BottomNavigation items={mockItems} activeId=\"home\" />);
+    render(<BottomNavigation items={mockItems} activeId="home" />);
     
     const homeButton = screen.getByLabelText('Home');
     expect(homeButton).toHaveClass('text-blue-600');
   });
 
   test('calls onClick when item clicked', () => {
-    render(<BottomNavigation items={mockItems} activeId=\"home\" />);
+    render(<BottomNavigation items={mockItems} activeId="home" />);
     
     const searchButton = screen.getByLabelText('Search');
     fireEvent.click(searchButton);
@@ -222,12 +221,12 @@ describe('BottomNavigation Component', () => {
       { id: 'notifications', label: 'Notifications', icon: '🔔', onClick: jest.fn(), badge: 150 }
     ];
     
-    render(<BottomNavigation items={itemsWithLargeBadge} activeId=\"notifications\" />);
+    render(<BottomNavigation items={itemsWithLargeBadge} activeId="notifications" />);
     expect(screen.getByText('99+')).toBeInTheDocument();
   });
 
   test('has proper ARIA attributes', () => {
-    render(<BottomNavigation items={mockItems} activeId=\"home\" />);
+    render(<BottomNavigation items={mockItems} activeId="home" />);
     
     const homeButton = screen.getByLabelText('Home');
     expect(homeButton).toHaveAttribute('aria-current', 'page');
@@ -333,14 +332,14 @@ describe('MobileMenu Component', () => {
 
 describe('FloatingActionButton Component', () => {
   test('renders with icon', () => {
-    render(<FloatingActionButton icon=\"+\" onClick={jest.fn()} />);
+    render(<FloatingActionButton icon="+" onClick={jest.fn()} />);
     
     expect(screen.getByText('+')).toBeInTheDocument();
   });
 
   test('calls onClick when clicked', () => {
     const onClick = jest.fn();
-    render(<FloatingActionButton icon=\"+\" onClick={onClick} />);
+    render(<FloatingActionButton icon="+" onClick={onClick} />);
     
     const button = screen.getByRole('button');
     fireEvent.click(button);
@@ -349,21 +348,21 @@ describe('FloatingActionButton Component', () => {
   });
 
   test('uses custom label', () => {
-    render(<FloatingActionButton icon=\"+\" onClick={jest.fn()} label=\"Add item\" />);
+    render(<FloatingActionButton icon="+" onClick={jest.fn()} label="Add item" />);
     
     expect(screen.getByLabelText('Add item')).toBeInTheDocument();
   });
 
   test('positions correctly', () => {
     const { rerender } = render(
-      <FloatingActionButton icon=\"+\" onClick={jest.fn()} position=\"bottom-right\" />
+      <FloatingActionButton icon="+" onClick={jest.fn()} position="bottom-right" />
     );
     
     let button = screen.getByRole('button');
     expect(button.className).toContain('bottom-20');
     expect(button.className).toContain('right-4');
     
-    rerender(<FloatingActionButton icon=\"+\" onClick={jest.fn()} position=\"top-left\" />);
+    rerender(<FloatingActionButton icon="+" onClick={jest.fn()} position="top-left" />);
     button = screen.getByRole('button');
     expect(button.className).toContain('top-4');
     expect(button.className).toContain('left-4');
@@ -382,7 +381,7 @@ describe('TabBar Component', () => {
   ];
 
   test('renders all tabs', () => {
-    render(<TabBar tabs={mockTabs} activeId=\"all\" onChange={jest.fn()} />);
+    render(<TabBar tabs={mockTabs} activeId="all" onChange={jest.fn()} />);
     
     expect(screen.getByText('All')).toBeInTheDocument();
     expect(screen.getByText('Active')).toBeInTheDocument();
@@ -390,14 +389,14 @@ describe('TabBar Component', () => {
   });
 
   test('displays tab icons', () => {
-    render(<TabBar tabs={mockTabs} activeId=\"all\" onChange={jest.fn()} />);
+    render(<TabBar tabs={mockTabs} activeId="all" onChange={jest.fn()} />);
     
     expect(screen.getByText('📋')).toBeInTheDocument();
     expect(screen.getByText('✅')).toBeInTheDocument();
   });
 
   test('highlights active tab', () => {
-    render(<TabBar tabs={mockTabs} activeId=\"active\" onChange={jest.fn()} />);
+    render(<TabBar tabs={mockTabs} activeId="active" onChange={jest.fn()} />);
     
     const activeTab = screen.getByText('Active').closest('button');
     expect(activeTab).toHaveClass('text-blue-600');
@@ -405,7 +404,7 @@ describe('TabBar Component', () => {
 
   test('calls onChange when tab clicked', () => {
     const onChange = jest.fn();
-    render(<TabBar tabs={mockTabs} activeId=\"all\" onChange={onChange} />);
+    render(<TabBar tabs={mockTabs} activeId="all" onChange={onChange} />);
     
     const completedTab = screen.getByText('Completed');
     fireEvent.click(completedTab);
@@ -414,7 +413,7 @@ describe('TabBar Component', () => {
   });
 
   test('has proper ARIA roles', () => {
-    render(<TabBar tabs={mockTabs} activeId=\"all\" onChange={jest.fn()} />);
+    render(<TabBar tabs={mockTabs} activeId="all" onChange={jest.fn()} />);
     
     const tabs = screen.getAllByRole('tab');
     expect(tabs).toHaveLength(3);
@@ -430,7 +429,7 @@ describe('TabBar Component', () => {
 
 describe('MobileHeader Component', () => {
   test('renders title', () => {
-    render(<MobileHeader title=\"Dashboard\" />);
+    render(<MobileHeader title="Dashboard" />);
     
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
@@ -442,7 +441,7 @@ describe('MobileHeader Component', () => {
       label: 'Back'
     };
     
-    render(<MobileHeader title=\"Page\" leftAction={leftAction} />);
+    render(<MobileHeader title="Page" leftAction={leftAction} />);
     
     expect(screen.getByLabelText('Back')).toBeInTheDocument();
     expect(screen.getByText('←')).toBeInTheDocument();
@@ -455,7 +454,7 @@ describe('MobileHeader Component', () => {
       label: 'Menu'
     };
     
-    render(<MobileHeader title=\"Page\" rightAction={rightAction} />);
+    render(<MobileHeader title="Page" rightAction={rightAction} />);
     
     expect(screen.getByLabelText('Menu')).toBeInTheDocument();
     expect(screen.getByText('⋮')).toBeInTheDocument();
@@ -468,7 +467,7 @@ describe('MobileHeader Component', () => {
       label: 'Back'
     };
     
-    render(<MobileHeader title=\"Page\" leftAction={leftAction} />);
+    render(<MobileHeader title="Page" leftAction={leftAction} />);
     
     const backButton = screen.getByLabelText('Back');
     fireEvent.click(backButton);
@@ -483,7 +482,7 @@ describe('MobileHeader Component', () => {
       label: 'Menu'
     };
     
-    render(<MobileHeader title=\"Page\" rightAction={rightAction} />);
+    render(<MobileHeader title="Page" rightAction={rightAction} />);
     
     const menuButton = screen.getByLabelText('Menu');
     fireEvent.click(menuButton);
@@ -616,7 +615,7 @@ describe('Mobile Navigation Integration', () => {
     
     const { rerender } = render(
       <>
-        <BottomNavigation items={navItems} activeId=\"home\" />
+        <BottomNavigation items={navItems} activeId="home" />
         <MobileMenu 
           isOpen={menuOpen} 
           onClose={() => setMenuOpen(false)} 
@@ -632,7 +631,7 @@ describe('Mobile Navigation Integration', () => {
     // Rerender with menu open
     rerender(
       <>
-        <BottomNavigation items={navItems} activeId=\"home\" />
+        <BottomNavigation items={navItems} activeId="home" />
         <MobileMenu 
           isOpen={true} 
           onClose={() => setMenuOpen(false)} 
@@ -653,10 +652,10 @@ describe('Mobile Navigation Integration', () => {
     render(
       <>
         <MobileHeader 
-          title=\"Dashboard\"
+          title="Dashboard"
           leftAction={{ icon: '←', onClick: jest.fn(), label: 'Back' }}
         />
-        <BottomNavigation items={navItems} activeId=\"home\" />
+        <BottomNavigation items={navItems} activeId="home" />
       </>
     );
     
@@ -675,7 +674,7 @@ describe('Mobile Components Accessibility', () => {
       { id: 'home', label: 'Home', icon: '🏠', onClick: jest.fn() }
     ];
     
-    render(<BottomNavigation items={navItems} activeId=\"home\" />);
+    render(<BottomNavigation items={navItems} activeId="home" />);
     
     const button = screen.getByRole('button');
     expect(button).toHaveAttribute('aria-label');
@@ -698,7 +697,7 @@ describe('Mobile Components Accessibility', () => {
       { id: 'tab2', label: 'Tab 2' }
     ];
     
-    render(<TabBar tabs={tabs} activeId=\"tab1\" onChange={jest.fn()} />);
+    render(<TabBar tabs={tabs} activeId="tab1" onChange={jest.fn()} />);
     
     const tabElements = screen.getAllByRole('tab');
     expect(tabElements[0]).toHaveAttribute('aria-selected', 'true');

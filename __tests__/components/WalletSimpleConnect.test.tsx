@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from '@jest/globals'
+import { describe, expect, it, } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
@@ -53,7 +53,7 @@ describe('SimpleWalletConnect', () => {
 
 describe('SimpleWalletConnect - Disconnected', () => {
   beforeAll(() => {
-    vi.doMock('@rainbow-me/rainbowkit', () => ({
+    jest.doMock('@rainbow-me/rainbowkit', () => ({
       ConnectButton: {
         Custom: ({ children }: any) => children({
           account: null,
@@ -76,7 +76,7 @@ describe('SimpleWalletConnect - Disconnected', () => {
 
 describe('SimpleWalletConnect - Wrong Network', () => {
   beforeAll(() => {
-    vi.doMock('@rainbow-me/rainbowkit', () => ({
+    jest.doMock('@rainbow-me/rainbowkit', () => ({
       ConnectButton: {
         Custom: ({ children }: any) => children({
           account: { address: '0x1234567890123456789012345678901234567890' },

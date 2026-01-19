@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from '@jest/globals'
+import { describe, expect, it, } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
@@ -43,7 +43,11 @@ jest.mock('wagmi', () => ({
 
 // Mock viem
 jest.mock('viem', () => ({
-  formatEther: (val: bigint) => (Number(val) / 1e18).toString(),
+  formatEther: (val) => (Number(val) / 1e18).toString(),
+  formatUnits: (val, decimals) => (Number(val) / Math.pow(10, decimals || 18)).toString(),
+  parseUnits: (val, decimals) => BigInt(Math.floor(parseFloat(val) * Math.pow(10, decimals || 18))),
+  isAddress: (addr) => addr && addr.startsWith('0x') && addr.length === 42,
+  getAddress: (addr) => addr,
 }))
 
 // Mock vfide hooks
@@ -154,7 +158,7 @@ describe('VaultSettingsPanel', () => {
 
 describe('VaultSettingsPanel - No Wallet', () => {
   beforeAll(() => {
-    vi.doMock('wagmi', () => ({
+    jest.doMock('wagmi', () => ({
       useAccount: () => ({
         address: undefined,
         isConnected: false,

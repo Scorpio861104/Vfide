@@ -13,7 +13,11 @@ jest.mock('wagmi', () => ({
 // Mock viem
 jest.mock('viem', () => ({
   parseEther: (val: string) => BigInt(parseFloat(val) * 1e18),
-  formatEther: (val: bigint) => (Number(val) / 1e18).toString(),
+  formatEther: (val) => (Number(val) / 1e18).toString(),
+  formatUnits: (val, decimals) => (Number(val) / Math.pow(10, decimals || 18)).toString(),
+  parseUnits: (val, decimals) => BigInt(Math.floor(parseFloat(val) * Math.pow(10, decimals || 18))),
+  isAddress: (addr) => addr && addr.startsWith('0x') && addr.length === 42,
+  getAddress: (addr) => addr,
 }))
 
 // Mock abis

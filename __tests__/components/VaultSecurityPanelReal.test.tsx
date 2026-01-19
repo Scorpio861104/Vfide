@@ -3,7 +3,7 @@
  * Tests for actual security components with mocked hooks
  */
 
-import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
+import { describe, it, expect,  beforeEach, Mock } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
@@ -60,7 +60,7 @@ describe('VaultSecurityPanel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
-    vi.setSystemTime(mockNow * 1000)
+    jest.setSystemTime(mockNow * 1000)
     
     // Default mocks - no vault
     ;(useUserVault as Mock).mockReturnValue({

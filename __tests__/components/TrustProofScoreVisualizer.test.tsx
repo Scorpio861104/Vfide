@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from '@jest/globals'
+import { describe, expect, it, } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
@@ -120,7 +120,7 @@ describe('ProofScoreVisualizer', () => {
 
 describe('ProofScoreVisualizer - Loading State', () => {
   it('shows loading state when data is loading', () => {
-    vi.doMock('@/lib/vfide-hooks', () => ({
+    jest.doMock('@/lib/vfide-hooks', () => ({
       useProofScore: () => ({
         score: 0,
         tier: 'Bronze',

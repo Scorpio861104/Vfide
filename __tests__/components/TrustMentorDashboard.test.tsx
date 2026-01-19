@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from '@jest/globals'
+import { describe, expect, it, } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
@@ -96,7 +96,7 @@ describe('MentorDashboard', () => {
 
 describe('MentorDashboard - Not Connected', () => {
   beforeEach(() => {
-    vi.doMock('wagmi', () => ({
+    jest.doMock('wagmi', () => ({
       useAccount: () => ({
         address: undefined,
         isConnected: false,
@@ -106,7 +106,7 @@ describe('MentorDashboard - Not Connected', () => {
 
   it('renders connect wallet message when not connected', () => {
     // Reset module to use new mock
-    vi.resetModules()
+    jest.resetModules()
     // Test will show non-mentor state with mocked hooks
     const { container } = render(<MentorDashboard />)
     expect(container).toBeInTheDocument()

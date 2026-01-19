@@ -107,7 +107,7 @@ describe('Security Tests', () => {
         const dangerousPatterns = [
           /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER)\b)/i,
           /(--|;|\/\*|\*\/)/,
-          /('|\"|`)/
+          /('|"|`)/
         ]
         return dangerousPatterns.some(pattern => pattern.test(input))
       }

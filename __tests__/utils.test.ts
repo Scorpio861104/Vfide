@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from '@jest/globals'
+import { describe, it, expect, } from '@jest/globals'
 import {
   cn,
   validateAddress,
@@ -333,7 +333,7 @@ describe('devLog', () => {
     process.env.NODE_ENV = 'production'
     
     // Need to re-import to get fresh module with production env
-    vi.resetModules()
+    jest.resetModules()
     const { devLog } = await import('@/lib/utils')
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
     
@@ -342,6 +342,6 @@ describe('devLog', () => {
     expect(consoleSpy).not.toHaveBeenCalled()
     consoleSpy.mockRestore()
     process.env.NODE_ENV = originalEnv
-    vi.resetModules()
+    jest.resetModules()
   })
 })

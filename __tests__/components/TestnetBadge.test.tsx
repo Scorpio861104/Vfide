@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from '@jest/globals'
+import { describe, expect, it,  beforeEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
@@ -51,7 +51,7 @@ describe('TestnetBadge', () => {
   })
 
   it('returns null when IS_TESTNET is false', async () => {
-    vi.doMock('@/lib/testnet', () => ({
+    jest.doMock('@/lib/testnet', () => ({
       IS_TESTNET: false,
       CURRENT_CHAIN_ID: 84532,
     }))

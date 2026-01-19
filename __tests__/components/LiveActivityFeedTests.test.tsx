@@ -2,7 +2,7 @@
  * LiveActivityFeed Tests
  * Tests for LiveActivityFeed component (0% coverage)
  */
-import { describe, it, expect, vi, beforeEach } from '@jest/globals'
+import { describe, it, expect,  beforeEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { LiveActivityFeed } from '@/components/trust/LiveActivityFeed'
 import type { ActivityItem } from '@/lib/vfide-hooks'
@@ -184,10 +184,10 @@ describe('LiveActivityFeed', () => {
 describe('LiveActivityFeed - Empty State', () => {
   it('handles empty activities array', async () => {
     // Reset modules to apply new mock
-    vi.resetModules()
+    jest.resetModules()
     
     // Re-mock with empty activities
-    vi.doMock('@/lib/vfide-hooks', () => ({
+    jest.doMock('@/lib/vfide-hooks', () => ({
       useActivityFeed: () => ({ activities: [] }),
     }))
 

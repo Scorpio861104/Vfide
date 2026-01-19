@@ -3,7 +3,7 @@
  * Tests for actual wallet components with mocked hooks
  */
 
-import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
+import { describe, it, expect,  beforeEach, Mock } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
@@ -223,15 +223,15 @@ describe('FaucetButton', () => {
 describe('FaucetButton - Mainnet', () => {
   it('should return null on mainnet', async () => {
     // Reset modules to apply new mock
-    vi.resetModules()
+    jest.resetModules()
     
     // Mock as mainnet
-    vi.doMock('@/lib/testnet', () => ({
+    jest.doMock('@/lib/testnet', () => ({
       IS_TESTNET: false,
       FAUCET_URLS: {},
     }))
     
-    vi.doMock('wagmi', () => ({
+    jest.doMock('wagmi', () => ({
       useAccount: jest.fn().mockReturnValue({
         address: '0x1234567890123456789012345678901234567890',
         isConnected: true,
