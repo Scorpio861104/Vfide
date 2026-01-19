@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
-import { Coins, ChevronDown, ChevronUp, RefreshCw, ExternalLink } from 'lucide-react';
+import { Coins, ChevronDown, RefreshCw, ExternalLink } from 'lucide-react';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
 /**
  * Multi-Chain Balance View Component
@@ -98,6 +99,7 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const { playSuccess, playNotification } = useTransactionSounds();
 
   // Fetch balances from all chains
   const fetchBalances = async () => {
@@ -143,6 +145,7 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
     setBalances(results);
     setLastUpdated(new Date());
     setIsLoading(false);
+    playSuccess();
   };
 
   // Fetch on mount and when address changes
@@ -162,18 +165,31 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
 
   if (compact) {
     return (
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
+      <motion.button
+        onClick={() => {
+          setIsExpanded(!isExpanded);
+          playNotification();
+        }}
         className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
         <Coins size={16} className="text-cyan-400" />
-        <span className="text-sm text-white font-medium">{formatUSD(totalUSD)}</span>
-        {isExpanded ? (
-          <ChevronUp size={14} className="text-zinc-400" />
-        ) : (
+        <motion.span 
+          className="text-sm text-white font-medium"
+          key={totalUSD}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {formatUSD(totalUSD)}
+        </motion.span>
+        <motion.div
+          animate={{ rotate: isExpanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
           <ChevronDown size={14} className="text-zinc-400" />
-        )}
-      </button>
+        </motion.div>
+      </motion.button>
     );
   }
 
@@ -195,28 +211,48 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-white">{formatUSD(totalUSD)}</span>
-            <button
-              onClick={fetchBalances}
+            <motion.span 
+              className="text-xl font-bold text-white"
+              key={totalUSD}
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+            >
+              {formatUSD(totalUSD)}
+            </motion.span>
+            <motion.button
+              onClick={() => {
+                fetchBalances();
+                playNotification();
+              }}
               disabled={isLoading}
               className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors disabled:opacity-50"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
-            </button>
+              <motion.div
+                animate={{ rotate: isLoading ? 360 : 0 }}
+                transition={{ duration: 1, repeat: isLoading ? Infinity : 0, ease: 'linear' }}
+              >
+                <RefreshCw size={16} />
+              </motion.div>
+            </motion.button>
           </div>
         </div>
       </div>
 
       {/* Chain List */}
       <div className="divide-y divide-zinc-800">
-        {balances.map((chain, index) => (
-          <motion.div
-            key={chain.chainId}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="p-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
-          >
+        <AnimatePresence>
+          {balances.map((chain, index) => (
+            <motion.div
+              key={chain.chainId}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ delay: index * 0.05 }}
+              className="p-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
+              whileHover={{ backgroundColor: 'rgba(39, 39, 42, 0.5)' }}
+            >
             <div className="flex items-center gap-3">
               <div 
                 className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
@@ -232,20 +268,30 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
             
             <div className="text-right flex items-center gap-3">
               <div>
-                <p className="text-sm font-medium text-white">{chain.balance}</p>
+                <motion.p 
+                  className="text-sm font-medium text-white"
+                  key={chain.balance}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  {chain.balance}
+                </motion.p>
                 <p className="text-xs text-zinc-500">{chain.balanceUSD}</p>
               </div>
-              <a
+              <motion.a
                 href={`${chain.explorer}/address/${address}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1 text-zinc-500 hover:text-cyan-400 transition-colors"
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
               >
                 <ExternalLink size={14} />
-              </a>
+              </motion.a>
             </div>
           </motion.div>
         ))}
+        </AnimatePresence>
       </div>
 
       {/* Loading state */}

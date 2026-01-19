@@ -3,6 +3,9 @@
 import { CHAINS, type SupportedChain, getChainList, getChainNetwork, isChainReady } from '@/lib/chains'
 import { useEffect, useState } from 'react'
 import { useChainId, useSwitchChain } from 'wagmi'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ChevronDown, Check, Loader2, Zap } from 'lucide-react'
+import { useTransactionSounds } from '@/hooks/useTransactionSounds'
 
 interface ChainSelectorProps {
   onChainSelect?: (chain: SupportedChain) => void
@@ -15,6 +18,7 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
   const { switchChain, isPending } = useSwitchChain()
   const [selectedChain, setSelectedChain] = useState<SupportedChain>('base')
   const [isOpen, setIsOpen] = useState(false)
+  const { playSuccess, playNotification } = useTransactionSounds()
 
   // Find current chain from chainId
   useEffect(() => {
@@ -33,12 +37,14 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
     
     setSelectedChain(chain)
     setIsOpen(false)
+    playNotification()
     
     // Switch chain if connected
     if (switchChain) {
       try {
         // Type assertion needed for wagmi's strict chain ID typing
         await switchChain({ chainId: network.id as 84532 | 8453 | 300 | 80002 | 137 | 324 })
+        playSuccess()
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
           console.error('Failed to switch chain:', error)
@@ -59,67 +65,93 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
   if (compact) {
     return (
       <div className="relative">
-        <button
+        <motion.button
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/30 transition-all"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span className="text-lg">{currentChain.icon}</span>
           <span className="text-sm font-medium text-gray-200">{currentChain.name}</span>
-          <svg 
-            className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </motion.div>
+        </motion.button>
 
-        {isOpen && (
-          <>
-            <div 
-              className="fixed inset-0 z-40" 
-              onClick={() => setIsOpen(false)} 
-            />
-            <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 rounded-xl border border-gray-700 shadow-xl overflow-hidden min-w-50 max-w-[calc(100vw-2rem)]">
-              {chainList.map((chain) => {
-                const ready = isChainReady(chain.id)
-                return (
-                  <button
-                    key={chain.id}
-                    onClick={() => ready && handleSelect(chain.id)}
-                    disabled={!ready || isPending}
-                    className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                      selectedChain === chain.id 
-                        ? 'bg-blue-600/20 text-white' 
-                        : ready 
-                          ? 'hover:bg-gray-800 text-gray-200' 
-                          : 'opacity-50 cursor-not-allowed text-gray-500'
-                    }`}
-                  >
-                    <span className="text-xl">{chain.icon}</span>
-                    <div className="text-left">
-                      <div className="font-medium">{chain.name}</div>
-                      <div className="text-xs text-gray-400">
-                        {ready ? chain.tagline : 'Coming soon'}
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              <motion.div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setIsOpen(false)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              />
+              <motion.div 
+                className="absolute right-0 top-full mt-2 z-50 bg-gray-900 rounded-xl border border-gray-700 shadow-xl overflow-hidden min-w-50 max-w-[calc(100vw-2rem)]"
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+              >
+                {chainList.map((chain, index) => {
+                  const ready = isChainReady(chain.id)
+                  return (
+                    <motion.button
+                      key={chain.id}
+                      onClick={() => ready && handleSelect(chain.id)}
+                      disabled={!ready || isPending}
+                      className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+                        selectedChain === chain.id 
+                          ? 'bg-blue-600/20 text-white' 
+                          : ready 
+                            ? 'hover:bg-gray-800 text-gray-200' 
+                            : 'opacity-50 cursor-not-allowed text-gray-500'
+                      }`}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      whileHover={{ x: ready ? 4 : 0 }}
+                    >
+                      <span className="text-xl">{chain.icon}</span>
+                      <div className="text-left">
+                        <div className="font-medium">{chain.name}</div>
+                        <div className="text-xs text-gray-400">
+                          {ready ? chain.tagline : 'Coming soon'}
+                        </div>
                       </div>
-                    </div>
-                    {selectedChain === chain.id && (
-                      <span className="ml-auto text-green-400">✓</span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </>
-        )}
+                      {selectedChain === chain.id && (
+                        <motion.div
+                          className="ml-auto"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 500 }}
+                        >
+                          <Check className="w-5 h-5 text-green-400" />
+                        </motion.div>
+                      )}
+                    </motion.button>
+                  )
+                })}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     )
   }
 
   // Full version - card grid for onboarding
   return (
-    <div className="space-y-4">
+    <motion.div 
+      className="space-y-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
       <h3 className="text-lg font-semibold text-white text-center">
         Choose Your Network
       </h3>
@@ -128,12 +160,12 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
       </p>
 
       <div className="grid gap-3">
-        {chainList.map((chain) => {
+        {chainList.map((chain, index) => {
           const ready = isChainReady(chain.id)
           const isSelected = selectedChain === chain.id
           
           return (
-            <button
+            <motion.button
               key={chain.id}
               onClick={() => ready && handleSelect(chain.id)}
               disabled={!ready || isPending}
@@ -146,12 +178,23 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
                     : 'border-gray-800 bg-gray-900/50 opacity-50 cursor-not-allowed'
                 }
               `}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ scale: ready ? 1.02 : 1, y: ready ? -2 : 0 }}
+              whileTap={{ scale: ready ? 0.98 : 1 }}
             >
               {/* Recommended badge for Base */}
               {chain.id === 'base' && ready && (
-                <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full">
+                <motion.span 
+                  className="absolute -top-2 -right-2 px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full flex items-center gap-1"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: 'spring' }}
+                >
+                  <Zap className="w-3 h-3" />
                   EASIEST
-                </span>
+                </motion.span>
               )}
               
               <div className="flex items-center gap-4">
@@ -165,9 +208,18 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-white">{chain.name}</span>
-                    {isSelected && (
-                      <span className="text-green-400">✓</span>
-                    )}
+                    <AnimatePresence>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          exit={{ scale: 0, rotate: 180 }}
+                          transition={{ type: 'spring', stiffness: 500 }}
+                        >
+                          <Check className="w-5 h-5 text-green-400" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <p className="text-sm text-gray-400">{chain.description}</p>
                 </div>
@@ -214,18 +266,30 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
                   )}
                 </div>
               )}
-            </button>
+            </motion.button>
           )
         })}
       </div>
 
-      {isPending && (
-        <div className="text-center text-sm text-blue-400">
-          <span className="inline-block animate-spin mr-2">⏳</span>
-          Switching network...
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {isPending && (
+          <motion.div 
+            className="text-center text-sm text-blue-400 flex items-center justify-center gap-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            >
+              <Loader2 className="w-4 h-4" />
+            </motion.div>
+            Switching network...
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }
 
