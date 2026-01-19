@@ -11,6 +11,7 @@ import { WalletQRCode } from './WalletQRCode';
 import { PendingTransactionsList, usePendingTransactions } from './PendingTransactions';
 import { GasIndicator } from './GasPriceAlert';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { useWalletPersistence } from '@/hooks/useWalletPersistence';
 
 interface QuickWalletConnectProps {
   size?: 'sm' | 'md' | 'lg';
@@ -35,6 +36,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const { data: balance } = useBalance({ address });
   const { pendingCount } = usePendingTransactions();
   const { playConnect, playClick } = useTransactionSounds();
+  const { isReconnecting: isAutoReconnecting, reconnectError, minutesUntilDisconnect } = useWalletPersistence();
   
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -126,8 +128,8 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
     return () => document.removeEventListener('click', handleClick);
   }, [isOpen]);
 
-  // Loading state
-  if (isConnecting || isPending || isReconnecting) {
+  // Loading state (includes both auto-reconnecting and manual reconnecting)
+  if (isConnecting || isPending || isReconnecting || isAutoReconnecting) {
     return (
       <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800/80 rounded-xl border border-zinc-700">
         <motion.div
@@ -136,7 +138,9 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
         >
           <RefreshCw size={18} className="text-cyan-400" />
         </motion.div>
-        <span className="text-sm text-zinc-300">Connecting...</span>
+        <span className="text-sm text-zinc-300">
+          {isAutoReconnecting ? 'Auto-reconnecting...' : 'Connecting...'}
+        </span>
       </div>
     );
   }
@@ -203,7 +207,25 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
 
   // Connected - show wallet info with dropdown
   return (
-    <div className="relative wallet-dropdown">
+    <>
+      {/* Inactivity Warning Banner */}
+      <AnimatePresence>
+        {minutesUntilDisconnect !== null && minutesUntilDisconnect > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute -top-14 right-0 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg shadow-lg backdrop-blur-sm whitespace-nowrap z-50"
+          >
+            <span className="flex items-center gap-2 text-xs font-medium">
+              <Clock size={14} className="animate-pulse" />
+              <span>Auto-disconnect in {minutesUntilDisconnect}m</span>
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <div className="relative wallet-dropdown">
       {/* Wrong network warning */}
       {isWrongNetwork && (
         <motion.button
@@ -405,5 +427,6 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }

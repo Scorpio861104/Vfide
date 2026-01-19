@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useReconnect } from 'wagmi';
 import { useToast } from '@/components/ui/toast';
 import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
+import { useWalletPersistence } from '@/hooks/useWalletPersistence';
 import { useENS } from '@/hooks/useENS';
 import { measureLatency, getCachedLatency, getLatencyColor } from '@/lib/networkLatency';
 import { addConnectionToHistory } from '@/lib/connectionHistory';
@@ -48,6 +49,7 @@ export function SimpleWalletConnect() {
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
   const { sessionDurationFormatted, isInCooldown, cooldownRemaining } = useEnhancedWalletConnect();
+  const { isReconnecting: isAutoReconnecting, reconnectError, minutesUntilDisconnect } = useWalletPersistence();
   // Get connector info and reconnect status from wagmi
   const { connector } = useAccount();
   const { isPending: isReconnecting } = useReconnect();
@@ -65,11 +67,11 @@ export function SimpleWalletConnect() {
     }
   }, [showToast]);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts - standardized across all wallet components
   useEffect(() => {
     const handleKeyboard = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + W to open wallet modal (if not connected)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+      // Cmd/Ctrl + Shift + W to toggle wallet (consistent with QuickWalletConnect)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'w') {
         e.preventDefault();
         // This will be handled by the button's onClick
       }
@@ -80,7 +82,30 @@ export function SimpleWalletConnect() {
   }, []);
 
   return (
-    <ConnectButton.Custom>
+    <>
+      {/* Inactivity Warning Banner */}
+      <AnimatePresence>
+        {minutesUntilDisconnect !== null && minutesUntilDisconnect > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg shadow-lg backdrop-blur-sm"
+          >
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <Clock size={16} className="animate-pulse" />
+              <span className="hidden sm:inline">
+                Wallet will auto-disconnect in {minutesUntilDisconnect} minute{minutesUntilDisconnect !== 1 ? 's' : ''} due to inactivity
+              </span>
+              <span className="sm:hidden">
+                Auto-disconnect in {minutesUntilDisconnect}m
+              </span>
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <ConnectButton.Custom>
       {({
         account,
         chain,
@@ -174,7 +199,30 @@ export function SimpleWalletConnect() {
             })}
           >
             {(() => {
-              // Show reconnecting state (auto-reconnect from session)
+              // Show auto-reconnecting state (from useWalletPersistence)
+              if (isAutoReconnecting) {
+                return (
+                  <motion.div
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="show"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-cyan-500/10 text-cyan-400 font-bold rounded-lg border border-cyan-500/30"
+                  >
+                    <span className="flex items-center gap-2">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <RefreshCw size={16} />
+                      </motion.div>
+                      <span className="hidden sm:inline">Auto-reconnecting to previous session...</span>
+                      <span className="sm:hidden">Auto-reconnect...</span>
+                    </span>
+                  </motion.div>
+                );
+              }
+
+              // Show reconnecting state (manual reconnect from wagmi)
               if (isReconnecting) {
                 return (
                   <motion.div
@@ -192,6 +240,23 @@ export function SimpleWalletConnect() {
                       </motion.div>
                       <span className="hidden sm:inline">Reconnecting...</span>
                       <span className="sm:hidden">Resuming...</span>
+                    </span>
+                  </motion.div>
+                );
+              }
+              
+              // Show reconnect error if present
+              if (reconnectError) {
+                return (
+                  <motion.div
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="show"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-red-500/10 text-red-400 font-medium rounded-lg border border-red-500/30"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="hidden sm:inline">Reconnect failed. Click to try again.</span>
+                      <span className="sm:hidden">Reconnect failed</span>
                     </span>
                   </motion.div>
                 );
@@ -411,5 +476,6 @@ export function SimpleWalletConnect() {
         );
       }}
     </ConnectButton.Custom>
+    </>
   );
 }

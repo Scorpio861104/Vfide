@@ -76,7 +76,7 @@ export function useEnhancedWalletConnect() {
     return undefined;
   }, [connectionStatus]);
 
-  // Enhanced error messages
+  // Enhanced error messages with actionable guidance
   const getErrorMessage = useCallback((error: Error | null): string => {
     if (!error) return 'Connection failed';
     
@@ -84,31 +84,36 @@ export function useEnhancedWalletConnect() {
     
     // User rejection
     if (message.includes('user rejected') || message.includes('user denied') || message.includes('user cancelled')) {
-      return 'Connection cancelled. Please try again when ready.';
+      return 'Wallet connection was cancelled. Click "Connect Wallet" to try again.';
     }
     
     // Timeout errors
     if (message.includes('timeout') || message.includes('timed out')) {
-      return 'Connection timed out. Please check your wallet and try again.';
+      return 'Connection timed out. Open your wallet app and try connecting again.';
     }
     
     // Network errors
     if (message.includes('network') || message.includes('rpc')) {
-      return 'Network error. Please check your internet connection.';
+      return 'Network error. Check your internet connection and retry.';
     }
     
     // Wallet not found
     if (message.includes('not found') || message.includes('not installed')) {
-      return 'Wallet not found. Please install the wallet extension.';
+      return 'Wallet not detected. Install MetaMask or use WalletConnect.';
     }
     
     // Chain errors
     if (message.includes('chain') || message.includes('unsupported')) {
-      return 'Unsupported network. Please switch to a supported network.';
+      return 'Wrong network. Switch to a supported network and retry.';
+    }
+    
+    // Account errors
+    if (message.includes('account')) {
+      return 'Account error. Unlock your wallet and try again.';
     }
     
     // Generic error with original message
-    return `Connection error: ${error.message}`;
+    return `Connection failed: ${error.message}. Try again or use a different wallet.`;
   }, []);
 
   // Phase 2: Connection timeout handler - optimized to avoid stuck state
