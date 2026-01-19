@@ -16,7 +16,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
-import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
+import { ResponsiveContainer } from '@/lib/mobile';
 import { AvatarUploadCompact } from './AvatarUpload';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { 
@@ -215,7 +215,7 @@ const generateActivityHeatmap = (): ActivityHeatmapDay[] => {
 
 // ==================== HELPER FUNCTIONS ====================
 
-const getRarityColor = (rarity: Badge['rarity']): string => {
+const _getRarityColor = (rarity: Badge['rarity']): string => {
   const colors: Record<Badge['rarity'], string> = {
     common: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
     rare: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
-import { TrendingUp, Users, Unlock, Gift, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 /**
  * CreatorDashboard - Comprehensive analytics and earnings management for creators
@@ -64,7 +64,7 @@ export function CreatorDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [ethPrice] = useState(2500); // Mock ETH price in USD
   const [showClaimCelebration, setShowClaimCelebration] = useState(false);
-  const { playSuccess, playNotification } = useTransactionSounds();
+  const { playSuccess, playNotification: _playNotification } = useTransactionSounds();
 
   useEffect(() => {
     const loadStats = async () => {

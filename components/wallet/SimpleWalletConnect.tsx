@@ -115,7 +115,7 @@ export function SimpleWalletConnect() {
       setCopied(true);
       showToast('Address copied to clipboard', 'success', 2000);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to copy address', 'error', 2000);
     }
   }, [showToast]);

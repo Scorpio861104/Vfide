@@ -96,7 +96,7 @@ function AnimatedCounter({ value, prefix = '+', suffix = '' }: { value: number; 
 
 // ==================== SHARE MENU ====================
 
-function ShareMenu({ notification, onClose }: { notification: AchievementNotification; onClose: () => void }) {
+function ShareMenu({ notification, onClose: _onClose }: { notification: AchievementNotification; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
   
   const shareText = notification.shareText || 

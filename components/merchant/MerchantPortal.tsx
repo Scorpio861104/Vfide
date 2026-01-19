@@ -761,7 +761,7 @@ function MetricCard({
   type: 'currency' | 'number';
   icon: string;
 }) {
-  const formatted = type === 'currency'
+  const _formatted = type === 'currency'
     ? `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
     : value.toLocaleString();
 

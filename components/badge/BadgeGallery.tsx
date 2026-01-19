@@ -4,7 +4,7 @@ import { useBadgeNFTs } from '@/lib/vfide-hooks'
 import { getBadgeById, getAllBadges, getBadgesByCategory, getBadgeCategories } from '@/lib/badge-registry'
 import { BadgeDisplay } from './BadgeDisplay'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTransactionSounds } from '@/hooks/useTransactionSounds'
 import { Trophy, Lock, Sparkles, Star, Zap } from 'lucide-react'
@@ -19,8 +19,8 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
   const { tokenIds, isLoading: loadingBadges } = useBadgeNFTs(address)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
-  const [newlyEarned, setNewlyEarned] = useState<Set<string>>(new Set())
-  const { playSuccess, playNotification } = useTransactionSounds()
+  const [_newlyEarned, _setNewlyEarned] = useState<Set<string>>(new Set())
+  const { playSuccess: _playSuccess, playNotification } = useTransactionSounds()
   
   const categories = getBadgeCategories()
   

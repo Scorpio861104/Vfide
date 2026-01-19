@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
-import { Flame, TrendingUp, Calendar, Gift, Target, Award, Zap, AlertTriangle } from 'lucide-react';
+import { Flame, Calendar, Gift, Target, Award, Zap, AlertTriangle } from 'lucide-react';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
 interface Streak {
@@ -61,7 +61,7 @@ function FireParticle({ delay }: { delay: number }) {
 
 export default function StreakTracker() {
   const { address: _address } = useAccount();
-  const { playSuccess, playNotification } = useTransactionSounds();
+  const { playSuccess: _playSuccess, playNotification } = useTransactionSounds();
   const [streak, _setStreak] = useState<Streak>({
     type: 'login',
     currentStreak: 5,
@@ -70,7 +70,7 @@ export default function StreakTracker() {
     totalDays: 47,
   });
   const [isHovered, setIsHovered] = useState(false);
-  const [showMilestoneAnimation, setShowMilestoneAnimation] = useState(false);
+  const [_showMilestoneAnimation, _setShowMilestoneAnimation] = useState(false);
 
   const getNextMilestone = () => {
     const { currentStreak } = streak;

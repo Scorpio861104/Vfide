@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Play, Pause, Activity, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
@@ -41,7 +41,7 @@ export function RealtimeMetrics({
   const [metrics, setMetrics] = useState<RealtimeMetric[]>(initialMetrics);
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const { playSuccess, playNotification } = useTransactionSounds();
+  const { playSuccess: _playSuccess, playNotification } = useTransactionSounds();
 
   useEffect(() => {
     if (isPaused || !onUpdate) return;

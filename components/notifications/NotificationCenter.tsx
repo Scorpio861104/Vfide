@@ -17,12 +17,12 @@
 
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import React, { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
-import { Bell, Check, Archive, X, ChevronRight, Filter, Clock, AlertTriangle, CheckCircle, XCircle, Info, Wallet } from 'lucide-react';
+import { Bell, Check, Archive, ChevronRight, Clock, AlertTriangle, CheckCircle, XCircle, Info, Wallet } from 'lucide-react';
 
 // ==================== TYPES ====================
 
@@ -215,7 +215,7 @@ function calculateNotificationStats(notifications: Notification[]): Notification
 
 // ==================== HELPER FUNCTIONS ====================
 
-function getTypeColor(type: Notification['type']): string {
+function _getTypeColor(type: Notification['type']): string {
   switch (type) {
     case 'success':
       return 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700';
@@ -232,7 +232,7 @@ function getTypeColor(type: Notification['type']): string {
   }
 }
 
-function getTypeTextColor(type: Notification['type']): string {
+function _getTypeTextColor(type: Notification['type']): string {
   switch (type) {
     case 'success':
       return 'text-green-800 dark:text-green-200';
@@ -785,7 +785,7 @@ export default function NotificationCenter() {
       <div className="space-y-3">
         <AnimatePresence mode="popLayout">
           {filteredNotifications.length > 0 ? (
-            filteredNotifications.map((notification, index) => (
+            filteredNotifications.map((notification, _index) => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}

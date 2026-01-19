@@ -2,28 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
-import { Trophy, TrendingUp, DollarSign, Crown, Medal, Star } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Trophy, TrendingUp, DollarSign } from 'lucide-react';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
-
-// Animated counter for prize amounts
-function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => Math.round(latest).toLocaleString());
-  const [displayValue, setDisplayValue] = useState('0');
-  
-  useEffect(() => {
-    const controls = animate(count, value, { duration: 1.5, ease: 'easeOut' });
-    return controls.stop;
-  }, [value, count]);
-
-  useEffect(() => {
-    const unsubscribe = rounded.on('change', (v) => setDisplayValue(v));
-    return unsubscribe;
-  }, [rounded]);
-  
-  return <motion.span>{prefix}{displayValue}{suffix}</motion.span>;
-}
 
 interface LeaderboardEntry {
   rank: number;
@@ -62,7 +43,7 @@ export default function MonthlyLeaderboard() {
   const [monthYear] = useState(new Date().toISOString().slice(0, 7));
   const [loading, setLoading] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
-  const { playSuccess, playNotification } = useTransactionSounds();
+  const { playSuccess, playNotification: _playNotification } = useTransactionSounds();
 
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true);

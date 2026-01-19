@@ -20,8 +20,6 @@ import {
     Check,
     Clock,
     XCircle,
-    RefreshCw,
-    Filter,
     TrendingUp,
     TrendingDown
 } from 'lucide-react';
@@ -343,7 +341,7 @@ function renderIconForType(type: Transaction['type'], className: string) {
   }
 }
 
-function getStatusIcon(status: Transaction['status']) {
+function _getStatusIcon(status: Transaction['status']) {
   switch (status) {
     case 'confirmed':
       return Check;

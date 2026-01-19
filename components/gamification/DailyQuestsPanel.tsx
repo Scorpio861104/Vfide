@@ -12,7 +12,7 @@ import { useAccount } from 'wagmi';
 import { 
   Target, Flame, Gift, CheckCircle2, Lock, 
   Clock, TrendingUp, Star, Award, Calendar,
-  ChevronLeft, ChevronRight, Sparkles, Zap
+  ChevronLeft, ChevronRight, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';

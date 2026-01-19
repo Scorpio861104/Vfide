@@ -187,7 +187,7 @@ export function useEnhancedWalletConnect() {
       await navigator.clipboard.writeText(addressToCopy);
       showToast('Address copied to clipboard', 'success', 2000);
       return true;
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to copy address', 'error', 2000);
       return false;
     }

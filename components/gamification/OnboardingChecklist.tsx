@@ -343,7 +343,7 @@ export default function OnboardingChecklist() {
   );
 }
 
-function ChecklistItemCard({ item, onComplete }: { item: ChecklistItem; onComplete?: () => void }) {
+function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistItem; onComplete?: () => void }) {
   return (
     <motion.div 
       className={`rounded-lg p-3 ${

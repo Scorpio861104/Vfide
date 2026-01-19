@@ -24,9 +24,7 @@ import {
   Search,
   ChevronRight,
   Check,
-  CheckCheck,
-  Trash2,
-  ExternalLink
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';

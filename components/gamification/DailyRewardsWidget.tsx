@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gift, Flame, Calendar, CheckCircle2, Sparkles, Star, Zap, Clock } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function DailyRewardsWidget() {
   const [nextRewardTime, setNextRewardTime] = useState<number | null>(null);
   const [weekRewards, setWeekRewards] = useState<DailyReward[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const { playSuccess, playNotification } = useTransactionSounds();
+  const { playSuccess, playNotification: _playNotification } = useTransactionSounds();
 
   useEffect(() => {
     if (isConnected) {

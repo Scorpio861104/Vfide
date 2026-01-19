@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Palette, 
   Bell, 
@@ -26,7 +26,6 @@ import {
   Globe,
   Calendar,
   Clock,
-  ChevronRight,
   Sparkles,
   Zap
 } from 'lucide-react';

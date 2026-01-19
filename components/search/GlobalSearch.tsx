@@ -8,7 +8,6 @@ import {
   Command, 
   MessageSquare, 
   Search, 
-  TrendingUp, 
   Users, 
   X, 
   Clock, 
@@ -196,7 +195,6 @@ export function GlobalSearch() {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognitionAPI = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     if (!SpeechRecognitionAPI) {
       setIsListening(false);

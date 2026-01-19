@@ -81,7 +81,6 @@ interface VoiceSpeechRecognition extends EventTarget {
 function getSpeechRecognition(): VoiceSpeechRecognition | null {
   if (typeof window === 'undefined') return null;
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   if (!SpeechRecognitionAPI) return null;
   

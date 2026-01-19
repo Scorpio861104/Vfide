@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { Wallet, Plus, Check, Trash2, Edit2, X } from 'lucide-react';
 import { getLinkedWallets, unlinkWallet, updateWalletLabel, setPrimaryWallet } from '@/lib/biometricAuth';
