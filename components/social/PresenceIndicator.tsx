@@ -92,7 +92,7 @@ export function PresenceIndicator({
           {formatLastSeen(presence.lastSeen)}
         </span>
       )}
-    </div>
+    </motion.div>
   );
 }
 
