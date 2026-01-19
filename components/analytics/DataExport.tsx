@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Download, FileText, CheckCircle2 } from 'lucide-react';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
 interface ExportOptions {
   format: 'csv' | 'json' | 'pdf' | 'excel';
@@ -21,12 +24,14 @@ export function DataExport({
   className = ''
 }: DataExportProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [options, setOptions] = useState<ExportOptions>({
     format: 'csv',
     includeHeaders: true,
     dateFormat: 'ISO',
     compression: false
   });
+  const { playSuccess, playNotification } = useTransactionSounds();
 
   const convertToCSV = (data: any[]): string => {
     if (data.length === 0) return '';
@@ -95,6 +100,10 @@ export function DataExport({
 
         downloadFile(content, mimeType, extension);
       }
+      
+      setShowSuccess(true);
+      playSuccess();
+      setTimeout(() => setShowSuccess(false), 2000);
     } catch (error) {
       console.error('Export failed:', error);
     } finally {
@@ -104,8 +113,13 @@ export function DataExport({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      <motion.div 
+        className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+          <FileText className="w-5 h-5 text-blue-500" />
           Export Data
         </h3>
 
@@ -116,18 +130,26 @@ export function DataExport({
               Format
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {(['csv', 'json', 'pdf', 'excel'] as const).map(format => (
-                <button
+              {(['csv', 'json', 'pdf', 'excel'] as const).map((format, index) => (
+                <motion.button
                   key={format}
-                  onClick={() => setOptions({ ...options, format })}
+                  onClick={() => {
+                    setOptions({ ...options, format });
+                    playNotification();
+                  }}
                   className={`px-4 py-2 rounded-lg border-2 transition-colors ${
                     options.format === format
                       ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                       : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400'
                   }`}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   {format.toUpperCase()}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
@@ -188,29 +210,45 @@ export function DataExport({
         </div>
 
         {/* Export button */}
-        <button
+        <motion.button
           onClick={handleExport}
           disabled={isExporting || data.length === 0}
           className="mt-4 w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          whileHover={{ scale: data.length > 0 && !isExporting ? 1.02 : 1 }}
+          whileTap={{ scale: data.length > 0 && !isExporting ? 0.98 : 1 }}
         >
           {isExporting ? (
             <>
-              <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
+              <motion.div
+                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              />
               Exporting...
             </>
           ) : (
             <>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
+              <Download className="w-5 h-5" />
               Export Data
             </>
           )}
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
+
+      {/* Success Toast */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            className="fixed bottom-8 right-8 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2"
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+          >
+            <CheckCircle2 className="w-5 h-5" />
+            Export Complete!
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

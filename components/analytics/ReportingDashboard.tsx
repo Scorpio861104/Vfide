@@ -1,4 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { TrendingUp, TrendingDown, Minus, BarChart3, LineChart as LineChartIcon, RefreshCw, Download } from 'lucide-react';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
 // Types
 interface Metric {
@@ -9,6 +12,44 @@ interface Metric {
   trend?: 'up' | 'down' | 'neutral';
   icon?: React.ReactNode;
   format?: 'number' | 'currency' | 'percentage' | 'duration';
+}
+
+// Animated Counter Component
+function AnimatedCounter({ value, format }: { value: number; format?: string }) {
+  const motionValue = useMotionValue(0);
+  const rounded = useTransform(motionValue, latest => Math.round(latest));
+  const [displayValue, setDisplayValue] = React.useState(0);
+
+  React.useEffect(() => {
+    const controls = animate(motionValue, value, {
+      duration: 1,
+      ease: 'easeOut'
+    });
+    
+    const unsubscribe = rounded.on('change', latest => setDisplayValue(latest));
+    
+    return () => {
+      controls.stop();
+      unsubscribe();
+    };
+  }, [value, motionValue, rounded]);
+
+  const formatValue = (val: number): string => {
+    switch (format) {
+      case 'currency':
+        return `$${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      case 'percentage':
+        return `${val.toFixed(2)}%`;
+      case 'duration':
+        const hours = Math.floor(val / 3600);
+        const minutes = Math.floor((val % 3600) / 60);
+        return `${hours}h ${minutes}m`;
+      default:
+        return val.toLocaleString();
+    }
+  };
+
+  return <>{formatValue(displayValue)}</>;
 }
 
 interface ChartData {
@@ -87,34 +128,30 @@ function MetricCard({ metric }: { metric: Metric }) {
   const getTrendIcon = (trend?: 'up' | 'down' | 'neutral') => {
     if (!trend) return null;
     
-    const baseClasses = 'w-4 h-4';
     if (trend === 'up') {
-      return (
-        <svg className={`${baseClasses} text-green-500`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-        </svg>
-      );
+      return <TrendingUp className="w-4 h-4 text-green-500" />;
     } else if (trend === 'down') {
-      return (
-        <svg className={`${baseClasses} text-red-500`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
-      );
+      return <TrendingDown className="w-4 h-4 text-red-500" />;
     }
-    return (
-      <svg className={`${baseClasses} text-gray-500`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
-      </svg>
-    );
+    return <Minus className="w-4 h-4 text-gray-500" />;
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+    <motion.div 
+      className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{metric.label}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {formatValue(metric.value, metric.format)}
+            {typeof metric.value === 'number' ? (
+              <AnimatedCounter value={metric.value} format={metric.format} />
+            ) : (
+              formatValue(metric.value, metric.format)
+            )}
           </p>
           {metric.change !== undefined && (
             <div className="flex items-center gap-1 mt-2">
@@ -135,7 +172,7 @@ function MetricCard({ metric }: { metric: Metric }) {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -283,6 +320,7 @@ export function ReportingDashboard({
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(false);
+  const { playSuccess, playNotification } = useTransactionSounds();
 
   const selectedReport = useMemo(
     () => reports.find(r => r.id === selectedReportId),
@@ -295,6 +333,7 @@ export function ReportingDashboard({
     setIsRefreshing(true);
     try {
       await onRefresh();
+      playSuccess();
     } finally {
       setIsRefreshing(false);
     }
@@ -342,43 +381,43 @@ export function ReportingDashboard({
 
         <div className="flex flex-wrap gap-2">
           {onRefresh && (
-            <button
+            <motion.button
               onClick={handleRefresh}
               disabled={isRefreshing}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              whileHover={{ scale: isRefreshing ? 1 : 1.05 }}
+              whileTap={{ scale: isRefreshing ? 1 : 0.95 }}
             >
-              <svg
-                className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+              <motion.div
+                animate={{ rotate: isRefreshing ? 360 : 0 }}
+                transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: 'linear' }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+                <RefreshCw className="w-4 h-4" />
+              </motion.div>
               Refresh
-            </button>
+            </motion.button>
           )}
 
           {onExport && (
             <div className="flex gap-2">
-              <button
-                onClick={() => handleExport('csv')}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-              >
-                CSV
-              </button>
-              <button
-                onClick={() => handleExport('pdf')}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-              >
-                PDF
-              </button>
-              <button
-                onClick={() => handleExport('json')}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-              >
-                JSON
-              </button>
+              {(['csv', 'pdf', 'json'] as const).map((format, index) => (
+                <motion.button
+                  key={format}
+                  onClick={() => {
+                    handleExport(format);
+                    playNotification();
+                  }}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center gap-2"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Download className="w-4 h-4" />
+                  {format.toUpperCase()}
+                </motion.button>
+              ))}
             </div>
           )}
         </div>
@@ -430,14 +469,40 @@ export function ReportingDashboard({
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Chart Type
           </label>
-          <select
-            value={chartType}
-            onChange={(e) => setChartType(e.target.value as 'line' | 'bar')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          >
-            <option value="line">Line Chart</option>
-            <option value="bar">Bar Chart</option>
-          </select>
+          <div className="flex gap-2">
+            <motion.button
+              onClick={() => {
+                setChartType('line');
+                playNotification();
+              }}
+              className={`flex-1 px-3 py-2 rounded-lg border-2 transition-colors flex items-center justify-center gap-2 ${
+                chartType === 'line'
+                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                  : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <LineChartIcon className="w-4 h-4" />
+              Line
+            </motion.button>
+            <motion.button
+              onClick={() => {
+                setChartType('bar');
+                playNotification();
+              }}
+              className={`flex-1 px-3 py-2 rounded-lg border-2 transition-colors flex items-center justify-center gap-2 ${
+                chartType === 'bar'
+                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                  : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Bar
+            </motion.button>
+          </div>
         </div>
 
         {/* Auto-refresh toggle */}
@@ -459,24 +524,43 @@ export function ReportingDashboard({
       {/* Metrics Grid */}
       {selectedReport.metrics.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {selectedReport.metrics.map(metric => (
-            <MetricCard key={metric.id} metric={metric} />
-          ))}
+          <AnimatePresence mode="popLayout">
+            {selectedReport.metrics.map((metric, index) => (
+              <motion.div
+                key={metric.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <MetricCard metric={metric} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 
       {/* Charts */}
       {selectedReport.charts.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            Trends
-          </h2>
-          {chartType === 'line' ? (
-            <LineChart data={selectedReport.charts} />
-          ) : (
-            <BarChart data={selectedReport.charts} />
-          )}
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={`${selectedReportId}-${chartType}`}
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Trends
+            </h2>
+            {chartType === 'line' ? (
+              <LineChart data={selectedReport.charts} />
+            ) : (
+              <BarChart data={selectedReport.charts} />
+            )}
+          </motion.div>
+        </AnimatePresence>
       )}
     </div>
   );

@@ -1,6 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { Shield, Search, CheckCircle2, X, AlertTriangle } from 'lucide-react';
 import { useThreatDetection } from '@/hooks/useThreatDetection';
 import { ThreatLevel, formatThreatType } from '@/config/security-advanced';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
 interface ThreatDetectionPanelProps {
   className?: string;
@@ -31,6 +34,21 @@ const getRiskScoreColor = (score: number): string => {
 
 export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelProps) {
   const threat = useThreatDetection();
+  const { playSuccess, playNotification, playError } = useTransactionSounds();
+  const [isScanning, setIsScanning] = useState(false);
+
+  // Animated risk score
+  const AnimatedRiskScore = ({ score }: { score: number }) => {
+    const motionValue = useMotionValue(0);
+    const rounded = useTransform(motionValue, (v) => Math.round(v));
+    
+    useEffect(() => {
+      const controls = animate(motionValue, score, { duration: 1.5 });
+      return controls.stop;
+    }, [score]);
+    
+    return <motion.span>{rounded}</motion.span>;
+  };
 
   useEffect(() => {
     // Run anomaly detection on mount
@@ -38,63 +56,94 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
   }, []);
 
   const handleScan = async () => {
+    setIsScanning(true);
+    playNotification();
     await threat.detectAnomalies();
+    setIsScanning(false);
+    if (threat.activeThreats.length === 0) {
+      playSuccess();
+    } else {
+      playError();
+    }
   };
 
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Threat Level Overview */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+      <motion.div 
+        className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Threat Detection</h2>
-          <button
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Shield className="w-7 h-7 text-blue-500" />
+            Threat Detection
+          </h2>
+          <motion.button
             onClick={handleScan}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+            disabled={isScanning}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 disabled:opacity-50"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            🔍 Scan Now
-          </button>
+            {isScanning ? (
+              <motion.div
+                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              />
+            ) : (
+              <Search className="w-5 h-5" />
+            )}
+            {isScanning ? 'Scanning...' : 'Scan Now'}
+          </motion.button>
         </div>
 
         {/* Risk Score */}
         <div className="text-center mb-6">
-          <div className="inline-flex flex-col items-center p-6 bg-gray-50 dark:bg-gray-900 rounded-xl">
+          <motion.div 
+            className="inline-flex flex-col items-center p-6 bg-gray-50 dark:bg-gray-900 rounded-xl"
+            whileHover={{ scale: 1.02 }}
+          >
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Risk Score</div>
             <div className={`text-6xl font-bold ${getRiskScoreColor(threat.riskScore)}`}>
-              {threat.riskScore}
+              <AnimatedRiskScore score={threat.riskScore} />
             </div>
             <div className="text-sm text-gray-500 mt-1">out of 100</div>
-            <div className={`mt-3 px-4 py-2 rounded-full border-2 font-semibold ${getThreatLevelColor(threat.threatLevel)}`}>
+            <motion.div 
+              className={`mt-3 px-4 py-2 rounded-full border-2 font-semibold ${getThreatLevelColor(threat.threatLevel)}`}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              key={threat.threatLevel}
+            >
               {threat.threatLevel.toUpperCase()}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-center">
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {threat.metrics.threatsDetected}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Total Threats</div>
-          </div>
-          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-center">
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-              {threat.activeThreats.length}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Active</div>
-          </div>
-          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-center">
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {threat.metrics.failedLoginAttempts}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Failed Logins</div>
-          </div>
-          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-center">
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {threat.metrics.activeSessions}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Active Sessions</div>
-          </div>
+          {[
+            { label: 'Total Threats', value: threat.metrics.threatsDetected },
+            { label: 'Active', value: threat.activeThreats.length, isRed: true },
+            { label: 'Failed Logins', value: threat.metrics.failedLoginAttempts },
+            { label: 'Active Sessions', value: threat.metrics.activeSessions }
+          ].map((item, index) => (
+            <motion.div 
+              key={item.label}
+              className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-center"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.05 }}
+            >
+              <div className={`text-2xl font-bold ${item.isRed ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                {item.value}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{item.label}</div>
+            </motion.div>
+          ))}
         </div>
 
         {/* Recommendations */}
@@ -109,19 +158,30 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
             ))}
           </ul>
         </div>
-      </div>
+      </motion.div>
 
       {/* Active Threats */}
+      <AnimatePresence>
       {threat.activeThreats.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            🚨 Active Threats ({threat.activeThreats.length})
+        <motion.div 
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+        >
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-500" />
+            Active Threats ({threat.activeThreats.length})
           </h3>
           <div className="space-y-3">
-            {threat.activeThreats.map((t) => (
-              <div
+            {threat.activeThreats.map((t, index) => (
+              <motion.div
                 key={t.id}
                 className={`p-4 rounded-lg border-2 ${getThreatLevelColor(t.severity)}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ delay: index * 0.1 }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
@@ -145,27 +205,38 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => threat.resolveThread(t.id)}
-                      className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                    <motion.button
+                      onClick={() => {
+                        threat.resolveThread(t.id);
+                        playSuccess();
+                      }}
+                      className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1"
                       title="Mark as resolved"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      ✓
-                    </button>
-                    <button
-                      onClick={() => threat.dismissThreat(t.id)}
+                      <CheckCircle2 className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
+                      onClick={() => {
+                        threat.dismissThreat(t.id);
+                        playNotification();
+                      }}
                       className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
                       title="Dismiss"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      ✕
-                    </button>
+                      <X className="w-4 h-4" />
+                    </motion.button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Threat History */}
       {threat.threats.length > threat.activeThreats.length && (
@@ -190,17 +261,30 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
       )}
 
       {/* No Threats */}
+      <AnimatePresence>
       {threat.threats.length === 0 && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-12 text-center">
-          <div className="text-6xl mb-4">🛡️</div>
+        <motion.div 
+          className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-12 text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+        >
+          <motion.div 
+            className="text-6xl mb-4"
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            🛡️
+          </motion.div>
           <h3 className="text-2xl font-bold text-green-900 dark:text-green-100 mb-2">
             All Clear!
           </h3>
           <p className="text-green-800 dark:text-green-200">
             No security threats detected. Your account is secure.
           </p>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 };

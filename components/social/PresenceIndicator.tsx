@@ -9,6 +9,7 @@
 
 import { formatLastSeen, useUserPresence, type PresenceStatus } from '@/lib/presence';
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PresenceIndicatorProps {
   address: string;
@@ -56,17 +57,26 @@ export function PresenceIndicator({
   const sizeClass = sizeClasses[size];
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <motion.div 
+      className={`flex items-center gap-2 ${className}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
       <div className="relative">
-        <div
-          className={`${sizeClass} ${colorClass} rounded-full ${
-            isOnline ? 'animate-pulse' : ''
-          }`}
+        <motion.div
+          className={`${sizeClass} ${colorClass} rounded-full`}
           title={statusLabels[presence.status]}
+          animate={isOnline ? {
+            scale: [1, 1.2, 1],
+            opacity: [1, 0.8, 1]
+          } : {}}
+          transition={{ duration: 2, repeat: Infinity }}
         />
         {isOnline && (
-          <div
-            className={`absolute inset-0 ${sizeClass} ${colorClass} rounded-full animate-ping opacity-75`}
+          <motion.div
+            className={`absolute inset-0 ${sizeClass} ${colorClass} rounded-full`}
+            animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
+            transition={{ duration: 2, repeat: Infinity }}
           />
         )}
       </div>
@@ -110,16 +120,22 @@ export function PresenceBadge({
   };
 
   return (
-    <span
+    <motion.span
       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
         statusColor[presence.status]
       } ${className}`}
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
     >
-      <span
+      <motion.span
         className={`h-1.5 w-1.5 rounded-full ${statusColors[presence.status]}`}
+        animate={presence.status === 'online' ? {
+          scale: [1, 1.3, 1],
+        } : {}}
+        transition={{ duration: 1.5, repeat: Infinity }}
       />
       {statusLabels[presence.status]}
-    </span>
+    </motion.span>
   );
 }
 
@@ -155,10 +171,12 @@ export function PresenceDot({
       className={`absolute ${positionClasses[position]} ${className}`}
       title={statusLabels[presence.status]}
     >
-      <div
-        className={`h-3 w-3 ${statusColors[presence.status]} rounded-full border-2 border-white dark:border-gray-900 ${
-          isOnline ? 'animate-pulse' : ''
-        }`}
+      <motion.div
+        className={`h-3 w-3 ${statusColors[presence.status]} rounded-full border-2 border-white dark:border-gray-900`}
+        animate={isOnline ? {
+          scale: [1, 1.15, 1],
+        } : {}}
+        transition={{ duration: 1.5, repeat: Infinity }}
       />
     </div>
   );

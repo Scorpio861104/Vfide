@@ -1,5 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Filter, Layers, Play, X, Plus, Database } from 'lucide-react';
 import { safeParseInt } from '@/lib/validation';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
 interface FilterCondition {
   field: string;
@@ -31,12 +34,14 @@ export function QueryBuilder({
   const [groupBy, setGroupBy] = useState<string[]>([]);
   const [sortBy, _setSortBy] = useState<{ field: string; direction: 'asc' | 'desc' }[]>([]);
   const [limit, setLimit] = useState<number>(100);
+  const { playSuccess, playNotification, playError } = useTransactionSounds();
 
   const addFilter = () => {
     setFilters([
       ...filters,
       { field: fields[0]?.name || '', operator: 'equals', value: '' }
     ]);
+    playNotification();
   };
 
   const updateFilter = (index: number, updates: Partial<FilterCondition>) => {
@@ -50,6 +55,7 @@ export function QueryBuilder({
 
   const removeFilter = (index: number) => {
     setFilters(filters.filter((_, i) => i !== index));
+    playError();
   };
 
   const addAggregation = () => {
@@ -58,6 +64,7 @@ export function QueryBuilder({
       ...aggregations,
       { field: numericFields[0]?.name || fields[0]?.name || '', function: 'sum' }
     ]);
+    playNotification();
   };
 
   const updateAggregation = (index: number, updates: Partial<AggregationConfig>) => {
@@ -71,6 +78,7 @@ export function QueryBuilder({
 
   const removeAggregation = (index: number) => {
     setAggregations(aggregations.filter((_, i) => i !== index));
+    playError();
   };
 
   const executeQuery = useMemo(() => {
@@ -177,33 +185,54 @@ export function QueryBuilder({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      <motion.div 
+        className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+          <Database className="w-5 h-5 text-blue-500" />
           Query Builder
         </h3>
 
         {/* Filters Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
               Filters
             </h4>
-            <button
+            <motion.button
               onClick={addFilter}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              + Add Filter
-            </button>
+              <Plus className="w-3 h-3" /> Add Filter
+            </motion.button>
           </div>
 
+          <AnimatePresence mode="popLayout">
           {filters.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <motion.p 
+              className="text-sm text-gray-500 dark:text-gray-400"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
               No filters applied
-            </p>
+            </motion.p>
           ) : (
             <div className="space-y-2">
               {filters.map((filter, index) => (
-                <div key={index} className="flex gap-2">
+                <motion.div 
+                  key={index} 
+                  className="flex gap-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20, height: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
                   <select
                     value={filter.field}
                     onChange={(e) => updateFilter(index, { field: e.target.value })}
@@ -238,18 +267,19 @@ export function QueryBuilder({
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   />
 
-                  <button
+                  <motion.button
                     onClick={() => removeFilter(index)}
                     className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+                    <X className="w-4 h-4" />
+                  </motion.button>
+                </motion.div>
               ))}
             </div>
           )}
+          </AnimatePresence>
         </div>
 
         {/* Group By Section */}
@@ -278,25 +308,40 @@ export function QueryBuilder({
         {/* Aggregations Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <Layers className="w-4 h-4" />
               Aggregations
             </h4>
-            <button
+            <motion.button
               onClick={addAggregation}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              + Add Aggregation
-            </button>
+              <Plus className="w-3 h-3" /> Add Aggregation
+            </motion.button>
           </div>
 
+          <AnimatePresence mode="popLayout">
           {aggregations.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <motion.p 
+              className="text-sm text-gray-500 dark:text-gray-400"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
               No aggregations configured
-            </p>
+            </motion.p>
           ) : (
             <div className="space-y-2">
               {aggregations.map((agg, index) => (
-                <div key={index} className="flex gap-2">
+                <motion.div 
+                  key={index} 
+                  className="flex gap-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20, height: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
                   <select
                     value={agg.function}
                     onChange={(e) => updateAggregation(index, { function: e.target.value as any })}
@@ -329,18 +374,19 @@ export function QueryBuilder({
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   />
 
-                  <button
+                  <motion.button
                     onClick={() => removeAggregation(index)}
                     className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+                    <X className="w-4 h-4" />
+                  </motion.button>
+                </motion.div>
               ))}
             </div>
           )}
+          </AnimatePresence>
         </div>
 
         {/* Limit */}
@@ -358,21 +404,29 @@ export function QueryBuilder({
         </div>
 
         {/* Execute Button */}
-        <button
-          onClick={handleExecute}
+        <motion.button
+          onClick={() => {
+            handleExecute();
+            playSuccess();
+          }}
           className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <Play className="w-5 h-5" />
           Execute Query ({executeQuery.length} results)
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* Results Preview */}
+      <AnimatePresence>
       {executeQuery.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <motion.div 
+          className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+        >
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Results Preview ({executeQuery.length} rows)
           </h4>
@@ -389,13 +443,19 @@ export function QueryBuilder({
               </thead>
               <tbody>
                 {executeQuery.slice(0, 10).map((row, index) => (
-                  <tr key={index} className="border-b border-gray-100 dark:border-gray-700/50">
+                  <motion.tr 
+                    key={index} 
+                    className="border-b border-gray-100 dark:border-gray-700/50"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
                     {Object.values(row).map((value: any, cellIndex) => (
                       <td key={cellIndex} className="py-2 px-3 text-gray-600 dark:text-gray-400">
                         {String(value)}
                       </td>
                     ))}
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
@@ -405,8 +465,9 @@ export function QueryBuilder({
               Showing first 10 of {executeQuery.length} results
             </p>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 };

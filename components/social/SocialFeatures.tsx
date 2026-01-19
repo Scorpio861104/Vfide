@@ -7,6 +7,9 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Users, UserPlus, Heart, MessageCircle, Share2, Ban, Check, X } from 'lucide-react';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -296,11 +299,21 @@ function UserCard({
   onBlock,
 }: UserCardProps) {
   return (
-  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+  <motion.div 
+    className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ scale: 1.02, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+  >
     <div className="flex items-start justify-between mb-3">
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-3xl">{user.avatar}</span>
+          <motion.span 
+            className="text-3xl"
+            whileHover={{ scale: 1.2, rotate: 10 }}
+          >
+            {user.avatar}
+          </motion.span>
           <div>
             <div className="flex items-center gap-1">
               <h3 className="font-semibold">{user.displayName}</h3>
@@ -311,13 +324,15 @@ function UserCard({
         </div>
         {user.bio && <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{user.bio}</p>}
       </div>
-      <button
+      <motion.button
         onClick={() => onBlock(user.id)}
         className="text-gray-400 hover:text-red-600 transition-colors"
         title="Block user"
+        whileHover={{ scale: 1.2 }}
+        whileTap={{ scale: 0.9 }}
       >
-        ⊗
-      </button>
+        <Ban className="w-4 h-4" />
+      </motion.button>
     </div>
 
     <div className="grid grid-cols-3 gap-2 mb-3 text-center text-sm">
@@ -337,45 +352,53 @@ function UserCard({
 
     <div className="flex gap-2">
       {relationship.status === 'following' ? (
-        <button
+        <motion.button
           onClick={() => onUnfollow(user.id)}
           className="flex-1 px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-medium text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           Following
-        </button>
+        </motion.button>
       ) : (
-        <button
+        <motion.button
           onClick={() => onFollow(user.id)}
           className="flex-1 px-3 py-2 bg-blue-600 text-white rounded font-medium text-sm hover:bg-blue-700 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           Follow
-        </button>
+        </motion.button>
       )}
 
       {relationship.status === 'friend' ? (
-        <button
+        <motion.button
           onClick={() => onRemoveFriend(user.id)}
           className="flex-1 px-3 py-2 bg-purple-600 text-white rounded font-medium text-sm hover:bg-purple-700 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           Friend
-        </button>
+        </motion.button>
       ) : relationship.status === 'friend_requested' ? (
-        <button
+        <motion.button
           disabled
           className="flex-1 px-3 py-2 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded font-medium text-sm cursor-not-allowed"
         >
           Requested
-        </button>
+        </motion.button>
       ) : (
-        <button
+        <motion.button
           onClick={() => onAddFriend(user.id)}
           className="flex-1 px-3 py-2 bg-green-600 text-white rounded font-medium text-sm hover:bg-green-700 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           Add Friend
-        </button>
+        </motion.button>
       )}
     </div>
-  </div>
+  </motion.div>
   );
 }
 
@@ -387,9 +410,20 @@ interface FriendRequestCardProps {
 
 function FriendRequestCard({ request, onAccept, onReject }: FriendRequestCardProps) {
   return (
-  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 flex items-center justify-between">
+  <motion.div 
+    className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: 20 }}
+    whileHover={{ scale: 1.01 }}
+  >
     <div className="flex items-center gap-3 flex-1">
-      <span className="text-3xl">{request.fromUser.avatar}</span>
+      <motion.span 
+        className="text-3xl"
+        whileHover={{ scale: 1.2 }}
+      >
+        {request.fromUser.avatar}
+      </motion.span>
       <div>
         <h3 className="font-semibold">{request.fromUser.displayName}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">@{request.fromUser.username}</p>
@@ -397,20 +431,24 @@ function FriendRequestCard({ request, onAccept, onReject }: FriendRequestCardPro
       </div>
     </div>
     <div className="flex gap-2">
-      <button
+      <motion.button
         onClick={() => onAccept(request.id)}
-        className="px-4 py-2 bg-green-600 text-white rounded font-medium text-sm hover:bg-green-700 transition-colors"
+        className="px-4 py-2 bg-green-600 text-white rounded font-medium text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        Accept
-      </button>
-      <button
+        <Check className="w-4 h-4" /> Accept
+      </motion.button>
+      <motion.button
         onClick={() => onReject(request.id)}
-        className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded font-medium text-sm hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+        className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded font-medium text-sm hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors flex items-center gap-1"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        Reject
-      </button>
+        <X className="w-4 h-4" /> Reject
+      </motion.button>
     </div>
-  </div>
+  </motion.div>
   );
 }
 
@@ -468,9 +506,19 @@ interface FeedPostCardProps {
 
 function FeedPostCard({ post, onLike, onComment, onShare }: FeedPostCardProps) {
   return (
-  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+  <motion.div 
+    className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+  >
     <div className="flex items-center gap-3 mb-3">
-      <span className="text-2xl">{post.user.avatar}</span>
+      <motion.span 
+        className="text-2xl"
+        whileHover={{ scale: 1.2 }}
+      >
+        {post.user.avatar}
+      </motion.span>
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-sm">{post.user.displayName}</h3>
@@ -490,30 +538,37 @@ function FeedPostCard({ post, onLike, onComment, onShare }: FeedPostCardProps) {
     </div>
 
     <div className="flex gap-2">
-      <button
+      <motion.button
         onClick={() => onLike(post.id)}
-        className={`flex-1 px-3 py-2 rounded font-medium text-sm transition-colors ${
+        className={`flex-1 px-3 py-2 rounded font-medium text-sm transition-colors flex items-center justify-center gap-1 ${
           post.liked
             ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400'
             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
         }`}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
-        {post.liked ? '❤️ Liked' : '🤍 Like'}
-      </button>
-      <button
+        <Heart className={`w-4 h-4 ${post.liked ? 'fill-current' : ''}`} />
+        {post.liked ? 'Liked' : 'Like'}
+      </motion.button>
+      <motion.button
         onClick={() => onComment(post.id)}
-        className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded font-medium text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded font-medium text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-1"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
-        💬 Comment
-      </button>
-      <button
+        <MessageCircle className="w-4 h-4" /> Comment
+      </motion.button>
+      <motion.button
         onClick={() => onShare(post.id)}
-        className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded font-medium text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded font-medium text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-1"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
-        📤 Share
-      </button>
+        <Share2 className="w-4 h-4" /> Share
+      </motion.button>
     </div>
-  </div>
+  </motion.div>
   );
 }
 
@@ -683,30 +738,26 @@ function SocialFeatures({ className = '' }: SocialFeaturesProps) {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="text-2xl font-bold text-blue-600">{socialStats.followers}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Followers</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="text-2xl font-bold text-blue-600">{socialStats.following}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Following</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="text-2xl font-bold text-purple-600">{socialStats.friends}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Friends</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="text-2xl font-bold text-green-600">{socialStats.friendRequests}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Requests</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="text-2xl font-bold text-orange-600">{socialStats.suggestions}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Suggestions</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="text-2xl font-bold text-red-600">{socialStats.blockedUsers}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Blocked</div>
-        </div>
+        {[
+          { label: 'Followers', value: socialStats.followers, color: 'blue' },
+          { label: 'Following', value: socialStats.following, color: 'blue' },
+          { label: 'Friends', value: socialStats.friends, color: 'purple' },
+          { label: 'Requests', value: socialStats.friendRequests, color: 'green' },
+          { label: 'Suggestions', value: socialStats.suggestions, color: 'orange' },
+          { label: 'Blocked', value: socialStats.blockedUsers, color: 'red' }
+        ].map((stat, index) => (
+          <motion.div 
+            key={stat.label}
+            className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+            whileHover={{ scale: 1.05, y: -2 }}
+          >
+            <div className={`text-2xl font-bold text-${stat.color}-600`}>{stat.value}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Search Bar */}
