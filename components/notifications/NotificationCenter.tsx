@@ -17,9 +17,12 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { Bell, Check, Archive, X, ChevronRight, Filter, Clock, AlertTriangle, CheckCircle, XCircle, Info, Wallet } from 'lucide-react';
 
 // ==================== TYPES ====================
 
@@ -348,80 +351,136 @@ function NotificationItem({
   onAction,
 }: NotificationItemProps) {
   const isRead = notification.read;
+  const { playSuccess, playNotification } = useTransactionSounds();
+
+  const getTypeIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'success': return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'error': return <XCircle className="w-5 h-5 text-red-500" />;
+      case 'warning': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+      case 'info': return <Info className="w-5 h-5 text-blue-500" />;
+      case 'transaction': return <Wallet className="w-5 h-5 text-purple-500" />;
+      default: return <Bell className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
+  const handleRead = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRead(notification.id);
+    playSuccess();
+  };
+
+  const handleArchive = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onArchive(notification.id);
+    playNotification();
+  };
 
   return (
-    <div
-      className={`${getTypeColor(notification.type)} border rounded-lg p-4 md:p-6 transition-all cursor-pointer hover:shadow-md`}
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -20, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 100, scale: 0.9 }}
+      whileHover={{ scale: 1.01, x: 4 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      className={`relative bg-[#1A1A1F] border rounded-xl p-4 md:p-5 transition-all cursor-pointer overflow-hidden ${
+        !isRead ? 'border-yellow-500/30' : 'border-[#2A2A2F]'
+      }`}
       onClick={() => !isRead && onRead(notification.id)}
     >
-      <div className="flex items-start gap-4">
+      {/* Unread indicator glow */}
+      {!isRead && (
+        <motion.div
+          animate={{ opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-transparent pointer-events-none"
+        />
+      )}
+
+      <div className="relative flex items-start gap-4">
         {/* Icon and Priority Indicator */}
         <div className="relative shrink-0">
-          <span className="text-2xl md:text-3xl">{notification.icon}</span>
-          <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${getPriorityColor(notification.priority)}`} />
+          <motion.div
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            className="w-12 h-12 rounded-xl bg-[#2A2A2F] flex items-center justify-center"
+          >
+            {getTypeIcon(notification.type)}
+          </motion.div>
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full ${getPriorityColor(notification.priority)} ring-2 ring-[#1A1A1F]`} 
+          />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className={`text-base md:text-lg font-bold ${getTypeTextColor(notification.type)} ${!isRead ? 'font-extrabold' : ''}`}>
+          <div className="flex items-start justify-between mb-1">
+            <h3 className={`text-base font-semibold text-gray-100 ${!isRead ? 'text-white' : 'text-gray-300'}`}>
               {notification.title}
             </h3>
             {!isRead && (
-              <div className="w-3 h-3 rounded-full bg-blue-500 shrink-0 ml-2" />
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="w-2.5 h-2.5 rounded-full bg-yellow-500 shrink-0 ml-2"
+              />
             )}
           </div>
 
-          <p className={`text-sm md:text-base ${getTypeTextColor(notification.type)} opacity-90 mb-2`}>
+          <p className="text-sm text-gray-400 mb-2 line-clamp-2">
             {notification.message}
           </p>
 
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 text-xs md:text-sm">
-              <span className={getTypeTextColor(notification.type)}>
-                {notification.source}
-              </span>
-              <span className="opacity-60">•</span>
-              <span className="opacity-60">{formatTime(notification.timestamp)}</span>
-            </div>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-gray-500">{notification.source}</span>
+            <span className="text-gray-600">•</span>
+            <span className="text-gray-500 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {formatTime(notification.timestamp)}
+            </span>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {!isRead && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRead(notification.id);
-              }}
-              className="text-xs px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleRead}
+              className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 transition-colors"
+              title="Mark as read"
             >
-              Mark Read
-            </button>
+              <Check className="w-4 h-4" />
+            </motion.button>
           )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onArchive(notification.id);
-            }}
-            className="text-xs px-2 py-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-900 dark:text-white rounded transition-colors"
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleArchive}
+            className="p-2 rounded-lg bg-[#2A2A2F] text-gray-400 hover:bg-[#3A3A3F] hover:text-gray-300 transition-colors"
+            title="Archive"
           >
-            Archive
-          </button>
+            <Archive className="w-4 h-4" />
+          </motion.button>
         </div>
       </div>
 
       {/* Action Button */}
       {notification.actionUrl && notification.actionLabel && (
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => onAction?.(notification.actionUrl!)}
-          className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm md:text-base"
+          className="mt-4 w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
         >
           {notification.actionLabel}
-        </button>
+          <ChevronRight className="w-4 h-4" />
+        </motion.button>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -434,17 +493,44 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, color }: StatCardProps) {
   return (
-    <div className={`rounded-lg p-4 md:p-6 bg-linear-to-br ${color} text-white shadow-lg`}>
-      <div className="flex items-start justify-between">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.03, y: -2 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className={`rounded-xl p-4 md:p-5 bg-gradient-to-br ${color} text-white shadow-lg relative overflow-hidden`}
+    >
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+          backgroundSize: '20px 20px'
+        }} />
+      </div>
+      
+      <div className="relative flex items-start justify-between">
         <div>
-          <p className="text-xs md:text-sm font-medium opacity-90 mb-1 md:mb-2">
+          <p className="text-xs md:text-sm font-medium opacity-80 mb-1">
             {label}
           </p>
-          <p className="text-2xl md:text-3xl font-bold">{value}</p>
+          <motion.p 
+            key={value}
+            initial={{ scale: 1.2, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-2xl md:text-3xl font-bold"
+          >
+            {value}
+          </motion.p>
         </div>
-        <span className="text-3xl md:text-4xl opacity-80">{icon}</span>
+        <motion.span 
+          animate={{ rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          className="text-3xl md:text-4xl opacity-80"
+        >
+          {icon}
+        </motion.span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -696,24 +782,36 @@ export default function NotificationCenter() {
       </div>
 
       {/* Notifications List */}
-      <div className="space-y-4">
-        {filteredNotifications.length > 0 ? (
-          filteredNotifications.map((notification) => (
-            <NotificationItem
-              key={notification.id}
-              notification={notification}
-              onRead={handleMarkAsRead}
-              onArchive={handleArchive}
-              onAction={handleNotificationAction}
-            />
-          ))
-        ) : (
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-700">
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
-              No notifications match your filters
-            </p>
-          </div>
-        )}
+      <div className="space-y-3">
+        <AnimatePresence mode="popLayout">
+          {filteredNotifications.length > 0 ? (
+            filteredNotifications.map((notification, index) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onRead={handleMarkAsRead}
+                onArchive={handleArchive}
+                onAction={handleNotificationAction}
+              />
+            ))
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-[#1A1A1F] rounded-xl p-8 text-center border border-[#2A2A2F]"
+            >
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Bell className="w-12 h-12 mx-auto mb-4 text-gray-500" />
+              </motion.div>
+              <p className="text-gray-400 text-lg">
+                No notifications match your filters
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { Transaction, useTransactions } from '@/lib/crypto';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowDownLeft,
     ArrowUpRight,
@@ -16,9 +16,17 @@ import {
     FileText,
     Gift,
     Search,
-    Users
+    Users,
+    Check,
+    Clock,
+    XCircle,
+    RefreshCw,
+    Filter,
+    TrendingUp,
+    TrendingDown
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
 interface TransactionHistoryProps {
   userId: string;
@@ -28,6 +36,7 @@ export function TransactionHistory({ userId }: TransactionHistoryProps) {
   const { transactions, loading } = useTransactions(userId);
   const [filter, setFilter] = useState<'all' | 'send' | 'receive' | 'tip'>('all');
   const [search, setSearch] = useState('');
+  const { playNotification } = useTransactionSounds();
 
   const filteredTransactions = transactions.filter((tx) => {
     if (filter !== 'all' && tx.type !== filter) return false;
@@ -42,60 +51,139 @@ export function TransactionHistory({ userId }: TransactionHistoryProps) {
     return true;
   });
 
+  // Calculate stats
+  const stats = useMemo(() => {
+    const sent = transactions.filter(tx => tx.from.toLowerCase() === userId.toLowerCase());
+    const received = transactions.filter(tx => tx.to.toLowerCase() === userId.toLowerCase());
+    return {
+      totalSent: sent.reduce((sum, tx) => sum + parseFloat(tx.amount), 0),
+      totalReceived: received.reduce((sum, tx) => sum + parseFloat(tx.amount), 0),
+      pending: transactions.filter(tx => tx.status === 'pending').length,
+    };
+  }, [transactions, userId]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 border-3 border-[#2A2A2F] border-t-yellow-500 rounded-full"
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Transaction History</h2>
-        <div className="flex items-center gap-2">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              className="pl-10 pr-4 py-2 bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
-            />
-          </div>
-
-          {/* Filter */}
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
-            className="px-4 py-2 bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-5"
+    >
+      {/* Header with Stats */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            Transaction History
+            {stats.pending > 0 && (
+              <motion.span
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="px-2 py-0.5 text-xs bg-yellow-500/20 text-yellow-500 rounded-full"
+              >
+                {stats.pending} pending
+              </motion.span>
+            )}
+          </h2>
+        </div>
+        
+        {/* Quick Stats */}
+        <div className="flex items-center gap-3">
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="px-3 py-2 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2"
           >
-            <option value="all">All</option>
-            <option value="send">Sent</option>
-            <option value="receive">Received</option>
-            <option value="tip">Tips</option>
-          </select>
+            <TrendingDown className="w-4 h-4 text-green-500" />
+            <span className="text-green-400 text-sm font-medium">+{stats.totalReceived.toFixed(2)}</span>
+          </motion.div>
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2"
+          >
+            <TrendingUp className="w-4 h-4 text-red-500" />
+            <span className="text-red-400 text-sm font-medium">-{stats.totalSent.toFixed(2)}</span>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="flex items-center gap-3">
+        {/* Search */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by address or memo..."
+            className="w-full pl-10 pr-4 py-2.5 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors"
+          />
+        </div>
+
+        {/* Filter Buttons */}
+        <div className="flex items-center gap-1 p-1 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl">
+          {(['all', 'send', 'receive', 'tip'] as const).map((f) => (
+            <motion.button
+              key={f}
+              onClick={() => {
+                setFilter(f);
+                playNotification();
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                filter === f 
+                  ? 'bg-yellow-500 text-black' 
+                  : 'text-gray-400 hover:text-white hover:bg-[#2A2A2F]'
+              }`}
+            >
+              {f === 'all' ? 'All' : f === 'send' ? 'Sent' : f === 'receive' ? 'Received' : 'Tips'}
+            </motion.button>
+          ))}
         </div>
       </div>
 
       {/* Transactions List */}
-      {filteredTransactions.length === 0 ? (
-        <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-12 text-center">
-          <FileText className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400">No transactions found</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filteredTransactions.map((transaction) => (
-            <TransactionCard key={transaction.id} transaction={transaction} userId={userId} />
-          ))}
-        </div>
-      )}
-    </div>
+      <AnimatePresence mode="popLayout">
+        {filteredTransactions.length === 0 ? (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-12 text-center"
+          >
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <FileText className="w-14 h-14 text-gray-600 mx-auto mb-4" />
+            </motion.div>
+            <p className="text-gray-400 text-lg">No transactions found</p>
+            <p className="text-gray-500 text-sm mt-1">Try adjusting your filters</p>
+          </motion.div>
+        ) : (
+          <motion.div layout className="space-y-2">
+            {filteredTransactions.map((transaction, index) => (
+              <TransactionCard 
+                key={transaction.id} 
+                transaction={transaction} 
+                userId={userId}
+                index={index}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -106,30 +194,58 @@ export function TransactionHistory({ userId }: TransactionHistoryProps) {
 interface TransactionCardProps {
   transaction: Transaction;
   userId: string;
+  index?: number;
 }
 
 // Memoized for list performance
-const TransactionCard = React.memo(function TransactionCard({ transaction, userId }: TransactionCardProps) {
+const TransactionCard = React.memo(function TransactionCard({ transaction, userId, index = 0 }: TransactionCardProps) {
   const isSent = transaction.from.toLowerCase() === userId.toLowerCase();
   const statusColor = getStatusColor(transaction.status);
+  const StatusIcon = getStatusIcon(transaction.status);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-[#1A1A1F] border border-[#2A2A2F] hover:border-[#3A3A3F] rounded-lg p-4 transition-colors"
+      layout
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 30 }}
+      whileHover={{ scale: 1.01, x: 4 }}
+      className="bg-[#1A1A1F] border border-[#2A2A2F] hover:border-[#3A3A3F] rounded-xl p-4 transition-all"
     >
       <div className="flex items-center gap-4">
         {/* Icon */}
-        <div
-          className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+        <motion.div
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          className={`relative w-12 h-12 rounded-xl flex items-center justify-center ${
             isSent
-              ? 'bg-red-500/10 text-red-400'
-              : 'bg-green-500/10 text-green-400'
+              ? 'bg-gradient-to-br from-red-500/20 to-red-600/10 text-red-400'
+              : 'bg-gradient-to-br from-green-500/20 to-green-600/10 text-green-400'
           }`}
         >
-          {renderIconForType(transaction.type, "w-6 h-6")}
-        </div>
+          {renderIconForType(transaction.type, "w-5 h-5")}
+          
+          {/* Status indicator */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-[#1A1A1F] ${
+              transaction.status === 'confirmed' ? 'bg-green-500' :
+              transaction.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+            }`}
+          >
+            {transaction.status === 'pending' ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <Clock className="w-3 h-3 text-black" />
+              </motion.div>
+            ) : (
+              <StatusIcon className="w-3 h-3 text-black" />
+            )}
+          </motion.div>
+        </motion.div>
 
         {/* Details */}
         <div className="flex-1 min-w-0">
@@ -137,19 +253,24 @@ const TransactionCard = React.memo(function TransactionCard({ transaction, userI
             <span className="text-white font-medium">
               {getTransactionLabel(transaction.type, isSent)}
             </span>
-            <span
-              className={`px-2 py-0.5 rounded text-xs font-medium ${statusColor}`}
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}`}
             >
               {transaction.status}
-            </span>
+            </motion.span>
           </div>
 
           <div className="text-sm text-gray-400 truncate">
-            {isSent ? (<>To</>) : (<>From</>)}: {formatAddress(isSent ? transaction.to : transaction.from)}
+            {isSent ? 'To' : 'From'}: <span className="font-mono">{formatAddress(isSent ? transaction.to : transaction.from)}</span>
           </div>
 
           {transaction.memo && (
-            <div className="text-sm text-gray-500 mt-1">{transaction.memo}</div>
+            <div className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+              <FileText className="w-3 h-3" />
+              {transaction.memo}
+            </div>
           )}
 
           <div className="text-xs text-gray-600 mt-1">
@@ -159,24 +280,27 @@ const TransactionCard = React.memo(function TransactionCard({ transaction, userI
 
         {/* Amount */}
         <div className="text-right">
-          <div
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             className={`text-lg font-bold ${
               isSent ? 'text-red-400' : 'text-green-400'
             }`}
           >
             {isSent ? '-' : '+'}
             {transaction.amount} {transaction.currency}
-          </div>
+          </motion.div>
           {transaction.txHash && (
-            <a
+            <motion.a
+              whileHover={{ scale: 1.05 }}
               href={`https://etherscan.io/tx/${transaction.txHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 mt-1"
+              className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 mt-1 transition-colors"
             >
-              <span>View on Etherscan</span>
+              <span>Etherscan</span>
               <ExternalLink className="w-3 h-3" />
-            </a>
+            </motion.a>
           )}
         </div>
       </div>
@@ -202,6 +326,19 @@ function renderIconForType(type: Transaction['type'], className: string) {
       return <Users className={className} />;
     default:
       return <ArrowUpRight className={className} />;
+  }
+}
+
+function getStatusIcon(status: Transaction['status']) {
+  switch (status) {
+    case 'confirmed':
+      return Check;
+    case 'pending':
+      return Clock;
+    case 'failed':
+      return XCircle;
+    default:
+      return Clock;
   }
 }
 
