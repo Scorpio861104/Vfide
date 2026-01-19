@@ -4,28 +4,222 @@ import { SHORTCUTS, useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { Group } from '@/types/groups';
 import { Friend } from '@/types/messaging';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Command, MessageSquare, Search, TrendingUp, Users, X } from 'lucide-react';
+import { 
+  Command, 
+  MessageSquare, 
+  Search, 
+  TrendingUp, 
+  Users, 
+  X, 
+  Clock, 
+  Mic, 
+  MicOff,
+  Hash,
+  Wallet,
+  Send,
+  ArrowRightLeft,
+  FileText,
+  Settings,
+  Star,
+  Trash2,
+  Zap,
+  Trophy,
+  Store,
+  Vote,
+  Shield,
+  LayoutDashboard,
+  CreditCard,
+  PiggyBank,
+  Bell,
+  ChevronRight
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
+import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+
+// ==================== TYPES ====================
+
+type SearchCategory = 'all' | 'pages' | 'people' | 'transactions' | 'commands';
 
 interface SearchResult {
-  type: 'friend' | 'group' | 'achievement' | 'page';
+  type: 'friend' | 'group' | 'achievement' | 'page' | 'command' | 'transaction' | 'address';
   id: string;
   title: string;
   subtitle?: string;
   icon: React.ReactNode;
   action: () => void;
+  category: SearchCategory;
+  keywords?: string[];
 }
+
+interface RecentSearch {
+  query: string;
+  timestamp: number;
+  resultCount: number;
+}
+
+// ==================== CONSTANTS ====================
+
+const RECENT_SEARCHES_KEY = 'vfide-recent-searches';
+const MAX_RECENT_SEARCHES = 5;
+
+const CATEGORY_ICONS: Record<SearchCategory, React.ReactNode> = {
+  all: <Search className="w-4 h-4" />,
+  pages: <FileText className="w-4 h-4" />,
+  people: <Users className="w-4 h-4" />,
+  transactions: <ArrowRightLeft className="w-4 h-4" />,
+  commands: <Zap className="w-4 h-4" />,
+};
+
+const PAGES = [
+  { title: 'Dashboard', path: '/dashboard', keywords: ['home', 'overview', 'dashboard', 'main'], icon: LayoutDashboard },
+  { title: 'Vault', path: '/vault', keywords: ['vault', 'safe', 'storage', 'security'], icon: Shield },
+  { title: 'Wallet', path: '/crypto', keywords: ['wallet', 'crypto', 'balance', 'funds'], icon: Wallet },
+  { title: 'Messages', path: '/social-messaging', keywords: ['messages', 'chat', 'social', 'dm'], icon: MessageSquare },
+  { title: 'Feed', path: '/feed', keywords: ['feed', 'activity', 'posts', 'updates'], icon: Bell },
+  { title: 'Achievements', path: '/achievements', keywords: ['achievements', 'badges', 'gamification', 'rewards'], icon: Trophy },
+  { title: 'Governance', path: '/governance', keywords: ['governance', 'dao', 'voting', 'proposals'], icon: Vote },
+  { title: 'Merchant', path: '/merchant', keywords: ['merchant', 'shop', 'store', 'business', 'pos'], icon: Store },
+  { title: 'Quests', path: '/quests', keywords: ['quests', 'missions', 'daily', 'challenges'], icon: Star },
+  { title: 'Rewards', path: '/rewards', keywords: ['rewards', 'claim', 'earnings'], icon: Trophy },
+  { title: 'Payroll', path: '/payroll', keywords: ['payroll', 'salary', 'payments', 'streaming'], icon: CreditCard },
+  { title: 'Treasury', path: '/treasury', keywords: ['treasury', 'funds', 'reserve'], icon: PiggyBank },
+  { title: 'Settings', path: '/settings', keywords: ['settings', 'preferences', 'config', 'options'], icon: Settings },
+];
+
+const COMMANDS = [
+  { id: 'send', title: 'Send Payment', description: 'Send crypto to an address', keywords: ['send', 'pay', 'transfer'], icon: Send, action: '/pay' },
+  { id: 'swap', title: 'Swap Tokens', description: 'Exchange one token for another', keywords: ['swap', 'exchange', 'trade'], icon: ArrowRightLeft, action: '/crypto?tab=swap' },
+  { id: 'stake', title: 'Stake VFIDE', description: 'Stake tokens for rewards', keywords: ['stake', 'staking', 'lock'], icon: PiggyBank, action: '/rewards?tab=stake' },
+  { id: 'vote', title: 'Vote on Proposal', description: 'Participate in governance', keywords: ['vote', 'governance', 'proposal'], icon: Vote, action: '/governance' },
+  { id: 'claim', title: 'Claim Rewards', description: 'Claim pending rewards', keywords: ['claim', 'rewards', 'earnings'], icon: Trophy, action: '/rewards?tab=claim' },
+];
+
+// ==================== HELPERS ====================
+
+function fuzzyMatch(text: string, query: string): boolean {
+  const textLower = text.toLowerCase();
+  const queryLower = query.toLowerCase();
+  
+  // Exact match
+  if (textLower.includes(queryLower)) return true;
+  
+  // Fuzzy match (characters in order)
+  let queryIndex = 0;
+  for (let i = 0; i < textLower.length && queryIndex < queryLower.length; i++) {
+    if (textLower[i] === queryLower[queryIndex]) {
+      queryIndex++;
+    }
+  }
+  return queryIndex === queryLower.length;
+}
+
+function isEthAddress(str: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(str);
+}
+
+function isTransactionHash(str: string): boolean {
+  return /^0x[a-fA-F0-9]{64}$/.test(str);
+}
+
+function shortenAddress(address: string): string {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+// ==================== COMPONENT ====================
 
 export function GlobalSearch() {
   const { address } = useAccount();
   const router = useRouter();
+  const { playSound } = useTransactionSounds();
+  
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [activeCategory, setActiveCategory] = useState<SearchCategory>('all');
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const [showTips, setShowTips] = useState(false);
+  
   const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  // Load recent searches
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+      if (stored) {
+        setRecentSearches(JSON.parse(stored));
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Save recent search
+  const saveRecentSearch = useCallback((searchQuery: string, resultCount: number) => {
+    if (!searchQuery.trim()) return;
+    
+    const newSearch: RecentSearch = {
+      query: searchQuery,
+      timestamp: Date.now(),
+      resultCount,
+    };
+
+    setRecentSearches(prev => {
+      const filtered = prev.filter(s => s.query.toLowerCase() !== searchQuery.toLowerCase());
+      const updated = [newSearch, ...filtered].slice(0, MAX_RECENT_SEARCHES);
+      try {
+        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+      } catch { /* ignore */ }
+      return updated;
+    });
+  }, []);
+
+  // Clear recent searches
+  const clearRecentSearches = useCallback(() => {
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem(RECENT_SEARCHES_KEY);
+    } catch { /* ignore */ }
+  }, []);
+
+  // Voice search
+  const toggleVoiceSearch = useCallback(() => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = event.results[0][0].transcript;
+      setQuery(transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  }, [isListening]);
 
   // Keyboard shortcut to open search
   useKeyboardShortcuts([
@@ -44,28 +238,38 @@ export function GlobalSearch() {
     },
   ]);
 
-  // Handle arrow key navigation
+  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedIndex(prev => (prev + 1) % results.length);
+        playSound('click');
+        setSelectedIndex(prev => (prev + 1) % Math.max(results.length, 1));
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedIndex(prev => (prev - 1 + results.length) % results.length);
+        playSound('click');
+        setSelectedIndex(prev => (prev - 1 + Math.max(results.length, 1)) % Math.max(results.length, 1));
       } else if (e.key === 'Enter' && results[selectedIndex]) {
         e.preventDefault();
+        playSound('success');
+        saveRecentSearch(query, results.length);
         results[selectedIndex].action();
         setIsOpen(false);
         setQuery('');
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        // Cycle through categories
+        const categories: SearchCategory[] = ['all', 'pages', 'people', 'transactions', 'commands'];
+        const currentIdx = categories.indexOf(activeCategory);
+        setActiveCategory(categories[(currentIdx + 1) % categories.length]);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, results, selectedIndex]);
+  }, [isOpen, results, selectedIndex, query, activeCategory, playSound, saveRecentSearch]);
 
   // Search function
   const performSearch = useCallback((searchQuery: string) => {
@@ -74,53 +278,123 @@ export function GlobalSearch() {
       return;
     }
 
-    const query = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase();
     const searchResults: SearchResult[] = [];
 
+    // Check for command shortcuts (starts with /)
+    if (searchQuery.startsWith('/')) {
+      const cmdQuery = searchQuery.slice(1).toLowerCase();
+      COMMANDS.forEach(cmd => {
+        if (cmd.id.includes(cmdQuery) || cmd.keywords.some(k => k.includes(cmdQuery))) {
+          searchResults.push({
+            type: 'command',
+            id: cmd.id,
+            title: cmd.title,
+            subtitle: cmd.description,
+            icon: <cmd.icon className="w-5 h-5" />,
+            action: () => router.push(cmd.action),
+            category: 'commands',
+          });
+        }
+      });
+    }
+
+    // Check for ETH address
+    if (isEthAddress(searchQuery)) {
+      searchResults.push({
+        type: 'address',
+        id: searchQuery,
+        title: shortenAddress(searchQuery),
+        subtitle: 'View address on explorer',
+        icon: <Wallet className="w-5 h-5" />,
+        action: () => window.open(`https://basescan.org/address/${searchQuery}`, '_blank'),
+        category: 'transactions',
+      });
+      searchResults.push({
+        type: 'command',
+        id: `send-${searchQuery}`,
+        title: `Send to ${shortenAddress(searchQuery)}`,
+        subtitle: 'Quick send payment',
+        icon: <Send className="w-5 h-5" />,
+        action: () => router.push(`/pay?to=${searchQuery}`),
+        category: 'commands',
+      });
+    }
+
+    // Check for transaction hash
+    if (isTransactionHash(searchQuery)) {
+      searchResults.push({
+        type: 'transaction',
+        id: searchQuery,
+        title: `Transaction ${shortenAddress(searchQuery)}`,
+        subtitle: 'View on block explorer',
+        icon: <Hash className="w-5 h-5" />,
+        action: () => window.open(`https://basescan.org/tx/${searchQuery}`, '_blank'),
+        category: 'transactions',
+      });
+    }
+
     // Search pages
-    const pages = [
-      { title: 'Dashboard', path: '/', keywords: ['home', 'overview', 'dashboard'] },
-      { title: 'Messages', path: '/social-messaging', keywords: ['messages', 'chat', 'social'] },
-      { title: 'Achievements', path: '/achievements', keywords: ['achievements', 'badges', 'gamification'] },
-      { title: 'Governance', path: '/governance', keywords: ['governance', 'dao', 'voting'] },
-      { title: 'Merchant', path: '/merchant', keywords: ['merchant', 'shop', 'store'] },
-      { title: 'Analytics', path: '/reporting', keywords: ['analytics', 'reports', 'stats'] },
-    ];
+    if (activeCategory === 'all' || activeCategory === 'pages') {
+      PAGES.forEach(page => {
+        const matches = 
+          fuzzyMatch(page.title, q) ||
+          page.keywords.some(k => fuzzyMatch(k, q));
+        
+        if (matches) {
+          searchResults.push({
+            type: 'page',
+            id: page.path,
+            title: page.title,
+            icon: <page.icon className="w-5 h-5" />,
+            action: () => router.push(page.path),
+            category: 'pages',
+          });
+        }
+      });
+    }
 
-    pages.forEach(page => {
-      const matches = page.keywords.some(k => k.includes(query)) || page.title.toLowerCase().includes(query);
-      if (matches) {
-        searchResults.push({
-          type: 'page',
-          id: page.path,
-          title: page.title,
-          icon: <TrendingUp className="w-5 h-5" />,
-          action: () => router.push(page.path),
-        });
-      }
-    });
+    // Search commands
+    if ((activeCategory === 'all' || activeCategory === 'commands') && !searchQuery.startsWith('/')) {
+      COMMANDS.forEach(cmd => {
+        const matches = 
+          fuzzyMatch(cmd.title, q) ||
+          cmd.keywords.some(k => fuzzyMatch(k, q));
+        
+        if (matches) {
+          searchResults.push({
+            type: 'command',
+            id: cmd.id,
+            title: cmd.title,
+            subtitle: cmd.description,
+            icon: <cmd.icon className="w-5 h-5" />,
+            action: () => router.push(cmd.action),
+            category: 'commands',
+          });
+        }
+      });
+    }
 
-    // Search friends (if available)
-    if (address && typeof window !== 'undefined') {
+    // Search friends
+    if ((activeCategory === 'all' || activeCategory === 'people') && address && typeof window !== 'undefined') {
       try {
         const storedFriends = localStorage.getItem(`vfide_friends_${address}`);
         if (storedFriends) {
           const friends: Friend[] = JSON.parse(storedFriends);
           friends.forEach(friend => {
             const matches = 
-              friend.alias?.toLowerCase().includes(query) ||
-              friend.address.toLowerCase().includes(query);
+              fuzzyMatch(friend.alias || '', q) ||
+              friend.address.toLowerCase().includes(q);
             
             if (matches) {
               searchResults.push({
                 type: 'friend',
                 id: friend.address,
-                title: friend.alias || friend.address,
+                title: friend.alias || shortenAddress(friend.address),
                 subtitle: friend.address,
                 icon: <Users className="w-5 h-5" />,
-                action: () => {
-                  router.push(`/social-messaging?friend=${friend.address}`);
-                },
+                action: () => router.push(`/social-messaging?friend=${friend.address}`),
+                category: 'people',
               });
             }
           });
@@ -131,15 +405,15 @@ export function GlobalSearch() {
     }
 
     // Search groups
-    if (address && typeof window !== 'undefined') {
+    if ((activeCategory === 'all' || activeCategory === 'people') && address && typeof window !== 'undefined') {
       try {
         const storedGroups = localStorage.getItem(`vfide_groups_${address}`);
         if (storedGroups) {
           const groups: Group[] = JSON.parse(storedGroups);
           groups.forEach(group => {
             const matches =
-              group.name.toLowerCase().includes(query) ||
-              group.description?.toLowerCase().includes(query);
+              fuzzyMatch(group.name, q) ||
+              fuzzyMatch(group.description || '', q);
             
             if (matches) {
               searchResults.push({
@@ -148,9 +422,8 @@ export function GlobalSearch() {
                 title: group.name,
                 subtitle: `${group.members.length} members`,
                 icon: <MessageSquare className="w-5 h-5" />,
-                action: () => {
-                  router.push(`/social-messaging?group=${group.id}`);
-                },
+                action: () => router.push(`/social-messaging?group=${group.id}`),
+                category: 'people',
               });
             }
           });
@@ -160,15 +433,20 @@ export function GlobalSearch() {
       }
     }
 
-    setResults(searchResults.slice(0, 8)); // Limit to 8 results
+    // Filter by category
+    const filtered = activeCategory === 'all' 
+      ? searchResults 
+      : searchResults.filter(r => r.category === activeCategory);
+
+    setResults(filtered.slice(0, 10));
     setSelectedIndex(0);
-  }, [address, router]);
+  }, [address, router, activeCategory]);
 
   // Debounced search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       performSearch(query);
-    }, 200);
+    }, 150);
 
     return () => clearTimeout(timeoutId);
   }, [query, performSearch]);
@@ -177,6 +455,15 @@ export function GlobalSearch() {
     setIsOpen(false);
     setQuery('');
     setResults([]);
+    setActiveCategory('all');
+    setShowTips(false);
+  };
+
+  const handleResultClick = (result: SearchResult) => {
+    playSound('success');
+    saveRecentSearch(query, results.length);
+    result.action();
+    handleClose();
   };
 
   return (
@@ -184,11 +471,11 @@ export function GlobalSearch() {
       {/* Trigger Button in Nav */}
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex items-center gap-2 px-3 py-2 bg-[#1A1A1F] hover:bg-[#2A2A2F] border border-[#2A2A2F] rounded-lg text-sm text-[#6B6B78] transition-colors"
+        className="hidden md:flex items-center gap-2 px-3 py-2 bg-[#1A1A1F] hover:bg-[#2A2A2F] border border-[#2A2A2F] hover:border-cyan-500/30 rounded-xl text-sm text-[#6B6B78] transition-all group"
       >
-        <Search className="w-4 h-4" />
-        <span>Search...</span>
-        <kbd className="px-1.5 py-0.5 text-xs font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">
+        <Search className="w-4 h-4 group-hover:text-cyan-400 transition-colors" />
+        <span className="group-hover:text-white transition-colors">Search...</span>
+        <kbd className="px-1.5 py-0.5 text-xs font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F] group-hover:border-cyan-500/30 transition-colors">
           ⌘K
         </kbd>
       </button>
@@ -220,68 +507,182 @@ export function GlobalSearch() {
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-[#0A0A0F] border border-[#2A2A2F] rounded-2xl shadow-2xl z-50 overflow-hidden"
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-[#0A0A0F]/95 backdrop-blur-xl border border-[#2A2A2F] rounded-2xl shadow-2xl z-50 overflow-hidden"
             >
               {/* Search Input */}
               <div className="flex items-center gap-3 p-4 border-b border-[#2A2A2F]">
-                <Search className="w-5 h-5 text-[#6B6B78]" />
+                <Search className={`w-5 h-5 ${query ? 'text-cyan-400' : 'text-[#6B6B78]'} transition-colors`} />
                 <input
                   ref={inputRef}
                   type="text"
                   value={query}
                   onChange={e => setQuery(e.target.value)}
-                  placeholder="Search friends, groups, pages..."
-                  className="flex-1 bg-transparent text-[#F5F3E8] placeholder-[#6B6B78] outline-none"
+                  placeholder="Search pages, people, commands... (try /send)"
+                  className="flex-1 bg-transparent text-[#F5F3E8] placeholder-[#6B6B78] outline-none text-lg"
                   autoFocus
                 />
                 {query && (
                   <button
                     onClick={() => setQuery('')}
-                    className="p-1 hover:bg-[#2A2A3F] rounded transition-colors"
+                    className="p-1.5 hover:bg-[#2A2A3F] rounded-lg transition-colors"
                   >
                     <X className="w-4 h-4 text-[#6B6B78]" />
                   </button>
                 )}
+                <button
+                  onClick={toggleVoiceSearch}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isListening 
+                      ? 'bg-red-500/20 text-red-400 animate-pulse' 
+                      : 'hover:bg-[#2A2A3F] text-[#6B6B78]'
+                  }`}
+                  title="Voice search"
+                >
+                  {isListening ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                </button>
               </div>
 
+              {/* Category Chips */}
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-[#2A2A2F] overflow-x-auto">
+                {(Object.keys(CATEGORY_ICONS) as SearchCategory[]).map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                      activeCategory === cat
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                        : 'bg-[#1A1A1F] text-[#6B6B78] border border-transparent hover:bg-[#2A2A2F] hover:text-white'
+                    }`}
+                  >
+                    {CATEGORY_ICONS[cat]}
+                    <span className="capitalize">{cat}</span>
+                  </button>
+                ))}
+                <div className="flex-1" />
+                <button
+                  onClick={() => setShowTips(!showTips)}
+                  className="text-xs text-[#6B6B78] hover:text-cyan-400 transition-colors"
+                >
+                  {showTips ? 'Hide tips' : 'Show tips'}
+                </button>
+              </div>
+
+              {/* Tips */}
+              <AnimatePresence>
+                {showTips && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden bg-cyan-500/5 border-b border-[#2A2A2F]"
+                  >
+                    <div className="p-3 text-xs text-[#6B6B78] space-y-1">
+                      <p><span className="text-cyan-400">/send</span> — Quick send command</p>
+                      <p><span className="text-cyan-400">0x...</span> — Search addresses or tx hashes</p>
+                      <p><span className="text-cyan-400">Tab</span> — Cycle categories</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Results */}
-              <div className="max-h-96 overflow-y-auto">
-                {results.length === 0 && query ? (
-                  <div className="p-8 text-center">
-                    <p className="text-sm text-[#6B6B78]">No results found for &quot;{query}&quot;</p>
-                  </div>
-                ) : results.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <Command className="w-12 h-12 text-[#6B6B78] mx-auto mb-3" />
-                    <p className="text-sm text-[#6B6B78] mb-1">Quick search</p>
-                    <p className="text-xs text-[#6B6B78]/60">Search for friends, groups, and pages</p>
-                  </div>
-                ) : (
+              <div className="max-h-80 overflow-y-auto">
+                {/* Recent Searches (when no query) */}
+                {!query && recentSearches.length > 0 && (
                   <div className="py-2">
-                    {results.map((result, index) => (
+                    <div className="flex items-center justify-between px-4 py-2">
+                      <span className="text-xs font-medium text-[#6B6B78] uppercase tracking-wide">Recent Searches</span>
                       <button
-                        key={result.id}
-                        onClick={() => {
-                          result.action();
-                          handleClose();
-                        }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                          index === selectedIndex
-                            ? 'bg-[#00F0FF]/10 border-l-2 border-[#00F0FF]'
+                        onClick={clearRecentSearches}
+                        className="text-xs text-[#6B6B78] hover:text-red-400 flex items-center gap-1 transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Clear
+                      </button>
+                    </div>
+                    {recentSearches.map((search, index) => (
+                      <button
+                        key={`${search.query}-${search.timestamp}`}
+                        onClick={() => setQuery(search.query)}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors ${
+                          index === selectedIndex && !query
+                            ? 'bg-cyan-500/10 border-l-2 border-cyan-400'
                             : 'hover:bg-[#1A1A1F]'
                         }`}
                       >
-                        <div className={`${index === selectedIndex ? 'text-[#00F0FF]' : 'text-[#6B6B78]'}`}>
+                        <Clock className="w-4 h-4 text-[#6B6B78]" />
+                        <span className="text-sm text-[#F5F3E8]">{search.query}</span>
+                        <span className="text-xs text-[#6B6B78]">{search.resultCount} results</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* No Query Prompt */}
+                {!query && recentSearches.length === 0 && (
+                  <div className="p-8 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                      <Command className="w-8 h-8 text-cyan-400" />
+                    </div>
+                    <p className="text-sm text-[#F5F3E8] mb-1">Quick Search</p>
+                    <p className="text-xs text-[#6B6B78]">
+                      Search pages, people, transactions, or use commands like <span className="text-cyan-400">/send</span>
+                    </p>
+                  </div>
+                )}
+
+                {/* No Results */}
+                {query && results.length === 0 && (
+                  <div className="p-8 text-center">
+                    <p className="text-sm text-[#6B6B78] mb-2">No results for &quot;{query}&quot;</p>
+                    <p className="text-xs text-[#6B6B78]/60">Try a different search or category</p>
+                  </div>
+                )}
+
+                {/* Results List */}
+                {results.length > 0 && (
+                  <div className="py-2">
+                    {results.map((result, index) => (
+                      <motion.button
+                        key={result.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        onClick={() => handleResultClick(result)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 transition-all ${
+                          index === selectedIndex
+                            ? 'bg-cyan-500/10 border-l-2 border-cyan-400'
+                            : 'hover:bg-[#1A1A1F] border-l-2 border-transparent'
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg ${
+                          index === selectedIndex 
+                            ? 'bg-cyan-500/20 text-cyan-400' 
+                            : 'bg-[#1A1A1F] text-[#6B6B78]'
+                        } transition-colors`}>
                           {result.icon}
                         </div>
-                        <div className="flex-1 text-left">
-                          <p className="text-sm font-medium text-[#F5F3E8]">{result.title}</p>
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="text-sm font-medium text-[#F5F3E8] truncate">{result.title}</p>
                           {result.subtitle && (
-                            <p className="text-xs text-[#6B6B78]">{result.subtitle}</p>
+                            <p className="text-xs text-[#6B6B78] truncate">{result.subtitle}</p>
                           )}
                         </div>
-                        <span className="text-xs text-[#6B6B78] uppercase">{result.type}</span>
-                      </button>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-medium ${
+                            result.type === 'command' ? 'bg-purple-500/20 text-purple-400' :
+                            result.type === 'page' ? 'bg-blue-500/20 text-blue-400' :
+                            result.type === 'transaction' || result.type === 'address' ? 'bg-green-500/20 text-green-400' :
+                            'bg-orange-500/20 text-orange-400'
+                          }`}>
+                            {result.type}
+                          </span>
+                          <ChevronRight className={`w-4 h-4 ${
+                            index === selectedIndex ? 'text-cyan-400' : 'text-[#6B6B78]'
+                          }`} />
+                        </div>
+                      </motion.button>
                     ))}
                   </div>
                 )}
@@ -290,15 +691,22 @@ export function GlobalSearch() {
               {/* Footer */}
               <div className="flex items-center justify-between px-4 py-3 bg-[#0F0F14] border-t border-[#2A2A2F] text-xs text-[#6B6B78]">
                 <div className="flex gap-4">
-                  <span>
-                    <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">↑↓</kbd> Navigate
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">↑↓</kbd>
+                    Navigate
                   </span>
-                  <span>
-                    <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">Enter</kbd> Select
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">Tab</kbd>
+                    Categories
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">↵</kbd>
+                    Select
                   </span>
                 </div>
-                <span>
-                  <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">Esc</kbd> Close
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">Esc</kbd>
+                  Close
                 </span>
               </div>
             </motion.div>
@@ -307,4 +715,11 @@ export function GlobalSearch() {
       </AnimatePresence>
     </>
   );
+}
+
+// TypeScript declarations for Web Speech API
+declare global {
+  interface Window {
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
 }
