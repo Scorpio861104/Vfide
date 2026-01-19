@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getAvatarUrl } from '@/lib/constants';
+import { requireOwnership } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, updateUserSchema } from '@/lib/auth/validation';
 
 interface User {
   wallet_address: string;

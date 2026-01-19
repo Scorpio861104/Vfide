@@ -1,7 +1,20 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireOwnership } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  // Rate limiting - strict for claims
+  const rateLimitResponse = await withRateLimit(request, 'claim');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const { userId } = await params;
+
+  // Require ownership - only the user can claim their own rewards
+  const authResult = requireOwnership(request, userId);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
   try {
     const { userId } = await params;
     const body = await request.json();

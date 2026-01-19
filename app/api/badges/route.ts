@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAdmin } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, awardBadgeSchema } from '@/lib/auth/validation';
 
 interface Badge {
   id: number;
@@ -75,19 +78,30 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/badges
- * Award a badge to a user
+ * Award a badge to a user (admin only)
  */
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { userAddress, badgeId } = body;
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
 
-    if (!userAddress || !badgeId) {
+  // Require admin access
+  const authResult = requireAdmin(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
+  try {
+    // Validate request body
+    const validation = await validateBody(request, awardBadgeSchema);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: userAddress, badgeId' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
       );
     }
+
+    const { userAddress, badgeType: badgeId } = validation.data;
 
     // Get user ID
     const userResult = await query(
@@ -168,6 +182,16 @@ export async function POST(request: NextRequest) {
  * Remove a badge from a user (admin only)
  */
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require admin access
+  const authResult = requireAdmin(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');

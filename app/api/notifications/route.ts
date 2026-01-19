@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 interface Notification {
   id: number;
@@ -30,6 +32,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
@@ -41,6 +49,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'userAddress is required' },
         { status: 400 }
+      );
+    }
+
+    // Verify ownership - user can only view their own notifications
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only view your own notifications' },
+        { status: 403 }
       );
     }
 
@@ -99,6 +115,16 @@ export async function GET(request: NextRequest) {
  * Create a new notification
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { userAddress, type, title, message, data } = body;

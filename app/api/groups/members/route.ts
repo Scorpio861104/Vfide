@@ -1,5 +1,7 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 interface GroupMember {
   id: number;
@@ -13,6 +15,10 @@ interface GroupMember {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');
@@ -55,6 +61,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
     const { groupId, userAddress, role = 'member', actorAddress } = body;
@@ -96,6 +110,14 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
     const { groupId, userAddress, role, actorAddress } = body;
@@ -136,6 +158,14 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const rateLimitDelete = await withRateLimit(request, 'write');
+  if (rateLimitDelete) return rateLimitDelete;
+
+  // Authentication
+  const authResultDelete = await requireAuth(request);
+  if (authResultDelete instanceof NextResponse) return authResultDelete;
+
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');

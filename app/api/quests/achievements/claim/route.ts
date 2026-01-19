@@ -1,11 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
  * POST /api/quests/achievements/claim
  * Claim achievement milestone rewards
+ * 
+ * Security:
+ * - Requires authentication
+ * - Rate limited (5 claims per hour)
+ * - User can only claim their own rewards
  */
 export async function POST(request: NextRequest) {
+  // Rate limit - strict for claiming rewards
+  const rateLimitResponse = await withRateLimit(request, 'claim');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const { milestoneId, userAddress } = await request.json();
 
@@ -13,6 +30,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Milestone ID and user address required' },
         { status: 400 }
+      );
+    }
+
+    // Verify user is claiming their own rewards
+    if (!checkOwnership(authResult.user, userAddress)) {
+      return NextResponse.json(
+        { error: 'You can only claim your own rewards' },
+        { status: 403 }
       );
     }
 

@@ -1,22 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
+import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, authSchema } from '@/lib/auth/validation';
 
 /**
  * POST /api/auth
  * Authenticate user with wallet signature
+ * 
+ * Security:
+ * - Rate limited (10 requests/minute) to prevent brute force
+ * - Validates wallet signature cryptographically
+ * - Returns secure JWT token (not Base64)
  */
 export async function POST(request: NextRequest) {
-  try {
-    const { address, message, signature } = await request.json();
+  // Apply rate limiting for auth endpoints
+  const rateLimitResponse = await withRateLimit(request, 'auth');
+  if (rateLimitResponse) return rateLimitResponse;
 
-    if (!address || !message || !signature) {
+  try {
+    // Validate request body
+    const validation = await validateBody(request, authSchema);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
       );
     }
 
-    // Verify the signature
+    const { address, message, signature } = validation.data;
+
+    // Verify the message contains expected content (prevent replay attacks)
+    const expectedPrefix = 'Sign in to VFIDE';
+    if (!message.includes(expectedPrefix)) {
+      return NextResponse.json(
+        { error: 'Invalid message format' },
+        { status: 400 }
+      );
+    }
+
+    // Check message timestamp to prevent replay attacks (within 5 minutes)
+    const timestampMatch = message.match(/Timestamp: (\d+)/);
+    if (timestampMatch) {
+      const messageTimestamp = parseInt(timestampMatch[1]);
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      if (Math.abs(now - messageTimestamp) > fiveMinutes) {
+        return NextResponse.json(
+          { error: 'Message expired. Please sign a new message.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Verify the cryptographic signature
     const isValid = await verifyMessage({
       address: address as `0x${string}`,
       message,
@@ -30,16 +68,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate session token (in production, use JWT)
-    const sessionToken = Buffer.from(`${address}:${Date.now()}`).toString('base64');
+    // Generate secure JWT token
+    const tokenResponse = generateToken(address);
 
-    // In production, store session in Redis/database
-    // For now, just return the token
     return NextResponse.json({
       success: true,
-      token: sessionToken,
-      address,
-      expiresIn: 86400, // 24 hours
+      token: tokenResponse.token,
+      address: tokenResponse.address,
+      expiresIn: tokenResponse.expiresIn,
     });
   } catch (error) {
     console.error('[Auth API] Error:', error);
@@ -51,12 +87,17 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/auth/verify
- * Verify session token
+ * GET /api/auth
+ * Verify session token and return user info
+ * 
+ * Security:
+ * - Validates JWT signature
+ * - Checks token expiration
  */
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const authHeader = request.headers.get('authorization');
+    const token = extractToken(authHeader);
 
     if (!token) {
       return NextResponse.json(
@@ -65,27 +106,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Decode and verify token
-    const decoded = Buffer.from(token, 'base64').toString();
-    const [address, timestamp] = decoded.split(':');
+    // Verify JWT token
+    const payload = verifyToken(token);
 
-    // Check if token is expired (24 hours)
-    const tokenAge = Date.now() - parseInt(timestamp || '0');
-    if (tokenAge > 86400000) {
+    if (!payload) {
       return NextResponse.json(
-        { error: 'Token expired' },
+        { error: 'Invalid or expired token' },
         { status: 401 }
       );
     }
 
     return NextResponse.json({
       valid: true,
-      address,
+      address: payload.address,
+      chainId: payload.chainId,
+      issuedAt: payload.iat,
+      expiresAt: payload.exp,
     });
   } catch (error) {
     console.error('[Auth Verify API] Error:', error);
     return NextResponse.json(
-      { error: 'Invalid token' },
+      { error: 'Token verification failed' },
       { status: 401 }
     );
   }

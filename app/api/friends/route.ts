@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
+import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, friendRequestSchema } from '@/lib/auth/validation';
 
 interface Friendship {
   id: number;
@@ -21,6 +24,16 @@ interface Friendship {
  * Get user's friends list or friend requests
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const address = searchParams.get('address');
@@ -30,6 +43,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'address is required' },
         { status: 400 }
+      );
+    }
+
+    // Verify the requesting user is accessing their own friends list
+    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only view your own friends list' },
+        { status: 403 }
       );
     }
 
@@ -70,16 +91,35 @@ export async function GET(request: NextRequest) {
  * Send friend request
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   const client = await getClient();
   
   try {
-    const body = await request.json();
-    const { from, to } = body;
-
-    if (!from || !to) {
+    // Validate request body
+    const validation = await validateBody(request, friendRequestSchema);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: from, to' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
+      );
+    }
+
+    const { from, to } = validation.data;
+
+    // Verify the request is from the authenticated user
+    if (authResult.user.address.toLowerCase() !== from.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only send friend requests from your own address' },
+        { status: 403 }
       );
     }
 
@@ -165,6 +205,16 @@ export async function POST(request: NextRequest) {
  * Accept or reject friend request
  */
 export async function PATCH(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   const client = await getClient();
   
   try {
@@ -195,6 +245,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     const userId = userResult.rows[0].id;
+
+    // Verify the authenticated user is the one accepting/rejecting
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      await client.query('ROLLBACK');
+      return NextResponse.json(
+        { error: 'You can only respond to your own friend requests' },
+        { status: 403 }
+      );
+    }
 
     // Get friendship
     const friendshipResult = await client.query(
@@ -272,6 +331,16 @@ export async function PATCH(request: NextRequest) {
  * Remove friend
  */
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const user1 = searchParams.get('user1');
@@ -281,6 +350,15 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields: user1, user2' },
         { status: 400 }
+      );
+    }
+
+    // Verify the authenticated user is one of the users in the friendship
+    const authenticatedAddress = authResult.user.address.toLowerCase();
+    if (authenticatedAddress !== user1.toLowerCase() && authenticatedAddress !== user2.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only remove your own friendships' },
+        { status: 403 }
       );
     }
 
