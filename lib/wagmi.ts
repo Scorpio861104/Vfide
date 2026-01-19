@@ -4,6 +4,8 @@ import {
   metaMaskWallet,
   coinbaseWallet,
   injectedWallet,
+  trustWallet,
+  rainbowWallet,
 } from '@rainbow-me/rainbowkit/wallets'
 import { createConfig, http, fallback, createStorage } from 'wagmi'
 import { 
@@ -15,6 +17,7 @@ import {
   zkSyncSepoliaTestnet,
 } from 'wagmi/chains'
 import { IS_TESTNET } from './chains'
+import { isMobileDevice } from './mobileDetection'
 
 // Create noopStorage for SSR to avoid hydration mismatches
 // SSR-safe storage implementation - parameters required by Storage interface
@@ -111,33 +114,61 @@ const wagmiStorage = createStorage({
 })
 
 // ========================================
-// WALLET CONNECTORS
+// WALLET CONNECTORS (MOBILE-FIRST)
 // ========================================
-// Include explicit wallet options for best user experience
-// metaMaskWallet: Shows MetaMask with install prompt if not installed
-// injectedWallet: Detects other browser extensions (Rabby, Brave, etc.)
-// coinbaseWallet: Direct Coinbase SDK connection
-// walletConnectWallet: Mobile/QR code connections (requires project ID)
+// Mobile-first wallet configuration:
+// - On mobile: prioritize WalletConnect and mobile app wallets
+// - On desktop: prioritize browser extensions
+// - Include explicit wallet options for best user experience
 
-// Build wallet groups dynamically - only include groups that have wallets
-// This prevents the "No wallets provided for group" error during SSR
-const walletGroups = [
-  {
-    groupName: 'Popular',
+// Detect if running on mobile device (lazy evaluation, memoized)
+const isMobile = isMobileDevice();
+
+// Build wallet groups dynamically based on device type
+// Mobile users get mobile wallets first, desktop users get extensions first
+const walletGroups = isMobile ? [
+  // MOBILE: WalletConnect and mobile apps first
+  ...(hasWalletConnect ? [{
+    groupName: 'Recommended for Mobile',
     wallets: [
-      // MetaMask first - shows install prompt if not installed
-      metaMaskWallet,
-      // Coinbase Wallet direct SDK
+      walletConnectWallet,  // Best for staying in browser
+      trustWallet,          // Popular mobile wallet
+      rainbowWallet,        // Modern mobile wallet
+      coinbaseWallet,       // Cross-platform
+    ],
+  }] : [{
+    groupName: 'Mobile Wallets',
+    wallets: [
+      trustWallet,
+      rainbowWallet,
       coinbaseWallet,
-      // Catch other browser extensions (Rabby, Brave Wallet, etc.)
+    ],
+  }]),
+  {
+    groupName: 'Browser Extensions',
+    wallets: [
+      metaMaskWallet,
       injectedWallet,
     ],
   },
+] : [
+  // DESKTOP: Browser extensions first
+  {
+    groupName: 'Browser Extensions',
+    wallets: [
+      metaMaskWallet,       // Most popular
+      coinbaseWallet,       // Cross-platform
+      injectedWallet,       // Catch-all for others (Rabby, Brave, etc.)
+    ],
+  },
   // Only add WalletConnect group if we have a valid project ID
-  // Spreading empty array when no projectId avoids empty group error
   ...(hasWalletConnect ? [{
-    groupName: 'Mobile & QR',
-    wallets: [walletConnectWallet],
+    groupName: 'Mobile & QR Code',
+    wallets: [
+      walletConnectWallet,  // For mobile app connections
+      trustWallet,          // Has desktop app too
+      rainbowWallet,        // Has desktop app too
+    ],
   }] : []),
 ]
 

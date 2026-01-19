@@ -282,3 +282,25 @@ jest.mock('@tanstack/react-query', () => ({
   useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn() })),
 }))
 
+// Mock useTransactionSounds hook
+jest.mock('@/hooks/useTransactionSounds', () => ({
+  useTransactionSounds: () => ({
+    playSuccess: jest.fn(),
+    playError: jest.fn(),
+    playClick: jest.fn(),
+    playNotification: jest.fn(),
+  }),
+}))
+
+// Mock ResponsiveContainer
+jest.mock('@/lib/mobile', () => ({
+  ResponsiveContainer: ({ children }) => <div>{children}</div>,
+  useMediaQuery: jest.fn(() => false),
+  useMobile: jest.fn(() => false),
+}))
+
+// Mock AvatarUpload
+jest.mock('@/components/profile/AvatarUpload', () => ({
+  AvatarUploadCompact: () => <div data-testid="avatar-upload">Avatar</div>,
+}))
+
