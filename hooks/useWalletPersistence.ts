@@ -270,7 +270,10 @@ export function useWalletPersistence() {
       
       debounceTimeout = setTimeout(() => {
         updateActivity();
-        debounceTimeout = null;
+        if (debounceTimeout) {
+          clearTimeout(debounceTimeout);
+          debounceTimeout = null;
+        }
       }, ACTIVITY_DEBOUNCE_MS);
     };
 
