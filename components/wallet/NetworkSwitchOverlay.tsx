@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { AlertTriangle, ArrowRight, Check, Loader2, X, Zap } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useAccount, useChainId, useSwitchChain } from 'wagmi'
+import { logger } from '@/lib/logger'
 
 /**
  * Seamless Network Switch Overlay
@@ -73,11 +74,12 @@ export function NetworkSwitchOverlay() {
     try {
       switchChain({ chainId: expectedChainId as 84532 | 8453 })
     } catch (e) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Switch failed:', e)
-      }
+      logger.error('Network switch failed', e, { 
+        expectedChainId, 
+        currentChainId: chainId 
+      })
     }
-  }, [switchChain, expectedChainId])
+  }, [switchChain, expectedChainId, chainId])
 
   const handleDismiss = () => {
     setDismissed(true)

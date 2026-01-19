@@ -14,6 +14,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { IS_TESTNET } from '@/lib/chains';
+import { logger } from '@/lib/logger';
 
 /**
  * Pending Transactions List Component
@@ -110,7 +111,7 @@ export function usePendingTransactions() {
         });
       }
     } catch (err) {
-      console.error('Failed to poll transaction:', err);
+      logger.error('Failed to poll transaction', err, { hash: tx.hash, chainId: tx.chainId });
     } finally {
       setIsPolling(false);
     }

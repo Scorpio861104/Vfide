@@ -4,6 +4,7 @@ import { useEffect, useCallback, useRef, useState } from 'react';
 import { useAccount, useReconnect, useDisconnect } from 'wagmi';
 import { safeLocalStorage } from '@/lib/utils';
 import { linkWallet } from '@/lib/biometricAuth';
+import { logger } from '@/lib/logger';
 
 // Storage keys for session persistence
 const SESSION_KEY = 'vfide-session';
@@ -327,7 +328,10 @@ export function useWalletPersistence() {
 
       if (timeSinceActivity >= timeoutMs) {
         // Auto-disconnect due to inactivity
-        console.log(`Auto-disconnecting after ${timeoutMinutes} minutes of inactivity`);
+        logger.wallet('Auto-disconnecting due to inactivity', { 
+          timeoutMinutes, 
+          timeSinceActivityMinutes: Math.floor(timeSinceActivity / 60000) 
+        });
         disconnect();
         clearSession();
         setMinutesUntilDisconnect(null);
