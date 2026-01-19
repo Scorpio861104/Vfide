@@ -305,7 +305,7 @@ function TaxesTab({ taxSummary }: TaxesTabProps) {
       {/* Info Card */}
       <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
         <div className="flex items-start gap-3">
-          <AlertTriangleIcon className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+          <AlertTriangleIcon className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
           <div>
             <h4 className="font-medium text-yellow-500">Tax Disclaimer</h4>
             <p className="text-sm text-muted-foreground mt-1">

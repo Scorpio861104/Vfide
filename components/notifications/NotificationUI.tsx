@@ -199,7 +199,7 @@ export function NotificationToast({
       </div>
 
       {/* Swipe hint */}
-      <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-1 bg-linear-to-l from-white/5 to-transparent pointer-events-none" />
     </motion.div>
   );
 }
@@ -224,7 +224,7 @@ export function ToastContainer({
   const visibleNotifications = notifications.slice(0, maxVisible);
 
   return (
-    <div className="fixed top-4 right-4 z-[200] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed top-4 right-4 z-200 flex flex-col gap-3 pointer-events-none">
       <AnimatePresence mode="popLayout">
         {visibleNotifications.map((notification) => (
           <div key={notification.id} className="pointer-events-auto">
@@ -541,7 +541,7 @@ export function NotificationBadge({
         <>
           <span className={`
             absolute ${badgeSizeClasses[size]} rounded-full 
-            bg-gradient-to-r from-cyan-500 to-blue-500 
+            bg-linear-to-r from-cyan-500 to-blue-500 
             flex items-center justify-center font-bold text-white
           `}>
             {count > 99 ? '99+' : count}
@@ -623,7 +623,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99] bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-99 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
           />
 

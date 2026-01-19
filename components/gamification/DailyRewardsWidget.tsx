@@ -116,7 +116,7 @@ export default function DailyRewardsWidget() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative bg-gradient-to-br from-[#FFD700]/10 to-[#FFA500]/10 border-2 border-[#FFD700]/30 rounded-2xl p-6 overflow-hidden"
+      className="relative bg-linear-to-br from-[#FFD700]/10 to-[#FFA500]/10 border-2 border-[#FFD700]/30 rounded-2xl p-6 overflow-hidden"
     >
       {/* Confetti animation */}
       <AnimatePresence>
@@ -159,7 +159,7 @@ export default function DailyRewardsWidget() {
       <motion.div
         animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.05, 1] }}
         transition={{ duration: 3, repeat: Infinity }}
-        className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-yellow-500/30 to-orange-500/20 rounded-full blur-3xl pointer-events-none"
+        className="absolute -top-10 -right-10 w-32 h-32 bg-linear-to-br from-yellow-500/30 to-orange-500/20 rounded-full blur-3xl pointer-events-none"
       />
 
       {/* Header */}
@@ -168,7 +168,7 @@ export default function DailyRewardsWidget() {
           <motion.div 
             animate={canClaim ? { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] } : {}}
             transition={{ duration: 1.5, repeat: canClaim ? Infinity : 0 }}
-            className="bg-gradient-to-br from-[#FFD700] to-[#FFA500] rounded-xl p-3 shadow-lg shadow-yellow-500/30"
+            className="bg-linear-to-br from-[#FFD700] to-[#FFA500] rounded-xl p-3 shadow-lg shadow-yellow-500/30"
           >
             <Gift className="w-6 h-6 text-black" />
           </motion.div>
@@ -224,7 +224,7 @@ export default function DailyRewardsWidget() {
                 isClaimed
                   ? 'bg-[#50C878]/20 border border-[#50C878]/50'
                   : isToday
-                  ? 'bg-gradient-to-br from-[#FFD700]/30 to-[#FFA500]/20 border-2 border-[#FFD700]'
+                  ? 'bg-linear-to-br from-[#FFD700]/30 to-[#FFA500]/20 border-2 border-[#FFD700]'
                   : 'bg-[#2A2A2F] border border-[#3A3A3F]'
               }`}
             >
@@ -233,7 +233,7 @@ export default function DailyRewardsWidget() {
                 <motion.div
                   animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.05, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FFD700]/20 to-transparent pointer-events-none"
+                  className="absolute inset-0 rounded-xl bg-linear-to-br from-[#FFD700]/20 to-transparent pointer-events-none"
                 />
               )}
               
@@ -311,7 +311,7 @@ export default function DailyRewardsWidget() {
           whileTap={canClaim ? { scale: 0.98 } : {}}
           className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
             canClaim && !claiming
-              ? 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black shadow-lg shadow-yellow-500/30 hover:shadow-yellow-500/50'
+              ? 'bg-linear-to-r from-[#FFD700] to-[#FFA500] text-black shadow-lg shadow-yellow-500/30 hover:shadow-yellow-500/50'
               : 'bg-[#2A2A2F] text-[#6A6A6F] cursor-not-allowed'
           }`}
         >

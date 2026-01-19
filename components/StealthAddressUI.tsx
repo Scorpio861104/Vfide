@@ -306,7 +306,7 @@ export default function StealthAddressUI() {
               <ul className="space-y-2">
                 {privacyScore.recommendations.map((rec, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-sm">
-                    <ShieldIcon className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <ShieldIcon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                     <span className="text-muted-foreground">{rec}</span>
                   </li>
                 ))}

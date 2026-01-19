@@ -48,7 +48,7 @@ export function TestnetNotification() {
         >
           <div className="bg-amber-500/10 backdrop-blur-xl border border-amber-500/30 rounded-xl shadow-2xl p-4">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+              <div className="shrink-0 w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
                 <FlaskConical className="w-4 h-4 text-amber-400" />
               </div>
               
@@ -63,7 +63,7 @@ export function TestnetNotification() {
 
               <button
                 onClick={() => setShow(false)}
-                className="flex-shrink-0 text-amber-400/60 hover:text-amber-400 transition-colors"
+                className="shrink-0 text-amber-400/60 hover:text-amber-400 transition-colors"
                 aria-label="Dismiss"
               >
                 <X size={16} />

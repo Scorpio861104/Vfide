@@ -209,7 +209,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
       {/* Legendary Glow Effect */}
       {isLegendary && (
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-yellow-500/30 via-orange-500/30 to-yellow-500/30 rounded-2xl blur-xl"
+          className="absolute inset-0 bg-linear-to-r from-yellow-500/30 via-orange-500/30 to-yellow-500/30 rounded-2xl blur-xl"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
         />
@@ -250,14 +250,14 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
       </AnimatePresence>
 
       {/* Toast Content */}
-      <div className={`relative bg-gradient-to-r ${colorMap[notification.type]} p-[2px] rounded-2xl shadow-2xl ${rarityGlow[rarity]}`}>
-        <div className={`bg-[#0F0F14] rounded-2xl p-4 min-w-[380px] border-2 ${rarityColors[rarity]} border-opacity-50`}>
+      <div className={`relative bg-linear-to-r ${colorMap[notification.type]} p-0.5 rounded-2xl shadow-2xl ${rarityGlow[rarity]}`}>
+        <div className={`bg-[#0F0F14] rounded-2xl p-4 min-w-95 border-2 ${rarityColors[rarity]} border-opacity-50`}>
           {/* Combo Multiplier Badge */}
           {notification.comboMultiplier && notification.comboMultiplier > 1 && (
             <motion.div
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
-              className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1"
+              className="absolute -top-3 -right-3 bg-linear-to-r from-pink-500 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1"
             >
               <ChevronUp className="w-3 h-3" />
               {notification.comboMultiplier}x COMBO
@@ -282,7 +282,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
           <div className="flex items-start gap-4">
             {/* Icon */}
             <motion.div 
-              className={`bg-gradient-to-br ${colorMap[notification.type]} rounded-xl p-3 text-white flex-shrink-0 shadow-lg`}
+              className={`bg-linear-to-br ${colorMap[notification.type]} rounded-xl p-3 text-white shrink-0 shadow-lg`}
               animate={isLegendary ? { 
                 rotate: [0, 5, -5, 0],
                 scale: [1, 1.1, 1]
@@ -344,7 +344,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+            <div className="flex flex-col items-end gap-2 shrink-0">
               <button
                 onClick={() => onDismiss(notification.id)}
                 className="p-1.5 text-[#A0A0A5] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -377,7 +377,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
               transition={{ delay: 0.5 }}
             >
               <motion.div
-                className={`h-full bg-gradient-to-r ${colorMap[notification.type]}`}
+                className={`h-full bg-linear-to-r ${colorMap[notification.type]}`}
                 initial={{ width: 0 }}
                 animate={{ width: '100%' }}
                 transition={{ duration: 1, delay: 0.6, ease: 'easeOut' }}
@@ -426,7 +426,7 @@ export function AchievementToastContainer() {
   }, [addNotification]);
 
   return (
-    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none max-w-md">
+    <div className="fixed top-4 right-4 z-100 flex flex-col gap-3 pointer-events-none max-w-md">
       {/* Combo Counter */}
       <AnimatePresence>
         {comboCount >= 2 && (
@@ -434,7 +434,7 @@ export function AchievementToastContainer() {
             initial={{ opacity: 0, scale: 0.5, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: -20 }}
-            className="self-end px-4 py-2 bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full shadow-lg pointer-events-auto"
+            className="self-end px-4 py-2 bg-linear-to-r from-pink-500 to-yellow-500 rounded-full shadow-lg pointer-events-auto"
           >
             <span className="text-white font-bold text-sm">
               🔥 {comboCount}x Streak!

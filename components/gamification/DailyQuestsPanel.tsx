@@ -141,7 +141,7 @@ function StreakCalendar({ history, onMonthChange }: { history: boolean[]; onMont
             transition={{ delay: i * 0.01 }}
             className={`aspect-square rounded-md flex items-center justify-center text-[10px] ${
               active === null ? '' :
-              active ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white' : 
+              active ? 'bg-linear-to-br from-orange-500 to-red-500 text-white' : 
               'bg-[#2A2A2F] text-[#606065]'
             }`}
           >
@@ -261,7 +261,7 @@ export default function DailyQuestsPanel() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6 relative overflow-hidden"
+        className="bg-linear-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6 relative overflow-hidden"
       >
         {/* Animated Fire Particles */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -294,7 +294,7 @@ export default function DailyQuestsPanel() {
             >
               <Flame className="w-14 h-14 text-orange-500" />
               <motion.div 
-                className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg"
+                className="absolute -top-2 -right-2 w-7 h-7 bg-linear-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg"
                 animate={{ scale: [1, 1.15, 1] }}
                 transition={{ duration: 0.5, repeat: Infinity }}
               >
@@ -349,7 +349,7 @@ export default function DailyQuestsPanel() {
           </div>
           <div className="w-full bg-[#2A2A2F] rounded-full h-3 overflow-hidden">
             <motion.div 
-              className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full"
+              className="bg-linear-to-r from-orange-500 to-red-500 h-3 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${(streak.current / streak.nextMilestone) * 100}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
@@ -384,7 +384,7 @@ export default function DailyQuestsPanel() {
                 <motion.span 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-full text-[10px] font-bold text-black flex items-center justify-center"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-linear-to-r from-[#FFD700] to-[#FFA500] rounded-full text-[10px] font-bold text-black flex items-center justify-center"
                 >
                   {count}
                 </motion.span>
@@ -392,7 +392,7 @@ export default function DailyQuestsPanel() {
               {activeTab === tab && (
                 <motion.div
                   layoutId="questTabIndicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#FFD700] to-[#FFA500]"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-[#FFD700] to-[#FFA500]"
                 />
               )}
             </motion.button>

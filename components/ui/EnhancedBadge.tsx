@@ -101,7 +101,7 @@ export function EnhancedBadge({
     >
       {/* Icon */}
       {icon && (
-        <span className="flex-shrink-0">
+        <span className="shrink-0">
           {icon}
         </span>
       )}
@@ -113,7 +113,7 @@ export function EnhancedBadge({
       {removable && (
         <button
           onClick={onRemove}
-          className="flex-shrink-0 ml-1 hover:opacity-70 transition-opacity"
+          className="shrink-0 ml-1 hover:opacity-70 transition-opacity"
         >
           <X className="w-3 h-3" />
         </button>

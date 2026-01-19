@@ -256,7 +256,7 @@ export function GlobalNav() {
                                   }
                                 `}
                               >
-                                {IconComponent && <IconComponent size={18} className="opacity-70 flex-shrink-0" />}
+                                {IconComponent && <IconComponent size={18} className="opacity-70 shrink-0" />}
                                 {link.label}
                               </Link>
                             );

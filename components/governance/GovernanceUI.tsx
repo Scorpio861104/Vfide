@@ -455,7 +455,7 @@ function StatCard({ label, value, icon, index = 0 }: StatCardProps) {
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
             initial={{ x: '-100%' }}
             animate={{ x: '100%' }}
             exit={{ opacity: 0 }}
@@ -811,7 +811,7 @@ function DelegationItem({ delegation, onRevoke, index = 0 }: DelegationItemProps
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent"
             initial={{ x: '-100%' }}
             animate={{ x: '100%' }}
             exit={{ opacity: 0 }}
