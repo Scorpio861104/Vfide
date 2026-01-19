@@ -182,8 +182,6 @@ export default function OnboardingChecklist() {
     .filter(item => item.completed)
     .reduce((sum, item) => sum + (item.reward.vfide || 0), 0);
 
-  if (isDismissed || !isConnected) return null;
-
   // Play sound when all tasks complete
   const handleAllComplete = useCallback(() => {
     if (completedCount === totalCount && totalCount > 0) {
@@ -196,6 +194,8 @@ export default function OnboardingChecklist() {
   useEffect(() => {
     handleAllComplete();
   }, [handleAllComplete]);
+
+  if (isDismissed || !isConnected) return null;
 
   if (isMinimized) {
     return (

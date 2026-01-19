@@ -132,7 +132,7 @@ function shortenAddress(address: string): string {
 export function GlobalSearch() {
   const { address } = useAccount();
   const router = useRouter();
-  const { playSound } = useTransactionSounds();
+  const { play: playSound } = useTransactionSounds();
   
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -144,7 +144,7 @@ export function GlobalSearch() {
   const [showTips, setShowTips] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInterface | null>(null);
 
   // Load recent searches
   useEffect(() => {
@@ -196,15 +196,20 @@ export function GlobalSearch() {
       return;
     }
 
-    const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-    const recognition = new SpeechRecognition();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognitionAPI = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    if (!SpeechRecognitionAPI) {
+      setIsListening(false);
+      return;
+    }
+    const recognition = new SpeechRecognitionAPI() as SpeechRecognitionInterface;
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript;
-      setQuery(transcript);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript;
+      if (transcript) setQuery(transcript);
       setIsListening(false);
     };
 
@@ -263,7 +268,8 @@ export function GlobalSearch() {
         // Cycle through categories
         const categories: SearchCategory[] = ['all', 'pages', 'people', 'transactions', 'commands'];
         const currentIdx = categories.indexOf(activeCategory);
-        setActiveCategory(categories[(currentIdx + 1) % categories.length]);
+        const nextCategory = categories[(currentIdx + 1) % categories.length];
+        if (nextCategory) setActiveCategory(nextCategory);
       }
     };
 
@@ -717,9 +723,15 @@ export function GlobalSearch() {
   );
 }
 
-// TypeScript declarations for Web Speech API
-declare global {
-  interface Window {
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
+// SpeechRecognitionInterface type for this file
+interface SpeechRecognitionInterface {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: { results: { [index: number]: { [index: number]: { transcript: string } } } }) => void) | null;
+  onerror: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
 }

@@ -171,8 +171,8 @@ function isInQuietHours(prefs: NotificationPreferences): boolean {
   
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
-  const [startH, startM] = prefs.quietHours.start.split(':').map(Number);
-  const [endH, endM] = prefs.quietHours.end.split(':').map(Number);
+  const [startH = 0, startM = 0] = prefs.quietHours.start.split(':').map(Number);
+  const [endH = 0, endM = 0] = prefs.quietHours.end.split(':').map(Number);
   const startTime = startH * 60 + startM;
   const endTime = endH * 60 + endM;
 
@@ -422,7 +422,7 @@ export function NotificationCenter() {
     snoozeMinutes: 30,
   });
 
-  const { playSound } = useTransactionSounds();
+  const { play: playSound } = useTransactionSounds();
 
   // Load preferences
   useEffect(() => {

@@ -408,12 +408,14 @@ export function GroupedNotification({
   onArchiveAll,
 }: GroupedNotificationProps) {
   const first = group.notifications[0];
-  const colors = TYPE_COLORS[first.type];
-  const unreadCount = group.notifications.filter(n => !n.read).length;
-
-  if (group.count === 1) {
+  
+  // Early return if no notifications
+  if (!first || group.count === 1) {
     return null; // Use NotificationItem for single items
   }
+  
+  const colors = TYPE_COLORS[first.type];
+  const unreadCount = group.notifications.filter(n => !n.read).length;
 
   return (
     <motion.div

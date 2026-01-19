@@ -150,7 +150,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
       <AnimatePresence>
         {isOpen && (
           <motion.aside
-            className="fixed left-0 top-0 h-full w-[280px] bg-[#1A1A1D] border-r border-[#3A3A3F] md:hidden z-50"
+            className="fixed left-0 top-0 h-full w-70 bg-[#1A1A1D] border-r border-[#3A3A3F] md:hidden z-50"
             aria-hidden={false}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}

@@ -167,7 +167,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
   const [showConfetti, setShowConfetti] = useState(true);
   const [showShare, setShowShare] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const { playSound } = useTransactionSounds();
+  const { play: playSound } = useTransactionSounds();
   const hasPlayedSound = useRef(false);
 
   const rarity = notification.rarity || 'common';
@@ -395,12 +395,12 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
 export function AchievementToastContainer() {
   const [notifications, setNotifications] = useState<AchievementNotification[]>([]);
   const [comboCount, setComboCount] = useState(0);
-  const comboTimerRef = useRef<NodeJS.Timeout>();
+  const comboTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const addNotification = useCallback((notification: Omit<AchievementNotification, 'id' | 'timestamp'>) => {
     // Track combos
     setComboCount(prev => prev + 1);
-    clearTimeout(comboTimerRef.current);
+    if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
     comboTimerRef.current = setTimeout(() => setComboCount(0), 10000);
 
     const multiplier = comboCount >= 3 ? Math.min(comboCount, 5) : undefined;
@@ -477,9 +477,12 @@ function playAchievementSound(type: AchievementNotification['type'], rarity: 'co
     };
 
     // Legendary gets extra notes
+    const baseNotes = frequencies[type] ?? frequencies.achievement ?? [];
     const notes = rarity === 'legendary' 
-      ? [...(frequencies[type] || frequencies.achievement), 1046.50, 1318.51]
-      : frequencies[type] || frequencies.achievement;
+      ? [...baseNotes, 1046.50, 1318.51]
+      : baseNotes;
+    
+    if (notes.length === 0) return;
     
     const noteDuration = rarity === 'legendary' ? 0.2 : 0.15;
     const volume = rarity === 'legendary' ? 0.15 : 0.1;

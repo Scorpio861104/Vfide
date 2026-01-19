@@ -77,7 +77,7 @@ const DEFAULT_PREFS: NotificationPreferences = {
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [preferences, setPreferences] = useState<NotificationPreferences>(DEFAULT_PREFS);
-  const { playSound } = useTransactionSounds();
+  const { play: playSound } = useTransactionSounds();
   const desktopPermission = useRef<NotificationPermission>('default');
 
   // Load from storage
@@ -133,8 +133,8 @@ export function useNotifications() {
     
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
-    const [startH, startM] = preferences.quietHours.start.split(':').map(Number);
-    const [endH, endM] = preferences.quietHours.end.split(':').map(Number);
+    const [startH = 0, startM = 0] = preferences.quietHours.start.split(':').map(Number);
+    const [endH = 0, endM = 0] = preferences.quietHours.end.split(':').map(Number);
     const startTime = startH * 60 + startM;
     const endTime = endH * 60 + endM;
 
@@ -331,7 +331,7 @@ export function useNotifications() {
 
 import { createContext, useContext, ReactNode } from 'react';
 
-interface NotificationContextValue extends ReturnType<typeof useNotifications> {}
+type NotificationContextValue = ReturnType<typeof useNotifications>;
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 

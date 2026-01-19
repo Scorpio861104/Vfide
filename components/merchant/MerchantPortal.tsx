@@ -29,13 +29,19 @@ function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; p
     const num = Math.round(latest);
     return num.toLocaleString();
   });
+  const [displayValue, setDisplayValue] = useState('0');
   
   useEffect(() => {
     const controls = animate(count, value, { duration: 1.2, ease: 'easeOut' });
     return controls.stop;
   }, [value, count]);
+
+  useEffect(() => {
+    const unsubscribe = rounded.on('change', (v) => setDisplayValue(v));
+    return unsubscribe;
+  }, [rounded]);
   
-  return <motion.span>{prefix}{rounded}{suffix}</motion.span>;
+  return <motion.span>{prefix}{displayValue}{suffix}</motion.span>;
 }
 
 // ==================== TYPES ====================
@@ -645,7 +651,7 @@ function BulkPaymentsSection({
             id="csv-upload"
           />
           <label htmlFor="csv-upload" className={`
-            block w-full min-h-[48px] text-base font-semibold rounded-lg
+            block w-full min-h-12 text-base font-semibold rounded-lg
             transition-all active:scale-95 cursor-pointer text-center
             px-4 py-3 bg-[#00F0FF] text-[#1A1A1D] hover:bg-[#00D4FF]
             ${uploading ? 'opacity-60 cursor-not-allowed' : ''}

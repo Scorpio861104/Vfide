@@ -64,7 +64,7 @@ interface SpeechRecognitionErrorEvent extends Event {
   message?: string;
 }
 
-interface SpeechRecognition extends EventTarget {
+interface VoiceSpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
@@ -78,20 +78,14 @@ interface SpeechRecognition extends EventTarget {
   onstart: (() => void) | null;
 }
 
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => SpeechRecognition;
-    webkitSpeechRecognition?: new () => SpeechRecognition;
-  }
-}
-
-function getSpeechRecognition(): SpeechRecognition | null {
+function getSpeechRecognition(): VoiceSpeechRecognition | null {
   if (typeof window === 'undefined') return null;
   
-  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   if (!SpeechRecognitionAPI) return null;
   
-  return new SpeechRecognitionAPI();
+  return new SpeechRecognitionAPI() as VoiceSpeechRecognition;
 }
 
 // ============================================================================
@@ -150,7 +144,7 @@ export function useVoiceCommands(options?: {
     confidence: 0,
   });
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<VoiceSpeechRecognition | null>(null);
   const onResultRef = useRef(options?.onResult);
   const onShortcutRef = useRef(options?.onShortcut);
 

@@ -5,13 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Copy, Check, Clock, Circle, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { useAccount, useReconnect } from 'wagmi';
+import { useAccount, useReconnect, useChainId } from 'wagmi';
 import { useToast } from '@/components/ui/toast';
 import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
 import { useENS } from '@/hooks/useENS';
-import { measureLatency, getCachedLatency, getLatencyColor } from '@/lib/networkLatency';
+import { measureLatency, getCachedLatency, getLatencyColor, type LatencyData } from '@/lib/networkLatency';
 import { addConnectionToHistory } from '@/lib/connectionHistory';
-import { connectionStateAnimations, fadeIn, scaleIn } from '@/lib/animations';
+import { connectionStateAnimations as _connectionStateAnimations, fadeIn, scaleIn } from '@/lib/animations';
 import { scrollToTop } from '@/lib/focusTrap';
 import { POLLING_INTERVALS, ANIMATION_DURATION } from '@/lib/walletConstants';
 
@@ -49,8 +49,63 @@ export function SimpleWalletConnect() {
   const { showToast } = useToast();
   const { sessionDurationFormatted, isInCooldown, cooldownRemaining } = useEnhancedWalletConnect();
   // Get connector info and reconnect status from wagmi
-  const { connector } = useAccount();
+  const { connector, address, isConnected } = useAccount();
+  const chainId = useChainId();
   const { isPending: isReconnecting } = useReconnect();
+  
+  // Phase 3: ENS resolution - moved outside render prop
+  const { ensName } = useENS(address);
+  
+  // Phase 3: Network latency monitoring - moved outside render prop
+  const [latencyData, setLatencyData] = useState<LatencyData | null>(chainId ? getCachedLatency(chainId) : null);
+
+  // Track latency when connected
+  useEffect(() => {
+    if (chainId && isConnected) {
+      // Check cached first (instant, no blocking)
+      const cached = getCachedLatency(chainId);
+      if (cached) {
+        setLatencyData(cached);
+      }
+
+      // Defer latency measurement to avoid blocking connection flow
+      const deferredMeasure = setTimeout(async () => {
+        // Use a default RPC URL based on chain ID
+        const rpcUrl = `https://rpc.chain${chainId}.example.com`;
+        const data = await measureLatency(rpcUrl, chainId);
+        setLatencyData(data);
+      }, 2000);
+
+      // Less frequent polling after initial measurement
+      const interval = setInterval(async () => {
+        const rpcUrl = `https://rpc.chain${chainId}.example.com`;
+        const data = await measureLatency(rpcUrl, chainId);
+        setLatencyData(data);
+      }, POLLING_INTERVALS.LATENCY);
+
+      return () => {
+        clearTimeout(deferredMeasure);
+        clearInterval(interval);
+      };
+    }
+    return undefined;
+  }, [chainId, isConnected]);
+
+  // Phase 3: Track connection in history
+  useEffect(() => {
+    if (isConnected && address && chainId) {
+      addConnectionToHistory({
+        address,
+        connectorId: connector?.id || 'unknown',
+        connectorName: connector?.name,
+        chainId,
+        success: true,
+      });
+      
+      // Phase 4: Scroll to top after successful connection
+      setTimeout(() => scrollToTop(), ANIMATION_DURATION.SCROLL_DELAY);
+    }
+  }, [isConnected, address, chainId, connector]);
 
   // Copy address to clipboard
   const copyAddress = useCallback(async (address: string, e: React.MouseEvent) => {
@@ -102,65 +157,6 @@ export function SimpleWalletConnect() {
 
         // Show loading state
         const isLoading = authenticationStatus === 'loading';
-
-        // Phase 3: ENS resolution
-        const { ensName } = useENS(account?.address);
-
-        // Phase 3: Network latency monitoring - deferred to avoid blocking connection
-        const [latencyData, setLatencyData] = useState(chain?.id ? getCachedLatency(chain.id) : null);
-
-        useEffect(() => {
-          if (chain?.id && connected) {
-            // Check cached first (instant, no blocking)
-            const cached = getCachedLatency(chain.id);
-            if (cached) {
-              setLatencyData(cached);
-            }
-
-            // Defer latency measurement to avoid blocking connection flow
-            // Wait 2 seconds after connection before measuring
-            const deferredMeasure = setTimeout(async () => {
-              const chainWithRpc = chain as { rpcUrls?: { default?: { http?: string[] } } };
-              const rpcUrl = chainWithRpc.rpcUrls?.default?.http?.[0];
-              if (rpcUrl) {
-                const data = await measureLatency(rpcUrl, chain.id);
-                setLatencyData(data);
-              }
-            }, 2000);
-
-            // Less frequent polling after initial measurement
-            const interval = setInterval(async () => {
-              const chainWithRpc = chain as { rpcUrls?: { default?: { http?: string[] } } };
-              const rpcUrl = chainWithRpc.rpcUrls?.default?.http?.[0];
-              if (rpcUrl) {
-                const data = await measureLatency(rpcUrl, chain.id);
-                setLatencyData(data);
-              }
-            }, POLLING_INTERVALS.LATENCY);
-
-            return () => {
-              clearTimeout(deferredMeasure);
-              clearInterval(interval);
-            };
-          }
-          return undefined;
-        }, [chain?.id, connected, chain]);
-
-        // Phase 3: Track connection in history
-        useEffect(() => {
-          if (connected && account && chain) {
-            addConnectionToHistory({
-              address: account.address,
-              connectorId: connector?.id || 'unknown',
-              connectorName: connector?.name,
-              chainId: chain.id,
-              success: true,
-            });
-            
-            // Phase 4: Scroll to top after successful connection
-            setTimeout(() => scrollToTop(), ANIMATION_DURATION.SCROLL_DELAY);
-          }
-        }, [connected, account, chain, connector]);
 
         return (
           <div

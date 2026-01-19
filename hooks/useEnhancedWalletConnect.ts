@@ -16,7 +16,7 @@ import {
   formatSessionDuration,
   clearSessionData,
 } from '@/lib/walletPreferences';
-import { CONNECTION_TIMEOUT_MS, CONNECTION_LIMITS, POLLING_INTERVALS } from '@/lib/walletConstants';
+import { CONNECTION_TIMEOUT_MS, CONNECTION_LIMITS as _CONNECTION_LIMITS, POLLING_INTERVALS as _POLLING_INTERVALS } from '@/lib/walletConstants';
 
 /**
  * Enhanced Wallet Connection Hook

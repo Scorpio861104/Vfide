@@ -17,13 +17,19 @@ function AnimatedNumber({ value, prefix = '', suffix = '', decimals = 0 }: { val
     if (decimals > 0) return latest.toFixed(decimals);
     return Math.round(latest).toLocaleString();
   });
+  const [displayValue, setDisplayValue] = useState('0');
   
   useEffect(() => {
     const controls = animate(count, value, { duration: 1.5, ease: 'easeOut' });
     return controls.stop;
   }, [value, count]);
+
+  useEffect(() => {
+    const unsubscribe = rounded.on('change', (v) => setDisplayValue(v));
+    return unsubscribe;
+  }, [rounded]);
   
-  return <motion.span>{prefix}{rounded}{suffix}</motion.span>;
+  return <motion.span>{prefix}{displayValue}{suffix}</motion.span>;
 }
 
 interface CreatorStats {

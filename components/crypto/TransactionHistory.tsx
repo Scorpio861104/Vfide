@@ -201,7 +201,21 @@ interface TransactionCardProps {
 const TransactionCard = React.memo(function TransactionCard({ transaction, userId, index = 0 }: TransactionCardProps) {
   const isSent = transaction.from.toLowerCase() === userId.toLowerCase();
   const statusColor = getStatusColor(transaction.status);
-  const StatusIcon = getStatusIcon(transaction.status);
+
+  // Render status icon based on status
+  const renderStatusIcon = () => {
+    const iconClass = "w-3 h-3 text-black";
+    switch (transaction.status) {
+      case 'confirmed':
+        return <Check className={iconClass} />;
+      case 'pending':
+        return <Clock className={iconClass} />;
+      case 'failed':
+        return <XCircle className={iconClass} />;
+      default:
+        return <Clock className={iconClass} />;
+    }
+  };
 
   return (
     <motion.div
@@ -242,7 +256,7 @@ const TransactionCard = React.memo(function TransactionCard({ transaction, userI
                 <Clock className="w-3 h-3 text-black" />
               </motion.div>
             ) : (
-              <StatusIcon className="w-3 h-3 text-black" />
+              renderStatusIcon()
             )}
           </motion.div>
         </motion.div>

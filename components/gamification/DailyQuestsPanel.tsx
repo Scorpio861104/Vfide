@@ -108,7 +108,7 @@ function StreakCalendar({ history, onMonthChange }: { history: boolean[]; onMont
     // Days of month
     for (let i = 1; i <= daysInMonth; i++) {
       const dayIndex = 30 - (new Date().getDate() - i) - (monthOffset * 30);
-      days.push(dayIndex >= 0 && dayIndex < history.length ? history[dayIndex] : false);
+      days.push(dayIndex >= 0 && dayIndex < history.length ? (history[dayIndex] ?? false) : false);
     }
     return { days, monthName };
   }, [history, monthOffset]);
@@ -170,7 +170,7 @@ export default function DailyQuestsPanel() {
   });
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimedReward, setClaimedReward] = useState<Quest | null>(null);
-  const { playSound } = useTransactionSounds();
+  const { play: playSound } = useTransactionSounds();
 
   useEffect(() => {
     if (isConnected) {
@@ -589,9 +589,9 @@ function QuestCard({
 }
 
 // Stat Card Component
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string | number; color: string }) {
+function StatCard({ icon, label, value, color, isRing: _isRing, pulse }: { icon: React.ReactNode; label: string; value: string | number; color: string; isRing?: boolean; pulse?: boolean }) {
   return (
-    <div className="bg-[#0A0A0B] rounded-lg p-4">
+    <div className={`bg-[#0A0A0B] rounded-lg p-4 ${pulse ? 'animate-pulse' : ''}`}>
       <div className={`${color} mb-2`}>
         {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-5 h-5' })}
       </div>
