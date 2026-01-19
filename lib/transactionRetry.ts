@@ -5,6 +5,17 @@
 
 import { logger } from './logger';
 
+// Retry configuration constants
+const DEFAULT_MAX_ATTEMPTS = 3;
+const DEFAULT_INITIAL_DELAY_MS = 1000; // 1 second
+const DEFAULT_MAX_DELAY_MS = 10000; // 10 seconds
+const DEFAULT_BACKOFF_MULTIPLIER = 2;
+
+// Aggressive retry settings for reads (no gas cost)
+const READ_MAX_ATTEMPTS = 5;
+const READ_INITIAL_DELAY_MS = 500; // 0.5 seconds
+const READ_MAX_DELAY_MS = 5000; // 5 seconds
+
 export interface RetryOptions {
   maxAttempts?: number;
   initialDelay?: number;
@@ -29,10 +40,10 @@ export function isUserRejection(error: unknown): boolean {
 }
 
 const DEFAULT_OPTIONS: Required<RetryOptions> = {
-  maxAttempts: 3,
-  initialDelay: 1000, // 1 second
-  maxDelay: 10000, // 10 seconds
-  backoffMultiplier: 2,
+  maxAttempts: DEFAULT_MAX_ATTEMPTS,
+  initialDelay: DEFAULT_INITIAL_DELAY_MS,
+  maxDelay: DEFAULT_MAX_DELAY_MS,
+  backoffMultiplier: DEFAULT_BACKOFF_MULTIPLIER,
   shouldRetry: (error: unknown) => {
     // Don't retry user rejections
     return !isUserRejection(error);
@@ -48,6 +59,7 @@ function delay(ms: number): Promise<void> {
 
 /**
  * Calculate delay with exponential backoff
+ * For backoffMultiplier of 2, uses efficient bit shift; otherwise uses multiplication
  */
 function calculateDelay(
   attempt: number,
@@ -55,7 +67,19 @@ function calculateDelay(
   maxDelay: number,
   backoffMultiplier: number
 ): number {
-  const exponentialDelay = initialDelay * Math.pow(backoffMultiplier, attempt - 1);
+  let exponentialDelay: number;
+  
+  // Optimize for power of 2 (most common case)
+  if (backoffMultiplier === 2) {
+    exponentialDelay = initialDelay << (attempt - 1); // Bit shift for 2^n
+  } else {
+    // General case: use iterative multiplication to avoid Math.pow overhead
+    exponentialDelay = initialDelay;
+    for (let i = 1; i < attempt; i++) {
+      exponentialDelay *= backoffMultiplier;
+    }
+  }
+  
   return Math.min(exponentialDelay, maxDelay);
 }
 
@@ -146,9 +170,9 @@ export async function retryRead<T>(
   options: RetryOptions = {}
 ): Promise<T> {
   return retryTransaction(operation, {
-    maxAttempts: 5,
-    initialDelay: 500,
-    maxDelay: 5000,
+    maxAttempts: READ_MAX_ATTEMPTS,
+    initialDelay: READ_INITIAL_DELAY_MS,
+    maxDelay: READ_MAX_DELAY_MS,
     ...options,
   });
 }

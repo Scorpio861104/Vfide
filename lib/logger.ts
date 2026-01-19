@@ -17,7 +17,7 @@ interface LogContext {
 const LOG_LEVELS = {
   development: ['debug', 'info', 'warn', 'error'],
   test: ['warn', 'error'],
-  production: ['error'], // Only errors in production
+  production: ['warn', 'error'], // Warnings + errors in production for valuable insights
 };
 
 /**
@@ -74,34 +74,44 @@ class Logger {
     if (isLevelEnabled('warn')) {
       console.warn(`[WARN] ${formatMessage(message, context)}`);
       
-      // Send warnings to Sentry in production
+      // Send warnings to Sentry in production (if configured)
       if (process.env.NODE_ENV === 'production') {
-        Sentry.captureMessage(message, {
-          level: 'warning',
-          extra: context,
-        });
+        try {
+          Sentry.captureMessage(message, {
+            level: 'warning',
+            extra: context,
+          });
+        } catch (err) {
+          // Sentry not configured - fail silently
+          console.error('[Logger] Sentry not configured:', err);
+        }
       }
     }
   }
 
   /**
    * Error level logging (always enabled)
-   * Automatically reports to Sentry
+   * Automatically reports to Sentry if configured
    */
   error(message: string, error?: Error | unknown, context?: LogContext): void {
     if (isLevelEnabled('error')) {
       console.error(`[ERROR] ${formatMessage(message, context)}`, error);
       
-      // Always report errors to Sentry
-      if (error instanceof Error) {
-        Sentry.captureException(error, {
-          extra: { message, ...context },
-        });
-      } else {
-        Sentry.captureMessage(message, {
-          level: 'error',
-          extra: { error, ...context },
-        });
+      // Always report errors to Sentry (if configured)
+      try {
+        if (error instanceof Error) {
+          Sentry.captureException(error, {
+            extra: { message, ...context },
+          });
+        } else {
+          Sentry.captureMessage(message, {
+            level: 'error',
+            extra: { error, ...context },
+          });
+        }
+      } catch (err) {
+        // Sentry not configured - fail silently
+        console.error('[Logger] Sentry not configured:', err);
       }
     }
   }
