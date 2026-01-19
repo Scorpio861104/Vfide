@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
 
     // Check message timestamp to prevent replay attacks (within 5 minutes)
     const timestampMatch = message.match(/Timestamp: (\d+)/);
-    if (timestampMatch) {
-      const messageTimestamp = parseInt(timestampMatch[1]);
+    if (timestampMatch && timestampMatch[1]) {
+      const messageTimestamp = parseInt(timestampMatch[1], 10);
       const now = Date.now();
       const fiveMinutes = 5 * 60 * 1000;
       

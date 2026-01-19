@@ -37,9 +37,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
 
   // Feature Flags
-  NEXT_PUBLIC_ENABLE_FAUCET: z.string().optional().transform(v => v !== 'false').default(true),
-  NEXT_PUBLIC_ENABLE_DEMO_MODE: z.string().optional().transform(v => v === 'true').default(false),
-  NEXT_PUBLIC_ENABLE_ANALYTICS: z.string().optional().transform(v => v === 'true').default(false),
+  NEXT_PUBLIC_ENABLE_FAUCET: z.string().default('true').transform(v => v !== 'false'),
+  NEXT_PUBLIC_ENABLE_DEMO_MODE: z.string().default('false').transform(v => v === 'true'),
+  NEXT_PUBLIC_ENABLE_ANALYTICS: z.string().default('false').transform(v => v === 'true'),
 
   // Analytics
   NEXT_PUBLIC_GA_ID: z.string().optional(),

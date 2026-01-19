@@ -25,17 +25,27 @@ export const username = z
   .max(30, 'Username must be at most 30 characters')
   .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens');
 
-// Safe text (prevents XSS)
+// Safe text (prevents XSS) - base validator without max
+const sanitizeText = (val: string) => val.replace(/<script[^>]*>.*?<\/script>/gi, '').trim();
+
 export const safeText = z
   .string()
   .max(10000, 'Text is too long')
-  .transform((val) => val.replace(/<script[^>]*>.*?<\/script>/gi, '').trim());
+  .transform(sanitizeText);
 
-// Short text (for titles, names)
+// Factory for safe text with custom max length
+export const safeTextMax = (maxLen: number) => 
+  z.string().max(maxLen).transform(sanitizeText);
+
+// Short text (for titles, names) - base validator
 export const shortText = z
   .string()
   .max(200, 'Text is too long')
   .transform((val) => val.trim());
+
+// Factory for short text with custom min/max
+export const shortTextRange = (minLen: number, maxLen: number) =>
+  z.string().min(minLen).max(maxLen).transform((val) => val.trim());
 
 // URL validator
 export const urlString = z
@@ -63,14 +73,14 @@ export const createUserSchema = z.object({
   wallet_address: ethereumAddress,
   username: username.optional(),
   display_name: shortText.optional(),
-  bio: safeText.max(500).optional(),
+  bio: safeTextMax(500).optional(),
   avatar_url: urlString.optional(),
 });
 
 export const updateUserSchema = z.object({
   username: username.optional(),
   display_name: shortText.optional(),
-  bio: safeText.max(500).optional(),
+  bio: safeTextMax(500).optional(),
   avatar_url: urlString.optional(),
 });
 
@@ -79,18 +89,18 @@ export const updateUserSchema = z.object({
 export const sendMessageSchema = z.object({
   from: ethereumAddress,
   to: ethereumAddress,
-  content: safeText.min(1, 'Message cannot be empty').max(5000, 'Message is too long'),
+  content: z.string().min(1, 'Message cannot be empty').max(5000, 'Message is too long').transform(sanitizeText),
   conversationId: z.string().optional(),
 });
 
 export const editMessageSchema = z.object({
   messageId: z.coerce.number().int().positive(),
-  content: safeText.min(1, 'Message cannot be empty').max(5000, 'Message is too long'),
+  content: z.string().min(1, 'Message cannot be empty').max(5000, 'Message is too long').transform(sanitizeText),
 });
 
 export const reactionSchema = z.object({
   messageId: z.coerce.number().int().positive(),
-  emoji: z.string().emoji('Invalid emoji').max(10),
+  emoji: z.string().max(10),
   action: z.enum(['add', 'remove']).default('add'),
 });
 
@@ -109,8 +119,8 @@ export const friendActionSchema = z.object({
 // ==================== Group Schemas ====================
 
 export const createGroupSchema = z.object({
-  name: shortText.min(2, 'Group name is too short').max(100),
-  description: safeText.max(1000).optional(),
+  name: shortTextRange(2, 100),
+  description: safeTextMax(1000).optional(),
   isPrivate: z.boolean().default(false),
 });
 
@@ -132,7 +142,7 @@ export const awardBadgeSchema = z.object({
   userAddress: ethereumAddress,
   badgeType: z.string().min(1).max(50),
   badgeName: shortText.optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ==================== Gamification Schemas ====================
@@ -146,8 +156,8 @@ export const awardXpSchema = z.object({
 // ==================== Proposal Schemas ====================
 
 export const createProposalSchema = z.object({
-  title: shortText.min(5, 'Title is too short').max(200),
-  description: safeText.min(20, 'Description is too short').max(10000),
+  title: shortTextRange(5, 200),
+  description: z.string().min(20, 'Description is too short').max(10000).transform(sanitizeText),
   proposerAddress: ethereumAddress,
   options: z.array(shortText).min(2).max(10).optional(),
   endsAt: z.coerce.date().optional(),
@@ -159,8 +169,8 @@ export const createNotificationSchema = z.object({
   userId: z.coerce.number().int().positive(),
   type: z.enum(['info', 'success', 'warning', 'error', 'transaction', 'social', 'system']),
   title: shortText,
-  message: safeText.max(500),
-  metadata: z.record(z.unknown()).optional(),
+  message: safeTextMax(500),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const notificationPrefsSchema = z.object({
@@ -191,8 +201,8 @@ export const claimRewardSchema = z.object({
 export const activitySchema = z.object({
   userAddress: ethereumAddress,
   type: z.string().min(1).max(50),
-  description: safeText.max(500).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  description: safeTextMax(500).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ==================== Endorsement Schemas ====================
@@ -200,15 +210,15 @@ export const activitySchema = z.object({
 export const endorsementSchema = z.object({
   fromAddress: ethereumAddress,
   toAddress: ethereumAddress,
-  skill: shortText.min(1).max(100),
-  message: safeText.max(500).optional(),
+  skill: shortTextRange(1, 100),
+  message: safeTextMax(500).optional(),
 });
 
 // ==================== Analytics Schemas ====================
 
 export const analyticsEventSchema = z.object({
   event: z.string().min(1).max(100),
-  properties: z.record(z.unknown()).optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
   timestamp: z.coerce.date().optional(),
 });
 
@@ -220,7 +230,7 @@ export const analyticsEventSchema = z.object({
 export async function validateBody<T>(
   request: Request,
   schema: z.ZodType<T>
-): Promise<{ success: true; data: T } | { success: false; error: string; details?: z.ZodError['errors'] }> {
+): Promise<{ success: true; data: T } | { success: false; error: string; details?: z.ZodError['issues'] }> {
   try {
     const body = await request.json();
     const result = schema.safeParse(body);
@@ -229,7 +239,7 @@ export async function validateBody<T>(
       return {
         success: false,
         error: 'Validation failed',
-        details: result.error.errors,
+        details: result.error.issues,
       };
     }
     
@@ -245,7 +255,7 @@ export async function validateBody<T>(
 export function validateQuery<T>(
   searchParams: URLSearchParams,
   schema: z.ZodType<T>
-): { success: true; data: T } | { success: false; error: string; details?: z.ZodError['errors'] } {
+): { success: true; data: T } | { success: false; error: string; details?: z.ZodError['issues'] } {
   const params = Object.fromEntries(searchParams.entries());
   const result = schema.safeParse(params);
   
@@ -253,7 +263,7 @@ export function validateQuery<T>(
     return {
       success: false,
       error: 'Invalid query parameters',
-      details: result.error.errors,
+      details: result.error.issues,
     };
   }
   

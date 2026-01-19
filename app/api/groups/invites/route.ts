@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.address.toLowerCase()]
+      [authResult.user.address.toLowerCase()]
     );
 
     if (userResult.rows.length === 0) {
@@ -168,10 +168,10 @@ export async function PATCH(request: NextRequest) {
     // Verify ownership - only creator can modify
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.address.toLowerCase()]
+      [authResult.user.address.toLowerCase()]
     );
     
-    if (userResult.rows.length === 0 || userResult.rows[0].id !== result.rows[0].created_by) {
+    if (userResult.rows.length === 0 || userResult.rows[0]?.id !== result.rows[0]?.created_by) {
       return NextResponse.json(
         { error: 'Not authorized to modify this invite' },
         { status: 403 }
@@ -253,10 +253,10 @@ export async function DELETE(request: NextRequest) {
     // Verify ownership - only creator can delete
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.address.toLowerCase()]
+      [authResult.user.address.toLowerCase()]
     );
     
-    if (userResult.rows.length === 0 || userResult.rows[0].id !== inviteResult.rows[0].created_by) {
+    if (userResult.rows.length === 0 || userResult.rows[0]?.id !== inviteResult.rows[0]?.created_by) {
       return NextResponse.json(
         { error: 'Not authorized to delete this invite' },
         { status: 403 }

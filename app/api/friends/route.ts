@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
-import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
+import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, friendRequestSchema } from '@/lib/auth/validation';
 

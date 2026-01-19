@@ -61,9 +61,9 @@ class InMemoryRateLimiter {
   
   private parseWindow(window: string): number {
     const match = window.match(/^(\d+)([smh])$/);
-    if (!match) return 60000; // Default 1 minute
+    if (!match || !match[1] || !match[2]) return 60000; // Default 1 minute
     
-    const value = parseInt(match[1]);
+    const value = parseInt(match[1], 10);
     const unit = match[2];
     
     switch (unit) {
