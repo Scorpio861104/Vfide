@@ -18,14 +18,21 @@ interface QuickWalletConnectProps {
 }
 
 /**
- * Streamlined One-Click Wallet Connection
+ * Streamlined One-Click Wallet Connection (Mobile-First)
  * 
- * Improvements over the original:
- * 1. One-click MetaMask connection (no modal)
- * 2. Inline wallet dropdown (no separate modal)
- * 3. Quick balance display
- * 4. Fast network switching
- * 5. Minimal UI, maximum speed
+ * Key Features:
+ * 1. Mobile-first: WalletConnect prioritized on mobile devices
+ * 2. Desktop-optimized: Browser extensions prioritized on desktop
+ * 3. One-click connection with smart connector selection
+ * 4. Inline wallet dropdown (no separate modal)
+ * 5. Quick balance display and network switching
+ * 6. Minimal UI, maximum speed
+ * 
+ * Mobile UX:
+ * - Detects mobile devices automatically
+ * - Uses WalletConnect for seamless in-browser experience
+ * - No app switching required
+ * - Works with Trust Wallet, MetaMask app, Rainbow, etc.
  */
 export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
@@ -45,7 +52,18 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const [showQR, setShowQR] = useState(false);
   const [activeTab, setActiveTab] = useState<'menu' | 'transactions'>('menu');
 
-  // Get MetaMask connector for one-click connect
+  // Mobile detection (SSR-safe)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  }, []);
+
+  // Get WalletConnect connector (prioritize for mobile)
+  const walletConnectConnector = connectors.find(c => 
+    c.id === 'walletConnect' || c.name === 'WalletConnect'
+  );
+
+  // Get MetaMask connector for desktop
   const metaMaskConnector = connectors.find(c => 
     c.id === 'io.metamask' || c.id === 'metaMask' || c.name === 'MetaMask'
   );
@@ -53,8 +71,10 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   // Get injected connector as fallback
   const injectedConnector = connectors.find(c => c.id === 'injected');
   
-  // Primary connector to use
-  const primaryConnector = metaMaskConnector || injectedConnector;
+  // Primary connector to use - WalletConnect on mobile, MetaMask on desktop
+  const primaryConnector = isMobile 
+    ? (walletConnectConnector || metaMaskConnector || injectedConnector)
+    : (metaMaskConnector || injectedConnector);
 
   // Expected chain
   const expectedChain = IS_TESTNET ? baseSepolia : base;

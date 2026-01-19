@@ -23,7 +23,8 @@ export function RainbowKitWrapper({ children }: { children: ReactNode }) {
         learnMoreUrl: '/docs',
         disclaimer: ({ Text, Link }) => (
           <Text>
-            On mobile? Use WalletConnect to stay in your browser.{' '}
+            On mobile? WalletConnect keeps you in your browser without app switching.{' '}
+            Works with Trust Wallet, MetaMask app, Rainbow, and more.{' '}
             <Link href="/docs">Learn more</Link>
           </Text>
         ),

@@ -17,14 +17,14 @@ import { scrollToTop } from '@/lib/focusTrap';
 import { POLLING_INTERVALS, ANIMATION_DURATION } from '@/lib/walletConstants';
 
 /**
- * Enhanced Simple Wallet Connect Component
+ * Enhanced Simple Wallet Connect Component (Mobile-First)
  * 
  * Phase 1 Enhancements:
  * - Improved button responsiveness
  * - Better loading states with status indicators
  * - Enhanced error handling
  * - Smooth animations
- * - Mobile optimized
+ * - Mobile optimized with WalletConnect priority
  * - Keyboard navigation support (Enter, Escape)
  * - Copy address to clipboard functionality
  * 
@@ -44,6 +44,12 @@ import { POLLING_INTERVALS, ANIMATION_DURATION } from '@/lib/walletConstants';
  * - Optimistic UI updates
  * - Smooth scroll-to-top after connection
  * - Gas price estimates in tooltips
+ * 
+ * Mobile-First Features:
+ * - Automatic mobile device detection
+ * - WalletConnect integration for mobile wallets
+ * - Support for Trust Wallet, MetaMask app, Rainbow, etc.
+ * - No app switching required on mobile
  */
 export function SimpleWalletConnect() {
   const [copied, setCopied] = useState(false);
