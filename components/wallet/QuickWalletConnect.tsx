@@ -12,6 +12,7 @@ import { PendingTransactionsList, usePendingTransactions } from './PendingTransa
 import { GasIndicator } from './GasPriceAlert';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { useWalletPersistence } from '@/hooks/useWalletPersistence';
+import { isMobileDevice } from '@/lib/mobileDetection';
 
 interface QuickWalletConnectProps {
   size?: 'sm' | 'md' | 'lg';
@@ -52,10 +53,10 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const [showQR, setShowQR] = useState(false);
   const [activeTab, setActiveTab] = useState<'menu' | 'transactions'>('menu');
 
-  // Mobile detection (SSR-safe)
+  // Mobile detection (SSR-safe, memoized)
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    setIsMobile(isMobileDevice());
   }, []);
 
   // Get WalletConnect connector (prioritize for mobile)

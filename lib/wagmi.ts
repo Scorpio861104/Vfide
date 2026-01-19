@@ -17,6 +17,7 @@ import {
   zkSyncSepoliaTestnet,
 } from 'wagmi/chains'
 import { IS_TESTNET } from './chains'
+import { isMobileDevice } from './mobileDetection'
 
 // Create noopStorage for SSR to avoid hydration mismatches
 // SSR-safe storage implementation - parameters required by Storage interface
@@ -66,12 +67,6 @@ const hasWalletConnect = typeof projectId === 'string' && projectId.length > 0
 
 // App metadata for wallet connections
 const appName = 'VFIDE'
-
-// Mobile detection (SSR-safe)
-const isMobile = () => {
-  if (typeof window === 'undefined') return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
 
 // Custom zkSync Sepolia with explicit RPC
 const zkSyncSepoliaWithMetadata = {
@@ -126,12 +121,12 @@ const wagmiStorage = createStorage({
 // - On desktop: prioritize browser extensions
 // - Include explicit wallet options for best user experience
 
-// Detect if running on mobile device
-const isMobileDevice = isMobile();
+// Detect if running on mobile device (lazy evaluation, memoized)
+const isMobileDevice_ = isMobileDevice();
 
 // Build wallet groups dynamically based on device type
 // Mobile users get mobile wallets first, desktop users get extensions first
-const walletGroups = isMobileDevice ? [
+const walletGroups = isMobileDevice_ ? [
   // MOBILE: WalletConnect and mobile apps first
   ...(hasWalletConnect ? [{
     groupName: 'Recommended for Mobile',
