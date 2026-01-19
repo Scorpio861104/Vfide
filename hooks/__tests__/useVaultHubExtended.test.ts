@@ -1,5 +1,5 @@
 // Extended tests for useVaultHub.ts - comprehensive coverage
-import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
+import { describe, it, expect, beforeEach, Mock } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Store original env
@@ -68,7 +68,7 @@ describe('useVaultHub - Extended Tests', () => {
   // We need to dynamically import the hook after setting up mocks
   async function getUseVaultHub() {
     // Clear the module cache to get fresh imports
-    vi.resetModules()
+    jest.resetModules()
     const vaultHubModule = await import('../useVaultHub')
     return vaultHubModule.useVaultHub
   }

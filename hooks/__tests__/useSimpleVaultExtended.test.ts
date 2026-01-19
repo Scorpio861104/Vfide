@@ -3,7 +3,7 @@
  * Covers executeVaultAction flow and ProofScore tiers
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from '@jest/globals'
+import { describe, it, expect, beforeEach, afterEach, Mock } from '@jest/globals'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock useVaultHub
@@ -97,7 +97,7 @@ describe('useSimpleVault - Extended Tests', () => {
       await act(async () => {
         result.current.executeVaultAction('Execute', mockTargetContract, mockCallData)
         // Advance past the 500ms delay
-        await vi.advanceTimersByTimeAsync(600)
+        jest.advanceTimersByTime(600)
       })
 
       expect(mockWriteContract).toHaveBeenCalledWith(
@@ -125,7 +125,7 @@ describe('useSimpleVault - Extended Tests', () => {
 
       // Advance past preparing delay
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(600)
+        jest.advanceTimersByTime(600)
       })
 
       expect(result.current.actionStatus).toBe('signing')
@@ -146,7 +146,7 @@ describe('useSimpleVault - Extended Tests', () => {
 
       // Advance past preparing delay and signing
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(600)
+        jest.advanceTimersByTime(600)
       })
 
       await waitFor(() => {
@@ -168,7 +168,7 @@ describe('useSimpleVault - Extended Tests', () => {
 
       // Advance through all timers
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(5000)
+        jest.advanceTimersByTime(5000)
       })
 
       expect(result.current.actionStatus).toBe('success')
@@ -189,7 +189,7 @@ describe('useSimpleVault - Extended Tests', () => {
 
       // Advance through all timers including the 3s reset
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(10000)
+        jest.advanceTimersByTime(10000)
       })
 
       expect(result.current.actionStatus).toBe('idle')
@@ -212,7 +212,7 @@ describe('useSimpleVault - Extended Tests', () => {
 
       // Advance past preparing delay
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(600)
+        jest.advanceTimersByTime(600)
       })
 
       await waitFor(() => {
@@ -236,7 +236,7 @@ describe('useSimpleVault - Extended Tests', () => {
 
       // Advance past preparing delay
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(600)
+        jest.advanceTimersByTime(600)
       })
 
       await waitFor(() => {
@@ -307,7 +307,7 @@ describe('useSimpleVault - Extended Tests', () => {
       })
 
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(600)
+        jest.advanceTimersByTime(600)
       })
 
       expect(result.current.actionStatus).toBe('signing')
@@ -327,7 +327,7 @@ describe('useSimpleVault - Extended Tests', () => {
       })
 
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(5000)
+        jest.advanceTimersByTime(5000)
       })
 
       expect(result.current.actionStatus).toBe('success')
@@ -347,7 +347,7 @@ describe('useSimpleVault - Extended Tests', () => {
       })
 
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(600)
+        jest.advanceTimersByTime(600)
       })
 
       await waitFor(() => {
