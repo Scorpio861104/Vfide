@@ -13,6 +13,21 @@ export interface RetryOptions {
   shouldRetry?: (error: unknown) => boolean;
 }
 
+/**
+ * Check if an error is a user rejection
+ */
+export function isUserRejection(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  
+  const message = error.message.toLowerCase();
+  return (
+    message.includes('user rejected') ||
+    message.includes('user denied') ||
+    message.includes('user cancelled') ||
+    message.includes('rejected by user')
+  );
+}
+
 const DEFAULT_OPTIONS: Required<RetryOptions> = {
   maxAttempts: 3,
   initialDelay: 1000, // 1 second
@@ -20,15 +35,7 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   backoffMultiplier: 2,
   shouldRetry: (error: unknown) => {
     // Don't retry user rejections
-    if (error instanceof Error) {
-      const message = error.message.toLowerCase();
-      return !(
-        message.includes('user rejected') ||
-        message.includes('user denied') ||
-        message.includes('user cancelled')
-      );
-    }
-    return true;
+    return !isUserRejection(error);
   },
 };
 
@@ -173,20 +180,5 @@ export function isGasError(error: unknown): boolean {
     message.includes('gas') ||
     message.includes('out of gas') ||
     message.includes('insufficient funds')
-  );
-}
-
-/**
- * Check if an error is a user rejection
- */
-export function isUserRejection(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  
-  const message = error.message.toLowerCase();
-  return (
-    message.includes('user rejected') ||
-    message.includes('user denied') ||
-    message.includes('user cancelled') ||
-    message.includes('rejected by user')
   );
 }
