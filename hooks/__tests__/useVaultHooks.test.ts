@@ -1425,4 +1425,103 @@ describe('useTransferVFIDE edge cases', () => {
     expect(result.current.isTransferring).toBe(false)
     expect(result.current.isSuccess).toBe(false)
   })
+
+  it('throws error for NaN amount (line 119)', () => {
+    const mockWriteContract = jest.fn()
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContract: mockWriteContract,
+      data: null,
+      isPending: false,
+    })
+    ;(wagmi.useAccount as jest.Mock).mockReturnValue({
+      address: mockAddress,
+    })
+    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
+      data: mockVaultAddress,
+    })
+    ;(wagmi.useWaitForTransactionReceipt as jest.Mock).mockReturnValue({
+      isLoading: false,
+      isSuccess: false,
+    })
+
+    const { result } = renderHook(() => useTransferVFIDE())
+    const toVault = '0x9876543210987654321098765432109876543210' as `0x${string}`
+    
+    // NaN amount should throw error
+    let errorThrown = false
+    try {
+      result.current.transfer(toVault, 'not-a-number')
+    } catch (error: unknown) {
+      errorThrown = true
+      expect((error as Error).message).toContain('positive number')
+    }
+    expect(errorThrown).toBe(true)
+    expect(mockWriteContract).not.toHaveBeenCalled()
+  })
+
+  it('throws error for negative amount (line 119)', () => {
+    const mockWriteContract = jest.fn()
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContract: mockWriteContract,
+      data: null,
+      isPending: false,
+    })
+    ;(wagmi.useAccount as jest.Mock).mockReturnValue({
+      address: mockAddress,
+    })
+    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
+      data: mockVaultAddress,
+    })
+    ;(wagmi.useWaitForTransactionReceipt as jest.Mock).mockReturnValue({
+      isLoading: false,
+      isSuccess: false,
+    })
+
+    const { result } = renderHook(() => useTransferVFIDE())
+    const toVault = '0x9876543210987654321098765432109876543210' as `0x${string}`
+    
+    // Negative amount should throw error
+    let errorThrown = false
+    try {
+      result.current.transfer(toVault, '-100')
+    } catch (error: unknown) {
+      errorThrown = true
+      expect((error as Error).message).toContain('positive number')
+    }
+    expect(errorThrown).toBe(true)
+    expect(mockWriteContract).not.toHaveBeenCalled()
+  })
+
+  it('throws error for zero amount (line 119)', () => {
+    const mockWriteContract = jest.fn()
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContract: mockWriteContract,
+      data: null,
+      isPending: false,
+    })
+    ;(wagmi.useAccount as jest.Mock).mockReturnValue({
+      address: mockAddress,
+    })
+    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
+      data: mockVaultAddress,
+    })
+    ;(wagmi.useWaitForTransactionReceipt as jest.Mock).mockReturnValue({
+      isLoading: false,
+      isSuccess: false,
+    })
+
+    const { result } = renderHook(() => useTransferVFIDE())
+    const toVault = '0x9876543210987654321098765432109876543210' as `0x${string}`
+    
+    // Zero amount should throw error
+    let errorThrown = false
+    try {
+      result.current.transfer(toVault, '0')
+    } catch (error: unknown) {
+      errorThrown = true
+      expect((error as Error).message).toContain('positive number')
+    }
+    expect(errorThrown).toBe(true)
+    expect(mockWriteContract).not.toHaveBeenCalled()
+  })
 })

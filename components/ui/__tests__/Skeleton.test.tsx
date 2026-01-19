@@ -4,6 +4,8 @@ import {
     FriendListSkeleton,
     GroupListSkeleton,
     MessageListSkeleton,
+    NotificationListSkeleton,
+    NotificationSkeleton,
     Skeleton,
     SkeletonCard,
     SkeletonStat,
@@ -164,6 +166,48 @@ describe('SkeletonTable', () => {
   it('applies custom className', () => {
     const { container } = render(<SkeletonTable className="custom-class" />)
     expect(container.firstChild).toHaveClass('custom-class')
+  })
+})
+
+describe('NotificationSkeleton', () => {
+  it('renders notification skeleton', () => {
+    const { container } = render(<NotificationSkeleton />)
+    expect(container.firstChild).toBeInTheDocument()
+  })
+
+  it('includes avatar skeleton', () => {
+    const { container } = render(<NotificationSkeleton />)
+    expect(container.querySelector('.rounded-full')).toBeInTheDocument()
+  })
+
+  it('includes text content skeletons', () => {
+    const { container } = render(<NotificationSkeleton />)
+    expect(container.querySelector('.flex-1')).toBeInTheDocument()
+  })
+
+  it('has correct background styling', () => {
+    const { container } = render(<NotificationSkeleton />)
+    expect(container.firstChild).toHaveClass('bg-[#2A2A2F]')
+    expect(container.firstChild).toHaveClass('rounded-lg')
+  })
+})
+
+describe('NotificationListSkeleton', () => {
+  it('renders notification list with default count', () => {
+    const { container } = render(<NotificationListSkeleton />)
+    expect(container.querySelector('.space-y-3')).toBeInTheDocument()
+  })
+
+  it('renders custom count of notifications', () => {
+    const { container } = render(<NotificationListSkeleton count={3} />)
+    const notifications = container.querySelectorAll('.flex.items-start.gap-3.p-4')
+    expect(notifications).toHaveLength(3)
+  })
+
+  it('renders 5 notifications by default', () => {
+    const { container } = render(<NotificationListSkeleton />)
+    const notifications = container.querySelectorAll('.flex.items-start.gap-3.p-4')
+    expect(notifications).toHaveLength(5)
   })
 })
 describe('MessageListSkeleton', () => {
