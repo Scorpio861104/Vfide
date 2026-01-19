@@ -16,6 +16,12 @@ const AUTO_DISCONNECT_TIME_KEY = 'vfide-auto-disconnect-time';
 // Default auto-disconnect timeout in minutes
 const DEFAULT_AUTO_DISCONNECT_MINUTES = 30;
 
+// Reconnection timeout in milliseconds
+const RECONNECTION_TIMEOUT_MS = 10000; // 10 seconds
+
+// Activity tracking debounce in milliseconds
+const ACTIVITY_DEBOUNCE_MS = 30000; // 30 seconds
+
 interface SessionData {
   address: string;
   connectorId: string;
@@ -193,7 +199,7 @@ export function useWalletPersistence() {
       const timeoutId = setTimeout(() => {
         setIsReconnecting(false);
         setReconnectError('Reconnection timed out');
-      }, 10000); // 10 second timeout
+      }, RECONNECTION_TIMEOUT_MS);
       
       reconnect({ connectors: [lastConnector] })
         .then(() => {
@@ -265,7 +271,7 @@ export function useWalletPersistence() {
       debounceTimeout = setTimeout(() => {
         updateActivity();
         debounceTimeout = null;
-      }, 30000); // 30 seconds debounce
+      }, ACTIVITY_DEBOUNCE_MS);
     };
 
     // Track meaningful user activity

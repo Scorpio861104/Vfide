@@ -216,6 +216,9 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="absolute -top-14 right-0 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg shadow-lg backdrop-blur-sm whitespace-nowrap z-50"
+            role="alert"
+            aria-live="polite"
+            aria-atomic="true"
           >
             <span className="flex items-center gap-2 text-xs font-medium">
               <Clock size={14} className="animate-pulse" />

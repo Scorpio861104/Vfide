@@ -91,6 +91,9 @@ export function SimpleWalletConnect() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg shadow-lg backdrop-blur-sm"
+            role="alert"
+            aria-live="polite"
+            aria-atomic="true"
           >
             <span className="flex items-center gap-2 text-sm font-medium">
               <Clock size={16} className="animate-pulse" />
