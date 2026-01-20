@@ -281,12 +281,14 @@ const TOKEN_ABI = [
   },
 ] as const;
 
-const TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const BURN_ROUTER_ADDRESS = (process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+// Constants
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+const TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
+const BURN_ROUTER_ADDRESS = (process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
 
 // Check if contracts are deployed (not zero address)
-const IS_TOKEN_DEPLOYED = TOKEN_ADDRESS !== '0x0000000000000000000000000000000000000000';
-const IS_BURN_ROUTER_DEPLOYED = BURN_ROUTER_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_TOKEN_DEPLOYED = TOKEN_ADDRESS !== ZERO_ADDRESS;
+const IS_BURN_ROUTER_DEPLOYED = BURN_ROUTER_ADDRESS !== ZERO_ADDRESS;
 
 // BurnRouter ABI
 const BURN_ROUTER_ABI = [
@@ -1583,7 +1585,7 @@ export default function AdminPanel() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-300 text-sm">VaultHub</span>
-                      {vaultHubAddress && vaultHubAddress !== '0x0000000000000000000000000000000000000000' ? (
+                      {vaultHubAddress && vaultHubAddress !== ZERO_ADDRESS ? (
                         <span className="text-green-400 text-sm">✅ Connected</span>
                       ) : (
                         <span className="text-red-400 text-sm">❌ Not Set</span>
@@ -1591,7 +1593,7 @@ export default function AdminPanel() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-300 text-sm">SecurityHub</span>
-                      {securityHubAddress && securityHubAddress !== '0x0000000000000000000000000000000000000000' ? (
+                      {securityHubAddress && securityHubAddress !== ZERO_ADDRESS ? (
                         <span className="text-green-400 text-sm">✅ Connected</span>
                       ) : (
                         <span className="text-red-400 text-sm">❌ Not Set</span>
@@ -1599,7 +1601,7 @@ export default function AdminPanel() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-300 text-sm">ProofLedger</span>
-                      {ledgerAddress && ledgerAddress !== '0x0000000000000000000000000000000000000000' ? (
+                      {ledgerAddress && ledgerAddress !== ZERO_ADDRESS ? (
                         <span className="text-green-400 text-sm">✅ Connected</span>
                       ) : (
                         <span className="text-red-400 text-sm">❌ Not Set</span>
@@ -1607,7 +1609,7 @@ export default function AdminPanel() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-300 text-sm">BurnRouter</span>
-                      {burnRouterAddress && burnRouterAddress !== '0x0000000000000000000000000000000000000000' ? (
+                      {burnRouterAddress && burnRouterAddress !== ZERO_ADDRESS ? (
                         <span className="text-green-400 text-sm">✅ Connected</span>
                       ) : (
                         <span className="text-red-400 text-sm">❌ Not Set</span>
@@ -1687,10 +1689,10 @@ export default function AdminPanel() {
               <div className="bg-black/30 rounded-lg p-4 border border-purple-500/30">
                 <h3 className="text-purple-400 text-sm font-bold mb-3">Overall System Status</h3>
                 <div className="flex items-center gap-4">
-                  {vaultHubAddress && vaultHubAddress !== '0x0000000000000000000000000000000000000000' &&
-                  securityHubAddress && securityHubAddress !== '0x0000000000000000000000000000000000000000' &&
-                  ledgerAddress && ledgerAddress !== '0x0000000000000000000000000000000000000000' &&
-                  burnRouterAddress && burnRouterAddress !== '0x0000000000000000000000000000000000000000' ? (
+                  {vaultHubAddress && vaultHubAddress !== ZERO_ADDRESS &&
+                  securityHubAddress && securityHubAddress !== ZERO_ADDRESS &&
+                  ledgerAddress && ledgerAddress !== ZERO_ADDRESS &&
+                  burnRouterAddress && burnRouterAddress !== ZERO_ADDRESS ? (
                     <>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
