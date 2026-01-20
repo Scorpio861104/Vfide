@@ -11,7 +11,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const eventType = searchParams.get('eventType');
     const userId = searchParams.get('userId');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+
+    // Validate parsed number
+    if (isNaN(limit) || limit < 0) {
+      return NextResponse.json(
+        { error: 'Invalid limit parameter' },
+        { status: 400 }
+      );
+    }
 
     let sql = `SELECT * FROM analytics_events WHERE 1=1`;
     const params: (string | number)[] = [];

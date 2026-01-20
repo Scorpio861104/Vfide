@@ -108,7 +108,11 @@ function parseRelativeDate(text: string): Date | undefined {
   // In X days/weeks/months
   const inMatch = lowerText.match(/in\s+(\d+)\s+(day|week|month|year)s?/i);
   if (inMatch && inMatch[1] && inMatch[2]) {
-    const amount = parseInt(inMatch[1]);
+    const amount = parseInt(inMatch[1], 10);
+    if (isNaN(amount) || !isFinite(amount) || amount <= 0) {
+      return undefined;
+    }
+    
     const unit = inMatch[2].toLowerCase();
     const result = new Date(now);
     
@@ -132,7 +136,11 @@ function parseRelativeDate(text: string): Date | undefined {
   // On the Xth (day of month for recurring)
   const dayOfMonthMatch = lowerText.match(/on\s+the\s+(\d+)(?:st|nd|rd|th)/i);
   if (dayOfMonthMatch && dayOfMonthMatch[1]) {
-    const day = parseInt(dayOfMonthMatch[1]);
+    const day = parseInt(dayOfMonthMatch[1], 10);
+    if (isNaN(day) || !isFinite(day) || day < 1 || day > 31) {
+      return undefined;
+    }
+    
     const result = new Date(now);
     result.setDate(day);
     if (result <= now) {
@@ -152,11 +160,20 @@ function parseRelativeDate(text: string): Date | undefined {
       // Month name format
       const monthName = monthDayMatch[1].toLowerCase().slice(0, 3);
       month = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(monthName);
-      day = parseInt(monthDayMatch[2]);
+      day = parseInt(monthDayMatch[2], 10);
+      
+      if (isNaN(day) || !isFinite(day) || day < 1 || day > 31) {
+        return undefined;
+      }
     } else if (monthDayMatch[3] && monthDayMatch[4]) {
       // MM/DD format
-      month = parseInt(monthDayMatch[3]) - 1;
-      day = parseInt(monthDayMatch[4]);
+      month = parseInt(monthDayMatch[3], 10) - 1;
+      day = parseInt(monthDayMatch[4], 10);
+      
+      if (isNaN(month) || isNaN(day) || !isFinite(month) || !isFinite(day) || 
+          month < 0 || month > 11 || day < 1 || day > 31) {
+        return undefined;
+      }
     } else {
       return undefined;
     }
@@ -243,7 +260,11 @@ function parseStream(text: string): StreamInfo | undefined {
   // "stream 1000 VFIDE over 30 days"
   const streamMatch = lower.match(/stream\s+.*?over\s+(\d+)\s+(second|minute|hour|day|week|month)s?/i);
   if (streamMatch && streamMatch[1] && streamMatch[2]) {
-    const amount = parseInt(streamMatch[1]);
+    const amount = parseInt(streamMatch[1], 10);
+    if (isNaN(amount) || !isFinite(amount) || amount <= 0) {
+      return undefined;
+    }
+    
     const unit = streamMatch[2].toLowerCase();
     
     let durationSeconds: number;
@@ -380,7 +401,10 @@ export function parseNaturalLanguage(input: string): ParsedIntent {
     // Extract day of month for recurring
     const dayMatch = lower.match(/on\s+the\s+(\d+)(?:st|nd|rd|th)/);
     if (dayMatch && dayMatch[1]) {
-      result.schedule.dayOfMonth = parseInt(dayMatch[1]);
+      const dayValue = parseInt(dayMatch[1], 10);
+      if (!isNaN(dayValue) && isFinite(dayValue) && dayValue >= 1 && dayValue <= 31) {
+        result.schedule.dayOfMonth = dayValue;
+      }
     }
     
     result.confidence = 0.85;

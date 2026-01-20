@@ -64,6 +64,10 @@ class InMemoryRateLimiter {
     if (!match || !match[1] || !match[2]) return 60000; // Default 1 minute
     
     const value = parseInt(match[1], 10);
+    if (isNaN(value) || !isFinite(value) || value <= 0) {
+      return 60000; // Default 1 minute
+    }
+    
     const unit = match[2];
     
     switch (unit) {

@@ -41,9 +41,17 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
     const unreadOnly = searchParams.get('unreadOnly') === 'true';
+
+    // Validate parsed numbers
+    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+      return NextResponse.json(
+        { error: 'Invalid limit or offset parameter' },
+        { status: 400 }
+      );
+    }
 
     if (!userAddress) {
       return NextResponse.json(
@@ -95,9 +103,14 @@ export async function GET(request: NextRequest) {
       [userAddress.toLowerCase()]
     );
 
+    const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
+    if (isNaN(totalCount)) {
+      throw new Error('Failed to get notification count');
+    }
+
     return NextResponse.json({
       notifications: result.rows,
-      total: parseInt(countResult.rows[0]?.count || '0'),
+      total: totalCount,
       limit,
       offset,
     });

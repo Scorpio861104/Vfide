@@ -39,8 +39,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100); // Max 100
-    const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
+    const limitParam = parseInt(searchParams.get('limit') || '50', 10);
+    const offsetParam = parseInt(searchParams.get('offset') || '0', 10);
+
+    // Validate parsed numbers
+    if (isNaN(limitParam) || isNaN(offsetParam) || !isFinite(limitParam) || !isFinite(offsetParam)) {
+      return NextResponse.json(
+        { error: 'Invalid limit or offset parameter' },
+        { status: 400 }
+      );
+    }
+
+    const limit = Math.min(limitParam, 100); // Max 100
+    const offset = Math.max(offsetParam, 0);
 
     const result = await query(
       `SELECT t.* FROM transactions t

@@ -10,7 +10,15 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const monthYear = searchParams.get('month') || new Date().toISOString().slice(0, 7); // Default to current month
     const userAddress = searchParams.get('userAddress');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+
+    // Validate parsed number
+    if (isNaN(limit) || limit < 0) {
+      return NextResponse.json(
+        { error: 'Invalid limit parameter' },
+        { status: 400 }
+      );
+    }
 
     const client = await getClient();
 
@@ -92,8 +100,14 @@ export async function GET(request: NextRequest) {
 
         if (userResult.rows.length > 0) {
           const user = userResult.rows[0];
+          const currentRank = parseInt(user.current_rank, 10);
+          
+          if (isNaN(currentRank) || !isFinite(currentRank)) {
+            throw new Error('Invalid rank data');
+          }
+          
           userPosition = {
-            rank: parseInt(user.current_rank),
+            rank: currentRank,
             finalRank: user.final_rank,
             activityScore: user.activity_score,
             tier: user.tier_name,

@@ -73,18 +73,40 @@ export async function GET(request: NextRequest) {
     const subgraphUrl = process.env.NEXT_PUBLIC_SUBGRAPH_URL;
     
     if (!subgraphUrl) {
+      // Validate year and quarter
+      const yearNum = parseInt(year, 10);
+      const quarterNum = parseInt(quarter, 10);
+      
+      if (isNaN(yearNum) || isNaN(quarterNum) || !isFinite(yearNum) || !isFinite(quarterNum)) {
+        return NextResponse.json(
+          { error: 'Invalid year or quarter parameter' },
+          { status: 400 }
+        );
+      }
+      
       // Return empty leaderboard with a message
       return NextResponse.json({
         success: true,
         data: [],
         message: 'Leaderboard data will be available once the subgraph is deployed',
         meta: {
-          year: parseInt(year),
-          quarter: parseInt(quarter),
+          year: yearNum,
+          quarter: quarterNum,
           totalParticipants: 0,
           rewardPool: QUARTERLY_REWARD_POOL,
         }
       });
+    }
+
+    // Validate year and quarter before using
+    const yearNum = parseInt(year, 10);
+    const quarterNum = parseInt(quarter, 10);
+    
+    if (isNaN(yearNum) || isNaN(quarterNum) || !isFinite(yearNum) || !isFinite(quarterNum)) {
+      return NextResponse.json(
+        { error: 'Invalid year or quarter parameter' },
+        { status: 400 }
+      );
     }
 
     // When subgraph is available, fetch real data
@@ -107,7 +129,7 @@ export async function GET(request: NextRequest) {
             }
           }
         `,
-        variables: { year: parseInt(year), quarter: parseInt(quarter) }
+        variables: { year: yearNum, quarter: quarterNum }
       }),
     });
 
@@ -137,8 +159,8 @@ export async function GET(request: NextRequest) {
       success: true,
       data: leaderboard,
       meta: {
-        year: parseInt(year),
-        quarter: parseInt(quarter),
+        year: yearNum,
+        quarter: quarterNum,
         totalParticipants: stats.length,
         totalPoints,
         rewardPool: QUARTERLY_REWARD_POOL,

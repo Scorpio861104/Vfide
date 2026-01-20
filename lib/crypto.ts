@@ -101,7 +101,12 @@ export async function connectWallet(): Promise<Wallet> {
     });
 
     // Convert wei to ETH
-    const ethBalance = parseInt(balance, 16) / 1e18;
+    const balanceWei = parseInt(balance, 16);
+    if (isNaN(balanceWei) || !isFinite(balanceWei)) {
+      throw new Error('Invalid balance format from provider');
+    }
+    
+    const ethBalance = balanceWei / 1e18;
 
     // Get VFIDE token balance (mock for now)
     const tokenBalance = await getTokenBalance(address);
@@ -240,7 +245,12 @@ async function sendEthTransaction(to: string, amount: string): Promise<string> {
     throw new Error('MetaMask not installed');
   }
 
-  const amountWei = '0x' + (parseFloat(amount) * 1e18).toString(16);
+  const amountFloat = parseFloat(amount);
+  if (isNaN(amountFloat) || !isFinite(amountFloat) || amountFloat <= 0) {
+    throw new Error('Invalid transaction amount');
+  }
+
+  const amountWei = '0x' + (amountFloat * 1e18).toString(16);
 
   const txHash = await window.ethereum.request({
     method: 'eth_sendTransaction',

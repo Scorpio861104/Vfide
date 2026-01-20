@@ -24,9 +24,11 @@ export const TESTNET_CHAIN_ID = 84532  // Base Sepolia
 export const MAINNET_CHAIN_ID = 8453   // Base Mainnet
 
 // Get current default chain ID from env (for initial connection suggestion)
-export const CURRENT_CHAIN_ID = parseInt(
-  process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID || '84532'
-)
+const chainIdStr = process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID || '84532';
+const parsedChainId = parseInt(chainIdStr, 10);
+export const CURRENT_CHAIN_ID = (!isNaN(parsedChainId) && isFinite(parsedChainId)) 
+  ? parsedChainId 
+  : 84532;
 
 // Legacy export - kept for backwards compatibility
 export const isTestnetChain = CURRENT_CHAIN_ID === TESTNET_CHAIN_ID

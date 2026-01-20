@@ -10,7 +10,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const metric = searchParams.get('metric');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+
+    // Validate parsed number
+    if (isNaN(limit) || limit < 0) {
+      return NextResponse.json(
+        { error: 'Invalid limit parameter' },
+        { status: 400 }
+      );
+    }
 
     let sql = `SELECT * FROM performance_metrics`;
     const params: (string | number)[] = [];

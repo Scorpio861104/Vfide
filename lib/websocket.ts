@@ -48,7 +48,10 @@ export interface WSConfig {
  */
 function getDefaultChainId(): number {
   if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID) {
-    return parseInt(process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID);
+    const chainId = parseInt(process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID, 10);
+    if (!isNaN(chainId) && isFinite(chainId)) {
+      return chainId;
+    }
   }
   return 8453; // Base mainnet
 }

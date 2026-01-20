@@ -29,8 +29,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
     const activityType = searchParams.get('type');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+
+    // Validate parsed numbers
+    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+      return NextResponse.json(
+        { error: 'Invalid limit or offset parameter' },
+        { status: 400 }
+      );
+    }
 
     let queryText = `
       SELECT 
@@ -80,9 +88,17 @@ export async function GET(request: NextRequest) {
 
     const countResult = await query<{ count: string }>(countQuery, countParams);
 
+    const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
+    if (isNaN(totalCount)) {
+      return NextResponse.json(
+        { error: 'Failed to get total count' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       activities: result.rows,
-      total: parseInt(countResult.rows[0]?.count || '0'),
+      total: totalCount,
       limit,
       offset,
     });

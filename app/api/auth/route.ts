@@ -43,6 +43,15 @@ export async function POST(request: NextRequest) {
     const timestampMatch = message.match(/Timestamp: (\d+)/);
     if (timestampMatch && timestampMatch[1]) {
       const messageTimestamp = parseInt(timestampMatch[1], 10);
+      
+      // Validate parsed timestamp
+      if (isNaN(messageTimestamp) || !isFinite(messageTimestamp)) {
+        return NextResponse.json(
+          { error: 'Invalid timestamp in message' },
+          { status: 400 }
+        );
+      }
+      
       const now = Date.now();
       const fiveMinutes = 5 * 60 * 1000;
       
