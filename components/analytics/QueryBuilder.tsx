@@ -132,7 +132,12 @@ export function QueryBuilder({
         // Calculate aggregations
         aggregations.forEach(agg => {
           const alias = agg.alias || `${agg.function}_${agg.field}`;
-          const values = rows.map(r => Number(r[agg.field])).filter(v => !isNaN(v));
+          // Optimized: Single-pass filtering and conversion instead of map + filter
+          const values = rows.reduce<number[]>((acc, r) => {
+            const num = Number(r[agg.field]);
+            if (!isNaN(num)) acc.push(num);
+            return acc;
+          }, []);
 
           switch (agg.function) {
             case 'sum':
