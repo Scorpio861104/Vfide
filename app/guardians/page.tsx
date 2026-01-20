@@ -525,9 +525,9 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       {/* Guardian Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: 'Total Guardians', value: myGuardians.length, sub: 'Max recommended: 5', icon: Users, color: 'cyan', gradient: 'from-cyan-500/20 to-blue-500/20' },
-          { label: 'Mature Guardians', value: myGuardians.filter(g => g.mature).length, sub: '7+ days active', icon: CheckCircle2, color: 'green', gradient: 'from-green-500/20 to-emerald-500/20' },
-          { label: 'Recovery Threshold', value: `2/${myGuardians.length}`, sub: 'Approvals needed', icon: Shield, color: 'yellow', gradient: 'from-yellow-500/20 to-amber-500/20' },
+          { label: 'Total Guardians', value: myGuardians.length, sub: 'Max recommended: 5', icon: Users, iconColor: 'text-cyan-400', textColor: 'text-cyan-400', gradient: 'from-cyan-500/20 to-blue-500/20' },
+          { label: 'Mature Guardians', value: myGuardians.filter(g => g.mature).length, sub: '7+ days active', icon: CheckCircle2, iconColor: 'text-green-400', textColor: 'text-green-400', gradient: 'from-green-500/20 to-emerald-500/20' },
+          { label: 'Recovery Threshold', value: `2/${myGuardians.length}`, sub: 'Approvals needed', icon: Shield, iconColor: 'text-yellow-400', textColor: 'text-yellow-400', gradient: 'from-yellow-500/20 to-amber-500/20' },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -539,9 +539,9 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-400 text-sm">{stat.label}</span>
-              <stat.icon className={`text-${stat.color}-400`} size={20} />
+              <stat.icon className={stat.iconColor} size={20} />
             </div>
-            <div className={`text-3xl font-bold text-${stat.color}-400`}>{stat.value}</div>
+            <div className={`text-3xl font-bold ${stat.textColor}`}>{stat.value}</div>
             <div className="text-gray-500 text-xs">{stat.sub}</div>
           </motion.div>
         ))}
@@ -1063,11 +1063,11 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
           <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-gradient-to-b from-cyan-500/50 via-yellow-500/50 to-green-500/50" />
           <div className="space-y-6">
             {[
-              { icon: Key, color: "cyan", title: "Recovery Requested", desc: "Owner, guardian, or Next of Kin initiates request" },
-              { icon: Timer, color: "yellow", title: "30-Day Window Opens", desc: "Owner can cancel if fraudulent. Guardians verify identity." },
-              { icon: Users, color: "green", title: "Guardian Approvals", desc: "2/3 mature guardians (7+ days active) must approve" },
-              { icon: CheckCircle2, color: "green", title: "Finalize Recovery", desc: "Anyone can call finalizeRecovery() once threshold met" },
-              { icon: ArrowRightCircle, color: "cyan", title: "Ownership Transferred", desc: "Vault now owned by new address. Full access restored." },
+              { icon: Key, bgColor: "bg-cyan-500/20", borderColor: "border-cyan-500/50", iconColor: "text-cyan-400", title: "Recovery Requested", desc: "Owner, guardian, or Next of Kin initiates request" },
+              { icon: Timer, bgColor: "bg-yellow-500/20", borderColor: "border-yellow-500/50", iconColor: "text-yellow-400", title: "30-Day Window Opens", desc: "Owner can cancel if fraudulent. Guardians verify identity." },
+              { icon: Users, bgColor: "bg-green-500/20", borderColor: "border-green-500/50", iconColor: "text-green-400", title: "Guardian Approvals", desc: "2/3 mature guardians (7+ days active) must approve" },
+              { icon: CheckCircle2, bgColor: "bg-green-500/20", borderColor: "border-green-500/50", iconColor: "text-green-400", title: "Finalize Recovery", desc: "Anyone can call finalizeRecovery() once threshold met" },
+              { icon: ArrowRightCircle, bgColor: "bg-cyan-500/20", borderColor: "border-cyan-500/50", iconColor: "text-cyan-400", title: "Ownership Transferred", desc: "Vault now owned by new address. Full access restored." },
             ].map((step, i) => (
               <motion.div 
                 key={i} 
@@ -1077,9 +1077,9 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                 className="flex gap-4 relative"
               >
                 <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center z-10 shrink-0 bg-${step.color}-500/20 border border-${step.color}-500/50`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center z-10 shrink-0 ${step.bgColor} border ${step.borderColor}`}
                 >
-                  <step.icon size={16} className={`text-${step.color}-400`} />
+                  <step.icon size={16} className={step.iconColor} />
                 </div>
                 <div className="pt-1">
                   <div className="text-white font-bold text-sm">{step.title}</div>
