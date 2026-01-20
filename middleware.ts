@@ -1,12 +1,14 @@
 /**
- * Next.js Middleware for Security Headers and Request Size Limits
+ * Next.js Middleware for Security Headers, Request Size Limits, and Content-Type Validation
  * 
  * This middleware:
  * 1. Adds nonce to CSP headers for inline scripts/styles
  * 2. Enforces request size limits to prevent DoS attacks
+ * 3. Validates Content-Type headers to prevent MIME confusion attacks
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { validateContentType } from './lib/api/contentTypeValidation';
 
 /**
  * Maximum request body sizes by endpoint type
@@ -98,6 +100,12 @@ export function middleware(request: NextRequest) {
           }
         );
       }
+    }
+    
+    // Validate Content-Type for write operations
+    const contentTypeError = validateContentType(request);
+    if (contentTypeError) {
+      return contentTypeError;
     }
   }
   
