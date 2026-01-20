@@ -45,7 +45,7 @@ export function MerchantDashboard() {
   const [autoConvertEnabled, setAutoConvertEnabled] = useState(false)
   const [customPayout, setCustomPayout] = useState('')
   const [showCelebration, setShowCelebration] = useState(false)
-  const { playSuccess, playNotification, playError } = useTransactionSounds()
+  const { playSuccess, playNotification, playError: _playError } = useTransactionSounds()
 
   const categories = [
     'retail', 'services', 'digital_goods', 'food_beverage', 

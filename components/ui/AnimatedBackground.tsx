@@ -96,7 +96,7 @@ export function AnimatedBackground() {
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
-          className="absolute rounded-full bg-[#00F0FF]/30"
+          className="absolute rounded-full bg-cyan-400/30"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,

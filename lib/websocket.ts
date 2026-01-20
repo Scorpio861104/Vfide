@@ -21,7 +21,7 @@ export interface WSMessage {
   from: string;
   to?: string;
   conversationId?: string;
-  data: any;
+  data: unknown;
   timestamp: number;
 }
 
@@ -43,10 +43,20 @@ export interface WSConfig {
  * WebSocket Manager using Socket.IO for real-time messaging
  * Connects to VFIDE WebSocket server with authentication
  */
+/**
+ * Get default chain ID from environment or fallback
+ */
+function getDefaultChainId(): number {
+  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID) {
+    return parseInt(process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID);
+  }
+  return 8453; // Base mainnet
+}
+
 export class WebSocketManager {
   private socket: Socket | null = null;
   private config: WSConfig;
-  private messageHandlers: Map<string, Set<(data: any) => void>> = new Map();
+  private messageHandlers: Map<string, Set<(data: unknown) => void>> = new Map();
   private isConnecting = false;
   private isClosed = false;
 
@@ -84,7 +94,7 @@ export class WebSocketManager {
             signature,
             message,
             address: userAddress,
-            chainId: chainId || 8453, // Default to Base mainnet
+            chainId: chainId || getDefaultChainId(),
           },
           reconnection: true,
           reconnectionAttempts: this.config.maxReconnectAttempts,
@@ -137,7 +147,7 @@ export class WebSocketManager {
   /**
    * Emit event to Socket.IO server
    */
-  emit(event: string, data: any): boolean {
+  emit(event: string, data: unknown): boolean {
     if (!this.socket || !this.socket.connected) {
       console.error('[Socket.IO] Not connected');
       return false;
@@ -165,7 +175,7 @@ export class WebSocketManager {
   /**
    * Subscribe to Socket.IO event
    */
-  on(event: string, handler: (data: any) => void) {
+  on(event: string, handler: (data: unknown) => void) {
     if (!this.socket) {
       console.warn('[Socket.IO] Not initialized');
       return () => {};
@@ -175,7 +185,7 @@ export class WebSocketManager {
       this.messageHandlers.set(event, new Set());
       
       // Register Socket.IO listener
-      this.socket.on(event, (data: any) => {
+      this.socket.on(event, (data: unknown) => {
         const handlers = this.messageHandlers.get(event);
         if (handlers) {
           handlers.forEach(h => h(data));
@@ -183,11 +193,20 @@ export class WebSocketManager {
       });
     }
     
+    // Safe: We just ensured this event exists in the map above
     this.messageHandlers.get(event)!.add(handler);
 
-    // Return unsubscribe function
+    // Return unsubscribe function with proper cleanup
     return () => {
-      this.messageHandlers.get(event)?.delete(handler);
+      const handlers = this.messageHandlers.get(event);
+      if (handlers) {
+        handlers.delete(handler);
+        // If no handlers left, remove the event listener and clean up the map
+        if (handlers.size === 0) {
+          this.socket?.off(event);
+          this.messageHandlers.delete(event);
+        }
+      }
     };
   }
 
@@ -283,7 +302,22 @@ export function useWebSocket(config: WSConfig, userAddress?: string) {
   }, []);
 
   const subscribe = useCallback((type: WSMessageType, handler: (message: WSMessage) => void) => {
-    return wsRef.current?.on(type, handler) || (() => {});
+    // Wrap handler to ensure type safety when receiving unknown data
+    const wrappedHandler = (data: unknown) => {
+      // Type guard: ensure data is a valid WSMessage
+      if (
+        data &&
+        typeof data === 'object' &&
+        'type' in data &&
+        'from' in data &&
+        'timestamp' in data
+      ) {
+        handler(data as WSMessage);
+      } else {
+        console.warn('[useWebSocket] Received invalid message format:', data);
+      }
+    };
+    return wsRef.current?.on(type, wrappedHandler) || (() => {});
   }, []);
 
   const getWebSocket = useCallback(() => wsRef.current, []);

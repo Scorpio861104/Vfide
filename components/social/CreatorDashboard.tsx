@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
-import { TrendingUp, Users, Unlock, Gift, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 /**
  * CreatorDashboard - Comprehensive analytics and earnings management for creators
@@ -17,13 +17,19 @@ function AnimatedNumber({ value, prefix = '', suffix = '', decimals = 0 }: { val
     if (decimals > 0) return latest.toFixed(decimals);
     return Math.round(latest).toLocaleString();
   });
+  const [displayValue, setDisplayValue] = useState('0');
   
   useEffect(() => {
     const controls = animate(count, value, { duration: 1.5, ease: 'easeOut' });
     return controls.stop;
   }, [value, count]);
+
+  useEffect(() => {
+    const unsubscribe = rounded.on('change', (v) => setDisplayValue(v));
+    return unsubscribe;
+  }, [rounded]);
   
-  return <motion.span>{prefix}{rounded}{suffix}</motion.span>;
+  return <motion.span>{prefix}{displayValue}{suffix}</motion.span>;
 }
 
 interface CreatorStats {
@@ -58,7 +64,7 @@ export function CreatorDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [ethPrice] = useState(2500); // Mock ETH price in USD
   const [showClaimCelebration, setShowClaimCelebration] = useState(false);
-  const { playSuccess, playNotification } = useTransactionSounds();
+  const { playSuccess, playNotification: _playNotification } = useTransactionSounds();
 
   useEffect(() => {
     const loadStats = async () => {

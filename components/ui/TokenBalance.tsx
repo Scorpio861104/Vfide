@@ -73,15 +73,15 @@ export function TokenBalance({
   return (
     <div className={`flex items-center gap-3 text-sm ${className}`}>
       {showNative && (
-        <div className="flex items-center gap-1 px-2 py-1 bg-[#2A2A2F] rounded-full">
-          <span className="text-[#A0A0A5]">Ξ</span>
-          <span className="text-[#F5F3E8] font-medium">{formattedEth}</span>
+        <div className="flex items-center gap-1 px-2 py-1 bg-zinc-800 rounded-full">
+          <span className="text-zinc-400">Ξ</span>
+          <span className="text-zinc-100 font-medium">{formattedEth}</span>
         </div>
       )}
       {showToken && TOKEN_ADDRESS && TOKEN_ADDRESS !== '0x' && (
-        <div className="flex items-center gap-1 px-2 py-1 bg-linear-to-r from-[#00F0FF]/10 to-[#0080FF]/10 border border-[#00F0FF]/30 rounded-full">
-          <span className="text-[#00F0FF]">V</span>
-          <span className="text-[#F5F3E8] font-medium">{formattedToken}</span>
+        <div className="flex items-center gap-1 px-2 py-1 bg-linear-to-r from-cyan-400/10 to-blue-500/10 border border-cyan-400/30 rounded-full">
+          <span className="text-cyan-400">V</span>
+          <span className="text-zinc-100 font-medium">{formattedToken}</span>
         </div>
       )}
     </div>

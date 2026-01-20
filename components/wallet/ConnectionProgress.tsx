@@ -35,7 +35,7 @@ export function ConnectionProgress({
 }) {
   const { isConnecting, isReconnecting, isConnected } = useAccount();
   const [step, setStep] = useState<ConnectionStep>('idle');
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [_showSuccess, setShowSuccess] = useState(false);
 
   // Track connection state changes
   useEffect(() => {

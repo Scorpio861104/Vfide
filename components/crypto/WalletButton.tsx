@@ -101,7 +101,7 @@ export function WalletButtonCompact() {
                   }}
                   type="button"
                   aria-label="Open account menu"
-                  className="flex items-center gap-2 px-3 py-1.5 bg-[#1A1A1F] border border-[#2A2A2F] hover:border-blue-500/50 text-white text-sm rounded-lg transition-colors cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 text-white text-sm rounded-lg transition-colors cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                 >
                   {account.displayName}
                 </button>

@@ -18,9 +18,9 @@ interface EnhancedProgressBarProps {
 
 const colorStyles = {
   cyan: {
-    bg: "bg-[#00F0FF]/20",
-    fill: "bg-[#00F0FF]",
-    gradient: "bg-linear-to-r from-[#00F0FF] to-[#0080FF]",
+    bg: "bg-cyan-400/20",
+    fill: "bg-cyan-400",
+    gradient: "bg-linear-to-r from-cyan-400 to-blue-500",
     glow: "shadow-[0_0_20px_rgba(0,240,255,0.5)]",
   },
   green: {
@@ -68,12 +68,12 @@ export function EnhancedProgressBar({
       {(label || showValue) && (
         <div className="flex items-center justify-between mb-2">
           {label && (
-            <span className="text-sm font-medium text-[#A8A8B3]">
+            <span className="text-sm font-medium text-zinc-400">
               {label}
             </span>
           )}
           {showValue && (
-            <span className="text-sm font-semibold text-[#F8F8FC]">
+            <span className="text-sm font-semibold text-zinc-50">
               {value}/{max}
             </span>
           )}
@@ -184,12 +184,12 @@ export function CircularProgress({
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {showValue && (
-          <span className="text-2xl font-bold text-[#F8F8FC]">
+          <span className="text-2xl font-bold text-zinc-50">
             {Math.round(percentage)}%
           </span>
         )}
         {label && (
-          <span className="text-xs text-[#8A8A8F] mt-1">
+          <span className="text-xs text-zinc-400 mt-1">
             {label}
           </span>
         )}
@@ -236,14 +236,14 @@ export function StepProgress({
                     font-semibold text-sm transition-all duration-300
                     ${isCompleted || isCurrent
                       ? `${colors.fill} text-white ${colors.glow}`
-                      : "bg-[#1F1F2A] text-[#8A8A8F]"
+                      : "bg-zinc-900 text-zinc-400"
                     }
                   `}
                 >
                   {isCompleted ? "✓" : stepNumber}
                 </div>
                 {labels?.[i] && (
-                  <span className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-[#A8A8B3]">
+                  <span className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-zinc-400">
                     {labels[i]}
                   </span>
                 )}
@@ -251,7 +251,7 @@ export function StepProgress({
 
               {/* Connector line */}
               {i < totalSteps - 1 && (
-                <div className="flex-1 h-1 mx-2 bg-[#1F1F2A] rounded-full overflow-hidden">
+                <div className="flex-1 h-1 mx-2 bg-zinc-900 rounded-full overflow-hidden">
                   <motion.div
                     className={colors.fill}
                     initial={{ width: 0 }}

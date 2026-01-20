@@ -90,7 +90,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="min-h-screen bg-[#0D0D0F] flex items-center justify-center px-4">
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
           <div className="max-w-md w-full">
             <div className="bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
               {/* Error Icon */}

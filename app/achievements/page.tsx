@@ -24,15 +24,15 @@ export default function AchievementsPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-linear-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-2xl p-8 md:p-12 text-center"
+                className="bg-linear-to-br from-zinc-900 to-zinc-950 border border-zinc-700 rounded-2xl p-8 md:p-12 text-center"
               >
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-linear-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center">
-                  <Trophy className="w-10 h-10 text-[#0A0A0F]" />
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                  <Trophy className="w-10 h-10 text-zinc-950" />
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-[#F5F3E8] mb-4">
+                <h2 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">
                   View Your Achievements
                 </h2>
-                <p className="text-lg text-[#A0A0A5] mb-8 max-w-2xl mx-auto">
+                <p className="text-lg text-zinc-400 mb-8 max-w-2xl mx-auto">
                   Connect your wallet to track your progress, unlock achievements, and level up in the VFIDE ecosystem.
                 </p>
                 <div className="flex justify-center">
@@ -60,12 +60,12 @@ export default function AchievementsPage() {
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl md:text-5xl font-bold text-[#F5F3E8] mb-2 md:mb-3 flex items-center gap-2 md:gap-3">
-                    <Trophy className="w-8 h-8 md:w-10 md:h-10 text-[#FFD700]" />
+                  <h1 className="text-3xl md:text-5xl font-bold text-zinc-100 mb-2 md:mb-3 flex items-center gap-2 md:gap-3">
+                    <Trophy className="w-8 h-8 md:w-10 md:h-10 text-amber-400" />
                     Achievements
                   </h1>
-                  <p className="text-[#A0A0A5] text-sm md:text-lg flex items-center gap-2">
-                    <Zap className="w-3 h-3 md:w-4 md:h-4 text-[#00F0FF]" />
+                  <p className="text-zinc-400 text-sm md:text-lg flex items-center gap-2">
+                    <Zap className="w-3 h-3 md:w-4 md:h-4 text-cyan-400" />
                     Track your progress and unlock rewards
                   </p>
                 </div>
@@ -78,8 +78,8 @@ export default function AchievementsPage() {
                 onClick={() => setActiveTab('achievements')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                   activeTab === 'achievements'
-                    ? 'bg-linear-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F]'
-                    : 'bg-[#1A1A2E] text-[#A0A0A5] hover:text-[#F5F3E8]'
+                    ? 'bg-linear-to-r from-cyan-400 to-violet-400 text-zinc-950'
+                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
                 }`}
               >
                 <Trophy className="w-4 h-4 inline mr-2" />
@@ -89,8 +89,8 @@ export default function AchievementsPage() {
                 onClick={() => setActiveTab('stats')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                   activeTab === 'stats'
-                    ? 'bg-linear-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F]'
-                    : 'bg-[#1A1A2E] text-[#A0A0A5] hover:text-[#F5F3E8]'
+                    ? 'bg-linear-to-r from-cyan-400 to-violet-400 text-zinc-950'
+                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
                 }`}
               >
                 <TrendingUp className="w-4 h-4 inline mr-2" />
@@ -109,33 +109,33 @@ export default function AchievementsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="mt-4 bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-4"
+                    className="mt-4 bg-zinc-900 border border-zinc-700 rounded-xl p-4"
                   >
-                    <h3 className="text-lg font-bold text-[#F5F3E8] mb-4">Activity Stats</h3>
+                    <h3 className="text-lg font-bold text-zinc-100 mb-4">Activity Stats</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-[#A0A0A5]">Messages Sent</span>
-                        <span className="text-sm font-bold text-[#F5F3E8]">{progress.stats.messagesSent}</span>
+                        <span className="text-sm text-zinc-400">Messages Sent</span>
+                        <span className="text-sm font-bold text-zinc-100">{progress.stats.messagesSent}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-[#A0A0A5]">Friends Added</span>
-                        <span className="text-sm font-bold text-[#F5F3E8]">{progress.stats.friendsAdded}</span>
+                        <span className="text-sm text-zinc-400">Friends Added</span>
+                        <span className="text-sm font-bold text-zinc-100">{progress.stats.friendsAdded}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-[#A0A0A5]">Groups Created</span>
-                        <span className="text-sm font-bold text-[#F5F3E8]">{progress.stats.groupsCreated}</span>
+                        <span className="text-sm text-zinc-400">Groups Created</span>
+                        <span className="text-sm font-bold text-zinc-100">{progress.stats.groupsCreated}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-[#A0A0A5]">Payments Sent</span>
-                        <span className="text-sm font-bold text-[#F5F3E8]">{progress.stats.paymentsSent}</span>
+                        <span className="text-sm text-zinc-400">Payments Sent</span>
+                        <span className="text-sm font-bold text-zinc-100">{progress.stats.paymentsSent}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-[#A0A0A5]">Days Active</span>
-                        <span className="text-sm font-bold text-[#F5F3E8]">{progress.stats.daysActive}</span>
+                        <span className="text-sm text-zinc-400">Days Active</span>
+                        <span className="text-sm font-bold text-zinc-100">{progress.stats.daysActive}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-[#A0A0A5]">Longest Streak</span>
-                        <span className="text-sm font-bold text-[#FF8C42]">{progress.stats.longestStreak}🔥</span>
+                        <span className="text-sm text-zinc-400">Longest Streak</span>
+                        <span className="text-sm font-bold text-orange-400">{progress.stats.longestStreak}🔥</span>
                       </div>
                     </div>
                   </motion.div>
@@ -159,20 +159,20 @@ export default function AchievementsPage() {
                     animate={{ opacity: 1 }}
                     className="space-y-4"
                   >
-                    <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-6">
-                      <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Your Progress</h3>
+                    <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6">
+                      <h3 className="text-xl font-bold text-zinc-100 mb-6">Your Progress</h3>
                       
                       {/* Level Progress */}
                       <div className="mb-6">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-[#A0A0A5]">Level Progress</span>
-                          <span className="text-sm font-semibold text-[#00F0FF]">
+                          <span className="text-sm text-zinc-400">Level Progress</span>
+                          <span className="text-sm font-semibold text-cyan-400">
                             Level {progress.level}
                           </span>
                         </div>
-                        <div className="h-3 bg-[#0A0A0F] rounded-full overflow-hidden">
+                        <div className="h-3 bg-zinc-950 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-linear-to-r from-[#00F0FF] to-[#A78BFA]"
+                            className="h-full bg-linear-to-r from-cyan-400 to-violet-400"
                             style={{ width: `${progress.xpToNextLevel > 0 ? ((progress.xp / (progress.xp + progress.xpToNextLevel)) * 100) : 100}%` }}
                           />
                         </div>
@@ -181,14 +181,14 @@ export default function AchievementsPage() {
                       {/* Achievement Completion */}
                       <div className="mb-6">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-[#A0A0A5]">Achievements</span>
-                          <span className="text-sm font-semibold text-[#FFD700]">
+                          <span className="text-sm text-zinc-400">Achievements</span>
+                          <span className="text-sm font-semibold text-amber-400">
                             {progress.achievements.length}/{Object.keys(ACHIEVEMENTS).length}
                           </span>
                         </div>
-                        <div className="h-3 bg-[#0A0A0F] rounded-full overflow-hidden">
+                        <div className="h-3 bg-zinc-950 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-linear-to-r from-[#FFD700] to-[#FFA500]"
+                            className="h-full bg-linear-to-r from-amber-400 to-orange-500"
                             style={{ width: `${(progress.achievements.length / Object.keys(ACHIEVEMENTS).length) * 100}%` }}
                           />
                         </div>
@@ -196,7 +196,7 @@ export default function AchievementsPage() {
 
                       {/* Category Breakdown */}
                       <div>
-                        <h4 className="text-sm font-semibold text-[#F5F3E8] mb-3">Category Breakdown</h4>
+                        <h4 className="text-sm font-semibold text-zinc-100 mb-3">Category Breakdown</h4>
                         <div className="space-y-2">
                           {['social', 'vault', 'engagement', 'milestone'].map(category => {
                             const categoryAchievements = Object.values(ACHIEVEMENTS).filter(a => a.category === category);
@@ -204,8 +204,8 @@ export default function AchievementsPage() {
                             
                             return (
                               <div key={category} className="flex items-center justify-between">
-                                <span className="text-sm text-[#A0A0A5] capitalize">{category}</span>
-                                <span className="text-sm text-[#F5F3E8]">
+                                <span className="text-sm text-zinc-400 capitalize">{category}</span>
+                                <span className="text-sm text-zinc-100">
                                   {unlocked}/{categoryAchievements.length}
                                 </span>
                               </div>

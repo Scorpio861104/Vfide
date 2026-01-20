@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
  * Health check endpoint for the frontend application
@@ -11,7 +12,11 @@ import { NextResponse } from 'next/server';
  * 
  * Returns basic application status and version information
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   const healthData = {
     status: 'ok',
     timestamp: new Date().toISOString(),

@@ -24,9 +24,7 @@ import {
   Search,
   ChevronRight,
   Check,
-  CheckCheck,
-  Trash2,
-  ExternalLink
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
@@ -171,8 +169,8 @@ function isInQuietHours(prefs: NotificationPreferences): boolean {
   
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
-  const [startH, startM] = prefs.quietHours.start.split(':').map(Number);
-  const [endH, endM] = prefs.quietHours.end.split(':').map(Number);
+  const [startH = 0, startM = 0] = prefs.quietHours.start.split(':').map(Number);
+  const [endH = 0, endM = 0] = prefs.quietHours.end.split(':').map(Number);
   const startTime = startH * 60 + startM;
   const endTime = endH * 60 + endM;
 
@@ -228,8 +226,8 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
       {/* Content */}
       <motion.div style={{ x: swipeX }}>
         <div
-          className={`relative p-4 border-b border-[#3A3A3F] hover:bg-[#3A3A3F]/50 transition-colors ${
-            !notification.read ? 'bg-[#00F0FF]/5' : ''
+          className={`relative p-4 border-b border-zinc-700 hover:bg-zinc-700/50 transition-colors ${
+            !notification.read ? 'bg-cyan-400/5' : ''
           }`}
         >
           {/* Priority indicator */}
@@ -251,11 +249,11 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
-                <span className={`font-bold text-sm text-[#F5F3E8] ${!notification.read ? 'font-extrabold' : ''}`}>
+                <span className={`font-bold text-sm text-zinc-100 ${!notification.read ? 'font-extrabold' : ''}`}>
                   {notification.title}
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-[#A0A0A5]">
+                  <span className="text-xs text-zinc-400">
                     {formatTimeAgo(notification.timestamp)}
                   </span>
                   {!notification.read && (
@@ -263,7 +261,7 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
                   )}
                 </div>
               </div>
-              <p className="text-xs text-[#A0A0A5] mt-0.5 line-clamp-1">
+              <p className="text-xs text-zinc-400 mt-0.5 line-clamp-1">
                 {notification.message}
               </p>
               
@@ -278,21 +276,21 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
           <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => { e.stopPropagation(); onSnooze(); }}
-              className="p-1.5 hover:bg-white/10 rounded-lg text-[#A0A0A5] hover:text-white transition-colors"
+              className="p-1.5 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
               title="Snooze"
             >
               <Clock size={12} />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onArchive(); }}
-              className="p-1.5 hover:bg-white/10 rounded-lg text-[#A0A0A5] hover:text-white transition-colors"
+              className="p-1.5 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
               title="Archive"
             >
               <Archive size={12} />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onArchive(); }}
-              className="p-1.5 hover:bg-white/10 rounded-lg text-[#A0A0A5] hover:text-[#FF6B6B] transition-colors"
+              className="p-1.5 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-red-400 transition-colors"
               title="Dismiss"
             >
               <X size={12} />
@@ -316,37 +314,37 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
     <div className="p-4 space-y-4">
       <div className="space-y-3">
         <label className="flex items-center justify-between">
-          <span className="text-sm text-[#F5F3E8]">Sound</span>
+          <span className="text-sm text-zinc-100">Sound</span>
           <input
             type="checkbox"
             checked={prefs.sound}
             onChange={(e) => onUpdate({ ...prefs, sound: e.target.checked })}
-            className="w-5 h-5 rounded bg-[#3A3A3F] border-[#4A4A4F] text-cyan-500 focus:ring-cyan-500/50"
+            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
           />
         </label>
         <label className="flex items-center justify-between">
-          <span className="text-sm text-[#F5F3E8]">Desktop notifications</span>
+          <span className="text-sm text-zinc-100">Desktop notifications</span>
           <input
             type="checkbox"
             checked={prefs.desktop}
             onChange={(e) => onUpdate({ ...prefs, desktop: e.target.checked })}
-            className="w-5 h-5 rounded bg-[#3A3A3F] border-[#4A4A4F] text-cyan-500 focus:ring-cyan-500/50"
+            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
           />
         </label>
         <label className="flex items-center justify-between">
-          <span className="text-sm text-[#F5F3E8]">Vibrate (mobile)</span>
+          <span className="text-sm text-zinc-100">Vibrate (mobile)</span>
           <input
             type="checkbox"
             checked={prefs.vibrate}
             onChange={(e) => onUpdate({ ...prefs, vibrate: e.target.checked })}
-            className="w-5 h-5 rounded bg-[#3A3A3F] border-[#4A4A4F] text-cyan-500 focus:ring-cyan-500/50"
+            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
           />
         </label>
       </div>
 
-      <div className="pt-3 border-t border-[#3A3A3F]">
+      <div className="pt-3 border-t border-zinc-700">
         <label className="flex items-center justify-between mb-3">
-          <span className="text-sm text-[#F5F3E8]">Quiet hours</span>
+          <span className="text-sm text-zinc-100">Quiet hours</span>
           <input
             type="checkbox"
             checked={prefs.quietHours.enabled}
@@ -354,7 +352,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
               ...prefs, 
               quietHours: { ...prefs.quietHours, enabled: e.target.checked }
             })}
-            className="w-5 h-5 rounded bg-[#3A3A3F] border-[#4A4A4F] text-cyan-500 focus:ring-cyan-500/50"
+            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
           />
         </label>
         {prefs.quietHours.enabled && (
@@ -366,9 +364,9 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
                 ...prefs,
                 quietHours: { ...prefs.quietHours, start: e.target.value }
               })}
-              className="flex-1 px-2 py-1 bg-[#3A3A3F] border border-[#4A4A4F] rounded text-sm text-white"
+              className="flex-1 px-2 py-1 bg-zinc-700 border border-zinc-700 rounded text-sm text-white"
             />
-            <span className="text-[#A0A0A5]">to</span>
+            <span className="text-zinc-400">to</span>
             <input
               type="time"
               value={prefs.quietHours.end}
@@ -376,18 +374,18 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
                 ...prefs,
                 quietHours: { ...prefs.quietHours, end: e.target.value }
               })}
-              className="flex-1 px-2 py-1 bg-[#3A3A3F] border border-[#4A4A4F] rounded text-sm text-white"
+              className="flex-1 px-2 py-1 bg-zinc-700 border border-zinc-700 rounded text-sm text-white"
             />
           </div>
         )}
       </div>
 
-      <div className="pt-3 border-t border-[#3A3A3F]">
-        <label className="text-sm text-[#F5F3E8] mb-2 block">Snooze duration</label>
+      <div className="pt-3 border-t border-zinc-700">
+        <label className="text-sm text-zinc-100 mb-2 block">Snooze duration</label>
         <select
           value={prefs.snoozeMinutes}
           onChange={(e) => onUpdate({ ...prefs, snoozeMinutes: Number(e.target.value) })}
-          className="w-full px-3 py-2 bg-[#3A3A3F] border border-[#4A4A4F] rounded-lg text-sm text-white"
+          className="w-full px-3 py-2 bg-zinc-700 border border-zinc-700 rounded-lg text-sm text-white"
         >
           <option value={15}>15 minutes</option>
           <option value={30}>30 minutes</option>
@@ -397,10 +395,10 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
         </select>
       </div>
 
-      <div className="pt-3 border-t border-[#3A3A3F]">
-        <p className="text-xs text-[#A0A0A5]">
+      <div className="pt-3 border-t border-zinc-700">
+        <p className="text-xs text-zinc-400">
           <strong className="text-white">Tip:</strong> Swipe right to mark as read, swipe left to archive.
-          Press <kbd className="px-1 py-0.5 bg-[#3A3A3F] rounded text-[10px]">⌘R</kbd> to mark all as read.
+          Press <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-[10px]">⌘R</kbd> to mark all as read.
         </p>
       </div>
     </div>
@@ -422,7 +420,7 @@ export function NotificationCenter() {
     snoozeMinutes: 30,
   });
 
-  const { playSound } = useTransactionSounds();
+  const { play: playSound } = useTransactionSounds();
 
   // Load preferences
   useEffect(() => {
@@ -512,7 +510,7 @@ export function NotificationCenter() {
       {/* Bell Button with enhanced badge */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/50 rounded-lg"
+        className="relative p-2 text-zinc-400 hover:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/50 rounded-lg"
         aria-label="Notifications"
       >
         <Bell size={20} />
@@ -521,7 +519,7 @@ export function NotificationCenter() {
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+              className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-linear-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </motion.span>
@@ -550,12 +548,12 @@ export function NotificationCenter() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              className="fixed sm:absolute right-3 sm:right-0 top-14 sm:top-full mt-2 w-[calc(100vw-1.5rem)] sm:w-96 max-w-md max-h-[80vh] overflow-hidden bg-[#1A1A1F]/95 backdrop-blur-xl border border-[#3A3A3F] rounded-2xl shadow-2xl z-50"
+              className="fixed sm:absolute right-3 sm:right-0 top-14 sm:top-full mt-2 w-[calc(100vw-1.5rem)] sm:w-96 max-w-md max-h-[80vh] overflow-hidden bg-zinc-900/95 backdrop-blur-xl border border-zinc-700 rounded-2xl shadow-2xl z-50"
             >
               {/* Header */}
-              <div className="px-4 py-3 border-b border-[#3A3A3F]">
+              <div className="px-4 py-3 border-b border-zinc-700">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-[#F5F3E8] flex items-center gap-2">
+                  <h3 className="font-bold text-zinc-100 flex items-center gap-2">
                     <Bell size={18} className="text-cyan-400" />
                     Notifications
                     {unreadCount > 0 && (
@@ -568,7 +566,7 @@ export function NotificationCenter() {
                     <button
                       onClick={() => setPrefs(p => ({ ...p, sound: !p.sound }))}
                       className={`p-2 rounded-lg transition-colors ${
-                        prefs.sound ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-[#A0A0A5]'
+                        prefs.sound ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-zinc-400'
                       }`}
                       title={prefs.sound ? 'Mute sounds' : 'Enable sounds'}
                     >
@@ -577,7 +575,7 @@ export function NotificationCenter() {
                     <button
                       onClick={() => setActiveTab(activeTab === 'settings' ? 'all' : 'settings')}
                       className={`p-2 rounded-lg transition-colors ${
-                        activeTab === 'settings' ? 'bg-white/10 text-white' : 'bg-white/5 text-[#A0A0A5]'
+                        activeTab === 'settings' ? 'bg-white/10 text-white' : 'bg-white/5 text-zinc-400'
                       }`}
                       title="Settings"
                     >
@@ -585,7 +583,7 @@ export function NotificationCenter() {
                     </button>
                     <button
                       onClick={() => setIsOpen(false)}
-                      className="p-2 hover:bg-white/10 rounded-lg text-[#A0A0A5] transition-colors"
+                      className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 transition-colors"
                     >
                       <X size={14} />
                     </button>
@@ -601,7 +599,7 @@ export function NotificationCenter() {
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                           activeTab === 'all' 
                             ? 'bg-white/10 text-white' 
-                            : 'text-[#A0A0A5] hover:text-white'
+                            : 'text-zinc-400 hover:text-white'
                         }`}
                       >
                         All
@@ -611,7 +609,7 @@ export function NotificationCenter() {
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
                           activeTab === 'unread' 
                             ? 'bg-white/10 text-white' 
-                            : 'text-[#A0A0A5] hover:text-white'
+                            : 'text-zinc-400 hover:text-white'
                         }`}
                       >
                         Unread
@@ -632,13 +630,13 @@ export function NotificationCenter() {
 
                     {/* Search */}
                     <div className="relative">
-                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A0A0A5]" />
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search notifications..."
-                        className="w-full pl-9 pr-3 py-2 bg-white/5 border border-[#3A3A3F] rounded-lg text-sm text-white placeholder-[#A0A0A5] focus:outline-none focus:border-cyan-500/50"
+                        className="w-full pl-9 pr-3 py-2 bg-white/5 border border-zinc-700 rounded-lg text-sm text-white placeholder-[#A0A0A5] focus:outline-none focus:border-cyan-500/50"
                       />
                     </div>
                   </>
@@ -652,9 +650,9 @@ export function NotificationCenter() {
                 ) : filteredNotifications.length === 0 ? (
                   <div className="p-8 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/5 flex items-center justify-center">
-                      <BellOff size={24} className="text-[#A0A0A5]" />
+                      <BellOff size={24} className="text-zinc-400" />
                     </div>
-                    <p className="text-[#A0A0A5] text-sm">
+                    <p className="text-zinc-400 text-sm">
                       {activeTab === 'unread' ? 'All caught up! 🎉' : 'No notifications yet'}
                     </p>
                   </div>
@@ -673,7 +671,7 @@ export function NotificationCenter() {
               </div>
 
               {/* Footer */}
-              <div className="px-4 py-3 border-t border-[#3A3A3F] flex items-center justify-between">
+              <div className="px-4 py-3 border-t border-zinc-700 flex items-center justify-between">
                 <Link
                   href="/notifications"
                   onClick={() => setIsOpen(false)}
@@ -684,7 +682,7 @@ export function NotificationCenter() {
                 </Link>
                 <button
                   onClick={clearArchived}
-                  className="text-xs text-[#A0A0A5] hover:text-red-400 transition-colors flex items-center gap-1"
+                  className="text-xs text-zinc-400 hover:text-red-400 transition-colors flex items-center gap-1"
                 >
                   <Trash2 size={12} />
                   Clear archived

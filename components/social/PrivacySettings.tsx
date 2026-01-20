@@ -99,11 +99,11 @@ export function PrivacySettings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[#F5F3E8] flex items-center gap-2">
-            <Shield className="w-6 h-6 text-[#00F0FF]" />
+          <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
+            <Shield className="w-6 h-6 text-cyan-400" />
             Privacy & Safety
           </h2>
-          <p className="text-sm text-[#A0A0A5] mt-1">
+          <p className="text-sm text-zinc-400 mt-1">
             Control who can contact you and see your activity
           </p>
         </div>
@@ -111,8 +111,8 @@ export function PrivacySettings() {
           onClick={saveSettings}
           className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
             saved
-              ? 'bg-[#50C878] text-[#0A0A0F]'
-              : 'bg-[#00F0FF] text-[#0A0A0F] hover:bg-[#00D5E0]'
+              ? 'bg-emerald-500 text-zinc-950'
+              : 'bg-cyan-400 text-zinc-950 hover:bg-cyan-400'
           }`}
         >
           {saved ? (
@@ -129,9 +129,9 @@ export function PrivacySettings() {
       {/* Settings Sections */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Message Privacy */}
-        <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6">
-          <h3 className="text-lg font-bold text-[#F5F3E8] mb-4 flex items-center gap-2">
-            <MessageCircle className="w-5 h-5 text-[#00F0FF]" />
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-6">
+          <h3 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
+            <MessageCircle className="w-5 h-5 text-cyan-400" />
             Who Can Message You
           </h3>
 
@@ -145,8 +145,8 @@ export function PrivacySettings() {
                 key={option.value}
                 className={`block p-3 rounded-lg border cursor-pointer transition-all ${
                   settings.allowMessagesFrom === option.value
-                    ? 'bg-[#00F0FF]/10 border-[#00F0FF]/50'
-                    : 'bg-[#0A0A0F] border-[#2A2A2F] hover:border-[#3A3A4F]'
+                    ? 'bg-cyan-400/10 border-cyan-400/50'
+                    : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                 }`}
               >
                 <input
@@ -159,11 +159,11 @@ export function PrivacySettings() {
                 />
                 <div className="flex items-start gap-3">
                   <option.icon className={`w-5 h-5 mt-0.5 ${
-                    settings.allowMessagesFrom === option.value ? 'text-[#00F0FF]' : 'text-[#6B6B78]'
+                    settings.allowMessagesFrom === option.value ? 'text-cyan-400' : 'text-zinc-500'
                   }`} />
                   <div className="flex-1">
-                    <div className="font-semibold text-[#F5F3E8] text-sm">{option.label}</div>
-                    <div className="text-xs text-[#6B6B78]">{option.desc}</div>
+                    <div className="font-semibold text-zinc-100 text-sm">{option.label}</div>
+                    <div className="text-xs text-zinc-500">{option.desc}</div>
                   </div>
                 </div>
               </label>
@@ -172,9 +172,9 @@ export function PrivacySettings() {
         </div>
 
         {/* Friend Request Privacy */}
-        <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6">
-          <h3 className="text-lg font-bold text-[#F5F3E8] mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#A78BFA]" />
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-6">
+          <h3 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-violet-400" />
             Who Can Send Friend Requests
           </h3>
 
@@ -188,8 +188,8 @@ export function PrivacySettings() {
                 key={option.value}
                 className={`block p-3 rounded-lg border cursor-pointer transition-all ${
                   settings.allowFriendRequestsFrom === option.value
-                    ? 'bg-[#A78BFA]/10 border-[#A78BFA]/50'
-                    : 'bg-[#0A0A0F] border-[#2A2A2F] hover:border-[#3A3A4F]'
+                    ? 'bg-violet-400/10 border-violet-400/50'
+                    : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                 }`}
               >
                 <input
@@ -202,11 +202,11 @@ export function PrivacySettings() {
                 />
                 <div className="flex items-start gap-3">
                   <option.icon className={`w-5 h-5 mt-0.5 ${
-                    settings.allowFriendRequestsFrom === option.value ? 'text-[#A78BFA]' : 'text-[#6B6B78]'
+                    settings.allowFriendRequestsFrom === option.value ? 'text-violet-400' : 'text-zinc-500'
                   }`} />
                   <div className="flex-1">
-                    <div className="font-semibold text-[#F5F3E8] text-sm">{option.label}</div>
-                    <div className="text-xs text-[#6B6B78]">{option.desc}</div>
+                    <div className="font-semibold text-zinc-100 text-sm">{option.label}</div>
+                    <div className="text-xs text-zinc-500">{option.desc}</div>
                   </div>
                 </div>
               </label>
@@ -215,9 +215,9 @@ export function PrivacySettings() {
         </div>
 
         {/* Online Status */}
-        <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6">
-          <h3 className="text-lg font-bold text-[#F5F3E8] mb-4 flex items-center gap-2">
-            <Eye className="w-5 h-5 text-[#50C878]" />
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-6">
+          <h3 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
+            <Eye className="w-5 h-5 text-emerald-500" />
             Online Status Visibility
           </h3>
 
@@ -231,8 +231,8 @@ export function PrivacySettings() {
                 key={option.value}
                 className={`block p-3 rounded-lg border cursor-pointer transition-all ${
                   settings.showOnlineStatus === option.value
-                    ? 'bg-[#50C878]/10 border-[#50C878]/50'
-                    : 'bg-[#0A0A0F] border-[#2A2A2F] hover:border-[#3A3A4F]'
+                    ? 'bg-emerald-500/10 border-emerald-500/50'
+                    : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                 }`}
               >
                 <input
@@ -245,9 +245,9 @@ export function PrivacySettings() {
                 />
                 <div className="flex items-center gap-3">
                   <option.icon className={`w-5 h-5 ${
-                    settings.showOnlineStatus === option.value ? 'text-[#50C878]' : 'text-[#6B6B78]'
+                    settings.showOnlineStatus === option.value ? 'text-emerald-500' : 'text-zinc-500'
                   }`} />
-                  <div className="font-semibold text-[#F5F3E8] text-sm">{option.label}</div>
+                  <div className="font-semibold text-zinc-100 text-sm">{option.label}</div>
                 </div>
               </label>
             ))}
@@ -255,9 +255,9 @@ export function PrivacySettings() {
         </div>
 
         {/* ProofScore Requirements */}
-        <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6">
-          <h3 className="text-lg font-bold text-[#F5F3E8] mb-4 flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[#FFD700]" />
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-6">
+          <h3 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-amber-400" />
             Trust Requirements
           </h3>
 
@@ -267,20 +267,20 @@ export function PrivacySettings() {
                 type="checkbox"
                 checked={settings.requireProofScoreForRequests}
                 onChange={(e) => setSettings({ ...settings, requireProofScoreForRequests: e.target.checked })}
-                className="mt-1 w-4 h-4 rounded border-[#3A3A4F] bg-[#0A0A0F] text-[#00F0FF] focus:ring-[#00F0FF] focus:ring-offset-0"
+                className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-0"
               />
               <div>
-                <div className="text-sm font-semibold text-[#F5F3E8]">
+                <div className="text-sm font-semibold text-zinc-100">
                   Require Minimum ProofScore
                 </div>
-                <div className="text-xs text-[#6B6B78]">
+                <div className="text-xs text-zinc-500">
                   Only allow requests from users with sufficient trust
                 </div>
               </div>
             </label>
 
             <div>
-              <label className="text-sm text-[#A0A0A5] mb-2 block">
+              <label className="text-sm text-zinc-400 mb-2 block">
                 Minimum ProofScore: {(settings.minimumProofScoreForRequests / 100).toFixed(0)}%
               </label>
               <input
@@ -300,13 +300,13 @@ export function PrivacySettings() {
                 type="checkbox"
                 checked={settings.autoRejectLowTrust}
                 onChange={(e) => setSettings({ ...settings, autoRejectLowTrust: e.target.checked })}
-                className="mt-1 w-4 h-4 rounded border-[#3A3A4F] bg-[#0A0A0F] text-[#00F0FF] focus:ring-[#00F0FF] focus:ring-offset-0"
+                className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-0"
               />
               <div>
-                <div className="text-sm font-semibold text-[#F5F3E8]">
+                <div className="text-sm font-semibold text-zinc-100">
                   Auto-Reject Low Trust
                 </div>
-                <div className="text-xs text-[#6B6B78]">
+                <div className="text-xs text-zinc-500">
                   Automatically reject requests below threshold
                 </div>
               </div>
@@ -316,9 +316,9 @@ export function PrivacySettings() {
       </div>
 
       {/* Blocked Users */}
-      <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6">
-        <h3 className="text-lg font-bold text-[#F5F3E8] mb-4 flex items-center gap-2">
-          <UserX className="w-5 h-5 text-[#FF6B9D]" />
+      <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-6">
+        <h3 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
+          <UserX className="w-5 h-5 text-pink-400" />
           Blocked Users ({blockedUsers.length})
         </h3>
 
@@ -330,12 +330,12 @@ export function PrivacySettings() {
               placeholder="Wallet address to block (0x...)"
               value={blockAddress}
               onChange={(e) => setBlockAddress(e.target.value)}
-              className="flex-1 px-3 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] text-sm focus:border-[#FF6B9D] focus:outline-none"
+              className="flex-1 px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-pink-400 focus:outline-none"
             />
             <button
               onClick={handleBlockUser}
               disabled={!blockAddress}
-              className="px-4 py-2 bg-[#FF6B9D] text-[#0A0A0F] rounded-lg font-semibold text-sm hover:bg-[#FF5A8D] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-pink-400 text-zinc-950 rounded-lg font-semibold text-sm hover:bg-pink-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Block
             </button>
@@ -343,7 +343,7 @@ export function PrivacySettings() {
 
           {/* Blocked list */}
           {blockedUsers.length === 0 ? (
-            <p className="text-sm text-[#6B6B78] text-center py-4">
+            <p className="text-sm text-zinc-500 text-center py-4">
               No blocked users
             </p>
           ) : (
@@ -351,19 +351,19 @@ export function PrivacySettings() {
               {blockedUsers.map((user) => (
                 <div
                   key={user.address}
-                  className="flex items-center justify-between p-3 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]"
+                  className="flex items-center justify-between p-3 bg-zinc-950 rounded-lg border border-zinc-800"
                 >
                   <div>
-                    <div className="text-sm font-medium text-[#F5F3E8]">
+                    <div className="text-sm font-medium text-zinc-100">
                       {formatAddress(user.address)}
                     </div>
-                    <div className="text-xs text-[#6B6B78]">
+                    <div className="text-xs text-zinc-500">
                       Blocked {new Date(user.blockedAt).toLocaleDateString()}
                     </div>
                   </div>
                   <button
                     onClick={() => handleUnblock(user.address)}
-                    className="px-3 py-1 text-sm text-[#00F0FF] hover:text-[#00D5E0] transition-colors"
+                    className="px-3 py-1 text-sm text-cyan-400 hover:text-cyan-400 transition-colors"
                   >
                     Unblock
                   </button>

@@ -30,8 +30,8 @@ const variantStyles = {
     button: 'primary' as const,
   },
   info: {
-    icon: <AlertTriangle className="text-[#00F0FF]" size={32} />,
-    bg: 'bg-[#00F0FF]/20 border-[#00F0FF]',
+    icon: <AlertTriangle className="text-cyan-400" size={32} />,
+    bg: 'bg-cyan-400/20 border-cyan-400',
     button: 'primary' as const,
   },
 };
@@ -81,14 +81,14 @@ export function ConfirmModal({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-[#1A1A1D] border border-[#2A2A2F] rounded-2xl p-6 max-w-md w-full"
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               onClick={onClose}
               aria-label="Close modal"
-              className="absolute top-4 right-4 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 transition-colors"
             >
               <X size={20} />
             </button>
@@ -99,17 +99,17 @@ export function ConfirmModal({
             </div>
 
             {/* Title */}
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{title}</h3>
+            <h3 className="text-xl font-bold text-zinc-100 mb-2">{title}</h3>
 
             {/* Message */}
-            <div className="text-[#A0A0A5] mb-6">{message}</div>
+            <div className="text-zinc-400 mb-6">{message}</div>
 
             {/* Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-colors disabled:opacity-50"
               >
                 {cancelText}
               </button>

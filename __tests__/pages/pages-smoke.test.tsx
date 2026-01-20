@@ -70,7 +70,7 @@ jest.mock('wagmi', () => ({
 jest.mock('connectkit', () => ({
   ConnectKitButton: () => React.createElement('button', { 'data-testid': 'connect-button' }, 'Connect'),
   ConnectKitProvider: ({ children }: React.PropsWithChildren) => children,
-}))
+}), { virtual: true })
 
 // Mock framer-motion
 jest.mock('framer-motion', () => ({

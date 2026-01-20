@@ -8,8 +8,8 @@ export const MessagingCenter = dynamic(
   () => import('@/components/social/MessagingCenter').then(mod => ({ default: mod.MessagingCenter })),
   {
     loading: () => (
-      <div className="flex-1 bg-[#0A0A0F] rounded-xl border border-[#2A2A2F] overflow-hidden">
-        <div className="p-4 border-b border-[#2A2A2F]">
+      <div className="flex-1 bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden">
+        <div className="p-4 border-b border-zinc-800">
           <Skeleton height={24} className="w-1/3 mb-2" />
           <Skeleton height={16} className="w-1/2" />
         </div>
@@ -32,7 +32,7 @@ export const FriendsList = dynamic(
     loading: () => (
       <div className="space-y-2 p-4">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="flex items-center gap-3 p-3 bg-[#0F0F14] rounded-lg">
+          <div key={i} className="flex items-center gap-3 p-3 bg-zinc-900 rounded-lg">
             <Skeleton width={40} height={40} rounded="full" />
             <div className="flex-1 space-y-2">
               <Skeleton height={16} className="w-3/5" />
@@ -52,7 +52,7 @@ export const GroupMessaging = dynamic(
     loading: () => (
       <div className="space-y-3 p-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="p-4 bg-[#0F0F14] border border-[#2A2A2F] rounded-xl">
+          <div key={i} className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
             <div className="flex items-start gap-3">
               <Skeleton width={48} height={48} rounded="full" />
               <div className="flex-1 space-y-2">
@@ -91,7 +91,7 @@ export const ActivityFeed = dynamic(
     loading: () => (
       <div className="space-y-3 p-4">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="flex gap-3 p-3 bg-[#0F0F14] rounded-lg">
+          <div key={i} className="flex gap-3 p-3 bg-zinc-900 rounded-lg">
             <Skeleton width={40} height={40} rounded="full" />
             <div className="flex-1 space-y-2">
               <Skeleton height={14} className="w-full" />
@@ -110,7 +110,7 @@ export const UserStatsWidget = dynamic(
   () => import('@/components/gamification/GamificationWidgets').then(mod => ({ default: mod.UserStatsWidget })),
   {
     loading: () => (
-      <div className="p-4 bg-[#0F0F14] rounded-xl border border-[#2A2A2F]">
+      <div className="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
         <Skeleton height={20} className="w-1/3 mb-3" />
         <Skeleton height={8} className="w-full mb-2" />
         <div className="grid grid-cols-2 gap-2">
@@ -129,7 +129,7 @@ export const AchievementsList = dynamic(
     loading: () => (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="p-4 bg-[#0F0F14] border border-[#2A2A2F] rounded-xl">
+          <div key={i} className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
             <div className="flex items-start gap-3">
               <Skeleton width={48} height={48} rounded="full" />
               <div className="flex-1 space-y-2">
@@ -150,7 +150,7 @@ export const VaultDisplay = dynamic(
   () => import('@/components/dashboard/VaultDisplay'),
   {
     loading: () => (
-      <div className="p-6 bg-[#0F0F14] rounded-xl border border-[#2A2A2F]">
+      <div className="p-6 bg-zinc-900 rounded-xl border border-zinc-800">
         <Skeleton height={28} className="w-1/3 mb-4" />
         <div className="space-y-3">
           <Skeleton height={60} />
@@ -166,11 +166,11 @@ export const AssetBalances = dynamic(
   () => import('@/components/dashboard/AssetBalances'),
   {
     loading: () => (
-      <div className="p-6 bg-[#0F0F14] rounded-xl border border-[#2A2A2F]">
+      <div className="p-6 bg-zinc-900 rounded-xl border border-zinc-800">
         <Skeleton height={24} className="w-1/4 mb-4" />
         <div className="space-y-2">
           {[1, 2, 3].map(i => (
-            <div key={i} className="flex items-center justify-between p-3 bg-[#1A1A1F] rounded-lg">
+            <div key={i} className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg">
               <Skeleton width={40} height={40} rounded="full" />
               <div className="flex-1 ml-3 space-y-2">
                 <Skeleton height={16} className="w-1/2" />
@@ -210,7 +210,7 @@ export const PerformanceChart = dynamic(
   () => import('@/components/charts/PerformanceChart'),
   {
     loading: () => (
-      <div className="w-full h-64 flex items-center justify-center bg-[#0F0F14] rounded-xl border border-[#2A2A2F]">
+      <div className="w-full h-64 flex items-center justify-center bg-zinc-900 rounded-xl border border-zinc-800">
         <Skeleton height={200} className="w-full" />
       </div>
     ),
@@ -222,7 +222,7 @@ export const AllocationChart = dynamic(
   () => import('@/components/charts/AllocationChart'),
   {
     loading: () => (
-      <div className="w-full h-64 flex items-center justify-center bg-[#0F0F14] rounded-xl border border-[#2A2A2F]">
+      <div className="w-full h-64 flex items-center justify-center bg-zinc-900 rounded-xl border border-zinc-800">
         <Skeleton width={200} height={200} rounded="full" />
       </div>
     ),

@@ -96,7 +96,7 @@ function AnimatedCounter({ value, prefix = '+', suffix = '' }: { value: number; 
 
 // ==================== SHARE MENU ====================
 
-function ShareMenu({ notification, onClose }: { notification: AchievementNotification; onClose: () => void }) {
+function ShareMenu({ notification, onClose: _onClose }: { notification: AchievementNotification; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
   
   const shareText = notification.shareText || 
@@ -130,19 +130,19 @@ function ShareMenu({ notification, onClose }: { notification: AchievementNotific
       initial={{ opacity: 0, scale: 0.9, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 10 }}
-      className="absolute bottom-full right-0 mb-2 bg-[#1A1A1F] border border-[#3A3A3F] rounded-xl p-2 shadow-xl z-10"
+      className="absolute bottom-full right-0 mb-2 bg-zinc-900 border border-zinc-700 rounded-xl p-2 shadow-xl z-10"
     >
       <div className="flex items-center gap-1">
         <button
           onClick={shareToTwitter}
-          className="p-2 hover:bg-[#2A2A3F] rounded-lg text-[#1DA1F2] transition-colors"
+          className="p-2 hover:bg-zinc-800 rounded-lg text-sky-500 transition-colors"
           title="Share on Twitter"
         >
           <Twitter className="w-4 h-4" />
         </button>
         <button
           onClick={copyToClipboard}
-          className="p-2 hover:bg-[#2A2A3F] rounded-lg text-[#A0A0A5] transition-colors"
+          className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 transition-colors"
           title="Copy to clipboard"
         >
           {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
@@ -150,7 +150,7 @@ function ShareMenu({ notification, onClose }: { notification: AchievementNotific
         {'share' in navigator && (
           <button
             onClick={nativeShare}
-            className="p-2 hover:bg-[#2A2A3F] rounded-lg text-[#A0A0A5] transition-colors"
+            className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 transition-colors"
             title="Share"
           >
             <Share2 className="w-4 h-4" />
@@ -167,7 +167,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
   const [showConfetti, setShowConfetti] = useState(true);
   const [showShare, setShowShare] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const { playSound } = useTransactionSounds();
+  const { play: playSound } = useTransactionSounds();
   const hasPlayedSound = useRef(false);
 
   const rarity = notification.rarity || 'common';
@@ -209,7 +209,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
       {/* Legendary Glow Effect */}
       {isLegendary && (
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-yellow-500/30 via-orange-500/30 to-yellow-500/30 rounded-2xl blur-xl"
+          className="absolute inset-0 bg-linear-to-r from-yellow-500/30 via-orange-500/30 to-yellow-500/30 rounded-2xl blur-xl"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
         />
@@ -250,14 +250,14 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
       </AnimatePresence>
 
       {/* Toast Content */}
-      <div className={`relative bg-gradient-to-r ${colorMap[notification.type]} p-[2px] rounded-2xl shadow-2xl ${rarityGlow[rarity]}`}>
-        <div className={`bg-[#0F0F14] rounded-2xl p-4 min-w-[380px] border-2 ${rarityColors[rarity]} border-opacity-50`}>
+      <div className={`relative bg-linear-to-r ${colorMap[notification.type]} p-0.5 rounded-2xl shadow-2xl ${rarityGlow[rarity]}`}>
+        <div className={`bg-zinc-900 rounded-2xl p-4 min-w-95 border-2 ${rarityColors[rarity]} border-opacity-50`}>
           {/* Combo Multiplier Badge */}
           {notification.comboMultiplier && notification.comboMultiplier > 1 && (
             <motion.div
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
-              className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1"
+              className="absolute -top-3 -right-3 bg-linear-to-r from-pink-500 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1"
             >
               <ChevronUp className="w-3 h-3" />
               {notification.comboMultiplier}x COMBO
@@ -282,7 +282,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
           <div className="flex items-start gap-4">
             {/* Icon */}
             <motion.div 
-              className={`bg-gradient-to-br ${colorMap[notification.type]} rounded-xl p-3 text-white flex-shrink-0 shadow-lg`}
+              className={`bg-linear-to-br ${colorMap[notification.type]} rounded-xl p-3 text-white shrink-0 shadow-lg`}
               animate={isLegendary ? { 
                 rotate: [0, 5, -5, 0],
                 scale: [1, 1.1, 1]
@@ -301,7 +301,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
               <h4 className="font-bold text-white text-lg leading-tight">
                 {notification.title}
               </h4>
-              <p className="text-sm text-[#A0A0A5] mt-1">
+              <p className="text-sm text-zinc-400 mt-1">
                 {notification.description}
               </p>
 
@@ -344,10 +344,10 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+            <div className="flex flex-col items-end gap-2 shrink-0">
               <button
                 onClick={() => onDismiss(notification.id)}
-                className="p-1.5 text-[#A0A0A5] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -355,7 +355,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
               <div className="relative">
                 <button
                   onClick={() => setShowShare(!showShare)}
-                  className="p-1.5 text-[#A0A0A5] hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors"
+                  className="p-1.5 text-zinc-400 hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
                 </button>
@@ -371,13 +371,13 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
           {/* Progress Bar (for streaks/quests) */}
           {(notification.type === 'streak' || notification.type === 'quest') && (
             <motion.div 
-              className="mt-3 h-1 bg-[#2A2A3F] rounded-full overflow-hidden"
+              className="mt-3 h-1 bg-zinc-800 rounded-full overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
               <motion.div
-                className={`h-full bg-gradient-to-r ${colorMap[notification.type]}`}
+                className={`h-full bg-linear-to-r ${colorMap[notification.type]}`}
                 initial={{ width: 0 }}
                 animate={{ width: '100%' }}
                 transition={{ duration: 1, delay: 0.6, ease: 'easeOut' }}
@@ -395,12 +395,12 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
 export function AchievementToastContainer() {
   const [notifications, setNotifications] = useState<AchievementNotification[]>([]);
   const [comboCount, setComboCount] = useState(0);
-  const comboTimerRef = useRef<NodeJS.Timeout>();
+  const comboTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const addNotification = useCallback((notification: Omit<AchievementNotification, 'id' | 'timestamp'>) => {
     // Track combos
     setComboCount(prev => prev + 1);
-    clearTimeout(comboTimerRef.current);
+    if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
     comboTimerRef.current = setTimeout(() => setComboCount(0), 10000);
 
     const multiplier = comboCount >= 3 ? Math.min(comboCount, 5) : undefined;
@@ -426,7 +426,7 @@ export function AchievementToastContainer() {
   }, [addNotification]);
 
   return (
-    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none max-w-md">
+    <div className="fixed top-4 right-4 z-100 flex flex-col gap-3 pointer-events-none max-w-md">
       {/* Combo Counter */}
       <AnimatePresence>
         {comboCount >= 2 && (
@@ -434,7 +434,7 @@ export function AchievementToastContainer() {
             initial={{ opacity: 0, scale: 0.5, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: -20 }}
-            className="self-end px-4 py-2 bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full shadow-lg pointer-events-auto"
+            className="self-end px-4 py-2 bg-linear-to-r from-pink-500 to-yellow-500 rounded-full shadow-lg pointer-events-auto"
           >
             <span className="text-white font-bold text-sm">
               🔥 {comboCount}x Streak!
@@ -477,9 +477,12 @@ function playAchievementSound(type: AchievementNotification['type'], rarity: 'co
     };
 
     // Legendary gets extra notes
+    const baseNotes = frequencies[type] ?? frequencies.achievement ?? [];
     const notes = rarity === 'legendary' 
-      ? [...(frequencies[type] || frequencies.achievement), 1046.50, 1318.51]
-      : frequencies[type] || frequencies.achievement;
+      ? [...baseNotes, 1046.50, 1318.51]
+      : baseNotes;
+    
+    if (notes.length === 0) return;
     
     const noteDuration = rarity === 'legendary' ? 0.2 : 0.15;
     const volume = rarity === 'legendary' ? 0.15 : 0.1;

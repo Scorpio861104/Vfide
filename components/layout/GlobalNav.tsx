@@ -123,7 +123,7 @@ export function GlobalNav() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-[#1F1F2A]">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-zinc-800">
       <div className="container mx-auto px-3 sm:px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           {/* Logo */}
@@ -168,7 +168,7 @@ export function GlobalNav() {
                 </linearGradient>
               </defs>
             </motion.svg>
-            <span className="text-2xl font-(family-name:--font-display) font-bold text-[#F8F8FC] group-hover:text-[#00F0FF] transition-colors">
+            <span className="text-2xl font-(family-name:--font-display) font-bold text-zinc-50 group-hover:text-cyan-400 transition-colors">
               VFIDE
             </span>
           </Link>
@@ -186,10 +186,10 @@ export function GlobalNav() {
                   className={`
                     relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2
                     ${link.accent 
-                      ? 'text-[#00F0FF] hover:bg-[#00F0FF]/10' 
+                      ? 'text-cyan-400 hover:bg-cyan-400/10' 
                       : isActive 
-                        ? 'text-[#F8F8FC] bg-[#1F1F2A]' 
-                        : 'text-[#8A8A8F] hover:text-[#F8F8FC] hover:bg-[#16161D]'
+                        ? 'text-zinc-50 bg-zinc-900' 
+                        : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-900'
                     }
                   `}
                 >
@@ -198,7 +198,7 @@ export function GlobalNav() {
                   {isActive && !link.accent && (
                     <motion.div
                       layoutId="nav-indicator"
-                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#00F0FF] rounded-full"
+                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-cyan-400 rounded-full"
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
@@ -210,7 +210,7 @@ export function GlobalNav() {
             <div className="relative">
               <button
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="px-4 py-2 rounded-lg font-medium text-sm text-[#8A8A8F] hover:text-[#F8F8FC] hover:bg-[#16161D] transition-all flex items-center gap-1"
+                className="px-4 py-2 rounded-lg font-medium text-sm text-zinc-400 hover:text-zinc-50 hover:bg-zinc-900 transition-all flex items-center gap-1"
               >
                 <MoreHorizontal className="w-4 h-4" />
                 More
@@ -230,11 +230,11 @@ export function GlobalNav() {
                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      className="absolute top-full right-0 mt-2 w-72 bg-[#0F0F12] border border-[#1F1F2A] rounded-xl shadow-2xl p-3 z-50 max-h-128 overflow-y-auto scrollbar-thin"
+                      className="absolute top-full right-0 mt-2 w-72 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-3 z-50 max-h-128 overflow-y-auto scrollbar-thin"
                     >
                       {moreLinks.map((section, sectionIdx) => (
-                        <div key={section.category} className={sectionIdx > 0 ? "mt-4 pt-4 border-t border-[#1F1F2A]" : ""}>
-                          <div className="px-2 mb-2 text-xs font-semibold text-[#8A8A8F] uppercase tracking-wider">
+                        <div key={section.category} className={sectionIdx > 0 ? "mt-4 pt-4 border-t border-zinc-800" : ""}>
+                          <div className="px-2 mb-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                             {section.category}
                           </div>
                           {section.items.map((link) => {
@@ -249,14 +249,14 @@ export function GlobalNav() {
                                 className={`
                                   flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all
                                   ${link.accent 
-                                    ? 'text-[#00F0FF] hover:bg-[#00F0FF]/10' 
+                                    ? 'text-cyan-400 hover:bg-cyan-400/10' 
                                     : isActive 
-                                      ? 'text-[#F8F8FC] bg-[#1F1F2A]' 
-                                      : 'text-[#A8A8B3] hover:text-[#F8F8FC] hover:bg-[#16161D]'
+                                      ? 'text-zinc-50 bg-zinc-900' 
+                                      : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-900'
                                   }
                                 `}
                               >
-                                {IconComponent && <IconComponent size={18} className="opacity-70 flex-shrink-0" />}
+                                {IconComponent && <IconComponent size={18} className="opacity-70 shrink-0" />}
                                 {link.label}
                               </Link>
                             );
@@ -279,7 +279,7 @@ export function GlobalNav() {
             <NetworkSwitcher />
             <Link
               href="/profile"
-              className="p-2 rounded-lg text-[#8A8A8F] hover:text-[#F8F8FC] hover:bg-[#16161D] transition-all"
+              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-50 hover:bg-zinc-900 transition-all"
               aria-label="Profile"
             >
               <User className="w-5 h-5" />

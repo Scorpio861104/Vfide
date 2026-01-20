@@ -199,7 +199,7 @@ export function NotificationToast({
       </div>
 
       {/* Swipe hint */}
-      <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-1 bg-linear-to-l from-white/5 to-transparent pointer-events-none" />
     </motion.div>
   );
 }
@@ -224,7 +224,7 @@ export function ToastContainer({
   const visibleNotifications = notifications.slice(0, maxVisible);
 
   return (
-    <div className="fixed top-4 right-4 z-[200] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed top-4 right-4 z-200 flex flex-col gap-3 pointer-events-none">
       <AnimatePresence mode="popLayout">
         {visibleNotifications.map((notification) => (
           <div key={notification.id} className="pointer-events-auto">
@@ -408,12 +408,14 @@ export function GroupedNotification({
   onArchiveAll,
 }: GroupedNotificationProps) {
   const first = group.notifications[0];
-  const colors = TYPE_COLORS[first.type];
-  const unreadCount = group.notifications.filter(n => !n.read).length;
-
-  if (group.count === 1) {
+  
+  // Early return if no notifications
+  if (!first || group.count === 1) {
     return null; // Use NotificationItem for single items
   }
+  
+  const colors = TYPE_COLORS[first.type];
+  const unreadCount = group.notifications.filter(n => !n.read).length;
 
   return (
     <motion.div
@@ -435,7 +437,7 @@ export function GroupedNotification({
                 className={`
                   absolute w-8 h-8 rounded-lg ${colors.icon} 
                   flex items-center justify-center text-sm
-                  border-2 border-[#0A0A0F]
+                  border-2 border-zinc-950
                 `}
                 style={{
                   top: i * 4,
@@ -541,7 +543,7 @@ export function NotificationBadge({
         <>
           <span className={`
             absolute ${badgeSizeClasses[size]} rounded-full 
-            bg-gradient-to-r from-cyan-500 to-blue-500 
+            bg-linear-to-r from-cyan-500 to-blue-500 
             flex items-center justify-center font-bold text-white
           `}>
             {count > 99 ? '99+' : count}
@@ -623,7 +625,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99] bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-99 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
           />
 
@@ -633,7 +635,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed top-16 right-4 z-100 w-96 max-h-[80vh] overflow-hidden rounded-2xl bg-[#0A0A0F]/95 backdrop-blur-xl border border-white/10 shadow-2xl"
+            className="fixed top-16 right-4 z-100 w-96 max-h-[80vh] overflow-hidden rounded-2xl bg-zinc-950/95 backdrop-blur-xl border border-white/10 shadow-2xl"
           >
             {/* Header */}
             <div className="p-4 border-b border-white/10">

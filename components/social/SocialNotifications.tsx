@@ -134,15 +134,15 @@ export function SocialNotifications() {
       {/* Bell Button */}
       <button
         onClick={() => setShowNotifications(!showNotifications)}
-        className="relative p-2 hover:bg-[#2A2A3F] rounded-lg transition-colors"
+        className="relative p-2 hover:bg-zinc-800 rounded-lg transition-colors"
         aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
         aria-expanded={showNotifications}
         aria-haspopup="dialog"
       >
-        <Bell className="w-5 h-5 text-[#F5F3E8]" aria-hidden="true" />
+        <Bell className="w-5 h-5 text-zinc-100" aria-hidden="true" />
         {unreadCount > 0 && (
           <span 
-            className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B9D] text-[#F5F3E8] text-xs font-bold rounded-full flex items-center justify-center"
+            className="absolute -top-1 -right-1 w-5 h-5 bg-pink-400 text-zinc-100 text-xs font-bold rounded-full flex items-center justify-center"
             aria-label={`${unreadCount} unread`}
           >
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -168,24 +168,24 @@ export function SocialNotifications() {
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="fixed sm:absolute inset-x-4 sm:left-auto sm:right-0 sm:inset-x-auto top-16 sm:top-12 sm:w-96 max-h-[80vh] sm:max-h-[600px] bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl shadow-2xl z-50 flex flex-col"
+              className="fixed sm:absolute inset-x-4 sm:left-auto sm:right-0 sm:inset-x-auto top-16 sm:top-12 sm:w-96 max-h-[80vh] sm:max-h-[600px] bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl z-50 flex flex-col"
               role="dialog"
               aria-label="Notifications panel"
               aria-modal="false"
             >
               {/* Header */}
-              <div className="p-4 border-b border-[#2A2A2F] flex items-center justify-between">
+              <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-[#F5F3E8]">Notifications</h3>
+                  <h3 className="font-bold text-zinc-100">Notifications</h3>
                   {unreadCount > 0 && (
-                    <p className="text-xs text-[#6B6B78]">{unreadCount} unread</p>
+                    <p className="text-xs text-zinc-500">{unreadCount} unread</p>
                   )}
                 </div>
                 <div className="flex gap-2">
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllAsRead}
-                      className="text-xs text-[#00F0FF] hover:underline"
+                      className="text-xs text-cyan-400 hover:underline"
                     >
                       Mark all read
                     </button>
@@ -193,7 +193,7 @@ export function SocialNotifications() {
                   {notifications.length > 0 && (
                     <button
                       onClick={clearAll}
-                      className="text-xs text-[#FF6B9D] hover:underline"
+                      className="text-xs text-pink-400 hover:underline"
                     >
                       Clear all
                     </button>
@@ -204,7 +204,7 @@ export function SocialNotifications() {
               {/* Notifications List */}
               <div className="flex-1 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="p-8 text-center text-[#6B6B78]">
+                  <div className="p-8 text-center text-zinc-500">
                     <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
                     <p>No notifications</p>
                   </div>
@@ -217,8 +217,8 @@ export function SocialNotifications() {
                         return (
                           <div
                             key={notif.id}
-                            className={`p-4 hover:bg-[#2A2A3F] transition-colors ${
-                              !notif.read ? 'bg-[#00F0FF]/5' : ''
+                            className={`p-4 hover:bg-zinc-800 transition-colors ${
+                              !notif.read ? 'bg-cyan-400/5' : ''
                             }`}
                           >
                             <div className="flex items-start gap-3">
@@ -233,32 +233,32 @@ export function SocialNotifications() {
                               {/* Content */}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between gap-2 mb-1">
-                                  <h4 className="font-semibold text-[#F5F3E8] text-sm">
+                                  <h4 className="font-semibold text-zinc-100 text-sm">
                                     {notif.title}
                                   </h4>
                                   {!notif.read && (
-                                    <div className="w-2 h-2 bg-[#00F0FF] rounded-full shrink-0 mt-1" />
+                                    <div className="w-2 h-2 bg-cyan-400 rounded-full shrink-0 mt-1" />
                                   )}
                                 </div>
-                                <p className="text-sm text-[#A0A0A5] mb-2">
+                                <p className="text-sm text-zinc-400 mb-2">
                                   {notif.message}
                                 </p>
                                 <div className="flex items-center justify-between">
-                                  <p className="text-xs text-[#6B6B78]">
+                                  <p className="text-xs text-zinc-500">
                                     {new Date(notif.timestamp).toLocaleString()}
                                   </p>
                                   <div className="flex gap-2">
                                     {!notif.read && (
                                       <button
                                         onClick={() => markAsRead(notif.id)}
-                                        className="text-xs text-[#00F0FF] hover:underline"
+                                        className="text-xs text-cyan-400 hover:underline"
                                       >
                                         Mark read
                                       </button>
                                     )}
                                     <button
                                       onClick={() => deleteNotification(notif.id)}
-                                      className="text-xs text-[#FF6B9D] hover:underline"
+                                      className="text-xs text-pink-400 hover:underline"
                                     >
                                       Delete
                                     </button>

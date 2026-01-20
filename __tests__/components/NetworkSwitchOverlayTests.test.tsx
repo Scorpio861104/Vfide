@@ -3,7 +3,7 @@
  * Tests for NetworkSwitchOverlay component (0% coverage)
  * Simplified tests that work with the component's rendering logic
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
+import { describe, it, expect,  beforeEach, afterEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 
 // Store mock implementations
@@ -74,7 +74,7 @@ describe('NetworkSwitchOverlay', () => {
     mockSwitchChainPending = false
     mockSwitchChainError = false
     mockSwitchChainSuccess = false
-    vi.resetModules()
+    jest.resetModules()
   })
 
   afterEach(() => {

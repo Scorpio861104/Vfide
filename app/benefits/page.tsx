@@ -54,7 +54,7 @@ export default function BenefitsPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-linear-to-b from-zinc-950 via-[#0f0f18] to-zinc-950" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,240,255,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,215,0,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
@@ -193,8 +193,8 @@ function OverviewTab() {
       {/* Hero Section */}
       <div className="bg-linear-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-xl p-8 text-center">
         <Gift className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-        <h2 className="text-3xl font-bold text-[#F5F3E8] mb-4">Active Participation Benefits</h2>
-        <p className="text-[#A0A0A5] max-w-2xl mx-auto">
+        <h2 className="text-3xl font-bold text-zinc-100 mb-4">Active Participation Benefits</h2>
+        <p className="text-zinc-400 max-w-2xl mx-auto">
           VFIDE rewards active participation through governance voting, merchant transactions,
           and community engagement. Build your ProofScore through positive actions to unlock fee discounts.
         </p>
@@ -203,31 +203,31 @@ function OverviewTab() {
       {/* Benefits Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {benefits.map((benefit, idx) => (
-          <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#00F0FF]/30 transition-colors">
+          <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-cyan-400/30 transition-colors">
             <benefit.icon size={32} style={{ color: benefit.color }} className="mb-4" />
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{benefit.title}</h3>
-            <p className="text-[#A0A0A5] text-sm">{benefit.description}</p>
+            <h3 className="text-xl font-bold text-zinc-100 mb-2">{benefit.title}</h3>
+            <p className="text-zinc-400 text-sm">{benefit.description}</p>
           </div>
         ))}
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-[#00F0FF]">5</div>
-          <div className="text-sm text-[#A0A0A5]">Membership Tiers</div>
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
+          <div className="text-3xl font-bold text-cyan-400">5</div>
+          <div className="text-sm text-zinc-400">Membership Tiers</div>
         </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-green-400">12</div>
-          <div className="text-sm text-[#A0A0A5]">Reward Types</div>
+          <div className="text-sm text-zinc-400">Reward Types</div>
         </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-yellow-400">1.2M</div>
-          <div className="text-sm text-[#A0A0A5]">VFIDE Distributed</div>
+          <div className="text-sm text-zinc-400">VFIDE Distributed</div>
         </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 text-center">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
           <div className="text-3xl font-bold text-purple-400">8,432</div>
-          <div className="text-sm text-[#A0A0A5]">Active Members</div>
+          <div className="text-sm text-zinc-400">Active Members</div>
         </div>
       </div>
     </div>
@@ -276,23 +276,23 @@ function TiersTab() {
   return (
     <div className="space-y-8">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">Membership Tiers</h2>
-        <p className="text-[#A0A0A5]">Hold VFIDE and maintain your ProofScore to unlock higher tiers</p>
+        <h2 className="text-2xl font-bold text-zinc-100 mb-2">Membership Tiers</h2>
+        <p className="text-zinc-400">Hold VFIDE and maintain your ProofScore to unlock higher tiers</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {tiers.map((tier, idx) => (
           <div 
             key={idx} 
-            className="bg-[#2A2A2F] border-2 rounded-xl p-6 text-center hover:scale-105 transition-transform"
+            className="bg-zinc-800 border-2 rounded-xl p-6 text-center hover:scale-105 transition-transform"
             style={{ borderColor: tier.color }}
           >
             <Crown size={40} style={{ color: tier.color }} className="mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{tier.name}</h3>
-            <div className="text-sm text-[#00F0FF] font-bold mb-2">{tier.requirement}</div>
-            <div className="text-xs text-[#A0A0A5] mb-4">ProofScore: {tier.proofScore}</div>
-            <div className="border-t border-[#3A3A3F] pt-4">
-              <ul className="text-xs text-[#A0A0A5] space-y-1">
+            <h3 className="text-xl font-bold text-zinc-100 mb-2">{tier.name}</h3>
+            <div className="text-sm text-cyan-400 font-bold mb-2">{tier.requirement}</div>
+            <div className="text-xs text-zinc-400 mb-4">ProofScore: {tier.proofScore}</div>
+            <div className="border-t border-zinc-700 pt-4">
+              <ul className="text-xs text-zinc-400 space-y-1">
                 {tier.benefits.map((benefit, bidx) => (
                   <li key={bidx} className="flex items-center gap-2">
                     <Sparkles size={12} style={{ color: tier.color }} />
@@ -305,19 +305,19 @@ function TiersTab() {
         ))}
       </div>
 
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">How Tiers Work</h3>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-4">How Tiers Work</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h4 className="text-[#00F0FF] font-bold mb-2">Token Holdings</h4>
-            <p className="text-[#A0A0A5] text-sm">
+            <h4 className="text-cyan-400 font-bold mb-2">Token Holdings</h4>
+            <p className="text-zinc-400 text-sm">
               Your tier is determined by the minimum VFIDE balance you hold for 30 consecutive days.
               Short-term holdings don&apos;t count toward tier qualification.
             </p>
           </div>
           <div>
-            <h4 className="text-[#00F0FF] font-bold mb-2">ProofScore Requirement</h4>
-            <p className="text-[#A0A0A5] text-sm">
+            <h4 className="text-cyan-400 font-bold mb-2">ProofScore Requirement</h4>
+            <p className="text-zinc-400 text-sm">
               Even with sufficient tokens, you must maintain the minimum ProofScore to access
               tier benefits. This ensures only trusted members receive premium perks.
             </p>
@@ -346,8 +346,8 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
             <div className="flex items-center gap-4 mb-6">
               <Award className="w-12 h-12 text-green-400" />
               <div>
-                <h2 className="text-2xl font-bold text-[#F5F3E8]">Claimable Rewards</h2>
-                <p className="text-[#A0A0A5]">Rewards ready to claim based on your activity</p>
+                <h2 className="text-2xl font-bold text-zinc-100">Claimable Rewards</h2>
+                <p className="text-zinc-400">Rewards ready to claim based on your activity</p>
               </div>
             </div>
             <div className="text-4xl font-bold text-green-400 text-center py-4">
@@ -359,17 +359,17 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
           </div>
 
           {/* Rewards List */}
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Reward Breakdown</h3>
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+            <h3 className="text-xl font-bold text-zinc-100 mb-6">Reward Breakdown</h3>
             <div className="space-y-3">
               {availableRewards.map((reward, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg">
+                <div key={idx} className="flex items-center justify-between p-4 bg-zinc-900 rounded-lg">
                   <div className="flex items-center gap-4">
-                    <Gift className={reward.claimable ? 'text-green-400' : 'text-[#505055]'} size={20} />
+                    <Gift className={reward.claimable ? 'text-green-400' : 'text-zinc-500'} size={20} />
                     <div>
-                      <div className="text-[#F5F3E8] font-bold">{reward.name}</div>
+                      <div className="text-zinc-100 font-bold">{reward.name}</div>
                       {reward.cooldown && (
-                        <div className="flex items-center gap-1 text-xs text-[#A0A0A5]">
+                        <div className="flex items-center gap-1 text-xs text-zinc-400">
                           <Clock size={12} />
                           {reward.cooldown} remaining
                         </div>
@@ -377,13 +377,13 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="text-[#00F0FF] font-bold">{reward.amount}</span>
+                    <span className="text-cyan-400 font-bold">{reward.amount}</span>
                     {reward.claimable ? (
                       <button className="px-4 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors">
                         Claim
                       </button>
                     ) : (
-                      <button className="px-4 py-1 bg-[#3A3A3F] text-[#707075] text-sm font-bold rounded-lg cursor-not-allowed">
+                      <button className="px-4 py-1 bg-zinc-700 text-zinc-500 text-sm font-bold rounded-lg cursor-not-allowed">
                         Locked
                       </button>
                     )}
@@ -394,32 +394,32 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
           </div>
 
           {/* Preview Rewards */}
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Preview Upcoming Rewards</h3>
-            <p className="text-[#A0A0A5] text-sm mb-4">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+            <h3 className="text-xl font-bold text-zinc-100 mb-4">Preview Upcoming Rewards</h3>
+            <p className="text-zinc-400 text-sm mb-4">
               Based on your current activity and holdings, here&apos;s what you can expect:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-[#1A1A1D] rounded-lg text-center">
+              <div className="p-4 bg-zinc-900 rounded-lg text-center">
                 <div className="text-2xl font-bold text-yellow-400">150</div>
-                <div className="text-xs text-[#A0A0A5]">VFIDE next week</div>
+                <div className="text-xs text-zinc-400">VFIDE next week</div>
               </div>
-              <div className="p-4 bg-[#1A1A1D] rounded-lg text-center">
+              <div className="p-4 bg-zinc-900 rounded-lg text-center">
                 <div className="text-2xl font-bold text-cyan-400">650</div>
-                <div className="text-xs text-[#A0A0A5]">VFIDE next month</div>
+                <div className="text-xs text-zinc-400">VFIDE next month</div>
               </div>
-              <div className="p-4 bg-[#1A1A1D] rounded-lg text-center">
+              <div className="p-4 bg-zinc-900 rounded-lg text-center">
                 <div className="text-2xl font-bold text-purple-400">2,400</div>
-                <div className="text-xs text-[#A0A0A5]">VFIDE this quarter</div>
+                <div className="text-xs text-zinc-400">VFIDE this quarter</div>
               </div>
             </div>
           </div>
         </>
       ) : (
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-12 text-center">
-          <Gift className="w-16 h-16 text-[#505055] mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">Connect Wallet to View Rewards</h3>
-          <p className="text-[#A0A0A5]">Connect your wallet to see your available rewards and claim bonuses</p>
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-12 text-center">
+          <Gift className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-zinc-100 mb-2">Connect Wallet to View Rewards</h3>
+          <p className="text-zinc-400">Connect your wallet to see your available rewards and claim bonuses</p>
         </div>
       )}
     </div>
@@ -429,10 +429,10 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
 function StatsTab({ isConnected, address }: { isConnected: boolean; address?: string }) {
   if (!isConnected) {
     return (
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-12 text-center">
-        <TrendingUp className="w-16 h-16 text-[#505055] mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">Connect Wallet to View Stats</h3>
-        <p className="text-[#A0A0A5]">Connect your wallet to see your membership statistics</p>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-12 text-center">
+        <TrendingUp className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
+        <h3 className="text-xl font-bold text-zinc-100 mb-2">Connect Wallet to View Stats</h3>
+        <p className="text-zinc-400">Connect your wallet to see your membership statistics</p>
       </div>
     );
   }
@@ -446,8 +446,8 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
             G
           </div>
           <div className="text-center md:text-left">
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-1">Gold Member</h2>
-            <p className="text-[#A0A0A5] text-sm mb-2">
+            <h2 className="text-2xl font-bold text-zinc-100 mb-1">Gold Member</h2>
+            <p className="text-zinc-400 text-sm mb-2">
               {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connected'}
             </p>
             <div className="flex flex-wrap justify-center md:justify-start gap-2">
@@ -464,31 +464,31 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <Coins className="text-yellow-400 mb-3" size={24} />
-          <div className="text-2xl font-bold text-[#F5F3E8]">52,450</div>
-          <div className="text-sm text-[#A0A0A5]">VFIDE Balance</div>
+          <div className="text-2xl font-bold text-zinc-100">52,450</div>
+          <div className="text-sm text-zinc-400">VFIDE Balance</div>
         </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <TrendingUp className="text-green-400 mb-3" size={24} />
-          <div className="text-2xl font-bold text-[#F5F3E8]">3,420</div>
-          <div className="text-sm text-[#A0A0A5]">Total Earned</div>
+          <div className="text-2xl font-bold text-zinc-100">3,420</div>
+          <div className="text-sm text-zinc-400">Total Earned</div>
         </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <Users className="text-purple-400 mb-3" size={24} />
-          <div className="text-2xl font-bold text-[#F5F3E8]">7</div>
-          <div className="text-sm text-[#A0A0A5]">Referrals</div>
+          <div className="text-2xl font-bold text-zinc-100">7</div>
+          <div className="text-sm text-zinc-400">Referrals</div>
         </div>
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <Clock className="text-cyan-400 mb-3" size={24} />
-          <div className="text-2xl font-bold text-[#F5F3E8]">145</div>
-          <div className="text-sm text-[#A0A0A5]">Days Active</div>
+          <div className="text-2xl font-bold text-zinc-100">145</div>
+          <div className="text-sm text-zinc-400">Days Active</div>
         </div>
       </div>
 
       {/* Activity History */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Recent Activity</h3>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-6">Recent Activity</h3>
         <div className="space-y-3">
           {[
             { action: 'Claimed daily reward', amount: '+50 VFIDE', time: '2 hours ago' },
@@ -496,10 +496,10 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
             { action: 'ProofScore increased', amount: '+5 points', time: '3 days ago' },
             { action: 'Transaction cashback', amount: '+75 VFIDE', time: '5 days ago' },
           ].map((activity, idx) => (
-            <div key={idx} className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
+            <div key={idx} className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg">
               <div>
-                <div className="text-[#F5F3E8] text-sm">{activity.action}</div>
-                <div className="text-xs text-[#A0A0A5]">{activity.time}</div>
+                <div className="text-zinc-100 text-sm">{activity.action}</div>
+                <div className="text-xs text-zinc-400">{activity.time}</div>
               </div>
               <span className="text-green-400 font-bold">{activity.amount}</span>
             </div>
@@ -508,18 +508,18 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
       </div>
 
       {/* Next Tier Progress */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Progress to Platinum</h3>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-4">Progress to Platinum</h3>
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-[#A0A0A5]">52,450 / 250,000 VFIDE</span>
-            <span className="text-[#00F0FF]">21%</span>
+            <span className="text-zinc-400">52,450 / 250,000 VFIDE</span>
+            <span className="text-cyan-400">21%</span>
           </div>
-          <div className="h-3 bg-[#1A1A1D] rounded-full overflow-hidden">
+          <div className="h-3 bg-zinc-900 rounded-full overflow-hidden">
             <div className="h-full bg-linear-to-r from-yellow-500 to-[#E5E4E2] w-[21%] rounded-full" />
           </div>
         </div>
-        <p className="text-[#A0A0A5] text-sm">
+        <p className="text-zinc-400 text-sm">
           You need 197,550 more VFIDE to reach Platinum tier. Keep holding and earning!
         </p>
       </div>

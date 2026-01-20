@@ -49,21 +49,21 @@ export function FirstTimeUserBanner({
           exit={{ opacity: 0, y: -20 }}
           className="relative mb-6"
         >
-          <div className="bg-linear-to-r from-[#00F0FF]/10 to-[#A78BFA]/10 border border-[#00F0FF]/30 rounded-xl p-4 md:p-5">
+          <div className="bg-linear-to-r from-cyan-400/10 to-violet-400/10 border border-cyan-400/30 rounded-xl p-4 md:p-5">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5 text-[#0A0A0F]" />
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5 text-zinc-950" />
               </div>
               
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#F5F3E8] leading-relaxed">
+                <p className="text-sm text-zinc-100 leading-relaxed">
                   {message}
                 </p>
                 
                 {onAction && actionText && (
                   <button
                     onClick={onAction}
-                    className="mt-3 text-xs font-semibold text-[#00F0FF] hover:underline"
+                    className="mt-3 text-xs font-semibold text-cyan-400 hover:underline"
                   >
                     {actionText} →
                   </button>
@@ -72,7 +72,7 @@ export function FirstTimeUserBanner({
 
               <button
                 onClick={handleDismiss}
-                className="p-1 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors shrink-0"
+                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors shrink-0"
                 aria-label="Dismiss"
               >
                 <X className="w-5 h-5" />

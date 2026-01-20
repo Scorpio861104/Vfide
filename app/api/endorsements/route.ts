@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, endorsementSchema } from '@/lib/auth/validation';
 
 interface Endorsement {
   id: number;
@@ -122,16 +125,36 @@ export async function GET(request: NextRequest) {
  * Create a new endorsement
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   const client = await getClient();
   
   try {
-    const body = await request.json();
-    const { endorserAddress, endorsedAddress, proposalId, message } = body;
-
-    if (!endorserAddress || !endorsedAddress) {
+    // Validate request body
+    const validation = await validateBody(request, endorsementSchema);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: endorserAddress, endorsedAddress' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
+      );
+    }
+
+    const { fromAddress: endorserAddress, toAddress: endorsedAddress, message } = validation.data;
+    const proposalId = null; // Optional field
+
+    // Verify the endorser is the authenticated user
+    if (authResult.user.address.toLowerCase() !== endorserAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only create endorsements from your own address' },
+        { status: 403 }
       );
     }
 
@@ -224,9 +247,19 @@ export async function POST(request: NextRequest) {
 
 /**
  * DELETE /api/endorsements?endorsementId=123
- * Delete an endorsement
+ * Delete an endorsement (only the endorser can delete)
  */
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const endorsementId = searchParams.get('endorsementId');
@@ -235,6 +268,29 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: 'endorsementId is required' },
         { status: 400 }
+      );
+    }
+
+    // Verify ownership - only the endorser can delete their endorsement
+    const endorsementCheck = await query(
+      `SELECT e.endorser_id, u.wallet_address 
+       FROM endorsements e 
+       JOIN users u ON e.endorser_id = u.id 
+       WHERE e.id = $1`,
+      [endorsementId]
+    );
+
+    if (endorsementCheck.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'Endorsement not found' },
+        { status: 404 }
+      );
+    }
+
+    if (endorsementCheck.rows[0].wallet_address.toLowerCase() !== authResult.user.address.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only delete your own endorsements' },
+        { status: 403 }
       );
     }
 

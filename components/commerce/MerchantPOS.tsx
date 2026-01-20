@@ -269,20 +269,20 @@ export function MerchantPOS() {
   if (!isMerchant) {
     return (
       <div className="text-center py-20">
-        <p className="text-xl text-[#F5F3E8]/60">Register as merchant to access POS</p>
+        <p className="text-xl text-zinc-100/60">Register as merchant to access POS</p>
       </div>
     )
   }
   
   return (
-    <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-[#1A1A2E] py-8 px-4">
+    <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-zinc-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[#F5F3E8] mb-2">
+          <h1 className="text-4xl font-bold text-zinc-100 mb-2">
             {businessName} POS
           </h1>
-          <p className="text-[#F5F3E8]/60">
+          <p className="text-zinc-100/60">
             Point of sale with no processor fees (burn + gas apply)
           </p>
         </div>
@@ -293,8 +293,8 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('pos')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'pos'
-                ? 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-white'
-                : 'bg-[#0F0F0F]/50 text-[#F5F3E8]/60 hover:text-[#F5F3E8]'
+                ? 'bg-linear-to-r from-cyan-400 to-blue-500 text-white'
+                : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
             🛒 Point of Sale
@@ -303,8 +303,8 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('products')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'products'
-                ? 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-white'
-                : 'bg-[#0F0F0F]/50 text-[#F5F3E8]/60 hover:text-[#F5F3E8]'
+                ? 'bg-linear-to-r from-cyan-400 to-blue-500 text-white'
+                : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
             📦 Products & Menu
@@ -313,8 +313,8 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('sales')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'sales'
-                ? 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-white'
-                : 'bg-[#0F0F0F]/50 text-[#F5F3E8]/60 hover:text-[#F5F3E8]'
+                ? 'bg-linear-to-r from-cyan-400 to-blue-500 text-white'
+                : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
             📊 Sales & Reports
@@ -326,15 +326,15 @@ export function MerchantPOS() {
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Product Grid - Left Side */}
             <div className="lg:col-span-2 space-y-4">
-              <div className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#00F0FF]/20">
-                <h2 className="text-2xl font-bold text-[#F5F3E8] mb-4">Products</h2>
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+                <h2 className="text-2xl font-bold text-zinc-100 mb-4">Products</h2>
                 
                 {/* Category Filter */}
                 <div className="flex gap-2 mb-4 flex-wrap">
                   {['All', ...Array.from(new Set(products.map(p => p.category)))].map(cat => (
                     <button
                       key={cat}
-                      className="px-4 py-2 rounded-lg bg-[#00F0FF]/10 text-[#00F0FF] hover:bg-[#00F0FF]/20 transition-colors text-sm"
+                      className="px-4 py-2 rounded-lg bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20 transition-colors text-sm"
                     >
                       {cat}
                     </button>
@@ -349,12 +349,12 @@ export function MerchantPOS() {
                       onClick={() => addToCart(product)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="bg-[#0A0A0A] border border-[#00F0FF]/30 rounded-xl p-4 text-left hover:border-[#00F0FF] transition-all"
+                      className="bg-zinc-950 border border-cyan-400/30 rounded-xl p-4 text-left hover:border-cyan-400 transition-all"
                     >
                       <div className="text-2xl mb-2">☕</div>
-                      <h3 className="font-bold text-[#F5F3E8] mb-1">{product.name}</h3>
-                      <p className="text-sm text-[#F5F3E8]/60 mb-2">{product.description}</p>
-                      <p className="text-xl font-bold text-[#00FF88]">${product.price.toFixed(2)}</p>
+                      <h3 className="font-bold text-zinc-100 mb-1">{product.name}</h3>
+                      <p className="text-sm text-zinc-100/60 mb-2">{product.description}</p>
+                      <p className="text-xl font-bold text-emerald-400">${product.price.toFixed(2)}</p>
                     </motion.button>
                   ))}
                 </div>
@@ -364,13 +364,13 @@ export function MerchantPOS() {
             {/* Cart & Checkout - Right Side */}
             <div className="space-y-4">
               {/* Cart */}
-              <div className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#00F0FF]/20">
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold text-[#F5F3E8]">Cart</h2>
+                  <h2 className="text-2xl font-bold text-zinc-100">Cart</h2>
                   {cart.length && (
                     <button
                       onClick={clearCart}
-                      className="text-sm text-[#FF4444] hover:text-[#FF6666]"
+                      className="text-sm text-red-500 hover:text-red-400"
                     >
                       Clear
                     </button>
@@ -378,7 +378,7 @@ export function MerchantPOS() {
                 </div>
                 
                 {cart.length === 0 ? (
-                  <p className="text-center text-[#F5F3E8]/40 py-8">
+                  <p className="text-center text-zinc-100/40 py-8">
                     Cart is empty
                   </p>
                 ) : (
@@ -386,25 +386,25 @@ export function MerchantPOS() {
                     {cart.map(item => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between bg-[#0A0A0A] rounded-lg p-3"
+                        className="flex items-center justify-between bg-zinc-950 rounded-lg p-3"
                       >
                         <div className="flex-1">
-                          <h4 className="font-bold text-[#F5F3E8]">{item.name}</h4>
-                          <p className="text-sm text-[#00FF88]">${item.price.toFixed(2)}</p>
+                          <h4 className="font-bold text-zinc-100">{item.name}</h4>
+                          <p className="text-sm text-emerald-400">${item.price.toFixed(2)}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="w-8 h-8 bg-[#FF4444]/20 text-[#FF4444] rounded hover:bg-[#FF4444]/30"
+                            className="w-8 h-8 bg-red-500/20 text-red-500 rounded hover:bg-red-500/30"
                           >
                             -
                           </button>
-                          <span className="w-8 text-center font-bold text-[#F5F3E8]">
+                          <span className="w-8 text-center font-bold text-zinc-100">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="w-8 h-8 bg-[#00FF88]/20 text-[#00FF88] rounded hover:bg-[#00FF88]/30"
+                            className="w-8 h-8 bg-emerald-400/20 text-emerald-400 rounded hover:bg-emerald-400/30"
                           >
                             +
                           </button>
@@ -420,71 +420,71 @@ export function MerchantPOS() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#00F0FF]/20 space-y-4"
+                  className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20 space-y-4"
                 >
                   <div className="space-y-2">
-                    <div className="flex justify-between text-[#F5F3E8]/60">
+                    <div className="flex justify-between text-zinc-100/60">
                       <span>Subtotal (USD)</span>
                       <span className="font-bold">${subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-[#F5F3E8]/60">
+                    <div className="flex justify-between text-zinc-100/60">
                       <span>VFIDE Fee (0%)</span>
-                      <span className="font-bold text-[#00FF88]">$0.00</span>
+                      <span className="font-bold text-emerald-400">$0.00</span>
                     </div>
-                    <div className="h-px bg-[#00F0FF]/20" />
+                    <div className="h-px bg-cyan-400/20" />
                     <div className="flex justify-between text-xl font-bold">
-                      <span className="text-[#F5F3E8]">Total</span>
+                      <span className="text-zinc-100">Total</span>
                       <div className="text-right">
-                        <div className="text-[#00FF88]">{vfideAmount} VFIDE</div>
-                        <div className="text-sm text-[#F5F3E8]/60">${subtotal.toFixed(2)} USD</div>
+                        <div className="text-emerald-400">{vfideAmount} VFIDE</div>
+                        <div className="text-sm text-zinc-100/60">${subtotal.toFixed(2)} USD</div>
                       </div>
                     </div>
                   </div>
                   
                   {/* Processor Comparison */}
-                  <div className="bg-[#0A0A0A] border border-[#00F0FF]/30 rounded-lg p-4 space-y-3">
-                    <p className="text-xs text-[#F5F3E8]/60 mb-2">Fee Comparison</p>
+                  <div className="bg-zinc-950 border border-cyan-400/30 rounded-lg p-4 space-y-3">
+                    <p className="text-xs text-zinc-100/60 mb-2">Fee Comparison</p>
                     
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between items-center">
-                        <span className="text-[#F5F3E8]/70">Stripe</span>
-                        <span className="text-[#FF4444] font-mono">${fees.stripe.toFixed(2)}</span>
+                        <span className="text-zinc-100/70">Stripe</span>
+                        <span className="text-red-500 font-mono">${fees.stripe.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[#F5F3E8]/70">Square</span>
-                        <span className="text-[#FF6666] font-mono">${fees.square.toFixed(2)}</span>
+                        <span className="text-zinc-100/70">Square</span>
+                        <span className="text-red-400 font-mono">${fees.square.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[#F5F3E8]/70">Clover</span>
-                        <span className="text-[#FF8888] font-mono">${fees.clover.toFixed(2)}</span>
+                        <span className="text-zinc-100/70">Clover</span>
+                        <span className="text-red-400 font-mono">${fees.clover.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[#F5F3E8]/70">PayPal</span>
-                        <span className="text-[#FFAAAA] font-mono">${fees.paypal.toFixed(2)}</span>
+                        <span className="text-zinc-100/70">PayPal</span>
+                        <span className="text-red-300 font-mono">${fees.paypal.toFixed(2)}</span>
                       </div>
-                      <div className="h-px bg-[#00F0FF]/20" />
+                      <div className="h-px bg-cyan-400/20" />
                       <div className="flex justify-between items-center">
-                        <span className="text-[#00FF88] font-bold">VFIDE</span>
-                        <span className="text-[#00FF88] font-bold font-mono">${fees.vfide.toFixed(2)}</span>
+                        <span className="text-emerald-400 font-bold">VFIDE</span>
+                        <span className="text-emerald-400 font-bold font-mono">${fees.vfide.toFixed(2)}</span>
                       </div>
                     </div>
                     
                     <motion.div
                       animate={{ scale: [1, 1.02, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className="bg-[#00FF88]/10 border border-[#00FF88]/30 rounded px-3 py-2 text-center"
+                      className="bg-emerald-400/10 border border-emerald-400/30 rounded px-3 py-2 text-center"
                     >
-                      <p className="text-[#00FF88] font-bold text-lg">
+                      <p className="text-emerald-400 font-bold text-lg">
                         Save ${Math.max(fees.stripe, fees.square, fees.clover, fees.paypal).toFixed(2)}!
                       </p>
-                      <p className="text-xs text-[#F5F3E8]/60">vs most expensive</p>
+                      <p className="text-xs text-zinc-100/60">vs most expensive</p>
                     </motion.div>
                   </div>
                   
                   {/* Generate QR Button */}
                   <button
                     onClick={() => setShowQRPayment(true)}
-                    className="w-full bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-4 rounded-xl hover:scale-105 transition-transform"
+                    className="w-full bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform"
                   >
                     Generate QR Payment
                   </button>
@@ -496,12 +496,12 @@ export function MerchantPOS() {
         
         {activeTab === 'products' && (
           /* PRODUCTS MANAGEMENT VIEW */
-          <div className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#00F0FF]/20">
+          <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-[#F5F3E8]">Manage Products</h2>
+              <h2 className="text-2xl font-bold text-zinc-100">Manage Products</h2>
               <button
                 onClick={() => setShowAddProduct(true)}
-                className="bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
+                className="bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
               >
                 + Add Product
               </button>
@@ -512,20 +512,20 @@ export function MerchantPOS() {
               {products.map(product => (
                 <div
                   key={product.id}
-                  className="bg-[#0A0A0A] border border-[#00F0FF]/30 rounded-lg p-4 flex items-center justify-between"
+                  className="bg-zinc-950 border border-cyan-400/30 rounded-lg p-4 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-3xl">☕</div>
                     <div>
-                      <h3 className="font-bold text-[#F5F3E8]">{product.name}</h3>
-                      <p className="text-sm text-[#F5F3E8]/60">{product.category} • {product.description}</p>
+                      <h3 className="font-bold text-zinc-100">{product.name}</h3>
+                      <p className="text-sm text-zinc-100/60">{product.category} • {product.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="text-2xl font-bold text-[#00FF88]">${product.price.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-emerald-400">${product.price.toFixed(2)}</span>
                     <button
                       onClick={() => setProducts(products.filter(p => p.id !== product.id))}
-                      className="text-[#FF4444] hover:text-[#FF6666] px-3 py-2"
+                      className="text-red-500 hover:text-red-400 px-3 py-2"
                     >
                       🗑️
                     </button>
@@ -541,30 +541,30 @@ export function MerchantPOS() {
           <div className="space-y-6">
             {/* Today's Summary */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#00F0FF]/20">
-                <p className="text-sm text-[#F5F3E8]/60 mb-2">Today&apos;s Sales</p>
-                <p className="text-3xl font-bold text-[#00F0FF]">{todaysSales.length}</p>
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+                <p className="text-sm text-zinc-100/60 mb-2">Today&apos;s Sales</p>
+                <p className="text-3xl font-bold text-cyan-400">{todaysSales.length}</p>
               </div>
-              <div className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#00FF88]/20">
-                <p className="text-sm text-[#F5F3E8]/60 mb-2">Revenue</p>
-                <p className="text-3xl font-bold text-[#00FF88]">${todaysRevenue.toFixed(2)}</p>
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-emerald-400/20">
+                <p className="text-sm text-zinc-100/60 mb-2">Revenue</p>
+                <p className="text-3xl font-bold text-emerald-400">${todaysRevenue.toFixed(2)}</p>
               </div>
-              <div className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#FF6B9D]/20">
-                <p className="text-sm text-[#F5F3E8]/60 mb-2">Fees Paid</p>
-                <p className="text-3xl font-bold text-[#FF6B9D]">${todaysFees.toFixed(2)}</p>
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-pink-400/20">
+                <p className="text-sm text-zinc-100/60 mb-2">Fees Paid</p>
+                <p className="text-3xl font-bold text-pink-400">${todaysFees.toFixed(2)}</p>
               </div>
-              <div className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#FFD700]/20">
-                <p className="text-sm text-[#F5F3E8]/60 mb-2">Net Income</p>
-                <p className="text-3xl font-bold text-[#FFD700]">${todaysNet.toFixed(2)}</p>
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-amber-400/20">
+                <p className="text-sm text-zinc-100/60 mb-2">Net Income</p>
+                <p className="text-3xl font-bold text-amber-400">${todaysNet.toFixed(2)}</p>
               </div>
             </div>
             
             {/* Sales History */}
-            <div className="bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-6 border border-[#00F0FF]/20">
-              <h2 className="text-2xl font-bold text-[#F5F3E8] mb-4">Recent Transactions</h2>
+            <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+              <h2 className="text-2xl font-bold text-zinc-100 mb-4">Recent Transactions</h2>
               
               {salesHistory.length === 0 ? (
-                <p className="text-center text-[#F5F3E8]/40 py-8">No sales yet</p>
+                <p className="text-center text-zinc-100/40 py-8">No sales yet</p>
               ) : (
                 <div className="space-y-3">
                   {salesHistory.slice(0, 10).map(sale => (
@@ -572,7 +572,7 @@ export function MerchantPOS() {
                       key={sale.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="bg-[#0A0A0A] border border-[#00F0FF]/30 rounded-lg p-4 hover:border-[#00F0FF] transition-colors cursor-pointer"
+                      className="bg-zinc-950 border border-cyan-400/30 rounded-lg p-4 hover:border-cyan-400 transition-colors cursor-pointer"
                       onClick={() => {
                         setCurrentSale(sale)
                         setShowReceipt(true)
@@ -580,21 +580,21 @@ export function MerchantPOS() {
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-bold text-[#F5F3E8]">
+                          <p className="font-bold text-zinc-100">
                             {new Date(sale.timestamp).toLocaleTimeString()}
                           </p>
-                          <p className="text-sm text-[#F5F3E8]/60">
+                          <p className="text-sm text-zinc-100/60">
                             {sale.items.length} items • {sale.customerAddress}
                           </p>
                           {sale.emailSent && (
-                            <p className="text-xs text-[#00FF88] flex items-center gap-1 mt-1">
+                            <p className="text-xs text-emerald-400 flex items-center gap-1 mt-1">
                               ✉️ Digital receipt sent
                             </p>
                           )}
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-[#00FF88]">${sale.subtotal.toFixed(2)}</p>
-                          <p className="text-xs text-[#F5F3E8]/60">{sale.vfideAmount} VFIDE</p>
+                          <p className="text-2xl font-bold text-emerald-400">${sale.subtotal.toFixed(2)}</p>
+                          <p className="text-xs text-zinc-100/60">{sale.vfideAmount} VFIDE</p>
                         </div>
                       </div>
                     </motion.div>
@@ -621,66 +621,66 @@ export function MerchantPOS() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#0F0F0F] border border-[#00F0FF]/30 rounded-2xl p-8 max-w-md w-full"
+              className="bg-zinc-950 border border-cyan-400/30 rounded-2xl p-8 max-w-md w-full"
             >
-              <h3 className="text-2xl font-bold text-[#F5F3E8] mb-6">Add New Product</h3>
+              <h3 className="text-2xl font-bold text-zinc-100 mb-6">Add New Product</h3>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-[#F5F3E8]/70 mb-2">Product Name *</label>
+                  <label className="block text-sm text-zinc-100/70 mb-2">Product Name *</label>
                   <input
                     type="text"
                     value={newProduct.name}
                     onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
                     placeholder="Cappuccino"
-                    className="w-full bg-[#0A0A0A] border border-[#00F0FF]/30 rounded-lg px-4 py-3 text-[#F5F3E8] focus:border-[#00F0FF] outline-none"
+                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-[#F5F3E8]/70 mb-2">Price (USD) *</label>
+                  <label className="block text-sm text-zinc-100/70 mb-2">Price (USD) *</label>
                   <input
                     type="number"
                     step="0.01"
                     value={newProduct.price}
                     onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
                     placeholder="4.50"
-                    className="w-full bg-[#0A0A0A] border border-[#00F0FF]/30 rounded-lg px-4 py-3 text-[#F5F3E8] focus:border-[#00F0FF] outline-none"
+                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-[#F5F3E8]/70 mb-2">Category</label>
+                  <label className="block text-sm text-zinc-100/70 mb-2">Category</label>
                   <input
                     type="text"
                     value={newProduct.category}
                     onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
                     placeholder="Coffee, Food, Drinks..."
-                    className="w-full bg-[#0A0A0A] border border-[#00F0FF]/30 rounded-lg px-4 py-3 text-[#F5F3E8] focus:border-[#00F0FF] outline-none"
+                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-[#F5F3E8]/70 mb-2">Description</label>
+                  <label className="block text-sm text-zinc-100/70 mb-2">Description</label>
                   <textarea
                     value={newProduct.description}
                     onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
                     placeholder="Double shot espresso with steamed milk..."
                     rows={3}
-                    className="w-full bg-[#0A0A0A] border border-[#00F0FF]/30 rounded-lg px-4 py-3 text-[#F5F3E8] focus:border-[#00F0FF] outline-none resize-none"
+                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none resize-none"
                   />
                 </div>
                 
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={handleAddProduct}
-                    className="flex-1 bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="flex-1 bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     Add Product
                   </button>
                   <button
                     onClick={() => setShowAddProduct(false)}
-                    className="px-6 bg-[#0A0A0A] border border-[#00F0FF]/30 text-[#F5F3E8] font-bold py-3 rounded-lg hover:border-[#00F0FF] transition-colors"
+                    className="px-6 bg-zinc-950 border border-cyan-400/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-cyan-400 transition-colors"
                   >
                     Cancel
                   </button>
@@ -706,10 +706,10 @@ export function MerchantPOS() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#0F0F0F] border-2 border-[#00F0FF]/50 rounded-2xl p-8 max-w-md w-full text-center"
+              className="bg-zinc-950 border-2 border-cyan-400/50 rounded-2xl p-8 max-w-md w-full text-center"
             >
-              <h3 className="text-3xl font-bold text-[#F5F3E8] mb-2">Scan to Pay</h3>
-              <p className="text-[#F5F3E8]/60 mb-6">Customer scans with VFIDE app</p>
+              <h3 className="text-3xl font-bold text-zinc-100 mb-2">Scan to Pay</h3>
+              <p className="text-zinc-100/60 mb-6">Customer scans with VFIDE app</p>
               
               {/* QR Code */}
               <div className="bg-white p-6 rounded-xl inline-block mb-6">
@@ -722,47 +722,47 @@ export function MerchantPOS() {
               </div>
               
               {/* Payment Details */}
-              <div className="bg-[#0A0A0A] rounded-xl p-6 mb-6 space-y-3">
-                <div className="flex justify-between text-[#F5F3E8]/60">
+              <div className="bg-zinc-950 rounded-xl p-6 mb-6 space-y-3">
+                <div className="flex justify-between text-zinc-100/60">
                   <span>Total Amount</span>
-                  <span className="font-bold text-[#F5F3E8]">${subtotal.toFixed(2)}</span>
+                  <span className="font-bold text-zinc-100">${subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-[#F5F3E8]/60">
+                <div className="flex justify-between text-zinc-100/60">
                   <span>In VFIDE</span>
-                  <span className="font-bold text-[#00FF88]">{vfideAmount} VFIDE</span>
+                  <span className="font-bold text-emerald-400">{vfideAmount} VFIDE</span>
                 </div>
-                <div className="flex justify-between text-[#F5F3E8]/60">
+                <div className="flex justify-between text-zinc-100/60">
                   <span>VFIDE Fee</span>
-                  <span className="font-bold text-[#00FF88]">${fees.vfide.toFixed(2)}</span>
+                  <span className="font-bold text-emerald-400">${fees.vfide.toFixed(2)}</span>
                 </div>
-                <div className="h-px bg-[#00F0FF]/20 my-2" />
+                <div className="h-px bg-cyan-400/20 my-2" />
                 
                 <div className="space-y-1.5 text-xs">
-                  <p className="text-[#F5F3E8]/40 mb-1">Other processors would charge:</p>
+                  <p className="text-zinc-100/40 mb-1">Other processors would charge:</p>
                   <div className="flex justify-between">
-                    <span className="text-[#F5F3E8]/60">Stripe:</span>
-                    <span className="text-[#FF4444]">${fees.stripe.toFixed(2)}</span>
+                    <span className="text-zinc-100/60">Stripe:</span>
+                    <span className="text-red-500">${fees.stripe.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#F5F3E8]/60">Square:</span>
-                    <span className="text-[#FF6666]">${fees.square.toFixed(2)}</span>
+                    <span className="text-zinc-100/60">Square:</span>
+                    <span className="text-red-400">${fees.square.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#F5F3E8]/60">Clover:</span>
-                    <span className="text-[#FF8888]">${fees.clover.toFixed(2)}</span>
+                    <span className="text-zinc-100/60">Clover:</span>
+                    <span className="text-red-400">${fees.clover.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#F5F3E8]/60">PayPal:</span>
-                    <span className="text-[#FFAAAA]">${fees.paypal.toFixed(2)}</span>
+                    <span className="text-zinc-100/60">PayPal:</span>
+                    <span className="text-red-300">${fees.paypal.toFixed(2)}</span>
                   </div>
                 </div>
                 
                 <motion.div
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="bg-[#00FF88]/20 border border-[#00FF88] rounded-lg p-3 text-center"
+                  className="bg-emerald-400/20 border border-emerald-400 rounded-lg p-3 text-center"
                 >
-                  <p className="text-[#00FF88] font-bold text-lg">
+                  <p className="text-emerald-400 font-bold text-lg">
                     You Save Up To ${(Math.max(fees.stripe, fees.square, fees.clover, fees.paypal) - fees.vfide).toFixed(2)}!
                   </p>
                 </motion.div>
@@ -773,12 +773,12 @@ export function MerchantPOS() {
                 <motion.div
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
-                  className="flex items-center justify-center gap-2 text-[#00F0FF]"
+                  className="flex items-center justify-center gap-2 text-cyan-400"
                 >
-                  <div className="w-2 h-2 rounded-full bg-[#00F0FF] animate-pulse" />
+                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                   <span className="text-sm">Waiting for blockchain confirmation...</span>
                 </motion.div>
-                <p className="text-xs text-center text-[#F5F3E8]/40 mt-2">
+                <p className="text-xs text-center text-zinc-100/40 mt-2">
                   Payment will auto-confirm when detected on-chain
                 </p>
               </div>
@@ -786,7 +786,7 @@ export function MerchantPOS() {
               <div className="space-y-3">
                 <button
                   onClick={() => setShowQRPayment(false)}
-                  className="w-full bg-[#0A0A0A] border border-[#00F0FF]/30 text-[#F5F3E8] font-bold py-4 rounded-xl hover:border-[#00F0FF] transition-colors"
+                  className="w-full bg-zinc-950 border border-cyan-400/30 text-zinc-100 font-bold py-4 rounded-xl hover:border-cyan-400 transition-colors"
                 >
                   Cancel Payment
                 </button>
@@ -811,19 +811,19 @@ export function MerchantPOS() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#0F0F0F] border-2 border-[#00F0FF]/50 rounded-2xl p-8 max-w-md w-full"
+              className="bg-zinc-950 border-2 border-cyan-400/50 rounded-2xl p-8 max-w-md w-full"
             >
               <div className="text-center mb-6">
                 <div className="text-6xl mb-4">📧</div>
-                <h3 className="text-2xl font-bold text-[#F5F3E8] mb-2">Digital Receipt</h3>
-                <p className="text-[#F5F3E8]/60">
+                <h3 className="text-2xl font-bold text-zinc-100 mb-2">Digital Receipt</h3>
+                <p className="text-zinc-100/60">
                   Would customer like a receipt via email?
                 </p>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-[#F5F3E8]/70 mb-2">
+                  <label className="block text-sm text-zinc-100/70 mb-2">
                     Customer Email (Optional)
                   </label>
                   <input
@@ -831,12 +831,12 @@ export function MerchantPOS() {
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     placeholder="customer@example.com"
-                    className="w-full bg-[#0A0A0A] border border-[#00F0FF]/30 rounded-lg px-4 py-3 text-[#F5F3E8] focus:border-[#00F0FF] outline-none"
+                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
                 
-                <div className="bg-[#00F0FF]/10 border border-[#00F0FF]/30 rounded-lg p-3">
-                  <p className="text-xs text-[#F5F3E8]/70">
+                <div className="bg-cyan-400/10 border border-cyan-400/30 rounded-lg p-3">
+                  <p className="text-xs text-zinc-100/70">
                     ✅ Instant email delivery<br />
                     ✅ Itemized receipt with totals<br />
                     ✅ Transaction ID for records<br />
@@ -847,7 +847,7 @@ export function MerchantPOS() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => completeSale()}
-                    className="bg-[#0A0A0A] border border-[#00F0FF]/30 text-[#F5F3E8] font-bold py-3 rounded-lg hover:border-[#00F0FF] transition-colors"
+                    className="bg-zinc-950 border border-cyan-400/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-cyan-400 transition-colors"
                   >
                     Skip
                   </button>
@@ -859,7 +859,7 @@ export function MerchantPOS() {
                         completeSale()
                       }
                     }}
-                    className="bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     {customerEmail ? 'Send Receipt' : 'Continue'}
                   </button>

@@ -311,12 +311,12 @@ export function UnifiedActivityFeed({
     return (
       <div className={`space-y-4 ${className}`}>
         {[1, 2, 3].map((i) => (
-          <div key={i} className="p-4 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl animate-pulse">
+          <div key={i} className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl animate-pulse">
             <div className="flex gap-3">
-              <div className="w-10 h-10 bg-[#2A2A3E] rounded-full" />
+              <div className="w-10 h-10 bg-zinc-800 rounded-full" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-[#2A2A3E] rounded w-3/4" />
-                <div className="h-3 bg-[#2A2A3E] rounded w-1/2" />
+                <div className="h-4 bg-zinc-800 rounded w-3/4" />
+                <div className="h-3 bg-zinc-800 rounded w-1/2" />
               </div>
             </div>
           </div>
@@ -333,7 +333,7 @@ export function UnifiedActivityFeed({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.05 }}
-          className="p-4 bg-[#1A1A1F] border border-[#2A2A2F] hover:border-[#3A3A4F] rounded-xl transition-all group"
+          className="p-4 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-all group"
         >
           <div className="flex gap-3">
             {/* Icon */}
@@ -344,18 +344,18 @@ export function UnifiedActivityFeed({
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="text-sm text-[#F5F3E8]">
+                <p className="text-sm text-zinc-100">
                   <span className="font-semibold">{activity.actor.name}</span>
-                  <span className="text-[#A0A0A5] ml-1">{getActivityText(activity)}</span>
+                  <span className="text-zinc-400 ml-1">{getActivityText(activity)}</span>
                 </p>
-                <span className="text-xs text-[#6B6B78] whitespace-nowrap">
+                <span className="text-xs text-zinc-500 whitespace-nowrap">
                   {formatTimeAgo(activity.timestamp)}
                 </span>
               </div>
 
               {/* Additional Content */}
               {activity.content && (
-                <p className="text-sm text-[#A0A0A5] mb-2 line-clamp-2">{activity.content}</p>
+                <p className="text-sm text-zinc-400 mb-2 line-clamp-2">{activity.content}</p>
               )}
 
               {/* Amount Badge */}
@@ -386,8 +386,8 @@ export function UnifiedActivityFeed({
 
       {activities.length === 0 && (
         <div className="p-12 text-center">
-          <Users className="w-12 h-12 text-[#6B6B78] mx-auto mb-3 opacity-50" />
-          <p className="text-[#A0A0A5]">No activities yet</p>
+          <Users className="w-12 h-12 text-zinc-500 mx-auto mb-3 opacity-50" />
+          <p className="text-zinc-400">No activities yet</p>
         </div>
       )}
     </div>

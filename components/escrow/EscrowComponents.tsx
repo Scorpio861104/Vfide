@@ -89,28 +89,28 @@ export function EscrowCard({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-sm">
               <div className="min-w-0">
                 <p className="text-gray-500 mb-1 flex items-center gap-1 text-xs sm:text-sm">
-                  <User className="w-3 h-3 flex-shrink-0" /> Merchant
+                  <User className="w-3 h-3 shrink-0" /> Merchant
                 </p>
                 <p className="text-white font-mono text-xs sm:text-sm truncate">{merchant}</p>
               </div>
               
               <div className="min-w-0">
                 <p className="text-gray-500 mb-1 flex items-center gap-1 text-xs sm:text-sm">
-                  <DollarSign className="w-3 h-3 flex-shrink-0" /> Amount
+                  <DollarSign className="w-3 h-3 shrink-0" /> Amount
                 </p>
                 <p className="text-white font-semibold text-xs sm:text-sm">{amount} {token}</p>
               </div>
               
               <div className="min-w-0">
                 <p className="text-gray-500 mb-1 flex items-center gap-1 text-xs sm:text-sm">
-                  <Calendar className="w-3 h-3 flex-shrink-0" /> Created
+                  <Calendar className="w-3 h-3 shrink-0" /> Created
                 </p>
                 <p className="text-white text-xs sm:text-sm">{createdAt.toLocaleDateString()}</p>
               </div>
               
               <div className="min-w-0">
                 <p className="text-gray-500 mb-1 flex items-center gap-1 text-xs sm:text-sm">
-                  <Timer className="w-3 h-3 flex-shrink-0" /> Release
+                  <Timer className="w-3 h-3 shrink-0" /> Release
                 </p>
                 <p className={`font-medium text-xs sm:text-sm ${
                   releaseTime <= new Date(Date.now() + 24 * 60 * 60 * 1000) 
@@ -159,14 +159,14 @@ export function EscrowCard({
             
             {state === 'DISPUTED' && (
               <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-xl">
-                <Scale className="w-5 h-5 text-red-400 flex-shrink-0" />
+                <Scale className="w-5 h-5 text-red-400 shrink-0" />
                 <span className="text-red-300 text-xs sm:text-sm">Awaiting Arbiter</span>
               </div>
             )}
             
             {(state === 'RELEASED' || state === 'REFUNDED') && (
               <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                <FileCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                <FileCheck className="w-5 h-5 text-emerald-400 shrink-0" />
                 <span className="text-emerald-300 text-xs sm:text-sm whitespace-nowrap">
                   {state === 'RELEASED' ? 'Funds Released' : 'Funds Refunded'}
                 </span>

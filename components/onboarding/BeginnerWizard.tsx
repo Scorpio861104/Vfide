@@ -13,7 +13,7 @@ interface Step {
   action?: React.ReactNode;
 }
 
-const iconClass = "w-10 h-10 text-[#00F0FF]";
+const iconClass = "w-10 h-10 text-cyan-400";
 
 export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -38,7 +38,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
             href="https://metamask.io/download/"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-6 py-3 bg-[#FF6B35] text-white font-bold rounded-lg hover:bg-[#FF8555] transition-all text-center"
+            className="px-6 py-3 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-400 transition-all text-center"
           >
             Get MetaMask
           </a>
@@ -46,7 +46,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
             href="https://www.coinbase.com/wallet/downloads"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-6 py-3 bg-[#0052FF] text-white font-bold rounded-lg hover:bg-[#0062FF] transition-all text-center"
+            className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-600 transition-all text-center"
           >
             Get Coinbase Wallet
           </a>
@@ -110,12 +110,12 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
-        className="bg-[#2A2A2F] border-2 border-[#00F0FF] rounded-2xl p-8 max-w-2xl w-full relative"
+        className="bg-zinc-800 border-2 border-cyan-400 rounded-2xl p-8 max-w-2xl w-full relative"
       >
         {/* Close Button */}
         <button
           onClick={skipWizard}
-          className="absolute top-4 right-4 text-[#A0A0A5] hover:text-[#F5F3E8] text-2xl"
+          className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 text-2xl"
         >
           ×
         </button>
@@ -126,7 +126,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
             <div
               key={step.id}
               className={`h-2 flex-1 rounded-full transition-all ${
-                index <= currentStep ? "bg-[#00F0FF]" : "bg-[#3A3A3F]"
+                index <= currentStep ? "bg-cyan-400" : "bg-zinc-700"
               }`}
             />
           ))}
@@ -142,13 +142,13 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
             transition={{ duration: 0.3 }}
           >
             <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-[#00F0FF]/10 rounded-full border border-[#00F0FF]/30">
+              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-cyan-400/10 rounded-full border border-cyan-400/30">
                 {currentStepData?.icon}
               </div>
-              <h2 className="text-3xl font-bold text-[#F5F3E8] mb-3 font-(family-name:--font-display)">
+              <h2 className="text-3xl font-bold text-zinc-100 mb-3 font-(family-name:--font-display)">
                 {currentStepData?.title}
               </h2>
-              <p className="text-lg text-[#A0A0A5] leading-relaxed font-(family-name:--font-body) max-w-xl mx-auto">
+              <p className="text-lg text-zinc-400 leading-relaxed font-(family-name:--font-body) max-w-xl mx-auto">
                 {currentStepData?.description}
               </p>
             </div>
@@ -162,38 +162,38 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="mt-4 p-4 bg-[#50C878]/20 border border-[#50C878] rounded-lg text-center"
+                className="mt-4 p-4 bg-emerald-500/20 border border-emerald-500 rounded-lg text-center"
               >
-                <svg className="w-8 h-8 mx-auto mb-2 text-[#50C878]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 mx-auto mb-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <div className="text-[#50C878] font-bold">Wallet Connected!</div>
+                <div className="text-emerald-500 font-bold">Wallet Connected!</div>
               </motion.div>
             )}
           </motion.div>
         </AnimatePresence>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center mt-8 pt-6 border-t border-[#3A3A3F]">
+        <div className="flex justify-between items-center mt-8 pt-6 border-t border-zinc-700">
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
             className={`px-6 py-2 rounded-lg font-bold transition-all ${
               currentStep === 0
-                ? "bg-[#3A3A3F] text-[#6A6A6F] cursor-not-allowed"
-                : "bg-[#3A3A3F] text-[#F5F3E8] hover:bg-[#4A4A4F]"
+                ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+                : "bg-zinc-700 text-zinc-100 hover:bg-zinc-700"
             }`}
           >
             ← Back
           </button>
 
-          <div className="text-[#A0A0A5] text-sm font-(family-name:--font-body)">
+          <div className="text-zinc-400 text-sm font-(family-name:--font-body)">
             Step {currentStep + 1} of {steps.length}
           </div>
 
           <button
             onClick={nextStep}
-            className="px-6 py-2 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all"
+            className="px-6 py-2 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 transition-all"
           >
             {currentStep === steps.length - 1 ? "Start Using VFIDE!" : "Next →"}
           </button>

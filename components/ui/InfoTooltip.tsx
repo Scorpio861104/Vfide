@@ -22,7 +22,7 @@ export function InfoTooltip({ content, children, position = "top" }: InfoTooltip
     <div className="relative inline-block">
       <button
         type="button"
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full border-2 border-[#00F0FF] text-[#00F0FF] text-xs font-bold hover:bg-[#00F0FF] hover:text-[#1A1A1D] transition-all cursor-help"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full border-2 border-cyan-400 text-cyan-400 text-xs font-bold hover:bg-cyan-400 hover:text-zinc-900 transition-all cursor-help"
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
         onClick={() => setIsVisible(!isVisible)}
@@ -33,15 +33,15 @@ export function InfoTooltip({ content, children, position = "top" }: InfoTooltip
       
       {isVisible && (
         <div
-          className={`absolute z-50 px-4 py-3 bg-[#2A2A2F] border-2 border-[#00F0FF] rounded-lg shadow-lg w-[calc(100vw-2rem)] min-w-62.5 max-w-87.5 sm:w-auto ${positionClasses[position]}`}
+          className={`absolute z-50 px-4 py-3 bg-zinc-800 border-2 border-cyan-400 rounded-lg shadow-lg w-[calc(100vw-2rem)] min-w-62.5 max-w-87.5 sm:w-auto ${positionClasses[position]}`}
           role="tooltip"
         >
-          <div className="text-sm text-[#F5F3E8] leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+          <div className="text-sm text-zinc-100 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
             {content}
           </div>
           {/* Tooltip arrow */}
           <div
-            className={`absolute w-3 h-3 bg-[#2A2A2F] border-[#00F0FF] transform rotate-45 ${
+            className={`absolute w-3 h-3 bg-zinc-800 border-cyan-400 transform rotate-45 ${
               position === "bottom"
                 ? "-bottom-1.75 left-1/2 -translate-x-1/2 border-b-2 border-r-2"
                 : position === "top"

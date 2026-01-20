@@ -35,9 +35,9 @@ function useAnimatedCounter(end: number, duration: number = 2000, start: number 
 function FloatingOrbs() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#00F0FF]/10 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#0080FF]/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-[#A78BFA]/5 rounded-full blur-[150px]" />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-cyan-400/10 rounded-full blur-[120px] animate-pulse" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-violet-400/5 rounded-full blur-[150px]" />
     </div>
   );
 }
@@ -54,9 +54,9 @@ function HeroVisualization() {
           transition={{ duration: 1, delay: 0.5 }}
           className="absolute w-60 h-60 sm:w-80 sm:h-80 md:w-100 md:h-100"
         >
-          <div className="absolute inset-0 rounded-full border border-[#00F0FF]/20 animate-pulse" />
-          <div className="absolute inset-4 rounded-full border border-[#00F0FF]/15" />
-          <div className="absolute inset-8 rounded-full border border-[#00F0FF]/10" />
+          <div className="absolute inset-0 rounded-full border border-cyan-400/20 animate-pulse" />
+          <div className="absolute inset-4 rounded-full border border-cyan-400/15" />
+          <div className="absolute inset-8 rounded-full border border-cyan-400/10" />
         </motion.div>
         
         {/* Central shield */}
@@ -124,9 +124,9 @@ function HeroVisualization() {
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute w-72 h-72 md:w-96 md:h-96"
         >
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#00F0FF] rounded-full shadow-[0_0_20px_rgba(0,240,255,0.8)]" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#00FF88] rounded-full shadow-[0_0_15px_rgba(0,255,136,0.8)]" />
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#A78BFA] rounded-full shadow-[0_0_15px_rgba(167,139,250,0.8)]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_20px_rgba(0,240,255,0.8)]" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(0,255,136,0.8)]" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-violet-400 rounded-full shadow-[0_0_15px_rgba(167,139,250,0.8)]" />
         </motion.div>
       </div>
     </div>
@@ -169,11 +169,11 @@ function FeatureCard({ icon, title, description, color, delay = 0 }: FeatureCard
           <div style={{ color }}>{icon}</div>
         </div>
         
-        <h3 className="text-xl font-semibold text-[#F8F8FC] mb-3 group-hover:text-white transition-colors">
+        <h3 className="text-xl font-semibold text-zinc-50 mb-3 group-hover:text-white transition-colors">
           {title}
         </h3>
         
-        <p className="text-[#A8A8B3] leading-relaxed group-hover:text-[#B8B8C3] transition-colors">
+        <p className="text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors">
           {description}
         </p>
       </div>
@@ -207,7 +207,7 @@ function StatItem({ value, label, prefix = "", suffix = "", color }: StatItemPro
       >
         {prefix}{count.toLocaleString()}{suffix}
       </div>
-      <div className="text-sm text-[#6B6B78] uppercase tracking-wider">{label}</div>
+      <div className="text-sm text-zinc-500 uppercase tracking-wider">{label}</div>
     </motion.div>
   );
 }
@@ -232,26 +232,26 @@ function Step({ number, title, description, time, index }: StepProps) {
     >
       {/* Connection line */}
       {index < 2 && (
-        <div className="absolute left-7 top-16 bottom-0 w-px bg-linear-to-b from-[#00F0FF]/30 to-transparent" />
+        <div className="absolute left-7 top-16 bottom-0 w-px bg-gradient-to-b from-cyan-400/30 to-transparent" />
       )}
       
       {/* Step number */}
       <motion.div 
         whileHover={{ scale: 1.1, rotate: 5 }}
-        className="relative z-10 w-14 h-14 rounded-2xl bg-linear-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold text-xl shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
+        className="relative z-10 w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-zinc-950 font-bold text-xl shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
       >
         {number}
       </motion.div>
       
       {/* Content */}
       <div className="flex-1 pb-8">
-        <h3 className="text-xl font-semibold text-[#F8F8FC] mb-2 group-hover:text-[#00F0FF] transition-colors">
+        <h3 className="text-xl font-semibold text-zinc-50 mb-2 group-hover:text-cyan-400 transition-colors">
           {title}
         </h3>
-        <p className="text-[#A8A8B3] mb-3 leading-relaxed">
+        <p className="text-zinc-400 mb-3 leading-relaxed">
           {description}
         </p>
-        <div className="inline-flex items-center gap-2 text-sm text-[#00F0FF] font-medium">
+        <div className="inline-flex items-center gap-2 text-sm text-cyan-400 font-medium">
           <Zap className="w-4 h-4" />
           {time}
         </div>
@@ -263,7 +263,7 @@ function Step({ number, title, description, time, index }: StepProps) {
 // Trust indicators
 function TrustBadge({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#0F0F14]/80 border border-[#1F1F2A] text-sm text-[#A8A8B3]">
+    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-400">
       {children}
     </div>
   );
@@ -284,7 +284,7 @@ export default function Home() {
       {/* Hero Section */}
       <section 
         ref={heroRef}
-        className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#08080A] pt-20"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden bg-zinc-950 pt-20"
       >
         <FloatingOrbs />
         
@@ -302,7 +302,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00F0FF]/10 border border-[#00F0FF]/20 text-[#00F0FF] text-sm font-medium mb-8"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-sm font-medium mb-8"
               >
                 <Sparkles className="w-4 h-4" />
                 Now Live on Base
@@ -312,7 +312,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-5xl sm:text-6xl lg:text-7xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-6 leading-[1.1]"
+                className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold text-zinc-50 mb-6 leading-[1.1]"
               >
                 Accept Crypto.
                 <br />
@@ -323,9 +323,9 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl text-[#A8A8B3] mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
+                className="text-xl text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
               >
-                The first payment protocol where merchants pay <strong className="text-[#F8F8FC]">zero processing fees</strong>. 
+                The first payment protocol where merchants pay <strong className="text-zinc-50">zero processing fees</strong>. 
                 Token transfers have behavioral fees (0.25-5%) that reward trust. Own your funds.
               </motion.p>
               
@@ -359,11 +359,11 @@ export default function Home() {
                 className="flex flex-wrap gap-3 justify-center lg:justify-start"
               >
                 <TrustBadge>
-                  <div className="w-2 h-2 bg-[#22C55E] rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                   14 Contracts Deployed
                 </TrustBadge>
                 <TrustBadge>
-                  <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   Audited &amp; Open Source
                 </TrustBadge>
               </motion.div>
@@ -391,15 +391,15 @@ export default function Home() {
           <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="w-6 h-10 rounded-full border-2 border-[#3A3A45] flex items-start justify-center p-2"
+            className="w-6 h-10 rounded-full border-2 border-zinc-700 flex items-start justify-center p-2"
           >
-            <div className="w-1 h-2 bg-[#00F0FF] rounded-full" />
+            <div className="w-1 h-2 bg-cyan-400 rounded-full" />
           </motion.div>
         </motion.div>
       </section>
 
       {/* Live Stats Section */}
-      <section className="relative py-20 bg-[#0A0A0F] overflow-hidden">
+      <section className="relative py-20 bg-zinc-950 overflow-hidden">
         <div className="absolute inset-0 aurora-bg" />
         
         <div className="relative z-10 container mx-auto px-3 sm:px-4 max-w-6xl">
@@ -409,7 +409,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <span className="text-sm text-[#6B6B78] uppercase tracking-widest">Live Network</span>
+            <span className="text-sm text-zinc-500 uppercase tracking-widest">Live Network</span>
           </motion.div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-12">
@@ -423,10 +423,10 @@ export default function Home() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center text-sm text-[#4A4A55] mt-12"
+            className="text-center text-sm text-zinc-600 mt-12"
           >
             <span className="inline-flex items-center gap-2">
-              <span className="w-2 h-2 bg-[#00F0FF] rounded-full animate-pulse" />
+              <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
               Live data • Updates in real-time
             </span>
           </motion.p>
@@ -434,8 +434,8 @@ export default function Home() {
       </section>
 
       {/* Why VFIDE Section */}
-      <section className="py-24 bg-[#08080A] relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
+      <section className="py-24 bg-zinc-950 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent" />
         
         <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
           <motion.div
@@ -444,10 +444,10 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-zinc-50 mb-4">
               Why VFIDE?
             </h2>
-            <p className="text-lg text-[#6B6B78] max-w-2xl mx-auto">
+            <p className="text-lg text-zinc-500 max-w-2xl mx-auto">
               Built for the future of commerce. Designed for trust.
             </p>
           </motion.div>
@@ -500,8 +500,8 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 bg-[#0A0A0F] relative">
-        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
+      <section className="py-24 bg-zinc-950 relative">
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent" />
         
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.div
@@ -510,10 +510,10 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-zinc-50 mb-4">
               Get Started in Seconds
             </h2>
-            <p className="text-lg text-[#6B6B78]">
+            <p className="text-lg text-zinc-500">
               No signup, no verification, no waiting
             </p>
           </motion.div>
@@ -555,7 +555,7 @@ export default function Home() {
               Start Accepting Payments
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <p className="mt-4 text-sm text-[#6B6B78]">
+            <p className="mt-4 text-sm text-zinc-500">
               No signup required • Non-custodial • Permissionless
             </p>
           </motion.div>
@@ -563,8 +563,8 @@ export default function Home() {
       </section>
 
       {/* Testimonial / Social Proof */}
-      <section className="py-24 bg-[#08080A] relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#1F1F2A] to-transparent" />
+      <section className="py-24 bg-zinc-950 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent" />
         
         <div className="container mx-auto px-3 sm:px-4 max-w-4xl text-center">
           <motion.div
@@ -575,22 +575,22 @@ export default function Home() {
           >
             <div className="flex justify-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-6 h-6 fill-[#FFD700] text-[#FFD700]" />
+                <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
               ))}
             </div>
             
-            <blockquote className="text-xl sm:text-2xl md:text-3xl font-medium text-[#F8F8FC] mb-8 leading-relaxed">
+            <blockquote className="text-xl sm:text-2xl md:text-3xl font-medium text-zinc-50 mb-8 leading-relaxed">
               &ldquo;Finally, a payment system that doesn&apos;t take a cut of every transaction. 
               VFIDE lets me keep what I earn.&rdquo;
             </blockquote>
             
             <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#0080FF] flex items-center justify-center text-[#0A0A0F] font-bold">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-zinc-950 font-bold">
                 M
               </div>
               <div className="text-left">
-                <div className="text-[#F8F8FC] font-medium">Merchant User</div>
-                <div className="text-sm text-[#6B6B78]">Beta Tester</div>
+                <div className="text-zinc-50 font-medium">Merchant User</div>
+                <div className="text-sm text-zinc-500">Beta Tester</div>
               </div>
             </div>
           </motion.div>
@@ -598,9 +598,9 @@ export default function Home() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-32 bg-[#0A0A0F] relative overflow-hidden">
+      <section className="py-32 bg-zinc-950 relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-[#00F0FF]/5 rounded-full blur-[150px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-cyan-400/5 rounded-full blur-[150px]" />
         </div>
         
         <div className="relative z-10 container mx-auto px-3 sm:px-4 text-center max-w-3xl">
@@ -608,7 +608,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-(family-name:--font-display) font-bold text-[#F8F8FC] mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-zinc-50 mb-6"
           >
             Ready to Own Your Payments?
           </motion.h2>
@@ -618,7 +618,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-xl text-[#A8A8B3] mb-10"
+            className="text-xl text-zinc-400 mb-10"
           >
             Join thousands of merchants and users building trust on VFIDE.
           </motion.p>
@@ -650,10 +650,10 @@ export default function Home() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
-            className="mt-12 text-xs text-[#4A4A55] max-w-xl mx-auto"
+            className="mt-12 text-xs text-zinc-600 max-w-xl mx-auto"
           >
             VFIDE tokens are utility tokens for governance and payments, not investment securities. 
-            Cryptocurrency involves significant risk. See <Link href="/legal" className="text-[#00F0FF] hover:underline">full terms</Link>.
+            Cryptocurrency involves significant risk. See <Link href="/legal" className="text-cyan-400 hover:underline">full terms</Link>.
           </motion.p>
         </div>
       </section>

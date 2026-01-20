@@ -48,13 +48,13 @@ export function MessageReactions({
               onClick={() => handleReactionClick(reaction.emoji, reaction.hasReacted)}
               className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${
                 reaction.hasReacted
-                  ? 'bg-[#00F0FF]/20 border border-[#00F0FF]'
-                  : 'bg-[#2A2A3F]/50 border border-[#3A3A4F] hover:bg-[#3A3A4F]'
+                  ? 'bg-cyan-400/20 border border-cyan-400'
+                  : 'bg-zinc-800/50 border border-zinc-700 hover:bg-zinc-700'
               }`}
               title={`${reaction.count} reaction${reaction.count > 1 ? 's' : ''}`}
             >
               <span className="text-sm">{reaction.emoji}</span>
-              <span className={`${reaction.hasReacted ? 'text-[#00F0FF]' : 'text-[#6B6B78]'} font-medium`}>
+              <span className={`${reaction.hasReacted ? 'text-cyan-400' : 'text-zinc-500'} font-medium`}>
                 {reaction.count}
               </span>
             </motion.button>
@@ -65,7 +65,7 @@ export function MessageReactions({
       {/* Add Reaction Button */}
       <button
         onClick={() => setShowPicker(!showPicker)}
-        className="inline-flex items-center gap-1 mt-1 px-2 py-1 bg-[#2A2A3F]/30 hover:bg-[#3A3A4F] border border-[#3A3A4F] rounded-full text-xs text-[#6B6B78] transition-colors"
+        className="inline-flex items-center gap-1 mt-1 px-2 py-1 bg-zinc-800/30 hover:bg-zinc-700 border border-zinc-700 rounded-full text-xs text-zinc-500 transition-colors"
         title="Add reaction"
       >
         <Smile className="w-3 h-3" />
@@ -87,7 +87,7 @@ export function MessageReactions({
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              className="absolute left-0 mt-2 p-2 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl shadow-xl z-20"
+              className="absolute left-0 mt-2 p-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl z-20"
             >
               <div className="flex gap-1">
                 {QUICK_REACTIONS.map(emoji => (
@@ -97,7 +97,7 @@ export function MessageReactions({
                       onReact(emoji);
                       setShowPicker(false);
                     }}
-                    className="w-10 h-10 flex items-center justify-center hover:bg-[#2A2A3F] rounded-lg transition-colors text-xl"
+                    className="w-10 h-10 flex items-center justify-center hover:bg-zinc-800 rounded-lg transition-colors text-xl"
                     title={`React with ${emoji}`}
                   >
                     {emoji}

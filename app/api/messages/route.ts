@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
 import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, sendMessageSchema } from '@/lib/auth/validation';
+import { isAddress } from 'viem';
 
 interface Message {
   id: number;
@@ -35,6 +39,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress'); // Current user
@@ -49,8 +59,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Verify ownership - user can only read their own messages
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only view your own messages' },
+        { status: 403 }
+      );
+    }
+
     // If conversationWith is specified, get messages between two users
     if (conversationWith) {
+      // Validate conversationWith address
+      if (!isAddress(conversationWith)) {
+        return NextResponse.json(
+          { error: 'Invalid conversationWith address format' },
+          { status: 400 }
+        );
+      }
+
       const result = await query<Message>(
         `SELECT 
           m.*,
@@ -124,8 +150,9 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('[Messages GET API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch messages';
     return NextResponse.json(
-      { error: 'Failed to fetch messages' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -136,17 +163,38 @@ export async function GET(request: NextRequest) {
  * Send a new message
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   const client = await getClient();
   
   try {
-    const body = await request.json();
-    const { from, to, content, isEncrypted } = body;
-
-    // Validate required fields
-    if (!from || !to || !content) {
+    // Validate request body
+    const validation = await validateBody(request, sendMessageSchema);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: from, to, content' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
+      );
+    }
+
+    const { from, to, content } = validation.data;
+    const isEncrypted = false; // Default to unencrypted
+    
+    // Content is already sanitized by sendMessageSchema via validateBody
+
+    // Verify the sender is the authenticated user
+    if (authResult.user.address.toLowerCase() !== from.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only send messages from your own address' },
+        { status: 403 }
       );
     }
 
@@ -212,8 +260,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('[Messages POST API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
     return NextResponse.json(
-      { error: 'Failed to send message' },
+      { error: errorMessage },
       { status: 500 }
     );
   } finally {
@@ -226,11 +275,49 @@ export async function POST(request: NextRequest) {
  * Mark messages as read
  */
 export async function PATCH(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { messageIds, conversationWith, userAddress } = body;
 
+    // Verify ownership - user can only mark their own messages as read
+    if (userAddress && authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only mark your own messages as read' },
+        { status: 403 }
+      );
+    }
+
     if (messageIds && Array.isArray(messageIds)) {
+      // Verify the user is the recipient of these messages
+      const messageCheck = await query(
+        `SELECT m.id, recipient.wallet_address 
+         FROM messages m 
+         JOIN users recipient ON m.recipient_id = recipient.id 
+         WHERE m.id = ANY($1)`,
+        [messageIds]
+      );
+
+      const unauthorizedMessages = messageCheck.rows.filter(
+        m => m.wallet_address.toLowerCase() !== authResult.user.address.toLowerCase()
+      );
+
+      if (unauthorizedMessages.length > 0) {
+        return NextResponse.json(
+          { error: 'You can only mark messages where you are the recipient as read' },
+          { status: 403 }
+        );
+      }
+
       // Mark specific messages as read
       await query(
         `UPDATE messages SET is_read = true, updated_at = NOW()

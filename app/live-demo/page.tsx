@@ -39,7 +39,7 @@ export default function LiveDemoPage() {
   
   return (
     <>
-      <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-[#1A1A2E] py-16 sm:py-20 px-3 sm:px-4 pt-20 sm:pt-24 overflow-x-hidden">
+      <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-zinc-900 py-16 sm:py-20 px-3 sm:px-4 pt-20 sm:pt-24 overflow-x-hidden">
       <TransactionNotification 
         notification={notification}
         onClose={closeNotification}
@@ -52,16 +52,16 @@ export default function LiveDemoPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-2 sm:space-y-4"
         >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#F5F3E8]">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-zinc-100">
             Experience{' '}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-[#00F0FF] to-[#0080FF]">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-500">
               VFIDE Live
             </span>
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-[#F5F3E8]/60 max-w-2xl mx-auto px-2">
+          <p className="text-base sm:text-lg md:text-xl text-zinc-100/60 max-w-2xl mx-auto px-2">
             Real-time blockchain data that makes people{' '}
-            <span className="text-[#00FF88] font-bold">excited</span> and want to be{' '}
-            <span className="text-[#FFD700] font-bold">all in</span> on VFIDE
+            <span className="text-emerald-400 font-bold">excited</span> and want to be{' '}
+            <span className="text-amber-400 font-bold">all in</span> on VFIDE
           </p>
         </motion.div>
         
@@ -85,7 +85,7 @@ export default function LiveDemoPage() {
               transition={{ delay: 0.3 }}
               className="rounded-2xl p-4 sm:p-6 md:p-8"
             >
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#F5F3E8] mb-3 sm:mb-4 md:mb-6 text-center">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-100 mb-3 sm:mb-4 md:mb-6 text-center">
                 Your ProofScore Reputation
               </h2>
               <div className="flex justify-center">
@@ -106,13 +106,13 @@ export default function LiveDemoPage() {
                 >
                   <button
                     onClick={() => handleDemoTransaction('endorse')}
-                    className="w-full bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0A] font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base"
+                    className="w-full bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base"
                   >
                     Endorse Another User
                   </button>
                   <button
                     onClick={() => handleDemoTransaction('vote')}
-                    className="w-full bg-linear-to-r from-[#A78BFA] to-[#7C3AED] text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base"
+                    className="w-full bg-linear-to-r from-violet-400 to-violet-600 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base"
                   >
                     Vote on DAO Proposal
                   </button>
@@ -125,7 +125,7 @@ export default function LiveDemoPage() {
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-[#0F0F0F]/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-[#00F0FF]/20"
+              className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
             >
               <FeeSavingsCalculator />
             </motion.div>
@@ -136,7 +136,7 @@ export default function LiveDemoPage() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-[#0F0F0F]/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-[#00F0FF]/20"
+            className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
           >
             <LiveActivityFeed />
             
@@ -150,12 +150,12 @@ export default function LiveDemoPage() {
               >
                 <button
                   onClick={() => handleDemoTransaction('transfer')}
-                  className="bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
+                  className="bg-linear-to-r from-cyan-400 to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
                 >
                   Send VFIDE
                 </button>
                 <button
-                  className="bg-linear-to-r from-[#00FF88] to-[#00CC6A] text-[#0A0A0A] font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
+                  className="bg-linear-to-r from-emerald-400 to-[#00CC6A] text-zinc-950 font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
                 >
                   Pay Merchant
                 </button>
@@ -171,19 +171,19 @@ export default function LiveDemoPage() {
           transition={{ delay: 0.8 }}
           className="relative"
         >
-          <div className="absolute inset-0 bg-linear-to-r from-[#00F0FF] via-[#00FF88] to-[#FFD700] rounded-2xl blur-2xl opacity-20" />
-          <div className="relative bg-[#0F0F0F]/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-[#00F0FF]/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-[#F5F3E8]">
+          <div className="absolute inset-0 bg-linear-to-r from-cyan-400 via-[#00FF88] to-amber-400 rounded-2xl blur-2xl opacity-20" />
+          <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-cyan-400/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-zinc-100">
               Ready for No Processor Fees?
             </h2>
-            <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-[#F5F3E8]/70 max-w-2xl mx-auto">
+            <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-zinc-100/70 max-w-2xl mx-auto">
               Join thousands building trust-based commerce with non-custodial vaults and DAO governance.
             </p>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center">
-              <button className="w-full sm:w-auto bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
+              <button className="w-full sm:w-auto bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
                 Create Your Vault
               </button>
-              <button className="w-full sm:w-auto bg-[#0F0F0F] border-2 border-[#00F0FF] text-[#00F0FF] font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
+              <button className="w-full sm:w-auto bg-zinc-950 border-2 border-cyan-400 text-cyan-400 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
                 Read Docs
               </button>
             </div>

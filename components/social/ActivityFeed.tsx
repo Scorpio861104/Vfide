@@ -99,12 +99,12 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-[#00F0FF]" />
-          <h3 className="font-bold text-[#F5F3E8]">Activity Feed</h3>
+          <Activity className="w-5 h-5 text-cyan-400" />
+          <h3 className="font-bold text-zinc-100">Activity Feed</h3>
         </div>
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-[#50C878]" />
-          <span className="text-sm text-[#A0A0A5]">
+          <TrendingUp className="w-4 h-4 text-emerald-500" />
+          <span className="text-sm text-zinc-400">
             {activities.length} activities
           </span>
         </div>
@@ -118,8 +118,8 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
             onClick={() => setFilter(option.value)}
             className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${
               filter === option.value
-                ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                : 'bg-[#2A2A3F] text-[#A0A0A5] hover:bg-[#3A3A4F]'
+                ? 'bg-cyan-400 text-zinc-950'
+                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
             }`}
           >
             {option.label}
@@ -129,9 +129,9 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
 
       {/* Activity List */}
       {filteredActivities.length === 0 ? (
-        <div className="p-8 bg-[#0A0A0F] border border-[#2A2A2F] rounded-xl text-center">
-          <Activity className="w-12 h-12 text-[#6B6B78] mx-auto mb-3 opacity-50" />
-          <p className="text-[#6B6B78]">No activity yet</p>
+        <div className="p-8 bg-zinc-950 border border-zinc-800 rounded-xl text-center">
+          <Activity className="w-12 h-12 text-zinc-500 mx-auto mb-3 opacity-50" />
+          <p className="text-zinc-500">No activity yet</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -142,7 +142,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
                   key={activity.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-[#0A0A0F] border border-[#2A2A2F] rounded-xl hover:border-[#3A3A4F] transition-colors"
+                  className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors"
                 >
                   <div className="flex items-start gap-3">
                     {/* Icon */}
@@ -167,10 +167,10 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
                           {activity.type.replace('_', ' ')}
                         </span>
                       </div>
-                      <p className="text-sm text-[#A0A0A5] mb-2">
+                      <p className="text-sm text-zinc-400 mb-2">
                         {activity.content}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-[#6B6B78]">
+                      <div className="flex items-center gap-2 text-xs text-zinc-500">
                         <Clock className="w-3 h-3" />
                         <span>
                           {new Date(activity.timestamp).toLocaleString()}

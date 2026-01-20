@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from '@jest/globals'
+import { describe, expect, it, } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
@@ -103,7 +103,7 @@ describe('GuardianManagementPanel', () => {
 
 describe('GuardianManagementPanel - No Vault', () => {
   it('shows create vault message when no vault exists', () => {
-    vi.doMock('@/lib/vfide-hooks', () => ({
+    jest.doMock('@/lib/vfide-hooks', () => ({
       useUserVault: () => ({ vaultAddress: null }),
       useVaultGuardians: () => ({
         guardians: [],

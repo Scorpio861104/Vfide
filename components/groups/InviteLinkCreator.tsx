@@ -113,7 +113,7 @@ export function InviteLinkCreator({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6 max-w-lg w-full"
+              className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-lg w-full"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -126,7 +126,7 @@ export function InviteLinkCreator({
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-[#2A2A2F] rounded-lg transition-colors"
+                  className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
                   aria-label="Close"
                 >
                   <X className="w-5 h-5 text-gray-400" />
@@ -145,7 +145,7 @@ export function InviteLinkCreator({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="e.g., Weekly meetup invite"
-                    className="w-full px-3 py-2 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
@@ -158,7 +158,7 @@ export function InviteLinkCreator({
                   <select
                     value={expiresIn}
                     onChange={(e) => setExpiresIn(safeParseInt(e.target.value, 86400))}
-                    className="w-full px-3 py-2 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   >
                     {EXPIRATION_OPTIONS.map((option) => (
                       <option key={option.label} value={option.value}>
@@ -177,7 +177,7 @@ export function InviteLinkCreator({
                   <select
                     value={maxUses}
                     onChange={(e) => setMaxUses(safeParseInt(e.target.value, 0))}
-                    className="w-full px-3 py-2 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   >
                     {MAX_USES_OPTIONS.map((option) => (
                       <option key={option.label} value={option.value}>
@@ -194,7 +194,7 @@ export function InviteLinkCreator({
                     id="requireApproval"
                     checked={requireApproval}
                     onChange={(e) => setRequireApproval(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-600 bg-[#0F0F14] text-blue-600 focus:ring-blue-500"
+                    className="w-4 h-4 rounded border-gray-600 bg-zinc-900 text-blue-600 focus:ring-blue-500"
                   />
                   <label htmlFor="requireApproval" className="text-sm text-gray-300">
                     Require admin approval to join
@@ -264,8 +264,8 @@ export function InviteLinkCard({ link, onRevoke, onDelete }: InviteLinkCardProps
   };
 
   return (
-    <div className={`bg-[#1A1A1F] border rounded-lg p-4 ${
-      isValid ? 'border-[#2A2A2F]' : 'border-red-900/30 opacity-60'
+    <div className={`bg-zinc-900 border rounded-lg p-4 ${
+      isValid ? 'border-zinc-800' : 'border-red-900/30 opacity-60'
     }`}>
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
@@ -273,14 +273,14 @@ export function InviteLinkCard({ link, onRevoke, onDelete }: InviteLinkCardProps
           {link.metadata?.description && (
             <p className="text-white font-medium mb-1">{link.metadata.description}</p>
           )}
-          <code className="text-xs text-gray-400 bg-[#0F0F14] px-2 py-1 rounded">
+          <code className="text-xs text-gray-400 bg-zinc-900 px-2 py-1 rounded">
             {link.code}
           </code>
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={handleCopy}
-            className="p-2 hover:bg-[#2A2A2F] rounded-lg transition-colors"
+            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
             aria-label="Copy link"
           >
             {copied ? (
@@ -292,7 +292,7 @@ export function InviteLinkCard({ link, onRevoke, onDelete }: InviteLinkCardProps
           {onRevoke && isValid && (
             <button
               onClick={() => onRevoke(link.code)}
-              className="p-2 hover:bg-[#2A2A2F] rounded-lg transition-colors"
+              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
               aria-label="Revoke link"
               title="Revoke"
             >

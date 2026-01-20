@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   // Fix for pino/thread-stream compatibility
   serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
 
-  // TypeScript strict mode - build fails on errors (production quality)
+  // Enforce TypeScript strict mode - all errors must be fixed
   typescript: {
     ignoreBuildErrors: false,
   },

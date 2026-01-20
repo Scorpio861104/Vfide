@@ -17,6 +17,11 @@ pool.on('connect', () => {
 
 pool.on('error', (err) => {
   console.error('❌ Database connection error:', err);
+  // Log the error for monitoring, but let the pool handle reconnection
+  // The pool will automatically attempt to reconnect
+  if (err.message.includes('Connection terminated') || err.message.includes('ECONNREFUSED')) {
+    console.error('⚠️ Database connection lost. Pool will attempt to reconnect automatically.');
+  }
 });
 
 export async function query<T extends QueryResultRow = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
@@ -27,7 +32,13 @@ export async function query<T extends QueryResultRow = any>(text: string, params
     console.log('Executed query', { text, duration, rows: res.rowCount });
     return res;
   } catch (error) {
-    console.error('Database query error:', error);
+    const duration = Date.now() - start;
+    console.error('Database query error:', { error, text, duration });
+    
+    // Re-throw with more context for better error handling
+    if (error instanceof Error) {
+      throw new Error(`Database query failed: ${error.message}`);
+    }
     throw error;
   }
 }

@@ -95,27 +95,27 @@ export function StoryCreator({
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-zinc-900 border border-zinc-700 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#3A3A4F]">
-          <h2 className="text-xl font-bold text-[#00F0FF]">Create Story</h2>
+        <div className="flex items-center justify-between p-4 border-b border-zinc-700">
+          <h2 className="text-xl font-bold text-cyan-400">Create Story</h2>
           <button
             onClick={onClose}
-            className="text-[#A0A0A5] hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#3A3A4F]"
+            className="text-zinc-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-700"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Mode Selector */}
-        <div className="flex border-b border-[#3A3A4F]">
+        <div className="flex border-b border-zinc-700">
           <button
             onClick={() => setMode('text')}
             className={`flex-1 py-3 font-semibold transition-colors flex items-center justify-center gap-2 ${
               mode === 'text'
-                ? 'bg-[#00F0FF]/10 text-[#00F0FF] border-b-2 border-[#00F0FF]'
-                : 'text-[#A0A0A5] hover:text-white'
+                ? 'bg-cyan-400/10 text-cyan-400 border-b-2 border-cyan-400'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Type size={18} />
@@ -125,8 +125,8 @@ export function StoryCreator({
             onClick={() => setMode('media')}
             className={`flex-1 py-3 font-semibold transition-colors flex items-center justify-center gap-2 ${
               mode === 'media'
-                ? 'bg-[#00F0FF]/10 text-[#00F0FF] border-b-2 border-[#00F0FF]'
-                : 'text-[#A0A0A5] hover:text-white'
+                ? 'bg-cyan-400/10 text-cyan-400 border-b-2 border-cyan-400'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Camera size={18} />
@@ -153,13 +153,13 @@ export function StoryCreator({
               </div>
 
               {/* Character Count */}
-              <p className="text-center text-sm text-[#A0A0A5]">
+              <p className="text-center text-sm text-zinc-400">
                 {textContent.length}/200 characters
               </p>
 
               {/* Background Selector */}
               <div>
-                <p className="text-[#F5F3E8] mb-3 font-semibold">Choose Background</p>
+                <p className="text-zinc-100 mb-3 font-semibold">Choose Background</p>
                 <div className="grid grid-cols-5 gap-3">
                   {STORY_BACKGROUNDS.map((bg, index) => (
                     <button
@@ -167,7 +167,7 @@ export function StoryCreator({
                       onClick={() => setSelectedBackground(index)}
                       className={`aspect-square rounded-lg transition-all ${
                         selectedBackground === index
-                          ? 'ring-2 ring-[#00F0FF] scale-110'
+                          ? 'ring-2 ring-cyan-400 scale-110'
                           : 'hover:scale-105'
                       }`}
                       style={{ background: bg.gradient }}
@@ -191,12 +191,12 @@ export function StoryCreator({
               {/* Media Upload/Preview */}
               {!mediaPreview ? (
                 <div
-                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-[#3A3A4F] rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-[#00F0FF] transition-colors"
+                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-cyan-400 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <ImageIcon className="w-16 h-16 text-[#A0A0A5] mb-4" />
-                  <p className="text-[#F5F3E8] text-lg mb-2">Add Photo or Video</p>
-                  <p className="text-[#A0A0A5] text-sm">Click to browse</p>
+                  <ImageIcon className="w-16 h-16 text-zinc-400 mb-4" />
+                  <p className="text-zinc-100 text-lg mb-2">Add Photo or Video</p>
+                  <p className="text-zinc-400 text-sm">Click to browse</p>
                 </div>
               ) : (
                 <div className="aspect-9/16 max-w-sm mx-auto rounded-xl overflow-hidden relative">
@@ -221,7 +221,7 @@ export function StoryCreator({
               {/* Caption Input */}
               {mediaPreview && (
                 <div>
-                  <label className="block text-[#F5F3E8] mb-2 font-semibold">
+                  <label className="block text-zinc-100 mb-2 font-semibold">
                     Add Caption (optional)
                   </label>
                   <input
@@ -229,7 +229,7 @@ export function StoryCreator({
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
                     placeholder="Write a caption..."
-                    className="w-full px-4 py-3 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] placeholder-[#6B6B78] focus:border-[#00F0FF] focus:outline-none"
+                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
                     maxLength={100}
                   />
                 </div>
@@ -239,17 +239,17 @@ export function StoryCreator({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[#3A3A4F] flex gap-3">
+        <div className="p-4 border-t border-zinc-700 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 border border-[#3A3A4F] text-[#A0A0A5] rounded-lg font-semibold hover:bg-[#3A3A4F]/50 transition-colors"
+            className="flex-1 py-3 border border-zinc-700 text-zinc-400 rounded-lg font-semibold hover:bg-zinc-700/50 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={(mode === 'text' && !textContent.trim()) || (mode === 'media' && !mediaPreview)}
-            className="flex-1 py-3 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-semibold hover:bg-[#00D9E8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 py-3 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Share Story
           </button>

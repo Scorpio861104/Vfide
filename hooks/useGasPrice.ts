@@ -172,8 +172,8 @@ export function useGasPrice() {
     if (history.length < 3) return 'stable';
     
     const recent = history.slice(-3);
-    const first = recent[0].standard;
-    const last = recent[recent.length - 1].standard;
+    const first = recent[0]?.standard ?? 0;
+    const last = recent[recent.length - 1]?.standard ?? 0;
     const change = ((last - first) / first) * 100;
     
     if (change > 10) return 'up';

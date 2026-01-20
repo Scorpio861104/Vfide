@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
     const { userId, filename, fileType, fileSize, url } = body;

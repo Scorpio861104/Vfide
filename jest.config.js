@@ -78,14 +78,11 @@ const customJestConfig = {
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(wagmi|@wagmi|viem|@tanstack)/)',
+    'node_modules/(?!(wagmi|@wagmi|viem|@tanstack|@rainbow-me|@walletconnect|@noble|@scure|abitype|ox)/)',
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
     '/__mocks__/',
-    '<rootDir>/__tests__/(?!(contract-interactions|network-resilience|security|integration|multi-chain|load-stress|accessibility|websocket|storage|error-boundary)\\.test\\.tsx?)',
-    '<rootDir>/hooks/__tests__/.*Extended\\.test\\.[jt]sx?$',
-    '<rootDir>/hooks/__tests__/.*Real\\.test\\.[jt]sx?$',
     '<rootDir>/playwright/',
     '/e2e/',  // E2E tests run via Playwright, not Jest
   ],

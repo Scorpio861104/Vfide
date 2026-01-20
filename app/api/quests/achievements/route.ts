@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
  * GET /api/quests/achievements
  * Fetch achievement milestones with user progress
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
@@ -97,6 +103,14 @@ export async function GET(request: NextRequest) {
  * Update achievement progress
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const { milestoneKey, userAddress, progress } = await request.json();
 

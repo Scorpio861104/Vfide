@@ -15,7 +15,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
@@ -28,7 +28,6 @@ import {
   CheckCircle, 
   XCircle, 
   TrendingUp,
-  Sparkles,
   Send,
   History,
   FileText,
@@ -455,7 +454,7 @@ function StatCard({ label, value, icon, index = 0 }: StatCardProps) {
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
             initial={{ x: '-100%' }}
             animate={{ x: '100%' }}
             exit={{ opacity: 0 }}
@@ -707,7 +706,7 @@ interface DelegationItemProps {
 
 function DelegationItem({ delegation, onRevoke, index = 0 }: DelegationItemProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const { playSuccess, playError } = useTransactionSounds();
+  const { playSuccess: _playSuccess, playError } = useTransactionSounds();
   
   const handleRevoke = () => {
     playError(); // Use error sound for revoke action
@@ -811,7 +810,7 @@ function DelegationItem({ delegation, onRevoke, index = 0 }: DelegationItemProps
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent"
             initial={{ x: '-100%' }}
             animate={{ x: '100%' }}
             exit={{ opacity: 0 }}
@@ -1160,7 +1159,7 @@ export default function GovernanceUI() {
           transition={{ duration: 0.5, delay: 0.3 }}
         >
           <div className="relative grid grid-cols-2 md:grid-cols-4 border-b border-gray-200 dark:border-gray-700">
-            {(['proposals', 'voting', 'delegation', 'history'] as const).map((tab, idx) => (
+            {(['proposals', 'voting', 'delegation', 'history'] as const).map((tab, _idx) => (
               <motion.button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

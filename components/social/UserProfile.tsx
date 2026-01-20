@@ -259,17 +259,17 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Cover Image */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative h-48 md:h-64 bg-linear-to-r from-[#00F0FF]/20 via-[#A78BFA]/20 to-[#FF006E]/20"
+        className="relative h-48 md:h-64 bg-linear-to-r from-cyan-400/20 via-violet-400/20 to-rose-500/20"
       >
         {user.coverImage && (
           <img src={user.coverImage} alt="cover" className="w-full h-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-linear-to-t from-[#0A0A0F] to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-zinc-950 to-transparent" />
       </motion.div>
 
       {/* Profile Header */}
@@ -282,8 +282,8 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
           className="flex flex-col md:flex-row md:items-end gap-4 -mt-20 mb-6"
         >
           <div className="shrink-0">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-linear-to-br from-[#00F0FF] to-[#A78BFA] p-1 shadow-2xl">
-              <div className="w-full h-full rounded-xl bg-[#1A1A2E] flex items-center justify-center text-6xl md:text-8xl">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-linear-to-br from-cyan-400 to-violet-400 p-1 shadow-2xl">
+              <div className="w-full h-full rounded-xl bg-zinc-900 flex items-center justify-center text-6xl md:text-8xl">
                 {user.avatar}
               </div>
             </div>
@@ -292,29 +292,29 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
           {/* Profile Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl md:text-4xl font-bold text-[#F5F3E8]">{user.displayName}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-zinc-100">{user.displayName}</h1>
               {user.isVerified && (
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                   title="Verified user"
                 >
-                  <CheckCircle2 className="w-8 h-8 text-[#00F0FF]" />
+                  <CheckCircle2 className="w-8 h-8 text-cyan-400" />
                 </motion.div>
               )}
             </div>
-            <p className="text-[#A0A0A5] text-lg mb-3">@{user.username}</p>
+            <p className="text-zinc-400 text-lg mb-3">@{user.username}</p>
 
             {user.location && (
-              <div className="flex items-center gap-2 text-[#A0A0A5] mb-3">
+              <div className="flex items-center gap-2 text-zinc-400 mb-3">
                 <MapPin className="w-4 h-4" />
                 {user.location}
               </div>
             )}
 
-            <p className="text-[#D0D0D8] max-w-2xl mb-4">{user.bio}</p>
+            <p className="text-zinc-300 max-w-2xl mb-4">{user.bio}</p>
 
-            <div className="flex items-center gap-2 text-sm text-[#A0A0A5] mb-4">
+            <div className="flex items-center gap-2 text-sm text-zinc-400 mb-4">
               <Calendar className="w-4 h-4" />
               Joined {user.joinedAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </div>
@@ -323,15 +323,15 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
           {/* Action Buttons */}
           <div className="flex gap-2 shrink-0">
             {isOwnProfile ? (
-              <button className="px-6 py-3 bg-[#00F0FF]/20 border border-[#00F0FF] text-[#00F0FF] rounded-lg hover:bg-[#00F0FF]/30 transition-colors font-semibold">
+              <button className="px-6 py-3 bg-cyan-400/20 border border-cyan-400 text-cyan-400 rounded-lg hover:bg-cyan-400/30 transition-colors font-semibold">
                 Edit Profile
               </button>
             ) : (
               <>
-                <button className="px-4 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg hover:bg-[#00D9E8] transition-colors font-semibold">
+                <button className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg hover:bg-cyan-400 transition-colors font-semibold">
                   {user.isFollowing ? 'Following' : 'Follow'}
                 </button>
-                <button className="px-4 py-2 bg-[#A78BFA] text-white rounded-lg hover:bg-[#9661F0] transition-colors font-semibold">
+                <button className="px-4 py-2 bg-violet-400 text-white rounded-lg hover:bg-purple-500 transition-colors font-semibold">
                   {user.isFriend ? 'Friends' : 'Add Friend'}
                 </button>
               </>
@@ -340,7 +340,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
             <div className="relative">
               <button
                 onClick={() => setShowShareMenu(!showShareMenu)}
-                className="px-4 py-2 bg-[#2A2A3E] border border-[#3A3A4F] text-[#A0A0A5] rounded-lg hover:border-[#00F0FF] transition-colors"
+                className="px-4 py-2 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg hover:border-cyan-400 transition-colors"
               >
                 <Share2 className="w-5 h-5" />
               </button>
@@ -351,11 +351,11 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-48 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg shadow-xl z-10"
+                    className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-10"
                   >
                     <button
                       onClick={handleCopyProfile}
-                      className="w-full text-left px-4 py-3 text-[#F5F3E8] hover:bg-[#2A2A3E] flex items-center gap-2 transition-colors border-b border-[#3A3A4F]"
+                      className="w-full text-left px-4 py-3 text-zinc-100 hover:bg-zinc-800 flex items-center gap-2 transition-colors border-b border-zinc-700"
                     >
                       {copied ? (
                         <>
@@ -369,11 +369,11 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                         </>
                       )}
                     </button>
-                    <button className="w-full text-left px-4 py-3 text-[#F5F3E8] hover:bg-[#2A2A3E] flex items-center gap-2 transition-colors border-b border-[#3A3A4F]">
+                    <button className="w-full text-left px-4 py-3 text-zinc-100 hover:bg-zinc-800 flex items-center gap-2 transition-colors border-b border-zinc-700">
                       <Share2 className="w-4 h-4" />
                       Share on X
                     </button>
-                    <button className="w-full text-left px-4 py-3 text-[#F5F3E8] hover:bg-[#2A2A3E] flex items-center gap-2 transition-colors">
+                    <button className="w-full text-left px-4 py-3 text-zinc-100 hover:bg-zinc-800 flex items-center gap-2 transition-colors">
                       <MessageCircle className="w-4 h-4" />
                       Share Message
                     </button>
@@ -391,32 +391,32 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
           transition={{ delay: 0.2 }}
           className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
         >
-          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#00F0FF] transition-colors">
-            <div className="text-[#00F0FF] text-2xl font-bold mb-1">{user.proofScore.toLocaleString()}</div>
-            <div className="text-xs text-[#A0A0A5]">Proof Score</div>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-cyan-400 transition-colors">
+            <div className="text-cyan-400 text-2xl font-bold mb-1">{user.proofScore.toLocaleString()}</div>
+            <div className="text-xs text-zinc-400">Proof Score</div>
           </div>
 
-          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#A78BFA] transition-colors">
-            <div className="text-[#A78BFA] text-2xl font-bold mb-1">{user.level}</div>
-            <div className="text-xs text-[#A0A0A5]">Level</div>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-violet-400 transition-colors">
+            <div className="text-violet-400 text-2xl font-bold mb-1">{user.level}</div>
+            <div className="text-xs text-zinc-400">Level</div>
           </div>
 
-          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#50C878] transition-colors">
-            <div className="text-[#50C878] text-2xl font-bold mb-1">{user.followers.toLocaleString()}</div>
-            <div className="text-xs text-[#A0A0A5]">Followers</div>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-emerald-500 transition-colors">
+            <div className="text-emerald-500 text-2xl font-bold mb-1">{user.followers.toLocaleString()}</div>
+            <div className="text-xs text-zinc-400">Followers</div>
           </div>
 
-          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#FF6B9D] transition-colors">
-            <div className="text-[#FF6B9D] text-2xl font-bold mb-1 flex items-center justify-center gap-1">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-pink-400 transition-colors">
+            <div className="text-pink-400 text-2xl font-bold mb-1 flex items-center justify-center gap-1">
               <Flame className="w-5 h-5" />
               {user.activityStreak}
             </div>
-            <div className="text-xs text-[#A0A0A5]">Day Streak</div>
+            <div className="text-xs text-zinc-400">Day Streak</div>
           </div>
 
-          <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 text-center hover:border-[#FFD700] transition-colors">
-            <div className="text-[#FFD700] text-2xl font-bold mb-1">{user.totalPoints.toLocaleString()}</div>
-            <div className="text-xs text-[#A0A0A5]">Total Points</div>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-amber-400 transition-colors">
+            <div className="text-amber-400 text-2xl font-bold mb-1">{user.totalPoints.toLocaleString()}</div>
+            <div className="text-xs text-zinc-400">Total Points</div>
           </div>
         </motion.div>
 
@@ -428,7 +428,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
             transition={{ delay: 0.3 }}
             className="mb-8"
           >
-            <h3 className="text-lg font-bold text-[#F5F3E8] mb-4">Featured Badges</h3>
+            <h3 className="text-lg font-bold text-zinc-100 mb-4">Featured Badges</h3>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {user.badges.slice(0, 4).map((badge) => (
                 <motion.div
@@ -443,9 +443,9 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                         : badge.rarity === 'uncommon'
                           ? 'border-green-500 bg-green-500/10'
                           : badge.rarity === 'rare'
-                            ? 'border-[#00F0FF] bg-[#00F0FF]/10'
+                            ? 'border-cyan-400 bg-cyan-400/10'
                             : badge.rarity === 'epic'
-                              ? 'border-[#A78BFA] bg-[#A78BFA]/10'
+                              ? 'border-violet-400 bg-violet-400/10'
                               : 'border-yellow-500 bg-yellow-500/10'
                     }`}
                   >
@@ -456,8 +456,8 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                     whileHover={{ opacity: 1 }}
                     className="absolute inset-0 bg-black/80 rounded-xl flex flex-col items-center justify-center p-2"
                   >
-                    <div className="text-xs font-bold text-center text-[#F5F3E8]">{badge.name}</div>
-                    <div className="text-[10px] text-[#A0A0A5] text-center mt-1">{badge.description}</div>
+                    <div className="text-xs font-bold text-center text-zinc-100">{badge.name}</div>
+                    <div className="text-[10px] text-zinc-400 text-center mt-1">{badge.description}</div>
                   </motion.div>
                 </motion.div>
               ))}
@@ -467,7 +467,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
       </div>
 
       {/* Tab Navigation */}
-      <div className="sticky top-0 z-20 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-[#3A3A4F]">
+      <div className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-700">
         <div className="px-4 md:px-8">
           <div className="flex gap-1 overflow-x-auto">
             {tabs.map((tab) => (
@@ -476,8 +476,8 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                 onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`px-4 py-3 font-semibold text-sm whitespace-nowrap border-b-2 transition-all ${
                   activeTab === tab.key
-                    ? 'border-[#00F0FF] text-[#00F0FF]'
-                    : 'border-transparent text-[#A0A0A5] hover:text-[#F5F3E8]'
+                    ? 'border-cyan-400 text-cyan-400'
+                    : 'border-transparent text-zinc-400 hover:text-zinc-100'
                 }`}
               >
                 <span className="mr-2">{tab.icon}</span>
@@ -506,14 +506,14 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 hover:border-[#00F0FF]/50 transition-colors"
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-cyan-400/50 transition-colors"
                 >
                   <div className="flex items-start gap-4">
                     <div className="text-2xl shrink-0">{item.icon}</div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-[#F5F3E8] font-semibold">{item.title}</h4>
-                      <p className="text-[#A0A0A5] text-sm">{item.description}</p>
-                      <p className="text-[#6B6B78] text-xs mt-1">
+                      <h4 className="text-zinc-100 font-semibold">{item.title}</h4>
+                      <p className="text-zinc-400 text-sm">{item.description}</p>
+                      <p className="text-zinc-500 text-xs mt-1">
                         {new Date(item.timestamp).toLocaleDateString()} at{' '}
                         {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
@@ -539,16 +539,16 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 hover:border-[#A78BFA] transition-colors"
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-violet-400 transition-colors"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-2xl">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-2xl">
                       {friend.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-[#F5F3E8] truncate">{friend.displayName}</h4>
+                      <h4 className="font-semibold text-zinc-100 truncate">{friend.displayName}</h4>
                       {friend.isMutual && (
-                        <div className="text-xs text-[#00F0FF] flex items-center gap-1">
+                        <div className="text-xs text-cyan-400 flex items-center gap-1">
                           <Users className="w-3 h-3" />
                           Mutual friends
                         </div>
@@ -557,11 +557,11 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                   </div>
                   <div className="flex items-center justify-between text-sm mb-3">
                     <div>
-                      <div className="text-[#00F0FF] font-semibold">{friend.proofScore}</div>
-                      <div className="text-[#A0A0A5] text-xs">Proof Score</div>
+                      <div className="text-cyan-400 font-semibold">{friend.proofScore}</div>
+                      <div className="text-zinc-400 text-xs">Proof Score</div>
                     </div>
                   </div>
-                  <button className="w-full px-3 py-2 bg-[#2A2A3E] border border-[#3A3A4F] text-[#F5F3E8] rounded hover:border-[#A78BFA] transition-colors text-sm font-semibold">
+                  <button className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded hover:border-violet-400 transition-colors text-sm font-semibold">
                     View Profile
                   </button>
                 </motion.div>
@@ -584,8 +584,8 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
-                  className={`bg-[#1A1A2E] border rounded-lg p-4 transition-colors ${
-                    achievement.isUnlocked ? 'border-[#00F0FF]' : 'border-[#3A3A4F]'
+                  className={`bg-zinc-900 border rounded-lg p-4 transition-colors ${
+                    achievement.isUnlocked ? 'border-cyan-400' : 'border-zinc-700'
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -593,22 +593,22 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                       {achievement.icon}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#F5F3E8] mb-1">{achievement.title}</h4>
-                      <p className="text-[#A0A0A5] text-sm mb-3">{achievement.description}</p>
-                      <div className="w-full bg-[#0A0A0F] rounded-full h-2 overflow-hidden">
+                      <h4 className="font-semibold text-zinc-100 mb-1">{achievement.title}</h4>
+                      <p className="text-zinc-400 text-sm mb-3">{achievement.description}</p>
+                      <div className="w-full bg-zinc-950 rounded-full h-2 overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
                           transition={{ duration: 1, delay: 0.2 }}
-                          className={`h-full ${achievement.isUnlocked ? 'bg-linear-to-r from-[#00F0FF] to-[#A78BFA]' : 'bg-[#3A3A4F]'}`}
+                          className={`h-full ${achievement.isUnlocked ? 'bg-linear-to-r from-cyan-400 to-violet-400' : 'bg-zinc-700'}`}
                         />
                       </div>
                       <div className="flex justify-between items-center mt-2">
-                        <span className="text-xs text-[#A0A0A5]">
+                        <span className="text-xs text-zinc-400">
                           {achievement.progress} / {achievement.maxProgress}
                         </span>
                         {achievement.isUnlocked && (
-                          <span className="text-[10px] text-[#00F0FF] font-semibold">UNLOCKED</span>
+                          <span className="text-[10px] text-cyan-400 font-semibold">UNLOCKED</span>
                         )}
                       </div>
                     </div>
@@ -643,16 +643,16 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                         : badge.rarity === 'uncommon'
                           ? 'border-green-500 bg-green-500/10'
                           : badge.rarity === 'rare'
-                            ? 'border-[#00F0FF] bg-[#00F0FF]/10'
+                            ? 'border-cyan-400 bg-cyan-400/10'
                             : badge.rarity === 'epic'
-                              ? 'border-[#A78BFA] bg-[#A78BFA]/10'
+                              ? 'border-violet-400 bg-violet-400/10'
                               : 'border-yellow-500 bg-yellow-500/10'
                     }`}
                   >
                     {badge.icon}
                   </motion.div>
-                  <h4 className="font-semibold text-[#F5F3E8] text-center text-sm mb-1">{badge.name}</h4>
-                  <p className="text-[#A0A0A5] text-xs text-center">{badge.description}</p>
+                  <h4 className="font-semibold text-zinc-100 text-center text-sm mb-1">{badge.name}</h4>
+                  <p className="text-zinc-400 text-xs text-center">{badge.description}</p>
                   <div className="text-center mt-2">
                     <span
                       className={`text-[10px] font-bold px-2 py-1 rounded ${
@@ -661,9 +661,9 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                           : badge.rarity === 'uncommon'
                             ? 'text-green-400 bg-green-500/20'
                             : badge.rarity === 'rare'
-                              ? 'text-[#00F0FF] bg-[#00F0FF]/20'
+                              ? 'text-cyan-400 bg-cyan-400/20'
                               : badge.rarity === 'epic'
-                                ? 'text-[#A78BFA] bg-[#A78BFA]/20'
+                                ? 'text-violet-400 bg-violet-400/20'
                                 : 'text-yellow-400 bg-yellow-500/20'
                       }`}
                     >

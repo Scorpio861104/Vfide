@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAdmin } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, awardXpSchema } from '@/lib/auth/validation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -77,9 +80,27 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require admin access - only admins can award XP
+  const authResult = requireAdmin(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
-    const body = await request.json();
-    const { userAddress, xpAmount, reason } = body;
+    // Validate request body
+    const validation = await validateBody(request, awardXpSchema);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error, details: validation.details },
+        { status: 400 }
+      );
+    }
+
+    const { userAddress, xpAmount, reason } = validation.data;
 
     if (!userAddress || !xpAmount) {
       return NextResponse.json(

@@ -15,17 +15,22 @@ interface LogContext {
  * Log levels for different environments
  */
 const LOG_LEVELS = {
-  development: ['debug', 'info', 'warn', 'error'],
-  test: ['warn', 'error'],
-  production: ['warn', 'error'], // Warnings + errors in production for valuable insights
+  development: ['debug', 'info', 'warn', 'error'] as LogLevel[],
+  test: ['warn', 'error'] as LogLevel[],
+  production: ['warn', 'error'] as LogLevel[], // Warnings + errors in production for valuable insights
 };
+
+const DEFAULT_LOG_LEVELS: LogLevel[] = ['debug', 'info', 'warn', 'error'];
 
 /**
  * Get current environment log levels
  */
 function getEnabledLevels(): LogLevel[] {
-  const env = process.env.NODE_ENV || 'development';
-  return LOG_LEVELS[env as keyof typeof LOG_LEVELS] || LOG_LEVELS.development;
+  const env = process.env.NODE_ENV as keyof typeof LOG_LEVELS | undefined;
+  if (env && env in LOG_LEVELS) {
+    return LOG_LEVELS[env];
+  }
+  return DEFAULT_LOG_LEVELS;
 }
 
 /**
@@ -81,9 +86,8 @@ class Logger {
             level: 'warning',
             extra: context,
           });
-        } catch (err) {
+        } catch {
           // Sentry not configured - fail silently
-          console.error('[Logger] Sentry not configured:', err);
         }
       }
     }
@@ -109,9 +113,8 @@ class Logger {
             extra: { error, ...context },
           });
         }
-      } catch (err) {
+      } catch {
         // Sentry not configured - fail silently
-        console.error('[Logger] Sentry not configured:', err);
       }
     }
   }

@@ -284,26 +284,26 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-20 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-[#3A3A4F] px-4 md:px-8 py-6"
+        className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-700 px-4 md:px-8 py-6"
       >
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#F5F3E8] mb-4">Discover Community</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">Discover Community</h1>
 
           {/* Search Bar */}
           <div className="flex gap-3 mb-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A0A0A5] w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search users, tags, or interests..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] placeholder-[#6B6B78] focus:outline-none focus:border-[#00F0FF] transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors"
               />
             </div>
 
@@ -311,8 +311,8 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
               onClick={() => setShowFilters(!showFilters)}
               className={`px-4 py-3 rounded-lg border transition-colors flex items-center gap-2 font-semibold ${
                 showFilters
-                  ? 'bg-[#00F0FF]/20 border-[#00F0FF] text-[#00F0FF]'
-                  : 'bg-[#2A2A3E] border-[#3A3A4F] text-[#A0A0A5] hover:border-[#00F0FF]'
+                  ? 'bg-cyan-400/20 border-cyan-400 text-cyan-400'
+                  : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-cyan-400'
               }`}
             >
               <Filter className="w-4 h-4" />
@@ -327,37 +327,37 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4 mb-4"
+                className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 mb-4"
               >
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
-                    <label className="text-sm text-[#A0A0A5] font-semibold mb-2 block">Min Proof Score</label>
+                    <label className="text-sm text-zinc-400 font-semibold mb-2 block">Min Proof Score</label>
                     <input
                       type="number"
                       value={filter.proofScoreMin || ''}
                       onChange={(e) => setFilter({ ...filter, proofScoreMin: e.target.value ? safeParseInt(e.target.value, 0, { min: 0 }) : undefined })}
-                      className="w-full px-3 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded text-[#F5F3E8] focus:outline-none focus:border-[#00F0FF]"
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-cyan-400"
                       placeholder="0"
                     />
                   </div>
 
                   <div>
-                    <label className="text-sm text-[#A0A0A5] font-semibold mb-2 block">Max Proof Score</label>
+                    <label className="text-sm text-zinc-400 font-semibold mb-2 block">Max Proof Score</label>
                     <input
                       type="number"
                       value={filter.proofScoreMax || ''}
                       onChange={(e) => setFilter({ ...filter, proofScoreMax: e.target.value ? safeParseInt(e.target.value, undefined, { max: 10000 }) : undefined })}
-                      className="w-full px-3 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded text-[#F5F3E8] focus:outline-none focus:border-[#00F0FF]"
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-cyan-400"
                       placeholder="10000"
                     />
                   </div>
 
                   <div>
-                    <label className="text-sm text-[#A0A0A5] font-semibold mb-2 block">Sort By</label>
+                    <label className="text-sm text-zinc-400 font-semibold mb-2 block">Sort By</label>
                     <select
                       value={filter.sortBy}
                       onChange={(e) => setFilter({ ...filter, sortBy: e.target.value as DiscoverFilter['sortBy'] })}
-                      className="w-full px-3 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded text-[#F5F3E8] focus:outline-none focus:border-[#00F0FF]"
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-cyan-400"
                     >
                       <option value="trending">Trending</option>
                       <option value="proofScore">Proof Score</option>
@@ -368,7 +368,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                 </div>
 
                 <div>
-                  <label className="text-sm text-[#A0A0A5] font-semibold mb-2 block">Tags</label>
+                  <label className="text-sm text-zinc-400 font-semibold mb-2 block">Tags</label>
                   <div className="flex flex-wrap gap-2">
                     {allTags.map((tag) => (
                       <button
@@ -376,8 +376,8 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                         onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
                         className={`px-3 py-1 rounded-full text-sm font-semibold transition-colors ${
                           selectedTag === tag
-                            ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                            : 'bg-[#2A2A3E] text-[#A0A0A5] hover:border-[#00F0FF]'
+                            ? 'bg-cyan-400 text-zinc-950'
+                            : 'bg-zinc-800 text-zinc-400 hover:border-cyan-400'
                         }`}
                       >
                         {tag}
@@ -397,7 +397,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                   key={tag}
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setSelectedTag(tag)}
-                  className="px-3 py-1 rounded-full text-xs font-semibold bg-[#2A2A3E] text-[#A0A0A5] hover:bg-[#3A3A4F] transition-colors"
+                  className="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition-colors"
                 >
                   #{tag}
                 </motion.button>
@@ -416,8 +416,8 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
           className="mb-12"
         >
           <div className="flex items-center gap-2 mb-6">
-            <TrendingUp className="w-6 h-6 text-[#FF6B9D]" />
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">Trending Now</h2>
+            <TrendingUp className="w-6 h-6 text-pink-400" />
+            <h2 className="text-2xl font-bold text-zinc-100">Trending Now</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -428,32 +428,32 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="bg-linear-to-br from-[#1A1A2E] via-[#2A2A3E] to-[#1A1A2E] border border-[#FF6B9D]/30 rounded-lg p-6 hover:border-[#FF6B9D] transition-colors group cursor-pointer"
+                className="bg-linear-to-br from-zinc-900 via-[#2A2A3E] to-zinc-900 border border-pink-400/30 rounded-lg p-6 hover:border-pink-400 transition-colors group cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-5xl">{user.avatar}</div>
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
-                    className="text-[#FF6B9D]"
+                    className="text-pink-400"
                   >
                     <Flame className="w-5 h-5" />
                   </motion.div>
                 </div>
 
-                <h3 className="text-lg font-bold text-[#F5F3E8] mb-1">{user.displayName}</h3>
-                <p className="text-sm text-[#A0A0A5] mb-3">{user.trendingReason}</p>
+                <h3 className="text-lg font-bold text-zinc-100 mb-1">{user.displayName}</h3>
+                <p className="text-sm text-zinc-400 mb-3">{user.trendingReason}</p>
 
-                <div className="bg-[#0A0A0F] rounded p-3 mb-4">
-                  <div className="text-[#FF6B9D] text-2xl font-bold">{user.trendingScore}</div>
-                  <div className="text-xs text-[#6B6B78]">Trending Score</div>
+                <div className="bg-zinc-950 rounded p-3 mb-4">
+                  <div className="text-pink-400 text-2xl font-bold">{user.trendingScore}</div>
+                  <div className="text-xs text-zinc-500">Trending Score</div>
                 </div>
 
-                <div className="text-sm text-[#A0A0A5] mb-4">
-                  <span className="text-[#00F0FF] font-semibold">+{user.newFollowers}</span> new followers
+                <div className="text-sm text-zinc-400 mb-4">
+                  <span className="text-cyan-400 font-semibold">+{user.newFollowers}</span> new followers
                 </div>
 
-                <button className="w-full px-4 py-2 bg-[#FF6B9D] text-white rounded-lg hover:bg-[#FF5589] transition-colors font-semibold text-sm group-hover:shadow-lg group-hover:shadow-[#FF6B9D]/50">
+                <button className="w-full px-4 py-2 bg-pink-400 text-white rounded-lg hover:bg-pink-500 transition-colors font-semibold text-sm group-hover:shadow-lg group-hover:shadow-pink-400/50">
                   Follow
                 </button>
               </motion.div>
@@ -469,8 +469,8 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
           className="mb-12"
         >
           <div className="flex items-center gap-2 mb-6">
-            <Sparkles className="w-6 h-6 text-[#A78BFA]" />
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">Community Highlights</h2>
+            <Sparkles className="w-6 h-6 text-violet-400" />
+            <h2 className="text-2xl font-bold text-zinc-100">Community Highlights</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -481,30 +481,30 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-6 hover:border-[#A78BFA] transition-colors cursor-pointer group"
+                className="bg-zinc-900 border border-zinc-700 rounded-lg p-6 hover:border-violet-400 transition-colors cursor-pointer group"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-4xl">{highlight.icon}</div>
                   <div className="text-right">
-                    <div className="text-[#00F0FF] text-sm font-bold">{highlight.participantCount}</div>
-                    <div className="text-[#6B6B78] text-xs">members</div>
+                    <div className="text-cyan-400 text-sm font-bold">{highlight.participantCount}</div>
+                    <div className="text-zinc-500 text-xs">members</div>
                   </div>
                 </div>
 
-                <h3 className="text-lg font-bold text-[#F5F3E8] mb-2">{highlight.title}</h3>
-                <p className="text-[#A0A0A5] text-sm mb-4">{highlight.description}</p>
+                <h3 className="text-lg font-bold text-zinc-100 mb-2">{highlight.title}</h3>
+                <p className="text-zinc-400 text-sm mb-4">{highlight.description}</p>
 
                 <div className="flex items-center justify-between">
                   <span className={`text-xs font-semibold px-2 py-1 rounded ${
                     highlight.activity === 'Very High'
-                      ? 'bg-[#00F0FF]/20 text-[#00F0FF]'
+                      ? 'bg-cyan-400/20 text-cyan-400'
                       : highlight.activity === 'High'
-                        ? 'bg-[#50C878]/20 text-[#50C878]'
-                        : 'bg-[#FFD700]/20 text-[#FFD700]'
+                        ? 'bg-emerald-500/20 text-emerald-500'
+                        : 'bg-amber-400/20 text-amber-400'
                   }`}>
                     {highlight.activity} Activity
                   </span>
-                  <ChevronRight className="w-4 h-4 text-[#A0A0A5] group-hover:text-[#A78BFA] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-violet-400 transition-colors" />
                 </div>
               </motion.div>
             ))}
@@ -519,8 +519,8 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <Users className="w-6 h-6 text-[#00F0FF]" />
-              <h2 className="text-2xl font-bold text-[#F5F3E8]">
+              <Users className="w-6 h-6 text-cyan-400" />
+              <h2 className="text-2xl font-bold text-zinc-100">
                 Recommended Users {filteredUsers.length > 0 && `(${filteredUsers.length})`}
               </h2>
             </div>
@@ -532,9 +532,9 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <Search className="w-16 h-16 text-[#3A3A4F] mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-[#F5F3E8] mb-2">No results found</h3>
-              <p className="text-[#A0A0A5]">Try adjusting your search or filters</p>
+              <Search className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-zinc-100 mb-2">No results found</h3>
+              <p className="text-zinc-400">Try adjusting your search or filters</p>
             </motion.div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -546,69 +546,69 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.05 }}
                   onClick={() => onSelectUser?.(user.id)}
-                  className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-5 hover:border-[#00F0FF] transition-all group cursor-pointer"
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-5 hover:border-cyan-400 transition-all group cursor-pointer"
                 >
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shrink-0">
                       {user.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-[#F5F3E8] truncate">{user.displayName}</h3>
+                        <h3 className="font-bold text-zinc-100 truncate">{user.displayName}</h3>
                         {user.isVerified && (
                           <motion.div
                             animate={{ scale: [1, 1.1, 1] }}
                             transition={{ duration: 2, repeat: Infinity }}
                           >
-                            <Check className="w-4 h-4 text-[#00F0FF]" />
+                            <Check className="w-4 h-4 text-cyan-400" />
                           </motion.div>
                         )}
                       </div>
-                      <p className="text-xs text-[#A0A0A5]">@{user.username}</p>
+                      <p className="text-xs text-zinc-400">@{user.username}</p>
                     </div>
 
                     <motion.div
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className="text-xs font-bold bg-linear-to-r from-[#00F0FF] to-[#A78BFA] text-transparent bg-clip-text shrink-0"
+                      className="text-xs font-bold bg-linear-to-r from-cyan-400 to-violet-400 text-transparent bg-clip-text shrink-0"
                     >
                       {user.matchScore}%
                     </motion.div>
                   </div>
 
-                  <p className="text-sm text-[#A0A0A5] mb-3 line-clamp-2">{user.bio}</p>
+                  <p className="text-sm text-zinc-400 mb-3 line-clamp-2">{user.bio}</p>
 
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs mb-4 pb-4 border-b border-[#3A3A4F]">
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs mb-4 pb-4 border-b border-zinc-700">
                     <div>
-                      <div className="text-[#00F0FF] font-bold">{user.proofScore}</div>
-                      <div className="text-[#6B6B78]">Score</div>
+                      <div className="text-cyan-400 font-bold">{user.proofScore}</div>
+                      <div className="text-zinc-500">Score</div>
                     </div>
                     <div>
-                      <div className="text-[#A78BFA] font-bold">{user.followers}</div>
-                      <div className="text-[#6B6B78]">Followers</div>
+                      <div className="text-violet-400 font-bold">{user.followers}</div>
+                      <div className="text-zinc-500">Followers</div>
                     </div>
                     <div>
-                      <div className="text-[#50C878] font-bold">{user.badges}</div>
-                      <div className="text-[#6B6B78]">Badges</div>
+                      <div className="text-emerald-500 font-bold">{user.badges}</div>
+                      <div className="text-zinc-500">Badges</div>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-1 mb-4">
                     {user.tags.slice(0, 2).map((tag) => (
-                      <span key={tag} className="text-xs px-2 py-1 rounded-full bg-[#2A2A3E] text-[#00F0FF]">
+                      <span key={tag} className="text-xs px-2 py-1 rounded-full bg-zinc-800 text-cyan-400">
                         #{tag}
                       </span>
                     ))}
                   </div>
 
-                  <p className="text-xs text-[#6B6B78] mb-4">💡 {user.reason}</p>
+                  <p className="text-xs text-zinc-500 mb-4">💡 {user.reason}</p>
 
                   <button
                     onClick={() => handleFollow(user.id)}
                     className={`w-full px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
                       followedUsers.has(user.id)
-                        ? 'bg-[#00F0FF]/20 border border-[#00F0FF] text-[#00F0FF]'
-                        : 'bg-[#00F0FF] text-[#0A0A0F] hover:bg-[#00D9E8]'
+                        ? 'bg-cyan-400/20 border border-cyan-400 text-cyan-400'
+                        : 'bg-cyan-400 text-zinc-950 hover:bg-cyan-400'
                     }`}
                   >
                     {followedUsers.has(user.id) ? '✓ Following' : 'Follow'}

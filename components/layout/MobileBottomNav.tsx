@@ -83,10 +83,10 @@ export function MobileBottomNav() {
               aria-labelledby="more-menu-title"
             >
               <div className="flex items-center justify-between mb-4">
-                <span id="more-menu-title" className="text-sm font-semibold text-[#F8F8FC]">More Options</span>
+                <span id="more-menu-title" className="text-sm font-semibold text-zinc-50">More Options</span>
                 <button 
                   onClick={() => setShowMore(false)}
-                  className="w-8 h-8 rounded-lg bg-[#1F1F2A] flex items-center justify-center text-[#6B6B78] hover:text-[#F8F8FC] transition-colors"
+                  className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-zinc-50 transition-colors"
                   aria-label="Close menu"
                 >
                   <X size={16} />
@@ -100,7 +100,7 @@ export function MobileBottomNav() {
                 
                 return (
                   <div key={category} className="mb-4 last:mb-0">
-                    <div className="px-2 mb-2 text-xs font-semibold text-[#6B6B78] uppercase tracking-wider">
+                    <div className="px-2 mb-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
                       {category}
                     </div>
                     <div className="grid grid-cols-3 gap-2">
@@ -116,13 +116,13 @@ export function MobileBottomNav() {
                             onClick={() => setShowMore(false)}
                             className={`flex flex-col items-center gap-2 p-3 rounded-xl text-center transition-all ${
                               pathname === item.href
-                                ? 'bg-[#00F0FF]/20 border border-[#00F0FF]/30'
-                                : 'bg-[#16161D] border border-[#1F1F2A] hover:border-[#00F0FF]/20'
+                                ? 'bg-cyan-400/20 border border-cyan-400/30'
+                                : 'bg-zinc-900 border border-zinc-800 hover:border-cyan-400/20'
                             }`}
                           >
                             <span className="text-xl">{item.emoji}</span>
                             <span className={`text-[10px] font-medium leading-tight ${
-                              pathname === item.href ? 'text-[#00F0FF]' : 'text-[#A8A8B3]'
+                              pathname === item.href ? 'text-cyan-400' : 'text-zinc-400'
                             }`}>
                               {item.label}
                             </span>
@@ -139,7 +139,7 @@ export function MobileBottomNav() {
       </AnimatePresence>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-[#1F1F2A] md:hidden safe-area-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-zinc-800 md:hidden safe-area-bottom">
         <div className="flex items-center justify-around h-16 px-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href || 
@@ -152,8 +152,8 @@ export function MobileBottomNav() {
                 href={item.href}
                 className={`relative flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all ${
                   isActive 
-                    ? 'text-[#00F0FF]' 
-                    : 'text-[#6B6B78] active:text-[#F8F8FC]'
+                    ? 'text-cyan-400' 
+                    : 'text-zinc-500 active:text-zinc-50'
                 }`}
               >
                 <motion.div
@@ -166,7 +166,7 @@ export function MobileBottomNav() {
                 {isActive && (
                   <motion.div
                     layoutId="bottomNavIndicator"
-                    className="absolute top-0 w-10 h-1 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
+                    className="absolute top-0 w-10 h-1 bg-linear-to-r from-cyan-400 to-blue-500 rounded-full"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -178,7 +178,7 @@ export function MobileBottomNav() {
           <button
             onClick={() => setShowMore(!showMore)}
             className={`relative flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all ${
-              showMore ? 'text-[#00F0FF]' : 'text-[#6B6B78] active:text-[#F8F8FC]'
+              showMore ? 'text-cyan-400' : 'text-zinc-500 active:text-zinc-50'
             }`}
             aria-label={showMore ? 'Close more options' : 'Open more options'}
             aria-expanded={showMore}
@@ -194,7 +194,7 @@ export function MobileBottomNav() {
             {showMore && (
               <motion.div
                 layoutId="bottomNavIndicator"
-                className="absolute top-0 w-10 h-1 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full"
+                className="absolute top-0 w-10 h-1 bg-linear-to-r from-cyan-400 to-blue-500 rounded-full"
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}

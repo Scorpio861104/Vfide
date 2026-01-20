@@ -71,7 +71,7 @@ function PayContent() {
     <motion.main 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-[#0D0D0F] pt-20 relative overflow-hidden"
+      className="min-h-screen bg-zinc-950 pt-20 relative overflow-hidden"
     >
       {/* Premium Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
@@ -105,7 +105,7 @@ function PayContent() {
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
           >
             {/* Merchant Info */}
             <div className="mb-8 pb-8 border-b border-white/10">
@@ -231,7 +231,7 @@ export default function PayPage() {
   return (
     <>
       <Suspense fallback={
-        <div className="min-h-screen bg-[#0D0D0F] pt-20 flex items-center justify-center relative overflow-hidden">
+        <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center relative overflow-hidden">
           <div className="fixed inset-0 pointer-events-none">
             <div className="absolute top-1/4 -left-32 w-125 h-125 bg-cyan-500/10 rounded-full blur-[120px]" />
           </div>

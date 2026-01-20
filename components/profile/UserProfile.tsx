@@ -16,7 +16,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
-import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
+import { ResponsiveContainer } from '@/lib/mobile';
 import { AvatarUploadCompact } from './AvatarUpload';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { 
@@ -215,7 +215,7 @@ const generateActivityHeatmap = (): ActivityHeatmapDay[] => {
 
 // ==================== HELPER FUNCTIONS ====================
 
-const getRarityColor = (rarity: Badge['rarity']): string => {
+const _getRarityColor = (rarity: Badge['rarity']): string => {
   const colors: Record<Badge['rarity'], string> = {
     common: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
     rare: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -303,7 +303,7 @@ function ActivityHeatmap({ data }: { data: ActivityHeatmapDay[] }) {
   }, [data]);
 
   const getColor = (count: number) => {
-    if (count === 0) return 'bg-[#1A1A1F]';
+    if (count === 0) return 'bg-zinc-900';
     if (count <= 2) return 'bg-green-900/50';
     if (count <= 5) return 'bg-green-700/70';
     if (count <= 8) return 'bg-green-500';
@@ -313,15 +313,15 @@ function ActivityHeatmap({ data }: { data: ActivityHeatmapDay[] }) {
   const totalContributions = data.reduce((sum, d) => sum + d.count, 0);
 
   return (
-    <div className="bg-[#0F0F14] rounded-xl p-4 border border-[#2A2A2F]">
+    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-white">Activity Contributions</h3>
-        <span className="text-xs text-[#A0A0A5]">{totalContributions} in the last year</span>
+        <span className="text-xs text-zinc-400">{totalContributions} in the last year</span>
       </div>
       <div className="overflow-x-auto">
-        <div className="flex gap-[2px] min-w-max">
+        <div className="flex gap-0.5 min-w-max">
           {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-[2px]">
+            <div key={wi} className="flex flex-col gap-0.5">
               {week.map((day, di) => (
                 <motion.div
                   key={`${wi}-${di}`}
@@ -336,7 +336,7 @@ function ActivityHeatmap({ data }: { data: ActivityHeatmapDay[] }) {
           ))}
         </div>
       </div>
-      <div className="flex items-center justify-end gap-1 mt-2 text-xs text-[#A0A0A5]">
+      <div className="flex items-center justify-end gap-1 mt-2 text-xs text-zinc-400">
         <span>Less</span>
         {[0, 2, 5, 8, 12].map(n => (
           <div key={n} className={`w-3 h-3 rounded-sm ${getColor(n)}`} />
@@ -350,7 +350,7 @@ function ActivityHeatmap({ data }: { data: ActivityHeatmapDay[] }) {
 // Badge Carousel Component
 function BadgeCarousel({ badges }: { badges: Badge[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { playSound } = useTransactionSounds();
+  const { play: playSound } = useTransactionSounds();
 
   const next = () => {
     playSound('click');
@@ -368,11 +368,11 @@ function BadgeCarousel({ badges }: { badges: Badge[] }) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Badge Showcase</h3>
         <div className="flex gap-2">
-          <button onClick={prev} className="p-2 bg-[#1A1A1F] rounded-lg hover:bg-[#2A2A3F] transition-colors">
-            <ChevronLeft className="w-4 h-4 text-[#A0A0A5]" />
+          <button onClick={prev} className="p-2 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors">
+            <ChevronLeft className="w-4 h-4 text-zinc-400" />
           </button>
-          <button onClick={next} className="p-2 bg-[#1A1A1F] rounded-lg hover:bg-[#2A2A3F] transition-colors">
-            <ChevronRight className="w-4 h-4 text-[#A0A0A5]" />
+          <button onClick={next} className="p-2 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors">
+            <ChevronRight className="w-4 h-4 text-zinc-400" />
           </button>
         </div>
       </div>
@@ -397,7 +397,7 @@ function BadgeCarousel({ badges }: { badges: Badge[] }) {
                 className="absolute left-1/2 -translate-x-1/2 w-40"
                 style={{ perspective: 1000 }}
               >
-                <div className={`bg-gradient-to-br ${
+                <div className={`bg-linear-to-br ${
                   badge.rarity === 'legendary' ? 'from-yellow-500/20 to-orange-500/20 border-yellow-500/50' :
                   badge.rarity === 'epic' ? 'from-purple-500/20 to-pink-500/20 border-purple-500/50' :
                   badge.rarity === 'rare' ? 'from-blue-500/20 to-cyan-500/20 border-blue-500/50' :
@@ -411,7 +411,7 @@ function BadgeCarousel({ badges }: { badges: Badge[] }) {
                     {badge.icon}
                   </motion.div>
                   <h4 className="font-bold text-white text-sm truncate">{badge.name}</h4>
-                  <p className="text-xs text-[#A0A0A5] truncate">{badge.description}</p>
+                  <p className="text-xs text-zinc-400 truncate">{badge.description}</p>
                   <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                     badge.rarity === 'legendary' ? 'bg-yellow-500/20 text-yellow-400' :
                     badge.rarity === 'epic' ? 'bg-purple-500/20 text-purple-400' :
@@ -431,7 +431,7 @@ function BadgeCarousel({ badges }: { badges: Badge[] }) {
           <button
             key={i}
             onClick={() => setCurrentIndex(i)}
-            className={`w-2 h-2 rounded-full transition-all ${i === currentIndex ? 'bg-[#FFD700] w-4' : 'bg-[#2A2A3F]'}`}
+            className={`w-2 h-2 rounded-full transition-all ${i === currentIndex ? 'bg-amber-400 w-4' : 'bg-zinc-800'}`}
           />
         ))}
       </div>
@@ -469,19 +469,19 @@ function ShareProfileModal({ profile, onClose }: { profile: UserProfile; onClose
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
-        className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-2xl p-6 max-w-sm w-full"
+        className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-sm w-full"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white">Share Profile</h3>
-          <button onClick={onClose} className="p-2 hover:bg-[#2A2A3F] rounded-lg transition-colors">
-            <X className="w-5 h-5 text-[#A0A0A5]" />
+          <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-zinc-400" />
           </button>
         </div>
 
         {/* QR Code Placeholder */}
         <div className="bg-white rounded-xl p-4 mb-6">
-          <div className="w-full aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
+          <div className="w-full aspect-square bg-linear-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
             <div className="text-center">
               <QrCode className="w-16 h-16 text-gray-400 mx-auto mb-2" />
               <p className="text-xs text-gray-500">QR Code for {profile.username}</p>
@@ -490,16 +490,16 @@ function ShareProfileModal({ profile, onClose }: { profile: UserProfile; onClose
         </div>
 
         {/* Share Link */}
-        <div className="bg-[#0F0F14] rounded-lg p-3 mb-4">
+        <div className="bg-zinc-900 rounded-lg p-3 mb-4">
           <div className="flex items-center gap-2">
             <input
               type="text"
               value={profileUrl}
               readOnly
-              className="flex-1 bg-transparent text-sm text-[#A0A0A5] truncate outline-none"
+              className="flex-1 bg-transparent text-sm text-zinc-400 truncate outline-none"
             />
-            <button onClick={copyLink} className="p-2 hover:bg-[#2A2A3F] rounded-lg transition-colors">
-              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-[#A0A0A5]" />}
+            <button onClick={copyLink} className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
+              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-zinc-400" />}
             </button>
           </div>
         </div>
@@ -508,14 +508,14 @@ function ShareProfileModal({ profile, onClose }: { profile: UserProfile; onClose
         <div className="flex gap-2">
           <button
             onClick={shareToTwitter}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#1DA1F2]/20 text-[#1DA1F2] rounded-lg hover:bg-[#1DA1F2]/30 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-sky-500/20 text-sky-500 rounded-lg hover:bg-sky-500/30 transition-colors"
           >
             <Twitter className="w-4 h-4" />
             Twitter
           </button>
           <button
             onClick={copyLink}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#FFD700]/20 text-[#FFD700] rounded-lg hover:bg-[#FFD700]/30 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-400/20 text-amber-400 rounded-lg hover:bg-amber-400/30 transition-colors"
           >
             <Copy className="w-4 h-4" />
             {copied ? 'Copied!' : 'Copy Link'}
@@ -556,7 +556,7 @@ function StatCard({ label, value, icon, color = 'blue', animated = true }: StatC
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02, y: -2 }}
-      className={`bg-gradient-to-br ${colorClasses[color] || colorClasses.blue} border rounded-xl p-4 transition-all`}
+      className={`bg-linear-to-br ${colorClasses[color] || colorClasses.blue} border rounded-xl p-4 transition-all`}
     >
       <div className="flex items-center gap-3">
         <motion.div
@@ -574,7 +574,7 @@ function StatCard({ label, value, icon, color = 'blue', animated = true }: StatC
               value
             )}
           </p>
-          <p className="text-sm text-[#A0A0A5]">{label}</p>
+          <p className="text-sm text-zinc-400">{label}</p>
         </div>
       </div>
     </motion.div>
@@ -605,7 +605,7 @@ function BadgeCard({ badge }: BadgeCardProps) {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.03, y: -5 }}
-      className={`bg-gradient-to-br ${rarityStyles[badge.rarity]} border rounded-xl p-5 shadow-lg cursor-pointer transition-all`}
+      className={`bg-linear-to-br ${rarityStyles[badge.rarity]} border rounded-xl p-5 shadow-lg cursor-pointer transition-all`}
     >
       <div className="text-center">
         <motion.div 
@@ -616,11 +616,11 @@ function BadgeCard({ badge }: BadgeCardProps) {
           {badge.icon}
         </motion.div>
         <h3 className="font-bold text-white text-lg mb-1">{badge.name}</h3>
-        <p className="text-sm text-[#A0A0A5] mb-3">{badge.description}</p>
+        <p className="text-sm text-zinc-400 mb-3">{badge.description}</p>
         <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${rarityTextColors[badge.rarity]} bg-black/20`}>
           {badge.rarity}
         </span>
-        <p className="text-xs text-[#606065] mt-2">
+        <p className="text-xs text-zinc-500 mt-2">
           Earned {formatTimeAgo(badge.earnedDate)}
         </p>
       </div>
@@ -662,7 +662,7 @@ function ActivityItem({ activity, index = 0 }: ActivityItemProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
       whileHover={{ x: 5 }}
-      className={`flex items-center gap-3 p-4 bg-gradient-to-r ${getActivityColor(activity.type)} rounded-xl transition-all cursor-pointer`}
+      className={`flex items-center gap-3 p-4 bg-linear-to-r ${getActivityColor(activity.type)} rounded-xl transition-all cursor-pointer`}
     >
       <motion.div 
         className="text-2xl"
@@ -672,9 +672,9 @@ function ActivityItem({ activity, index = 0 }: ActivityItemProps) {
       </motion.div>
       <div className="flex-1">
         <p className="text-sm font-medium text-white">{activity.title}</p>
-        <p className="text-xs text-[#A0A0A5]">{formatTimeAgo(activity.timestamp)}</p>
+        <p className="text-xs text-zinc-400">{formatTimeAgo(activity.timestamp)}</p>
       </div>
-      <ChevronRight className="w-4 h-4 text-[#A0A0A5]" />
+      <ChevronRight className="w-4 h-4 text-zinc-400" />
     </motion.div>
   );
 };
@@ -699,7 +699,7 @@ export default function UserProfile() {
   const bioInputRef = useRef<HTMLTextAreaElement>(null);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { playSound } = useTransactionSounds();
+  const { play: playSound } = useTransactionSounds();
 
   // Validation
   const validateProfile = useCallback((): boolean => {
@@ -802,15 +802,13 @@ export default function UserProfile() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-[#1A1A1F] to-[#0F0F14] rounded-2xl p-6 border border-[#2A2A2F] relative overflow-hidden"
+        className="bg-linear-to-br from-zinc-900 to-zinc-900 rounded-2xl p-6 border border-zinc-800 relative overflow-hidden"
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div 
             className="absolute inset-0" 
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-            }}
+            style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.4\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')" }} 
           />
         </div>
 
@@ -827,7 +825,7 @@ export default function UserProfile() {
                 className="relative group"
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center text-6xl shadow-lg shadow-yellow-500/20">
+                <div className="w-32 h-32 rounded-2xl bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center text-6xl shadow-lg shadow-yellow-500/20">
                   {profile.avatar ? (
                     typeof profile.avatar === 'string' && profile.avatar.startsWith('http') ? (
                       <img src={profile.avatar} alt="Avatar" className="w-full h-full rounded-2xl object-cover" />
@@ -837,7 +835,7 @@ export default function UserProfile() {
                   ) : '👤'}
                 </div>
                 {/* Online indicator */}
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-[#1A1A1F] rounded-full" />
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-zinc-900 rounded-full" />
               </motion.div>
             )}
           </div>
@@ -847,7 +845,7 @@ export default function UserProfile() {
             {isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#A0A0A5] mb-1">
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">
                     Username *
                   </label>
                   <MobileInput
@@ -858,7 +856,7 @@ export default function UserProfile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#A0A0A5] mb-1">
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">
                     Display Name *
                   </label>
                   <MobileInput
@@ -869,7 +867,7 @@ export default function UserProfile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#A0A0A5] mb-1">
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">
                     Email *
                   </label>
                   <MobileInput
@@ -887,14 +885,14 @@ export default function UserProfile() {
                     <h1 className="text-3xl font-bold text-white mb-1">
                       {profile.displayName}
                     </h1>
-                    <p className="text-lg text-[#A0A0A5] mb-3">@{profile.username}</p>
+                    <p className="text-lg text-zinc-400 mb-3">@{profile.username}</p>
                   </div>
                   <button
                     onClick={() => setShowShareModal(true)}
-                    className="p-2 bg-[#2A2A3F] hover:bg-[#3A3A4F] rounded-xl transition-colors group"
+                    className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-colors group"
                     title="Share Profile"
                   >
-                    <Share2 className="w-5 h-5 text-[#A0A0A5] group-hover:text-[#FFD700] transition-colors" />
+                    <Share2 className="w-5 h-5 text-zinc-400 group-hover:text-amber-400 transition-colors" />
                   </button>
                 </div>
                 
@@ -905,20 +903,20 @@ export default function UserProfile() {
                       <textarea
                         ref={bioInputRef}
                         defaultValue={profile.bio}
-                        className="w-full px-3 py-2 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white resize-none focus:border-[#FFD700] outline-none"
+                        className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white resize-none focus:border-amber-400 outline-none"
                         rows={3}
                         autoFocus
                       />
                       <div className="flex gap-2">
                         <button
                           onClick={() => bioInputRef.current && handleSaveBio(bioInputRef.current.value)}
-                          className="px-3 py-1.5 bg-[#FFD700] text-black rounded-lg text-sm font-medium hover:bg-[#FFA500] transition-colors"
+                          className="px-3 py-1.5 bg-amber-400 text-black rounded-lg text-sm font-medium hover:bg-orange-500 transition-colors"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => setEditingBio(false)}
-                          className="px-3 py-1.5 bg-[#2A2A3F] text-white rounded-lg text-sm hover:bg-[#3A3A4F] transition-colors"
+                          className="px-3 py-1.5 bg-zinc-800 text-white rounded-lg text-sm hover:bg-zinc-700 transition-colors"
                         >
                           Cancel
                         </button>
@@ -929,13 +927,13 @@ export default function UserProfile() {
                       className="cursor-pointer"
                       onClick={() => setEditingBio(true)}
                     >
-                      <p className="text-[#C0C0C5] group-hover:text-white transition-colors">{profile.bio}</p>
-                      <Edit2 className="absolute top-0 right-0 w-4 h-4 text-[#606065] opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <p className="text-zinc-400 group-hover:text-white transition-colors">{profile.bio}</p>
+                      <Edit2 className="absolute top-0 right-0 w-4 h-4 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-4 text-sm text-[#A0A0A5]">
+                <div className="flex flex-wrap gap-4 text-sm text-zinc-400">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-4 h-4" /> Joined {formatJoinDate(profile.joinedDate)}
                   </span>
@@ -974,22 +972,22 @@ export default function UserProfile() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#1A1A1F] rounded-2xl p-6 border border-[#2A2A2F]"
+          className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800"
         >
           <h2 className="text-xl font-semibold text-white mb-4">Additional Information</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#A0A0A5] mb-1">Bio</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Bio</label>
               <textarea
                 value={editedProfile.bio}
                 onChange={(e) => handleProfileChange('bio', e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-[#2A2A2F] rounded-lg bg-[#0F0F14] text-white focus:border-[#FFD700] outline-none"
+                className="w-full px-3 py-2 border border-zinc-800 rounded-lg bg-zinc-900 text-white focus:border-amber-400 outline-none"
                 placeholder="Tell us about yourself..."
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#A0A0A5] mb-1">Location</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Location</label>
               <MobileInput
                 type="text"
                 value={editedProfile.location || ''}
@@ -998,7 +996,7 @@ export default function UserProfile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#A0A0A5] mb-1">Website</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Website</label>
               <MobileInput
                 type="url"
                 value={editedProfile.website || ''}
@@ -1008,7 +1006,7 @@ export default function UserProfile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#A0A0A5] mb-1">Twitter</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Twitter</label>
               <MobileInput
                 type="text"
                 value={editedProfile.twitter || ''}
@@ -1017,7 +1015,7 @@ export default function UserProfile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#A0A0A5] mb-1">GitHub</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">GitHub</label>
               <MobileInput
                 type="text"
                 value={editedProfile.github || ''}
@@ -1035,7 +1033,7 @@ export default function UserProfile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-[#1A1A1F] rounded-2xl p-6 border border-[#2A2A2F]"
+          className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800"
         >
           <h2 className="text-xl font-semibold text-white mb-4">Links</h2>
           <div className="flex flex-wrap gap-3">
@@ -1046,11 +1044,11 @@ export default function UserProfile() {
                 href={profile.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 bg-[#2A2A3F] hover:bg-[#3A3A4F] text-white rounded-xl text-sm transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm transition-colors"
               >
                 <Globe className="w-4 h-4 text-blue-400" />
                 Website
-                <ExternalLink className="w-3 h-3 text-[#606065]" />
+                <ExternalLink className="w-3 h-3 text-zinc-500" />
               </motion.a>
             )}
             {profile.twitter && (
@@ -1060,7 +1058,7 @@ export default function UserProfile() {
                 href={`https://twitter.com/${profile.twitter.replace('@', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 bg-[#1DA1F2]/20 hover:bg-[#1DA1F2]/30 text-[#1DA1F2] rounded-xl text-sm transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-sky-500/20 hover:bg-sky-500/30 text-sky-500 rounded-xl text-sm transition-colors"
               >
                 <Twitter className="w-4 h-4" />
                 {profile.twitter}
@@ -1088,39 +1086,39 @@ export default function UserProfile() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="bg-[#1A1A1F] rounded-2xl p-6 border border-[#2A2A2F]"
+        className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800"
       >
         <h2 className="text-xl font-semibold text-white mb-4">Connections</h2>
         <div className="grid grid-cols-3 gap-4">
           <motion.div 
-            className="text-center p-4 bg-[#0F0F14] rounded-xl"
+            className="text-center p-4 bg-zinc-900 rounded-xl"
             whileHover={{ scale: 1.05 }}
           >
             <Users className="w-6 h-6 text-blue-400 mx-auto mb-2" />
             <p className="text-2xl font-bold text-white">
               <AnimatedCounter value={socialConnections.followers} />
             </p>
-            <p className="text-sm text-[#A0A0A5]">Followers</p>
+            <p className="text-sm text-zinc-400">Followers</p>
           </motion.div>
           <motion.div 
-            className="text-center p-4 bg-[#0F0F14] rounded-xl"
+            className="text-center p-4 bg-zinc-900 rounded-xl"
             whileHover={{ scale: 1.05 }}
           >
             <TrendingUp className="w-6 h-6 text-green-400 mx-auto mb-2" />
             <p className="text-2xl font-bold text-white">
               <AnimatedCounter value={socialConnections.following} />
             </p>
-            <p className="text-sm text-[#A0A0A5]">Following</p>
+            <p className="text-sm text-zinc-400">Following</p>
           </motion.div>
           <motion.div 
-            className="text-center p-4 bg-[#0F0F14] rounded-xl"
+            className="text-center p-4 bg-zinc-900 rounded-xl"
             whileHover={{ scale: 1.05 }}
           >
             <MessageSquare className="w-6 h-6 text-purple-400 mx-auto mb-2" />
             <p className="text-2xl font-bold text-white">
               <AnimatedCounter value={socialConnections.friends} />
             </p>
-            <p className="text-sm text-[#A0A0A5]">Friends</p>
+            <p className="text-sm text-zinc-400">Friends</p>
           </motion.div>
         </div>
       </motion.div>
@@ -1140,7 +1138,7 @@ export default function UserProfile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="bg-[#1A1A1F] rounded-2xl p-6 border border-[#2A2A2F]"
+          className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800"
         >
           <BadgeCarousel badges={sortedBadges} />
         </motion.div>
@@ -1154,7 +1152,7 @@ export default function UserProfile() {
           transition={{ delay: 0.3 }}
         >
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#FFD700]" />
+            <TrendingUp className="w-5 h-5 text-amber-400" />
             Statistics
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1176,7 +1174,7 @@ export default function UserProfile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="bg-[#1A1A1F] rounded-2xl p-6 border border-[#2A2A2F]"
+          className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800"
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -1185,7 +1183,7 @@ export default function UserProfile() {
             </h2>
             <button
               onClick={() => setActiveTab('activity')}
-              className="text-sm text-[#FFD700] hover:underline flex items-center gap-1"
+              className="text-sm text-amber-400 hover:underline flex items-center gap-1"
             >
               View All
               <ChevronRight className="w-4 h-4" />
@@ -1215,10 +1213,10 @@ export default function UserProfile() {
     >
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-          <Award className="w-6 h-6 text-[#FFD700]" />
+          <Award className="w-6 h-6 text-amber-400" />
           Achievements
         </h2>
-        <p className="text-[#A0A0A5]">
+        <p className="text-zinc-400">
           {badges.length} {badges.length === 1 ? 'badge' : 'badges'} earned
         </p>
       </div>
@@ -1240,11 +1238,11 @@ export default function UserProfile() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[#1A1A1F] rounded-2xl p-12 border border-[#2A2A2F] text-center"
+          className="bg-zinc-900 rounded-2xl p-12 border border-zinc-800 text-center"
         >
           <div className="text-6xl mb-4">🏆</div>
           <p className="text-white text-lg mb-2">No badges earned yet</p>
-          <p className="text-[#A0A0A5] text-sm">
+          <p className="text-zinc-400 text-sm">
             Start participating to earn your first badge!
           </p>
         </motion.div>
@@ -1262,7 +1260,7 @@ export default function UserProfile() {
           <Zap className="w-6 h-6 text-yellow-400" />
           Activity History
         </h2>
-        <p className="text-[#A0A0A5]">Your recent activities on the platform</p>
+        <p className="text-zinc-400">Your recent activities on the platform</p>
       </div>
 
       {recentActivities.length > 0 ? (
@@ -1283,11 +1281,11 @@ export default function UserProfile() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[#1A1A1F] rounded-2xl p-12 border border-[#2A2A2F] text-center"
+          className="bg-zinc-900 rounded-2xl p-12 border border-zinc-800 text-center"
         >
           <div className="text-6xl mb-4">📊</div>
           <p className="text-white text-lg mb-2">No activities yet</p>
-          <p className="text-[#A0A0A5] text-sm">
+          <p className="text-zinc-400 text-sm">
             Your activities will appear here as you interact with the platform
           </p>
         </motion.div>
@@ -1302,7 +1300,7 @@ export default function UserProfile() {
     >
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">Privacy Settings</h2>
-        <p className="text-[#A0A0A5]">Control who can see your profile information</p>
+        <p className="text-zinc-400">Control who can see your profile information</p>
       </div>
 
       <div className="space-y-6">
@@ -1310,7 +1308,7 @@ export default function UserProfile() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#1A1A1F] rounded-2xl p-6 border border-[#2A2A2F]"
+          className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800"
         >
           <h3 className="text-lg font-semibold text-white mb-4">Profile Visibility</h3>
           <select
@@ -1318,7 +1316,7 @@ export default function UserProfile() {
             onChange={(e) =>
               handlePrivacyChange('profileVisibility', e.target.value as PrivacySettings['profileVisibility'])
             }
-            className="w-full px-3 py-3 border border-[#2A2A2F] rounded-xl bg-[#0F0F14] text-white focus:border-[#FFD700] outline-none"
+            className="w-full px-3 py-3 border border-zinc-800 rounded-xl bg-zinc-900 text-white focus:border-amber-400 outline-none"
           >
             <option value="public">🌍 Public - Anyone can view</option>
             <option value="friends">👥 Friends Only</option>
@@ -1331,7 +1329,7 @@ export default function UserProfile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-[#1A1A1F] rounded-2xl p-6 border border-[#2A2A2F]"
+          className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800"
         >
           <h3 className="text-lg font-semibold text-white mb-4">Information Visibility</h3>
           <div className="space-y-4">
@@ -1344,14 +1342,14 @@ export default function UserProfile() {
             ].map((setting) => (
               <label 
                 key={setting.key}
-                className="flex items-center justify-between p-3 bg-[#0F0F14] rounded-xl cursor-pointer hover:bg-[#151520] transition-colors"
+                className="flex items-center justify-between p-3 bg-zinc-900 rounded-xl cursor-pointer hover:bg-zinc-950 transition-colors"
               >
                 <span className="text-white flex items-center gap-2">
                   <span>{setting.icon}</span>
                   {setting.label}
                 </span>
                 <div className={`relative w-12 h-6 rounded-full transition-colors ${
-                  privacySettings[setting.key as keyof PrivacySettings] ? 'bg-[#FFD700]' : 'bg-[#2A2A3F]'
+                  privacySettings[setting.key as keyof PrivacySettings] ? 'bg-amber-400' : 'bg-zinc-800'
                 }`}>
                   <motion.div
                     className="absolute top-1 w-4 h-4 bg-white rounded-full shadow"
@@ -1395,11 +1393,11 @@ export default function UserProfile() {
           className="mb-6"
         >
           <h1 className="text-3xl font-bold text-white mb-2">User Profile</h1>
-          <p className="text-[#A0A0A5]">Manage your profile and settings</p>
+          <p className="text-zinc-400">Manage your profile and settings</p>
         </motion.div>
 
         {/* Tabs - Enhanced */}
-        <div className="mb-6 border-b border-[#2A2A2F]">
+        <div className="mb-6 border-b border-zinc-800">
           <div className="flex flex-wrap gap-2">
             {[
               { id: 'overview' as const, label: 'Overview', icon: '👤', count: null },
@@ -1414,14 +1412,14 @@ export default function UserProfile() {
                 whileTap={{ scale: 0.98 }}
                 className={`relative px-4 py-3 font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'text-[#FFD700]'
-                    : 'text-[#A0A0A5] hover:text-white'
+                    ? 'text-amber-400'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <span className="flex items-center gap-2">
                   {tab.icon} {tab.label}
                   {tab.count !== null && (
-                    <span className="text-xs bg-[#2A2A3F] px-2 py-0.5 rounded-full">
+                    <span className="text-xs bg-zinc-800 px-2 py-0.5 rounded-full">
                       {tab.count}
                     </span>
                   )}
@@ -1429,7 +1427,7 @@ export default function UserProfile() {
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="profileTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#FFD700] to-[#FFA500]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-amber-400 to-orange-500"
                   />
                 )}
               </motion.button>

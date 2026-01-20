@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from '@jest/globals'
+import { describe, it, expect,  beforeEach } from '@jest/globals'
 
 // Mock wagmi hooks
 jest.mock('wagmi', () => ({
@@ -10,7 +10,7 @@ jest.mock('wagmi', () => ({
 
 // Mock React hooks
 jest.mock('react', async () => {
-  const actual = await vi.importActual('react')
+  const actual = await jest.requireActual('react')
   return {
     ...(actual as object),
     useState: jest.fn((init) => [init, jest.fn()]),

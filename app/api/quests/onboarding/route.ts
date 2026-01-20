@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
  * GET /api/quests/onboarding
  * Fetch user onboarding progress
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
@@ -73,6 +79,14 @@ export async function GET(request: NextRequest) {
  * Update onboarding step completion
  */
 export async function PATCH(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const { step, userAddress } = await request.json();
 
@@ -189,6 +203,14 @@ export async function PATCH(request: NextRequest) {
  * Claim onboarding completion reward
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitPost = await withRateLimit(request, 'write');
+  if (rateLimitPost) return rateLimitPost;
+
+  // Authentication
+  const authResultPost = await requireAuth(request);
+  if (authResultPost instanceof NextResponse) return authResultPost;
+
   try {
     const { userAddress } = await request.json();
 

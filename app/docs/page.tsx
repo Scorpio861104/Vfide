@@ -213,19 +213,19 @@ export default function DocsPage() {
   return (
     <>
       
-      <main className="min-h-screen bg-[#1A1A1D] pt-20">
+      <main className="min-h-screen bg-zinc-900 pt-20">
         {/* Header */}
-        <section className="py-8 sm:py-12 bg-linear-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+        <section className="py-8 sm:py-12 bg-linear-to-b from-zinc-800 to-zinc-900 border-b border-zinc-700">
           <div className="container mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center max-w-3xl mx-auto"
             >
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-[family-name:var(--font-display)] font-bold text-zinc-100 mb-4">
                 Documentation & Help
               </h1>
-              <p className="text-base sm:text-lg text-[#A0A0A5]">
+              <p className="text-base sm:text-lg text-zinc-400">
                 Everything you need to know about VFIDE
               </p>
             </motion.div>
@@ -233,7 +233,7 @@ export default function DocsPage() {
         </section>
 
         {/* Tab Navigation */}
-        <div className="sticky top-16 sm:top-16 z-40 bg-[#1A1A1D]/95 backdrop-blur border-b border-[#3A3A3F]">
+        <div className="sticky top-16 sm:top-16 z-40 bg-zinc-900/95 backdrop-blur border-b border-zinc-700">
           <div className="container mx-auto px-2 sm:px-4">
             <div className="flex gap-1 overflow-x-auto py-2 scrollbar-hide">
               {tabs.map((tab) => (
@@ -242,8 +242,8 @@ export default function DocsPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base ${
                     activeTab === tab.id
-                      ? "bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/50"
-                      : "text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A2F]"
+                      ? "bg-cyan-400/20 text-cyan-400 border border-cyan-400/50"
+                      : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
                   }`}
                 >
                   {tab.icon}
@@ -272,7 +272,7 @@ export default function DocsPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="bg-[#2A2A2F] rounded-xl p-6 border border-[#3A3A3F] hover:border-[#00F0FF]/50 transition-all"
+                    className="bg-zinc-800 rounded-xl p-6 border border-zinc-700 hover:border-cyan-400/50 transition-all"
                   >
                     <div className="flex items-center gap-3 mb-4">
                       <div 
@@ -281,7 +281,7 @@ export default function DocsPage() {
                       >
                         <section.icon className="w-5 h-5" style={{ color: section.color }} />
                       </div>
-                      <h3 className="text-lg font-bold text-[#F5F3E8]">{section.title}</h3>
+                      <h3 className="text-lg font-bold text-zinc-100">{section.title}</h3>
                     </div>
                     <div className="space-y-2">
                       {section.links.map((link) => (
@@ -294,7 +294,7 @@ export default function DocsPage() {
                               setActiveTab(link.href.slice(1) as DocTab);
                             }
                           }}
-                          className="block text-[#A0A0A5] hover:text-[#00F0FF] transition-colors py-1"
+                          className="block text-zinc-400 hover:text-cyan-400 transition-colors py-1"
                         >
                           <ChevronRight className="w-4 h-4 inline mr-1" />
                           {link.name}
@@ -325,7 +325,7 @@ export default function DocsPage() {
                           ? level === "beginner" ? "bg-green-600 text-white" 
                             : level === "intermediate" ? "bg-blue-600 text-white"
                             : "bg-purple-600 text-white"
-                          : "bg-[#2A2A2F] text-[#A0A0A5] hover:bg-[#3A3A3F]"
+                          : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                       }`}
                     >
                       {level}
@@ -348,16 +348,16 @@ export default function DocsPage() {
                           setIsLessonModalOpen(true);
                         }
                       }}
-                      className="bg-[#2A2A2F] rounded-xl p-6 border border-[#3A3A3F] hover:border-[#00F0FF]/50 transition-all cursor-pointer group"
+                      className="bg-zinc-800 rounded-xl p-6 border border-zinc-700 hover:border-cyan-400/50 transition-all cursor-pointer group"
                     >
-                      <div className="w-12 h-12 mb-4 flex items-center justify-center bg-[#00F0FF]/10 rounded-lg border border-[#00F0FF]/30">
-                        <Book className="w-6 h-6 text-[#00F0FF]" />
+                      <div className="w-12 h-12 mb-4 flex items-center justify-center bg-cyan-400/10 rounded-lg border border-cyan-400/30">
+                        <Book className="w-6 h-6 text-cyan-400" />
                       </div>
-                      <h3 className="text-lg font-bold text-[#F5F3E8] mb-2 group-hover:text-[#00F0FF] transition-colors">
+                      <h3 className="text-lg font-bold text-zinc-100 mb-2 group-hover:text-cyan-400 transition-colors">
                         {lesson.title}
                       </h3>
-                      <p className="text-[#A0A0A5] text-sm mb-3">{lesson.description}</p>
-                      <div className="flex items-center gap-1 text-xs text-[#00F0FF]">
+                      <p className="text-zinc-400 text-sm mb-3">{lesson.description}</p>
+                      <div className="flex items-center gap-1 text-xs text-cyan-400">
                         <Clock className="w-3 h-3" />
                         <span>{lesson.duration}</span>
                       </div>
@@ -378,13 +378,13 @@ export default function DocsPage() {
                 {/* Search */}
                 <div className="max-w-xl mx-auto mb-8">
                   <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0A0A5]" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                     <input
                       type="text"
                       placeholder="Search FAQ..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
+                      className="w-full pl-12 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-100 focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -393,21 +393,21 @@ export default function DocsPage() {
                 <div className="max-w-3xl mx-auto space-y-6">
                   {filteredFaqs.map((category) => (
                     <div key={category.category}>
-                      <h3 className="text-xl font-bold text-[#00F0FF] mb-4">{category.category}</h3>
+                      <h3 className="text-xl font-bold text-cyan-400 mb-4">{category.category}</h3>
                       <div className="space-y-2">
                         {category.questions.map((faq, idx) => {
                           const globalIdx = faqs.flatMap(c => c.questions).indexOf(faq);
                           return (
                             <div
                               key={idx}
-                              className="bg-[#2A2A2F] rounded-xl border border-[#3A3A3F] overflow-hidden"
+                              className="bg-zinc-800 rounded-xl border border-zinc-700 overflow-hidden"
                             >
                               <button
                                 onClick={() => setOpenFaqIndex(openFaqIndex === globalIdx ? null : globalIdx)}
                                 className="w-full px-6 py-4 text-left flex items-center justify-between"
                               >
-                                <span className="font-medium text-[#F5F3E8]">{faq.q}</span>
-                                <ChevronDown className={`w-5 h-5 text-[#A0A0A5] transition-transform ${openFaqIndex === globalIdx ? "rotate-180" : ""}`} />
+                                <span className="font-medium text-zinc-100">{faq.q}</span>
+                                <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${openFaqIndex === globalIdx ? "rotate-180" : ""}`} />
                               </button>
                               <AnimatePresence>
                                 {openFaqIndex === globalIdx && (
@@ -417,7 +417,7 @@ export default function DocsPage() {
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="px-6 pb-4 text-[#A0A0A5]">{faq.a}</div>
+                                    <div className="px-6 pb-4 text-zinc-400">{faq.a}</div>
                                   </motion.div>
                                 )}
                               </AnimatePresence>
@@ -444,14 +444,14 @@ export default function DocsPage() {
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
                     <Shield className="w-8 h-8 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">4-Layer Security Architecture</h2>
-                  <p className="text-[#A0A0A5]">Emergency Breaker → Guardian Lock → Quarantine → Global Risk</p>
+                  <h2 className="text-2xl font-bold text-zinc-100 mb-2">4-Layer Security Architecture</h2>
+                  <p className="text-zinc-400">Emergency Breaker → Guardian Lock → Quarantine → Global Risk</p>
                 </div>
 
                 {/* Security Layers */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                   {securityLayers.map((layer) => (
-                    <div key={layer.num} className="bg-[#2A2A2F] rounded-xl p-6 border border-[#3A3A3F] text-center">
+                    <div key={layer.num} className="bg-zinc-800 rounded-xl p-6 border border-zinc-700 text-center">
                       <div 
                         className={`w-14 h-14 mx-auto mb-3 rounded-xl flex items-center justify-center border-2`}
                         style={{ 
@@ -463,56 +463,56 @@ export default function DocsPage() {
                           color: layer.color === "red" ? "#dc2626" : layer.color === "orange" ? "#ea580c" : layer.color === "yellow" ? "#ca8a04" : "#16a34a"
                         }}>{layer.num}</span>
                       </div>
-                      <div className="font-bold text-[#F5F3E8] mb-2">{layer.name}</div>
-                      <div className="text-xs text-[#A0A0A5]">{layer.desc}</div>
+                      <div className="font-bold text-zinc-100 mb-2">{layer.name}</div>
+                      <div className="text-xs text-zinc-400">{layer.desc}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Key Security Features */}
-                <div className="bg-[#2A2A2F] rounded-xl p-8 border border-[#3A3A3F]">
-                  <h3 className="text-xl font-bold text-[#F5F3E8] mb-6 flex items-center gap-2">
-                    <Lock className="w-5 h-5 text-[#00F0FF]" />
+                <div className="bg-zinc-800 rounded-xl p-8 border border-zinc-700">
+                  <h3 className="text-xl font-bold text-zinc-100 mb-6 flex items-center gap-2">
+                    <Lock className="w-5 h-5 text-cyan-400" />
                     Key Security Features
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div className="flex gap-3">
-                        <div className="w-8 h-8 bg-[#00F0FF]/20 rounded-lg flex items-center justify-center shrink-0">
-                          <Shield className="w-4 h-4 text-[#00F0FF]" />
+                        <div className="w-8 h-8 bg-cyan-400/20 rounded-lg flex items-center justify-center shrink-0">
+                          <Shield className="w-4 h-4 text-cyan-400" />
                         </div>
                         <div>
-                          <div className="font-medium text-[#F5F3E8]">Non-Custodial Vaults</div>
-                          <div className="text-sm text-[#A0A0A5]">Only YOU control your funds. VFIDE cannot access vaults.</div>
+                          <div className="font-medium text-zinc-100">Non-Custodial Vaults</div>
+                          <div className="text-sm text-zinc-400">Only YOU control your funds. VFIDE cannot access vaults.</div>
                         </div>
                       </div>
                       <div className="flex gap-3">
-                        <div className="w-8 h-8 bg-[#00FF88]/20 rounded-lg flex items-center justify-center shrink-0">
-                          <Users className="w-4 h-4 text-[#00FF88]" />
+                        <div className="w-8 h-8 bg-emerald-400/20 rounded-lg flex items-center justify-center shrink-0">
+                          <Users className="w-4 h-4 text-emerald-400" />
                         </div>
                         <div>
-                          <div className="font-medium text-[#F5F3E8]">Guardian Recovery</div>
-                          <div className="text-sm text-[#A0A0A5]">Add trusted guardians for wallet recovery. M-of-N approval required.</div>
+                          <div className="font-medium text-zinc-100">Guardian Recovery</div>
+                          <div className="text-sm text-zinc-400">Add trusted guardians for wallet recovery. M-of-N approval required.</div>
                         </div>
                       </div>
                     </div>
                     <div className="space-y-4">
                       <div className="flex gap-3">
-                        <div className="w-8 h-8 bg-[#FFD700]/20 rounded-lg flex items-center justify-center shrink-0">
-                          <Lock className="w-4 h-4 text-[#FFD700]" />
+                        <div className="w-8 h-8 bg-amber-400/20 rounded-lg flex items-center justify-center shrink-0">
+                          <Lock className="w-4 h-4 text-amber-400" />
                         </div>
                         <div>
-                          <div className="font-medium text-[#F5F3E8]">User-Controlled Freeze</div>
-                          <div className="text-sm text-[#A0A0A5]">Freeze your vault like freezing a credit card. Instant protection.</div>
+                          <div className="font-medium text-zinc-100">User-Controlled Freeze</div>
+                          <div className="text-sm text-zinc-400">Freeze your vault like freezing a credit card. Instant protection.</div>
                         </div>
                       </div>
                       <div className="flex gap-3">
-                        <div className="w-8 h-8 bg-[#A78BFA]/20 rounded-lg flex items-center justify-center shrink-0">
-                          <Zap className="w-4 h-4 text-[#A78BFA]" />
+                        <div className="w-8 h-8 bg-violet-400/20 rounded-lg flex items-center justify-center shrink-0">
+                          <Zap className="w-4 h-4 text-violet-400" />
                         </div>
                         <div>
-                          <div className="font-medium text-[#F5F3E8]">Abnormal Transaction Detection</div>
-                          <div className="text-sm text-[#A0A0A5]">Large transfers require your explicit approval.</div>
+                          <div className="font-medium text-zinc-100">Abnormal Transaction Detection</div>
+                          <div className="text-sm text-zinc-400">Large transfers require your explicit approval.</div>
                         </div>
                       </div>
                     </div>
@@ -523,7 +523,7 @@ export default function DocsPage() {
                 <div className="text-center mt-8">
                   <Link
                     href="/vault"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#00F0FF]/20 text-[#00F0FF] rounded-xl hover:bg-[#00F0FF]/30 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-400/20 text-cyan-400 rounded-xl hover:bg-cyan-400/30 transition-colors"
                   >
                     <Shield className="w-5 h-5" />
                     Manage Your Vault Security

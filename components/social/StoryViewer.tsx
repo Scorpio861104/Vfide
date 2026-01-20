@@ -111,7 +111,7 @@ export function StoryViewer({
       {/* Header */}
       <div className="absolute top-8 left-4 right-4 flex items-center justify-between z-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#00F0FF]/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-cyan-400/20 flex items-center justify-center">
             <span className="text-xl">{currentStory.userAvatar || '👤'}</span>
           </div>
           <div>

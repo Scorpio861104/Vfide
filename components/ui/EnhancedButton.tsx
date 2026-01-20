@@ -33,22 +33,22 @@ export function EnhancedButton({
   
   const variantStyles = {
     primary: `
-      bg-linear-to-br from-[#00F0FF] to-[#0080FF] 
-      text-[#0A0A0F] 
+      bg-linear-to-br from-cyan-400 to-blue-500 
+      text-zinc-950 
       hover:shadow-[0_0_30px_rgba(0,240,255,0.4)] 
       hover:scale-[1.02]
       active:scale-[0.98]
     `,
     secondary: `
-      bg-[#1F1F2A] 
-      text-[#F8F8FC] 
-      border border-[#2A2A35] 
-      hover:border-[#00F0FF] 
-      hover:bg-[#2A2A35]
+      bg-zinc-900 
+      text-zinc-50 
+      border border-zinc-800 
+      hover:border-cyan-400 
+      hover:bg-zinc-800
       hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]
     `,
     accent: `
-      bg-linear-to-r from-[#FF00F5] via-[#00F0FF] to-[#0080FF]
+      bg-linear-to-r from-fuchsia-500 via-cyan-400 to-blue-500
       text-white
       hover:shadow-[0_0_40px_rgba(255,0,245,0.5)]
       hover:scale-[1.02]
@@ -58,21 +58,21 @@ export function EnhancedButton({
       bg-white/5 
       backdrop-blur-xl 
       border border-white/10 
-      text-[#F8F8FC]
+      text-zinc-50
       hover:bg-white/10 
       hover:border-white/20
       hover:shadow-[0_8px_32px_rgba(0,240,255,0.15)]
     `,
     glow: `
-      bg-[#0A0A0F] 
-      text-[#00F0FF] 
-      border border-[#00F0FF]/50
+      bg-zinc-950 
+      text-cyan-400 
+      border border-cyan-400/50
       shadow-[0_0_20px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       hover:shadow-[0_0_40px_rgba(0,240,255,0.5),inset_0_0_30px_rgba(0,240,255,0.2)]
-      hover:border-[#00F0FF]
+      hover:border-cyan-400
     `,
     gradient: `
-      bg-linear-to-r from-[#FF00F5] via-[#FF0080] to-[#FF00F5]
+      bg-linear-to-r from-fuchsia-500 via-[#FF0080] to-fuchsia-500
       bg-[length:200%_100%]
       text-white
       hover:bg-[position:100%_0]
@@ -131,9 +131,9 @@ export function EnhancedButton({
           </svg>
         ) : (
           <>
-            {icon && iconPosition === "left" && <span className="flex-shrink-0">{icon}</span>}
+            {icon && iconPosition === "left" && <span className="shrink-0">{icon}</span>}
             {children}
-            {icon && iconPosition === "right" && <span className="flex-shrink-0">{icon}</span>}
+            {icon && iconPosition === "right" && <span className="shrink-0">{icon}</span>}
           </>
         )}
       </span>

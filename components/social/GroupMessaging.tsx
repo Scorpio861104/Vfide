@@ -126,12 +126,12 @@ export function GroupMessaging() {
   return (
     <div className="h-[calc(100vh-250px)] flex gap-4">
       {/* Groups List */}
-      <div className="w-80 bg-[#0A0A0F] border border-[#2A2A2F] rounded-xl p-4 flex flex-col">
+      <div className="w-80 bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-[#F5F3E8]">Groups</h3>
+          <h3 className="font-bold text-zinc-100">Groups</h3>
           <button
             onClick={() => setShowCreateGroup(true)}
-            className="p-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg hover:bg-[#00D5E0] transition-colors"
+            className="p-2 bg-cyan-400 text-zinc-950 rounded-lg hover:bg-cyan-400 transition-colors"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -140,9 +140,9 @@ export function GroupMessaging() {
         <div className="flex-1 overflow-y-auto space-y-2">
           {groups.length === 0 ? (
             <div className="text-center py-8">
-              <Users className="w-12 h-12 text-[#6B6B78] mx-auto mb-2 opacity-50" />
-              <p className="text-[#6B6B78] text-sm">No groups yet</p>
-              <p className="text-[#6B6B78] text-xs mt-1">Create one to get started!</p>
+              <Users className="w-12 h-12 text-zinc-500 mx-auto mb-2 opacity-50" />
+              <p className="text-zinc-500 text-sm">No groups yet</p>
+              <p className="text-zinc-500 text-xs mt-1">Create one to get started!</p>
             </div>
           ) : (
             groups.map((group) => (
@@ -151,8 +151,8 @@ export function GroupMessaging() {
                 onClick={() => setSelectedGroup(group)}
                 className={`w-full p-3 rounded-lg text-left transition-all ${
                   selectedGroup?.id === group.id
-                    ? 'bg-[#00F0FF]/20 border-2 border-[#00F0FF]'
-                    : 'bg-[#1A1A2E] border-2 border-transparent hover:bg-[#2A2A3F]'
+                    ? 'bg-cyan-400/20 border-2 border-cyan-400'
+                    : 'bg-zinc-900 border-2 border-transparent hover:bg-zinc-800'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -165,10 +165,10 @@ export function GroupMessaging() {
                     {group.icon || '👥'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-[#F5F3E8] truncate">
+                    <h4 className="font-semibold text-zinc-100 truncate">
                       {group.name}
                     </h4>
-                    <p className="text-xs text-[#6B6B78]">
+                    <p className="text-xs text-zinc-500">
                       {group.members.length} members
                     </p>
                   </div>
@@ -180,11 +180,11 @@ export function GroupMessaging() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 bg-[#0A0A0F] border border-[#2A2A2F] rounded-xl flex flex-col">
+      <div className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col">
         {selectedGroup ? (
           <>
             {/* Group Header */}
-            <div className="p-4 border-b border-[#2A2A2F] flex items-center justify-between">
+            <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
@@ -195,35 +195,35 @@ export function GroupMessaging() {
                   {selectedGroup.icon || '👥'}
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#F5F3E8]">{selectedGroup.name}</h3>
-                  <p className="text-sm text-[#6B6B78]">
+                  <h3 className="font-bold text-zinc-100">{selectedGroup.name}</h3>
+                  <p className="text-sm text-zinc-500">
                     {selectedGroup.members.length} members
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowGroupMenu(!showGroupMenu)}
-                className="p-2 hover:bg-[#2A2A3F] rounded-lg transition-colors relative"
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors relative"
               >
-                <MoreVertical className="w-5 h-5 text-[#F5F3E8]" />
+                <MoreVertical className="w-5 h-5 text-zinc-100" />
                 
                 {showGroupMenu && (
-                  <div className="absolute right-0 top-12 w-48 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg shadow-xl z-10">
+                  <div className="absolute right-0 top-12 w-48 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-10">
                     <button
-                      className="w-full px-4 py-2 text-left text-[#F5F3E8] hover:bg-[#2A2A3F] flex items-center gap-2 rounded-t-lg"
+                      className="w-full px-4 py-2 text-left text-zinc-100 hover:bg-zinc-800 flex items-center gap-2 rounded-t-lg"
                     >
                       <Settings className="w-4 h-4" />
                       Group Settings
                     </button>
                     <button
-                      className="w-full px-4 py-2 text-left text-[#F5F3E8] hover:bg-[#2A2A3F] flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-zinc-100 hover:bg-zinc-800 flex items-center gap-2"
                     >
                       <UserPlus className="w-4 h-4" />
                       Add Members
                     </button>
                     <button
                       onClick={leaveGroup}
-                      className="w-full px-4 py-2 text-left text-[#FF6B9D] hover:bg-[#2A2A3F] flex items-center gap-2 rounded-b-lg"
+                      className="w-full px-4 py-2 text-left text-pink-400 hover:bg-zinc-800 flex items-center gap-2 rounded-b-lg"
                     >
                       <LogOut className="w-4 h-4" />
                       Leave Group
@@ -237,8 +237,8 @@ export function GroupMessaging() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-[#6B6B78]">No messages yet</p>
-                  <p className="text-[#6B6B78] text-sm mt-1">Be the first to say something!</p>
+                  <p className="text-zinc-500">No messages yet</p>
+                  <p className="text-zinc-500 text-sm mt-1">Be the first to say something!</p>
                 </div>
               ) : (
                 messages.map((msg) => {
@@ -252,25 +252,25 @@ export function GroupMessaging() {
                     >
                       <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
                         {!isMe && (
-                          <p className="text-xs text-[#6B6B78] mb-1 ml-2">
+                          <p className="text-xs text-zinc-500 mb-1 ml-2">
                             <UserDisplay address={msg.from} />
                           </p>
                         )}
                         <div
                           className={`px-4 py-2 rounded-2xl ${
                             isMe
-                              ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                              : 'bg-[#2A2A3F] text-[#F5F3E8]'
+                              ? 'bg-cyan-400 text-zinc-950'
+                              : 'bg-zinc-800 text-zinc-100'
                           }`}
                         >
                           <p className="text-sm">{msg.content}</p>
                         </div>
                         <div className="flex items-center gap-2 mt-1 px-2">
-                          <p className="text-xs text-[#6B6B78]">
+                          <p className="text-xs text-zinc-500">
                             {new Date(msg.timestamp).toLocaleTimeString()}
                           </p>
                           {isMe && msg.readBy.length > 1 && (
-                            <CheckCheck className="w-3 h-3 text-[#00F0FF]" />
+                            <CheckCheck className="w-3 h-3 text-cyan-400" />
                           )}
                         </div>
                       </div>
@@ -282,7 +282,7 @@ export function GroupMessaging() {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-[#2A2A2F]">
+            <div className="p-4 border-t border-zinc-800">
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -290,12 +290,12 @@ export function GroupMessaging() {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  className="flex-1 px-4 py-2 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] placeholder-[#6B6B78] focus:border-[#00F0FF] focus:outline-none"
+                  className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!newMessage.trim()}
-                  className="px-4 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-semibold hover:bg-[#00D5E0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-5 h-5" />
                 </button>
@@ -305,8 +305,8 @@ export function GroupMessaging() {
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <Users className="w-16 h-16 text-[#6B6B78] mx-auto mb-4 opacity-50" />
-              <p className="text-[#6B6B78]">Select a group to start chatting</p>
+              <Users className="w-16 h-16 text-zinc-500 mx-auto mb-4 opacity-50" />
+              <p className="text-zinc-500">Select a group to start chatting</p>
             </div>
           </div>
         )}
@@ -399,12 +399,12 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-zinc-900 rounded-xl border border-zinc-700 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-[#F5F3E8]">Create Group</h2>
-          <button onClick={onClose} className="p-2 hover:bg-[#2A2A3F] rounded-lg">
-            <X className="w-5 h-5 text-[#6B6B78]" />
+          <h2 className="text-2xl font-bold text-zinc-100">Create Group</h2>
+          <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-lg">
+            <X className="w-5 h-5 text-zinc-500" />
           </button>
         </div>
 
@@ -412,14 +412,14 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
           {/* Icon & Color */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-[#F5F3E8] mb-2">Icon</label>
+              <label className="block text-sm font-semibold text-zinc-100 mb-2">Icon</label>
               <div className="grid grid-cols-4 gap-2">
                 {icons.map(i => (
                   <button
                     key={i}
                     onClick={() => setIcon(i)}
                     className={`p-3 text-2xl rounded-lg transition-all ${
-                      icon === i ? 'bg-[#00F0FF]/20 border-2 border-[#00F0FF]' : 'bg-[#0A0A0F] border-2 border-transparent hover:bg-[#2A2A3F]'
+                      icon === i ? 'bg-cyan-400/20 border-2 border-cyan-400' : 'bg-zinc-950 border-2 border-transparent hover:bg-zinc-800'
                     }`}
                   >
                     {i}
@@ -428,14 +428,14 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
               </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-[#F5F3E8] mb-2">Color</label>
+              <label className="block text-sm font-semibold text-zinc-100 mb-2">Color</label>
               <div className="grid grid-cols-3 gap-2">
                 {colors.map(c => (
                   <button
                     key={c}
                     onClick={() => setColor(c)}
                     className={`h-12 rounded-lg transition-all ${
-                      color === c ? 'ring-2 ring-[#F5F3E8] ring-offset-2 ring-offset-[#1A1A2E]' : ''
+                      color === c ? 'ring-2 ring-zinc-100 ring-offset-2 ring-offset-[#1A1A2E]' : ''
                     }`}
                     style={{ backgroundColor: c }}
                   />
@@ -446,38 +446,38 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-semibold text-[#F5F3E8] mb-2">Group Name*</label>
+            <label className="block text-sm font-semibold text-zinc-100 mb-2">Group Name*</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Team Alpha"
-              className="w-full px-4 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
+              className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-semibold text-[#F5F3E8] mb-2">Description</label>
+            <label className="block text-sm font-semibold text-zinc-100 mb-2">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's this group about?"
               rows={2}
-              className="w-full px-4 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none resize-none"
+              className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none resize-none"
             />
           </div>
 
           {/* Select Members */}
           <div>
-            <label className="block text-sm font-semibold text-[#F5F3E8] mb-2">
+            <label className="block text-sm font-semibold text-zinc-100 mb-2">
               Add Members* ({selectedFriends.length} selected)
             </label>
             <div className="max-h-48 overflow-y-auto space-y-2">
               {friends.map(friend => (
                 <label
                   key={friend.address}
-                  className="flex items-center gap-3 p-3 bg-[#0A0A0F] rounded-lg cursor-pointer hover:bg-[#2A2A3F] transition-colors"
+                  className="flex items-center gap-3 p-3 bg-zinc-950 rounded-lg cursor-pointer hover:bg-zinc-800 transition-colors"
                 >
                   <input
                     type="checkbox"
@@ -491,10 +491,10 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
                     }}
                     className="w-4 h-4"
                   />
-                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold">
                     {(friend.alias || friend.address).slice(0, 2).toUpperCase()}
                   </div>
-                  <span className="text-[#F5F3E8]">
+                  <span className="text-zinc-100">
                     {friend.alias || formatAddress(friend.address)}
                   </span>
                 </label>
@@ -506,13 +506,13 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
           <div className="flex gap-3 pt-4">
             <button
               onClick={handleCreate}
-              className="flex-1 py-3 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-bold hover:bg-[#00D5E0] transition-colors"
+              className="flex-1 py-3 bg-cyan-400 text-zinc-950 rounded-lg font-bold hover:bg-cyan-400 transition-colors"
             >
               Create Group
             </button>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-[#2A2A3F] text-[#F5F3E8] rounded-lg font-semibold hover:bg-[#3A3A4F] transition-colors"
+              className="px-6 py-3 bg-zinc-800 text-zinc-100 rounded-lg font-semibold hover:bg-zinc-700 transition-colors"
             >
               Cancel
             </button>

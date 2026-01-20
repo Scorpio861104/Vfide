@@ -122,11 +122,11 @@ const wagmiStorage = createStorage({
 // - Include explicit wallet options for best user experience
 
 // Detect if running on mobile device (lazy evaluation, memoized)
-const isMobileDevice_ = isMobileDevice();
+const isMobile = isMobileDevice();
 
 // Build wallet groups dynamically based on device type
 // Mobile users get mobile wallets first, desktop users get extensions first
-const walletGroups = isMobileDevice_ ? [
+const walletGroups = isMobile ? [
   // MOBILE: WalletConnect and mobile apps first
   ...(hasWalletConnect ? [{
     groupName: 'Recommended for Mobile',

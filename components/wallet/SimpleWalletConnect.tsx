@@ -5,14 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Copy, Check, Clock, Circle, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { useAccount, useReconnect } from 'wagmi';
+import { useAccount, useReconnect, useChainId } from 'wagmi';
 import { useToast } from '@/components/ui/toast';
 import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
 import { useWalletPersistence } from '@/hooks/useWalletPersistence';
 import { useENS } from '@/hooks/useENS';
-import { measureLatency, getCachedLatency, getLatencyColor } from '@/lib/networkLatency';
+import { measureLatency, getCachedLatency, getLatencyColor, type LatencyData } from '@/lib/networkLatency';
 import { addConnectionToHistory } from '@/lib/connectionHistory';
-import { connectionStateAnimations, fadeIn, scaleIn } from '@/lib/animations';
+import { connectionStateAnimations as _connectionStateAnimations, fadeIn, scaleIn } from '@/lib/animations';
 import { scrollToTop } from '@/lib/focusTrap';
 import { POLLING_INTERVALS, ANIMATION_DURATION } from '@/lib/walletConstants';
 
@@ -57,8 +57,63 @@ export function SimpleWalletConnect() {
   const { sessionDurationFormatted, isInCooldown, cooldownRemaining } = useEnhancedWalletConnect();
   const { isReconnecting: isAutoReconnecting, reconnectError, minutesUntilDisconnect } = useWalletPersistence();
   // Get connector info and reconnect status from wagmi
-  const { connector } = useAccount();
+  const { connector, address, isConnected } = useAccount();
+  const chainId = useChainId();
   const { isPending: isReconnecting } = useReconnect();
+  
+  // Phase 3: ENS resolution - moved outside render prop
+  const { ensName } = useENS(address);
+  
+  // Phase 3: Network latency monitoring - moved outside render prop
+  const [latencyData, setLatencyData] = useState<LatencyData | null>(chainId ? getCachedLatency(chainId) : null);
+
+  // Track latency when connected
+  useEffect(() => {
+    if (chainId && isConnected) {
+      // Check cached first (instant, no blocking)
+      const cached = getCachedLatency(chainId);
+      if (cached) {
+        setLatencyData(cached);
+      }
+
+      // Defer latency measurement to avoid blocking connection flow
+      const deferredMeasure = setTimeout(async () => {
+        // Use a default RPC URL based on chain ID
+        const rpcUrl = `https://rpc.chain${chainId}.example.com`;
+        const data = await measureLatency(rpcUrl, chainId);
+        setLatencyData(data);
+      }, 2000);
+
+      // Less frequent polling after initial measurement
+      const interval = setInterval(async () => {
+        const rpcUrl = `https://rpc.chain${chainId}.example.com`;
+        const data = await measureLatency(rpcUrl, chainId);
+        setLatencyData(data);
+      }, POLLING_INTERVALS.LATENCY);
+
+      return () => {
+        clearTimeout(deferredMeasure);
+        clearInterval(interval);
+      };
+    }
+    return undefined;
+  }, [chainId, isConnected]);
+
+  // Phase 3: Track connection in history
+  useEffect(() => {
+    if (isConnected && address && chainId) {
+      addConnectionToHistory({
+        address,
+        connectorId: connector?.id || 'unknown',
+        connectorName: connector?.name,
+        chainId,
+        success: true,
+      });
+      
+      // Phase 4: Scroll to top after successful connection
+      setTimeout(() => scrollToTop(), ANIMATION_DURATION.SCROLL_DELAY);
+    }
+  }, [isConnected, address, chainId, connector]);
 
   // Copy address to clipboard
   const copyAddress = useCallback(async (address: string, e: React.MouseEvent) => {
@@ -68,7 +123,7 @@ export function SimpleWalletConnect() {
       setCopied(true);
       showToast('Address copied to clipboard', 'success', 2000);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to copy address', 'error', 2000);
     }
   }, [showToast]);
@@ -137,65 +192,6 @@ export function SimpleWalletConnect() {
         // Show loading state
         const isLoading = authenticationStatus === 'loading';
 
-        // Phase 3: ENS resolution
-        const { ensName } = useENS(account?.address);
-
-        // Phase 3: Network latency monitoring - deferred to avoid blocking connection
-        const [latencyData, setLatencyData] = useState(chain?.id ? getCachedLatency(chain.id) : null);
-
-        useEffect(() => {
-          if (chain?.id && connected) {
-            // Check cached first (instant, no blocking)
-            const cached = getCachedLatency(chain.id);
-            if (cached) {
-              setLatencyData(cached);
-            }
-
-            // Defer latency measurement to avoid blocking connection flow
-            // Wait 2 seconds after connection before measuring
-            const deferredMeasure = setTimeout(async () => {
-              const chainWithRpc = chain as { rpcUrls?: { default?: { http?: string[] } } };
-              const rpcUrl = chainWithRpc.rpcUrls?.default?.http?.[0];
-              if (rpcUrl) {
-                const data = await measureLatency(rpcUrl, chain.id);
-                setLatencyData(data);
-              }
-            }, 2000);
-
-            // Less frequent polling after initial measurement
-            const interval = setInterval(async () => {
-              const chainWithRpc = chain as { rpcUrls?: { default?: { http?: string[] } } };
-              const rpcUrl = chainWithRpc.rpcUrls?.default?.http?.[0];
-              if (rpcUrl) {
-                const data = await measureLatency(rpcUrl, chain.id);
-                setLatencyData(data);
-              }
-            }, POLLING_INTERVALS.LATENCY);
-
-            return () => {
-              clearTimeout(deferredMeasure);
-              clearInterval(interval);
-            };
-          }
-          return undefined;
-        }, [chain?.id, connected, chain]);
-
-        // Phase 3: Track connection in history
-        useEffect(() => {
-          if (connected && account && chain) {
-            addConnectionToHistory({
-              address: account.address,
-              connectorId: connector?.id || 'unknown',
-              connectorName: connector?.name,
-              chainId: chain.id,
-              success: true,
-            });
-            
-            // Phase 4: Scroll to top after successful connection
-            setTimeout(() => scrollToTop(), ANIMATION_DURATION.SCROLL_DELAY);
-          }
-        }, [connected, account, chain, connector]);
-
         return (
           <div
             {...(!ready && {
@@ -238,7 +234,7 @@ export function SimpleWalletConnect() {
                     variants={fadeIn}
                     initial="hidden"
                     animate="show"
-                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-cyan-400 font-bold rounded-lg border border-cyan-500/30"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-zinc-800 text-cyan-400 font-bold rounded-lg border border-cyan-500/30"
                   >
                     <span className="flex items-center gap-2">
                       <motion.div
@@ -279,7 +275,7 @@ export function SimpleWalletConnect() {
                     animate="show"
                     className="flex items-center gap-2"
                   >
-                    <div className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-[#A0A0A5] font-bold rounded-lg border border-[#3A3A3F]">
+                    <div className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-zinc-800 text-zinc-400 font-bold rounded-lg border border-zinc-700">
                       <span className="flex items-center gap-2">
                         <motion.svg 
                           className="h-4 w-4"
@@ -331,7 +327,7 @@ export function SimpleWalletConnect() {
                     className={`px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-bold rounded-lg transition-all font-[family-name:var(--font-body)] touch-manipulation focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F0F12] ${
                       isInCooldown
                         ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                        : 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] hover:shadow-lg hover:shadow-[#00F0FF]/50 cursor-pointer focus:ring-[#00F0FF]'
+                        : 'bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 hover:shadow-lg hover:shadow-cyan-400/50 cursor-pointer focus:ring-cyan-400'
                     }`}
                   >
                     <AnimatePresence mode="wait">
@@ -400,7 +396,7 @@ export function SimpleWalletConnect() {
                     type="button"
                     aria-label={`Current network: ${chain.name}${latencyData ? ` - ${latencyData.status} (${latencyData.latency}ms)` : ''}`}
                     title={latencyData ? `Network latency: ${latencyData.latency}ms (${latencyData.status})` : chain.name}
-                    className="hidden sm:flex px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-all font-[family-name:var(--font-body)] text-sm items-center cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
+                    className="hidden sm:flex px-4 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-all font-[family-name:var(--font-body)] text-sm items-center cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                   >
                     {/* Phase 3: Network latency indicator */}
                     {latencyData && (
@@ -449,7 +445,7 @@ export function SimpleWalletConnect() {
                     type="button"
                     aria-label="Open account menu"
                     title={sessionDurationFormatted ? `Connected for ${sessionDurationFormatted}` : 'Open account menu'}
-                    className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
+                    className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
                   >
                     <span className="hidden sm:flex items-center gap-2">
                       {/* Phase 3: Show ENS name if available */}
@@ -465,12 +461,12 @@ export function SimpleWalletConnect() {
                       {/* Copy button */}
                       <button
                         onClick={(e) => copyAddress(account.address, e)}
-                        className="ml-1 p-1 hover:bg-[#1A1A1D]/20 rounded transition-colors"
+                        className="ml-1 p-1 hover:bg-zinc-900/20 rounded transition-colors"
                         title={`Copy address${ensName ? ` (${account.address})` : ''}`}
                         aria-label="Copy wallet address"
                       >
                         {copied ? (
-                          <Check size={14} className="text-[#50C878]" />
+                          <Check size={14} className="text-emerald-500" />
                         ) : (
                           <Copy size={14} />
                         )}

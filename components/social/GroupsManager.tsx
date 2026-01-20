@@ -99,17 +99,17 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
   );
 
   return (
-    <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col">
+    <div className="bg-zinc-900 rounded-xl border border-zinc-700 h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-[#3A3A4F]">
+      <div className="p-4 border-b border-zinc-700">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-[#F5F3E8] flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#A78BFA]" />
+          <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
+            <Users className="w-5 h-5 text-violet-400" />
             Groups ({groups.length})
           </h2>
           <button
             onClick={() => setShowCreateGroup(!showCreateGroup)}
-            className="p-2 rounded-lg bg-[#A78BFA]/10 text-[#A78BFA] hover:bg-[#A78BFA]/20 transition-colors"
+            className="p-2 rounded-lg bg-violet-400/10 text-violet-400 hover:bg-violet-400/20 transition-colors"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -117,13 +117,13 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B6B78]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <input
             type="text"
             placeholder="Search groups..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] text-sm focus:border-[#A78BFA] focus:outline-none"
+            className="w-full pl-10 pr-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
           />
         </div>
       </div>
@@ -135,12 +135,12 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-b border-[#3A3A4F] overflow-hidden"
+            className="border-b border-zinc-700 overflow-hidden"
           >
-            <div className="p-4 bg-[#0A0A0F]/50">
+            <div className="p-4 bg-zinc-950/50">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[#F5F3E8]">Create Group</h3>
-                <button onClick={() => setShowCreateGroup(false)} className="text-[#6B6B78] hover:text-[#F5F3E8]">
+                <h3 className="text-sm font-semibold text-zinc-100">Create Group</h3>
+                <button onClick={() => setShowCreateGroup(false)} className="text-zinc-500 hover:text-zinc-100">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -150,7 +150,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                 placeholder="Group name"
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
-                className="w-full px-3 py-2 mb-2 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] text-sm focus:border-[#A78BFA] focus:outline-none"
+                className="w-full px-3 py-2 mb-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
               />
 
               <input
@@ -158,14 +158,14 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                 placeholder="Description (optional)"
                 value={newGroupDescription}
                 onChange={(e) => setNewGroupDescription(e.target.value)}
-                className="w-full px-3 py-2 mb-3 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] text-sm focus:border-[#A78BFA] focus:outline-none"
+                className="w-full px-3 py-2 mb-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
               />
 
               <div className="mb-3">
-                <label className="text-xs text-[#A0A0A5] mb-2 block">Select Members (min 2):</label>
-                <div className="max-h-32 overflow-y-auto space-y-1 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-2">
+                <label className="text-xs text-zinc-400 mb-2 block">Select Members (min 2):</label>
+                <div className="max-h-32 overflow-y-auto space-y-1 bg-zinc-900 border border-zinc-700 rounded-lg p-2">
                   {friends.length === 0 ? (
-                    <p className="text-xs text-[#6B6B78] p-2">No friends to add</p>
+                    <p className="text-xs text-zinc-500 p-2">No friends to add</p>
                   ) : (
                     friends.map((friend) => (
                       <div
@@ -173,18 +173,18 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                         onClick={() => toggleMemberSelection(friend.address)}
                         className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
                           selectedMembers.includes(friend.address)
-                            ? 'bg-[#A78BFA]/20 border border-[#A78BFA]/50'
-                            : 'hover:bg-[#2A2A3F]'
+                            ? 'bg-violet-400/20 border border-violet-400/50'
+                            : 'hover:bg-zinc-800'
                         }`}
                       >
-                        <div className="w-6 h-6 rounded-full bg-linear-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center text-[#F5F3E8] text-xs font-bold">
+                        <div className="w-6 h-6 rounded-full bg-linear-to-br from-violet-400 to-violet-600 flex items-center justify-center text-zinc-100 text-xs font-bold">
                           {friend.alias ? friend.alias?.[0]?.toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
                         </div>
-                        <span className="text-xs text-[#F5F3E8] flex-1">
+                        <span className="text-xs text-zinc-100 flex-1">
                           {friend.alias || formatAddress(friend.address)}
                         </span>
                         {selectedMembers.includes(friend.address) && (
-                          <Shield className="w-3 h-3 text-[#A78BFA]" />
+                          <Shield className="w-3 h-3 text-violet-400" />
                         )}
                       </div>
                     ))
@@ -195,7 +195,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
               <button
                 onClick={handleCreateGroup}
                 disabled={!newGroupName || selectedMembers.length < 2}
-                className="w-full py-2 bg-[#A78BFA] text-[#0A0A0F] rounded-lg font-semibold text-sm hover:bg-[#9370DB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-2 bg-violet-400 text-zinc-950 rounded-lg font-semibold text-sm hover:bg-purple-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Create Group ({selectedMembers.length} members)
               </button>
@@ -208,11 +208,11 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
       <div className="flex-1 overflow-y-auto">
         {filteredGroups.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <Users className="w-12 h-12 text-[#3A3A4F] mb-3" />
-            <p className="text-[#6B6B78] text-sm">
+            <Users className="w-12 h-12 text-zinc-700 mb-3" />
+            <p className="text-zinc-500 text-sm">
               {groups.length === 0 ? 'No groups yet' : 'No groups match your search'}
             </p>
-            <p className="text-[#6B6B78] text-xs mt-1">
+            <p className="text-zinc-500 text-xs mt-1">
               Create a group to chat with multiple friends
             </p>
           </div>
@@ -231,29 +231,29 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                   onClick={() => onSelectGroup(group)}
                   className={`p-3 mb-2 rounded-lg cursor-pointer transition-all group ${
                     selectedGroup?.id === group.id
-                      ? 'bg-[#A78BFA]/20 border border-[#A78BFA]/50'
-                      : 'hover:bg-[#2A2A3F] border border-transparent'
+                      ? 'bg-violet-400/20 border border-violet-400/50'
+                      : 'hover:bg-zinc-800 border border-transparent'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#A78BFA] to-[#7C3AED] flex items-center justify-center text-[#F5F3E8] font-bold text-sm shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-violet-400 to-violet-600 flex items-center justify-center text-zinc-100 font-bold text-sm shrink-0">
                       {group.name?.[0]?.toUpperCase() ?? '?'}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold text-[#F5F3E8] truncate">
+                        <span className="text-sm font-semibold text-zinc-100 truncate">
                           {group.name}
                         </span>
-                        {isCreator && <Crown className="w-3 h-3 text-[#FFD700]" />}
-                        {group.isPrivate && <Lock className="w-3 h-3 text-[#A0A0A5]" />}
+                        {isCreator && <Crown className="w-3 h-3 text-amber-400" />}
+                        {group.isPrivate && <Lock className="w-3 h-3 text-zinc-400" />}
                       </div>
-                      <p className="text-xs text-[#6B6B78] mb-1 truncate">
+                      <p className="text-xs text-zinc-500 mb-1 truncate">
                         {group.description || 'No description'}
                       </p>
-                      <div className="flex items-center gap-1 text-xs text-[#A0A0A5]">
+                      <div className="flex items-center gap-1 text-xs text-zinc-400">
                         <Users className="w-3 h-3" />
                         <span>{group.members.length} members</span>
                       </div>
@@ -267,7 +267,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                             e.stopPropagation();
                             alert('Group settings - Coming soon!');
                           }}
-                          className="p-1.5 rounded-lg hover:bg-[#3A3A4F] text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 transition-colors"
                         >
                           <Settings className="w-4 h-4" />
                         </button>
@@ -277,7 +277,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                           e.stopPropagation();
                           handleLeaveGroup(group.id);
                         }}
-                        className="p-1.5 rounded-lg hover:bg-[#3A3A4F] text-[#A0A0A5] hover:text-[#FF6B9D] transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-pink-400 transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
                       </button>

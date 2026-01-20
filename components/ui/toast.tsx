@@ -71,20 +71,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               transition={{ duration: 0.2 }}
               className={`
                 p-4 rounded-lg shadow-lg border flex items-start gap-3
-                ${toast.type === 'success' ? 'bg-[#50C878]/10 border-[#50C878]' : ''}
-                ${toast.type === 'error' ? 'bg-[#C41E3A]/10 border-[#C41E3A]' : ''}
-                ${toast.type === 'info' ? 'bg-[#00F0FF]/10 border-[#00F0FF]' : ''}
+                ${toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500' : ''}
+                ${toast.type === 'error' ? 'bg-red-600/10 border-red-600' : ''}
+                ${toast.type === 'info' ? 'bg-cyan-400/10 border-cyan-400' : ''}
               `}
             >
-              {toast.type === 'success' && <CheckCircle2 className="text-[#50C878] shrink-0" size={20} />}
-              {toast.type === 'error' && <XCircle className="text-[#C41E3A] shrink-0" size={20} />}
-              {toast.type === 'info' && <AlertCircle className="text-[#00F0FF] shrink-0" size={20} />}
+              {toast.type === 'success' && <CheckCircle2 className="text-emerald-500 shrink-0" size={20} />}
+              {toast.type === 'error' && <XCircle className="text-red-600 shrink-0" size={20} />}
+              {toast.type === 'info' && <AlertCircle className="text-cyan-400 shrink-0" size={20} />}
               
-              <div className="flex-1 text-[#F5F3E8] text-sm">{toast.message}</div>
+              <div className="flex-1 text-zinc-100 text-sm">{toast.message}</div>
               
               <button
                 onClick={() => removeToast(toast.id)}
-                className="text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
+                className="text-zinc-400 hover:text-zinc-100 transition-colors"
               >
                 <X size={16} />
               </button>

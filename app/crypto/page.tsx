@@ -26,8 +26,8 @@ export default function CryptoDashboard() {
 
   if (!isConnected || !address) {
     return (
-      <div className="min-h-screen bg-[#0F0F12] flex items-center justify-center p-4">
-        <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4">
             <Wallet className="w-8 h-8 text-white" />
           </div>
@@ -42,7 +42,7 @@ export default function CryptoDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F0F12] p-4 md:p-8">
+    <div className="min-h-screen bg-zinc-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
@@ -98,7 +98,7 @@ export default function CryptoDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-2 mb-6 border-b border-[#2A2A2F]">
+        <div className="flex items-center gap-2 mb-6 border-b border-zinc-800">
           <button
             onClick={() => setActiveTab('transactions')}
             className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
@@ -124,7 +124,7 @@ export default function CryptoDashboard() {
         </div>
 
         {/* Content */}
-        <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           {activeTab === 'transactions' && <TransactionHistory userId={address} />}
           {activeTab === 'rewards' && <RewardsDisplay userId={address} />}
         </div>

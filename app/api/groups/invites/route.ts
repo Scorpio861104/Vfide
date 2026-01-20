@@ -1,5 +1,7 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 interface GroupInvite {
   id: number;
@@ -29,20 +31,28 @@ async function generateInviteCode(): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
-    const { groupId, createdByAddress, expiresIn, maxUses, description, requireApproval } = body;
+    const { groupId, expiresIn, maxUses, description, requireApproval } = body;
 
-    if (!groupId || !createdByAddress) {
+    if (!groupId) {
       return NextResponse.json(
-        { error: 'Missing required fields: groupId, createdByAddress' },
+        { error: 'Missing required field: groupId' },
         { status: 400 }
       );
     }
 
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [createdByAddress.toLowerCase()]
+      [authResult.user.address.toLowerCase()]
     );
 
     if (userResult.rows.length === 0) {
@@ -76,6 +86,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting only - public endpoint to validate invite codes
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');
@@ -120,6 +134,14 @@ export async function GET(request: NextRequest) {
  * Update invite link (revoke, etc.)
  */
 export async function PATCH(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
     const { code, action } = body;
@@ -140,6 +162,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         { error: 'Invite not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership - only creator can modify
+    const userResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authResult.user.address.toLowerCase()]
+    );
+    
+    if (userResult.rows.length === 0 || userResult.rows[0]?.id !== result.rows[0]?.created_by) {
+      return NextResponse.json(
+        { error: 'Not authorized to modify this invite' },
+        { status: 403 }
       );
     }
 
@@ -184,6 +219,14 @@ export async function PATCH(request: NextRequest) {
  * Delete an invite link
  */
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const code = request.nextUrl.searchParams.get('code');
 
@@ -194,17 +237,36 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const result = await query(
-      'DELETE FROM group_invites WHERE code = $1 RETURNING *',
+    // Check invite exists and get creator
+    const inviteResult = await query<GroupInvite>(
+      'SELECT * FROM group_invites WHERE code = $1',
       [code]
     );
     
-    if (result.rows.length === 0) {
+    if (inviteResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'Invite not found' },
         { status: 404 }
       );
     }
+
+    // Verify ownership - only creator can delete
+    const userResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authResult.user.address.toLowerCase()]
+    );
+    
+    if (userResult.rows.length === 0 || userResult.rows[0]?.id !== inviteResult.rows[0]?.created_by) {
+      return NextResponse.json(
+        { error: 'Not authorized to delete this invite' },
+        { status: 403 }
+      );
+    }
+
+    await query(
+      'DELETE FROM group_invites WHERE code = $1',
+      [code]
+    );
 
     return NextResponse.json({
       success: true,

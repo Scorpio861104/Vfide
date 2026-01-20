@@ -29,13 +29,19 @@ import { Wallet, Link2, Coins, Settings, CheckCircle2, X, Edit3, Power } from 'l
 function AnimatedBalance({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => latest.toLocaleString());
+  const [displayValue, setDisplayValue] = useState('0');
   
   useEffect(() => {
     const controls = animate(count, value, { duration: 1, ease: 'easeOut' });
     return controls.stop;
   }, [value, count]);
+
+  useEffect(() => {
+    const unsubscribe = rounded.on('change', (v) => setDisplayValue(v));
+    return unsubscribe;
+  }, [rounded]);
   
-  return <motion.span>{prefix}{rounded}{suffix}</motion.span>;
+  return <motion.span>{prefix}{displayValue}{suffix}</motion.span>;
 }
 
 // ==================== TYPES ====================
@@ -544,7 +550,7 @@ interface StatCardProps {
 function StatCard({ label, value, icon, color }: StatCardProps) {
   return (
     <motion.div 
-      className={`rounded-lg p-4 md:p-6 bg-gradient-to-br ${color} text-white shadow-lg`}
+      className={`rounded-lg p-4 md:p-6 bg-linear-to-br ${color} text-white shadow-lg`}
       whileHover={{ scale: 1.03, y: -2 }}
       transition={{ type: 'spring', stiffness: 400 }}
     >

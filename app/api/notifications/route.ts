@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 interface Notification {
   id: number;
@@ -30,6 +32,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
@@ -41,6 +49,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'userAddress is required' },
         { status: 400 }
+      );
+    }
+
+    // Verify ownership - user can only view their own notifications
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only view your own notifications' },
+        { status: 403 }
       );
     }
 
@@ -87,8 +103,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('[Notifications GET API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch notifications';
     return NextResponse.json(
-      { error: 'Failed to fetch notifications' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -99,6 +116,16 @@ export async function GET(request: NextRequest) {
  * Create a new notification
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { userAddress, type, title, message, data } = body;
@@ -139,8 +166,9 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('[Notifications POST API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create notification';
     return NextResponse.json(
-      { error: 'Failed to create notification' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -151,11 +179,29 @@ export async function POST(request: NextRequest) {
  * Mark notifications as read
  */
 export async function PATCH(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { notificationIds, userAddress, markAllRead } = body;
 
     if (markAllRead && userAddress) {
+      // Verify ownership - user can only modify their own notifications
+      if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+        return NextResponse.json(
+          { error: 'You can only modify your own notifications' },
+          { status: 403 }
+        );
+      }
+
       // Mark all notifications as read for user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
@@ -181,12 +227,25 @@ export async function PATCH(request: NextRequest) {
         updated: result.rowCount || 0,
       });
     } else if (notificationIds && Array.isArray(notificationIds)) {
-      // Mark specific notifications as read
+      // Verify ownership - notifications must belong to authenticated user
+      const userResult = await query(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [authResult.user.address.toLowerCase()]
+      );
+
+      if (userResult.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      // Mark specific notifications as read (only if they belong to the user)
       const result = await query(
         `UPDATE notifications 
          SET is_read = true, updated_at = NOW()
-         WHERE id = ANY($1)`,
-        [notificationIds]
+         WHERE id = ANY($1) AND user_id = $2`,
+        [notificationIds, userResult.rows[0].id]
       );
 
       return NextResponse.json({
@@ -201,8 +260,9 @@ export async function PATCH(request: NextRequest) {
     }
   } catch (error) {
     console.error('[Notifications PATCH API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update notifications';
     return NextResponse.json(
-      { error: 'Failed to update notifications' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -213,11 +273,29 @@ export async function PATCH(request: NextRequest) {
  * Delete notifications
  */
 export async function DELETE(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { notificationIds, userAddress, deleteAll } = body;
 
     if (deleteAll && userAddress) {
+      // Verify ownership - user can only delete their own notifications
+      if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+        return NextResponse.json(
+          { error: 'You can only delete your own notifications' },
+          { status: 403 }
+        );
+      }
+
       // Delete all notifications for user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
@@ -241,10 +319,23 @@ export async function DELETE(request: NextRequest) {
         deleted: result.rowCount || 0,
       });
     } else if (notificationIds && Array.isArray(notificationIds)) {
-      // Delete specific notifications
+      // Verify ownership - notifications must belong to authenticated user
+      const userResult = await query(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [authResult.user.address.toLowerCase()]
+      );
+
+      if (userResult.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      // Delete specific notifications (only if they belong to the user)
       const result = await query(
-        'DELETE FROM notifications WHERE id = ANY($1)',
-        [notificationIds]
+        'DELETE FROM notifications WHERE id = ANY($1) AND user_id = $2',
+        [notificationIds, userResult.rows[0].id]
       );
 
       return NextResponse.json({
@@ -259,8 +350,9 @@ export async function DELETE(request: NextRequest) {
     }
   } catch (error) {
     console.error('[Notifications DELETE API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete notifications';
     return NextResponse.json(
-      { error: 'Failed to delete notifications' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

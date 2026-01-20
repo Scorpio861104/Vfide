@@ -69,20 +69,20 @@ export function Modal({
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className={`
                 w-full ${sizes[size]} max-h-[85vh] overflow-y-auto
-                bg-linear-to-b from-[#2A2A2F] to-[#1A1A1D]
+                bg-linear-to-b from-zinc-800 to-zinc-900
                 border border-white/10 rounded-3xl shadow-2xl
                 pointer-events-auto
               `}
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="sticky top-0 flex items-start justify-between p-6 pb-0 bg-linear-to-b from-[#2A2A2F] to-transparent z-10">
+                <div className="sticky top-0 flex items-start justify-between p-6 pb-0 bg-linear-to-b from-zinc-800 to-transparent z-10">
                   <div>
                     {title && (
-                      <h2 className="text-2xl font-bold text-[#F5F3E8]">{title}</h2>
+                      <h2 className="text-2xl font-bold text-zinc-100">{title}</h2>
                     )}
                     {subtitle && (
-                      <p className="text-[#A0A0A5] mt-1">{subtitle}</p>
+                      <p className="text-zinc-400 mt-1">{subtitle}</p>
                     )}
                   </div>
                   {showCloseButton && (
@@ -90,7 +90,7 @@ export function Modal({
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
-                      className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
+                      className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-zinc-100 transition-colors"
                     >
                       <X size={20} />
                     </motion.button>
@@ -142,11 +142,11 @@ export function Button({
   type = 'button'
 }: ButtonProps) {
   const variants = {
-    primary: 'bg-linear-to-r from-[#00F0FF] to-[#00A8B5] text-black hover:shadow-lg hover:shadow-[#00F0FF]/25',
-    secondary: 'bg-white/10 text-[#F5F3E8] hover:bg-white/20 border border-white/10',
-    ghost: 'bg-transparent text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-white/5',
-    danger: 'bg-linear-to-r from-[#FF4444] to-[#CC3333] text-white hover:shadow-lg hover:shadow-[#FF4444]/25',
-    success: 'bg-linear-to-r from-[#50C878] to-[#3DA55D] text-black hover:shadow-lg hover:shadow-[#50C878]/25',
+    primary: 'bg-linear-to-r from-cyan-400 to-cyan-600 text-black hover:shadow-lg hover:shadow-cyan-400/25',
+    secondary: 'bg-white/10 text-zinc-100 hover:bg-white/20 border border-white/10',
+    ghost: 'bg-transparent text-zinc-400 hover:text-zinc-100 hover:bg-white/5',
+    danger: 'bg-linear-to-r from-red-500 to-[#CC3333] text-white hover:shadow-lg hover:shadow-red-500/25',
+    success: 'bg-linear-to-r from-emerald-500 to-[#3DA55D] text-black hover:shadow-lg hover:shadow-emerald-500/25',
   }
 
   const sizes = {
@@ -218,13 +218,13 @@ export function Input({
   return (
     <div className={className}>
       {label && (
-        <label className="block text-sm font-medium text-[#F5F3E8] mb-2">
+        <label className="block text-sm font-medium text-zinc-100 mb-2">
           {label}
         </label>
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A0A0A5]">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
             {icon}
           </div>
         )}
@@ -237,19 +237,19 @@ export function Input({
           className={`
             w-full px-4 py-3 ${icon ? 'pl-12' : ''}
             bg-white/5 border rounded-xl
-            text-[#F5F3E8] placeholder-[#6A6A6F]
-            focus:outline-none focus:ring-2 focus:ring-[#00F0FF]/50 focus:border-[#00F0FF]/50
+            text-zinc-100 placeholder-[#6A6A6F]
+            focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50
             transition-all duration-300
-            ${error ? 'border-[#FF4444]' : 'border-white/10 hover:border-white/20'}
+            ${error ? 'border-red-500' : 'border-white/10 hover:border-white/20'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         />
       </div>
       {error && (
-        <p className="mt-2 text-sm text-[#FF4444]">{error}</p>
+        <p className="mt-2 text-sm text-red-500">{error}</p>
       )}
       {hint && !error && (
-        <p className="mt-2 text-sm text-[#A0A0A5]">{hint}</p>
+        <p className="mt-2 text-sm text-zinc-400">{hint}</p>
       )}
     </div>
   )
@@ -286,7 +286,7 @@ export function Select({
   return (
     <div className={className}>
       {label && (
-        <label className="block text-sm font-medium text-[#F5F3E8] mb-2">
+        <label className="block text-sm font-medium text-zinc-100 mb-2">
           {label}
         </label>
       )}
@@ -297,8 +297,8 @@ export function Select({
         className={`
           w-full px-4 py-3
           bg-white/5 border border-white/10 rounded-xl
-          text-[#F5F3E8]
-          focus:outline-none focus:ring-2 focus:ring-[#00F0FF]/50 focus:border-[#00F0FF]/50
+          text-zinc-100
+          focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50
           transition-all duration-300
           hover:border-white/20
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -311,9 +311,9 @@ export function Select({
           backgroundSize: '1rem',
         }}
       >
-        <option value="" disabled className="bg-[#1A1A1D]">{placeholder}</option>
+        <option value="" disabled className="bg-zinc-900">{placeholder}</option>
         {options.map((option) => (
-          <option key={option.value} value={option.value} className="bg-[#1A1A1D]">
+          <option key={option.value} value={option.value} className="bg-zinc-900">
             {option.label}
           </option>
         ))}
@@ -342,12 +342,12 @@ export function Badge({
   className = ''
 }: BadgeProps) {
   const variants = {
-    default: 'bg-white/10 text-[#A0A0A5]',
-    success: 'bg-[#50C878]/20 text-[#50C878]',
-    warning: 'bg-[#FFD700]/20 text-[#FFD700]',
-    danger: 'bg-[#FF4444]/20 text-[#FF4444]',
-    info: 'bg-[#00F0FF]/20 text-[#00F0FF]',
-    premium: 'bg-linear-to-r from-[#FFD700]/20 to-[#FFA500]/20 text-[#FFD700]',
+    default: 'bg-white/10 text-zinc-400',
+    success: 'bg-emerald-500/20 text-emerald-500',
+    warning: 'bg-amber-400/20 text-amber-400',
+    danger: 'bg-red-500/20 text-red-500',
+    info: 'bg-cyan-400/20 text-cyan-400',
+    premium: 'bg-linear-to-r from-amber-400/20 to-orange-500/20 text-amber-400',
   }
 
   const sizes = {
@@ -394,8 +394,8 @@ export function Tooltip({ children, content, position = 'top' }: TooltipProps) {
       <div className={`
         absolute ${positions[position]} z-50
         px-3 py-2 rounded-lg
-        bg-[#2A2A2F] border border-white/10
-        text-sm text-[#F5F3E8]
+        bg-zinc-800 border border-white/10
+        text-sm text-zinc-100
         opacity-0 invisible group-hover:opacity-100 group-hover:visible
         transition-all duration-200
         whitespace-nowrap
@@ -444,8 +444,8 @@ export function ProgressBar({
     <div className={className}>
       {(label || showValue) && (
         <div className="flex justify-between items-center mb-2">
-          {label && <span className="text-sm text-[#A0A0A5]">{label}</span>}
-          {showValue && <span className="text-sm font-medium text-[#F5F3E8]">{percentage.toFixed(0)}%</span>}
+          {label && <span className="text-sm text-zinc-400">{label}</span>}
+          {showValue && <span className="text-sm font-medium text-zinc-100">{percentage.toFixed(0)}%</span>}
         </div>
       )}
       <div className={`w-full bg-white/10 rounded-full overflow-hidden ${sizes[size]}`}>
@@ -488,10 +488,10 @@ export function Alert({
   className = ''
 }: AlertProps) {
   const variants = {
-    info: 'bg-[#00F0FF]/10 border-[#00F0FF]/30 text-[#00F0FF]',
-    success: 'bg-[#50C878]/10 border-[#50C878]/30 text-[#50C878]',
-    warning: 'bg-[#FFD700]/10 border-[#FFD700]/30 text-[#FFD700]',
-    danger: 'bg-[#FF4444]/10 border-[#FF4444]/30 text-[#FF4444]',
+    info: 'bg-cyan-400/10 border-cyan-400/30 text-cyan-400',
+    success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500',
+    warning: 'bg-amber-400/10 border-amber-400/30 text-amber-400',
+    danger: 'bg-red-500/10 border-red-500/30 text-red-500',
   }
 
   return (
@@ -538,7 +538,7 @@ export function Divider({ label, className = '' }: DividerProps) {
     return (
       <div className={`flex items-center gap-4 ${className}`}>
         <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
-        <span className="text-sm text-[#6A6A6F] font-medium">{label}</span>
+        <span className="text-sm text-zinc-500 font-medium">{label}</span>
         <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
       </div>
     )

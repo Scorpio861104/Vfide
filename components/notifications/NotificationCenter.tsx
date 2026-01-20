@@ -17,12 +17,12 @@
 
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import React, { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
-import { Bell, Check, Archive, X, ChevronRight, Filter, Clock, AlertTriangle, CheckCircle, XCircle, Info, Wallet } from 'lucide-react';
+import { Bell, Check, Archive, ChevronRight, Clock, AlertTriangle, CheckCircle, XCircle, Info, Wallet } from 'lucide-react';
 
 // ==================== TYPES ====================
 
@@ -215,7 +215,7 @@ function calculateNotificationStats(notifications: Notification[]): Notification
 
 // ==================== HELPER FUNCTIONS ====================
 
-function getTypeColor(type: Notification['type']): string {
+function _getTypeColor(type: Notification['type']): string {
   switch (type) {
     case 'success':
       return 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700';
@@ -232,7 +232,7 @@ function getTypeColor(type: Notification['type']): string {
   }
 }
 
-function getTypeTextColor(type: Notification['type']): string {
+function _getTypeTextColor(type: Notification['type']): string {
   switch (type) {
     case 'success':
       return 'text-green-800 dark:text-green-200';
@@ -384,8 +384,8 @@ function NotificationItem({
       exit={{ opacity: 0, x: 100, scale: 0.9 }}
       whileHover={{ scale: 1.01, x: 4 }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      className={`relative bg-[#1A1A1F] border rounded-xl p-4 md:p-5 transition-all cursor-pointer overflow-hidden ${
-        !isRead ? 'border-yellow-500/30' : 'border-[#2A2A2F]'
+      className={`relative bg-zinc-900 border rounded-xl p-4 md:p-5 transition-all cursor-pointer overflow-hidden ${
+        !isRead ? 'border-yellow-500/30' : 'border-zinc-800'
       }`}
       onClick={() => !isRead && onRead(notification.id)}
     >
@@ -394,7 +394,7 @@ function NotificationItem({
         <motion.div
           animate={{ opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-transparent pointer-events-none"
+          className="absolute inset-0 bg-linear-to-r from-yellow-500/5 to-transparent pointer-events-none"
         />
       )}
 
@@ -403,14 +403,14 @@ function NotificationItem({
         <div className="relative shrink-0">
           <motion.div
             whileHover={{ scale: 1.1, rotate: 5 }}
-            className="w-12 h-12 rounded-xl bg-[#2A2A2F] flex items-center justify-center"
+            className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center"
           >
             {getTypeIcon(notification.type)}
           </motion.div>
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full ${getPriorityColor(notification.priority)} ring-2 ring-[#1A1A1F]`} 
+            className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full ${getPriorityColor(notification.priority)} ring-2 ring-zinc-900`} 
           />
         </div>
 
@@ -460,7 +460,7 @@ function NotificationItem({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleArchive}
-            className="p-2 rounded-lg bg-[#2A2A2F] text-gray-400 hover:bg-[#3A3A3F] hover:text-gray-300 transition-colors"
+            className="p-2 rounded-lg bg-zinc-800 text-gray-400 hover:bg-zinc-700 hover:text-gray-300 transition-colors"
             title="Archive"
           >
             <Archive className="w-4 h-4" />
@@ -474,7 +474,7 @@ function NotificationItem({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onAction?.(notification.actionUrl!)}
-          className="mt-4 w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+          className="mt-4 w-full bg-linear-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
         >
           {notification.actionLabel}
           <ChevronRight className="w-4 h-4" />
@@ -498,7 +498,7 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.03, y: -2 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className={`rounded-xl p-4 md:p-5 bg-gradient-to-br ${color} text-white shadow-lg relative overflow-hidden`}
+      className={`rounded-xl p-4 md:p-5 bg-linear-to-br ${color} text-white shadow-lg relative overflow-hidden`}
     >
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
@@ -785,7 +785,7 @@ export default function NotificationCenter() {
       <div className="space-y-3">
         <AnimatePresence mode="popLayout">
           {filteredNotifications.length > 0 ? (
-            filteredNotifications.map((notification, index) => (
+            filteredNotifications.map((notification, _index) => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}
@@ -798,7 +798,7 @@ export default function NotificationCenter() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#1A1A1F] rounded-xl p-8 text-center border border-[#2A2A2F]"
+              className="bg-zinc-900 rounded-xl p-8 text-center border border-zinc-800"
             >
               <motion.div
                 animate={{ y: [0, -5, 0] }}

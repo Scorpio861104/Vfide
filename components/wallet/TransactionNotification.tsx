@@ -155,7 +155,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
                 >
                   {notification.title}
                 </h4>
-                <p className="text-sm text-[#F5F3E8]/80 mt-1">
+                <p className="text-sm text-zinc-100/80 mt-1">
                   {notification.message}
                 </p>
                 
@@ -167,7 +167,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
                     href={`https://sepolia.basescan.org/tx/${notification.txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-[#00F0FF] hover:text-[#00D4FF] mt-2 inline-flex items-center gap-1 transition-colors"
+                    className="text-xs text-cyan-400 hover:text-cyan-400 mt-2 inline-flex items-center gap-1 transition-colors"
                   >
                     View on Explorer →
                   </motion.a>
@@ -177,7 +177,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="text-[#F5F3E8]/50 hover:text-[#F5F3E8] transition-colors"
+                className="text-zinc-100/50 hover:text-zinc-100 transition-colors"
               >
                 ✕
               </button>

@@ -50,7 +50,7 @@ export default function ReportingAnalyticsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       {/* Header */}
       <div className="border-b border-slate-800">
         <div className="container mx-auto px-4 py-8">
@@ -136,7 +136,7 @@ export default function ReportingAnalyticsPage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className={`bg-linear-to-br ${colorMap[color as keyof typeof colorMap]} border border-slate-800 rounded-lg p-4`}
+                    className={`bg-gradient-to-br ${colorMap[color as keyof typeof colorMap]} border border-slate-800 rounded-lg p-4`}
                   >
                     <p className="text-sm text-slate-400 mb-1">{label}</p>
                     <p className="text-2xl font-bold">{value}</p>

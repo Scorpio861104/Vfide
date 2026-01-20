@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 interface User {
   id: string;
@@ -21,6 +22,10 @@ interface User {
 
 // GET /api/users - Get all users
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -65,6 +70,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/users - Create or update user
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
   try {
     const body = await request.json();
     const { wallet_address, username, display_name, bio, avatar_url } = body;

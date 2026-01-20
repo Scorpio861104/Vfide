@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from '@jest/globals'
+import { describe, expect, it, } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
@@ -95,7 +95,7 @@ describe('MentorBadge', () => {
 
 describe('MentorBadge - Not a Mentor', () => {
   beforeAll(() => {
-    vi.doMock('@/lib/vfide-hooks', () => ({
+    jest.doMock('@/lib/vfide-hooks', () => ({
       useIsMentor: () => ({ isMentor: false, isLoading: false }),
       useMentorInfo: () => ({ menteeCount: 0, isLoading: false }),
     }))
@@ -103,7 +103,7 @@ describe('MentorBadge - Not a Mentor', () => {
 
   it('returns null when not a mentor', async () => {
     // Re-import after mock change
-    vi.doMock('@/lib/vfide-hooks', () => ({
+    jest.doMock('@/lib/vfide-hooks', () => ({
       useIsMentor: () => ({ isMentor: false, isLoading: false }),
       useMentorInfo: () => ({ menteeCount: 0, isLoading: false }),
     }))

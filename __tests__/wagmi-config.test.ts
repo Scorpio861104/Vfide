@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from '@jest/globals'
+import { describe, expect, it,  beforeEach } from '@jest/globals'
 
 // Mock all external dependencies first
 jest.mock('@rainbow-me/rainbowkit', () => ({
@@ -34,13 +34,13 @@ jest.mock('wagmi/chains', () => ({
   zkSyncSepoliaTestnet: { id: 300, name: 'zkSync Sepolia' },
 }))
 
-jest.mock('./chains', () => ({
+jest.mock('@/lib/chains', () => ({
   IS_TESTNET: true,
 }))
 
 describe('wagmi config', () => {
   beforeEach(() => {
-    vi.resetModules()
+    jest.resetModules()
   })
 
   it('exports config', async () => {

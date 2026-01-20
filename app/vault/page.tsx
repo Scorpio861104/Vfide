@@ -49,7 +49,7 @@ function GlassCard({ children, className = "", hover = true, gradient }: {
     <motion.div
       whileHover={hover ? { scale: 1.01, y: -2 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -388,7 +388,7 @@ function VaultContent() {
   return (
     <>
       
-      <main className="min-h-screen bg-[#08080A] pt-20 relative">
+      <main className="min-h-screen bg-zinc-950 pt-20 relative">
         {/* Ambient Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-1/4 w-150 h-150 bg-emerald-500/5 rounded-full blur-[120px]" />
@@ -800,7 +800,7 @@ function VaultContent() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[#1A1A1D] border border-white/10 rounded-2xl max-w-md w-full p-6"
+                className="bg-zinc-900 border border-white/10 rounded-2xl max-w-md w-full p-6"
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -883,7 +883,7 @@ function VaultContent() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[#1A1A1D] border border-white/10 rounded-2xl max-w-md w-full p-6"
+                className="bg-zinc-900 border border-white/10 rounded-2xl max-w-md w-full p-6"
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-white flex items-center gap-2">

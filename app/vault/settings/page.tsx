@@ -13,11 +13,11 @@ import { motion } from 'framer-motion'
 export default function VaultSettingsPage() {
   return (
     <>
-      <div className="min-h-screen bg-linear-to-b from-gray-950 to-black text-white pt-20">
+      <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white pt-20">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           {/* Header */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-linear-to-br from-purple-500 to-blue-600 rounded-2xl mb-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mb-4">
               <Vault className="w-10 h-10" />
             </div>
             <h1 className="text-5xl font-black mb-4 bg-clip-text text-transparent bg-linear-to-r from-purple-400 via-blue-400 to-pink-400">
@@ -57,7 +57,7 @@ export default function VaultSettingsPage() {
         </div>
 
         {/* Features Grid */}
-        <div className="bg-linear-to-br from-purple-900/10 to-blue-900/10 border border-purple-500/20 rounded-2xl p-8">
+        <div className="bg-gradient-to-br from-purple-900/10 to-blue-900/10 border border-purple-500/20 rounded-2xl p-8">
           <h3 className="text-2xl font-bold mb-6 text-center">Advanced Security Features</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

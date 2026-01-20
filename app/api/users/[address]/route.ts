@@ -31,11 +31,12 @@ export async function GET(
   { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const { address } = await params;
+    const resolvedParams = await params;
+    const address = resolvedParams?.address;
 
-    if (!address) {
+    if (!address || typeof address !== 'string') {
       return NextResponse.json(
-        { error: 'Address is required' },
+        { error: 'Invalid address parameter' },
         { status: 400 }
       );
     }
@@ -83,8 +84,9 @@ export async function GET(
     });
   } catch (error) {
     console.error('[User GET API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
     return NextResponse.json(
-      { error: 'Failed to fetch user' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -98,18 +100,18 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ address: string }> }
 ) {
-  const resolvedParams = await params;
   try {
-    const { address } = resolvedParams;
-    const body = await request.json();
+    const resolvedParams = await params;
+    const address = resolvedParams?.address;
 
-    if (!address) {
+    if (!address || typeof address !== 'string') {
       return NextResponse.json(
-        { error: 'Address is required' },
+        { error: 'Invalid address parameter' },
         { status: 400 }
       );
     }
 
+    const body = await request.json();
     const { username, email, bio, avatar_url } = body;
 
     // Update user in database
@@ -138,8 +140,9 @@ export async function PUT(
     });
   } catch (error) {
     console.error('[User PUT API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update user';
     return NextResponse.json(
-      { error: 'Failed to update user' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -153,9 +156,16 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ address: string }> }
 ) {
-  const resolvedParams = await params;
   try {
-    const { address } = resolvedParams;
+    const resolvedParams = await params;
+    const address = resolvedParams?.address;
+
+    if (!address || typeof address !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid address parameter' },
+        { status: 400 }
+      );
+    }
     
     // Get form data
     const formData = await request.formData();
@@ -214,8 +224,9 @@ export async function POST(
     });
   } catch (error) {
     console.error('[Avatar Upload API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';
     return NextResponse.json(
-      { error: 'Failed to upload avatar' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

@@ -57,7 +57,7 @@ export function StatCard({
       
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium text-[#6B6B78] uppercase tracking-wider">{label}</span>
+          <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{label}</span>
           <div 
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ background: `${color}15` }}
@@ -68,14 +68,14 @@ export function StatCard({
         
         {isLoading ? (
           <div className="space-y-2">
-            <div className="h-8 w-24 bg-[#1F1F2A] rounded animate-pulse" />
-            <div className="h-4 w-16 bg-[#1F1F2A] rounded animate-pulse" />
+            <div className="h-8 w-24 bg-zinc-900 rounded animate-pulse" />
+            <div className="h-4 w-16 bg-zinc-900 rounded animate-pulse" />
           </div>
         ) : (
           <>
-            <div className="text-2xl font-bold text-[#F8F8FC]">{value}</div>
+            <div className="text-2xl font-bold text-zinc-50">{value}</div>
             {subValue && (
-              <div className="text-sm text-[#6B6B78] mt-1 flex items-center gap-2">
+              <div className="text-sm text-zinc-500 mt-1 flex items-center gap-2">
                 {subValue}
                 {href && (
                   <ChevronRight 
@@ -86,7 +86,7 @@ export function StatCard({
               </div>
             )}
             {trend && (
-              <div className={`text-xs mt-2 flex items-center gap-1 ${trend.value >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+              <div className={`text-xs mt-2 flex items-center gap-1 ${trend.value >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                 <span>{trend.value >= 0 ? '↑' : '↓'}</span>
                 <span>{Math.abs(trend.value)}% {trend.label}</span>
               </div>
@@ -122,7 +122,7 @@ export function QuickAction({ icon, label, href, color, isPrimary = false }: Qui
           relative p-5 rounded-2xl font-semibold flex flex-col items-center gap-3 text-center
           overflow-hidden transition-all duration-300
           ${isPrimary 
-            ? 'bg-linear-to-br text-[#0A0A0F] shadow-lg'
+            ? 'bg-linear-to-br text-zinc-950 shadow-lg'
             : 'glass-card hover:border-opacity-100'
           }
         `}
@@ -176,7 +176,7 @@ export function NotificationItem({
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      className="relative p-4 rounded-xl flex items-start gap-4 transition-colors hover:bg-[#16161D]"
+      className="relative p-4 rounded-xl flex items-start gap-4 transition-colors hover:bg-zinc-900"
       style={{ 
         background: `${color}08`,
         border: `1px solid ${color}20`
@@ -197,8 +197,8 @@ export function NotificationItem({
       </div>
       
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-sm text-[#F8F8FC]">{title}</div>
-        <div className="text-xs text-[#6B6B78] mt-1 line-clamp-2">{description}</div>
+        <div className="font-semibold text-sm text-zinc-50">{title}</div>
+        <div className="text-xs text-zinc-500 mt-1 line-clamp-2">{description}</div>
         {actionLabel && actionHref && (
           <Link 
             href={actionHref}
@@ -228,7 +228,7 @@ export function ActivityItem({ icon, action, details, value, time, color }: Acti
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between p-4 rounded-xl bg-[#0F0F14] hover:bg-[#16161D] transition-colors"
+      className="flex items-center justify-between p-4 rounded-xl bg-zinc-900 hover:bg-zinc-900 transition-colors"
     >
       <div className="flex items-center gap-4">
         <div 
@@ -238,16 +238,16 @@ export function ActivityItem({ icon, action, details, value, time, color }: Acti
           {icon}
         </div>
         <div>
-          <div className="font-medium text-sm text-[#F8F8FC]">{action}</div>
-          <div className="text-xs text-[#6B6B78] flex items-center gap-2">
+          <div className="font-medium text-sm text-zinc-50">{action}</div>
+          <div className="text-xs text-zinc-500 flex items-center gap-2">
             {details}
             {value && (
-              <span className="text-[#22C55E]">{value}</span>
+              <span className="text-emerald-500">{value}</span>
             )}
           </div>
         </div>
       </div>
-      <div className="text-xs text-[#4A4A55]">{time}</div>
+      <div className="text-xs text-zinc-600">{time}</div>
     </motion.div>
   );
 }

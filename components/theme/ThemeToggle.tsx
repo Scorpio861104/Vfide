@@ -49,8 +49,8 @@ export function ThemeToggle({ showLabel = false, size = 'md' }: ThemeToggleProps
       onClick={cycleMode}
       className={`
         ${buttonClasses[size]} rounded-lg
-        text-[#8A8A8F] hover:text-[#F8F8FC]
-        hover:bg-[#16161D] transition-all
+        text-zinc-400 hover:text-zinc-50
+        hover:bg-zinc-900 transition-all
         flex items-center gap-2
       `}
       whileHover={{ scale: 1.05 }}
@@ -91,7 +91,7 @@ export function ThemeToggleExpanded({ size = 'md' }: { size?: 'sm' | 'md' | 'lg'
   ];
 
   return (
-    <div className="flex items-center gap-1 bg-[#0F0F0F]/80 rounded-lg p-1 border border-[#1F1F2A]">
+    <div className="flex items-center gap-1 bg-zinc-950/80 rounded-lg p-1 border border-zinc-800">
       {modes.map(({ mode, icon: Icon, label }) => {
         const isActive = settings.mode === mode;
         return (
@@ -101,8 +101,8 @@ export function ThemeToggleExpanded({ size = 'md' }: { size?: 'sm' | 'md' | 'lg'
             className={`
               p-2 rounded-md transition-all
               ${isActive 
-                ? 'bg-[#00F0FF]/20 text-[#00F0FF]' 
-                : 'text-[#8A8A8F] hover:text-[#F8F8FC] hover:bg-[#16161D]'
+                ? 'bg-cyan-400/20 text-cyan-400' 
+                : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-900'
               }
             `}
             whileHover={{ scale: 1.05 }}

@@ -19,10 +19,10 @@ interface EnhancedStatCardProps {
 
 const colorStyles = {
   cyan: {
-    icon: "text-[#00F0FF]",
-    bg: "from-[#00F0FF]/10 to-[#0080FF]/10",
+    icon: "text-cyan-400",
+    bg: "from-cyan-400/10 to-blue-500/10",
     glow: "group-hover:shadow-[0_0_40px_rgba(0,240,255,0.3)]",
-    border: "border-[#00F0FF]/30",
+    border: "border-cyan-400/30",
   },
   green: {
     icon: "text-emerald-400",
@@ -61,7 +61,7 @@ export function EnhancedStatCard({
   };
 
   const getTrendColor = () => {
-    if (change === undefined || change === 0) return "text-[#8A8A8F]";
+    if (change === undefined || change === 0) return "text-zinc-400";
     return change > 0 ? "text-emerald-400" : "text-red-400";
   };
 
@@ -70,8 +70,8 @@ export function EnhancedStatCard({
       className={`
         group relative p-6 rounded-2xl border backdrop-blur-xl
         transition-all duration-300 hover:scale-[1.02] cursor-pointer
-        ${variant === "gradient" ? `bg-linear-to-br ${colors.bg}` : "bg-[#0F0F12]/80"}
-        ${variant === "glow" ? `${colors.border} ${colors.glow}` : "border-[#1F1F2A]"}
+        ${variant === "gradient" ? `bg-linear-to-br ${colors.bg}` : "bg-zinc-900/80"}
+        ${variant === "glow" ? `${colors.border} ${colors.glow}` : "border-zinc-800"}
         hover:border-[${color === "cyan" ? "#00F0FF" : color === "green" ? "#10b981" : color === "purple" ? "#a78bfa" : "#eab308"}]/50
       `}
       initial={{ opacity: 0, y: 20 }}
@@ -85,7 +85,7 @@ export function EnhancedStatCard({
       <div className="relative z-10">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
-          <span className="text-sm font-medium text-[#A8A8B3] uppercase tracking-wider">
+          <span className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
             {label}
           </span>
           {icon && (
@@ -98,7 +98,7 @@ export function EnhancedStatCard({
         {/* Value */}
         <div className="mb-3">
           <motion.div
-            className="text-4xl font-bold text-[#F8F8FC]"
+            className="text-4xl font-bold text-zinc-50"
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200 }}
@@ -117,7 +117,7 @@ export function EnhancedStatCard({
               </span>
             </div>
             {changeLabel && (
-              <span className="text-sm text-[#8A8A8F]">
+              <span className="text-sm text-zinc-400">
                 {changeLabel}
               </span>
             )}

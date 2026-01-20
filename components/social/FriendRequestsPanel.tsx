@@ -69,11 +69,11 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
   };
 
   const getTrustLevel = (proofScore?: number) => {
-    if (!proofScore) return { label: 'Unknown', color: 'text-[#6B6B78]' };
-    if (proofScore >= 8000) return { label: 'Elite', color: 'text-[#00F0FF]' };
-    if (proofScore >= 5400) return { label: 'Trusted', color: 'text-[#50C878]' };
-    if (proofScore >= 4000) return { label: 'Standard', color: 'text-[#FFD700]' };
-    return { label: 'Low Trust', color: 'text-[#FF6B9D]' };
+    if (!proofScore) return { label: 'Unknown', color: 'text-zinc-500' };
+    if (proofScore >= 8000) return { label: 'Elite', color: 'text-cyan-400' };
+    if (proofScore >= 5400) return { label: 'Trusted', color: 'text-emerald-500' };
+    if (proofScore >= 4000) return { label: 'Standard', color: 'text-amber-400' };
+    return { label: 'Low Trust', color: 'text-pink-400' };
   };
 
   const filteredRequests = requests.filter(r => {
@@ -85,14 +85,14 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
   const pendingCount = requests.filter(r => r.status === 'pending').length;
 
   return (
-    <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-4">
+    <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-[#F5F3E8] flex items-center gap-2">
-          <UserPlus className="w-5 h-5 text-[#00F0FF]" />
+        <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
+          <UserPlus className="w-5 h-5 text-cyan-400" />
           Friend Requests
           {pendingCount > 0 && (
-            <span className="ml-2 px-2 py-0.5 bg-[#00F0FF]/20 text-[#00F0FF] rounded-full text-xs font-bold">
+            <span className="ml-2 px-2 py-0.5 bg-cyan-400/20 text-cyan-400 rounded-full text-xs font-bold">
               {pendingCount}
             </span>
           )}
@@ -110,8 +110,8 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
               onClick={() => setFilter(tab.key as any)}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                 filter === tab.key
-                  ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                  : 'text-[#A0A0A5] hover:text-[#F5F3E8]'
+                  ? 'bg-cyan-400 text-zinc-950'
+                  : 'text-zinc-400 hover:text-zinc-100'
               }`}
             >
               {tab.label}
@@ -124,7 +124,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
       <div className="space-y-3">
         <AnimatePresence>
           {filteredRequests.length === 0 ? (
-            <div className="text-center py-8 text-[#6B6B78] text-sm">
+            <div className="text-center py-8 text-zinc-500 text-sm">
               {filter === 'pending' ? 'No pending requests' : 'No requests'}
             </div>
           ) : (
@@ -141,13 +141,13 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
                   transition={{ delay: idx * 0.05 }}
                   className={`p-4 rounded-lg border transition-all ${
                     isPending
-                      ? 'bg-[#2A2A3F] border-[#3A3A4F] hover:border-[#00F0FF]/50'
-                      : 'bg-[#0A0A0F] border-[#2A2A2F] opacity-60'
+                      ? 'bg-zinc-800 border-zinc-700 hover:border-cyan-400/50'
+                      : 'bg-zinc-950 border-zinc-800 opacity-60'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold shrink-0">
                       {request.fromAlias
                         ? request.fromAlias?.[0]?.toUpperCase()
                         : request.from.slice(2, 4).toUpperCase()}
@@ -156,7 +156,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold text-[#F5F3E8]">
+                        <span className="text-sm font-semibold text-zinc-100">
                           {request.fromAlias || formatAddress(request.from)}
                         </span>
                         {request.fromProofScore !== undefined && (
@@ -166,29 +166,29 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
                         )}
                       </div>
 
-                      <p className="text-xs text-[#6B6B78] mb-2">
+                      <p className="text-xs text-zinc-500 mb-2">
                         {formatAddress(request.from)}
                       </p>
 
                       {request.message && (
-                        <div className="mb-3 p-2 bg-[#1A1A2E] rounded-lg border border-[#3A3A4F]">
-                          <p className="text-sm text-[#A0A0A5]">{request.message}</p>
+                        <div className="mb-3 p-2 bg-zinc-900 rounded-lg border border-zinc-700">
+                          <p className="text-sm text-zinc-400">{request.message}</p>
                         </div>
                       )}
 
                       {/* Trust Warning */}
                       {request.fromProofScore !== undefined && request.fromProofScore < 4000 && (
-                        <div className="mb-3 flex items-center gap-2 text-xs text-[#FF6B9D]">
+                        <div className="mb-3 flex items-center gap-2 text-xs text-pink-400">
                           <AlertTriangle className="w-3 h-3" />
                           <span>Low trust score - Be cautious</span>
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 text-xs text-[#6B6B78]">
+                      <div className="flex items-center gap-2 text-xs text-zinc-500">
                         <Clock className="w-3 h-3" />
                         <span>{new Date(request.timestamp).toLocaleDateString()}</span>
                         {request.status !== 'pending' && (
-                          <span className="ml-2 px-2 py-0.5 rounded bg-[#3A3A4F] text-[#A0A0A5]">
+                          <span className="ml-2 px-2 py-0.5 rounded bg-zinc-700 text-zinc-400">
                             {request.status}
                           </span>
                         )}
@@ -200,14 +200,14 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
                       <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => handleAccept(request)}
-                          className="p-2 rounded-lg bg-[#50C878]/20 text-[#50C878] hover:bg-[#50C878]/30 transition-colors"
+                          className="p-2 rounded-lg bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30 transition-colors"
                           title="Accept"
                         >
                           <Check className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleReject(request)}
-                          className="p-2 rounded-lg bg-[#FF6B9D]/20 text-[#FF6B9D] hover:bg-[#FF6B9D]/30 transition-colors"
+                          className="p-2 rounded-lg bg-pink-400/20 text-pink-400 hover:bg-pink-400/30 transition-colors"
                           title="Reject"
                         >
                           <X className="w-4 h-4" />

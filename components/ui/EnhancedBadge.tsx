@@ -39,11 +39,11 @@ export function EnhancedBadge({
 
   const colorMap = {
     cyan: {
-      default: "bg-[#00F0FF]/10 text-[#00F0FF] border-[#00F0FF]/30",
-      gradient: "bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-white",
-      glow: "bg-[#00F0FF]/10 text-[#00F0FF] border-[#00F0FF]/50 shadow-[0_0_20px_rgba(0,240,255,0.4)]",
-      outline: "bg-transparent text-[#00F0FF] border-[#00F0FF]",
-      solid: "bg-[#00F0FF] text-[#0A0A0F] border-transparent",
+      default: "bg-cyan-400/10 text-cyan-400 border-cyan-400/30",
+      gradient: "bg-linear-to-r from-cyan-400 to-blue-500 text-white",
+      glow: "bg-cyan-400/10 text-cyan-400 border-cyan-400/50 shadow-[0_0_20px_rgba(0,240,255,0.4)]",
+      outline: "bg-transparent text-cyan-400 border-cyan-400",
+      solid: "bg-cyan-400 text-zinc-950 border-transparent",
     },
     green: {
       default: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
@@ -74,11 +74,11 @@ export function EnhancedBadge({
       solid: "bg-yellow-500 text-white border-transparent",
     },
     gray: {
-      default: "bg-[#2A2A35]/50 text-[#A8A8B3] border-[#2A2A35]",
-      gradient: "bg-linear-to-r from-[#2A2A35] to-[#1F1F2A] text-[#F8F8FC]",
-      glow: "bg-[#2A2A35]/50 text-[#A8A8B3] border-[#2A2A35] shadow-[0_0_20px_rgba(138,138,143,0.2)]",
-      outline: "bg-transparent text-[#A8A8B3] border-[#A8A8B3]",
-      solid: "bg-[#2A2A35] text-[#F8F8FC] border-transparent",
+      default: "bg-zinc-800/50 text-zinc-400 border-zinc-800",
+      gradient: "bg-linear-to-r from-[#2A2A35] to-[#1F1F2A] text-zinc-50",
+      glow: "bg-zinc-800/50 text-zinc-400 border-zinc-800 shadow-[0_0_20px_rgba(138,138,143,0.2)]",
+      outline: "bg-transparent text-zinc-400 border-zinc-400",
+      solid: "bg-zinc-800 text-zinc-50 border-transparent",
     },
   };
 
@@ -101,7 +101,7 @@ export function EnhancedBadge({
     >
       {/* Icon */}
       {icon && (
-        <span className="flex-shrink-0">
+        <span className="shrink-0">
           {icon}
         </span>
       )}
@@ -113,7 +113,7 @@ export function EnhancedBadge({
       {removable && (
         <button
           onClick={onRemove}
-          className="flex-shrink-0 ml-1 hover:opacity-70 transition-opacity"
+          className="shrink-0 ml-1 hover:opacity-70 transition-opacity"
         >
           <X className="w-3 h-3" />
         </button>

@@ -7,9 +7,8 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Users, UserPlus, Heart, MessageCircle, Share2, Ban, Check, X } from 'lucide-react';
-import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { motion } from 'framer-motion';
+import { Heart, MessageCircle, Share2, Ban, Check, X } from 'lucide-react';
 
 // ==================== TYPE DEFINITIONS ====================
 

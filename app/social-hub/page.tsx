@@ -241,14 +241,14 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
     >
       <div className={`
         relative p-0.5 rounded-full
-        ${story.viewed ? 'bg-[#3A3A4F]' : 'bg-linear-to-tr from-[#FF006E] via-[#FF6B9D] to-[#00F0FF]'}
+        ${story.viewed ? 'bg-zinc-700' : 'bg-linear-to-tr from-rose-500 via-[#FF6B9D] to-cyan-400'}
         ${story.isLive ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-[#0A0A0F]' : ''}
       `}>
-        <div className="w-14 h-14 rounded-full bg-[#1A1A2E] flex items-center justify-center text-2xl overflow-hidden">
+        <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center text-2xl overflow-hidden">
           {story.preview ? (
             <img src={story.preview} alt="" className="w-full h-full object-cover" />
           ) : isYou ? (
-            <Plus className="w-6 h-6 text-[#00F0FF]" />
+            <Plus className="w-6 h-6 text-cyan-400" />
           ) : (
             story.author.avatar
           )}
@@ -259,7 +259,7 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
           </span>
         )}
       </div>
-      <span className="text-xs text-[#A0A0A5] truncate max-w-15">
+      <span className="text-xs text-zinc-400 truncate max-w-15">
         {story.author.name}
       </span>
     </motion.button>
@@ -281,10 +281,10 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
   return (
     <motion.div
       layout
-      className="bg-[#1A1A2E]/80 backdrop-blur-xl border border-[#3A3A4F] rounded-2xl p-4"
+      className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4"
     >
       <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
+        <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
           ✨
         </div>
         <div className="flex-1">
@@ -293,7 +293,7 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
             onChange={(e) => setContent(e.target.value)}
             onFocus={() => setIsFocused(true)}
             placeholder="What's happening in Web3?"
-            className="w-full bg-transparent text-[#F8F8FC] placeholder-[#6A6A6F] resize-none outline-none min-h-15"
+            className="w-full bg-transparent text-zinc-50 placeholder-[#6A6A6F] resize-none outline-none min-h-15"
             rows={isFocused ? 3 : 1}
           />
           
@@ -303,30 +303,30 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="flex items-center justify-between pt-3 border-t border-[#3A3A4F] mt-3"
+                className="flex items-center justify-between pt-3 border-t border-zinc-700 mt-3"
               >
                 <div className="flex gap-2">
-                  <button className="p-2 hover:bg-[#3A3A4F] rounded-lg transition-colors text-[#00F0FF]">
+                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-cyan-400">
                     <ImageIcon className="w-5 h-5" />
                   </button>
-                  <button className="p-2 hover:bg-[#3A3A4F] rounded-lg transition-colors text-[#A78BFA]">
+                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-violet-400">
                     <Video className="w-5 h-5" />
                   </button>
-                  <button className="p-2 hover:bg-[#3A3A4F] rounded-lg transition-colors text-[#FF6B9D]">
+                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-pink-400">
                     <Smile className="w-5 h-5" />
                   </button>
-                  <button className="p-2 hover:bg-[#3A3A4F] rounded-lg transition-colors text-[#50C878]">
+                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-emerald-500">
                     <MapPin className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-sm ${content.length > 280 ? 'text-red-400' : 'text-[#6A6A6F]'}`}>
+                  <span className={`text-sm ${content.length > 280 ? 'text-red-400' : 'text-zinc-500'}`}>
                     {content.length}/280
                   </span>
                   <button
                     onClick={handleSubmit}
                     disabled={!content.trim() || content.length > 280}
-                    className="px-4 py-2 bg-linear-to-r from-[#00F0FF] to-[#A78BFA] text-[#0A0A0F] font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 bg-linear-to-r from-cyan-400 to-violet-400 text-zinc-950 font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     Post
@@ -348,25 +348,25 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
     <motion.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[#1A1A2E]/80 backdrop-blur-xl border border-[#3A3A4F] rounded-2xl overflow-hidden"
+      className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl overflow-hidden"
     >
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-xl">
+          <div className="w-12 h-12 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xl">
             {post.author.avatar}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#F8F8FC]">{post.author.name}</span>
+              <span className="font-semibold text-zinc-50">{post.author.name}</span>
               {post.author.verified && (
-                <Shield className="w-4 h-4 text-[#00F0FF]" />
+                <Shield className="w-4 h-4 text-cyan-400" />
               )}
-              <span className="text-xs px-2 py-0.5 rounded-full bg-[#00F0FF]/20 text-[#00F0FF]">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-400">
                 {post.author.proofScore} PS
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-[#6A6A6F]">
+            <div className="flex items-center gap-2 text-sm text-zinc-500">
               <span>{post.author.address}</span>
               <span>•</span>
               <span>{formatTimeAgo(post.timestamp)}</span>
@@ -376,16 +376,16 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 hover:bg-[#3A3A4F] rounded-lg transition-colors text-[#6A6A6F]"
+            className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-500"
           >
             <MoreHorizontal className="w-5 h-5" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg py-1 min-w-37.5 z-10">
-              <button className="w-full px-4 py-2 text-left text-sm text-[#A0A0A5] hover:bg-[#3A3A4F] flex items-center gap-2">
+            <div className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg py-1 min-w-37.5 z-10">
+              <button className="w-full px-4 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-700 flex items-center gap-2">
                 <Flag className="w-4 h-4" /> Report
               </button>
-              <button className="w-full px-4 py-2 text-left text-sm text-[#A0A0A5] hover:bg-[#3A3A4F] flex items-center gap-2">
+              <button className="w-full px-4 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-700 flex items-center gap-2">
                 <UserPlus className="w-4 h-4" /> {post.isFollowing ? 'Unfollow' : 'Follow'}
               </button>
             </div>
@@ -395,11 +395,11 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
 
       {/* Content */}
       <div className="px-4 pb-3">
-        <p className="text-[#F8F8FC] whitespace-pre-wrap">{post.content}</p>
+        <p className="text-zinc-50 whitespace-pre-wrap">{post.content}</p>
         {post.tags && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {post.tags.map((tag) => (
-              <span key={tag} className="text-[#00F0FF] text-sm hover:underline cursor-pointer">
+              <span key={tag} className="text-cyan-400 text-sm hover:underline cursor-pointer">
                 #{tag}
               </span>
             ))}
@@ -422,28 +422,28 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
       )}
 
       {/* Stats */}
-      <div className="px-4 py-2 flex items-center gap-4 text-sm text-[#6A6A6F] border-t border-[#3A3A4F]/50">
+      <div className="px-4 py-2 flex items-center gap-4 text-sm text-zinc-500 border-t border-zinc-700/50">
         <span>{formatNumber(post.views)} views</span>
       </div>
 
       {/* Actions */}
-      <div className="px-4 py-3 flex items-center justify-between border-t border-[#3A3A4F]">
+      <div className="px-4 py-3 flex items-center justify-between border-t border-zinc-700">
         <button
           onClick={onLike}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-            post.liked ? 'text-[#FF6B9D] bg-[#FF6B9D]/10' : 'text-[#A0A0A5] hover:bg-[#3A3A4F]'
+            post.liked ? 'text-pink-400 bg-pink-400/10' : 'text-zinc-400 hover:bg-zinc-700'
           }`}
         >
           <Heart className={`w-5 h-5 ${post.liked ? 'fill-current' : ''}`} />
           <span className="text-sm">{formatNumber(post.likes)}</span>
         </button>
         
-        <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-[#A0A0A5] hover:bg-[#3A3A4F] transition-colors">
+        <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors">
           <MessageSquare className="w-5 h-5" />
           <span className="text-sm">{formatNumber(post.comments)}</span>
         </button>
         
-        <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-[#A0A0A5] hover:bg-[#3A3A4F] transition-colors">
+        <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors">
           <Repeat2 className="w-5 h-5" />
           <span className="text-sm">{formatNumber(post.shares)}</span>
         </button>
@@ -451,13 +451,13 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
         <button
           onClick={onBookmark}
           className={`p-2 rounded-lg transition-colors ${
-            post.bookmarked ? 'text-[#00F0FF] bg-[#00F0FF]/10' : 'text-[#A0A0A5] hover:bg-[#3A3A4F]'
+            post.bookmarked ? 'text-cyan-400 bg-cyan-400/10' : 'text-zinc-400 hover:bg-zinc-700'
           }`}
         >
           <Bookmark className={`w-5 h-5 ${post.bookmarked ? 'fill-current' : ''}`} />
         </button>
         
-        <button className="p-2 rounded-lg text-[#A0A0A5] hover:bg-[#3A3A4F] transition-colors">
+        <button className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors">
           <Share2 className="w-5 h-5" />
         </button>
       </div>
@@ -469,25 +469,25 @@ function TrendingSidebar() {
   return (
     <div className="space-y-6">
       {/* Quick Links */}
-      <div className="bg-[#1A1A2E]/80 backdrop-blur-xl border border-[#3A3A4F] rounded-2xl p-4">
-        <h3 className="font-semibold text-[#F8F8FC] mb-4 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-[#00F0FF]" />
+      <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4">
+        <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
+          <Zap className="w-5 h-5 text-cyan-400" />
           Quick Access
         </h3>
         <div className="space-y-2">
-          <Link href="/feed" className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#3A3A4F] transition-colors text-[#A0A0A5]">
+          <Link href="/feed" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
             <Rss className="w-5 h-5" />
             <span>Activity Feed</span>
           </Link>
-          <Link href="/stories" className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#3A3A4F] transition-colors text-[#A0A0A5]">
+          <Link href="/stories" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
             <Camera className="w-5 h-5" />
             <span>Stories</span>
           </Link>
-          <Link href="/social-messaging" className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#3A3A4F] transition-colors text-[#A0A0A5]">
+          <Link href="/social-messaging" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
             <MessageCircle className="w-5 h-5" />
             <span>Messages</span>
           </Link>
-          <Link href="/social-payments" className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#3A3A4F] transition-colors text-[#A0A0A5]">
+          <Link href="/social-payments" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
             <Zap className="w-5 h-5" />
             <span>Social Payments</span>
           </Link>
@@ -495,9 +495,9 @@ function TrendingSidebar() {
       </div>
 
       {/* Trending */}
-      <div className="bg-[#1A1A2E]/80 backdrop-blur-xl border border-[#3A3A4F] rounded-2xl p-4">
-        <h3 className="font-semibold text-[#F8F8FC] mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-[#FF6B9D]" />
+      <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4">
+        <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-pink-400" />
           Trending
         </h3>
         <div className="space-y-3">
@@ -505,10 +505,10 @@ function TrendingSidebar() {
             <div key={topic.id} className="flex items-center justify-between group cursor-pointer">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-[#6A6A6F]">{index + 1}</span>
-                  <span className="text-[#00F0FF] font-medium group-hover:underline">{topic.tag}</span>
+                  <span className="text-sm text-zinc-500">{index + 1}</span>
+                  <span className="text-cyan-400 font-medium group-hover:underline">{topic.tag}</span>
                 </div>
-                <span className="text-xs text-[#6A6A6F]">{formatNumber(topic.posts)} posts</span>
+                <span className="text-xs text-zinc-500">{formatNumber(topic.posts)} posts</span>
               </div>
               {topic.trending === 'up' && <TrendingUp className="w-4 h-4 text-green-400" />}
               {topic.trending === 'down' && <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />}
@@ -518,57 +518,57 @@ function TrendingSidebar() {
       </div>
 
       {/* Who to Follow */}
-      <div className="bg-[#1A1A2E]/80 backdrop-blur-xl border border-[#3A3A4F] rounded-2xl p-4">
-        <h3 className="font-semibold text-[#F8F8FC] mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-[#A78BFA]" />
+      <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4">
+        <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
+          <Users className="w-5 h-5 text-violet-400" />
           Who to Follow
         </h3>
         <div className="space-y-4">
           {mockSuggested.map((user) => (
             <div key={user.address} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
                 {user.avatar}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="font-medium text-[#F8F8FC] truncate">{user.name}</span>
-                  {user.verified && <Shield className="w-3 h-3 text-[#00F0FF]" />}
+                  <span className="font-medium text-zinc-50 truncate">{user.name}</span>
+                  {user.verified && <Shield className="w-3 h-3 text-cyan-400" />}
                 </div>
-                <span className="text-xs text-[#6A6A6F]">{user.mutualFriends} mutual</span>
+                <span className="text-xs text-zinc-500">{user.mutualFriends} mutual</span>
               </div>
-              <button className="px-3 py-1 bg-[#00F0FF] text-[#0A0A0F] text-sm font-semibold rounded-full hover:bg-[#00D4E0] transition-colors">
+              <button className="px-3 py-1 bg-cyan-400 text-zinc-950 text-sm font-semibold rounded-full hover:bg-cyan-400 transition-colors">
                 Follow
               </button>
             </div>
           ))}
         </div>
-        <button className="w-full mt-4 text-[#00F0FF] text-sm hover:underline">
+        <button className="w-full mt-4 text-cyan-400 text-sm hover:underline">
           Show more
         </button>
       </div>
 
       {/* Stats Card */}
-      <div className="bg-linear-to-br from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-2xl p-4">
-        <h3 className="font-semibold text-[#F8F8FC] mb-4 flex items-center gap-2">
-          <Award className="w-5 h-5 text-[#FFD700]" />
+      <div className="bg-linear-to-br from-zinc-900 to-zinc-800 border border-zinc-700 rounded-2xl p-4">
+        <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
+          <Award className="w-5 h-5 text-amber-400" />
           Your Stats
         </h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-[#00F0FF]">1.2K</div>
-            <div className="text-xs text-[#6A6A6F]">Followers</div>
+            <div className="text-2xl font-bold text-cyan-400">1.2K</div>
+            <div className="text-xs text-zinc-500">Followers</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-[#A78BFA]">847</div>
-            <div className="text-xs text-[#6A6A6F]">Following</div>
+            <div className="text-2xl font-bold text-violet-400">847</div>
+            <div className="text-xs text-zinc-500">Following</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-[#FF6B9D]">15.2K</div>
-            <div className="text-xs text-[#6A6A6F]">Total Likes</div>
+            <div className="text-2xl font-bold text-pink-400">15.2K</div>
+            <div className="text-xs text-zinc-500">Total Likes</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-[#50C878]">89</div>
-            <div className="text-xs text-[#6A6A6F]">ProofScore</div>
+            <div className="text-2xl font-bold text-emerald-500">89</div>
+            <div className="text-xs text-zinc-500">ProofScore</div>
           </div>
         </div>
       </div>
@@ -703,11 +703,11 @@ export default function SocialHubPage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center mb-8"
             >
-              <h1 className="text-4xl md:text-5xl font-bold text-[#F8F8FC] mb-3 flex items-center justify-center gap-3">
-                <Sparkles className="w-10 h-10 text-[#00F0FF]" />
+              <h1 className="text-4xl md:text-5xl font-bold text-zinc-50 mb-3 flex items-center justify-center gap-3">
+                <Sparkles className="w-10 h-10 text-cyan-400" />
                 Social Hub
               </h1>
-              <p className="text-[#A0A0A5] text-lg max-w-2xl mx-auto">
+              <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
                 Connect, share, and engage with the VFIDE community
               </p>
             </motion.div>
@@ -718,12 +718,12 @@ export default function SocialHubPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-12"
               >
-                <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-8 max-w-md mx-auto">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto">
                   <div className="text-6xl mb-4">🔗</div>
-                  <h2 className="text-xl font-bold text-[#F8F8FC] mb-4">
+                  <h2 className="text-xl font-bold text-zinc-50 mb-4">
                     Connect to Join the Conversation
                   </h2>
-                  <p className="text-[#A0A0A5] mb-6">
+                  <p className="text-zinc-400 mb-6">
                     Connect your wallet to post, like, comment, and interact with the community.
                   </p>
                   <ConnectButton />
@@ -737,7 +737,7 @@ export default function SocialHubPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#1A1A2E]/80 backdrop-blur-xl border border-[#3A3A4F] rounded-2xl p-4"
+                    className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4"
                   >
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                       {mockStories.map((story) => (
@@ -773,8 +773,8 @@ export default function SocialHubPage() {
                           onClick={() => setFeedFilter(filter)}
                           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
                             feedFilter === filter
-                              ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                              : 'bg-[#1A1A2E] text-[#A0A0A5] hover:bg-[#3A3A4F]'
+                              ? 'bg-cyan-400 text-zinc-950'
+                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-700'
                           }`}
                         >
                           {filter}
@@ -784,7 +784,7 @@ export default function SocialHubPage() {
                     <button
                       onClick={handleRefresh}
                       disabled={isRefreshing}
-                      className="p-2 hover:bg-[#3A3A4F] rounded-lg transition-colors text-[#A0A0A5]"
+                      className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-400"
                     >
                       <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
                     </button>
@@ -809,7 +809,7 @@ export default function SocialHubPage() {
                   </div>
 
                   {/* Load More */}
-                  <button className="w-full py-4 bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl text-[#00F0FF] hover:bg-[#3A3A4F] transition-colors">
+                  <button className="w-full py-4 bg-zinc-900 border border-zinc-700 rounded-xl text-cyan-400 hover:bg-zinc-700 transition-colors">
                     Load More Posts
                   </button>
                 </div>

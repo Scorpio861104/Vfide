@@ -9,7 +9,7 @@
 
 import { formatLastSeen, useUserPresence, type PresenceStatus } from '@/lib/presence';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface PresenceIndicatorProps {
   address: string;

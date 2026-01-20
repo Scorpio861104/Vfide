@@ -28,11 +28,11 @@ interface Reply {
 }
 
 const categoryColors: Record<Discussion["category"], string> = {
-  general: "bg-[#A0A0A5]/20 text-[#A0A0A5] border-[#A0A0A5]",
-  proposals: "bg-[#00F0FF]/20 text-[#00F0FF] border-[#00F0FF]",
-  support: "bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]",
-  ideas: "bg-[#50C878]/20 text-[#50C878] border-[#50C878]",
-  announcements: "bg-[#9B59B6]/20 text-[#9B59B6] border-[#9B59B6]",
+  general: "bg-zinc-400/20 text-zinc-400 border-zinc-400",
+  proposals: "bg-cyan-400/20 text-cyan-400 border-cyan-400",
+  support: "bg-amber-400/20 text-amber-400 border-amber-400",
+  ideas: "bg-emerald-500/20 text-emerald-500 border-emerald-500",
+  announcements: "bg-purple-500/20 text-purple-500 border-purple-500",
 }
 
 export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
@@ -204,23 +204,23 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
         <div className="container mx-auto px-4 max-w-4xl">
           <button
             onClick={() => setSelectedDiscussion(null)}
-            className="mb-4 text-[#00F0FF] hover:underline flex items-center gap-2"
+            className="mb-4 text-cyan-400 hover:underline flex items-center gap-2"
           >
             ← Back to Discussions
           </button>
 
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 mb-6">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 mb-6">
             <div className="flex items-center gap-2 mb-3">
-              {selectedDiscussion.isPinned && <span className="text-[#FFD700]">📌</span>}
+              {selectedDiscussion.isPinned && <span className="text-amber-400">📌</span>}
               <span className={`px-2 py-1 text-xs rounded border ${categoryColors[selectedDiscussion.category]}`}>
                 {selectedDiscussion.category.toUpperCase()}
               </span>
             </div>
-            <h1 className="text-2xl font-bold text-[#F5F3E8] mb-4">{selectedDiscussion.title}</h1>
-            <p className="text-[#A0A0A5] mb-4">{selectedDiscussion.preview}</p>
-            <div className="flex items-center gap-4 text-sm text-[#A0A0A5]">
+            <h1 className="text-2xl font-bold text-zinc-100 mb-4">{selectedDiscussion.title}</h1>
+            <p className="text-zinc-400 mb-4">{selectedDiscussion.preview}</p>
+            <div className="flex items-center gap-4 text-sm text-zinc-400">
               <span>
-                by <span className="text-[#00F0FF] font-mono">{selectedDiscussion.author}</span>
+                by <span className="text-cyan-400 font-mono">{selectedDiscussion.author}</span>
               </span>
               <span>• {selectedDiscussion.timestamp}</span>
               <span>• 👁 {selectedDiscussion.views} views</span>
@@ -228,26 +228,26 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
           </div>
 
           <div className="space-y-4 mb-6">
-            <h2 className="text-lg font-bold text-[#F5F3E8]">💬 {replies.length} Replies</h2>
+            <h2 className="text-lg font-bold text-zinc-100">💬 {replies.length} Replies</h2>
             {replies.map((reply) => (
-              <div key={reply.id} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
+              <div key={reply.id} className="bg-zinc-800 border border-zinc-700 rounded-xl p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-[#00F0FF] font-mono">{reply.author}</span>
-                    <span className="text-[#50C878] text-xs">(Score: {reply.authorScore})</span>
-                    <span className="text-[#A0A0A5] text-sm">• {reply.timestamp}</span>
+                    <span className="text-cyan-400 font-mono">{reply.author}</span>
+                    <span className="text-emerald-500 text-xs">(Score: {reply.authorScore})</span>
+                    <span className="text-zinc-400 text-sm">• {reply.timestamp}</span>
                   </div>
-                  <button className="text-[#A0A0A5] hover:text-[#00F0FF] text-sm">❤️ {reply.likes}</button>
+                  <button className="text-zinc-400 hover:text-cyan-400 text-sm">❤️ {reply.likes}</button>
                 </div>
-                <p className="text-[#F5F3E8]">{reply.content}</p>
+                <p className="text-zinc-100">{reply.content}</p>
               </div>
             ))}
           </div>
 
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <h3 className="text-lg font-bold text-[#F5F3E8] mb-4">Reply to this discussion</h3>
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+            <h3 className="text-lg font-bold text-zinc-100 mb-4">Reply to this discussion</h3>
             {!isConnected && (
-              <div className="bg-[#FFD700]/20 border border-[#FFD700] rounded-lg p-3 mb-4 text-sm text-[#FFD700]">
+              <div className="bg-amber-400/20 border border-amber-400 rounded-lg p-3 mb-4 text-sm text-amber-400">
                 ⚠️ Connect your wallet to reply with your identity
               </div>
             )}
@@ -257,12 +257,12 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
               placeholder="Share your thoughts..."
               rows={4}
               maxLength={1000}
-              className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none mb-4"
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none resize-none mb-4"
             />
             <button
               onClick={handleReply}
               disabled={!newReply.trim()}
-              className="px-6 py-3 bg-[#00F0FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
+              className="px-6 py-3 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
             >
               💬 Post Reply
             </button>
@@ -277,39 +277,39 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">💬 Community Discussions</h2>
-            <p className="text-[#A0A0A5]">Discuss proposals, share ideas, and connect with the community.</p>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-2">💬 Community Discussions</h2>
+            <p className="text-zinc-400">Discuss proposals, share ideas, and connect with the community.</p>
           </div>
           <button
             onClick={() => setShowNewThread(!showNewThread)}
-            className="px-6 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-6 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all"
           >
             {showNewThread ? "✕ Cancel" : "+ New Discussion"}
           </button>
         </div>
 
         {showNewThread && (
-          <div className="bg-[#2A2A2F] border border-[#00F0FF] rounded-xl p-6 mb-6">
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">📝 Start a New Discussion</h3>
+          <div className="bg-zinc-800 border border-cyan-400 rounded-xl p-6 mb-6">
+            <h3 className="text-xl font-bold text-zinc-100 mb-4">📝 Start a New Discussion</h3>
 
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Title *</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Title *</label>
                   <input
                     type="text"
                     value={newThread.title}
                     onChange={(e) => setNewThread({ ...newThread, title: e.target.value })}
                     placeholder="Discussion topic..."
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
                 <div className="w-48">
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Category</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Category</label>
                   <select
                     value={newThread.category}
                     onChange={(e) => setNewThread({ ...newThread, category: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
                   >
                     <option value="general">General</option>
                     <option value="proposals">Proposals</option>
@@ -320,21 +320,21 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
               </div>
 
               <div>
-                <label className="block text-[#A0A0A5] text-sm mb-2">Content *</label>
+                <label className="block text-zinc-400 text-sm mb-2">Content *</label>
                 <textarea
                   value={newThread.content}
                   onChange={(e) => setNewThread({ ...newThread, content: e.target.value })}
                   placeholder="What would you like to discuss?"
                   rows={5}
                   maxLength={2000}
-                  className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none resize-none"
                 />
               </div>
 
               <button
                 onClick={handleNewThread}
                 disabled={!newThread.title.trim() || !newThread.content.trim()}
-                className="px-6 py-3 bg-[#00F0FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
+                className="px-6 py-3 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
               >
                 🚀 Start Discussion
               </button>
@@ -348,7 +348,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
               key={cat}
               onClick={() => setCategory(cat as typeof category)}
               className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${
-                category === cat ? "bg-[#00F0FF] text-[#1A1A1D]" : "bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#00F0FF]"
+                category === cat ? "bg-cyan-400 text-zinc-900" : "bg-zinc-800 text-zinc-400 hover:text-cyan-400"
               }`}
             >
               {cat === "all"
@@ -371,31 +371,31 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
             <div
               key={discussion.id}
               onClick={() => setSelectedDiscussion(discussion)}
-              className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 hover:border-[#00F0FF]/50 transition-all cursor-pointer"
+              className="bg-zinc-800 border border-zinc-700 rounded-xl p-4 hover:border-cyan-400/50 transition-all cursor-pointer"
             >
               <div className="flex items-start gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    {discussion.isPinned && <span className="text-[#FFD700]">📌</span>}
+                    {discussion.isPinned && <span className="text-amber-400">📌</span>}
                     <span className={`px-2 py-1 text-xs rounded border ${categoryColors[discussion.category]}`}>
                       {discussion.category}
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold text-[#F5F3E8] mb-1 hover:text-[#00F0FF] transition-colors">
+                  <h3 className="text-lg font-bold text-zinc-100 mb-1 hover:text-cyan-400 transition-colors">
                     {discussion.title}
                   </h3>
-                  <p className="text-[#A0A0A5] text-sm line-clamp-1 mb-2">{discussion.preview}</p>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-[#A0A0A5]">
+                  <p className="text-zinc-400 text-sm line-clamp-1 mb-2">{discussion.preview}</p>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400">
                     <span>
-                      by <span className="text-[#00F0FF]">{discussion.author}</span>
+                      by <span className="text-cyan-400">{discussion.author}</span>
                     </span>
                     <span>• {discussion.timestamp}</span>
                   </div>
                 </div>
                 <div className="text-right text-sm">
-                  <div className="text-[#00F0FF] font-bold">{discussion.replies}</div>
-                  <div className="text-[#A0A0A5] text-xs">replies</div>
-                  <div className="text-[#A0A0A5] text-xs mt-1">👁 {discussion.views}</div>
+                  <div className="text-cyan-400 font-bold">{discussion.replies}</div>
+                  <div className="text-zinc-400 text-xs">replies</div>
+                  <div className="text-zinc-400 text-xs mt-1">👁 {discussion.views}</div>
                 </div>
               </div>
             </div>
@@ -403,7 +403,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
         </div>
 
         {filteredDiscussions.length === 0 && (
-          <div className="text-center py-12 text-[#A0A0A5]">
+          <div className="text-center py-12 text-zinc-400">
             <div className="text-4xl mb-4">💬</div>
             <p>No discussions found. Start a new conversation!</p>
           </div>

@@ -6,12 +6,22 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
  * POST /api/groups/join
  * Join a group using an invite code
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const client = await getClient();
   
   try {

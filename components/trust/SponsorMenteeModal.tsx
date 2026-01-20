@@ -62,26 +62,26 @@ export function SponsorMenteeModal({ isOpen, onClose }: SponsorMenteeModalProps)
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="bg-[#0F0F0F] border border-[#00FF88]/30 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+            <div className="bg-zinc-950 border border-emerald-400/30 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#00FF88]">
+                <h2 className="text-2xl font-bold text-emerald-400">
                   🎓 Sponsor a Mentee
                 </h2>
                 <button
                   onClick={onClose}
-                  className="text-[#F5F3E8]/50 hover:text-[#F5F3E8] transition-colors"
+                  className="text-zinc-100/50 hover:text-zinc-100 transition-colors"
                 >
                   ✕
                 </button>
               </div>
 
               {/* Status */}
-              <div className="mb-6 p-4 rounded-lg bg-[#00FF88]/10 border border-[#00FF88]/20">
-                <div className="text-sm text-[#F5F3E8]/70">
-                  Mentees: <span className="text-[#00FF88] font-bold">{menteeCount}/10</span>
+              <div className="mb-6 p-4 rounded-lg bg-emerald-400/10 border border-emerald-400/20">
+                <div className="text-sm text-zinc-100/70">
+                  Mentees: <span className="text-emerald-400 font-bold">{menteeCount}/10</span>
                 </div>
-                <div className="text-xs text-[#F5F3E8]/50 mt-1">
+                <div className="text-xs text-zinc-100/50 mt-1">
                   You can sponsor {10 - menteeCount} more {10 - menteeCount === 1 ? 'user' : 'users'}
                 </div>
               </div>
@@ -96,10 +96,10 @@ export function SponsorMenteeModal({ isOpen, onClose }: SponsorMenteeModalProps)
                   value={menteeAddress}
                   onChange={(e) => handleAddressChange(e.target.value)}
                   placeholder="0x..."
-                  className="w-full px-4 py-3 rounded-lg bg-[#0A0A0A] border border-[#F5F3E8]/20 focus:border-[#00FF88] focus:outline-none transition-colors text-[#F5F3E8]"
+                  className="w-full px-4 py-3 rounded-lg bg-zinc-950 border border-zinc-100/20 focus:border-emerald-400 focus:outline-none transition-colors text-zinc-100"
                 />
                 {menteeAddress && !isValidAddress && (
-                  <div className="mt-2 text-xs text-[#FF4444]">
+                  <div className="mt-2 text-xs text-red-500">
                     Invalid Ethereum address
                   </div>
                 )}
@@ -110,32 +110,32 @@ export function SponsorMenteeModal({ isOpen, onClose }: SponsorMenteeModalProps)
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 p-4 rounded-lg bg-[#0A0A0A] border border-[#F5F3E8]/10"
+                  className="mb-6 p-4 rounded-lg bg-zinc-950 border border-zinc-100/10"
                 >
                   <div className="text-sm font-medium mb-3">Preview</div>
-                  <div className="space-y-2 text-xs text-[#F5F3E8]/70">
+                  <div className="space-y-2 text-xs text-zinc-100/70">
                     <div className="flex justify-between">
                       <span>Current Score:</span>
-                      <span className="text-[#00FF88]">{menteeScore.toLocaleString()}</span>
+                      <span className="text-emerald-400">{menteeScore.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Current Tier:</span>
-                      <span className="text-[#00F0FF]">{menteeTier}</span>
+                      <span className="text-cyan-400">{menteeTier}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>After Sponsorship:</span>
-                      <span className="text-[#00FF88] font-bold">+300 → {(menteeScore + 300).toLocaleString()}</span>
+                      <span className="text-emerald-400 font-bold">+300 → {(menteeScore + 300).toLocaleString()}</span>
                     </div>
                   </div>
                 </motion.div>
               )}
 
               {/* Benefits Info */}
-              <div className="mb-6 p-4 rounded-lg bg-[#0F0F0F]/50 border border-[#F5F3E8]/10">
-                <div className="text-sm font-medium mb-2 text-[#00FF88]">
+              <div className="mb-6 p-4 rounded-lg bg-zinc-950/50 border border-zinc-100/10">
+                <div className="text-sm font-medium mb-2 text-emerald-400">
                   What Happens:
                 </div>
-                <div className="space-y-2 text-xs text-[#F5F3E8]/70">
+                <div className="space-y-2 text-xs text-zinc-100/70">
                   <div>• Mentee receives +300 bonus points instantly</div>
                   <div>• You get +50 points when they reach 7,000</div>
                   <div>• Mentee can only have ONE mentor</div>
@@ -147,7 +147,7 @@ export function SponsorMenteeModal({ isOpen, onClose }: SponsorMenteeModalProps)
               <div className="flex gap-3">
                 <button
                   onClick={onClose}
-                  className="flex-1 py-3 rounded-lg bg-[#F5F3E8]/10 hover:bg-[#F5F3E8]/20 transition-colors font-medium"
+                  className="flex-1 py-3 rounded-lg bg-zinc-100/10 hover:bg-zinc-100/20 transition-colors font-medium"
                 >
                   Cancel
                 </button>
@@ -158,8 +158,8 @@ export function SponsorMenteeModal({ isOpen, onClose }: SponsorMenteeModalProps)
                   whileTap={canSponsor ? { scale: 0.98 } : {}}
                   className={`flex-1 py-3 rounded-lg font-bold transition-all ${
                     canSponsor
-                      ? 'bg-linear-to-r from-[#00FF88] to-[#00F0FF] text-[#0A0A0A] hover:shadow-lg hover:shadow-[#00FF88]/50'
-                      : 'bg-[#F5F3E8]/10 text-[#F5F3E8]/30 cursor-not-allowed'
+                      ? 'bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 hover:shadow-lg hover:shadow-emerald-400/50'
+                      : 'bg-zinc-100/10 text-zinc-100/30 cursor-not-allowed'
                   }`}
                 >
                   {isSponsoring ? (
@@ -181,7 +181,7 @@ export function SponsorMenteeModal({ isOpen, onClose }: SponsorMenteeModalProps)
               </div>
 
               {!canSponsor && isValidAddress && (
-                <div className="mt-3 text-xs text-center text-[#F5F3E8]/50">
+                <div className="mt-3 text-xs text-center text-zinc-100/50">
                   {!isMentor && 'You must be a registered mentor'}
                   {isMentor && menteeCount >= 10 && 'Maximum mentees reached (10/10)'}
                 </div>

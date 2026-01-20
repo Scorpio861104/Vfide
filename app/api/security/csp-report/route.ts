@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 interface CSPViolation {
   'document-uri'?: string;
@@ -27,6 +28,10 @@ const violations: Array<CSPViolation & { timestamp: number; userAgent: string }>
 const MAX_VIOLATIONS = 1000;
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   try {
     const body: CSPReport = await request.json();
     const violation = body['csp-report'];
@@ -71,6 +76,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const rateLimitGet = await withRateLimit(request, 'api');
+  if (rateLimitGet) return rateLimitGet;
+
   // Optional: endpoint to view recent violations (development only)
   if (process.env.NODE_ENV !== 'development') {
     return NextResponse.json({ error: 'Not available' }, { status: 404 });

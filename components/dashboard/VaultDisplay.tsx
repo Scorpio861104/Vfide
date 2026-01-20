@@ -23,13 +23,13 @@ export default function VaultDisplay({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-6 bg-linear-to-br from-[#1A1A2E] to-[#0F0F14] rounded-xl border border-[#3A3A4F] ${className}`}
+      className={`p-6 bg-linear-to-br from-zinc-900 to-zinc-900 rounded-xl border border-zinc-700 ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#00F0FF]/10 rounded-lg">
-            <Wallet className="w-5 h-5 text-[#00F0FF]" />
+          <div className="p-2 bg-cyan-400/10 rounded-lg">
+            <Wallet className="w-5 h-5 text-cyan-400" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">Your Vault</h3>
@@ -40,7 +40,7 @@ export default function VaultDisplay({
             )}
           </div>
         </div>
-        <button className="p-2 hover:bg-[#2A2A2F] rounded-lg transition-colors">
+        <button className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
           <ArrowUpRight className="w-5 h-5 text-gray-400" />
         </button>
       </div>
@@ -53,28 +53,28 @@ export default function VaultDisplay({
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-4 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]">
+        <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-green-400" />
             <span className="text-xs text-gray-400">24h Change</span>
           </div>
           <p className="text-lg font-semibold text-green-400">+0.00%</p>
         </div>
-        <div className="p-4 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]">
+        <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
           <div className="flex items-center gap-2 mb-2">
-            <Shield className="w-4 h-4 text-[#00F0FF]" />
+            <Shield className="w-4 h-4 text-cyan-400" />
             <span className="text-xs text-gray-400">Security</span>
           </div>
-          <p className="text-lg font-semibold text-[#00F0FF]">Active</p>
+          <p className="text-lg font-semibold text-cyan-400">Active</p>
         </div>
       </div>
 
       {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-3 mt-6">
-        <button className="px-4 py-2 bg-[#00F0FF] text-black rounded-lg font-medium hover:bg-[#00D0DF] transition-colors">
+        <button className="px-4 py-2 bg-cyan-400 text-black rounded-lg font-medium hover:bg-cyan-400 transition-colors">
           Deposit
         </button>
-        <button className="px-4 py-2 bg-[#2A2A2F] text-white rounded-lg font-medium hover:bg-[#3A3A4F] transition-colors border border-[#3A3A4F]">
+        <button className="px-4 py-2 bg-zinc-800 text-white rounded-lg font-medium hover:bg-zinc-700 transition-colors border border-zinc-700">
           Withdraw
         </button>
       </div>

@@ -206,7 +206,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Hidden Canvas for Certificate Generation */}
       <canvas ref={canvasRef} width={1200} height={800} style={{ display: 'none' }} />
 
@@ -214,12 +214,12 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-20 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-[#3A3A4F] px-4 md:px-8 py-6"
+        className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-700 px-4 md:px-8 py-6"
       >
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <Share2 className="w-8 h-8 text-[#00F0FF]" />
-            <h1 className="text-3xl md:text-4xl font-bold text-[#F5F3E8]">Share Your Success</h1>
+            <Share2 className="w-8 h-8 text-cyan-400" />
+            <h1 className="text-3xl md:text-4xl font-bold text-zinc-100">Share Your Success</h1>
           </div>
 
           {/* Tab Navigation */}
@@ -230,8 +230,8 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                 onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all flex items-center gap-2 ${
                   activeTab === tab.key
-                    ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                    : 'bg-[#2A2A3E] text-[#A0A0A5] hover:bg-[#3A3A4F]'
+                    ? 'bg-cyan-400 text-zinc-950'
+                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                 }`}
               >
                 <span>{tab.icon}</span>
@@ -263,7 +263,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                     transition={{ delay: idx * 0.1 }}
                     className={`bg-linear-to-br rounded-lg p-6 border-2 transition-all group cursor-pointer ${
                       selectedAchievement?.id === achievement.id
-                        ? 'border-[#00F0FF] from-[#00F0FF]/20 to-transparent'
+                        ? 'border-cyan-400 from-cyan-400/20 to-transparent'
                         : `border-${
                             achievement.rarity === 'legendary'
                               ? 'yellow'
@@ -272,15 +272,15 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                                 : achievement.rarity === 'rare'
                                   ? 'cyan'
                                   : 'gray'
-                          }-500/30 from-[#1A1A2E] to-[#2A2A3E]`
+                          }-500/30 from-zinc-900 to-zinc-800`
                     }`}
                     onClick={() => setSelectedAchievement(achievement)}
                   >
                     <div className="text-6xl mb-4">{achievement.icon}</div>
 
-                    <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{achievement.title}</h3>
+                    <h3 className="text-xl font-bold text-zinc-100 mb-2">{achievement.title}</h3>
 
-                    <p className="text-[#A0A0A5] text-sm mb-4 line-clamp-2">{achievement.description}</p>
+                    <p className="text-zinc-400 text-sm mb-4 line-clamp-2">{achievement.description}</p>
 
                     <div className="flex items-center justify-between mb-4">
                       <span
@@ -290,35 +290,35 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                             : achievement.rarity === 'epic'
                               ? 'bg-purple-500/20 text-purple-400'
                               : achievement.rarity === 'rare'
-                                ? 'bg-[#00F0FF]/20 text-[#00F0FF]'
+                                ? 'bg-cyan-400/20 text-cyan-400'
                                 : 'bg-gray-500/20 text-gray-400'
                         }`}
                       >
                         {achievement.rarity.toUpperCase()}
                       </span>
-                      <span className="text-xs text-[#6B6B78]">{achievement.unlockedDate.toLocaleDateString()}</span>
+                      <span className="text-xs text-zinc-500">{achievement.unlockedDate.toLocaleDateString()}</span>
                     </div>
 
                     {selectedAchievement?.id === achievement.id && (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mt-4 pt-4 border-t border-[#3A3A4F] space-y-3"
+                        className="mt-4 pt-4 border-t border-zinc-700 space-y-3"
                       >
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between bg-[#0A0A0F] rounded px-3 py-2">
-                            <code className="text-xs text-[#00F0FF] font-mono">{achievement.shareUrl}</code>
+                          <div className="flex items-center justify-between bg-zinc-950 rounded px-3 py-2">
+                            <code className="text-xs text-cyan-400 font-mono">{achievement.shareUrl}</code>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleCopyLink(achievement.shareUrl, `achievement_${achievement.id}`);
                               }}
-                              className="ml-2 p-1 hover:bg-[#2A2A3E] rounded transition-colors"
+                              className="ml-2 p-1 hover:bg-zinc-800 rounded transition-colors"
                             >
                               {copiedText === `achievement_${achievement.id}` ? (
                                 <CheckCircle2 className="w-4 h-4 text-green-500" />
                               ) : (
-                                <Copy className="w-4 h-4 text-[#A0A0A5]" />
+                                <Copy className="w-4 h-4 text-zinc-400" />
                               )}
                             </button>
                           </div>
@@ -332,7 +332,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                                   `🏆 Just unlocked "${achievement.title}" on VFIDE! ${achievement.shareUrl}`,
                                 );
                               }}
-                              className="p-2 bg-[#1D9BF0]/20 text-[#1D9BF0] rounded hover:bg-[#1D9BF0]/30 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
+                              className="p-2 bg-sky-500/20 text-sky-500 rounded hover:bg-sky-500/30 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
                             >
                               <Twitter className="w-4 h-4" />
                               Twitter
@@ -343,7 +343,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                                 e.stopPropagation();
                                 handleShareToSocial('linkedin', `Unlocked: ${achievement.title}`);
                               }}
-                              className="p-2 bg-[#0A66C2]/20 text-[#0A66C2] rounded hover:bg-[#0A66C2]/30 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
+                              className="p-2 bg-blue-700/20 text-blue-700 rounded hover:bg-blue-700/30 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
                             >
                               <Linkedin className="w-4 h-4" />
                               LinkedIn
@@ -354,7 +354,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                                 e.stopPropagation();
                                 generateCertificate(achievement);
                               }}
-                              className="p-2 bg-[#FFD700]/20 text-[#FFD700] rounded hover:bg-[#FFD700]/30 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
+                              className="p-2 bg-amber-400/20 text-amber-400 rounded hover:bg-amber-400/30 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
                             >
                               <Download className="w-4 h-4" />
                               Download
@@ -508,51 +508,51 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-linear-to-r from-[#FFD700]/10 via-[#1A1A2E] to-[#0A0A0F] border-2 border-[#FFD700]/30 rounded-lg overflow-hidden"
+                  className="bg-linear-to-r from-amber-400/10 via-[#1A1A2E] to-zinc-950 border-2 border-amber-400/30 rounded-lg overflow-hidden"
                 >
                   {/* Certificate Preview */}
-                  <div className="bg-[#1A1A2E] p-8 border-b border-[#FFD700]/20">
+                  <div className="bg-zinc-900 p-8 border-b border-amber-400/20">
                     <div className="flex items-center justify-between mb-6">
                       <div>
-                        <div className="text-[#FFD700] text-sm font-semibold mb-1">Certificate of Achievement</div>
-                        <h3 className="text-2xl font-bold text-[#F5F3E8]">{achievement.title}</h3>
+                        <div className="text-amber-400 text-sm font-semibold mb-1">Certificate of Achievement</div>
+                        <h3 className="text-2xl font-bold text-zinc-100">{achievement.title}</h3>
                       </div>
                       <div className="text-6xl">{achievement.icon}</div>
                     </div>
 
-                    <p className="text-[#A0A0A5] mb-6">{achievement.description}</p>
+                    <p className="text-zinc-400 mb-6">{achievement.description}</p>
 
-                    <div className="grid grid-cols-3 gap-4 text-sm mb-6 pb-6 border-b border-[#3A3A4F]">
+                    <div className="grid grid-cols-3 gap-4 text-sm mb-6 pb-6 border-b border-zinc-700">
                       <div>
-                        <div className="text-[#6B6B78]">Unlocked Date</div>
-                        <div className="text-[#F5F3E8] font-semibold">{achievement.unlockedDate.toLocaleDateString()}</div>
+                        <div className="text-zinc-500">Unlocked Date</div>
+                        <div className="text-zinc-100 font-semibold">{achievement.unlockedDate.toLocaleDateString()}</div>
                       </div>
                       <div>
-                        <div className="text-[#6B6B78]">Rarity</div>
-                        <div className="text-[#FFD700] font-semibold">{achievement.rarity.toUpperCase()}</div>
+                        <div className="text-zinc-500">Rarity</div>
+                        <div className="text-amber-400 font-semibold">{achievement.rarity.toUpperCase()}</div>
                       </div>
                       <div>
-                        <div className="text-[#6B6B78]">Certificate ID</div>
-                        <div className="text-[#00F0FF] font-mono text-xs">#ACH{achievement.id.slice(-6).toUpperCase()}</div>
+                        <div className="text-zinc-500">Certificate ID</div>
+                        <div className="text-cyan-400 font-mono text-xs">#ACH{achievement.id.slice(-6).toUpperCase()}</div>
                       </div>
                     </div>
 
-                    <div className="text-xs text-[#6B6B78] text-center">
+                    <div className="text-xs text-zinc-500 text-center">
                       This certificate verifies achievement on VFIDE • Issued {new Date().toLocaleDateString()}
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="bg-[#0A0A0F] p-6 flex gap-3">
+                  <div className="bg-zinc-950 p-6 flex gap-3">
                     <button
                       onClick={() => generateCertificate(achievement)}
-                      className="flex-1 px-4 py-3 bg-[#FFD700] text-[#0A0A0F] rounded-lg hover:bg-[#FFC700] transition-colors font-semibold flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-3 bg-amber-400 text-zinc-950 rounded-lg hover:bg-amber-400 transition-colors font-semibold flex items-center justify-center gap-2"
                     >
                       <Download className="w-5 h-5" />
                       Download Certificate
                     </button>
 
-                    <button className="flex-1 px-4 py-3 bg-[#2A2A3E] border border-[#FFD700]/30 text-[#F5F3E8] rounded-lg hover:border-[#FFD700] transition-colors font-semibold flex items-center justify-center gap-2">
+                    <button className="flex-1 px-4 py-3 bg-zinc-800 border border-amber-400/30 text-zinc-100 rounded-lg hover:border-amber-400 transition-colors font-semibold flex items-center justify-center gap-2">
                       <Share2 className="w-5 h-5" />
                       Share
                     </button>
@@ -571,29 +571,29 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
               exit={{ opacity: 0, y: -20 }}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-6">
-                  <div className="text-[#00F0FF] text-3xl font-bold mb-2">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6">
+                  <div className="text-cyan-400 text-3xl font-bold mb-2">
                     {mockShareMetrics.reduce((sum, m) => sum + m.shares, 0)}
                   </div>
-                  <div className="text-[#A0A0A5] text-sm">Total Shares</div>
+                  <div className="text-zinc-400 text-sm">Total Shares</div>
                 </div>
 
-                <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-6">
-                  <div className="text-[#A78BFA] text-3xl font-bold mb-2">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6">
+                  <div className="text-violet-400 text-3xl font-bold mb-2">
                     {mockShareMetrics.reduce((sum, m) => sum + m.clicks, 0)}
                   </div>
-                  <div className="text-[#A0A0A5] text-sm">Total Clicks</div>
+                  <div className="text-zinc-400 text-sm">Total Clicks</div>
                 </div>
 
-                <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-6">
-                  <div className="text-[#50C878] text-3xl font-bold mb-2">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6">
+                  <div className="text-emerald-500 text-3xl font-bold mb-2">
                     {mockShareMetrics.reduce((sum, m) => sum + m.conversions, 0)}
                   </div>
-                  <div className="text-[#A0A0A5] text-sm">Conversions</div>
+                  <div className="text-zinc-400 text-sm">Conversions</div>
                 </div>
 
-                <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-6">
-                  <div className="text-[#FF6B9D] text-3xl font-bold mb-2">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6">
+                  <div className="text-pink-400 text-3xl font-bold mb-2">
                     {Math.round(
                       (mockShareMetrics.reduce((sum, m) => sum + m.conversions, 0) /
                         mockShareMetrics.reduce((sum, m) => sum + m.clicks, 0)) *
@@ -601,19 +601,19 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                     )}
                     %
                   </div>
-                  <div className="text-[#A0A0A5] text-sm">Conversion Rate</div>
+                  <div className="text-zinc-400 text-sm">Conversion Rate</div>
                 </div>
               </div>
 
               <div className="space-y-4">
                 {mockShareMetrics.map((metric, idx) => {
                   const platformColors: Record<string, string> = {
-                    twitter: 'from-[#1D9BF0]/20 border-[#1D9BF0]/30',
-                    linkedin: 'from-[#0A66C2]/20 border-[#0A66C2]/30',
-                    email: 'from-[#EA4335]/20 border-[#EA4335]/30',
-                    whatsapp: 'from-[#25D366]/20 border-[#25D366]/30',
-                    telegram: 'from-[#0088cc]/20 border-[#0088cc]/30',
-                    discord: 'from-[#5865F2]/20 border-[#5865F2]/30',
+                    twitter: 'from-[#1D9BF0]/20 border-sky-500/30',
+                    linkedin: 'from-[#0A66C2]/20 border-blue-700/30',
+                    email: 'from-[#EA4335]/20 border-red-500/30',
+                    whatsapp: 'from-[#25D366]/20 border-green-500/30',
+                    telegram: 'from-[#0088cc]/20 border-sky-600/30',
+                    discord: 'from-[#5865F2]/20 border-indigo-500/30',
                   };
 
                   return (
@@ -625,39 +625,39 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                       className={`bg-linear-to-r ${platformColors[metric.platform]} border rounded-lg p-6`}
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-[#F5F3E8] capitalize">{metric.platform}</h3>
-                        <span className="text-2xl font-bold text-[#00F0FF]">{metric.shares}</span>
+                        <h3 className="text-lg font-bold text-zinc-100 capitalize">{metric.platform}</h3>
+                        <span className="text-2xl font-bold text-cyan-400">{metric.shares}</span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <div className="text-xs text-[#A0A0A5] mb-2">Clicks</div>
-                          <div className="w-full bg-[#0A0A0F] rounded h-2">
+                          <div className="text-xs text-zinc-400 mb-2">Clicks</div>
+                          <div className="w-full bg-zinc-950 rounded h-2">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min((metric.clicks / 1000) * 100, 100)}%` }}
                               transition={{ duration: 1, delay: idx * 0.1 + 0.3 }}
-                              className="bg-linear-to-r from-[#A78BFA] to-[#00F0FF] rounded h-full"
+                              className="bg-linear-to-r from-violet-400 to-cyan-400 rounded h-full"
                             />
                           </div>
-                          <div className="text-sm font-semibold text-[#F5F3E8] mt-1">{metric.clicks}</div>
+                          <div className="text-sm font-semibold text-zinc-100 mt-1">{metric.clicks}</div>
                         </div>
 
                         <div>
-                          <div className="text-xs text-[#A0A0A5] mb-2">Conversions</div>
-                          <div className="w-full bg-[#0A0A0F] rounded h-2">
+                          <div className="text-xs text-zinc-400 mb-2">Conversions</div>
+                          <div className="w-full bg-zinc-950 rounded h-2">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min((metric.conversions / 50) * 100, 100)}%` }}
                               transition={{ duration: 1, delay: idx * 0.1 + 0.4 }}
-                              className="bg-linear-to-r from-[#50C878] to-[#00F0FF] rounded h-full"
+                              className="bg-linear-to-r from-emerald-500 to-cyan-400 rounded h-full"
                             />
                           </div>
-                          <div className="text-sm font-semibold text-[#F5F3E8] mt-1">{metric.conversions}</div>
+                          <div className="text-sm font-semibold text-zinc-100 mt-1">{metric.conversions}</div>
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-4 border-t border-[#3A3A4F] text-xs text-[#A0A0A5]">
+                      <div className="mt-4 pt-4 border-t border-zinc-700 text-xs text-zinc-400">
                         Conversion Rate: {Math.round((metric.conversions / metric.clicks) * 100)}%
                       </div>
                     </motion.div>

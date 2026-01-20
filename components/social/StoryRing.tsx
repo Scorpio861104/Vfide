@@ -35,8 +35,8 @@ export function StoryRing({
   };
 
   const ringClasses = hasUnviewed
-    ? 'ring-2 ring-[#00F0FF] ring-offset-2 ring-offset-[#0A0A0F]'
-    : 'ring-2 ring-[#3A3A4F] ring-offset-2 ring-offset-[#0A0A0F]';
+    ? 'ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0A0A0F]'
+    : 'ring-2 ring-zinc-700 ring-offset-2 ring-offset-[#0A0A0F]';
 
   // Get the latest story thumbnail
   const latestStory = activeStories[activeStories.length - 1];
@@ -67,7 +67,7 @@ export function StoryRing({
               {latestStory?.content?.slice(0, 15)}...
             </div>
           ) : (
-            <div className="w-full h-full bg-linear-to-br from-[#00F0FF]/20 to-[#A78BFA]/20 flex items-center justify-center">
+            <div className="w-full h-full bg-linear-to-br from-cyan-400/20 to-violet-400/20 flex items-center justify-center">
               <span className="text-2xl">{userAvatar || '👤'}</span>
             </div>
           )}
@@ -75,14 +75,14 @@ export function StoryRing({
 
         {/* Story Count Badge */}
         {activeStories.length > 1 && (
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#00F0FF] text-[#0A0A0F] text-xs font-bold rounded-full flex items-center justify-center">
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-cyan-400 text-zinc-950 text-xs font-bold rounded-full flex items-center justify-center">
             {activeStories.length}
           </div>
         )}
       </div>
 
       {/* Username */}
-      <p className="text-[#F5F3E8] text-sm text-center max-w-20 truncate group-hover:text-[#00F0FF] transition-colors">
+      <p className="text-zinc-100 text-sm text-center max-w-20 truncate group-hover:text-cyan-400 transition-colors">
         {userName}
       </p>
     </motion.div>

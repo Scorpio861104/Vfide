@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from '@jest/globals'
+import { describe, expect, it,  beforeEach, afterEach } from '@jest/globals'
 import { render } from '@testing-library/react'
 import React from 'react'
 
@@ -44,12 +44,12 @@ import { TransactionSuccess } from '@/components/ui/TransactionSuccess'
 describe('TransactionSuccess', () => {
   beforeEach(() => {
     jest.useFakeTimers()
-    vi.stubGlobal('open', jest.fn())
+    global.open = jest.fn()
   })
 
   afterEach(() => {
     jest.useRealTimers()
-    vi.unstubAllGlobals()
+    delete (global as any).open
   })
 
   it('renders nothing when closed', () => {

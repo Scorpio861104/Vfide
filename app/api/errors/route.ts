@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   try {
     const { searchParams } = new URL(request.url);
     const severity = searchParams.get('severity');
@@ -28,6 +33,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
   try {
     const body = await request.json();
     const { severity, message, stack, metadata, userId } = body;

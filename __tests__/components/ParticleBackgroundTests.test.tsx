@@ -2,7 +2,7 @@
  * ParticleBackground Tests
  * Tests for ParticleBackground component (14% coverage)
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from '@jest/globals'
+import { describe, it, expect,  beforeEach, afterEach } from '@jest/globals'
 import { render } from '@testing-library/react'
 import { ParticleBackground } from '@/components/ui/ParticleBackground'
 
@@ -44,7 +44,7 @@ describe('ParticleBackground', () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    jest.restoreAllMocks()
   })
 
   it('renders canvas element', () => {

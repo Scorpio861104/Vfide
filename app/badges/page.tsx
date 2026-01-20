@@ -80,7 +80,7 @@ function GlassCard({ children, className = "", hover = true }: {
     <motion.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -177,7 +177,7 @@ export default function BadgesPage() {
   return (
     <>
       
-      <main className="min-h-screen bg-[#08080A] pt-20 relative">
+      <main className="min-h-screen bg-zinc-950 pt-20 relative">
         {/* Ambient Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/3 w-150 h-150 bg-amber-500/5 rounded-full blur-[120px]" />
@@ -197,7 +197,7 @@ export default function BadgesPage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", delay: 0.2 }}
-                className="inline-flex items-center justify-center w-20 h-20 bg-linear-to-br from-amber-500/30 to-orange-500/20 border border-amber-500/30 rounded-3xl mb-6 shadow-lg shadow-amber-500/20"
+                className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-500/30 to-orange-500/20 border border-amber-500/30 rounded-3xl mb-6 shadow-lg shadow-amber-500/20"
               >
                 <Award className="w-10 h-10 text-amber-400" />
               </motion.div>
@@ -240,7 +240,7 @@ export default function BadgesPage() {
         </section>
 
         {/* Filters & Search */}
-        <section className="py-6 sticky top-20 z-40 bg-[#08080A]/80 backdrop-blur-xl border-b border-white/5">
+        <section className="py-6 sticky top-20 z-40 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
           <div className="container mx-auto px-3 sm:px-4">
             {/* Tabs */}
             <div className="flex flex-wrap gap-2 mb-4">

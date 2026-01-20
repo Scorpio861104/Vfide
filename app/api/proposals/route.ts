@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 interface Proposal {
   id: number;
@@ -95,8 +97,23 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/proposals
  * Create a new proposal
+ * 
+ * Security:
+ * - Requires authentication
+ * - Rate limited
+ * - Proposer must match authenticated user
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { proposerAddress, title, description, votingEndsAt } = body;
@@ -105,6 +122,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields: proposerAddress, title, description' },
         { status: 400 }
+      );
+    }
+
+    // Verify user is creating proposal for themselves
+    if (!checkOwnership(authResult.user, proposerAddress)) {
+      return NextResponse.json(
+        { error: 'You can only create proposals for yourself' },
+        { status: 403 }
       );
     }
 
