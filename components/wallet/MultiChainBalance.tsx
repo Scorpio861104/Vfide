@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { Coins, ChevronDown, RefreshCw, ExternalLink } from 'lucide-react';
@@ -155,11 +155,13 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
     }
   }, [address, isConnected]);
 
-  // Calculate total USD value
-  const totalUSD = balances.reduce((sum, b) => {
-    const value = parseFloat(b.balanceUSD.replace(/[^0-9.]/g, '')) || 0;
-    return sum + value;
-  }, 0);
+  // Calculate total USD value with memoization to avoid regex parsing on every render
+  const totalUSD = useMemo(() => {
+    return balances.reduce((sum, b) => {
+      const value = parseFloat(b.balanceUSD.replace(/[^0-9.]/g, '')) || 0;
+      return sum + value;
+    }, 0);
+  }, [balances]);
 
   if (!isConnected) return null;
 

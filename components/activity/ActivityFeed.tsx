@@ -168,18 +168,29 @@ const calculateActivityStats = (activities: Activity[]): ActivityStats => {
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+  // Single-pass aggregation instead of multiple filter calls (O(n) instead of O(n×7))
+  let todayCount = 0;
+  let thisWeekCount = 0;
+  const byType = {
+    transaction: 0,
+    governance: 0,
+    merchant: 0,
+    badge: 0,
+    escrow: 0,
+    wallet: 0,
+  };
+
+  activities.forEach((a) => {
+    if (a.timestamp >= oneDayAgo) todayCount++;
+    if (a.timestamp >= oneWeekAgo) thisWeekCount++;
+    byType[a.type]++;
+  });
+
   const stats: ActivityStats = {
     total: activities.length,
-    today: activities.filter((a) => a.timestamp >= oneDayAgo).length,
-    thisWeek: activities.filter((a) => a.timestamp >= oneWeekAgo).length,
-    byType: {
-      transaction: activities.filter((a) => a.type === 'transaction').length,
-      governance: activities.filter((a) => a.type === 'governance').length,
-      merchant: activities.filter((a) => a.type === 'merchant').length,
-      badge: activities.filter((a) => a.type === 'badge').length,
-      escrow: activities.filter((a) => a.type === 'escrow').length,
-      wallet: activities.filter((a) => a.type === 'wallet').length,
-    },
+    today: todayCount,
+    thisWeek: thisWeekCount,
+    byType,
   };
 
   return stats;
