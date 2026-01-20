@@ -9,7 +9,7 @@
 ## 🗂️ Documentation Organization
 
 ### Getting Started (Read These First)
-1. **[STATUS-DASHBOARD.md](./STATUS-DASHBOARD.md)** - Visual progress overview
+1. **[STATUS-DASHBOARD.md](./archive/STATUS-DASHBOARD.md)** - Visual progress overview
    - 30% complete, 6/20 items done
    - Phase breakdown with progress bars
    - Quick statistics
@@ -20,16 +20,15 @@
    - Testing quick start
    - Responsive breakpoints
 
-3. **[SESSION-COMPLETION-SUMMARY.md](./SESSION-COMPLETION-SUMMARY.md)** - This session's work
+3. **[SESSION-COMPLETION-SUMMARY.md](./archive/SESSION-COMPLETION-SUMMARY.md)** - This session's work
    - What was accomplished
    - Files created
    - Validation checklist
 
 ### Phase Completion Reports
-1. **[PHASE1_COMPLETE.md](./PHASE1_COMPLETE.md)** - Foundation phase
+1. **Phase 1 Complete** - Foundation phase
    - Items #1-4 (Storybook, Accessibility, Performance, Components)
-   - 400+ lines of summary
-   - Detailed metrics
+   - See archive for detailed reports
 
 2. **[PHASE2-MOBILE-COMPLETE.md](./PHASE2-MOBILE-COMPLETE.md)** - Mobile design phase
    - Item #5 (Mobile-first responsive)

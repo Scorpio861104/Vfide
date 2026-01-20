@@ -249,17 +249,17 @@ export default function DeveloperPage() {
 
       {/* Resources */}
       <div className="grid md:grid-cols-3 gap-4">
-        <a href="#" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
+        <a href="/docs" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
           <div className="text-2xl mb-2">📚</div>
           <h4 className="font-medium">Documentation</h4>
           <p className="text-sm text-muted-foreground">Full API reference</p>
         </a>
-        <a href="#" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
+        <a href="https://github.com/Scorpio861104/Vfide" target="_blank" rel="noopener noreferrer" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
           <div className="text-2xl mb-2">💻</div>
           <h4 className="font-medium">GitHub</h4>
           <p className="text-sm text-muted-foreground">Open source SDK</p>
         </a>
-        <a href="#" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
+        <a href="https://discord.gg/vfide" target="_blank" rel="noopener noreferrer" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
           <div className="text-2xl mb-2">💬</div>
           <h4 className="font-medium">Discord</h4>
           <p className="text-sm text-muted-foreground">Developer community</p>

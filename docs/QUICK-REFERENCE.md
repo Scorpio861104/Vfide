@@ -336,7 +336,7 @@ const isMobile = useMedia('(max-width: 639px)');
 - **Component API?** → [COMPONENT-LIBRARY.md](./COMPONENT-LIBRARY.md)
 - **Integration?** → [MOBILE-INTEGRATION-GUIDE.md](./MOBILE-INTEGRATION-GUIDE.md)
 - **Accessibility?** → [ACCESSIBILITY-AUDIT.md](./ACCESSIBILITY-AUDIT.md)
-- **Status?** → [STATUS-DASHBOARD.md](./STATUS-DASHBOARD.md)
+- **Status?** → [STATUS-DASHBOARD.md](./archive/STATUS-DASHBOARD.md)
 
 ---
 

@@ -445,7 +445,7 @@ export default function EnhancedDashboardAnalytics() {
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             Transaction History
           </h3>
-          <a href="/transactions" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+          <a href="/explorer" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
             View all
           </a>
         </div>
