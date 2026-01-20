@@ -42,10 +42,28 @@ const nextConfig: NextConfig = {
   // Image optimization
   images: {
     remotePatterns: [
+      // Restrict to specific trusted domains for security
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'avatars.githubusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: '*.vercel-storage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cloudflare-ipfs.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.amazonaws.com',
+      },
+      // Add more trusted domains as needed
     ],
   },
 

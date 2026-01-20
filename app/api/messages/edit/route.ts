@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, editMessageSchema } from '@/lib/auth/validation';
+import { isAddress } from 'viem';
 
 interface MessageEditRequest {
   messageId: string;
@@ -9,6 +13,16 @@ interface MessageEditRequest {
 }
 
 export async function PATCH(request: NextRequest) {
+  // Rate limiting: 20 requests per minute for write operations
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   const client = await getClient();
   
   try {
@@ -20,6 +34,21 @@ export async function PATCH(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // Validate address format
+    if (!isAddress(userAddress)) {
+      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
+    }
+
+    // Verify authenticated user matches userAddress
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Validate content length and sanitization happens in validation schema
+    if (newContent.length < 1 || newContent.length > 5000) {
+      return NextResponse.json({ error: 'Content must be between 1 and 5000 characters' }, { status: 400 });
     }
 
     await client.query('BEGIN');

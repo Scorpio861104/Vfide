@@ -1,7 +1,13 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { isAddress } from 'viem';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ address: string }> }) {
+  // Rate limiting: 100 requests per minute for balance lookups
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
@@ -9,6 +15,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!address || typeof address !== 'string') {
       return NextResponse.json(
         { error: 'Invalid address parameter' },
+        { status: 400 }
+      );
+    }
+
+    // Validate address format
+    if (!isAddress(address)) {
+      return NextResponse.json(
+        { error: 'Invalid Ethereum address format' },
         { status: 400 }
       );
     }
