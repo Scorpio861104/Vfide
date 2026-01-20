@@ -137,12 +137,14 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
     setTimeout(() => setCopiedText(null), 2000);
   };
 
-  const handleShareToSocial = (platform: 'twitter' | 'linkedin' | 'email' | 'whatsapp', content: string) => {
+  const handleShareToSocial = (platform: 'twitter' | 'linkedin' | 'email' | 'whatsapp' | 'telegram' | 'discord', content: string) => {
     const shareUrls: Record<string, string> = {
       twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(content)}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('vfide.app')}`,
       email: `mailto:?subject=Check out my VFIDE achievement&body=${encodeURIComponent(content)}`,
       whatsapp: `https://wa.me/?text=${encodeURIComponent(content)}`,
+      telegram: `https://t.me/share/url?text=${encodeURIComponent(content)}`,
+      discord: `https://discord.com/channels/@me`,
     };
 
     if (shareUrls[platform]) {
