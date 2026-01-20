@@ -3,13 +3,19 @@
 
 @layer base {
   :root {
-    /* VFIDE Colors - Premium Fintech Palette */
+    /* ==========================================
+     * VFIDE DESIGN SYSTEM - Single Source of Truth
+     * See lib/design-tokens.ts for documentation
+     * ========================================== */
+    
+    /* Primary Accent (Cyan) */
     --accent: #00F0FF;
     --accent-light: #5BFAFF;
     --accent-dark: #0080FF;
     --accent-glow: rgba(0, 240, 255, 0.3);
     --accent-subtle: rgba(0, 240, 255, 0.08);
     
+    /* Secondary Accents */
     --accent-green: #00FF88;
     --accent-green-glow: rgba(0, 255, 136, 0.3);
     --accent-purple: #A78BFA;
@@ -17,26 +23,40 @@
     --accent-gold: #FFD700;
     --accent-gold-glow: rgba(255, 215, 0, 0.3);
     
+    /* Status Colors */
     --danger: #EF4444;
     --success: #22C55E;
     --warning: #F59E0B;
+    --info: #3B82F6;
     
-    /* Refined dark palette with depth */
+    /* Theme Manager Compatibility - Primary Colors */
+    --color-primary-500: var(--accent);
+    --color-primary-600: var(--accent-dark);
+    --color-secondary-500: var(--accent-purple);
+    --color-accent-500: var(--accent-green);
+    --color-success-500: var(--success);
+    --color-warning-500: var(--warning);
+    --color-error-500: var(--danger);
+    --color-info-500: var(--info);
+    
+    /* Background Colors (Dark Theme) */
     --bg-dark: #08080A;
     --bg-darker: #050507;
     --bg-panel: #0F0F14;
     --bg-panel-elevated: #16161D;
     --bg-panel-hover: #1C1C26;
     
-    /* Glass morphism */
+    /* Glass Morphism */
     --glass-bg: rgba(15, 15, 20, 0.6);
     --glass-border: rgba(255, 255, 255, 0.08);
     --glass-highlight: rgba(255, 255, 255, 0.05);
     
+    /* Text Colors */
     --text-primary: #F8F8FC;
     --text-secondary: #A8A8B3;
     --text-muted: #6B6B78;
     
+    /* Border Colors */
     --border: #1F1F2A;
     --border-accent: rgba(0, 240, 255, 0.2);
     
@@ -44,6 +64,19 @@
     --shadow-glow: 0 0 60px -12px rgba(0, 240, 255, 0.4);
     --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
     --shadow-elevated: 0 24px 80px -20px rgba(0, 0, 0, 0.6);
+    
+    /* Standard Neutral Scale (Zinc) */
+    --neutral-50: #fafafa;
+    --neutral-100: #f4f4f5;
+    --neutral-200: #e4e4e7;
+    --neutral-300: #d4d4d8;
+    --neutral-400: #a1a1aa;
+    --neutral-500: #71717a;
+    --neutral-600: #52525b;
+    --neutral-700: #3f3f46;
+    --neutral-800: #27272a;
+    --neutral-900: #18181b;
+    --neutral-950: #09090b;
   }
   
   /* Smooth scrolling */
@@ -135,19 +168,83 @@
 }
 
 @layer utilities {
-  /* Colors */
+  /* ==========================================
+   * SEMANTIC COLOR UTILITIES
+   * Use these instead of raw Tailwind colors
+   * ========================================== */
+  
+  /* Accent Colors */
   .text-accent {
     color: var(--accent);
   }
   
+  .text-accent-light {
+    color: var(--accent-light);
+  }
+  
+  .text-accent-dark {
+    color: var(--accent-dark);
+  }
+  
+  .bg-accent {
+    background-color: var(--accent);
+  }
+  
+  .border-accent {
+    border-color: var(--border-accent);
+  }
+  
+  /* Status Colors */
+  .text-success {
+    color: var(--success);
+  }
+  
+  .text-danger {
+    color: var(--danger);
+  }
+  
+  .text-warning {
+    color: var(--warning);
+  }
+  
+  .text-info {
+    color: var(--info);
+  }
+  
+  .bg-success {
+    background-color: var(--success);
+  }
+  
+  .bg-danger {
+    background-color: var(--danger);
+  }
+  
+  .bg-warning {
+    background-color: var(--warning);
+  }
+  
+  /* Background Colors */
   .bg-dark {
     background-color: var(--bg-dark);
+  }
+  
+  .bg-darker {
+    background-color: var(--bg-darker);
   }
   
   .bg-panel {
     background-color: var(--bg-panel);
   }
   
+  .bg-panel-elevated {
+    background-color: var(--bg-panel-elevated);
+  }
+  
+  .bg-panel-hover {
+    background-color: var(--bg-panel-hover);
+  }
+  
+  /* Text Colors */
   .text-text-primary {
     color: var(--text-primary);
   }
@@ -156,8 +253,17 @@
     color: var(--text-secondary);
   }
   
+  .text-text-muted {
+    color: var(--text-muted);
+  }
+  
+  /* Border Colors */
   .border-border {
     border-color: var(--border);
+  }
+  
+  .border-border-accent {
+    border-color: var(--border-accent);
   }
 
   /* Glass morphism components */
