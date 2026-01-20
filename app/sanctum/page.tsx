@@ -34,69 +34,17 @@ const IS_SANCTUM_DEPLOYED = SANCTUM_VAULT_ADDRESS !== '0x00000000000000000000000
 type TabType = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history';
 
 export default function SanctumPage() {
-  const { address: _address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [donateAmount, _setDonateAmount] = useState('');
-  const [donateNote, _setDonateNote] = useState('');
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
-  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  // Read vault balance (only if deployed)
-  const { data: _vaultBalance } = useReadContract({
-    address: SANCTUM_VAULT_ADDRESS,
-    abi: SANCTUM_VAULT_ABI,
-    functionName: 'getBalance',
-    args: [VFIDE_TOKEN_ADDRESS],
-    query: { enabled: IS_SANCTUM_DEPLOYED },
-  });
+  // Mock data since contracts not deployed yet
+  const vaultBalance = 0;
+  const charityCount = 0;
 
-  // Read charity count (only if deployed)
-  const { data: _charityCount } = useReadContract({
-    address: SANCTUM_VAULT_ADDRESS,
-    abi: SANCTUM_VAULT_ABI,
-    functionName: 'getCharityCount',
-    query: { enabled: IS_SANCTUM_DEPLOYED },
-  });
-
-  // Read next proposal ID (to know how many exist)
-  const { data: _nextProposalId } = useReadContract({
-    address: SANCTUM_VAULT_ADDRESS,
-    abi: SANCTUM_VAULT_ABI,
-    functionName: '_nextProposalId',
-    query: { enabled: IS_SANCTUM_DEPLOYED },
-  });
-
-  // Handlers
-  const _handleDonate = () => {
-    if (!IS_SANCTUM_DEPLOYED) return;
-    if (!donateAmount || safeParseFloat(donateAmount, 0) <= 0) return;
-    writeContract({
-      address: SANCTUM_VAULT_ADDRESS,
-      abi: SANCTUM_VAULT_ABI,
-      functionName: 'deposit',
-      args: [VFIDE_TOKEN_ADDRESS, parseUnits(donateAmount, 18), donateNote || 'Direct donation'],
-    });
-  };
-
-  const _handleApproveDisbursement = (proposalId: number) => {
-    writeContract({
-      address: SANCTUM_VAULT_ADDRESS,
-      abi: SANCTUM_VAULT_ABI,
-      functionName: 'approveDisbursement',
-      args: [BigInt(proposalId)],
-    });
-  };
-
-  const _handleExecuteDisbursement = (proposalId: number) => {
-    writeContract({
-      address: SANCTUM_VAULT_ADDRESS,
-      abi: SANCTUM_VAULT_ABI,
-      functionName: 'executeDisbursement',
-      args: [BigInt(proposalId)],
-    });
-  };
 
   return (
     <>
@@ -152,9 +100,9 @@ export default function SanctumPage() {
               { label: 'Active Charities', value: '8', unit: '', icon: Users, gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
               { label: 'Disbursements', value: '24', unit: 'completed', icon: CheckCircle, gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
               { label: 'Fee Allocation', value: '~3%', unit: 'of fees', icon: DollarSign, gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-            ].map((stat, idx) => (
+            ].map((stat) => (
               <motion.div 
-                key={idx} 
+                key={stat.label} 
                 whileHover={{ scale: 1.02, y: -2 }}
                 className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
               >
@@ -254,8 +202,8 @@ function OverviewTab() {
             { step: '3', title: 'Proposal Creation', desc: 'Council members propose disbursements to charities' },
             { step: '4', title: 'Multi-Sig Approval', desc: 'Required approvers sign off on disbursement' },
             { step: '5', title: 'Execution', desc: 'Funds transferred transparently on-chain' },
-          ].map((item, idx) => (
-            <div key={idx} className="flex gap-4">
+          ].map((item) => (
+            <div key={item.step} className="flex gap-4">
               <div className="w-8 h-8 bg-pink-500/20 text-pink-400 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
                 {item.step}
               </div>

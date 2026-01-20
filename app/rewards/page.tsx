@@ -68,19 +68,11 @@ type TabId = 'overview' | 'duty' | 'promotional' | 'liquidity' | 'referral'
 export default function RewardsPage() {
   const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
-  const [_stakeAmount, _setStakeAmount] = useState('')
-  const [_selectedPool, _setSelectedPool] = useState<string | null>(null)
-  const [claimingId, _setClaimingId] = useState<string | null>(null)
+  const [claimingId, setClaimingId] = useState<string | null>(null)
   
-
-  
-
-
-  
-
   // Contract write hooks
-  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
-  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Read duty points
   const { data: dutyPoints } = useReadContract({
@@ -153,60 +145,6 @@ export default function RewardsPage() {
       address: DUTY_DISTRIBUTOR_ADDRESS,
       abi: DUTY_DISTRIBUTOR_ABI,
       functionName: 'claimRewards',
-    });
-  };
-
-  const _handleClaimEducation = (milestone: string) => {
-    writeContract({
-      address: PROMOTIONAL_TREASURY_ADDRESS,
-      abi: PROMOTIONAL_TREASURY_ABI,
-      functionName: 'claimEducationReward',
-      args: [milestone],
-    });
-  };
-
-  const _handleClaimMilestone = (milestone: string) => {
-    writeContract({
-      address: PROMOTIONAL_TREASURY_ADDRESS,
-      abi: PROMOTIONAL_TREASURY_ABI,
-      functionName: 'claimUserMilestone',
-      args: [milestone],
-    });
-  };
-
-  const _handleStake = (lpToken: string, amount: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'stake',
-      args: [lpToken as `0x${string}`, parseUnits(amount, 18)],
-    });
-  };
-
-  const _handleUnstake = (lpToken: string, amount: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'unstake',
-      args: [lpToken as `0x${string}`, parseUnits(amount, 18)],
-    });
-  };
-
-  const _handleClaimLPRewards = (lpToken: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'claimRewards',
-      args: [lpToken as `0x${string}`],
-    });
-  };
-
-  const _handleCompound = (lpToken: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'compound',
-      args: [lpToken as `0x${string}`],
     });
   };
 
