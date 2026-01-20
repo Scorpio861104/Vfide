@@ -1,0 +1,126 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Vfide API",
+    "description": "Comprehensive API for Vfide - Social Web3 messaging and gamification platform",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Vfide Team",
+      "url": "https://vfide.app"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://vfide.app/api",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Development"
+    }
+  ],
+  "tags": [
+    { "name": "Authentication", "description": "User authentication and authorization" },
+    { "name": "Users", "description": "User profile management" },
+    { "name": "Crypto", "description": "Blockchain operations and transactions" },
+    { "name": "Messages", "description": "Encrypted messaging" },
+    { "name": "Groups", "description": "Group chat and management" },
+    { "name": "Friends", "description": "Social connections" },
+    { "name": "Notifications", "description": "Push notifications" },
+    { "name": "Gamification", "description": "Badges, quests, and leaderboard" },
+    { "name": "System", "description": "Health checks and system endpoints" }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "User login",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["address", "signature"],
+                "properties": {
+                  "address": {"type": "string", "pattern": "^0x[a-fA-F0-9]{40}$"},
+                  "signature": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Login successful"},
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "429": {"$ref": "#/components/responses/TooManyRequests"}
+        }
+      }
+    },
+    "/messages": {
+      "post": {
+        "summary": "Send message",
+        "tags": ["Messages"],
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["recipientAddress", "content"],
+                "properties": {
+                  "recipientAddress": {"type": "string"},
+                  "content": {"type": "string", "minLength": 1, "maxLength": 5000}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Message sent"},
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "413": {"$ref": "#/components/responses/PayloadTooLarge"},
+          "429": {"$ref": "#/components/responses/TooManyRequests"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from /api/auth/login"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request body or parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {"type": "string"},
+                "message": {"type": "string"}
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid authentication token"
+      },
+      "PayloadTooLarge": {
+        "description": "Request body exceeds size limit"
+      },
+      "TooManyRequests": {
+        "description": "Rate limit exceeded"
+      }
+    }
+  }
+}
