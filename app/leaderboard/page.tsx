@@ -312,7 +312,9 @@ export default function LeaderboardPage() {
             {/* Error State */}
             {error && (
               <div className="bg-[#FF4444]/10 border border-[#FF4444]/30 rounded-xl p-6 text-center mb-8">
-                <p className="text-[#FF4444] mb-4">{error.message}</p>
+                <p className="text-[#FF4444] mb-4">
+                  {error instanceof Error ? error.message : 'Failed to load leaderboard data'}
+                </p>
                 <button
                   onClick={() => refetch()}
                   className="px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] hover:border-[#00F0FF]"

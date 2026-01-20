@@ -202,8 +202,8 @@ function OverviewTab() {
 
       {/* Benefits Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {benefits.map((benefit, idx) => (
-          <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#00F0FF]/30 transition-colors">
+        {benefits.map((benefit) => (
+          <div key={benefit.title} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#00F0FF]/30 transition-colors">
             <benefit.icon size={32} style={{ color: benefit.color }} className="mb-4" />
             <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{benefit.title}</h3>
             <p className="text-[#A0A0A5] text-sm">{benefit.description}</p>
@@ -281,9 +281,9 @@ function TiersTab() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        {tiers.map((tier, idx) => (
+        {tiers.map((tier) => (
           <div 
-            key={idx} 
+            key={tier.name} 
             className="bg-[#2A2A2F] border-2 rounded-xl p-6 text-center hover:scale-105 transition-transform"
             style={{ borderColor: tier.color }}
           >
@@ -294,7 +294,7 @@ function TiersTab() {
             <div className="border-t border-[#3A3A3F] pt-4">
               <ul className="text-xs text-[#A0A0A5] space-y-1">
                 {tier.benefits.map((benefit, bidx) => (
-                  <li key={bidx} className="flex items-center gap-2">
+                  <li key={`${tier.name}-${bidx}`} className="flex items-center gap-2">
                     <Sparkles size={12} style={{ color: tier.color }} />
                     {benefit}
                   </li>
@@ -362,8 +362,8 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
           <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
             <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Reward Breakdown</h3>
             <div className="space-y-3">
-              {availableRewards.map((reward, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg">
+              {availableRewards.map((reward) => (
+                <div key={reward.name} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg">
                   <div className="flex items-center gap-4">
                     <Gift className={reward.claimable ? 'text-green-400' : 'text-[#505055]'} size={20} />
                     <div>
@@ -495,8 +495,8 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
             { action: 'Referral bonus received', amount: '+250 VFIDE', time: '1 day ago' },
             { action: 'ProofScore increased', amount: '+5 points', time: '3 days ago' },
             { action: 'Transaction cashback', amount: '+75 VFIDE', time: '5 days ago' },
-          ].map((activity, idx) => (
-            <div key={idx} className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
+          ].map((activity) => (
+            <div key={`${activity.action}-${activity.time}`} className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
               <div>
                 <div className="text-[#F5F3E8] text-sm">{activity.action}</div>
                 <div className="text-xs text-[#A0A0A5]">{activity.time}</div>

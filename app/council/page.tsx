@@ -429,9 +429,9 @@ function MembersTab() {
           Current Council Members
         </h3>
         <div className="space-y-4">
-          {members.map((member, idx) => (
+          {members.map((member) => (
             <motion.div 
-              key={idx}
+              key={member.address}
               whileHover={{ scale: 1.005, x: 4 }}
               className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl ${
                 member.status === 'vacant' 
@@ -657,8 +657,8 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
         <h3 className="text-xl font-bold text-white mb-6">Active Removal Votes</h3>
         {removalVotes.length > 0 ? (
           <div className="space-y-4">
-            {removalVotes.map((vote, idx) => (
-              <div key={idx} className="p-4 bg-red-500/10 rounded-xl border border-red-500/30">
+            {removalVotes.map((vote) => (
+              <div key={vote.target} className="p-4 bg-red-500/10 rounded-xl border border-red-500/30">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <div className="text-white font-bold">{vote.targetName}</div>
