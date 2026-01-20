@@ -61,12 +61,16 @@ const nextConfig: NextConfig = {
             value: [
               // Default: only same origin
               "default-src 'self'",
-              // Scripts: self, inline with nonce, eval for development
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
-              // Styles: self and inline styles (required by styled-jsx, Tailwind)
-              "style-src 'self' 'unsafe-inline'",
-              // Images: self, data URIs, HTTPS anywhere (for user avatars, external images)
-              "img-src 'self' data: https: blob:",
+              // Scripts: self and specific trusted domains
+              // Removed 'unsafe-inline' and 'unsafe-eval' for better security
+              // If you need inline scripts, use nonce-based CSP in middleware
+              "script-src 'self' https://vercel.live",
+              // Styles: self - removed 'unsafe-inline'
+              // For Tailwind, styles are now in external CSS files
+              // If you need inline styles, use nonce-based CSP in middleware
+              "style-src 'self'",
+              // Images: self, data URIs, HTTPS for user avatars (restrict to specific domains in production)
+              "img-src 'self' data: https:",
               // Fonts: self and data URIs
               "font-src 'self' data:",
               // Connect: self and WebSocket (for real-time features)

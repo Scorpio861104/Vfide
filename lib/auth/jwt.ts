@@ -4,6 +4,13 @@
  */
 
 import jwt from 'jsonwebtoken';
+import { validateEnvironment } from './startup-validation';
+
+// Validate environment on module load
+if (typeof window === 'undefined') {
+  // Only run validation on server-side
+  validateEnvironment();
+}
 
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'vfide-dev-secret-change-in-production';
