@@ -43,6 +43,16 @@ export interface WSConfig {
  * WebSocket Manager using Socket.IO for real-time messaging
  * Connects to VFIDE WebSocket server with authentication
  */
+/**
+ * Get default chain ID from environment or fallback
+ */
+function getDefaultChainId(): number {
+  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID) {
+    return parseInt(process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID);
+  }
+  return 8453; // Base mainnet
+}
+
 export class WebSocketManager {
   private socket: Socket | null = null;
   private config: WSConfig;
@@ -84,7 +94,7 @@ export class WebSocketManager {
             signature,
             message,
             address: userAddress,
-            chainId: chainId || (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID) : 8453), // Default to Base mainnet
+            chainId: chainId || getDefaultChainId(),
           },
           reconnection: true,
           reconnectionAttempts: this.config.maxReconnectAttempts,

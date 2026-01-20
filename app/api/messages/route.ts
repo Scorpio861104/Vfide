@@ -6,34 +6,6 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, sendMessageSchema } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
 
-/**
- * Server-side sanitization helper to prevent XSS attacks
- * Strips HTML tags and dangerous content
- */
-function sanitizeMessageContent(content: string): string {
-  if (!content || typeof content !== 'string') {
-    return '';
-  }
-  
-  // Strip HTML tags
-  let sanitized = content.replace(/<[^>]*>/g, '');
-  
-  // Remove potentially dangerous protocols
-  sanitized = sanitized.replace(/javascript:/gi, '');
-  sanitized = sanitized.replace(/data:/gi, '');
-  sanitized = sanitized.replace(/vbscript:/gi, '');
-  
-  // Trim whitespace
-  sanitized = sanitized.trim();
-  
-  // Limit length (e.g., 10000 characters max)
-  if (sanitized.length > 10000) {
-    sanitized = sanitized.substring(0, 10000);
-  }
-  
-  return sanitized;
-}
-
 interface Message {
   id: number;
   sender_id: number;
@@ -216,15 +188,7 @@ export async function POST(request: NextRequest) {
     const { from, to, content } = validation.data;
     const isEncrypted = false; // Default to unencrypted
     
-    // Sanitize message content to prevent XSS
-    const sanitizedContent = sanitizeMessageContent(content);
-    
-    if (!sanitizedContent) {
-      return NextResponse.json(
-        { error: 'Message content is empty or invalid' },
-        { status: 400 }
-      );
-    }
+    // Content is already sanitized by sendMessageSchema via validateBody
 
     // Verify the sender is the authenticated user
     if (authResult.user.address.toLowerCase() !== from.toLowerCase()) {
@@ -271,7 +235,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO messages (sender_id, recipient_id, content, is_encrypted, is_read)
        VALUES ($1, $2, $3, $4, false)
        RETURNING *`,
-      [senderId, recipientId, sanitizedContent, isEncrypted || false]
+      [senderId, recipientId, content, isEncrypted || false]
     );
 
     const message = messageResult.rows[0];

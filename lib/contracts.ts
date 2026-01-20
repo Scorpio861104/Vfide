@@ -41,7 +41,9 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
   if (!address) {
     if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-      console.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set NEXT_PUBLIC_${name.toUpperCase().replace(/([A-Z])/g, '_$1')}_ADDRESS in environment.`)
+      // Convert camelCase name to SCREAMING_SNAKE_CASE for env var name
+      const envVarName = `NEXT_PUBLIC_${name.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
+      console.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set ${envVarName} in environment.`)
     }
     return ZERO_ADDRESS
   }
