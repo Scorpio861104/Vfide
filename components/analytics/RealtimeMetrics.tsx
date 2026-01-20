@@ -54,13 +54,19 @@ export function RealtimeMetrics({
         })
       );
 
+      // Optimized: Only update metrics that have changed
       setMetrics(prev =>
         prev.map((metric, index) => {
           const update = updates[index];
-          const newHistory = [...metric.history, update?.newValue ?? metric.value].slice(-maxHistoryLength);
+          const newValue = update?.newValue ?? metric.value;
+          
+          // Skip update if value hasn't changed
+          if (newValue === metric.value) return metric;
+          
+          const newHistory = [...metric.history, newValue].slice(-maxHistoryLength);
           return {
             ...metric,
-            value: update?.newValue ?? metric.value,
+            value: newValue,
             history: newHistory
           };
         })

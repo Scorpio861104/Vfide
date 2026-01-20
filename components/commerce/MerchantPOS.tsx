@@ -245,14 +245,21 @@ export function MerchantPOS() {
     void sale; void email; // Placeholder until API integration
   }
   
-  // Sales analytics
+  // Sales analytics - Single-pass aggregation instead of multiple reduces (O(n) instead of O(n×3))
   const todaysSales = salesHistory.filter(sale => {
     const today = new Date().setHours(0, 0, 0, 0)
     return sale.timestamp >= today
   })
   
-  const todaysRevenue = todaysSales.reduce((sum, sale) => sum + sale.subtotal, 0)
-  const todaysFees = todaysSales.reduce((sum, sale) => sum + sale.fee, 0)
+  const { revenue, fees } = todaysSales.reduce(
+    (acc, sale) => ({
+      revenue: acc.revenue + sale.subtotal,
+      fees: acc.fees + sale.fee
+    }),
+    { revenue: 0, fees: 0 }
+  )
+  const todaysRevenue = revenue
+  const todaysFees = fees
   const todaysNet = todaysRevenue - todaysFees
   
   // Generate payment QR code

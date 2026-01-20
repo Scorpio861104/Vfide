@@ -187,29 +187,40 @@ function generateMockNotifications(): Notification[] {
 }
 
 function calculateNotificationStats(notifications: Notification[]): NotificationStats {
-  const unread = notifications.filter((n) => !n.read && !n.archived);
-  const archived = notifications.filter((n) => n.archived);
+  // Single-pass aggregation instead of multiple filter calls (O(n) instead of O(n×6))
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const readToday = notifications.filter(
-    (n) => n.read && n.timestamp > today.getTime() && !n.archived
-  ).length;
+  const todayTimestamp = today.getTime();
 
+  let totalNotArchived = 0;
+  let unreadCount = 0;
+  let readTodayCount = 0;
+  let archivedCount = 0;
   const unreadByType: Record<string, number> = {};
   const unreadByPriority: Record<string, number> = {};
 
-  unread.forEach((n) => {
-    unreadByType[n.type] = (unreadByType[n.type] || 0) + 1;
-    unreadByPriority[n.priority] = (unreadByPriority[n.priority] || 0) + 1;
+  notifications.forEach((n) => {
+    if (n.archived) {
+      archivedCount++;
+    } else {
+      totalNotArchived++;
+      if (!n.read) {
+        unreadCount++;
+        unreadByType[n.type] = (unreadByType[n.type] || 0) + 1;
+        unreadByPriority[n.priority] = (unreadByPriority[n.priority] || 0) + 1;
+      } else if (n.timestamp > todayTimestamp) {
+        readTodayCount++;
+      }
+    }
   });
 
   return {
-    total: notifications.filter((n) => !n.archived).length,
-    unread: unread.length,
+    total: totalNotArchived,
+    unread: unreadCount,
     unreadByType,
     unreadByPriority,
-    readToday,
-    archivedCount: archived.length,
+    readToday: readTodayCount,
+    archivedCount,
   };
 }
 
