@@ -222,6 +222,73 @@ export const analyticsEventSchema = z.object({
   timestamp: z.coerce.date().optional(),
 });
 
+// ==================== Quest Schemas ====================
+
+export const claimQuestSchema = z.object({
+  questId: z.coerce.number().int().positive(),
+  userAddress: ethereumAddress,
+});
+
+export const claimWeeklyQuestSchema = z.object({
+  questId: z.coerce.number().int().positive(),
+  userAddress: ethereumAddress,
+});
+
+export const claimAchievementSchema = z.object({
+  achievementId: z.coerce.number().int().positive(),
+  userAddress: ethereumAddress,
+});
+
+// ==================== Push Notification Schemas ====================
+
+export const pushSubscriptionSchema = z.object({
+  userAddress: ethereumAddress,
+  subscription: z.object({
+    endpoint: urlString,
+    keys: z.record(z.string(), z.string()),
+  }),
+});
+
+export const pushUnsubscribeSchema = z.object({
+  userAddress: ethereumAddress,
+  endpoint: urlString,
+});
+
+// ==================== Sync Schemas ====================
+
+export const syncSchema = z.object({
+  userAddress: ethereumAddress,
+  data: z.record(z.string(), z.unknown()),
+  timestamp: z.coerce.number().int().positive().optional(),
+});
+
+// ==================== Group Schemas (Extended) ====================
+
+export const addGroupMemberSchema = z.object({
+  groupId: z.coerce.number().int().positive(),
+  memberAddress: ethereumAddress,
+  role: z.enum(['admin', 'moderator', 'member']).default('member'),
+});
+
+export const removeGroupMemberSchema = z.object({
+  groupId: z.coerce.number().int().positive(),
+  memberAddress: ethereumAddress,
+});
+
+// ==================== Crypto Reward Schemas ====================
+
+export const claimCryptoRewardsSchema = z.object({
+  rewardIds: z.array(z.coerce.number().int().positive()).min(1).max(100),
+});
+
+// ==================== Leaderboard Schemas ====================
+
+export const claimPrizeSchema = z.object({
+  userAddress: ethereumAddress,
+  prizeType: z.enum(['monthly', 'quarterly', 'annual']),
+  period: z.string().optional(),
+});
+
 // ==================== Helper Functions ====================
 
 /**

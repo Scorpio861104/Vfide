@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, claimQuestSchema } from '@/lib/auth/validation';
 
 /**
  * POST /api/quests/claim
@@ -24,15 +25,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { questId, userAddress } = body;
-
-    if (!questId || !userAddress) {
+    const validation = await validateBody(request, claimQuestSchema);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Quest ID and user address required' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
       );
     }
+
+    const { questId, userAddress } = validation.data;
 
     // Verify user is claiming their own rewards
     if (!checkOwnership(authResult.user, userAddress)) {

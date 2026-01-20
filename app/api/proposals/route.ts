@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody, createProposalSchema } from '@/lib/auth/validation';
 
 interface Proposal {
   id: number;
@@ -128,15 +129,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { proposerAddress, title, description, votingEndsAt } = body;
-
-    if (!proposerAddress || !title || !description) {
+    const validation = await validateBody(request, createProposalSchema);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: proposerAddress, title, description' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
       );
     }
+
+    const { proposerAddress, title, description, endsAt } = validation.data;
 
     // Verify user is creating proposal for themselves
     if (!checkOwnership(authResult.user, proposerAddress)) {
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
         proposer.id,
         title,
         description,
-        votingEndsAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Default 7 days
+        endsAt?.toISOString() || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Default 7 days
       ]
     );
 

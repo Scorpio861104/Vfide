@@ -2,6 +2,7 @@
 // NO MOCKS - Real database queries
 
 import { Pool, QueryResult, QueryResultRow } from 'pg';
+import { logger } from './logger';
 
 // Validate DATABASE_URL is set in production
 if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
@@ -19,32 +20,40 @@ const pool = new Pool({
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
+  statement_timeout: 30000, // 30 second query timeout
+  query_timeout: 30000, // 30 second query timeout (node-postgres)
 });
 
 // Test connection on startup
 pool.on('connect', () => {
-  console.log('✅ Database connected');
+  logger.info('Database connected');
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Database connection error:', err);
+  logger.error('Database connection error', err);
   // Log the error for monitoring, but let the pool handle reconnection
   // The pool will automatically attempt to reconnect
   if (err.message.includes('Connection terminated') || err.message.includes('ECONNREFUSED')) {
-    console.error('⚠️ Database connection lost. Pool will attempt to reconnect automatically.');
+    logger.warn('Database connection lost. Pool will attempt to reconnect automatically.');
   }
 });
 
-export async function query<T extends QueryResultRow = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  text: string, 
+  params?: (string | number | boolean | null | Date | undefined)[]
+): Promise<QueryResult<T>> {
   const start = Date.now();
   try {
     const res = await pool.query<T>(text, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { text, duration, rows: res.rowCount });
+    // Only log slow queries (>100ms) to reduce noise
+    if (duration > 100) {
+      logger.info('Slow query executed', { text: text.substring(0, 100), duration, rows: res.rowCount });
+    }
     return res;
   } catch (error) {
     const duration = Date.now() - start;
-    console.error('Database query error:', { error, text, duration });
+    logger.error('Database query error', error, { text: text.substring(0, 100), duration });
     
     // Re-throw with more context for better error handling
     if (error instanceof Error) {
@@ -63,5 +72,5 @@ export { pool };
 // Helper function to safely close the pool
 export async function closePool() {
   await pool.end();
-  console.log('Database pool closed');
+  logger.info('Database pool closed');
 }

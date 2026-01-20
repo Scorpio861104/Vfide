@@ -118,3 +118,120 @@ export function safeJSONParseObject<T extends Record<string, any>>(
     ? result
     : fallback;
 }
+
+/**
+ * Safely parse an integer with validation
+ * @param value The string value to parse
+ * @param fallback The fallback value if parsing fails or produces NaN
+ * @param options Optional constraints (min, max)
+ * @returns Parsed integer or fallback
+ */
+export function safeParseInt(
+  value: string | null | undefined,
+  fallback: number,
+  options?: { min?: number; max?: number }
+): number {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = parseInt(value, 10);
+  
+  if (isNaN(parsed) || !isFinite(parsed)) {
+    return fallback;
+  }
+
+  // Apply constraints
+  let result = parsed;
+  if (options?.min !== undefined && result < options.min) {
+    result = options.min;
+  }
+  if (options?.max !== undefined && result > options.max) {
+    result = options.max;
+  }
+
+  return result;
+}
+
+/**
+ * Safely parse a float with validation
+ * @param value The string value to parse
+ * @param fallback The fallback value if parsing fails or produces NaN
+ * @param options Optional constraints (min, max, allowNegative)
+ * @returns Parsed float or fallback
+ */
+export function safeParseFloat(
+  value: string | null | undefined,
+  fallback: number,
+  options?: { min?: number; max?: number; allowNegative?: boolean }
+): number {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = parseFloat(value);
+  
+  if (isNaN(parsed) || !isFinite(parsed)) {
+    return fallback;
+  }
+
+  // Check negative constraint
+  if (options?.allowNegative === false && parsed < 0) {
+    return fallback;
+  }
+
+  // Apply constraints
+  let result = parsed;
+  if (options?.min !== undefined && result < options.min) {
+    result = options.min;
+  }
+  if (options?.max !== undefined && result > options.max) {
+    result = options.max;
+  }
+
+  return result;
+}
+
+/**
+ * Safely convert a number or string to number with validation
+ * @param value The value to convert
+ * @param fallback The fallback value if conversion fails
+ * @returns Converted number or fallback
+ */
+export function safeToNumber(
+  value: unknown,
+  fallback: number
+): number {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+
+  const num = typeof value === 'number' ? value : Number(value);
+  
+  if (isNaN(num) || !isFinite(num)) {
+    return fallback;
+  }
+
+  return num;
+}
+
+/**
+ * Parse pagination parameters safely
+ * @param limit Limit string from query params
+ * @param offset Offset string from query params
+ * @param defaults Default values and max constraints
+ * @returns Safe pagination values
+ */
+export function safeParsePagination(
+  limit: string | null | undefined,
+  offset: string | null | undefined,
+  defaults: { limit?: number; maxLimit?: number } = {}
+): { limit: number; offset: number } {
+  const defaultLimit = defaults.limit ?? 50;
+  const maxLimit = defaults.maxLimit ?? 1000;
+
+  return {
+    limit: safeParseInt(limit, defaultLimit, { min: 1, max: maxLimit }),
+    offset: safeParseInt(offset, 0, { min: 0 })
+  };
+}
