@@ -4,7 +4,7 @@
  */
 
 import jwt from 'jsonwebtoken';
-import { validateEnvironment } from './startup-validation';
+import { validateEnvironment } from '../startup-validation';
 
 // Validate environment on module load
 if (typeof window === 'undefined') {

@@ -94,7 +94,7 @@ export async function parseMigrationFile(
 
     try {
       downSql = await readFile(downPath, 'utf-8');
-    } catch (error) {
+    } catch (_error) {
       console.warn(`⚠️ No rollback file found for ${filename}`);
     }
 

@@ -175,7 +175,7 @@ jest.mock('framer-motion', () => ({
     ul: ({ children, ...props }) => <ul {...props}>{children}</ul>,
     li: ({ children, ...props }) => <li {...props}>{children}</li>,
     a: ({ children, ...props }) => <a {...props}>{children}</a>,
-    img: (props) => <img {...props} />,
+    img: (props) => <img alt="" {...props} />,
     svg: ({ children, ...props }) => <svg {...props}>{children}</svg>,
     path: (props) => <path {...props} />,
     section: ({ children, ...props }) => <section {...props}>{children}</section>,
@@ -254,14 +254,18 @@ jest.mock('socket.io-client', () => ({
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props) => {
-    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    // eslint-disable-next-line jsx-a11y/alt-text
     return <img {...props} />
   },
 }))
 
 // Mock lucide-react icons - return simple span elements
 jest.mock('lucide-react', () => {
-  const createIcon = (name) => (props) => <span data-testid={`icon-${name}`} {...props} />
+  const createIcon = (name) => {
+    const IconComponent = (props) => <span data-testid={`icon-${name}`} {...props} />;
+    IconComponent.displayName = `Icon(${name})`;
+    return IconComponent;
+  };
   return new Proxy({}, {
     get: (_, prop) => createIcon(prop)
   })

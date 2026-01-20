@@ -184,7 +184,7 @@ export function TokenApproval({
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Most secure - approve only what's needed
+              Most secure - approve only what&apos;s needed
             </p>
           </button>
 
