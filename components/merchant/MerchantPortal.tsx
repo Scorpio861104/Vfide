@@ -145,8 +145,8 @@ function generateMockApiKeys(): ApiKey[] {
   return [
     {
       id: 'key-001',
-      key: 'sk_live_51234567890abcdefghijklmnop',
-      maskedKey: 'sk_live_...nop',
+      key: 'sk_test_example1234567890abcdefghijklmnop',
+      maskedKey: 'sk_test_...nop',
       name: 'Production API Key',
       createdAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
       lastUsed: Date.now() - 1 * 60 * 60 * 1000,
@@ -738,7 +738,7 @@ function ApiKeysSection({
           Learn how to integrate VFIDE API into your application
         </p>
         <a
-          href="/docs/api"
+          href="/docs"
           className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
           View Documentation
