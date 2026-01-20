@@ -13,7 +13,19 @@ if (typeof window === 'undefined') {
 }
 
 // JWT Configuration
-const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'vfide-dev-secret-change-in-production';
+// No fallback secret - fail fast if not set
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error(
+      'JWT_SECRET or NEXTAUTH_SECRET environment variable must be set. ' +
+      'Please add it to your .env.local file for development or configure it in your deployment environment for production.'
+    );
+  }
+  return secret;
+}
+
+const JWT_SECRET = getJWTSecret();
 const JWT_EXPIRES_IN = '24h';
 const JWT_ISSUER = 'vfide';
 const JWT_AUDIENCE = 'vfide-app';
