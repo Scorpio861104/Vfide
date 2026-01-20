@@ -61,6 +61,13 @@ export async function GET(request: NextRequest) {
       userData = result.rows[0];
     }
 
+    if (!userData) {
+      return NextResponse.json(
+        { error: 'User data not found' },
+        { status: 404 }
+      );
+    }
+
     // Calculate progress to next level
     const xpForNextLevel = Math.pow(userData.level, 2) * 100;
     const xpProgress = userData.xp - (Math.pow(userData.level - 1, 2) * 100);
@@ -129,6 +136,12 @@ export async function POST(request: NextRequest) {
     }
 
     const userData = result.rows[0];
+    if (!userData) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
     const leveledUp = userData.leveled_up;
 
     return NextResponse.json({

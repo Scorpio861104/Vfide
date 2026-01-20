@@ -48,8 +48,8 @@ export function parseContentType(contentType: string | null): string | null {
   if (!contentType) return null;
   
   // Split by semicolon and take the first part (the media type)
-  const mainType = contentType.split(';')[0].trim().toLowerCase();
-  return mainType;
+  const mainType = contentType.split(';')[0]?.trim().toLowerCase();
+  return mainType || null;
 }
 
 /**
@@ -58,19 +58,19 @@ export function parseContentType(contentType: string | null): string | null {
 export function getAllowedContentTypes(pathname: string): ContentType[] {
   // Check if endpoint has specific requirements
   if (pathname in ENDPOINT_CONTENT_TYPE_REQUIREMENTS) {
-    return ENDPOINT_CONTENT_TYPE_REQUIREMENTS[pathname];
+    return ENDPOINT_CONTENT_TYPE_REQUIREMENTS[pathname] || [];
   }
   
   // Check for wildcard patterns
   for (const [pattern, types] of Object.entries(ENDPOINT_CONTENT_TYPE_REQUIREMENTS)) {
     if (pattern !== 'default' && pathname.includes(pattern)) {
-      return types;
+      return types || [];
     }
   }
   
   // Default to JSON only for API endpoints
   if (pathname.startsWith('/api/')) {
-    return ENDPOINT_CONTENT_TYPE_REQUIREMENTS.default;
+    return ENDPOINT_CONTENT_TYPE_REQUIREMENTS.default || [];
   }
   
   // Non-API endpoints have no restriction

@@ -37,6 +37,7 @@ interface Transaction {
   from?: string;
   timestamp: number;
   gasUsed?: string;
+  chainId: number;
 }
 
 const STORAGE_KEY = 'vfide-pending-txs';
@@ -92,7 +93,7 @@ export function usePendingTransactions() {
   };
 
   // Poll for pending transaction status
-  const pollTransaction = async (hash: string) => {
+  const pollTransaction = async (hash: string, txHash: string, txChainId: number) => {
     if (!window.ethereum) return;
     
     setIsPolling(true);
@@ -111,7 +112,7 @@ export function usePendingTransactions() {
         });
       }
     } catch (err) {
-      logger.error('Failed to poll transaction', err, { hash: tx.hash, chainId: tx.chainId });
+      logger.error('Failed to poll transaction', err, { hash: txHash, chainId: txChainId });
     } finally {
       setIsPolling(false);
     }
@@ -123,7 +124,7 @@ export function usePendingTransactions() {
     if (pending.length === 0) return;
 
     const interval = setInterval(() => {
-      pending.forEach(tx => pollTransaction(tx.hash));
+      pending.forEach(tx => pollTransaction(tx.hash, tx.hash, tx.chainId));
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(interval);

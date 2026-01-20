@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { parseUnits, formatUnits, type Address } from 'viem';
 import { useContractWrite, useWaitForTransactionReceipt } from 'wagmi';
 
@@ -54,12 +54,15 @@ export function TokenApproval({
   // Wait for transaction
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({
     hash,
-    onSuccess: (receipt) => {
-      if (receipt.status === 'success') {
-        onApprovalComplete?.(receipt.transactionHash);
-      }
-    },
   });
+
+  // Handle receipt separately
+  useEffect(() => {
+    if (hash && isConfirming === false) {
+      // Transaction completed
+      onApprovalComplete?.(hash);
+    }
+  }, [hash, isConfirming, onApprovalComplete]);
 
   const handleApprove = async () => {
     try {

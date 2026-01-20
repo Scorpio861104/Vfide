@@ -40,7 +40,7 @@ pool.on('error', (err) => {
 
 export async function query<T extends QueryResultRow = QueryResultRow>(
   text: string, 
-  params?: (string | number | boolean | null | Date | undefined)[]
+  params?: (string | number | boolean | null | Date | undefined | any[])[]
 ): Promise<QueryResult<T>> {
   const start = Date.now();
   try {

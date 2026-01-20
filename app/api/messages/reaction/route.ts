@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
       users: Array<{ address: string; username: string; avatar: string }>;
     }
 
-    const reactions = reactionsResult.rows.reduce((acc: Record<string, unknown>, row: ReactionRow) => {
+    const reactions = (reactionsResult.rows as ReactionRow[]).reduce((acc: Record<string, unknown>, row: ReactionRow) => {
       const key = row.reaction_type === 'emoji' ? row.emoji! : row.image_url!;
       acc[key] = {
         type: row.reaction_type,

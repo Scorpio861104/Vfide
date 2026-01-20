@@ -16,9 +16,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const resolvedParams = await params;
-    const userId = resolvedParams?.userId;
+    const userIdParam = resolvedParams?.userId;
 
-    if (!userId || typeof userId !== 'string') {
+    if (!userIdParam || typeof userIdParam !== 'string') {
       return NextResponse.json(
         { error: 'Invalid userId parameter' },
         { status: 400 }
@@ -31,7 +31,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       [authResult.user.address.toLowerCase()]
     );
 
-    if (userResult.rows.length === 0 || userResult.rows[0].id.toString() !== userId) {
+    const userId = userResult.rows[0]?.id;
+    if (userResult.rows.length === 0 || !userId || userId.toString() !== userIdParam) {
       return NextResponse.json(
         { error: 'You can only view your own transactions' },
         { status: 403 }

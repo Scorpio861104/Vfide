@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
        VALUES ($1, $2, $3, 'active', '0', '0', $4)
        RETURNING *`,
       [
-        proposer.id,
+        proposer?.id,
         title,
         description,
         endsAt?.toISOString() || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Default 7 days

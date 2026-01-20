@@ -172,7 +172,7 @@ export async function validateRequestBody<T>(
     if (!result.success) {
       return {
         success: false,
-        error: result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
+        error: result.error.issues.map((e) => `${String(e.path.join('.'))}: ${e.message}`).join(', ')
       };
     }
     
@@ -200,7 +200,7 @@ export function validateQueryParams<T>(
     if (!result.success) {
       return {
         success: false,
-        error: result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
+        error: result.error.issues.map((e) => `${String(e.path.join('.'))}: ${e.message}`).join(', ')
       };
     }
     

@@ -116,7 +116,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
 
     // Check if badge exists
     const badgeResult = await query(
@@ -154,15 +160,17 @@ export async function POST(request: NextRequest) {
 
     // Create notification
     const badge = badgeResult.rows[0];
-    await query(
-      `INSERT INTO notifications (user_id, type, title, message, data)
-       VALUES ($1, 'badge_earned', 'New Badge Earned!', $2, $3)`,
-      [
-        userId,
-        `You earned the "${badge.name}" badge!`,
-        JSON.stringify({ badgeId, badgeName: badge.name })
-      ]
-    );
+    if (badge) {
+      await query(
+        `INSERT INTO notifications (user_id, type, title, message, data)
+         VALUES ($1, 'badge_earned', 'New Badge Earned!', $2, $3)`,
+        [
+          userId,
+          `You earned the "${badge.name}" badge!`,
+          JSON.stringify({ badgeId, badgeName: badge.name })
+        ]
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -217,7 +225,13 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
 
     // Remove badge
     const result = await query(

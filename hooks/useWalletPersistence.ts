@@ -216,13 +216,16 @@ export function useWalletPersistence() {
         setReconnectError('Reconnection timed out');
       }, RECONNECTION_TIMEOUT_MS);
       
-      reconnect({ connectors: [lastConnector] })
+      // Cast reconnect to async function since wagmi types don't reflect the actual return type
+      const reconnectPromise = reconnect({ connectors: [lastConnector] }) as unknown as Promise<void>;
+      
+      void reconnectPromise
         .then(() => {
           clearTimeout(timeoutId);
           setIsReconnecting(false);
           setReconnectError(null);
         })
-        .catch((error) => {
+        .catch((error: Error) => {
           clearTimeout(timeoutId);
           setIsReconnecting(false);
           setReconnectError(error.message || 'Failed to reconnect');

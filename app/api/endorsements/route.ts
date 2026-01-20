@@ -300,7 +300,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (endorsementCheck.rows[0].wallet_address.toLowerCase() !== authResult.user.address.toLowerCase()) {
+    const endorsement = endorsementCheck.rows[0];
+    if (!endorsement || endorsement.wallet_address.toLowerCase() !== authResult.user.address.toLowerCase()) {
       return NextResponse.json(
         { error: 'You can only delete your own endorsements' },
         { status: 403 }
