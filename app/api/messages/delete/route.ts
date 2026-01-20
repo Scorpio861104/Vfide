@@ -52,6 +52,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     const message = messageResult.rows[0];
+    if (!message) {
+      return NextResponse.json({ error: 'Message not found' }, { status: 404 });
+    }
 
     if (message.sender.toLowerCase() !== userAddress.toLowerCase()) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });

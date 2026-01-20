@@ -163,7 +163,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
 
     // Insert notification
     const result = await query<Notification>(
@@ -228,11 +234,19 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
+      const userId = userResult.rows[0]?.id;
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
       const result = await query(
         `UPDATE notifications 
          SET is_read = true, updated_at = NOW()
          WHERE user_id = $1 AND is_read = false`,
-        [userResult.rows[0].id]
+        [userId]
       );
 
       return NextResponse.json({
@@ -253,12 +267,20 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
+      const userId = userResult.rows[0]?.id;
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
       // Mark specific notifications as read (only if they belong to the user)
       const result = await query(
         `UPDATE notifications 
          SET is_read = true, updated_at = NOW()
          WHERE id = ANY($1) AND user_id = $2`,
-        [notificationIds, userResult.rows[0].id]
+        [notificationIds, userId]
       );
 
       return NextResponse.json({
@@ -322,9 +344,17 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
+      const userId = userResult.rows[0]?.id;
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
       const result = await query(
         'DELETE FROM notifications WHERE user_id = $1',
-        [userResult.rows[0].id]
+        [userId]
       );
 
       return NextResponse.json({
@@ -345,10 +375,18 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
+      const userId = userResult.rows[0]?.id;
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
       // Delete specific notifications (only if they belong to the user)
       const result = await query(
         'DELETE FROM notifications WHERE id = ANY($1) AND user_id = $2',
-        [notificationIds, userResult.rows[0].id]
+        [notificationIds, userId]
       );
 
       return NextResponse.json({

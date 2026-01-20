@@ -150,13 +150,13 @@ export async function readBodyWithSizeLimit<T = unknown>(
     // Parse JSON
     try {
       return JSON.parse(text) as T;
-    } catch (parseError) {
+    } catch (_parseError) {
       return {
         error: 'Invalid JSON in request body',
         status: 400,
       };
     }
-  } catch (error) {
+  } catch (_error) {
     return {
       error: 'Failed to read request body',
       status: 500,

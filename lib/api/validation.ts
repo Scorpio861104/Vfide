@@ -172,7 +172,7 @@ export async function validateRequestBody<T>(
     if (!result.success) {
       return {
         success: false,
-        error: result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
+        error: result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
       };
     }
     
@@ -180,7 +180,7 @@ export async function validateRequestBody<T>(
       success: true,
       data: result.data
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
       error: 'Invalid JSON body'
@@ -200,7 +200,7 @@ export function validateQueryParams<T>(
     if (!result.success) {
       return {
         success: false,
-        error: result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
+        error: result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
       };
     }
     
@@ -208,7 +208,7 @@ export function validateQueryParams<T>(
       success: true,
       data: result.data
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
       error: 'Invalid query parameters'

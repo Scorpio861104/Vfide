@@ -180,6 +180,10 @@ const arg = process.argv[3];
       break;
 
     case 'create':
+      if (!arg) {
+        console.error('Error: Migration name is required');
+        process.exit(1);
+      }
       await createMigration(arg);
       break;
 

@@ -148,7 +148,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = userResult.rows[0].id;
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
 
     // Insert activity
     const result = await query<Activity>(

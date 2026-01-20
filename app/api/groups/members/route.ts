@@ -85,7 +85,8 @@ export async function POST(request: NextRequest) {
         [groupId, actorAddress.toLowerCase()]
       );
       
-      if (actorResult.rows.length === 0 || !['admin', 'moderator'].includes(actorResult.rows[0].role)) {
+      const actor = actorResult.rows[0];
+      if (actorResult.rows.length === 0 || !actor || !['admin', 'moderator'].includes(actor.role)) {
         return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
       }
     }
@@ -95,9 +96,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
+    const userIdVal = userResult.rows[0]?.id;
+    if (!userIdVal) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
     const result = await query<GroupMember>(
       'INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, $3) RETURNING *',
-      [groupId, userResult.rows[0].id, role]
+      [groupId, userIdVal, role]
     );
     
     await query('UPDATE groups SET member_count = member_count + 1 WHERE id = $1', [groupId]);
@@ -133,7 +139,8 @@ export async function PATCH(request: NextRequest) {
       [groupId, actorAddress.toLowerCase()]
     );
 
-    if (actorResult.rows.length === 0 || !['admin', 'moderator'].includes(actorResult.rows[0].role)) {
+    const actor = actorResult.rows[0];
+    if (actorResult.rows.length === 0 || !actor || !['admin', 'moderator'].includes(actor.role)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 

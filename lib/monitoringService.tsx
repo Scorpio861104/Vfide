@@ -218,7 +218,7 @@ class MonitoringService {
           width: window.innerWidth,
           height: window.innerHeight,
         },
-        connection: (navigator as any).connection?.effectiveType || 'unknown',
+        connection: navigator.connection?.effectiveType || 'unknown',
       },
     };
 

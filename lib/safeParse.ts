@@ -83,7 +83,7 @@ export function safeLocalStorageParse<T>(
   try {
     const item = localStorage.getItem(key);
     return safeJSONParse(item, fallback, false);
-  } catch (error) {
+  } catch (_error) {
     // localStorage access might fail in some browsers
     return fallback;
   }

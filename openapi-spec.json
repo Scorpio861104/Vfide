@@ -21,6 +21,7 @@
   ],
   "tags": [
     { "name": "Authentication", "description": "User authentication and authorization" },
+    { "name": "Security", "description": "Security tokens and CSRF protection" },
     { "name": "Users", "description": "User profile management" },
     { "name": "Crypto", "description": "Blockchain operations and transactions" },
     { "name": "Messages", "description": "Encrypted messaging" },
@@ -31,6 +32,47 @@
     { "name": "System", "description": "Health checks and system endpoints" }
   ],
   "paths": {
+    "/csrf": {
+      "get": {
+        "summary": "Get CSRF token",
+        "description": "Generates and returns a CSRF token for protecting state-changing operations. The token is also set as a secure, httpOnly cookie.",
+        "tags": ["Security"],
+        "responses": {
+          "200": {
+            "description": "CSRF token generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "CSRF token to include in x-csrf-token header for POST/PUT/PATCH/DELETE requests"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "CSRF token generated successfully"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "CSRF token cookie (httpOnly, secure in production)",
+                "schema": {
+                  "type": "string",
+                  "example": "csrf_token=<token>; HttpOnly; Secure; SameSite=Strict; Max-Age=86400; Path=/"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to generate CSRF token"
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "summary": "User login",
@@ -61,8 +103,9 @@
     "/messages": {
       "post": {
         "summary": "Send message",
+        "description": "Send an encrypted message to another user. Requires JWT authentication and CSRF token.",
         "tags": ["Messages"],
-        "security": [{"BearerAuth": []}],
+        "security": [{"BearerAuth": []}, {"CSRFToken": []}],
         "requestBody": {
           "required": true,
           "content": {
@@ -82,6 +125,7 @@
           "201": {"description": "Message sent"},
           "400": {"$ref": "#/components/responses/BadRequest"},
           "401": {"$ref": "#/components/responses/Unauthorized"},
+          "403": {"$ref": "#/components/responses/CSRFTokenInvalid"},
           "413": {"$ref": "#/components/responses/PayloadTooLarge"},
           "429": {"$ref": "#/components/responses/TooManyRequests"}
         }
@@ -95,6 +139,12 @@
         "scheme": "bearer",
         "bearerFormat": "JWT",
         "description": "JWT token obtained from /api/auth/login"
+      },
+      "CSRFToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-csrf-token",
+        "description": "CSRF token obtained from /api/csrf endpoint. Required for all state-changing operations (POST, PUT, PATCH, DELETE)."
       }
     },
     "responses": {
@@ -114,6 +164,21 @@
       },
       "Unauthorized": {
         "description": "Missing or invalid authentication token"
+      },
+      "CSRFTokenInvalid": {
+        "description": "CSRF token validation failed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {"type": "string", "example": "CSRF token validation failed"},
+                "message": {"type": "string", "example": "Invalid or missing CSRF token. Please refresh the page and try again."},
+                "code": {"type": "string", "example": "CSRF_TOKEN_INVALID"}
+              }
+            }
+          }
+        }
       },
       "PayloadTooLarge": {
         "description": "Request body exceeds size limit"

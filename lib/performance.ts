@@ -179,7 +179,7 @@ export function getNavigationMetrics() {
 export function getMemoryUsage() {
   if (typeof window === 'undefined') return null;
   
-  const memory = (performance as any).memory;
+  const memory = performance.memory;
   if (!memory) return null;
 
   return {

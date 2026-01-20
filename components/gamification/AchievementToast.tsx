@@ -421,8 +421,8 @@ export function AchievementToastContainer() {
 
   // Expose globally
   useEffect(() => {
-    (window as any).showAchievement = addNotification;
-    return () => { delete (window as any).showAchievement; };
+    window.showAchievement = addNotification;
+    return () => { delete window.showAchievement; };
   }, [addNotification]);
 
   return (
@@ -464,7 +464,7 @@ function playAchievementSound(type: AchievementNotification['type'], rarity: 'co
   if (typeof window === 'undefined') return;
   
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     
     const frequencies: Record<string, number[]> = {
       badge: [523.25, 659.25, 783.99],
@@ -517,8 +517,8 @@ export function triggerAchievement(
   icon?: string,
   rarity?: AchievementNotification['rarity']
 ) {
-  if (typeof window !== 'undefined' && (window as any).showAchievement) {
-    (window as any).showAchievement({ type, title, description, reward, icon, rarity });
+  if (typeof window !== 'undefined' && window.showAchievement) {
+    window.showAchievement({ type, title, description, reward, icon, rarity });
   }
 }
 

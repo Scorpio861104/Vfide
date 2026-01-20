@@ -23,9 +23,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userIdParam = searchParams.get('userId');
 
-    if (!userId) {
+    if (!userIdParam) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
       [authResult.user.address.toLowerCase()]
     );
 
-    if (userResult.rows.length === 0 || userResult.rows[0].id.toString() !== userId) {
+    const userId = userResult.rows[0]?.id;
+    if (userResult.rows.length === 0 || !userId || userId.toString() !== userIdParam) {
       return NextResponse.json(
         { error: 'You can only view your own payment requests' },
         { status: 403 }
@@ -95,7 +96,8 @@ export async function POST(request: NextRequest) {
       [authResult.user.address.toLowerCase()]
     );
 
-    if (userResult.rows.length === 0 || userResult.rows[0].id.toString() !== fromUserId.toString()) {
+    const userId = userResult.rows[0]?.id;
+    if (userResult.rows.length === 0 || !userId || userId.toString() !== fromUserId.toString()) {
       return NextResponse.json(
         { error: 'You can only create payment requests from your own account' },
         { status: 403 }

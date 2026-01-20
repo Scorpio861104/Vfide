@@ -650,7 +650,7 @@ export default function WalletManager() {
     const newWallet: Wallet = {
       id: `wallet-${Date.now()}`,
       address: `0x${Math.random().toString(16).substr(2, 40)}`,
-      type: type as any,
+      type: type as Wallet['type'],
       nickname: `${type} Wallet`,
       balance: '0',
       balanceUSD: 0,

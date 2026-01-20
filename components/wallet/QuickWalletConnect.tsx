@@ -44,7 +44,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const { data: balance } = useBalance({ address });
   const { pendingCount } = usePendingTransactions();
   const { playConnect, playClick } = useTransactionSounds();
-  const { isReconnecting: isAutoReconnecting, reconnectError, minutesUntilDisconnect } = useWalletPersistence();
+  const { isReconnecting: isAutoReconnecting, minutesUntilDisconnect } = useWalletPersistence();
   
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);

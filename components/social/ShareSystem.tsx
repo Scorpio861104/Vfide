@@ -456,7 +456,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                                 key={platform}
                                 onClick={() =>
                                   handleShareToSocial(
-                                    platform as any,
+                                    platform as ShareMetrics['platform'],
                                     `Join me on VFIDE! Use code ${referral.code} to get started: ${referral.link}`,
                                   )
                                 }

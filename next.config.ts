@@ -30,15 +30,6 @@ const nextConfig: NextConfig = {
   // Optimize for production builds
   reactStrictMode: true,
   
-  // API route configuration
-  // Set default body size limit for API routes
-  // Individual routes can override this with route segment config
-  serverRuntimeConfig: {
-    // Maximum API body size - 1MB default
-    // Can be overridden per route with: export const config = { api: { bodyParser: { sizeLimit: '10mb' } } }
-    maxApiBodySize: '1mb',
-  },
-
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: [

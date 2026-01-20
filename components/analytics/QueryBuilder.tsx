@@ -252,7 +252,7 @@ export function QueryBuilder({
 
                   <select
                     value={filter.operator}
-                    onChange={(e) => updateFilter(index, { operator: e.target.value as any })}
+                    onChange={(e) => updateFilter(index, { operator: e.target.value as FilterCondition['operator'] })}
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   >
                     <option value="equals">Equals</option>
@@ -349,7 +349,7 @@ export function QueryBuilder({
                 >
                   <select
                     value={agg.function}
-                    onChange={(e) => updateAggregation(index, { function: e.target.value as any })}
+                    onChange={(e) => updateAggregation(index, { function: e.target.value as AggregationConfig['function'] })}
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   >
                     <option value="sum">SUM</option>

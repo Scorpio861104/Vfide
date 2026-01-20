@@ -193,7 +193,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             <motion.button
               key={tab.key}
               onClick={() => {
-                setFilter(tab.key as any);
+                setFilter(tab.key as 'all' | 'favorites' | 'online');
                 playNotification();
               }}
               whileHover={{ scale: 1.02 }}

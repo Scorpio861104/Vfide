@@ -10,11 +10,6 @@ const REQUIRED_ENV_VARS = {
   DATABASE_URL: process.env.DATABASE_URL,
 } as const;
 
-const PRODUCTION_ONLY_CHECKS = {
-  // In production, JWT_SECRET must not be the default value
-  JWT_SECRET_NOT_DEFAULT: process.env.NODE_ENV === 'production',
-} as const;
-
 /**
  * Validate environment variables on startup
  * Throws error if critical configuration is missing

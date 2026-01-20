@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, editMessageSchema } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
 
 interface MessageEditRequest {
