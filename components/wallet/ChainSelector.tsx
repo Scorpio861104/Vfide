@@ -6,6 +6,7 @@ import { useChainId, useSwitchChain } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Check, Loader2, Zap } from 'lucide-react'
 import { useTransactionSounds } from '@/hooks/useTransactionSounds'
+import { logger } from '@/lib/logger'
 
 interface ChainSelectorProps {
   onChainSelect?: (chain: SupportedChain) => void
@@ -46,9 +47,10 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
         await switchChain({ chainId: network.id as 84532 | 8453 | 300 | 80002 | 137 | 324 })
         playSuccess()
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to switch chain:', error)
-        }
+        logger.error('Failed to switch chain', error, { 
+          targetChain: chain, 
+          targetChainId: network.id 
+        })
       }
     }
     

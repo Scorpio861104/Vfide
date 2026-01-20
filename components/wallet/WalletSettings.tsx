@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useWalletPersistence } from '@/hooks/useWalletPersistence';
+import { logger } from '@/lib/logger';
 
 // Auto-disconnect time options (in minutes)
 const AUTO_DISCONNECT_OPTIONS = [
@@ -100,7 +101,7 @@ export function WalletSettings() {
         linkWallet(address);
       }
     } catch (error) {
-      console.error('Biometric enrollment failed:', error);
+      logger.error('Biometric enrollment failed', error, { address });
     } finally {
       setIsEnrolling(false);
     }
