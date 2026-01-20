@@ -193,11 +193,8 @@ export class WebSocketManager {
       });
     }
     
-    // Safe access: we just ensured the map has this key
-    const handlers = this.messageHandlers.get(event);
-    if (handlers) {
-      handlers.add(handler);
-    }
+    // Safe: We just ensured this event exists in the map above
+    this.messageHandlers.get(event)!.add(handler);
 
     // Return unsubscribe function with proper cleanup
     return () => {

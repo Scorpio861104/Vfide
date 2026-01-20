@@ -42,7 +42,8 @@ function validateContractAddress(address: string | undefined, name: string): `0x
   if (!address) {
     if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
       // Convert camelCase name to SCREAMING_SNAKE_CASE for env var name
-      const envVarName = `NEXT_PUBLIC_${name.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
+      // Examples: vfideToken -> VFIDE_TOKEN, StablecoinRegistry -> STABLECOIN_REGISTRY
+      const envVarName = `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
       console.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set ${envVarName} in environment.`)
     }
     return ZERO_ADDRESS

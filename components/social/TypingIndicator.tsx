@@ -161,9 +161,12 @@ export function PresenceIndicator({
     const unsubscribe = subscribe('presence', (message) => {
       if (message.from === userAddress) {
         // Type guard for message.data
-        const data = message.data as { online?: boolean };
-        if (data && typeof data === 'object' && 'online' in data && typeof data.online === 'boolean') {
-          setIsOnline(data.online);
+        const data = message.data;
+        if (data && typeof data === 'object' && 'online' in data) {
+          const typedData = data as { online?: boolean };
+          if (typeof typedData.online === 'boolean') {
+            setIsOnline(typedData.online);
+          }
         }
       }
     });
