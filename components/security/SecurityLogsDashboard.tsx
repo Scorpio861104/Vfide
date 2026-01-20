@@ -83,7 +83,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
           </div>
           <select
             onChange={(e) => {
-              logs.filterBySeverity(e.target.value as any || null);
+              logs.filterBySeverity((e.target.value || null) as 'info' | 'warning' | 'critical' | null);
               playNotification();
             }}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"

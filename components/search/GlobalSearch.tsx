@@ -195,7 +195,7 @@ export function GlobalSearch() {
       return;
     }
 
-    const SpeechRecognitionAPI = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const SpeechRecognitionAPI = window.webkitSpeechRecognition || window.SpeechRecognition;
     if (!SpeechRecognitionAPI) {
       setIsListening(false);
       return;

@@ -86,8 +86,8 @@ export default function DailyRewardsWidget() {
       setTimeout(() => setShowConfetti(false), 3000);
       
       // Trigger achievement notification
-      if ((window as any).showAchievement) {
-        (window as any).showAchievement({
+      if (window.showAchievement) {
+        window.showAchievement({
           type: 'reward',
           title: 'Daily Reward Claimed!',
           description: `Day ${streak} streak bonus applied`,
