@@ -33,10 +33,10 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="relative bg-[#08080A] border-t border-[#1F1F2A] overflow-hidden">
+    <footer className="relative bg-zinc-950 border-t border-zinc-800 overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#00F0FF]/3 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-400/3 rounded-full blur-[150px]" />
       </div>
       
       <div className="relative z-10 container mx-auto px-4 py-16">
@@ -54,11 +54,11 @@ export function Footer() {
                   </linearGradient>
                 </defs>
               </svg>
-              <span className="text-xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC] group-hover:text-[#00F0FF] transition-colors">
+              <span className="text-xl font-[family-name:var(--font-display)] font-bold text-zinc-50 group-hover:text-cyan-400 transition-colors">
                 VFIDE
               </span>
             </Link>
-            <p className="text-[#6B6B78] text-sm leading-relaxed max-w-xs mb-6">
+            <p className="text-zinc-500 text-sm leading-relaxed max-w-xs mb-6">
               The decentralized payment protocol where trust is earned, not bought. Zero processing fees, instant settlement.
             </p>
             <div className="flex items-center gap-3">
@@ -68,7 +68,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-xl bg-[#16161D] border border-[#1F1F2A] flex items-center justify-center text-[#6B6B78] hover:text-[#00F0FF] hover:border-[#00F0FF]/30 transition-all"
+                  className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
                   aria-label={social.label}
                 >
                   <social.icon className="w-4 h-4" />
@@ -79,13 +79,13 @@ export function Footer() {
 
           {/* Product */}
           <div>
-            <h4 className="text-[#F8F8FC] font-semibold mb-4 text-sm">Product</h4>
+            <h4 className="text-zinc-50 font-semibold mb-4 text-sm">Product</h4>
             <ul className="space-y-3">
               {footerLinks.product.map((link) => (
                 <li key={link.href}>
                   <Link 
                     href={link.href} 
-                    className="text-[#6B6B78] hover:text-[#00F0FF] text-sm transition-colors"
+                    className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -96,21 +96,21 @@ export function Footer() {
 
           {/* Community */}
           <div>
-            <h4 className="text-[#F8F8FC] font-semibold mb-4 text-sm">Community</h4>
+            <h4 className="text-zinc-50 font-semibold mb-4 text-sm">Community</h4>
             <ul className="space-y-3">
               {footerLinks.community.map((link) => (
                 <li key={link.label}>
                   {link.soon ? (
-                    <span className="text-[#4A4A55] text-sm flex items-center gap-1">
+                    <span className="text-zinc-600 text-sm flex items-center gap-1">
                       {link.label}
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1F1F2A] text-[#6B6B78]">Soon</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-500">Soon</span>
                     </span>
                   ) : link.external ? (
                     <a 
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#6B6B78] hover:text-[#00F0FF] text-sm transition-colors inline-flex items-center gap-1"
+                      className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors inline-flex items-center gap-1"
                     >
                       {link.label}
                       <ExternalLink className="w-3 h-3" />
@@ -118,7 +118,7 @@ export function Footer() {
                   ) : (
                     <Link 
                       href={link.href}
-                      className="text-[#6B6B78] hover:text-[#00F0FF] text-sm transition-colors"
+                      className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -130,13 +130,13 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="text-[#F8F8FC] font-semibold mb-4 text-sm">Resources</h4>
+            <h4 className="text-zinc-50 font-semibold mb-4 text-sm">Resources</h4>
             <ul className="space-y-3">
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
                   <Link 
                     href={link.href}
-                    className="text-[#6B6B78] hover:text-[#00F0FF] text-sm transition-colors"
+                    className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -147,13 +147,13 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-[#F8F8FC] font-semibold mb-4 text-sm">Legal</h4>
+            <h4 className="text-zinc-50 font-semibold mb-4 text-sm">Legal</h4>
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
                 <li key={link.href}>
                   <Link 
                     href={link.href}
-                    className="text-[#6B6B78] hover:text-[#00F0FF] text-sm transition-colors"
+                    className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -164,19 +164,19 @@ export function Footer() {
         </div>
 
         {/* Legal Disclaimer */}
-        <div className="pt-8 border-t border-[#1F1F2A]">
+        <div className="pt-8 border-t border-zinc-800">
           <div className="max-w-3xl mx-auto text-center mb-6">
-            <p className="text-[#4A4A55] text-xs leading-relaxed">
-              <strong className="text-[#6B6B78]">DISCLAIMER:</strong> VFIDE tokens are utility tokens for governance and payments, 
+            <p className="text-zinc-600 text-xs leading-relaxed">
+              <strong className="text-zinc-500">DISCLAIMER:</strong> VFIDE tokens are utility tokens for governance and payments, 
               NOT investment securities. No guarantee of profits or returns. Cryptocurrency involves risk of total loss. 
               Not financial, legal, or tax advice. See{" "}
-              <Link href="/legal" className="text-[#00F0FF] hover:underline">Legal & Terms</Link> for full details.
+              <Link href="/legal" className="text-cyan-400 hover:underline">Legal & Terms</Link> for full details.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#4A4A55]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
             <p>© 2025 VFIDE Protocol. All rights reserved.</p>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-[#22C55E] rounded-full animate-pulse" />
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
               <span>Base Sepolia Testnet</span>
             </div>
           </div>

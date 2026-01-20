@@ -67,7 +67,7 @@ function ProgressRing({ progress, size = 60, strokeWidth = 4, color = '#FFD700' 
           r={radius}
           strokeWidth={strokeWidth}
           fill="transparent"
-          className="stroke-[#2A2A2F]"
+          className="stroke-zinc-800"
         />
         <motion.circle
           cx={size / 2}
@@ -119,17 +119,17 @@ function StreakCalendar({ history, onMonthChange }: { history: boolean[]; onMont
   };
 
   return (
-    <div className="bg-[#0A0A0B] rounded-xl p-4">
+    <div className="bg-zinc-950 rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
-        <button onClick={() => navigate(-1)} className="p-1 hover:bg-[#2A2A3F] rounded-lg text-[#A0A0A5] hover:text-white">
+        <button onClick={() => navigate(-1)} className="p-1 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <span className="text-white font-semibold text-sm">{monthName}</span>
-        <button onClick={() => navigate(1)} disabled={monthOffset >= 0} className="p-1 hover:bg-[#2A2A3F] rounded-lg text-[#A0A0A5] hover:text-white disabled:opacity-30">
+        <button onClick={() => navigate(1)} disabled={monthOffset >= 0} className="p-1 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30">
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-[#A0A0A5] mb-2">
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-zinc-400 mb-2">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i}>{d}</span>)}
       </div>
       <div className="grid grid-cols-7 gap-1">
@@ -142,7 +142,7 @@ function StreakCalendar({ history, onMonthChange }: { history: boolean[]; onMont
             className={`aspect-square rounded-md flex items-center justify-center text-[10px] ${
               active === null ? '' :
               active ? 'bg-linear-to-br from-orange-500 to-red-500 text-white' : 
-              'bg-[#2A2A2F] text-[#606065]'
+              'bg-zinc-800 text-zinc-500'
             }`}
           >
             {active === true && <Flame className="w-3 h-3" />}
@@ -246,11 +246,11 @@ export default function DailyQuestsPanel() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-8 text-center"
+        className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center"
       >
-        <Target className="w-16 h-16 text-[#FFD700] mx-auto mb-4 opacity-50" />
+        <Target className="w-16 h-16 text-amber-400 mx-auto mb-4 opacity-50" />
         <h3 className="text-xl font-bold text-white mb-2">Connect Wallet</h3>
-        <p className="text-[#A0A0A5]">Connect your wallet to see daily quests</p>
+        <p className="text-zinc-400">Connect your wallet to see daily quests</p>
       </motion.div>
     );
   }
@@ -303,7 +303,7 @@ export default function DailyQuestsPanel() {
             </motion.div>
             <div>
               <h3 className="text-2xl font-bold text-white">{streak.current} Day Streak! 🔥</h3>
-              <p className="text-[#A0A0A5] text-sm flex items-center gap-2">
+              <p className="text-zinc-400 text-sm flex items-center gap-2">
                 <Zap className="w-4 h-4 text-yellow-400" />
                 {streak.multiplier}x XP multiplier active
               </p>
@@ -312,14 +312,14 @@ export default function DailyQuestsPanel() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setShowCalendar(!showCalendar)}
-              className={`p-2 rounded-lg transition-colors ${showCalendar ? 'bg-orange-500/30 text-orange-400' : 'hover:bg-[#2A2A3F] text-[#A0A0A5]'}`}
+              className={`p-2 rounded-lg transition-colors ${showCalendar ? 'bg-orange-500/30 text-orange-400' : 'hover:bg-zinc-800 text-zinc-400'}`}
               title="View streak calendar"
             >
               <Calendar className="w-5 h-5" />
             </button>
             <div className="text-right">
-              <div className="text-sm text-[#A0A0A5] mb-1">Best Streak</div>
-              <div className="text-2xl font-bold text-[#FFD700] flex items-center gap-1">
+              <div className="text-sm text-zinc-400 mb-1">Best Streak</div>
+              <div className="text-2xl font-bold text-amber-400 flex items-center gap-1">
                 <Trophy className="w-5 h-5" />
                 {streak.longest} days
               </div>
@@ -344,10 +344,10 @@ export default function DailyQuestsPanel() {
         {/* Streak Progress */}
         <div className="space-y-2 mt-4 relative z-10">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-[#A0A0A5]">Next Milestone: {streak.nextMilestone} days</span>
+            <span className="text-zinc-400">Next Milestone: {streak.nextMilestone} days</span>
             <span className="text-white font-bold">{streak.current}/{streak.nextMilestone}</span>
           </div>
-          <div className="w-full bg-[#2A2A2F] rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
             <motion.div 
               className="bg-linear-to-r from-orange-500 to-red-500 h-3 rounded-full"
               initial={{ width: 0 }}
@@ -355,16 +355,16 @@ export default function DailyQuestsPanel() {
               transition={{ duration: 1, ease: 'easeOut' }}
             />
           </div>
-          <div className="flex justify-between text-xs text-[#A0A0A5]">
+          <div className="flex justify-between text-xs text-zinc-400">
             <span className="text-green-400">✓ 7 days: 1.15x</span>
             <span>⏳ 30 days: 1.5x</span>
-            <span className="text-[#606065]">🔒 90 days: 2x</span>
+            <span className="text-zinc-500">🔒 90 days: 2x</span>
           </div>
         </div>
       </motion.div>
 
       {/* Quest Tabs - Enhanced */}
-      <div className="flex gap-2 border-b border-[#2A2A2F]">
+      <div className="flex gap-2 border-b border-zinc-800">
         {(['daily', 'weekly', 'monthly'] as const).map((tab) => {
           const count = quests.filter(q => q.type === tab && q.completed && !q.claimed).length;
           return (
@@ -375,8 +375,8 @@ export default function DailyQuestsPanel() {
               whileTap={{ scale: 0.98 }}
               className={`relative px-6 py-3 font-semibold capitalize transition-all ${
                 activeTab === tab
-                  ? 'text-[#FFD700]'
-                  : 'text-[#A0A0A5] hover:text-white'
+                  ? 'text-amber-400'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               {tab}
@@ -384,7 +384,7 @@ export default function DailyQuestsPanel() {
                 <motion.span 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-linear-to-r from-[#FFD700] to-[#FFA500] rounded-full text-[10px] font-bold text-black flex items-center justify-center"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-linear-to-r from-amber-400 to-orange-500 rounded-full text-[10px] font-bold text-black flex items-center justify-center"
                 >
                   {count}
                 </motion.span>
@@ -392,7 +392,7 @@ export default function DailyQuestsPanel() {
               {activeTab === tab && (
                 <motion.div
                   layoutId="questTabIndicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-[#FFD700] to-[#FFA500]"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-amber-400 to-orange-500"
                 />
               )}
             </motion.button>
@@ -435,10 +435,10 @@ export default function DailyQuestsPanel() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6"
+        className="bg-zinc-900 border border-zinc-800 rounded-xl p-6"
       >
         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-[#50C878]" />
+          <TrendingUp className="w-5 h-5 text-emerald-500" />
           Today&apos;s Progress
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -446,21 +446,21 @@ export default function DailyQuestsPanel() {
             icon={<ProgressRing progress={(completedCount / Math.max(quests.length, 1)) * 100} color="#50C878" />} 
             label="Completed" 
             value={`${completedCount}/${quests.length}`} 
-            color="text-[#50C878]"
+            color="text-emerald-500"
             isRing 
           />
           <StatCard 
             icon={<Gift className="w-8 h-8" />} 
             label="Rewards Ready" 
             value={readyToClaim}
-            color="text-[#FFD700]"
+            color="text-amber-400"
             pulse={readyToClaim > 0}
           />
           <StatCard 
             icon={<Star className="w-8 h-8" />} 
             label="Total XP" 
             value={`+${totalXP}`} 
-            color="text-[#9333EA]" 
+            color="text-purple-600" 
           />
           <StatCard 
             icon={<Flame className="w-8 h-8" />} 
@@ -504,7 +504,7 @@ function QuestCard({
   const isLocked = quest.progress === 0 && quest.target > 10;
 
   return (
-    <div className={`bg-[#1A1A1F] border-2 ${quest.completed ? 'border-[#50C878]' : 'border-[#2A2A2F]'} rounded-xl p-5 transition-all hover:border-[#FFD700]/50 ${isLocked ? 'opacity-60' : ''}`}>
+    <div className={`bg-zinc-900 border-2 ${quest.completed ? 'border-emerald-500' : 'border-zinc-800'} rounded-xl p-5 transition-all hover:border-amber-400/50 ${isLocked ? 'opacity-60' : ''}`}>
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -513,21 +513,21 @@ function QuestCard({
           </div>
           <div>
             <h4 className="text-lg font-bold text-white mb-1">{quest.title}</h4>
-            <p className="text-sm text-[#A0A0A5]">{quest.description}</p>
+            <p className="text-sm text-zinc-400">{quest.description}</p>
           </div>
         </div>
-        {isLocked && <Lock className="w-5 h-5 text-[#A0A0A5]" />}
+        {isLocked && <Lock className="w-5 h-5 text-zinc-400" />}
       </div>
 
       {/* Progress */}
       <div className="mb-4">
         <div className="flex justify-between items-center mb-2 text-sm">
-          <span className="text-[#A0A0A5]">Progress</span>
+          <span className="text-zinc-400">Progress</span>
           <span className="font-bold text-white">{quest.progress}/{quest.target}</span>
         </div>
-        <div className="w-full bg-[#2A2A2F] rounded-full h-2">
+        <div className="w-full bg-zinc-800 rounded-full h-2">
           <div 
-            className={`bg-linear-to-r ${quest.completed ? 'from-[#50C878] to-[#50C878]' : 'from-[#3B82F6] to-[#9333EA]'} h-2 rounded-full transition-all`}
+            className={`bg-linear-to-r ${quest.completed ? 'from-emerald-500 to-emerald-500' : 'from-blue-500 to-purple-600'} h-2 rounded-full transition-all`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -536,21 +536,21 @@ function QuestCard({
       {/* Rewards */}
       <div className="flex items-center gap-4 mb-4 flex-wrap">
         {quest.reward.vfide && (
-          <div className="flex items-center gap-1.5 bg-[#FFD700]/10 px-3 py-1.5 rounded-lg">
-            <Gift className="w-4 h-4 text-[#FFD700]" />
-            <span className="text-sm font-bold text-[#FFD700]">{quest.reward.vfide} VFIDE</span>
+          <div className="flex items-center gap-1.5 bg-amber-400/10 px-3 py-1.5 rounded-lg">
+            <Gift className="w-4 h-4 text-amber-400" />
+            <span className="text-sm font-bold text-amber-400">{quest.reward.vfide} VFIDE</span>
           </div>
         )}
         {quest.reward.xp && (
-          <div className="flex items-center gap-1.5 bg-[#9333EA]/10 px-3 py-1.5 rounded-lg">
-            <Star className="w-4 h-4 text-[#9333EA]" />
-            <span className="text-sm font-bold text-[#9333EA]">{quest.reward.xp} XP</span>
+          <div className="flex items-center gap-1.5 bg-purple-600/10 px-3 py-1.5 rounded-lg">
+            <Star className="w-4 h-4 text-purple-600" />
+            <span className="text-sm font-bold text-purple-600">{quest.reward.xp} XP</span>
           </div>
         )}
         {quest.reward.badge && (
-          <div className="flex items-center gap-1.5 bg-[#3B82F6]/10 px-3 py-1.5 rounded-lg">
-            <Award className="w-4 h-4 text-[#3B82F6]" />
-            <span className="text-sm font-bold text-[#3B82F6]">{quest.reward.badge}</span>
+          <div className="flex items-center gap-1.5 bg-blue-500/10 px-3 py-1.5 rounded-lg">
+            <Award className="w-4 h-4 text-blue-500" />
+            <span className="text-sm font-bold text-blue-500">{quest.reward.badge}</span>
           </div>
         )}
       </div>
@@ -561,7 +561,7 @@ function QuestCard({
           <span className={`text-xs font-bold px-2 py-1 rounded ${getDifficultyColor(quest.difficulty)}`}>
             {quest.difficulty.toUpperCase()}
           </span>
-          <span className="text-xs text-[#A0A0A5] flex items-center gap-1">
+          <span className="text-xs text-zinc-400 flex items-center gap-1">
             <Clock className="w-3 h-3" />
             {getTimeRemaining(quest.expiresAt)}
           </span>
@@ -570,18 +570,18 @@ function QuestCard({
         {quest.completed && !quest.claimed ? (
           <button 
             onClick={() => onClaim(quest)}
-            className="px-4 py-2 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
+            className="px-4 py-2 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
           >
             <Gift className="w-4 h-4" />
             Claim
           </button>
         ) : quest.claimed ? (
-          <div className="text-[#50C878] text-sm font-bold flex items-center gap-1">
+          <div className="text-emerald-500 text-sm font-bold flex items-center gap-1">
             <CheckCircle2 className="w-4 h-4" />
             Claimed
           </div>
         ) : (
-          <div className="text-[#A0A0A5] text-sm">In Progress</div>
+          <div className="text-zinc-400 text-sm">In Progress</div>
         )}
       </div>
     </div>
@@ -591,12 +591,12 @@ function QuestCard({
 // Stat Card Component
 function StatCard({ icon, label, value, color, isRing: _isRing, pulse }: { icon: React.ReactNode; label: string; value: string | number; color: string; isRing?: boolean; pulse?: boolean }) {
   return (
-    <div className={`bg-[#0A0A0B] rounded-lg p-4 ${pulse ? 'animate-pulse' : ''}`}>
+    <div className={`bg-zinc-950 rounded-lg p-4 ${pulse ? 'animate-pulse' : ''}`}>
       <div className={`${color} mb-2`}>
         {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-5 h-5' })}
       </div>
       <div className="text-2xl font-bold text-white mb-1">{value}</div>
-      <div className="text-xs text-[#A0A0A5]">{label}</div>
+      <div className="text-xs text-zinc-400">{label}</div>
     </div>
   );
 }
@@ -605,29 +605,29 @@ function StatCard({ icon, label, value, color, isRing: _isRing, pulse }: { icon:
 function ClaimRewardModal({ reward, onClose }: { reward: Quest; onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1A1A1F] border-2 border-[#FFD700] rounded-xl p-8 text-center max-w-md animate-in zoom-in-95">
+      <div className="bg-zinc-900 border-2 border-amber-400 rounded-xl p-8 text-center max-w-md animate-in zoom-in-95">
         <div className="text-6xl mb-4 animate-bounce">🎉</div>
         <h2 className="text-3xl font-bold text-white mb-2">Quest Complete!</h2>
-        <p className="text-[#A0A0A5] mb-6">{reward.title}</p>
+        <p className="text-zinc-400 mb-6">{reward.title}</p>
         
         <div className="space-y-3 mb-6">
           {reward.reward.vfide && (
-            <div className="bg-[#FFD700]/10 border border-[#FFD700] rounded-lg p-4">
-              <div className="text-4xl font-bold text-[#FFD700] mb-1">+{reward.reward.vfide} VFIDE</div>
-              <div className="text-sm text-[#A0A0A5]">Added to your balance</div>
+            <div className="bg-amber-400/10 border border-amber-400 rounded-lg p-4">
+              <div className="text-4xl font-bold text-amber-400 mb-1">+{reward.reward.vfide} VFIDE</div>
+              <div className="text-sm text-zinc-400">Added to your balance</div>
             </div>
           )}
           {reward.reward.xp && (
-            <div className="bg-[#9333EA]/10 border border-[#9333EA] rounded-lg p-4">
-              <div className="text-4xl font-bold text-[#9333EA] mb-1">+{reward.reward.xp} XP</div>
-              <div className="text-sm text-[#A0A0A5]">Experience gained</div>
+            <div className="bg-purple-600/10 border border-purple-600 rounded-lg p-4">
+              <div className="text-4xl font-bold text-purple-600 mb-1">+{reward.reward.xp} XP</div>
+              <div className="text-sm text-zinc-400">Experience gained</div>
             </div>
           )}
         </div>
 
         <button 
           onClick={onClose}
-          className="w-full px-6 py-3 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold hover:opacity-90 transition-opacity"
+          className="w-full px-6 py-3 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold hover:opacity-90 transition-opacity"
         >
           Awesome!
         </button>

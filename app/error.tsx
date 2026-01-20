@@ -18,7 +18,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-[#1A1A1D] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-zinc-900 flex items-center justify-center px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -31,8 +31,8 @@ export default function Error({
           transition={{ type: "spring", delay: 0.1 }}
           className="mb-8"
         >
-          <div className="w-24 h-24 mx-auto bg-[#C41E3A]/20 border-2 border-[#C41E3A] rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-12 h-12 text-[#C41E3A]" />
+          <div className="w-24 h-24 mx-auto bg-red-600/20 border-2 border-red-600 rounded-full flex items-center justify-center">
+            <AlertTriangle className="w-12 h-12 text-red-600" />
           </div>
         </motion.div>
 
@@ -42,14 +42,14 @@ export default function Error({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-4">
+          <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-display)] font-bold text-zinc-100 mb-4">
             Something Went Wrong
           </h1>
-          <p className="text-lg text-[#A0A0A5] mb-4">
+          <p className="text-lg text-zinc-400 mb-4">
             We encountered an unexpected error. This has been logged and we&apos;ll look into it.
           </p>
           {error.digest && (
-            <p className="text-sm text-[#707075] mb-8 font-mono">
+            <p className="text-sm text-zinc-500 mb-8 font-mono">
               Error ID: {error.digest}
             </p>
           )}
@@ -64,14 +64,14 @@ export default function Error({
         >
           <button
             onClick={reset}
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform"
           >
             <RefreshCw className="w-5 h-5" />
             Try Again
           </button>
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-[#00F0FF] text-[#00F0FF] rounded-lg font-bold hover:bg-[#00F0FF]/10 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-cyan-400 text-cyan-400 rounded-lg font-bold hover:bg-cyan-400/10 transition-colors"
           >
             <Home className="w-5 h-5" />
             Go Home
@@ -83,15 +83,15 @@ export default function Error({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="mt-12 pt-8 border-t border-[#3A3A3F]"
+          className="mt-12 pt-8 border-t border-zinc-700"
         >
-          <p className="text-[#A0A0A5] text-sm">
+          <p className="text-zinc-400 text-sm">
             If this problem persists, please{" "}
             <a 
               href="https://github.com/Scorpio861104/Vfide/issues" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-[#00F0FF] hover:underline"
+              className="text-cyan-400 hover:underline"
             >
               report an issue
             </a>{" "}

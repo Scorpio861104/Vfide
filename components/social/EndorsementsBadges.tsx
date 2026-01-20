@@ -131,15 +131,15 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-[#00F0FF]" />
-            <h3 className="font-bold text-[#F5F3E8]">
+            <Award className="w-5 h-5 text-cyan-400" />
+            <h3 className="font-bold text-zinc-100">
               Endorsements ({totalEndorsements})
             </h3>
           </div>
           {showGiveEndorsement && onGiveEndorsement && (
             <button
               onClick={onGiveEndorsement}
-              className="px-3 py-1 bg-[#00F0FF] text-[#0A0A0F] rounded-lg text-sm font-semibold hover:bg-[#00D5E0] transition-colors"
+              className="px-3 py-1 bg-cyan-400 text-zinc-950 rounded-lg text-sm font-semibold hover:bg-cyan-400 transition-colors"
             >
               Give Endorsement
             </button>
@@ -147,9 +147,9 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
         </div>
 
         {totalEndorsements === 0 ? (
-          <div className="p-6 bg-[#0A0A0F] border border-[#2A2A2F] rounded-xl text-center">
-            <AlertCircle className="w-12 h-12 text-[#6B6B78] mx-auto mb-2 opacity-50" />
-            <p className="text-[#6B6B78]">No endorsements yet</p>
+          <div className="p-6 bg-zinc-950 border border-zinc-800 rounded-xl text-center">
+            <AlertCircle className="w-12 h-12 text-zinc-500 mx-auto mb-2 opacity-50" />
+            <p className="text-zinc-500">No endorsements yet</p>
           </div>
         ) : (
           <>
@@ -161,13 +161,13 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                 return (
                   <div
                     key={category}
-                    className="p-3 bg-[#0A0A0F] border border-[#2A2A2F] rounded-lg"
+                    className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg"
                   >
                     <div className="text-2xl mb-1">{icon}</div>
                     <div className="text-2xl font-bold" style={{ color }}>
                       {count}
                     </div>
-                    <div className="text-xs text-[#6B6B78] capitalize">
+                    <div className="text-xs text-zinc-500 capitalize">
                       {category}
                     </div>
                   </div>
@@ -177,7 +177,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
 
             {/* Recent Endorsements */}
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-[#A0A0A5] mb-2">
+              <h4 className="text-sm font-semibold text-zinc-400 mb-2">
                 Recent Endorsements
               </h4>
               {endorsements.slice(0, 5).map((endorsement) => {
@@ -187,7 +187,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                     key={endorsement.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-[#0A0A0F] border border-[#2A2A2F] rounded-lg hover:border-[#3A3A4F] transition-colors"
+                    className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg hover:border-zinc-700 transition-colors"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -207,14 +207,14 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                           >
                             {endorsement.category}
                           </span>
-                          <span className="text-xs text-[#6B6B78]">
+                          <span className="text-xs text-zinc-500">
                             from {formatAddress(endorsement.from)}
                           </span>
                         </div>
-                        <p className="text-sm text-[#A0A0A5]">
+                        <p className="text-sm text-zinc-400">
                           {endorsement.message}
                         </p>
-                        <p className="text-xs text-[#6B6B78] mt-1">
+                        <p className="text-xs text-zinc-500 mt-1">
                           {new Date(endorsement.timestamp).toLocaleDateString()}
                         </p>
                       </div>
@@ -230,16 +230,16 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
       {/* Badges Section */}
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <Shield className="w-5 h-5 text-[#FFD700]" />
-          <h3 className="font-bold text-[#F5F3E8]">
+          <Shield className="w-5 h-5 text-amber-400" />
+          <h3 className="font-bold text-zinc-100">
             Badges ({badges.length})
           </h3>
         </div>
 
         {badges.length === 0 ? (
-          <div className="p-6 bg-[#0A0A0F] border border-[#2A2A2F] rounded-xl text-center">
-            <Star className="w-12 h-12 text-[#6B6B78] mx-auto mb-2 opacity-50" />
-            <p className="text-[#6B6B78]">No badges earned yet</p>
+          <div className="p-6 bg-zinc-950 border border-zinc-800 rounded-xl text-center">
+            <Star className="w-12 h-12 text-zinc-500 mx-auto mb-2 opacity-50" />
+            <p className="text-zinc-500">No badges earned yet</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -250,7 +250,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                   key={badge.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="p-4 bg-[#0A0A0F] border rounded-lg hover:border-[#3A3A4F] transition-all hover:scale-105"
+                  className="p-4 bg-zinc-950 border rounded-lg hover:border-zinc-700 transition-all hover:scale-105"
                   style={{ borderColor: `${color}40` }}
                 >
                   <div
@@ -261,10 +261,10 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                   >
                     {badge.icon}
                   </div>
-                  <h4 className="font-bold text-[#F5F3E8] text-sm text-center mb-1">
+                  <h4 className="font-bold text-zinc-100 text-sm text-center mb-1">
                     {badge.name}
                   </h4>
-                  <p className="text-xs text-[#6B6B78] text-center mb-2">
+                  <p className="text-xs text-zinc-500 text-center mb-2">
                     {badge.description}
                   </p>
                   <div className="flex items-center justify-between">
@@ -277,7 +277,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                     >
                       {badge.rarity}
                     </span>
-                    <span className="text-xs text-[#6B6B78]">
+                    <span className="text-xs text-zinc-500">
                       {new Date(badge.earnedAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -293,18 +293,18 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-linear-to-r from-[#50C878]/20 to-[#00F0FF]/20 border border-[#50C878]/30 rounded-xl"
+          className="p-4 bg-linear-to-r from-emerald-500/20 to-cyan-400/20 border border-emerald-500/30 rounded-xl"
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#50C878] to-[#00F0FF] flex items-center justify-center">
-              <Shield className="w-6 h-6 text-[#0A0A0F]" />
+            <div className="w-12 h-12 rounded-full bg-linear-to-br from-emerald-500 to-cyan-400 flex items-center justify-center">
+              <Shield className="w-6 h-6 text-zinc-950" />
             </div>
             <div>
-              <h4 className="font-bold text-[#F5F3E8] flex items-center gap-2">
+              <h4 className="font-bold text-zinc-100 flex items-center gap-2">
                 Guardian Status
-                <CheckCircle className="w-4 h-4 text-[#50C878]" />
+                <CheckCircle className="w-4 h-4 text-emerald-500" />
               </h4>
-              <p className="text-sm text-[#A0A0A5]">
+              <p className="text-sm text-zinc-400">
                 Highly trusted community member with 5+ trustworthy endorsements
               </p>
             </div>

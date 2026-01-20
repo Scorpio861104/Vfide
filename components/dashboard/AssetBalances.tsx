@@ -33,7 +33,7 @@ export default function AssetBalances({
   className = '' 
 }: AssetBalancesProps) {
   return (
-    <div className={`p-6 bg-[#0F0F14] rounded-xl border border-[#2A2A2F] ${className}`}>
+    <div className={`p-6 bg-zinc-900 rounded-xl border border-zinc-800 ${className}`}>
       <h3 className="text-lg font-semibold text-white mb-4">Asset Balances</h3>
       
       <div className="space-y-3">
@@ -43,12 +43,12 @@ export default function AssetBalances({
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="p-4 bg-[#1A1A1F] rounded-lg hover:bg-[#2A2A2F] transition-colors cursor-pointer"
+            className="p-4 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <div className="flex items-center justify-between">
               {/* Asset Info */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#FF6B9D] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-pink-400 flex items-center justify-center">
                   <span className="text-sm font-bold text-white">
                     {asset.symbol.slice(0, 2)}
                   </span>

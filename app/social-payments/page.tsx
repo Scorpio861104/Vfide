@@ -44,7 +44,7 @@ export default function SocialPaymentsDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F]">
+    <div className="min-h-screen bg-zinc-950">
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 pt-24 pb-12">
         {/* Header */}
@@ -57,9 +57,9 @@ export default function SocialPaymentsDashboard() {
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#F5F3E8]">Social Payments</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100">Social Payments</h1>
           </div>
-          <p className="text-[#A0A0A5]">
+          <p className="text-zinc-400">
             Seamlessly integrated cryptocurrency and social interactions
           </p>
         </motion.div>
@@ -76,7 +76,7 @@ export default function SocialPaymentsDashboard() {
               <ArrowDownLeft className="w-8 h-8 text-green-400" />
               <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
-            <div className="text-2xl font-bold text-[#F5F3E8] mb-1">
+            <div className="text-2xl font-bold text-zinc-100 mb-1">
               {mockStats.totalTipsReceived}
             </div>
             <div className="text-sm text-green-400">Tips Received</div>
@@ -92,7 +92,7 @@ export default function SocialPaymentsDashboard() {
               <ArrowUpRight className="w-8 h-8 text-purple-400" />
               <Heart className="w-5 h-5 text-purple-400" />
             </div>
-            <div className="text-2xl font-bold text-[#F5F3E8] mb-1">
+            <div className="text-2xl font-bold text-zinc-100 mb-1">
               {mockStats.totalTipsSent}
             </div>
             <div className="text-sm text-purple-400">Tips Sent</div>
@@ -108,11 +108,11 @@ export default function SocialPaymentsDashboard() {
               <Lock className="w-8 h-8 text-blue-400" />
               <DollarSign className="w-5 h-5 text-blue-400" />
             </div>
-            <div className="text-2xl font-bold text-[#F5F3E8] mb-1">
+            <div className="text-2xl font-bold text-zinc-100 mb-1">
               {mockStats.contentSales}
             </div>
             <div className="text-sm text-blue-400">Content Sales</div>
-            <div className="text-xs text-[#6B6B78] mt-1">
+            <div className="text-xs text-zinc-500 mt-1">
               {mockStats.totalContentRevenue} earned
             </div>
           </motion.div>
@@ -127,7 +127,7 @@ export default function SocialPaymentsDashboard() {
               <Award className="w-8 h-8 text-yellow-400" />
               <Users className="w-5 h-5 text-yellow-400" />
             </div>
-            <div className="text-2xl font-bold text-[#F5F3E8] mb-1">
+            <div className="text-2xl font-bold text-zinc-100 mb-1">
               {mockStats.endorsementRewards}
             </div>
             <div className="text-sm text-yellow-400">Endorsement Rewards</div>
@@ -139,9 +139,9 @@ export default function SocialPaymentsDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mb-8 p-6 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl"
+          className="mb-8 p-6 bg-zinc-900 border border-zinc-800 rounded-xl"
         >
-          <h3 className="font-bold text-[#F5F3E8] mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-zinc-100 mb-4 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-400" />
             Top Supporters
           </h3>
@@ -149,13 +149,13 @@ export default function SocialPaymentsDashboard() {
             {mockStats.topTippers.map((tipper, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-3 bg-[#0A0A0F] rounded-lg hover:bg-[#2A2A3E] transition-colors"
+                className="flex items-center justify-between p-3 bg-zinc-950 rounded-lg hover:bg-zinc-800 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#2A2A3E] flex items-center justify-center text-lg">
+                  <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-lg">
                     {tipper.avatar}
                   </div>
-                  <span className="font-medium text-[#F5F3E8]">{tipper.name}</span>
+                  <span className="font-medium text-zinc-100">{tipper.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <DollarSign className="w-4 h-4 text-purple-400" />
@@ -167,7 +167,7 @@ export default function SocialPaymentsDashboard() {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-[#2A2A2F]">
+        <div className="flex gap-2 mb-6 border-b border-zinc-800">
           {[
             { id: 'feed' as const, label: 'Social Feed', icon: MessageCircle },
             { id: 'activity' as const, label: 'All Activity', icon: TrendingUp },
@@ -179,7 +179,7 @@ export default function SocialPaymentsDashboard() {
               className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
                 activeTab === tab.id
                   ? 'text-purple-400 border-purple-500'
-                  : 'text-[#6B6B78] border-transparent hover:text-[#A0A0A5]'
+                  : 'text-zinc-500 border-transparent hover:text-zinc-400'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -196,7 +196,7 @@ export default function SocialPaymentsDashboard() {
           transition={{ duration: 0.3 }}
         >
           {activeTab === 'feed' && (
-            <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
               <SocialFeed onPostCreated={() => {/* Post created */}} />
             </div>
           )}
@@ -208,8 +208,8 @@ export default function SocialPaymentsDashboard() {
           {activeTab === 'earnings' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Tip History */}
-              <div className="p-6 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl">
-                <h3 className="font-bold text-[#F5F3E8] mb-4 flex items-center gap-2">
+              <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-xl">
+                <h3 className="font-bold text-zinc-100 mb-4 flex items-center gap-2">
                   <ArrowDownLeft className="w-5 h-5 text-green-400" />
                   Recent Tips Received
                 </h3>
@@ -221,11 +221,11 @@ export default function SocialPaymentsDashboard() {
                   ].map((tip, idx) => (
                     <div
                       key={idx}
-                      className="p-3 bg-[#0A0A0F] rounded-lg flex items-center justify-between"
+                      className="p-3 bg-zinc-950 rounded-lg flex items-center justify-between"
                     >
                       <div>
-                        <div className="font-medium text-[#F5F3E8]">{tip.from}</div>
-                        <div className="text-xs text-[#6B6B78]">{tip.time}</div>
+                        <div className="font-medium text-zinc-100">{tip.from}</div>
+                        <div className="text-xs text-zinc-500">{tip.time}</div>
                       </div>
                       <div className="font-bold text-green-400">+{tip.amount}</div>
                     </div>
@@ -234,8 +234,8 @@ export default function SocialPaymentsDashboard() {
               </div>
 
               {/* Content Sales */}
-              <div className="p-6 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl">
-                <h3 className="font-bold text-[#F5F3E8] mb-4 flex items-center gap-2">
+              <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-xl">
+                <h3 className="font-bold text-zinc-100 mb-4 flex items-center gap-2">
                   <Lock className="w-5 h-5 text-blue-400" />
                   Content Sales
                 </h3>
@@ -247,13 +247,13 @@ export default function SocialPaymentsDashboard() {
                   ].map((sale, idx) => (
                     <div
                       key={idx}
-                      className="p-3 bg-[#0A0A0F] rounded-lg"
+                      className="p-3 bg-zinc-950 rounded-lg"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <div className="font-medium text-[#F5F3E8]">{sale.item}</div>
+                        <div className="font-medium text-zinc-100">{sale.item}</div>
                         <div className="font-bold text-blue-400">+{sale.amount}</div>
                       </div>
-                      <div className="text-xs text-[#6B6B78]">
+                      <div className="text-xs text-zinc-500">
                         to {sale.buyer} • {sale.time}
                       </div>
                     </div>

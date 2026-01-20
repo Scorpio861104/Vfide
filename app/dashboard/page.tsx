@@ -166,7 +166,7 @@ export default function DashboardPage() {
   if (!isConnected) {
     return (
       <>
-        <main className="min-h-screen bg-[#08080A] pt-20 flex items-center justify-center relative overflow-hidden">
+        <main className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-150 h-150 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-100 h-100 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
@@ -203,7 +203,7 @@ export default function DashboardPage() {
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20">
           <div className="fixed inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-0 left-1/4 w-150 h-150 bg-[#00F0FF]/5 rounded-full blur-[120px]" />
+            <div className="absolute top-0 left-1/4 w-150 h-150 bg-cyan-400/5 rounded-full blur-[120px]" />
             <div className="absolute bottom-1/4 right-0 w-125 h-125 bg-purple-500/5 rounded-full blur-[100px]" />
           </div>
 
@@ -275,7 +275,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="sticky top-20 z-40 bg-[#08080A]/80 backdrop-blur-xl border-b border-white/5">
+        <section className="sticky top-20 z-40 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
           <div className="container mx-auto px-3 sm:px-4">
             <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide" role="tablist">
               {[

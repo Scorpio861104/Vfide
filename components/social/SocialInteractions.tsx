@@ -273,15 +273,15 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-[#0A0A0F] via-[#1A1A2E] to-[#0A0A0F]">
+    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-20 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-[#3A3A4F] px-4 md:px-8 py-6"
+        className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-700 px-4 md:px-8 py-6"
       >
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#F5F3E8] mb-6">Social Interactions</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-6">Social Interactions</h1>
 
           {/* Tab Navigation */}
           <div className="flex gap-2 overflow-x-auto">
@@ -291,14 +291,14 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                 onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all flex items-center gap-2 ${
                   activeTab === tab.key
-                    ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                    : 'bg-[#2A2A3E] text-[#A0A0A5] hover:bg-[#3A3A4F]'
+                    ? 'bg-cyan-400 text-zinc-950'
+                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                 }`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
                 {tab.count !== undefined && tab.count > 0 && (
-                  <span className="ml-1 px-2 py-0.5 bg-[#FF6B9D] text-white rounded-full text-xs font-bold">
+                  <span className="ml-1 px-2 py-0.5 bg-pink-400 text-white rounded-full text-xs font-bold">
                     {tab.count}
                   </span>
                 )}
@@ -325,29 +325,29 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className={`bg-[#1A1A2E] border transition-all rounded-lg p-6 ${
+                  className={`bg-zinc-900 border transition-all rounded-lg p-6 ${
                     acceptedRequests.has(request.id)
-                      ? 'border-[#50C878]/50 bg-[#50C878]/5'
-                      : 'border-[#3A3A4F] hover:border-[#00F0FF]'
+                      ? 'border-emerald-500/50 bg-emerald-500/5'
+                      : 'border-zinc-700 hover:border-cyan-400'
                   }`}
                 >
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-[#2A2A3E] flex items-center justify-center text-3xl shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center text-3xl shrink-0">
                       {request.from.avatar}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-bold text-[#F5F3E8]">{request.from.name}</h3>
-                        <span className="text-[#A0A0A5]">@{request.from.username}</span>
+                        <h3 className="text-lg font-bold text-zinc-100">{request.from.name}</h3>
+                        <span className="text-zinc-400">@{request.from.username}</span>
                       </div>
 
-                      <div className="text-sm text-[#00F0FF] font-semibold mb-2">
+                      <div className="text-sm text-cyan-400 font-semibold mb-2">
                         {request.from.proofScore} Proof Score
                       </div>
 
                       {request.mutualFriends > 0 && (
-                        <div className="text-sm text-[#A0A0A5] mb-2">
+                        <div className="text-sm text-zinc-400 mb-2">
                           <Users className="w-4 h-4 inline mr-1" />
                           {request.mutualFriends} mutual friends
                         </div>
@@ -356,14 +356,14 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                       {request.mutualInterests.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-3">
                           {request.mutualInterests.map((interest) => (
-                            <span key={interest} className="text-xs px-2 py-1 rounded-full bg-[#2A2A3E] text-[#A78BFA]">
+                            <span key={interest} className="text-xs px-2 py-1 rounded-full bg-zinc-800 text-violet-400">
                               {interest}
                             </span>
                           ))}
                         </div>
                       )}
 
-                      <p className="text-xs text-[#6B6B78]">
+                      <p className="text-xs text-zinc-500">
                         Requested {new Date(request.timestamp).toLocaleDateString()}
                       </p>
                     </div>
@@ -374,7 +374,7 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                       initial={{ scale: 0.9 }}
                       animate={{ scale: 1 }}
                       disabled
-                      className="w-full px-4 py-3 bg-[#50C878]/20 border border-[#50C878] text-[#50C878] rounded-lg font-semibold flex items-center justify-center gap-2"
+                      className="w-full px-4 py-3 bg-emerald-500/20 border border-emerald-500 text-emerald-500 rounded-lg font-semibold flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-5 h-5" />
                       Friends
@@ -383,11 +383,11 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleAcceptRequest(request.id)}
-                        className="flex-1 px-4 py-3 bg-[#00F0FF] text-[#0A0A0F] rounded-lg hover:bg-[#00D9E8] transition-all font-semibold"
+                        className="flex-1 px-4 py-3 bg-cyan-400 text-zinc-950 rounded-lg hover:bg-cyan-400 transition-all font-semibold"
                       >
                         Accept
                       </button>
-                      <button className="flex-1 px-4 py-3 bg-[#2A2A3E] border border-[#3A3A4F] text-[#A0A0A5] rounded-lg hover:border-[#FF6B9D] transition-colors font-semibold">
+                      <button className="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg hover:border-pink-400 transition-colors font-semibold">
                         Decline
                       </button>
                     </div>
@@ -408,9 +408,9 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
             >
               {mockMessages.length === 0 ? (
                 <div className="text-center py-12">
-                  <MessageCircle className="w-16 h-16 text-[#3A3A4F] mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-[#F5F3E8] mb-2">No messages</h3>
-                  <p className="text-[#A0A0A5]">Start a conversation with your friends</p>
+                  <MessageCircle className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-zinc-100 mb-2">No messages</h3>
+                  <p className="text-zinc-400">Start a conversation with your friends</p>
                 </div>
               ) : (
                 mockMessages.map((message, idx) => (
@@ -420,36 +420,36 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
                     onClick={() => handleMarkAsRead(message.id)}
-                    className={`bg-[#1A1A2E] border rounded-lg p-5 hover:border-[#A78BFA] transition-all cursor-pointer ${
+                    className={`bg-zinc-900 border rounded-lg p-5 hover:border-violet-400 transition-all cursor-pointer ${
                       !message.read && !readMessages.has(message.id)
-                        ? 'border-[#A78BFA] bg-[#A78BFA]/5'
-                        : 'border-[#3A3A4F]'
+                        ? 'border-violet-400 bg-violet-400/5'
+                        : 'border-zinc-700'
                     }`}
                   >
                     <div className="flex items-start gap-4 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-2xl shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-2xl shrink-0">
                         {message.from.avatar}
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-[#F5F3E8]">{message.from.name}</h3>
-                          <span className="text-[#A0A0A5] text-sm">@{message.from.username}</span>
+                          <h3 className="font-bold text-zinc-100">{message.from.name}</h3>
+                          <span className="text-zinc-400 text-sm">@{message.from.username}</span>
                         </div>
-                        <p className="text-xs text-[#6B6B78]">
+                        <p className="text-xs text-zinc-500">
                           {new Date(message.timestamp).toLocaleDateString()} at{' '}
                           {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
 
                       {!message.read && !readMessages.has(message.id) && (
-                        <div className="w-3 h-3 rounded-full bg-[#A78BFA] shrink-0 mt-1" />
+                        <div className="w-3 h-3 rounded-full bg-violet-400 shrink-0 mt-1" />
                       )}
                     </div>
 
-                    <p className="text-[#D0D0D8] mb-3">{message.content}</p>
+                    <p className="text-zinc-300 mb-3">{message.content}</p>
 
-                    <button className="text-sm text-[#00F0FF] hover:text-[#00D9E8] transition-colors font-semibold">
+                    <button className="text-sm text-cyan-400 hover:text-cyan-400 transition-colors font-semibold">
                       Reply →
                     </button>
                   </motion.div>
@@ -473,8 +473,8 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                     onClick={() => setLeaderboardType(type)}
                     className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                       leaderboardType === type
-                        ? 'bg-[#FFD700] text-[#0A0A0F]'
-                        : 'bg-[#2A2A3E] text-[#A0A0A5] hover:bg-[#3A3A4F]'
+                        ? 'bg-amber-400 text-zinc-950'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                     }`}
                   >
                     {type === 'proofScore' ? '📊 Proof Score' : '🏆 Badges'}
@@ -489,28 +489,28 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className={`bg-[#1A1A2E] border rounded-lg p-4 transition-all hover:border-[#FFD700]/50 group`}
+                    className={`bg-zinc-900 border rounded-lg p-4 transition-all hover:border-amber-400/50 group`}
                   >
                     <div className="flex items-center gap-4">
-                      <div className="text-3xl font-bold text-[#FFD700] w-16 text-center">{entry.icon}</div>
+                      <div className="text-3xl font-bold text-amber-400 w-16 text-center">{entry.icon}</div>
 
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-12 h-12 rounded-full bg-[#2A2A3E] flex items-center justify-center text-xl shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-xl shrink-0">
                           {entry.user.avatar}
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-[#F5F3E8]">{entry.user.name}</h4>
-                            {entry.user.isVerified && <CheckCircle2 className="w-4 h-4 text-[#00F0FF]" />}
+                            <h4 className="font-bold text-zinc-100">{entry.user.name}</h4>
+                            {entry.user.isVerified && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
                           </div>
-                          <p className="text-xs text-[#A0A0A5]">@{entry.user.username}</p>
+                          <p className="text-xs text-zinc-400">@{entry.user.username}</p>
                         </div>
                       </div>
 
                       <div className="text-right shrink-0">
-                        <div className="text-2xl font-bold text-[#FFD700]">{entry.score}</div>
-                        <div className={`text-xs font-semibold ${entry.change > 0 ? 'text-[#50C878]' : entry.change < 0 ? 'text-[#FF6B9D]' : 'text-[#6B6B78]'}`}>
+                        <div className="text-2xl font-bold text-amber-400">{entry.score}</div>
+                        <div className={`text-xs font-semibold ${entry.change > 0 ? 'text-emerald-500' : entry.change < 0 ? 'text-pink-400' : 'text-zinc-500'}`}>
                           {entry.change > 0 ? '↑' : entry.change < 0 ? '↓' : '='} {Math.abs(entry.change)}
                         </div>
                       </div>
@@ -519,7 +519,7 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       whileHover={{ opacity: 1, height: 'auto' }}
-                      className="mt-3 pt-3 border-t border-[#3A3A4F] text-xs text-[#A0A0A5]"
+                      className="mt-3 pt-3 border-t border-zinc-700 text-xs text-zinc-400"
                     >
                       <div className="flex gap-4">
                         <div className="flex items-center gap-1">
@@ -553,45 +553,45 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-linear-to-r from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-lg p-6 hover:border-[#FF6B9D]/50 transition-colors"
+                  className="bg-linear-to-r from-zinc-900 to-zinc-800 border border-zinc-700 rounded-lg p-6 hover:border-pink-400/50 transition-colors"
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-[#2A2A3E] flex items-center justify-center text-3xl shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center text-3xl shrink-0">
                       {streak.avatar}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-[#F5F3E8]">{streak.username}</h3>
-                      <div className="flex items-center gap-2 text-[#FF6B9D] font-bold text-lg mt-1">
+                      <h3 className="text-xl font-bold text-zinc-100">{streak.username}</h3>
+                      <div className="flex items-center gap-2 text-pink-400 font-bold text-lg mt-1">
                         <Flame className="w-5 h-5" />
                         {streak.currentStreak} day streak
                       </div>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <div className="text-sm text-[#A0A0A5] mb-1">Personal best</div>
-                      <div className="text-2xl font-bold text-[#FFD700]">{streak.longestStreak}</div>
+                      <div className="text-sm text-zinc-400 mb-1">Personal best</div>
+                      <div className="text-2xl font-bold text-amber-400">{streak.longestStreak}</div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-[#3A3A4F]">
+                  <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-zinc-700">
                     <div>
-                      <div className="text-[#00F0FF] font-bold">1 day ago</div>
-                      <div className="text-xs text-[#6B6B78]">Last activity</div>
+                      <div className="text-cyan-400 font-bold">1 day ago</div>
+                      <div className="text-xs text-zinc-500">Last activity</div>
                     </div>
                     <div className="text-center">
-                      <div className="inline-block px-3 py-2 bg-[#FF6B9D]/20 text-[#FF6B9D] rounded-lg text-sm font-semibold">
+                      <div className="inline-block px-3 py-2 bg-pink-400/20 text-pink-400 rounded-lg text-sm font-semibold">
                         On Fire! 🔥
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[#50C878] font-bold">{streak.activities.length}</div>
-                      <div className="text-xs text-[#6B6B78]">Activity types</div>
+                      <div className="text-emerald-500 font-bold">{streak.activities.length}</div>
+                      <div className="text-xs text-zinc-500">Activity types</div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="text-xs text-[#A0A0A5] font-semibold mb-2">Recent Activities</h4>
+                    <h4 className="text-xs text-zinc-400 font-semibold mb-2">Recent Activities</h4>
                     <div className="flex flex-wrap gap-2">
                       {streak.activities.map((activity) => {
                         const activityEmojis: Record<string, string> = {
@@ -606,7 +606,7 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                         return (
                           <span
                             key={activity}
-                            className="px-3 py-1 rounded-full bg-[#2A2A3E] border border-[#3A3A4F] text-sm"
+                            className="px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-sm"
                           >
                             {activityEmojis[activity] || '•'} {activity}
                           </span>

@@ -55,10 +55,10 @@ export function OptimizedImage({
   if (hasError) {
     return (
       <div 
-        className={`bg-[#2A2A3F] flex items-center justify-center ${className}`}
+        className={`bg-zinc-800 flex items-center justify-center ${className}`}
         style={{ width, height }}
       >
-        <span className="text-[#6B6B78] text-sm">Failed to load</span>
+        <span className="text-zinc-500 text-sm">Failed to load</span>
       </div>
     );
   }
@@ -110,7 +110,7 @@ export function AvatarImage({
   if (!src || hasError) {
     return (
       <div
-        className="rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-white font-semibold"
+        className="rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-white font-semibold"
         style={{ width: size, height: size, fontSize: size / 2.5 }}
       >
         {fallback || alt.charAt(0).toUpperCase()}
@@ -149,10 +149,10 @@ export function BadgeImage({
   if (!src || hasError) {
     return (
       <div
-        className="rounded-full bg-[#2A2A3F] flex items-center justify-center"
+        className="rounded-full bg-zinc-800 flex items-center justify-center"
         style={{ width: size, height: size }}
       >
-        {icon || <span className="text-[#6B6B78]">🏆</span>}
+        {icon || <span className="text-zinc-500">🏆</span>}
       </div>
     );
   }

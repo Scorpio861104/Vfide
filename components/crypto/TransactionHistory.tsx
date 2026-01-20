@@ -66,7 +66,7 @@ export function TransactionHistory({ userId }: TransactionHistoryProps) {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-3 border-[#2A2A2F] border-t-yellow-500 rounded-full"
+          className="w-10 h-10 border-3 border-zinc-800 border-t-yellow-500 rounded-full"
         />
       </div>
     );
@@ -124,12 +124,12 @@ export function TransactionHistory({ userId }: TransactionHistoryProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by address or memo..."
-            className="w-full pl-10 pr-4 py-2.5 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors"
           />
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex items-center gap-1 p-1 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl">
+        <div className="flex items-center gap-1 p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
           {(['all', 'send', 'receive', 'tip'] as const).map((f) => (
             <motion.button
               key={f}
@@ -142,7 +142,7 @@ export function TransactionHistory({ userId }: TransactionHistoryProps) {
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 filter === f 
                   ? 'bg-yellow-500 text-black' 
-                  : 'text-gray-400 hover:text-white hover:bg-[#2A2A2F]'
+                  : 'text-gray-400 hover:text-white hover:bg-zinc-800'
               }`}
             >
               {f === 'all' ? 'All' : f === 'send' ? 'Sent' : f === 'receive' ? 'Received' : 'Tips'}
@@ -157,7 +157,7 @@ export function TransactionHistory({ userId }: TransactionHistoryProps) {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-12 text-center"
+            className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center"
           >
             <motion.div
               animate={{ y: [0, -5, 0] }}
@@ -223,7 +223,7 @@ const TransactionCard = React.memo(function TransactionCard({ transaction, userI
       exit={{ opacity: 0, x: 20 }}
       transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 30 }}
       whileHover={{ scale: 1.01, x: 4 }}
-      className="bg-[#1A1A1F] border border-[#2A2A2F] hover:border-[#3A3A3F] rounded-xl p-4 transition-all"
+      className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl p-4 transition-all"
     >
       <div className="flex items-center gap-4">
         {/* Icon */}
@@ -241,7 +241,7 @@ const TransactionCard = React.memo(function TransactionCard({ transaction, userI
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-[#1A1A1F] ${
+            className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-zinc-900 ${
               transaction.status === 'confirmed' ? 'bg-green-500' :
               transaction.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
             }`}

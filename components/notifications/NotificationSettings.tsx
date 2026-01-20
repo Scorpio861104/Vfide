@@ -204,7 +204,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
 
       {/* Test Notification */}
       {isSubscribed && (
-        <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-white font-medium mb-1">Test Notification</h3>
@@ -235,7 +235,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
 
       {/* Notification Types */}
       {isSubscribed && preferences && (
-        <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <h3 className="text-white font-medium mb-4">Notification Types</h3>
           <div className="space-y-3">
             <NotificationTypeToggle
@@ -286,7 +286,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
 
       {/* Quiet Hours */}
       {isSubscribed && preferences?.quietHours && (
-        <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-white font-medium flex items-center gap-2">
@@ -327,7 +327,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
                       },
                     })
                   }
-                  className="w-full px-3 py-2 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:border-blue-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -344,7 +344,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
                       },
                     })
                   }
-                  className="w-full px-3 py-2 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:border-blue-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -375,7 +375,7 @@ function NotificationTypeToggle({
   onToggle,
 }: NotificationTypeToggleProps) {
   return (
-    <div className="flex items-center justify-between p-3 bg-[#0F0F14] rounded-lg">
+    <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg">
       <div className="flex items-center gap-3 flex-1">
         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
           enabled ? 'bg-blue-900/30 text-blue-400' : 'bg-gray-800 text-gray-500'

@@ -62,23 +62,23 @@ export function TypingIndicator({ conversationId, currentUserAddress, otherUserN
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-[#6B6B78]"
+          className="flex items-center gap-2 px-4 py-2 text-sm text-zinc-500"
         >
           <div className="flex gap-1">
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
-              className="w-2 h-2 bg-[#00F0FF] rounded-full"
+              className="w-2 h-2 bg-cyan-400 rounded-full"
             />
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
-              className="w-2 h-2 bg-[#00F0FF] rounded-full"
+              className="w-2 h-2 bg-cyan-400 rounded-full"
             />
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
-              className="w-2 h-2 bg-[#00F0FF] rounded-full"
+              className="w-2 h-2 bg-cyan-400 rounded-full"
             />
           </div>
           <span>{otherUserName || 'User'} is typing...</span>
@@ -184,13 +184,13 @@ export function PresenceIndicator({
     <div className="relative">
       <div
         className={`${sizes[size]} rounded-full ${
-          isOnline ? 'bg-[#50C878]' : 'bg-[#6B6B78]'
+          isOnline ? 'bg-emerald-500' : 'bg-zinc-500'
         }`}
         title={isOnline ? 'Online' : 'Offline'}
       />
       {isOnline && (
         <div
-          className={`absolute inset-0 ${sizes[size]} rounded-full bg-[#50C878] animate-ping`}
+          className={`absolute inset-0 ${sizes[size]} rounded-full bg-emerald-500 animate-ping`}
         />
       )}
     </div>

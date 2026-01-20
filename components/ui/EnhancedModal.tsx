@@ -70,9 +70,9 @@ export function EnhancedModal({
   }, [isOpen]);
 
   const variantStyles = {
-    default: "bg-[#0F0F12] border border-[#1F1F2A]",
+    default: "bg-zinc-900 border border-zinc-800",
     glass: "bg-white/5 backdrop-blur-2xl border border-white/10",
-    gradient: "bg-linear-to-br from-[#16161D] to-[#0F0F12] border border-[#2A2A35]",
+    gradient: "bg-linear-to-br from-[#16161D] to-zinc-900 border border-zinc-800",
   };
 
   return (
@@ -102,19 +102,19 @@ export function EnhancedModal({
             `}
           >
             {/* Glow effect */}
-            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-[#00F0FF]/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-cyan-400/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             {/* Header */}
             {(title || showCloseButton) && (
-              <div className="relative z-10 flex items-start justify-between p-6 border-b border-[#1F1F2A]">
+              <div className="relative z-10 flex items-start justify-between p-6 border-b border-zinc-800">
                 <div className="flex-1">
                   {title && (
-                    <h2 className="text-2xl font-bold text-[#F8F8FC] mb-1">
+                    <h2 className="text-2xl font-bold text-zinc-50 mb-1">
                       {title}
                     </h2>
                   )}
                   {description && (
-                    <p className="text-sm text-[#A8A8B3]">
+                    <p className="text-sm text-zinc-400">
                       {description}
                     </p>
                   )}
@@ -123,7 +123,7 @@ export function EnhancedModal({
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="ml-4 p-2 rounded-lg text-[#8A8A8F] hover:text-[#F8F8FC] hover:bg-[#1F1F2A] transition-all"
+                    className="ml-4 p-2 rounded-lg text-zinc-400 hover:text-zinc-50 hover:bg-zinc-900 transition-all"
                   >
                     <X className="w-5 h-5" />
                   </button>

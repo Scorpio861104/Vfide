@@ -106,7 +106,7 @@ export default function SetupPage() {
   const step3Done = isConnected && isCorrectNetwork && hasBalance
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-white">
+    <div className="min-h-screen bg-zinc-950 text-white">
       {/* Header */}
       <div className="border-b border-zinc-800 bg-zinc-900/50">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">

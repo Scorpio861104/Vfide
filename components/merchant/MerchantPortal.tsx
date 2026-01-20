@@ -653,7 +653,7 @@ function BulkPaymentsSection({
           <label htmlFor="csv-upload" className={`
             block w-full min-h-12 text-base font-semibold rounded-lg
             transition-all active:scale-95 cursor-pointer text-center
-            px-4 py-3 bg-[#00F0FF] text-[#1A1A1D] hover:bg-[#00D4FF]
+            px-4 py-3 bg-cyan-400 text-zinc-900 hover:bg-cyan-400
             ${uploading ? 'opacity-60 cursor-not-allowed' : ''}
           `}>
             {uploading ? '⏳ Uploading...' : '📤 Choose File'}

@@ -79,14 +79,14 @@ export function SocialTipButton({
         onClick={() => setIsOpen(true)}
         className={`flex items-center gap-2 transition-all group ${
           compact
-            ? 'p-2 hover:bg-[#2A2A3E] rounded-lg'
+            ? 'p-2 hover:bg-zinc-800 rounded-lg'
             : 'px-4 py-2 bg-linear-to-r from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20 border border-purple-500/20 rounded-lg'
         } ${className}`}
       >
         <DollarSign className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
         {!compact && (
           <>
-            <span className="text-sm font-medium text-[#F5F3E8]">Tip</span>
+            <span className="text-sm font-medium text-zinc-100">Tip</span>
             {showTotal && tips.length > 0 && (
               <span className="text-xs text-purple-400">
                 ({formatTotal()})
@@ -115,7 +115,7 @@ export function SocialTipButton({
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md z-50"
             >
-              <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-2xl p-6 shadow-2xl">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
@@ -123,21 +123,21 @@ export function SocialTipButton({
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-[#F5F3E8]">Send Tip</h3>
-                      <p className="text-sm text-[#6B6B78]">to {recipientName}</p>
+                      <h3 className="font-bold text-zinc-100">Send Tip</h3>
+                      <p className="text-sm text-zinc-500">to {recipientName}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-[#2A2A3E] rounded-lg transition-colors"
+                    className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
                   >
-                    <X className="w-5 h-5 text-[#A0A0A5]" />
+                    <X className="w-5 h-5 text-zinc-400" />
                   </button>
                 </div>
 
                 {/* Currency Selection */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-[#A0A0A5] mb-2">
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">
                     Currency
                   </label>
                   <div className="grid grid-cols-2 gap-3">
@@ -146,11 +146,11 @@ export function SocialTipButton({
                       className={`p-3 rounded-xl border-2 transition-all ${
                         currency === 'VFIDE'
                           ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-[#2A2A2F] hover:border-[#3A3A4F]'
+                          : 'border-zinc-800 hover:border-zinc-700'
                       }`}
                     >
-                      <div className="font-bold text-[#F5F3E8]">VFIDE</div>
-                      <div className="text-xs text-[#6B6B78]">Community Token</div>
+                      <div className="font-bold text-zinc-100">VFIDE</div>
+                      <div className="text-xs text-zinc-500">Community Token</div>
                       {isConnected && (
                         <div className="text-xs text-purple-400 mt-1">
                           Connected
@@ -162,11 +162,11 @@ export function SocialTipButton({
                       className={`p-3 rounded-xl border-2 transition-all ${
                         currency === 'ETH'
                           ? 'border-blue-500 bg-blue-500/10'
-                          : 'border-[#2A2A2F] hover:border-[#3A3A4F]'
+                          : 'border-zinc-800 hover:border-zinc-700'
                       }`}
                     >
-                      <div className="font-bold text-[#F5F3E8]">ETH</div>
-                      <div className="text-xs text-[#6B6B78]">Ethereum</div>
+                      <div className="font-bold text-zinc-100">ETH</div>
+                      <div className="text-xs text-zinc-500">Ethereum</div>
                       {isConnected && (
                         <div className="text-xs text-blue-400 mt-1">
                           Connected
@@ -178,7 +178,7 @@ export function SocialTipButton({
 
                 {/* Amount */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-[#A0A0A5] mb-2">
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">
                     Amount
                   </label>
                   <div className="relative">
@@ -187,11 +187,11 @@ export function SocialTipButton({
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full px-4 py-3 bg-[#0A0A0F] border border-[#2A2A2F] rounded-xl text-[#F5F3E8] text-lg font-bold focus:border-purple-500 focus:outline-none"
+                      className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-lg font-bold focus:border-purple-500 focus:outline-none"
                       step="0.01"
                       min="0"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6B6B78]">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">
                       {currency}
                     </span>
                   </div>
@@ -200,7 +200,7 @@ export function SocialTipButton({
                       <button
                         key={value}
                         onClick={() => setAmount(value)}
-                        className="flex-1 px-3 py-1.5 bg-[#2A2A3E] hover:bg-[#3A3A4F] rounded-lg text-xs font-medium text-[#F5F3E8] transition-colors"
+                        className="flex-1 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-medium text-zinc-100 transition-colors"
                       >
                         {value}
                       </button>
@@ -210,18 +210,18 @@ export function SocialTipButton({
 
                 {/* Message */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-[#A0A0A5] mb-2">
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">
                     Message (optional)
                   </label>
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Great content! 🎉"
-                    className="w-full px-4 py-3 bg-[#0A0A0F] border border-[#2A2A2F] rounded-xl text-[#F5F3E8] focus:border-purple-500 focus:outline-none resize-none"
+                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 focus:border-purple-500 focus:outline-none resize-none"
                     rows={3}
                     maxLength={200}
                   />
-                  <div className="text-xs text-[#6B6B78] mt-1 text-right">
+                  <div className="text-xs text-zinc-500 mt-1 text-right">
                     {message.length}/200
                   </div>
                 </div>

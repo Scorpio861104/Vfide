@@ -76,7 +76,7 @@ describe('Skeleton', () => {
 
   it('applies bg color class', () => {
     const { container } = render(<Skeleton />)
-    expect(container.firstChild).toHaveClass('bg-[#2A2A2F]')
+    expect(container.firstChild).toHaveClass('bg-zinc-800')
   })
 })
 
@@ -123,13 +123,13 @@ describe('SkeletonCard', () => {
 
   it('has bg color', () => {
     const { container } = render(<SkeletonCard />)
-    expect(container.firstChild).toHaveClass('bg-[#1A1A1D]')
+    expect(container.firstChild).toHaveClass('bg-zinc-900')
   })
 
   it('has border styling', () => {
     const { container } = render(<SkeletonCard />)
     expect(container.firstChild).toHaveClass('border')
-    expect(container.firstChild).toHaveClass('border-[#2A2A2F]')
+    expect(container.firstChild).toHaveClass('border-zinc-800')
     expect(container.firstChild).toHaveClass('rounded-xl')
   })
 })
@@ -147,7 +147,7 @@ describe('SkeletonStat', () => {
 
   it('has bg and rounded styling', () => {
     const { container } = render(<SkeletonStat />)
-    expect(container.firstChild).toHaveClass('bg-[#2A2A2F]')
+    expect(container.firstChild).toHaveClass('bg-zinc-800')
     expect(container.firstChild).toHaveClass('rounded-xl')
   })
 })
@@ -187,7 +187,7 @@ describe('NotificationSkeleton', () => {
 
   it('has correct background styling', () => {
     const { container } = render(<NotificationSkeleton />)
-    expect(container.firstChild).toHaveClass('bg-[#2A2A2F]')
+    expect(container.firstChild).toHaveClass('bg-zinc-800')
     expect(container.firstChild).toHaveClass('rounded-lg')
   })
 })

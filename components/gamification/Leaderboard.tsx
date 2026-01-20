@@ -79,7 +79,7 @@ export function Leaderboard() {
     if (rank === 1) return <Crown className="w-5 h-5 text-yellow-400" />;
     if (rank === 2) return <Trophy className="w-5 h-5 text-gray-400" />;
     if (rank === 3) return <Trophy className="w-5 h-5 text-amber-600" />;
-    return <span className="text-sm text-[#6B6B78] font-mono">#{rank}</span>;
+    return <span className="text-sm text-zinc-500 font-mono">#{rank}</span>;
   };
 
   const getCategoryValue = (entry: LeaderboardEntry) => {
@@ -98,16 +98,16 @@ export function Leaderboard() {
   };
 
   return (
-    <div className="bg-[#0A0A0F] rounded-2xl border border-[#2A2A2F] overflow-hidden">
+    <div className="bg-zinc-950 rounded-2xl border border-zinc-800 overflow-hidden">
       {/* Header */}
-      <div className="p-6 border-b border-[#2A2A2F]">
+      <div className="p-6 border-b border-zinc-800">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-full bg-linear-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
             <Trophy className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">Leaderboard</h2>
-            <p className="text-sm text-[#6B6B78]">Top performers in the Vfide community</p>
+            <h2 className="text-2xl font-bold text-zinc-100">Leaderboard</h2>
+            <p className="text-sm text-zinc-500">Top performers in the Vfide community</p>
           </div>
         </div>
 
@@ -117,8 +117,8 @@ export function Leaderboard() {
             onClick={() => setCategory('xp')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'xp'
-                ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                : 'bg-[#1A1A1F] text-[#6B6B78] hover:bg-[#2A2A2F]'
+                ? 'bg-cyan-400 text-zinc-950'
+                : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800'
             }`}
           >
             <Zap className="w-4 h-4" />
@@ -128,8 +128,8 @@ export function Leaderboard() {
             onClick={() => setCategory('level')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'level'
-                ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                : 'bg-[#1A1A1F] text-[#6B6B78] hover:bg-[#2A2A2F]'
+                ? 'bg-cyan-400 text-zinc-950'
+                : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800'
             }`}
           >
             <TrendingUp className="w-4 h-4" />
@@ -139,8 +139,8 @@ export function Leaderboard() {
             onClick={() => setCategory('achievements')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'achievements'
-                ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                : 'bg-[#1A1A1F] text-[#6B6B78] hover:bg-[#2A2A2F]'
+                ? 'bg-cyan-400 text-zinc-950'
+                : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800'
             }`}
           >
             <Award className="w-4 h-4" />
@@ -150,8 +150,8 @@ export function Leaderboard() {
             onClick={() => setCategory('friends')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'friends'
-                ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                : 'bg-[#1A1A1F] text-[#6B6B78] hover:bg-[#2A2A2F]'
+                ? 'bg-cyan-400 text-zinc-950'
+                : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -162,18 +162,18 @@ export function Leaderboard() {
 
       {/* Your Rank (if logged in) */}
       {currentUserRank && (
-        <div className="p-4 bg-[#00F0FF]/10 border-b border-[#00F0FF]/20">
+        <div className="p-4 bg-cyan-400/10 border-b border-cyan-400/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {getRankIcon(currentUserRank.rank)}
               <div>
-                <p className="text-sm font-semibold text-[#F5F3E8]">Your Rank</p>
-                <p className="text-xs text-[#6B6B78]">{currentUserRank.alias || `${currentUserRank.address.slice(0, 6)}...`}</p>
+                <p className="text-sm font-semibold text-zinc-100">Your Rank</p>
+                <p className="text-xs text-zinc-500">{currentUserRank.alias || `${currentUserRank.address.slice(0, 6)}...`}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold text-[#00F0FF]">{getCategoryValue(currentUserRank)}</p>
-              <p className="text-xs text-[#6B6B78]">Level {currentUserRank.level}</p>
+              <p className="text-sm font-bold text-cyan-400">{getCategoryValue(currentUserRank)}</p>
+              <p className="text-xs text-zinc-500">Level {currentUserRank.level}</p>
             </div>
           </div>
         </div>
@@ -184,7 +184,7 @@ export function Leaderboard() {
         {isLoading ? (
           <div className="p-4 space-y-2">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="flex items-center gap-3 p-3 bg-[#0F0F14] rounded-lg">
+              <div key={i} className="flex items-center gap-3 p-3 bg-zinc-900 rounded-lg">
                 <Skeleton width={40} height={40} rounded="full" />
                 <div className="flex-1 space-y-2">
                   <Skeleton height={16} className="w-3/5" />
@@ -195,9 +195,9 @@ export function Leaderboard() {
           </div>
         ) : leaderboard.length === 0 ? (
           <div className="p-12 text-center">
-            <Trophy className="w-16 h-16 text-[#6B6B78] mx-auto mb-4" />
-            <p className="text-sm text-[#6B6B78]">No leaderboard data yet</p>
-            <p className="text-xs text-[#6B6B78] mt-2">Be the first to earn XP and climb the ranks!</p>
+            <Trophy className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
+            <p className="text-sm text-zinc-500">No leaderboard data yet</p>
+            <p className="text-xs text-zinc-500 mt-2">Be the first to earn XP and climb the ranks!</p>
           </div>
         ) : (
           <div className="divide-y divide-[#2A2A2F]">
@@ -210,8 +210,8 @@ export function Leaderboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`flex items-center gap-4 p-4 hover:bg-[#1A1A1F] transition-colors ${
-                    isCurrentUser ? 'bg-[#00F0FF]/5' : ''
+                  className={`flex items-center gap-4 p-4 hover:bg-zinc-900 transition-colors ${
+                    isCurrentUser ? 'bg-cyan-400/5' : ''
                   }`}
                 >
                   {/* Rank */}
@@ -223,26 +223,26 @@ export function Leaderboard() {
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
                     entry.rank <= 3
                       ? 'bg-linear-to-br from-yellow-400 to-orange-500'
-                      : 'bg-linear-to-br from-[#00F0FF] to-[#A78BFA]'
+                      : 'bg-linear-to-br from-cyan-400 to-violet-400'
                   }`}>
                     {(entry.alias || entry.address).charAt(0).toUpperCase()}
                   </div>
 
                   {/* User Info */}
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-[#F5F3E8]">
+                    <p className="text-sm font-semibold text-zinc-100">
                       {entry.alias || `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`}
                       {isCurrentUser && (
-                        <span className="ml-2 text-xs text-[#00F0FF]">(You)</span>
+                        <span className="ml-2 text-xs text-cyan-400">(You)</span>
                       )}
                     </p>
-                    <p className="text-xs text-[#6B6B78]">Level {entry.level}</p>
+                    <p className="text-xs text-zinc-500">Level {entry.level}</p>
                   </div>
 
                   {/* Stats */}
                   <div className="text-right">
-                    <p className="text-sm font-bold text-[#F5F3E8]">{getCategoryValue(entry)}</p>
-                    <p className="text-xs text-[#6B6B78]">{entry.achievementCount} achievements</p>
+                    <p className="text-sm font-bold text-zinc-100">{getCategoryValue(entry)}</p>
+                    <p className="text-xs text-zinc-500">{entry.achievementCount} achievements</p>
                   </div>
                 </motion.div>
               );
@@ -253,8 +253,8 @@ export function Leaderboard() {
 
       {/* Footer */}
       {leaderboard.length > 0 && (
-        <div className="p-4 bg-[#0F0F14] border-t border-[#2A2A2F] text-center">
-          <p className="text-xs text-[#6B6B78]">
+        <div className="p-4 bg-zinc-900 border-t border-zinc-800 text-center">
+          <p className="text-xs text-zinc-500">
             Showing top {Math.min(50, leaderboard.length)} of {leaderboard.length} users
           </p>
         </div>

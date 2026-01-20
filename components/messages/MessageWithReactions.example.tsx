@@ -100,7 +100,7 @@ export function MessageWithReactions({ message }: { message: Message }) {
   };
 
   return (
-    <div className="relative bg-[#1A1A1F] border border-white/10 rounded-xl p-4 hover:border-white/20 transition-colors">
+    <div className="relative bg-zinc-900 border border-white/10 rounded-xl p-4 hover:border-white/20 transition-colors">
       {/* Message Content */}
       <div className="mb-2">
         <div className="flex items-center gap-2 mb-2">

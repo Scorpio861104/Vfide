@@ -437,7 +437,7 @@ export function GroupedNotification({
                 className={`
                   absolute w-8 h-8 rounded-lg ${colors.icon} 
                   flex items-center justify-center text-sm
-                  border-2 border-[#0A0A0F]
+                  border-2 border-zinc-950
                 `}
                 style={{
                   top: i * 4,
@@ -635,7 +635,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed top-16 right-4 z-100 w-96 max-h-[80vh] overflow-hidden rounded-2xl bg-[#0A0A0F]/95 backdrop-blur-xl border border-white/10 shadow-2xl"
+            className="fixed top-16 right-4 z-100 w-96 max-h-[80vh] overflow-hidden rounded-2xl bg-zinc-950/95 backdrop-blur-xl border border-white/10 shadow-2xl"
           >
             {/* Header */}
             <div className="p-4 border-b border-white/10">

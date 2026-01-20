@@ -926,7 +926,7 @@ export default function VaultRecoveryPage() {
   };
   
   return (
-    <main className="min-h-screen bg-[#050507] relative overflow-hidden">
+    <main className="min-h-screen bg-zinc-950 relative overflow-hidden">
       <AuroraBackground />
       <FloatingParticles />
       

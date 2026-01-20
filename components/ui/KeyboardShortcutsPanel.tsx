@@ -46,11 +46,11 @@ export function KeyboardShortcutsPanel({ customShortcuts = [] }: ShortcutsPanelP
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 p-3 bg-[#2A2A3F] hover:bg-[#3A3A4F] border border-[#3A3A4F] rounded-full shadow-lg transition-colors z-40"
+        className="fixed bottom-4 right-4 p-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-full shadow-lg transition-colors z-40"
         aria-label="Keyboard shortcuts"
         title="Keyboard shortcuts (Cmd+/)"
       >
-        <Command className="w-5 h-5 text-[#00F0FF]" />
+        <Command className="w-5 h-5 text-cyan-400" />
       </button>
 
       {/* Shortcuts Panel */}
@@ -71,20 +71,20 @@ export function KeyboardShortcutsPanel({ customShortcuts = [] }: ShortcutsPanelP
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-[#0A0A0F] border border-[#2A2A2F] rounded-2xl shadow-2xl z-50 overflow-hidden"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl z-50 overflow-hidden"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-[#2A2A2F]">
+              <div className="flex items-center justify-between p-6 border-b border-zinc-800">
                 <div>
-                  <h2 className="text-xl font-bold text-[#F5F3E8]">Keyboard Shortcuts</h2>
-                  <p className="text-sm text-[#6B6B78] mt-1">Navigate faster with keyboard shortcuts</p>
+                  <h2 className="text-xl font-bold text-zinc-100">Keyboard Shortcuts</h2>
+                  <p className="text-sm text-zinc-500 mt-1">Navigate faster with keyboard shortcuts</p>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-[#2A2A3F] rounded-lg transition-colors"
+                  className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
                   aria-label="Close"
                 >
-                  <X className="w-5 h-5 text-[#6B6B78]" />
+                  <X className="w-5 h-5 text-zinc-500" />
                 </button>
               </div>
 
@@ -94,10 +94,10 @@ export function KeyboardShortcutsPanel({ customShortcuts = [] }: ShortcutsPanelP
                   {allShortcuts.map((shortcut, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between py-2 px-3 bg-[#0F0F14] rounded-lg"
+                      className="flex items-center justify-between py-2 px-3 bg-zinc-900 rounded-lg"
                     >
-                      <span className="text-sm text-[#F5F3E8]">{shortcut.description}</span>
-                      <kbd className="px-2 py-1 text-xs font-mono bg-[#2A2A3F] text-[#00F0FF] rounded border border-[#3A3A4F]">
+                      <span className="text-sm text-zinc-100">{shortcut.description}</span>
+                      <kbd className="px-2 py-1 text-xs font-mono bg-zinc-800 text-cyan-400 rounded border border-zinc-700">
                         {formatShortcut(shortcut)}
                       </kbd>
                     </div>
@@ -106,10 +106,10 @@ export function KeyboardShortcutsPanel({ customShortcuts = [] }: ShortcutsPanelP
               </div>
 
               {/* Footer */}
-              <div className="p-4 bg-[#0F0F14] border-t border-[#2A2A2F]">
-                <p className="text-xs text-[#6B6B78] text-center">
-                  Press <kbd className="px-1 py-0.5 text-xs font-mono bg-[#2A2A3F] text-[#00F0FF] rounded">Esc</kbd> or{' '}
-                  <kbd className="px-1 py-0.5 text-xs font-mono bg-[#2A2A3F] text-[#00F0FF] rounded">Cmd+/</kbd> to close
+              <div className="p-4 bg-zinc-900 border-t border-zinc-800">
+                <p className="text-xs text-zinc-500 text-center">
+                  Press <kbd className="px-1 py-0.5 text-xs font-mono bg-zinc-800 text-cyan-400 rounded">Esc</kbd> or{' '}
+                  <kbd className="px-1 py-0.5 text-xs font-mono bg-zinc-800 text-cyan-400 rounded">Cmd+/</kbd> to close
                 </p>
               </div>
             </motion.div>

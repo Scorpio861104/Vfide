@@ -69,15 +69,15 @@ export function PaymentRequestButton({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl max-w-md w-full"
+              className="bg-zinc-900 border border-zinc-800 rounded-xl max-w-md w-full"
             >
-              <div className="p-6 border-b border-[#2A2A2F]">
+              <div className="p-6 border-b border-zinc-800">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold text-white">Request Payment</h3>
                   <button
                     onClick={() => setShowModal(false)}
                     disabled={creating}
-                    className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#2A2A2F] rounded-lg transition-colors"
+                    className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -95,7 +95,7 @@ export function PaymentRequestButton({
                       className={`flex-1 px-4 py-3 rounded-lg border transition-all ${
                         currency === 'VFIDE'
                           ? 'border-purple-500 bg-purple-500/10 text-white'
-                          : 'border-[#2A2A2F] bg-[#0F0F14] text-gray-400'
+                          : 'border-zinc-800 bg-zinc-900 text-gray-400'
                       }`}
                     >
                       VFIDE
@@ -105,7 +105,7 @@ export function PaymentRequestButton({
                       className={`flex-1 px-4 py-3 rounded-lg border transition-all ${
                         currency === 'ETH'
                           ? 'border-blue-500 bg-blue-500/10 text-white'
-                          : 'border-[#2A2A2F] bg-[#0F0F14] text-gray-400'
+                          : 'border-zinc-800 bg-zinc-900 text-gray-400'
                       }`}
                     >
                       ETH
@@ -123,7 +123,7 @@ export function PaymentRequestButton({
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
                     step="0.01"
-                    className="w-full px-4 py-3 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white text-lg focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-lg focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
@@ -136,7 +136,7 @@ export function PaymentRequestButton({
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="What's this for?"
-                    className="w-full px-4 py-2 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
@@ -198,7 +198,7 @@ export function PaymentRequestCard({ request, isRecipient }: PaymentRequestCardP
         </div>
       </div>
 
-      <div className="bg-[#0F0F14] rounded-lg p-3 mb-3">
+      <div className="bg-zinc-900 rounded-lg p-3 mb-3">
         <div className="text-gray-400 text-xs mb-1">Amount Requested</div>
         <div className="text-white text-2xl font-bold">
           {request.amount} {request.currency}

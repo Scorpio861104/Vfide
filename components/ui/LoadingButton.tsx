@@ -18,8 +18,8 @@ interface LoadingButtonProps {
 }
 
 const variants = {
-  primary: 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] hover:shadow-lg hover:shadow-[#00F0FF]/50',
-  secondary: 'bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] hover:border-[#00F0FF]',
+  primary: 'bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 hover:shadow-lg hover:shadow-cyan-400/50',
+  secondary: 'bg-zinc-800 border border-zinc-700 text-zinc-100 hover:border-cyan-400',
   danger: 'bg-red-600 text-white hover:bg-red-500',
   success: 'bg-green-600 text-white hover:bg-green-500',
 };

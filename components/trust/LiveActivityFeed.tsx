@@ -49,24 +49,24 @@ export function LiveActivityFeed() {
     <div className="space-y-2 sm:space-y-3 md:space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-base sm:text-lg md:text-xl font-bold text-[#F5F3E8] flex items-center gap-2">
+        <h3 className="text-base sm:text-lg md:text-xl font-bold text-zinc-100 flex items-center gap-2">
           <motion.span
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.5, 1, 0.5],
             }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="w-2 h-2 bg-[#00FF88] rounded-full"
+            className="w-2 h-2 bg-emerald-400 rounded-full"
           />
           Live Activity
         </h3>
-        <span className="text-xs sm:text-sm text-[#F5F3E8]/50">
+        <span className="text-xs sm:text-sm text-zinc-100/50">
           {activities.length} recent
         </span>
       </div>
       
       {/* Activity List */}
-      <div className="relative h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl bg-[#0F0F0F]/50 backdrop-blur-xl border border-[#00F0FF]/20">
+      <div className="relative h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-cyan-400/20">
         <div className="absolute inset-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#00F0FF]/30 scrollbar-track-transparent p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2">
           <AnimatePresence initial={false}>
             {activities.map((activity) => (
@@ -144,19 +144,19 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
               >
                 {config.label}
               </span>
-              <span className="text-[10px] sm:text-xs text-[#F5F3E8]/40">
+              <span className="text-[10px] sm:text-xs text-zinc-100/40">
                 {timeAgo()}
               </span>
             </div>
             
-            <p className="text-xs sm:text-sm text-[#F5F3E8]/80 mt-0.5 sm:mt-1 truncate">
+            <p className="text-xs sm:text-sm text-zinc-100/80 mt-0.5 sm:mt-1 truncate">
               {config.description(activity)}
             </p>
             
             {activity.from && (
               <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 text-[10px] sm:text-xs">
-                <span className="text-[#F5F3E8]/50">From:</span>
-                <code className="text-[#00F0FF] font-mono truncate">
+                <span className="text-zinc-100/50">From:</span>
+                <code className="text-cyan-400 font-mono truncate">
                   {activity.from.slice(0, 6)}...{activity.from.slice(-4)}
                 </code>
               </div>
@@ -169,7 +169,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                 href={`https://sepolia.basescan.org/tx/${activity.txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-[#00F0FF] hover:text-[#00D4FF] mt-2 inline-flex items-center gap-1 transition-colors"
+                className="text-xs text-cyan-400 hover:text-cyan-400 mt-2 inline-flex items-center gap-1 transition-colors"
               >
                 View on Explorer →
               </motion.a>
@@ -208,7 +208,7 @@ function ParticleStream() {
             animate={{ top: '-10%', opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 3, ease: 'linear' }}
-            className="absolute w-1 h-1 bg-[#00F0FF] rounded-full"
+            className="absolute w-1 h-1 bg-cyan-400 rounded-full"
             style={{
               left: `${particle.left}%`,
               boxShadow: '0 0 8px #00F0FF',

@@ -106,7 +106,7 @@ function ImageAttachment({ attachment, compact, onClick }: ImageAttachmentProps)
   return (
     <div
       onClick={onClick}
-      className="relative group cursor-pointer rounded-lg overflow-hidden border border-[#2A2A2F] hover:border-blue-500 transition-colors"
+      className="relative group cursor-pointer rounded-lg overflow-hidden border border-zinc-800 hover:border-blue-500 transition-colors"
       style={{ maxWidth: compact ? '200px' : '400px' }}
     >
       <img
@@ -155,7 +155,7 @@ interface VideoAttachmentProps {
 function VideoAttachment({ attachment, compact }: VideoAttachmentProps) {
   return (
     <div
-      className="rounded-lg overflow-hidden border border-[#2A2A2F]"
+      className="rounded-lg overflow-hidden border border-zinc-800"
       style={{ maxWidth: compact ? '300px' : '500px' }}
     >
       <video
@@ -167,7 +167,7 @@ function VideoAttachment({ attachment, compact }: VideoAttachmentProps) {
         Your browser doesn&apos;t support video playback.
       </video>
       
-      <div className="bg-[#1A1A1F] border-t border-[#2A2A2F] p-2 flex items-center justify-between">
+      <div className="bg-zinc-900 border-t border-zinc-800 p-2 flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className="text-white text-sm truncate">{attachment.name}</div>
           <div className="text-gray-400 text-xs">{formatFileSize(attachment.size)}</div>
@@ -195,7 +195,7 @@ interface FileAttachmentProps {
 
 function FileAttachment({ attachment, compact: _compact }: FileAttachmentProps) {
   return (
-    <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-3 flex items-center gap-3 hover:border-[#3A3A3F] transition-colors">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center gap-3 hover:border-zinc-700 transition-colors">
       <div className="w-10 h-10 bg-linear-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
         {renderIconComponent(attachment.type, "w-5 h-5 text-blue-400")}
       </div>

@@ -129,35 +129,35 @@ export default function SocialPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-2xl p-8 md:p-12 text-center"
+                className="bg-linear-to-br from-zinc-900 to-zinc-950 border border-zinc-700 rounded-2xl p-8 md:p-12 text-center"
               >
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center">
-                  <MessageCircle className="w-10 h-10 text-[#0A0A0F]" />
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
+                  <MessageCircle className="w-10 h-10 text-zinc-950" />
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-[#F5F3E8] mb-4">
+                <h2 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">
                   Connect Your Wallet
                 </h2>
-                <p className="text-lg text-[#A0A0A5] mb-8 max-w-2xl mx-auto">
+                <p className="text-lg text-zinc-400 mb-8 max-w-2xl mx-auto">
                   Access encrypted messaging, friend connections, and social features.
                   Your wallet is your identity—no email or signup required.
                 </p>
                 
                 {/* Features Grid */}
                 <div className="grid md:grid-cols-3 gap-4 mb-8 max-w-3xl mx-auto">
-                  <div className="p-4 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]">
-                    <MessageCircle className="w-6 h-6 text-[#00F0FF] mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-[#F5F3E8]">Encrypted Messaging</p>
-                    <p className="text-xs text-[#6B6B78] mt-1">End-to-end encryption</p>
+                  <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
+                    <MessageCircle className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-zinc-100">Encrypted Messaging</p>
+                    <p className="text-xs text-zinc-500 mt-1">End-to-end encryption</p>
                   </div>
-                  <div className="p-4 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]">
-                    <Users className="w-6 h-6 text-[#A78BFA] mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-[#F5F3E8]">Groups & Friends</p>
-                    <p className="text-xs text-[#6B6B78] mt-1">Build your network</p>
+                  <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
+                    <Users className="w-6 h-6 text-violet-400 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-zinc-100">Groups & Friends</p>
+                    <p className="text-xs text-zinc-500 mt-1">Build your network</p>
                   </div>
-                  <div className="p-4 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]">
-                    <Award className="w-6 h-6 text-[#FFD700] mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-[#F5F3E8]">Endorsements</p>
-                    <p className="text-xs text-[#6B6B78] mt-1">Build reputation</p>
+                  <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
+                    <Award className="w-6 h-6 text-amber-400 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-zinc-100">Endorsements</p>
+                    <p className="text-xs text-zinc-500 mt-1">Build reputation</p>
                   </div>
                 </div>
 
@@ -178,11 +178,11 @@ export default function SocialPage() {
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-3xl md:text-5xl font-bold text-[#F5F3E8] mb-2 md:mb-3 flex items-center gap-2 md:gap-3">
-                  <MessageCircle className="w-8 h-8 md:w-10 md:h-10 text-[#00F0FF]" />
+                <h1 className="text-3xl md:text-5xl font-bold text-zinc-100 mb-2 md:mb-3 flex items-center gap-2 md:gap-3">
+                  <MessageCircle className="w-8 h-8 md:w-10 md:h-10 text-cyan-400" />
                   Social Hub
                 </h1>
-                <p className="text-[#A0A0A5] text-sm md:text-lg flex items-center gap-2">
+                <p className="text-zinc-400 text-sm md:text-lg flex items-center gap-2">
                   <Lock className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">Connect with friends through end-to-end encrypted messaging</span>
                   <span className="sm:hidden">Encrypted messaging</span>
@@ -193,25 +193,25 @@ export default function SocialPage() {
               {address && (
                 <div className="flex items-center gap-2 md:gap-3">
                   <UserStatsWidget userAddress={address} compact />
-                  <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg px-3 md:px-4 py-2 md:py-3">
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 bg-zinc-900 border border-zinc-700 rounded-lg px-3 md:px-4 py-2 md:py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 md:w-3 md:h-3 bg-[#50C878] rounded-full animate-pulse" />
+                      <div className="w-2 h-2 md:w-3 md:h-3 bg-emerald-500 rounded-full animate-pulse" />
                       <div>
-                        <div className="text-xs text-[#A0A0A5]">Connected</div>
-                        <div className="text-xs md:text-sm font-medium text-[#F5F3E8]">
+                        <div className="text-xs text-zinc-400">Connected</div>
+                        <div className="text-xs md:text-sm font-medium text-zinc-100">
                           {address.slice(0, 6)}...{address.slice(-4)}
                         </div>
                       </div>
                     </div>
                     {isLoadingVault ? (
-                      <div className="flex items-center gap-1 px-2 py-1 bg-[#6B6B78]/10 border border-[#6B6B78]/30 rounded-full">
-                        <div className="w-3 h-3 border-2 border-[#6B6B78] border-t-transparent rounded-full animate-spin" />
-                        <span className="text-xs text-[#6B6B78] font-semibold">Checking...</span>
+                      <div className="flex items-center gap-1 px-2 py-1 bg-zinc-500/10 border border-zinc-500/30 rounded-full">
+                        <div className="w-3 h-3 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-xs text-zinc-500 font-semibold">Checking...</span>
                       </div>
                     ) : hasVault ? (
-                      <div className="flex items-center gap-1 px-2 py-1 bg-[#00F0FF]/10 border border-[#00F0FF]/30 rounded-full">
-                        <Lock className="w-3 h-3 text-[#00F0FF]" />
-                        <span className="text-xs text-[#00F0FF] font-semibold">Vault Active</span>
+                      <div className="flex items-center gap-1 px-2 py-1 bg-cyan-400/10 border border-cyan-400/30 rounded-full">
+                        <Lock className="w-3 h-3 text-cyan-400" />
+                        <span className="text-xs text-cyan-400 font-semibold">Vault Active</span>
                       </div>
                     ) : null}
                   </div>
@@ -248,7 +248,7 @@ export default function SocialPage() {
           >
             {/* Mobile: Horizontal scroll */}
             <div className="lg:hidden overflow-x-auto scrollbar-hide">
-              <div className="flex gap-2 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-2 min-w-max">
+              <div className="flex gap-2 bg-zinc-900 border border-zinc-700 rounded-lg p-2 min-w-max">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
@@ -256,7 +256,7 @@ export default function SocialPage() {
                     className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all whitespace-nowrap ${
                       activeTab === tab.id
                         ? ''
-                        : 'text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F]'
+                        : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                     }`}
                     style={
                       activeTab === tab.id
@@ -273,7 +273,7 @@ export default function SocialPage() {
 
             {/* Desktop: Grid */}
             <div className="hidden lg:block">
-              <div className="grid grid-cols-4 gap-2 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-2">
+              <div className="grid grid-cols-4 gap-2 bg-zinc-900 border border-zinc-700 rounded-lg p-2">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
@@ -281,7 +281,7 @@ export default function SocialPage() {
                     className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
                       activeTab === tab.id
                         ? ''
-                        : 'text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F]'
+                        : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                     }`}
                     style={
                       activeTab === tab.id
@@ -337,18 +337,18 @@ export default function SocialPage() {
                   {selectedFriend ? (
                     <MessagingCenter friend={selectedFriend} hasVault={hasVault} />
                   ) : (
-                    <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col items-center justify-center p-12 text-center">
-                      <div className="w-24 h-24 rounded-full bg-[#00F0FF]/10 flex items-center justify-center mb-6">
-                        <MessageCircle className="w-12 h-12 text-[#00F0FF]" />
+                    <div className="bg-zinc-900 rounded-xl border border-zinc-700 h-full flex flex-col items-center justify-center p-12 text-center">
+                      <div className="w-24 h-24 rounded-full bg-cyan-400/10 flex items-center justify-center mb-6">
+                        <MessageCircle className="w-12 h-12 text-cyan-400" />
                       </div>
-                      <h3 className="text-2xl font-bold text-[#F5F3E8] mb-3">
+                      <h3 className="text-2xl font-bold text-zinc-100 mb-3">
                         Select a Friend to Start Messaging
                       </h3>
-                      <p className="text-[#A0A0A5] max-w-md mb-6">
+                      <p className="text-zinc-400 max-w-md mb-6">
                         All messages are encrypted using your wallet signature. Only you and your friend can read them.
                       </p>
-                      <div className="flex items-center gap-2 text-sm text-[#6B6B78]">
-                        <Shield className="w-4 h-4 text-[#50C878]" />
+                      <div className="flex items-center gap-2 text-sm text-zinc-500">
+                        <Shield className="w-4 h-4 text-emerald-500" />
                         <span>End-to-end encrypted • Non-custodial • Private</span>
                       </div>
                     </div>
@@ -468,29 +468,29 @@ export default function SocialPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-8 bg-[#1A1A2E] border border-[#00F0FF]/30 rounded-lg p-6"
+            className="mt-8 bg-zinc-900 border border-cyan-400/30 rounded-lg p-6"
           >
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#00F0FF]/20 flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5 text-[#00F0FF]" />
+              <div className="w-10 h-10 rounded-lg bg-cyan-400/20 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-cyan-400" />
               </div>
               <div className="flex-1">
-                <h4 className="text-lg font-bold text-[#F5F3E8] mb-2">End-to-End Encryption</h4>
-                <p className="text-sm text-[#A0A0A5] mb-3">
+                <h4 className="text-lg font-bold text-zinc-100 mb-2">End-to-End Encryption</h4>
+                <p className="text-sm text-zinc-400 mb-3">
                   All messages are encrypted using your wallet signature before leaving your device.
                   Only you and your intended recipient can decrypt and read the messages. VFIDE cannot access your conversations.
                 </p>
-                <div className="flex flex-wrap gap-4 text-xs text-[#6B6B78]">
+                <div className="flex flex-wrap gap-4 text-xs text-zinc-500">
                   <div className="flex items-center gap-1">
-                    <Shield className="w-3 h-3 text-[#50C878]" />
+                    <Shield className="w-3 h-3 text-emerald-500" />
                     <span>Wallet-based encryption</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-[#50C878]" />
+                    <Lock className="w-3 h-3 text-emerald-500" />
                     <span>Private by default</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Users className="w-3 h-3 text-[#50C878]" />
+                    <Users className="w-3 h-3 text-emerald-500" />
                     <span>Decentralized storage (coming soon)</span>
                   </div>
                 </div>

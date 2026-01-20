@@ -204,7 +204,7 @@ export default function OnboardingChecklist() {
           setIsMinimized(false);
           playNotification();
         }}
-        className="fixed bottom-24 right-6 z-40 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] px-6 py-3 rounded-full font-bold shadow-lg flex items-center gap-2"
+        className="fixed bottom-24 right-6 z-40 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 px-6 py-3 rounded-full font-bold shadow-lg flex items-center gap-2"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         whileHover={{ scale: 1.05 }}
@@ -223,7 +223,7 @@ export default function OnboardingChecklist() {
 
   return (
     <motion.div
-      className="fixed bottom-24 right-6 z-40 w-96 bg-[#1A1A1F] border-2 border-[#FFD700] rounded-xl shadow-2xl overflow-hidden"
+      className="fixed bottom-24 right-6 z-40 w-96 bg-zinc-900 border-2 border-amber-400 rounded-xl shadow-2xl overflow-hidden"
       initial={{ y: 100, opacity: 0, scale: 0.9 }}
       animate={{ y: 0, opacity: 1, scale: 1 }}
       exit={{ y: 100, opacity: 0, scale: 0.9 }}
@@ -231,22 +231,22 @@ export default function OnboardingChecklist() {
     >
       {showConfetti && <Confetti />}
       {/* Header */}
-      <div className="bg-linear-to-r from-[#FFD700]/20 to-[#FFA500]/20 p-4 border-b border-[#FFD700]/30">
+      <div className="bg-linear-to-r from-amber-400/20 to-orange-500/20 p-4 border-b border-amber-400/30">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-[#FFD700]" />
+            <Trophy className="w-6 h-6 text-amber-400" />
             Getting Started
           </h3>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsMinimized(true)}
-              className="text-[#A0A0A5] hover:text-white transition-colors"
+              className="text-zinc-400 hover:text-white transition-colors"
             >
               <ArrowRight className="w-5 h-5" />
             </button>
             <button
               onClick={() => setIsDismissed(true)}
-              className="text-[#A0A0A5] hover:text-white transition-colors"
+              className="text-zinc-400 hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -260,7 +260,7 @@ export default function OnboardingChecklist() {
               <AnimatedCounter value={completedCount} /> of {totalCount} completed
             </span>
             <motion.span 
-              className="text-[#FFD700] font-bold"
+              className="text-amber-400 font-bold"
               key={progress}
               initial={{ scale: 1.3 }}
               animate={{ scale: 1 }}
@@ -268,9 +268,9 @@ export default function OnboardingChecklist() {
               {Math.round(progress)}%
             </motion.span>
           </div>
-          <div className="w-full bg-[#2A2A2F] rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
             <motion.div 
-              className="bg-linear-to-r from-[#FFD700] to-[#FFA500] h-3 rounded-full relative"
+              className="bg-linear-to-r from-amber-400 to-orange-500 h-3 rounded-full relative"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ type: 'spring', stiffness: 100, damping: 15 }}
@@ -284,8 +284,8 @@ export default function OnboardingChecklist() {
           </div>
           {totalRewards > 0 && (
             <div className="text-center text-sm">
-              <span className="text-[#A0A0A5]">Earned: </span>
-              <span className="text-[#FFD700] font-bold">{totalRewards} VFIDE</span>
+              <span className="text-zinc-400">Earned: </span>
+              <span className="text-amber-400 font-bold">{totalRewards} VFIDE</span>
             </div>
           )}
         </div>
@@ -312,7 +312,7 @@ export default function OnboardingChecklist() {
       <AnimatePresence>
         {completedCount === totalCount && totalCount > 0 && (
           <motion.div 
-            className="bg-[#50C878]/10 border-t border-[#50C878]/30 p-4 text-center"
+            className="bg-emerald-500/10 border-t border-emerald-500/30 p-4 text-center"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -325,9 +325,9 @@ export default function OnboardingChecklist() {
               🎉
             </motion.div>
             <div className="text-lg font-bold text-white mb-1">All Done!</div>
-            <div className="text-sm text-[#A0A0A5] mb-3">You&apos;ve completed the onboarding checklist</div>
+            <div className="text-sm text-zinc-400 mb-3">You&apos;ve completed the onboarding checklist</div>
             <motion.button 
-              className="w-full px-4 py-2 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#0A0A0B] rounded-lg font-bold"
+              className="w-full px-4 py-2 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               animate={{ boxShadow: ['0 0 0px #FFD700', '0 0 20px #FFD700', '0 0 0px #FFD700'] }}
@@ -348,15 +348,15 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
     <motion.div 
       className={`rounded-lg p-3 ${
         item.completed 
-          ? 'bg-[#50C878]/10 border border-[#50C878]/30' 
-          : 'bg-[#0A0A0B] border border-[#2A2A2F]'
+          ? 'bg-emerald-500/10 border border-emerald-500/30' 
+          : 'bg-zinc-950 border border-zinc-800'
       }`}
       whileHover={{ scale: 1.01, borderColor: item.completed ? undefined : 'rgba(255, 215, 0, 0.5)' }}
       transition={{ type: 'spring', stiffness: 400 }}
     >
       <div className="flex items-start gap-3 mb-2">
         <motion.div 
-          className={`mt-0.5 ${item.completed ? 'text-[#50C878]' : 'text-[#A0A0A5]'}`}
+          className={`mt-0.5 ${item.completed ? 'text-emerald-500' : 'text-zinc-400'}`}
           initial={false}
           animate={item.completed ? { scale: [1, 1.3, 1], rotate: [0, 360] } : {}}
           transition={{ duration: 0.4 }}
@@ -371,13 +371,13 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
           <h4 className={`font-bold mb-1 ${item.completed ? 'text-white' : 'text-white'}`}>
             {item.title}
           </h4>
-          <p className="text-sm text-[#A0A0A5] mb-2">{item.description}</p>
+          <p className="text-sm text-zinc-400 mb-2">{item.description}</p>
           
           {/* Rewards */}
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {item.reward.xp && (
               <motion.span 
-                className="text-xs bg-[#9333EA]/20 text-[#9333EA] px-2 py-1 rounded"
+                className="text-xs bg-purple-600/20 text-purple-600 px-2 py-1 rounded"
                 whileHover={{ scale: 1.1, y: -2 }}
               >
                 +{item.reward.xp} XP
@@ -385,7 +385,7 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
             )}
             {item.reward.vfide && (
               <motion.span 
-                className="text-xs bg-[#FFD700]/20 text-[#FFD700] px-2 py-1 rounded"
+                className="text-xs bg-amber-400/20 text-amber-400 px-2 py-1 rounded"
                 whileHover={{ scale: 1.1, y: -2 }}
               >
                 +{item.reward.vfide} VFIDE
@@ -393,7 +393,7 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
             )}
             {item.reward.badge && (
               <motion.span 
-                className="text-xs bg-[#3B82F6]/20 text-[#3B82F6] px-2 py-1 rounded"
+                className="text-xs bg-blue-500/20 text-blue-500 px-2 py-1 rounded"
                 whileHover={{ scale: 1.1, y: -2 }}
                 animate={{ boxShadow: ['0 0 0px #3B82F6', '0 0 8px #3B82F6', '0 0 0px #3B82F6'] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -407,7 +407,7 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
           {!item.completed && (
             <motion.a
               href={item.action.link}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-[#FFD700]"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-amber-400"
               whileHover={{ x: 5 }}
             >
               {item.action.label}

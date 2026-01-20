@@ -177,7 +177,7 @@ export default function BadgesPage() {
   return (
     <>
       
-      <main className="min-h-screen bg-[#08080A] pt-20 relative">
+      <main className="min-h-screen bg-zinc-950 pt-20 relative">
         {/* Ambient Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/3 w-150 h-150 bg-amber-500/5 rounded-full blur-[120px]" />
@@ -240,7 +240,7 @@ export default function BadgesPage() {
         </section>
 
         {/* Filters & Search */}
-        <section className="py-6 sticky top-20 z-40 bg-[#08080A]/80 backdrop-blur-xl border-b border-white/5">
+        <section className="py-6 sticky top-20 z-40 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
           <div className="container mx-auto px-3 sm:px-4">
             {/* Tabs */}
             <div className="flex flex-wrap gap-2 mb-4">

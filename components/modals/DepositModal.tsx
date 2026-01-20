@@ -58,19 +58,19 @@ export default function DepositModal({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-md mx-4 p-6 bg-[#1A1A2E] rounded-2xl border border-[#3A3A4F] shadow-2xl"
+          className="relative w-full max-w-md mx-4 p-6 bg-zinc-900 rounded-2xl border border-zinc-700 shadow-2xl"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-[#00F0FF]/10 rounded-lg">
-                <ArrowDownCircle className="w-5 h-5 text-[#00F0FF]" />
+              <div className="p-2 bg-cyan-400/10 rounded-lg">
+                <ArrowDownCircle className="w-5 h-5 text-cyan-400" />
               </div>
               <h2 className="text-xl font-bold text-white">Deposit to Vault</h2>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-[#2A2A2F] rounded-lg transition-colors"
+              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
             >
               <X className="w-5 h-5 text-gray-400" />
             </button>
@@ -84,7 +84,7 @@ export default function DepositModal({
             <select
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              className="w-full px-4 py-3 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white focus:outline-none focus:border-[#00F0FF] transition-colors"
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-cyan-400 transition-colors"
             >
               <option value="VFIDE">VFIDE</option>
               <option value="ETH">ETH</option>
@@ -104,11 +104,11 @@ export default function DepositModal({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full px-4 py-3 bg-[#0F0F14] border border-[#2A2A2F] rounded-lg text-white text-lg focus:outline-none focus:border-[#00F0FF] transition-colors"
+                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-lg focus:outline-none focus:border-cyan-400 transition-colors"
               />
               <button
                 onClick={() => setAmount('100')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1 bg-[#2A2A2F] text-[#00F0FF] rounded text-sm hover:bg-[#3A3A4F] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1 bg-zinc-800 text-cyan-400 rounded text-sm hover:bg-zinc-700 transition-colors"
               >
                 MAX
               </button>
@@ -119,7 +119,7 @@ export default function DepositModal({
           </div>
 
           {/* Balance Info */}
-          <div className="p-4 bg-[#0F0F14] rounded-lg border border-[#2A2A2F] mb-6">
+          <div className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 mb-6">
             <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
               <Wallet className="w-4 h-4" />
               <span>After Deposit</span>
@@ -134,14 +134,14 @@ export default function DepositModal({
             <button
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-3 bg-[#2A2A2F] text-white rounded-lg font-medium hover:bg-[#3A3A4F] transition-colors disabled:opacity-50"
+              className="px-4 py-3 bg-zinc-800 text-white rounded-lg font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleDeposit}
               disabled={loading || !amount || safeParseFloat(amount, 0) <= 0}
-              className="px-4 py-3 bg-[#00F0FF] text-black rounded-lg font-medium hover:bg-[#00D0DF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-3 bg-cyan-400 text-black rounded-lg font-medium hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Depositing...' : 'Deposit'}
             </button>

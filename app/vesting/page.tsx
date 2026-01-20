@@ -147,7 +147,7 @@ export default function VestingPage() {
       <motion.main 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="min-h-screen bg-[#0D0D0F] pt-24 pb-16 relative overflow-hidden"
+        className="min-h-screen bg-zinc-950 pt-24 pb-16 relative overflow-hidden"
       >
         {/* Premium Background Effects */}
         <div className="fixed inset-0 pointer-events-none">

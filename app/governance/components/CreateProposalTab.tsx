@@ -96,59 +96,59 @@ export function CreateProposalTab({
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#F5F3E8]">✍️ Create New Proposal</h2>
-                  <p className="text-[#A0A0A5]">Share your idea with the community.</p>
+                  <h2 className="text-2xl font-bold text-zinc-100">✍️ Create New Proposal</h2>
+                  <p className="text-zinc-400">Share your idea with the community.</p>
                 </div>
                 {!DAO_DEPLOYED && (
-                  <span className="px-3 py-1 text-xs rounded bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]">
+                  <span className="px-3 py-1 text-xs rounded bg-amber-400/20 text-amber-400 border border-amber-400">
                     Testnet Only
                   </span>
                 )}
               </div>
 
               {!isConnected && (
-                <div className="bg-[#FFD700]/20 border border-[#FFD700] rounded-lg p-3 mb-4 text-sm text-[#FFD700]">
+                <div className="bg-amber-400/20 border border-amber-400 rounded-lg p-3 mb-4 text-sm text-amber-400">
                   ⚠️ Connect your wallet to propose with your identity
                 </div>
               )}
 
               {!DAO_DEPLOYED && (
-                <div className="bg-[#00F0FF]/10 border border-[#00F0FF]/50 rounded-lg p-3 mb-4 text-sm text-[#00F0FF]">
+                <div className="bg-cyan-400/10 border border-cyan-400/50 rounded-lg p-3 mb-4 text-sm text-cyan-400">
                   This is a test environment. Proposals here are for demonstration purposes.
                 </div>
               )}
 
               {!canPropose && (
-                <div className="bg-[#2A1F1F] border border-[#7F1D1D] rounded-lg p-3 mb-4 text-sm text-[#FBBF24]">
+                <div className="bg-zinc-900 border border-red-900 rounded-lg p-3 mb-4 text-sm text-amber-400">
                   🔒 You need more voting power to propose.
                 </div>
               )}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Title *</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Title *</label>
                   <input
                     type="text"
                     value={proposal.title}
                     onChange={(e) => updateProposal("title", e.target.value)}
                     placeholder="e.g., Fund community validator nodes"
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                   />
-                  <div className="text-xs text-[#A0A0A5] mt-1">
+                  <div className="text-xs text-zinc-400 mt-1">
                     {proposal.title.length}/{VALIDATION.TITLE_MAX} characters
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[#A0A0A5] text-sm mb-2">Category</label>
+                    <label className="block text-zinc-400 text-sm mb-2">Category</label>
                     <select
                       value={proposal.category}
                       onChange={(e) => updateProposal("category", e.target.value)}
-                      className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
                     >
                       <option value="funding">Funding</option>
                       <option value="protocol">Protocol</option>
@@ -158,65 +158,65 @@ export function CreateProposalTab({
                   </div>
 
                   <div>
-                    <label className="block text-[#A0A0A5] text-sm mb-2">Voting Duration (days)</label>
+                    <label className="block text-zinc-400 text-sm mb-2">Voting Duration (days)</label>
                     <input
                       type="number"
                       min={1}
                       max={30}
                       value={proposal.duration}
                       onChange={(e) => updateProposal("duration", Number(e.target.value))}
-                      className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Description *</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Description *</label>
                   <textarea
                     value={proposal.description}
                     onChange={(e) => updateProposal("description", e.target.value)}
                     placeholder="Describe the problem, proposed solution, and impact..."
                     rows={8}
                     maxLength={2000}
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none resize-none"
                   />
-                  <div className="text-xs text-[#A0A0A5] mt-1">
+                  <div className="text-xs text-zinc-400 mt-1">
                     {proposal.description.length}/{VALIDATION.DESC_MAX} characters
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[#A0A0A5] text-sm mb-2">Target Contract</label>
+                    <label className="block text-zinc-400 text-sm mb-2">Target Contract</label>
                     <input
                       type="text"
                       value={proposal.targetContract}
                       onChange={(e) => updateProposal("targetContract", e.target.value)}
                       placeholder="0x..."
-                      className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none"
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[#A0A0A5] text-sm mb-2">Calldata (optional)</label>
+                    <label className="block text-zinc-400 text-sm mb-2">Calldata (optional)</label>
                     <input
                       type="text"
                       value={proposal.calldata}
                       onChange={(e) => updateProposal("calldata", e.target.value)}
                       placeholder="0x..."
-                      className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none"
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {proposal.category === "funding" && (
                   <div>
-                    <label className="block text-[#A0A0A5] text-sm mb-2">Requested Amount (VFIDE)</label>
+                    <label className="block text-zinc-400 text-sm mb-2">Requested Amount (VFIDE)</label>
                     <input
                       type="number"
                       value={proposal.amount}
                       onChange={(e) => updateProposal("amount", e.target.value)}
                       placeholder="0"
-                      className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none"
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
                 )}
@@ -225,7 +225,7 @@ export function CreateProposalTab({
                   <button
                     onClick={handleSubmit}
                     disabled={!isValid || !canPropose || isCreating}
-                    className="px-6 py-3 bg-[#00F0FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
+                    className="px-6 py-3 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
                   >
                     {isCreating ? "Submitting..." : "🚀 Submit Proposal"}
                   </button>
@@ -235,9 +235,9 @@ export function CreateProposalTab({
           </div>
 
           <div className="space-y-4">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-5">
-              <h3 className="text-lg font-bold text-[#F5F3E8] mb-3">ℹ️ Proposal Guidelines</h3>
-              <ul className="space-y-2 text-sm text-[#A0A0A5]">
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-5">
+              <h3 className="text-lg font-bold text-zinc-100 mb-3">ℹ️ Proposal Guidelines</h3>
+              <ul className="space-y-2 text-sm text-zinc-400">
                 <li>• Be clear about the problem and solution.</li>
                 <li>• Include measurable success metrics.</li>
                 <li>• Provide budget breakdowns when requesting funds.</li>
@@ -245,49 +245,49 @@ export function CreateProposalTab({
               </ul>
             </div>
 
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-5">
-              <h3 className="text-lg font-bold text-[#F5F3E8] mb-3">📊 DAO Parameters</h3>
-              <dl className="space-y-2 text-sm text-[#A0A0A5]">
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-5">
+              <h3 className="text-lg font-bold text-zinc-100 mb-3">📊 DAO Parameters</h3>
+              <dl className="space-y-2 text-sm text-zinc-400">
                 <div className="flex justify-between">
                   <dt>Voting delay</dt>
-                  <dd className="text-[#F5F3E8]">{formatDuration(votingDelay)}</dd>
+                  <dd className="text-zinc-100">{formatDuration(votingDelay)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt>Voting period</dt>
-                  <dd className="text-[#F5F3E8]">{formatDuration(votingPeriod)}</dd>
+                  <dd className="text-zinc-100">{formatDuration(votingPeriod)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt>Quorum (min votes)</dt>
-                  <dd className="text-[#F5F3E8]">{formatCount(minVotesRequired)}</dd>
+                  <dd className="text-zinc-100">{formatCount(minVotesRequired)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt>Min participants</dt>
-                  <dd className="text-[#F5F3E8]">{formatCount(minParticipation)}</dd>
+                  <dd className="text-zinc-100">{formatCount(minParticipation)}</dd>
                 </div>
               </dl>
             </div>
 
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-5">
-              <h3 className="text-lg font-bold text-[#F5F3E8] mb-3">Your Identity</h3>
-              <div className="text-sm text-[#A0A0A5] space-y-2">
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-5">
+              <h3 className="text-lg font-bold text-zinc-100 mb-3">Your Identity</h3>
+              <div className="text-sm text-zinc-400 space-y-2">
                 <div className="flex justify-between">
                   <span>Status</span>
-                  <span className={isConnected ? "text-[#50C878]" : "text-[#FFD700]"}>
+                  <span className={isConnected ? "text-emerald-500" : "text-amber-400"}>
                     {isConnected ? "Connected" : "Not Connected"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Address</span>
-                  <span className="font-mono text-[#F5F3E8]">
+                  <span className="font-mono text-zinc-100">
                     {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "-"}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-5">
-              <h3 className="text-lg font-bold text-[#F5F3E8] mb-3">Costs</h3>
-              <p className="text-sm text-[#A0A0A5]">
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-5">
+              <h3 className="text-lg font-bold text-zinc-100 mb-3">Costs</h3>
+              <p className="text-sm text-zinc-400">
                 Gas fees apply when submitting on-chain. Ensure your wallet has enough balance before submitting.
               </p>
             </div>

@@ -29,7 +29,7 @@ export default function TestnetPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#0F0F12] text-white pt-20">
+      <div className="min-h-screen bg-zinc-900 text-white pt-20">
         <div className="max-w-2xl mx-auto px-4 py-12">
           <h1 className="text-3xl font-bold mb-2">Get Test ETH</h1>
           <p className="text-zinc-400 mb-8">

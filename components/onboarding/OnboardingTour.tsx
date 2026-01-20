@@ -16,7 +16,7 @@ interface TourStep {
   position?: "top" | "bottom" | "left" | "right" | "center";
 }
 
-const iconClass = "w-8 h-8 sm:w-12 sm:h-12 text-[#00F0FF]";
+const iconClass = "w-8 h-8 sm:w-12 sm:h-12 text-cyan-400";
 
 const tourSteps: TourStep[] = [
   {
@@ -161,11 +161,11 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
             transition={{ type: "spring", duration: 0.5 }}
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-101 w-[calc(100%-2rem)] max-w-lg sm:max-w-xl md:max-w-2xl"
           >
-            <div className="bg-linear-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#00F0FF] rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-linear-to-br from-zinc-800 to-zinc-900 border-2 border-cyan-400 rounded-2xl shadow-2xl overflow-hidden">
               {/* Progress Bar */}
-              <div className="h-1 bg-[#3A3A3F]">
+              <div className="h-1 bg-zinc-700">
                 <motion.div
-                  className="h-full bg-linear-to-r from-[#00F0FF] to-[#0080FF]"
+                  className="h-full bg-linear-to-r from-cyan-400 to-blue-500"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.3 }}
@@ -173,23 +173,23 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
               </div>
 
               {/* Header */}
-              <div className="p-4 sm:p-6 border-b border-[#3A3A3F] flex items-center justify-between">
+              <div className="p-4 sm:p-6 border-b border-zinc-700 flex items-center justify-between">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#00F0FF]/10 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-cyan-400/10 rounded-xl flex items-center justify-center">
                     {currentStep?.icon}
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-[#F5F3E8] font-(family-name:--font-display)">
+                    <h3 className="text-lg sm:text-2xl font-bold text-zinc-100 font-(family-name:--font-display)">
                       {currentStep?.title}
                     </h3>
-                    <p className="text-sm text-[#A0A0A5]">
+                    <p className="text-sm text-zinc-400">
                       Step {currentStepIndex + 1} of {tourSteps.length}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={handleSkip}
-                  className="p-2 text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#3A3A3F] rounded-lg transition-colors"
+                  className="p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700 rounded-lg transition-colors"
                   aria-label="Skip tour"
                 >
                   <X size={24} />
@@ -198,15 +198,15 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
 
               {/* Content */}
               <div className="p-4 sm:p-8">
-                <p className="text-base sm:text-lg text-[#F5F3E8] leading-relaxed">
+                <p className="text-base sm:text-lg text-zinc-100 leading-relaxed">
                   {currentStep?.description}
                 </p>
 
                 {/* Special content for specific steps */}
                 {currentStep?.id === "get-started" && (
-                  <div className="mt-6 p-4 bg-[#00F0FF]/10 border border-[#00F0FF] rounded-lg">
-                    <p className="text-[#00F0FF] font-bold mb-2">Pro Tip:</p>
-                    <p className="text-[#A0A0A5] text-sm">
+                  <div className="mt-6 p-4 bg-cyan-400/10 border border-cyan-400 rounded-lg">
+                    <p className="text-cyan-400 font-bold mb-2">Pro Tip:</p>
+                    <p className="text-zinc-400 text-sm">
                       After connecting your wallet, check out the Vault page to set up recovery options. 
                       This ensures you never lose access to your funds, even if you lose your wallet!
                     </p>
@@ -215,35 +215,35 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
 
                 {currentStep?.id === "merchant-portal" && (
                   <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="p-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-center">
-                      <svg className="w-6 h-6 mx-auto mb-1 text-[#00F0FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                      <div className="text-xs text-[#A0A0A5]">E-commerce</div>
+                    <div className="p-3 bg-zinc-900 border border-zinc-700 rounded-lg text-center">
+                      <svg className="w-6 h-6 mx-auto mb-1 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                      <div className="text-xs text-zinc-400">E-commerce</div>
                     </div>
-                    <div className="p-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-center">
-                      <svg className="w-6 h-6 mx-auto mb-1 text-[#00F0FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                      <div className="text-xs text-[#A0A0A5]">Retail Stores</div>
+                    <div className="p-3 bg-zinc-900 border border-zinc-700 rounded-lg text-center">
+                      <svg className="w-6 h-6 mx-auto mb-1 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                      <div className="text-xs text-zinc-400">Retail Stores</div>
                     </div>
-                    <div className="p-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-center">
-                      <svg className="w-6 h-6 mx-auto mb-1 text-[#00F0FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                      <div className="text-xs text-[#A0A0A5]">Services</div>
+                    <div className="p-3 bg-zinc-900 border border-zinc-700 rounded-lg text-center">
+                      <svg className="w-6 h-6 mx-auto mb-1 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                      <div className="text-xs text-zinc-400">Services</div>
                     </div>
                   </div>
                 )}
 
                 {currentStep?.id === "vault-security" && (
                   <div className="mt-6 space-y-3">
-                    <div className="flex items-start gap-3 p-3 bg-[#1A1A1D] border border-[#50C878] rounded-lg">
-                      <svg className="w-6 h-6 text-[#50C878] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    <div className="flex items-start gap-3 p-3 bg-zinc-900 border border-emerald-500 rounded-lg">
+                      <svg className="w-6 h-6 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                       <div>
-                        <div className="font-bold text-[#50C878] text-sm">Guardian Recovery</div>
-                        <div className="text-xs text-[#A0A0A5]">Trusted friends/family help recover lost wallets</div>
+                        <div className="font-bold text-emerald-500 text-sm">Guardian Recovery</div>
+                        <div className="text-xs text-zinc-400">Trusted friends/family help recover lost wallets</div>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 p-3 bg-[#1A1A1D] border border-[#FFD700] rounded-lg">
-                      <svg className="w-6 h-6 text-[#FFD700] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                    <div className="flex items-start gap-3 p-3 bg-zinc-900 border border-amber-400 rounded-lg">
+                      <svg className="w-6 h-6 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
                       <div>
-                        <div className="font-bold text-[#FFD700] text-sm">Next of Kin</div>
-                        <div className="text-xs text-[#A0A0A5]">Designate an heir to inherit your vault</div>
+                        <div className="font-bold text-amber-400 text-sm">Next of Kin</div>
+                        <div className="text-xs text-zinc-400">Designate an heir to inherit your vault</div>
                       </div>
                     </div>
                   </div>
@@ -251,11 +251,11 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
               </div>
 
               {/* Footer Navigation */}
-              <div className="p-6 border-t border-[#3A3A3F] flex items-center justify-between">
+              <div className="p-6 border-t border-zinc-700 flex items-center justify-between">
                 <button
                   onClick={handlePrevious}
                   disabled={isFirstStep}
-                  className="flex items-center gap-2 px-4 py-2 text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#3A3A3F] rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <ArrowLeft size={20} />
                   Previous
@@ -268,10 +268,10 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
                       onClick={() => setCurrentStepIndex(index)}
                       className={`w-2 h-2 rounded-full transition-all ${
                         index === currentStepIndex 
-                          ? "bg-[#00F0FF] w-6" 
+                          ? "bg-cyan-400 w-6" 
                           : index < currentStepIndex
-                          ? "bg-[#50C878]"
-                          : "bg-[#3A3A3F]"
+                          ? "bg-emerald-500"
+                          : "bg-zinc-700"
                       }`}
                       aria-label={`Go to step ${index + 1}`}
                     />
@@ -280,7 +280,7 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
 
                 <button
                   onClick={handleNext}
-                  className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:scale-105 transition-transform"
+                  className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:scale-105 transition-transform"
                 >
                   {isLastStep ? (
                     <>

@@ -55,7 +55,7 @@ export default function TreasuryPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-linear-to-b from-zinc-950 via-[#0f0f18] to-zinc-950" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(16,185,129,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(124,58,237,0.08),transparent_50%)]" />
@@ -144,7 +144,7 @@ function GlassCard({ children, className = "", gradient }: {
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient || 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${gradient || 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -180,10 +180,10 @@ function OverviewTab() {
             key={idx} 
             variants={itemVariants}
             whileHover={{ scale: 1.02, y: -4 }}
-            className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 group`}
+            className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 group`}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
+              <div className={`p-2 rounded-xl bg-linear-to-br ${stat.gradient}`}>
                 <stat.icon className={`w-5 h-5 ${stat.text}`} />
               </div>
               <span className="text-xs text-emerald-400 flex items-center gap-1">
@@ -200,23 +200,23 @@ function OverviewTab() {
       {/* Allocation Chart */}
       <GlassCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5">
+          <div className="p-2 rounded-xl bg-linear-to-br from-purple-500/20 to-purple-500/5">
             <PieChart className="w-5 h-5 text-purple-400" />
           </div>
           Fee Distribution Breakdown
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-2xl">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-linear-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-2xl">
             <div className="text-4xl font-bold text-orange-400 mb-2">40%</div>
             <div className="text-white font-bold">Burn</div>
             <div className="text-xs text-gray-500">Deflationary mechanism</div>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-pink-500/10 to-rose-500/5 border border-pink-500/20 rounded-2xl">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-linear-to-br from-pink-500/10 to-rose-500/5 border border-pink-500/20 rounded-2xl">
             <div className="text-4xl font-bold text-pink-400 mb-2">10%</div>
             <div className="text-white font-bold">Sanctum</div>
             <div className="text-xs text-gray-400">Charity fund</div>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-2xl">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-linear-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-2xl">
             <div className="text-4xl font-bold text-cyan-400 mb-2">50%</div>
             <div className="text-white font-bold">Ecosystem</div>
             <div className="text-xs text-gray-400">Council, staking, incentives</div>
@@ -273,47 +273,47 @@ function SanctumTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Sanctum Overview */}
-      <div className="bg-gradient-to-br from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-linear-to-br from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Heart className="w-12 h-12 text-pink-400" />
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">Sanctum Charity Vault</h2>
-            <p className="text-[#A0A0A5]">~3% of all transfer fees fund charitable causes</p>
+            <h2 className="text-2xl font-bold text-zinc-100">Sanctum Charity Vault</h2>
+            <p className="text-zinc-400">~3% of all transfer fees fund charitable causes</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-black/30 rounded-lg p-4">
             <div className="text-3xl font-bold text-pink-400">2.1M</div>
-            <div className="text-sm text-[#A0A0A5]">VFIDE Balance</div>
+            <div className="text-sm text-zinc-400">VFIDE Balance</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-[#F5F3E8]">4</div>
-            <div className="text-sm text-[#A0A0A5]">Active Charities</div>
+            <div className="text-3xl font-bold text-zinc-100">4</div>
+            <div className="text-sm text-zinc-400">Active Charities</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
             <div className="text-3xl font-bold text-green-400">2.08M</div>
-            <div className="text-sm text-[#A0A0A5]">Total Distributed</div>
+            <div className="text-sm text-zinc-400">Total Distributed</div>
           </div>
         </div>
       </div>
 
       {/* Registered Charities */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Registered Charities</h3>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-6">Registered Charities</h3>
         <div className="space-y-4">
           {charities.map((charity, idx) => (
-            <div key={idx} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg">
+            <div key={idx} className="flex items-center justify-between p-4 bg-zinc-900 rounded-lg">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-pink-500/20 rounded-full flex items-center justify-center">
                   <Heart size={20} className="text-pink-400" />
                 </div>
                 <div>
-                  <div className="text-[#F5F3E8] font-bold">{charity.name}</div>
-                  <div className="text-xs text-[#A0A0A5]">Allocation: {charity.allocation}%</div>
+                  <div className="text-zinc-100 font-bold">{charity.name}</div>
+                  <div className="text-xs text-zinc-400">Allocation: {charity.allocation}%</div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-[#00F0FF] font-bold">{charity.totalReceived}</div>
+                <div className="text-cyan-400 font-bold">{charity.totalReceived}</div>
                 <div className="text-xs text-green-400">Active</div>
               </div>
             </div>
@@ -322,24 +322,24 @@ function SanctumTab({ isConnected }: { isConnected: boolean }) {
       </div>
 
       {/* Pending Disbursements */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Pending Disbursements</h3>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-6">Pending Disbursements</h3>
         {!isConnected ? (
-          <div className="text-center py-8 text-[#A0A0A5]">
+          <div className="text-center py-8 text-zinc-400">
             Connect wallet to view and approve disbursements
           </div>
         ) : (
           <div className="space-y-4">
             {pendingDisbursements.map((disb) => (
-              <div key={disb.id} className="p-4 bg-[#1A1A1D] rounded-lg border border-yellow-500/30">
+              <div key={disb.id} className="p-4 bg-zinc-900 rounded-lg border border-yellow-500/30">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <div className="text-[#F5F3E8] font-bold">{disb.charity}</div>
-                    <div className="text-[#00F0FF] font-bold">{disb.amount}</div>
+                    <div className="text-zinc-100 font-bold">{disb.charity}</div>
+                    <div className="text-cyan-400 font-bold">{disb.amount}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-yellow-400 font-bold">{disb.approvals}/{disb.required} Approvals</div>
-                    <div className="text-xs text-[#A0A0A5]">Multi-sig required</div>
+                    <div className="text-xs text-zinc-400">Multi-sig required</div>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -370,50 +370,50 @@ function EcosystemTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Ecosystem Overview */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Users className="w-12 h-12 text-cyan-400" />
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">Ecosystem Vault</h2>
-            <p className="text-[#A0A0A5]">Funds council salaries, merchant rewards, and growth initiatives</p>
+            <h2 className="text-2xl font-bold text-zinc-100">Ecosystem Vault</h2>
+            <p className="text-zinc-400">Funds council salaries, merchant rewards, and growth initiatives</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-black/30 rounded-lg p-4">
             <div className="text-3xl font-bold text-cyan-400">18.5M</div>
-            <div className="text-sm text-[#A0A0A5]">VFIDE Balance</div>
+            <div className="text-sm text-zinc-400">VFIDE Balance</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-[#F5F3E8]">11%</div>
-            <div className="text-sm text-[#A0A0A5]">Of Transfer Fees</div>
+            <div className="text-3xl font-bold text-zinc-100">11%</div>
+            <div className="text-sm text-zinc-400">Of Transfer Fees</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
             <div className="text-3xl font-bold text-green-400">42.1M</div>
-            <div className="text-sm text-[#A0A0A5]">Total Distributed</div>
+            <div className="text-sm text-zinc-400">Total Distributed</div>
           </div>
         </div>
       </div>
 
       {/* Allocation Breakdown */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Allocation Breakdown</h3>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-6">Allocation Breakdown</h3>
         <div className="space-y-4">
           {allocations.map((alloc, idx) => (
-            <div key={idx} className="p-4 bg-[#1A1A1D] rounded-lg">
+            <div key={idx} className="p-4 bg-zinc-900 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <alloc.icon size={20} className="text-cyan-400" />
-                  <span className="text-[#F5F3E8] font-bold">{alloc.name}</span>
+                  <span className="text-zinc-100 font-bold">{alloc.name}</span>
                 </div>
-                <span className="text-[#00F0FF] font-bold">{alloc.amount}</span>
+                <span className="text-cyan-400 font-bold">{alloc.amount}</span>
               </div>
-              <div className="w-full h-2 bg-[#3A3A3F] rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-zinc-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-linear-to-r from-cyan-500 to-blue-500" 
                   style={{ width: `${alloc.percentage}%` }}
                 />
               </div>
-              <div className="text-right text-xs text-[#A0A0A5] mt-1">{alloc.percentage}%</div>
+              <div className="text-right text-xs text-zinc-400 mt-1">{alloc.percentage}%</div>
             </div>
           ))}
         </div>
@@ -421,20 +421,20 @@ function EcosystemTab({ isConnected }: { isConnected: boolean }) {
 
       {/* Claim Rewards (if applicable) */}
       {isConnected && (
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-          <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Your Claimable Rewards</h3>
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+          <h3 className="text-xl font-bold text-zinc-100 mb-4">Your Claimable Rewards</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-[#1A1A1D] rounded-lg">
-              <div className="text-[#A0A0A5] text-sm mb-1">Merchant Rewards</div>
-              <div className="text-2xl font-bold text-[#00F0FF]">0 VFIDE</div>
-              <button className="mt-3 w-full bg-[#3A3A3F] text-[#707075] font-bold py-2 rounded-lg cursor-not-allowed">
+            <div className="p-4 bg-zinc-900 rounded-lg">
+              <div className="text-zinc-400 text-sm mb-1">Merchant Rewards</div>
+              <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
+              <button className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
                 No Rewards Available
               </button>
             </div>
-            <div className="p-4 bg-[#1A1A1D] rounded-lg">
-              <div className="text-[#A0A0A5] text-sm mb-1">Headhunter Bounties</div>
-              <div className="text-2xl font-bold text-[#00F0FF]">0 VFIDE</div>
-              <button className="mt-3 w-full bg-[#3A3A3F] text-[#707075] font-bold py-2 rounded-lg cursor-not-allowed">
+            <div className="p-4 bg-zinc-900 rounded-lg">
+              <div className="text-zinc-400 text-sm mb-1">Headhunter Bounties</div>
+              <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
+              <button className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
                 No Bounties Available
               </button>
             </div>
@@ -455,51 +455,51 @@ function RevenueTab() {
   return (
     <div className="space-y-8">
       {/* Revenue Splitter Overview */}
-      <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <TrendingUp className="w-12 h-12 text-yellow-400" />
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">Revenue Splitter</h2>
-            <p className="text-[#A0A0A5]">Automatically distributes transfer fees to designated recipients</p>
+            <h2 className="text-2xl font-bold text-zinc-100">Revenue Splitter</h2>
+            <p className="text-zinc-400">Automatically distributes transfer fees to designated recipients</p>
           </div>
         </div>
       </div>
 
       {/* Revenue Flow */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Fee Flow</h3>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-6">Fee Flow</h3>
         <div className="flex items-center justify-center gap-4 flex-wrap">
-          <div className="p-4 bg-[#1A1A1D] rounded-lg text-center">
-            <div className="text-[#F5F3E8] font-bold">Transfer Fees</div>
-            <div className="text-xs text-[#A0A0A5]">0.25% - 5%</div>
+          <div className="p-4 bg-zinc-900 rounded-lg text-center">
+            <div className="text-zinc-100 font-bold">Transfer Fees</div>
+            <div className="text-xs text-zinc-400">0.25% - 5%</div>
           </div>
-          <ArrowRight className="text-[#00F0FF]" />
-          <div className="p-4 bg-[#1A1A1D] rounded-lg text-center">
-            <div className="text-[#F5F3E8] font-bold">BurnRouter</div>
-            <div className="text-xs text-[#A0A0A5]">Calculates splits</div>
+          <ArrowRight className="text-cyan-400" />
+          <div className="p-4 bg-zinc-900 rounded-lg text-center">
+            <div className="text-zinc-100 font-bold">BurnRouter</div>
+            <div className="text-xs text-zinc-400">Calculates splits</div>
           </div>
-          <ArrowRight className="text-[#00F0FF]" />
-          <div className="p-4 bg-[#1A1A1D] rounded-lg text-center">
-            <div className="text-[#F5F3E8] font-bold">RevenueSplitter</div>
-            <div className="text-xs text-[#A0A0A5]">Distributes</div>
+          <ArrowRight className="text-cyan-400" />
+          <div className="p-4 bg-zinc-900 rounded-lg text-center">
+            <div className="text-zinc-100 font-bold">RevenueSplitter</div>
+            <div className="text-xs text-zinc-400">Distributes</div>
           </div>
         </div>
       </div>
 
       {/* Payees */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Distribution Recipients</h3>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-6">Distribution Recipients</h3>
         <div className="space-y-4">
           {payees.map((payee, idx) => (
-            <div key={idx} className="p-4 bg-[#1A1A1D] rounded-lg">
+            <div key={idx} className="p-4 bg-zinc-900 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <div className="text-[#F5F3E8] font-bold">{payee.name}</div>
-                  <div className="text-xs text-[#A0A0A5]">{payee.description}</div>
+                  <div className="text-zinc-100 font-bold">{payee.name}</div>
+                  <div className="text-xs text-zinc-400">{payee.description}</div>
                 </div>
-                <div className="text-2xl font-bold text-[#00F0FF]">{payee.share}%</div>
+                <div className="text-2xl font-bold text-cyan-400">{payee.share}%</div>
               </div>
-              <div className="w-full h-3 bg-[#3A3A3F] rounded-full overflow-hidden">
+              <div className="w-full h-3 bg-zinc-700 rounded-full overflow-hidden">
                 <div 
                   className={`h-full ${
                     payee.name === 'Burn Address' ? 'bg-orange-500' :
@@ -531,76 +531,76 @@ function VestingTab() {
   return (
     <div className="space-y-8">
       {/* Vesting Overview */}
-      <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-linear-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Clock className="w-12 h-12 text-purple-400" />
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">Dev Reserve Vesting</h2>
-            <p className="text-[#A0A0A5]">50M VFIDE locked with 60-day cliff, 36-month linear vesting (bi-monthly unlocks)</p>
+            <h2 className="text-2xl font-bold text-zinc-100">Dev Reserve Vesting</h2>
+            <p className="text-zinc-400">50M VFIDE locked with 60-day cliff, 36-month linear vesting (bi-monthly unlocks)</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-black/30 rounded-lg p-4">
             <div className="text-2xl font-bold text-purple-400">{vestingSchedule.total}</div>
-            <div className="text-sm text-[#A0A0A5]">Total Allocation</div>
+            <div className="text-sm text-zinc-400">Total Allocation</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
             <div className="text-2xl font-bold text-green-400">{vestingSchedule.vested}</div>
-            <div className="text-sm text-[#A0A0A5]">Vested</div>
+            <div className="text-sm text-zinc-400">Vested</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-[#F5F3E8]">{vestingSchedule.claimed}</div>
-            <div className="text-sm text-[#A0A0A5]">Claimed</div>
+            <div className="text-2xl font-bold text-zinc-100">{vestingSchedule.claimed}</div>
+            <div className="text-sm text-zinc-400">Claimed</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-[#00F0FF]">{vestingSchedule.claimable}</div>
-            <div className="text-sm text-[#A0A0A5]">Claimable Now</div>
+            <div className="text-2xl font-bold text-cyan-400">{vestingSchedule.claimable}</div>
+            <div className="text-sm text-zinc-400">Claimable Now</div>
           </div>
         </div>
       </div>
 
       {/* Vesting Timeline */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Vesting Timeline</h3>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-6">Vesting Timeline</h3>
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <CheckCircle className="text-green-400" size={24} />
             <div>
-              <div className="text-[#F5F3E8] font-bold">Vesting Start</div>
-              <div className="text-sm text-[#A0A0A5]">{vestingSchedule.vestingStart}</div>
+              <div className="text-zinc-100 font-bold">Vesting Start</div>
+              <div className="text-sm text-zinc-400">{vestingSchedule.vestingStart}</div>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <CheckCircle className="text-green-400" size={24} />
             <div>
-              <div className="text-[#F5F3E8] font-bold">Cliff End</div>
-              <div className="text-sm text-[#A0A0A5]">{vestingSchedule.cliffEnd}</div>
+              <div className="text-zinc-100 font-bold">Cliff End</div>
+              <div className="text-sm text-zinc-400">{vestingSchedule.cliffEnd}</div>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <AlertCircle className="text-yellow-400" size={24} />
             <div>
-              <div className="text-[#F5F3E8] font-bold">Linear Vesting</div>
-              <div className="text-sm text-[#A0A0A5]">{vestingSchedule.biMonthlyUnlock}/bi-monthly</div>
+              <div className="text-zinc-100 font-bold">Linear Vesting</div>
+              <div className="text-sm text-zinc-400">{vestingSchedule.biMonthlyUnlock}/bi-monthly</div>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Clock className="text-[#A0A0A5]" size={24} />
+            <Clock className="text-zinc-400" size={24} />
             <div>
-              <div className="text-[#F5F3E8] font-bold">Vesting Complete</div>
-              <div className="text-sm text-[#A0A0A5]">{vestingSchedule.vestingEnd}</div>
+              <div className="text-zinc-100 font-bold">Vesting Complete</div>
+              <div className="text-sm text-zinc-400">{vestingSchedule.vestingEnd}</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-        <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Vesting Progress</h3>
-        <div className="w-full h-6 bg-[#1A1A1D] rounded-full overflow-hidden">
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-zinc-100 mb-4">Vesting Progress</h3>
+        <div className="w-full h-6 bg-zinc-900 rounded-full overflow-hidden">
           <div className="h-full bg-linear-to-r from-purple-500 to-indigo-500" style={{ width: '16.67%' }} />
         </div>
-        <div className="flex justify-between text-sm text-[#A0A0A5] mt-2">
+        <div className="flex justify-between text-sm text-zinc-400 mt-2">
           <span>16.67% Vested</span>
           <span>6 of 36 months</span>
         </div>

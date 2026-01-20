@@ -11,7 +11,7 @@ interface Step {
   description: string;
 }
 
-const iconClass = "w-10 h-10 text-[#50C878]";
+const iconClass = "w-10 h-10 text-emerald-500";
 
 export function GuardianWizard({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0);
@@ -74,11 +74,11 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
       <motion.div
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
-        className="bg-[#2A2A2F] border-2 border-[#50C878] rounded-2xl p-8 max-w-2xl w-full"
+        className="bg-zinc-800 border-2 border-emerald-500 rounded-2xl p-8 max-w-2xl w-full"
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#A0A0A5] hover:text-[#F5F3E8] text-2xl"
+          className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 text-2xl"
         >
           ×
         </button>
@@ -88,7 +88,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
             <div
               key={index}
               className={`h-2 flex-1 rounded-full transition-all ${
-                index <= step ? "bg-[#50C878]" : "bg-[#3A3A3F]"
+                index <= step ? "bg-emerald-500" : "bg-zinc-700"
               }`}
             />
           ))}
@@ -102,13 +102,13 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
             exit={{ opacity: 0, x: -20 }}
           >
             <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-[#50C878]/10 rounded-full border border-[#50C878]/30">
+              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-emerald-500/10 rounded-full border border-emerald-500/30">
                 {steps[step]?.icon}
               </div>
-              <h2 className="text-3xl font-bold text-[#F5F3E8] mb-3 font-(family-name:--font-display)">
+              <h2 className="text-3xl font-bold text-zinc-100 mb-3 font-(family-name:--font-display)">
                 {steps[step]?.title}
               </h2>
-              <p className="text-lg text-[#A0A0A5] leading-relaxed font-(family-name:--font-body)">
+              <p className="text-lg text-zinc-400 leading-relaxed font-(family-name:--font-body)">
                 {steps[step]?.description}
               </p>
             </div>
@@ -117,19 +117,19 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
               <div className="space-y-4 my-6">
                 {[0, 1, 2, 3, 4].map((index) => (
                   <div key={index}>
-                    <label className="block text-[#A0A0A5] text-sm mb-2 font-(family-name:--font-body)">
-                      Guardian #{index + 1} {index < 3 && <span className="text-[#FF4444]">*</span>}
+                    <label className="block text-zinc-400 text-sm mb-2 font-(family-name:--font-body)">
+                      Guardian #{index + 1} {index < 3 && <span className="text-red-500">*</span>}
                     </label>
                     <input
                       type="text"
                       value={guardians[index] || ''}
                       onChange={(e) => handleAddGuardian(index, e.target.value)}
                       placeholder="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
-                      className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#50C878] outline-none font-mono text-sm"
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-emerald-500 outline-none font-mono text-sm"
                     />
                   </div>
                 ))}
-                <div className="text-[#A0A0A5] text-xs text-center">
+                <div className="text-zinc-400 text-xs text-center">
                   Need at least 3 guardians (marked with *)
                 </div>
               </div>
@@ -141,10 +141,10 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
                 animate={{ opacity: 1, y: 0 }}
                 className={`p-4 rounded-lg mb-6 ${
                   actionStatus === 'success'
-                    ? 'bg-[#50C878]/20 border border-[#50C878] text-[#50C878]'
+                    ? 'bg-emerald-500/20 border border-emerald-500 text-emerald-500'
                     : actionStatus === 'error'
-                    ? 'bg-[#FF4444]/20 border border-[#FF4444] text-[#FF4444]'
-                    : 'bg-[#00F0FF]/20 border border-[#00F0FF] text-[#00F0FF]'
+                    ? 'bg-red-500/20 border border-red-500 text-red-500'
+                    : 'bg-cyan-400/20 border border-cyan-400 text-cyan-400'
                 }`}
               >
                 {userMessage}
@@ -159,8 +159,8 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
             disabled={step === 0}
             className={`px-6 py-2 rounded-lg font-bold transition-all ${
               step === 0
-                ? "bg-[#3A3A3F] text-[#6A6A6F] cursor-not-allowed"
-                : "bg-[#3A3A3F] text-[#F5F3E8] hover:bg-[#4A4A4F]"
+                ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+                : "bg-zinc-700 text-zinc-100 hover:bg-zinc-700"
             }`}
           >
             ← Back
@@ -169,7 +169,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
           {step < steps.length - 1 ? (
             <button
               onClick={() => setStep(step + 1)}
-              className="px-6 py-2 bg-linear-to-r from-[#50C878] to-[#40B868] text-white font-bold rounded-lg hover:shadow-lg transition-all"
+              className="px-6 py-2 bg-linear-to-r from-emerald-500 to-green-500 text-white font-bold rounded-lg hover:shadow-lg transition-all"
             >
               Next →
             </button>
@@ -177,7 +177,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
             <button
               onClick={handleSetupGuardians}
               disabled={actionStatus === 'confirming' || actionStatus === 'signing'}
-              className="px-6 py-2 bg-linear-to-r from-[#50C878] to-[#40B868] text-white font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-linear-to-r from-emerald-500 to-green-500 text-white font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {actionStatus === 'confirming' ? 'Setting up...' : 'Setup Guardians'}
             </button>

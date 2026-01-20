@@ -475,11 +475,11 @@ export function GlobalSearch() {
       {/* Trigger Button in Nav */}
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex items-center gap-2 px-3 py-2 bg-[#1A1A1F] hover:bg-[#2A2A2F] border border-[#2A2A2F] hover:border-cyan-500/30 rounded-xl text-sm text-[#6B6B78] transition-all group"
+        className="hidden md:flex items-center gap-2 px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-cyan-500/30 rounded-xl text-sm text-zinc-500 transition-all group"
       >
         <Search className="w-4 h-4 group-hover:text-cyan-400 transition-colors" />
         <span className="group-hover:text-white transition-colors">Search...</span>
-        <kbd className="px-1.5 py-0.5 text-xs font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F] group-hover:border-cyan-500/30 transition-colors">
+        <kbd className="px-1.5 py-0.5 text-xs font-mono bg-zinc-800 rounded border border-zinc-700 group-hover:border-cyan-500/30 transition-colors">
           ⌘K
         </kbd>
       </button>
@@ -487,10 +487,10 @@ export function GlobalSearch() {
       {/* Mobile Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden p-2 hover:bg-[#2A2A3F] rounded-lg transition-colors"
+        className="md:hidden p-2 hover:bg-zinc-800 rounded-lg transition-colors"
         aria-label="Search"
       >
-        <Search className="w-5 h-5 text-[#6B6B78]" />
+        <Search className="w-5 h-5 text-zinc-500" />
       </button>
 
       {/* Search Modal */}
@@ -512,26 +512,26 @@ export function GlobalSearch() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-[#0A0A0F]/95 backdrop-blur-xl border border-[#2A2A2F] rounded-2xl shadow-2xl z-50 overflow-hidden"
+              className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-2xl shadow-2xl z-50 overflow-hidden"
             >
               {/* Search Input */}
-              <div className="flex items-center gap-3 p-4 border-b border-[#2A2A2F]">
-                <Search className={`w-5 h-5 ${query ? 'text-cyan-400' : 'text-[#6B6B78]'} transition-colors`} />
+              <div className="flex items-center gap-3 p-4 border-b border-zinc-800">
+                <Search className={`w-5 h-5 ${query ? 'text-cyan-400' : 'text-zinc-500'} transition-colors`} />
                 <input
                   ref={inputRef}
                   type="text"
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   placeholder="Search pages, people, commands... (try /send)"
-                  className="flex-1 bg-transparent text-[#F5F3E8] placeholder-[#6B6B78] outline-none text-lg"
+                  className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 outline-none text-lg"
                   autoFocus
                 />
                 {query && (
                   <button
                     onClick={() => setQuery('')}
-                    className="p-1.5 hover:bg-[#2A2A3F] rounded-lg transition-colors"
+                    className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors"
                   >
-                    <X className="w-4 h-4 text-[#6B6B78]" />
+                    <X className="w-4 h-4 text-zinc-500" />
                   </button>
                 )}
                 <button
@@ -539,7 +539,7 @@ export function GlobalSearch() {
                   className={`p-2 rounded-lg transition-colors ${
                     isListening 
                       ? 'bg-red-500/20 text-red-400 animate-pulse' 
-                      : 'hover:bg-[#2A2A3F] text-[#6B6B78]'
+                      : 'hover:bg-zinc-800 text-zinc-500'
                   }`}
                   title="Voice search"
                 >
@@ -548,7 +548,7 @@ export function GlobalSearch() {
               </div>
 
               {/* Category Chips */}
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-[#2A2A2F] overflow-x-auto">
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-zinc-800 overflow-x-auto">
                 {(Object.keys(CATEGORY_ICONS) as SearchCategory[]).map(cat => (
                   <button
                     key={cat}
@@ -556,7 +556,7 @@ export function GlobalSearch() {
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                       activeCategory === cat
                         ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                        : 'bg-[#1A1A1F] text-[#6B6B78] border border-transparent hover:bg-[#2A2A2F] hover:text-white'
+                        : 'bg-zinc-900 text-zinc-500 border border-transparent hover:bg-zinc-800 hover:text-white'
                     }`}
                   >
                     {CATEGORY_ICONS[cat]}
@@ -566,7 +566,7 @@ export function GlobalSearch() {
                 <div className="flex-1" />
                 <button
                   onClick={() => setShowTips(!showTips)}
-                  className="text-xs text-[#6B6B78] hover:text-cyan-400 transition-colors"
+                  className="text-xs text-zinc-500 hover:text-cyan-400 transition-colors"
                 >
                   {showTips ? 'Hide tips' : 'Show tips'}
                 </button>
@@ -579,9 +579,9 @@ export function GlobalSearch() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden bg-cyan-500/5 border-b border-[#2A2A2F]"
+                    className="overflow-hidden bg-cyan-500/5 border-b border-zinc-800"
                   >
-                    <div className="p-3 text-xs text-[#6B6B78] space-y-1">
+                    <div className="p-3 text-xs text-zinc-500 space-y-1">
                       <p><span className="text-cyan-400">/send</span> — Quick send command</p>
                       <p><span className="text-cyan-400">0x...</span> — Search addresses or tx hashes</p>
                       <p><span className="text-cyan-400">Tab</span> — Cycle categories</p>
@@ -596,10 +596,10 @@ export function GlobalSearch() {
                 {!query && recentSearches.length > 0 && (
                   <div className="py-2">
                     <div className="flex items-center justify-between px-4 py-2">
-                      <span className="text-xs font-medium text-[#6B6B78] uppercase tracking-wide">Recent Searches</span>
+                      <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Recent Searches</span>
                       <button
                         onClick={clearRecentSearches}
-                        className="text-xs text-[#6B6B78] hover:text-red-400 flex items-center gap-1 transition-colors"
+                        className="text-xs text-zinc-500 hover:text-red-400 flex items-center gap-1 transition-colors"
                       >
                         <Trash2 className="w-3 h-3" />
                         Clear
@@ -612,12 +612,12 @@ export function GlobalSearch() {
                         className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors ${
                           index === selectedIndex && !query
                             ? 'bg-cyan-500/10 border-l-2 border-cyan-400'
-                            : 'hover:bg-[#1A1A1F]'
+                            : 'hover:bg-zinc-900'
                         }`}
                       >
-                        <Clock className="w-4 h-4 text-[#6B6B78]" />
-                        <span className="text-sm text-[#F5F3E8]">{search.query}</span>
-                        <span className="text-xs text-[#6B6B78]">{search.resultCount} results</span>
+                        <Clock className="w-4 h-4 text-zinc-500" />
+                        <span className="text-sm text-zinc-100">{search.query}</span>
+                        <span className="text-xs text-zinc-500">{search.resultCount} results</span>
                       </button>
                     ))}
                   </div>
@@ -629,8 +629,8 @@ export function GlobalSearch() {
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-linear-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
                       <Command className="w-8 h-8 text-cyan-400" />
                     </div>
-                    <p className="text-sm text-[#F5F3E8] mb-1">Quick Search</p>
-                    <p className="text-xs text-[#6B6B78]">
+                    <p className="text-sm text-zinc-100 mb-1">Quick Search</p>
+                    <p className="text-xs text-zinc-500">
                       Search pages, people, transactions, or use commands like <span className="text-cyan-400">/send</span>
                     </p>
                   </div>
@@ -639,8 +639,8 @@ export function GlobalSearch() {
                 {/* No Results */}
                 {query && results.length === 0 && (
                   <div className="p-8 text-center">
-                    <p className="text-sm text-[#6B6B78] mb-2">No results for &quot;{query}&quot;</p>
-                    <p className="text-xs text-[#6B6B78]/60">Try a different search or category</p>
+                    <p className="text-sm text-zinc-500 mb-2">No results for &quot;{query}&quot;</p>
+                    <p className="text-xs text-zinc-500/60">Try a different search or category</p>
                   </div>
                 )}
 
@@ -657,20 +657,20 @@ export function GlobalSearch() {
                         className={`w-full flex items-center gap-3 px-4 py-3 transition-all ${
                           index === selectedIndex
                             ? 'bg-cyan-500/10 border-l-2 border-cyan-400'
-                            : 'hover:bg-[#1A1A1F] border-l-2 border-transparent'
+                            : 'hover:bg-zinc-900 border-l-2 border-transparent'
                         }`}
                       >
                         <div className={`p-2 rounded-lg ${
                           index === selectedIndex 
                             ? 'bg-cyan-500/20 text-cyan-400' 
-                            : 'bg-[#1A1A1F] text-[#6B6B78]'
+                            : 'bg-zinc-900 text-zinc-500'
                         } transition-colors`}>
                           {result.icon}
                         </div>
                         <div className="flex-1 text-left min-w-0">
-                          <p className="text-sm font-medium text-[#F5F3E8] truncate">{result.title}</p>
+                          <p className="text-sm font-medium text-zinc-100 truncate">{result.title}</p>
                           {result.subtitle && (
-                            <p className="text-xs text-[#6B6B78] truncate">{result.subtitle}</p>
+                            <p className="text-xs text-zinc-500 truncate">{result.subtitle}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -683,7 +683,7 @@ export function GlobalSearch() {
                             {result.type}
                           </span>
                           <ChevronRight className={`w-4 h-4 ${
-                            index === selectedIndex ? 'text-cyan-400' : 'text-[#6B6B78]'
+                            index === selectedIndex ? 'text-cyan-400' : 'text-zinc-500'
                           }`} />
                         </div>
                       </motion.button>
@@ -693,23 +693,23 @@ export function GlobalSearch() {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-4 py-3 bg-[#0F0F14] border-t border-[#2A2A2F] text-xs text-[#6B6B78]">
+              <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-t border-zinc-800 text-xs text-zinc-500">
                 <div className="flex gap-4">
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">↑↓</kbd>
+                    <kbd className="px-1.5 py-0.5 font-mono bg-zinc-800 rounded border border-zinc-700">↑↓</kbd>
                     Navigate
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">Tab</kbd>
+                    <kbd className="px-1.5 py-0.5 font-mono bg-zinc-800 rounded border border-zinc-700">Tab</kbd>
                     Categories
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">↵</kbd>
+                    <kbd className="px-1.5 py-0.5 font-mono bg-zinc-800 rounded border border-zinc-700">↵</kbd>
                     Select
                   </span>
                 </div>
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 font-mono bg-[#2A2A3F] rounded border border-[#3A3A4F]">Esc</kbd>
+                  <kbd className="px-1.5 py-0.5 font-mono bg-zinc-800 rounded border border-zinc-700">Esc</kbd>
                   Close
                 </span>
               </div>

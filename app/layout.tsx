@@ -87,7 +87,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${spaceGrotesk.variable} font-[family-name:var(--font-body)] antialiased bg-[#0F0F12]`}>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} font-[family-name:var(--font-body)] antialiased bg-zinc-900`}>
         {isE2E ? (
           children
         ) : (

@@ -98,7 +98,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
       <motion.button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`md:hidden p-2 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors ${isDesktop ? 'hidden' : ''}`}
+        className={`md:hidden p-2 text-zinc-400 hover:text-zinc-100 transition-colors ${isDesktop ? 'hidden' : ''}`}
         style={{ minWidth: 44, minHeight: 44, width: 44, height: 44 }}
         aria-label="Menu"
         aria-expanded={isOpen}
@@ -150,7 +150,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
       <AnimatePresence>
         {isOpen && (
           <motion.aside
-            className="fixed left-0 top-0 h-full w-70 bg-[#1A1A1D] border-r border-[#3A3A3F] md:hidden z-50"
+            className="fixed left-0 top-0 h-full w-70 bg-zinc-900 border-r border-zinc-700 md:hidden z-50"
             aria-hidden={false}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
@@ -160,7 +160,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
             <div className="flex flex-col h-full">
               {logo && (
                 <motion.div 
-                  className="p-4 border-b border-[#3A3A3F]"
+                  className="p-4 border-b border-zinc-700"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
@@ -189,7 +189,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                         <Link
                           href={item.href}
                           onClick={() => handleNavClick(item.href)}
-                          className="flex items-center justify-between gap-3 px-4 py-3 text-[#A0A0A5] hover:text-[#00F0FF] hover:bg-[#2A2A2F] rounded-lg transition-all duration-200 group"
+                          className="flex items-center justify-between gap-3 px-4 py-3 text-zinc-400 hover:text-cyan-400 hover:bg-zinc-800 rounded-lg transition-all duration-200 group"
                         >
                           <div className="flex items-center gap-3">
                             {item.icon && <span className="w-5 h-5">{item.icon}</span>}
@@ -206,7 +206,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
               </nav>
 
               <motion.div 
-                className="p-4 border-t border-[#3A3A3F] space-y-2"
+                className="p-4 border-t border-zinc-700 space-y-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -215,7 +215,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                   aria-hidden
                   tabIndex={-1}
                   role="presentation"
-                  className="w-full px-4 py-2 bg-[#00F0FF]/20 text-[#00F0FF] rounded-lg text-sm font-medium hover:bg-[#00F0FF]/30 transition-colors"
+                  className="w-full px-4 py-2 bg-cyan-400/20 text-cyan-400 rounded-lg text-sm font-medium hover:bg-cyan-400/30 transition-colors"
                   onClick={() => setIsOpen(false)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

@@ -185,7 +185,7 @@ export function AvatarUpload({
       <div className="flex flex-col items-center gap-4">
         <div className={`${sizeClasses[size]} relative`}>
           {preview || currentAvatar ? (
-            <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-[#00F0FF]/20">
+            <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-cyan-400/20">
               <img
                 src={preview || currentAvatar}
                 alt="Avatar preview"
@@ -203,12 +203,12 @@ export function AvatarUpload({
               )}
               {isUploading && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-[#00F0FF] animate-spin" />
+                  <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
                 </div>
               )}
             </div>
           ) : (
-            <div className="w-full h-full rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center">
+            <div className="w-full h-full rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
               <ImageIcon className="w-12 h-12 text-white/50" />
             </div>
           )}
@@ -223,16 +223,16 @@ export function AvatarUpload({
               exit={{ opacity: 0, y: -10 }}
               className="w-full max-w-xs"
             >
-              <div className="flex items-center justify-between text-xs text-[#A0A0A5] mb-1">
+              <div className="flex items-center justify-between text-xs text-zinc-400 mb-1">
                 <span>Uploading...</span>
                 <span>{uploadProgress}%</span>
               </div>
-              <div className="w-full h-2 bg-[#2A2A3F] rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${uploadProgress}%` }}
                   transition={{ duration: 0.3 }}
-                  className="h-full bg-linear-to-r from-[#00F0FF] to-[#0080FF]"
+                  className="h-full bg-linear-to-r from-cyan-400 to-blue-500"
                 />
               </div>
             </motion.div>
@@ -264,8 +264,8 @@ export function AvatarUpload({
             onDrop={handleDrop}
             className={`w-full max-w-xs p-6 border-2 border-dashed rounded-xl transition-all ${
               isDragging
-                ? 'border-[#00F0FF] bg-[#00F0FF]/5'
-                : 'border-[#3A3A4F] hover:border-[#00F0FF]/50'
+                ? 'border-cyan-400 bg-cyan-400/5'
+                : 'border-zinc-700 hover:border-cyan-400/50'
             }`}
           >
             <input
@@ -277,27 +277,27 @@ export function AvatarUpload({
             />
 
             <div className="flex flex-col items-center gap-3 text-center">
-              <div className="p-3 bg-[#00F0FF]/10 rounded-full">
-                <Upload className="w-6 h-6 text-[#00F0FF]" />
+              <div className="p-3 bg-cyan-400/10 rounded-full">
+                <Upload className="w-6 h-6 text-cyan-400" />
               </div>
               
               <div>
-                <p className="text-sm font-semibold text-[#F5F3E8] mb-1">
+                <p className="text-sm font-semibold text-zinc-100 mb-1">
                   Upload Avatar
                 </p>
-                <p className="text-xs text-[#6B6B78]">
+                <p className="text-xs text-zinc-500">
                   Drag & drop or click to browse
                 </p>
               </div>
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg text-sm font-semibold hover:bg-[#00D5E0] transition-colors"
+                className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg text-sm font-semibold hover:bg-cyan-400 transition-colors"
               >
                 Choose File
               </button>
 
-              <p className="text-xs text-[#6B6B78]">
+              <p className="text-xs text-zinc-500">
                 JPEG, PNG, GIF or WebP • Max 5MB • Min {MIN_DIMENSION}x{MIN_DIMENSION}px
               </p>
             </div>
@@ -309,14 +309,14 @@ export function AvatarUpload({
           <div className="flex gap-3 w-full max-w-xs">
             <button
               onClick={handleCancel}
-              className="flex-1 px-4 py-2 bg-[#2A2A3F] text-[#F5F3E8] rounded-lg text-sm font-semibold hover:bg-[#3A3A4F] transition-colors"
+              className="flex-1 px-4 py-2 bg-zinc-800 text-zinc-100 rounded-lg text-sm font-semibold hover:bg-zinc-700 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleUpload}
               disabled={!file}
-              className="flex-1 px-4 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg text-sm font-semibold hover:bg-[#00D5E0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg text-sm font-semibold hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <Check className="w-4 h-4" />
               Upload
@@ -386,7 +386,7 @@ export function AvatarUploadCompact({
         {currentAvatar ? (
           <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center">
+          <div className="w-full h-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
             <ImageIcon className="w-8 h-8 text-white/50" />
           </div>
         )}

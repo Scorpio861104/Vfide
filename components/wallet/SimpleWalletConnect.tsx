@@ -177,7 +177,7 @@ export function SimpleWalletConnect() {
                     variants={fadeIn}
                     initial="hidden"
                     animate="show"
-                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-cyan-400 font-bold rounded-lg border border-cyan-500/30"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-zinc-800 text-cyan-400 font-bold rounded-lg border border-cyan-500/30"
                   >
                     <span className="flex items-center gap-2">
                       <motion.div
@@ -201,7 +201,7 @@ export function SimpleWalletConnect() {
                     animate="show"
                     className="flex items-center gap-2"
                   >
-                    <div className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-[#A0A0A5] font-bold rounded-lg border border-[#3A3A3F]">
+                    <div className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-zinc-800 text-zinc-400 font-bold rounded-lg border border-zinc-700">
                       <span className="flex items-center gap-2">
                         <motion.svg 
                           className="h-4 w-4"
@@ -253,7 +253,7 @@ export function SimpleWalletConnect() {
                     className={`px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-bold rounded-lg transition-all font-[family-name:var(--font-body)] touch-manipulation focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F0F12] ${
                       isInCooldown
                         ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                        : 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] hover:shadow-lg hover:shadow-[#00F0FF]/50 cursor-pointer focus:ring-[#00F0FF]'
+                        : 'bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 hover:shadow-lg hover:shadow-cyan-400/50 cursor-pointer focus:ring-cyan-400'
                     }`}
                   >
                     <AnimatePresence mode="wait">
@@ -322,7 +322,7 @@ export function SimpleWalletConnect() {
                     type="button"
                     aria-label={`Current network: ${chain.name}${latencyData ? ` - ${latencyData.status} (${latencyData.latency}ms)` : ''}`}
                     title={latencyData ? `Network latency: ${latencyData.latency}ms (${latencyData.status})` : chain.name}
-                    className="hidden sm:flex px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-all font-[family-name:var(--font-body)] text-sm items-center cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
+                    className="hidden sm:flex px-4 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-all font-[family-name:var(--font-body)] text-sm items-center cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                   >
                     {/* Phase 3: Network latency indicator */}
                     {latencyData && (
@@ -371,7 +371,7 @@ export function SimpleWalletConnect() {
                     type="button"
                     aria-label="Open account menu"
                     title={sessionDurationFormatted ? `Connected for ${sessionDurationFormatted}` : 'Open account menu'}
-                    className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
+                    className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
                   >
                     <span className="hidden sm:flex items-center gap-2">
                       {/* Phase 3: Show ENS name if available */}
@@ -387,12 +387,12 @@ export function SimpleWalletConnect() {
                       {/* Copy button */}
                       <button
                         onClick={(e) => copyAddress(account.address, e)}
-                        className="ml-1 p-1 hover:bg-[#1A1A1D]/20 rounded transition-colors"
+                        className="ml-1 p-1 hover:bg-zinc-900/20 rounded transition-colors"
                         title={`Copy address${ensName ? ` (${account.address})` : ''}`}
                         aria-label="Copy wallet address"
                       >
                         {copied ? (
-                          <Check size={14} className="text-[#50C878]" />
+                          <Check size={14} className="text-emerald-500" />
                         ) : (
                           <Copy size={14} />
                         )}

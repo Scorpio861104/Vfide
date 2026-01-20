@@ -167,7 +167,7 @@ export default function GovernancePage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-linear-to-b from-zinc-950 via-[#0f0f18] to-zinc-950" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,240,255,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
@@ -346,7 +346,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
           >
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 group"
+              className="bg-linear-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 group"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Your Voting Power</div>
@@ -369,7 +369,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6"
+              className="bg-linear-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Active Proposals</div>
@@ -388,7 +388,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
+              className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Your Participation</div>
@@ -405,7 +405,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
+              className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Governance Fatigue</div>
@@ -432,7 +432,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             className="bg-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
           >
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20">
+              <div className="p-2 rounded-xl bg-linear-to-br from-red-500/20 to-orange-500/20">
                 <Clock className="w-5 h-5 text-red-400" />
               </div>
               Upcoming Voting Deadlines
@@ -529,10 +529,10 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
   return (
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-[#F5F3E8]">
+              <h2 className="text-2xl font-bold text-zinc-100">
                 Active Proposals ({filteredProposals.length})
               </h2>
               <div className="flex gap-2">
@@ -547,11 +547,11 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
                     a.download = 'proposals.csv';
                     a.click();
                   }}
-                  className="px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] text-[#00F0FF] rounded-lg font-bold hover:border-[#00F0FF] transition-colors"
+                  className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400 transition-colors"
                 >
                   📊 Export CSV
                 </button>
-                <button className="px-6 py-2 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform">
+                <button className="px-6 py-2 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
                   Create Proposal
                 </button>
               </div>
@@ -564,8 +564,8 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
                   onClick={() => setFilterType(type)}
                   className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
                     filterType === type
-                      ? 'bg-[#00F0FF] text-[#1A1A1D]'
-                      : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#00F0FF]'
+                      ? 'bg-cyan-400 text-zinc-900'
+                      : 'bg-zinc-900 text-zinc-400 hover:text-cyan-400'
                   }`}
                 >
                   {type === 'all' ? 'All' : type}
@@ -576,7 +576,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
           
           <div className="space-y-4">
             {filteredProposals.length === 0 ? (
-              <div className="text-center py-12 text-[#A0A0A5]">
+              <div className="text-center py-12 text-zinc-400">
                 No proposals found matching your search.
               </div>
             ) : null}
@@ -585,29 +585,29 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
               const forPercent = Math.round((prop.forVotes / total) * 100);
               
               return (
-                <div key={prop.id} className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#00F0FF] transition-colors">
+                <div key={prop.id} className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 hover:border-cyan-400 transition-colors">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <div className="inline-block px-3 py-1 bg-[#00F0FF]/20 border border-[#00F0FF] rounded text-[#00F0FF] text-sm font-bold mb-2">
+                      <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-cyan-400 text-sm font-bold mb-2">
                         {prop.type}
                       </div>
-                      <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{prop.title}</h3>
-                      <p className="text-[#A0A0A5] text-sm">Proposed by {prop.author} • Ends in {prop.timeLeft}</p>
+                      <h3 className="text-xl font-bold text-zinc-100 mb-2">{prop.title}</h3>
+                      <p className="text-zinc-400 text-sm">Proposed by {prop.author} • Ends in {prop.timeLeft}</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-[#F5F3E8]">#{prop.id}</div>
+                      <div className="text-2xl font-bold text-zinc-100">#{prop.id}</div>
                     </div>
                   </div>
                   
                   <div className="mb-4">
                     <div className="flex justify-between text-sm mb-2">
-                      <span className="text-[#50C878]">FOR: {prop.forVotes.toLocaleString()} votes ({forPercent}%)</span>
-                      <span className="text-[#C41E3A]">AGAINST: {prop.againstVotes.toLocaleString()} votes ({100-forPercent}%)</span>
+                      <span className="text-emerald-500">FOR: {prop.forVotes.toLocaleString()} votes ({forPercent}%)</span>
+                      <span className="text-red-600">AGAINST: {prop.againstVotes.toLocaleString()} votes ({100-forPercent}%)</span>
                     </div>
-                    <div className="w-full h-2 bg-[#2A2A2F] rounded-full overflow-hidden">
-                      <div className="h-full bg-[#50C878]" style={{ width: `${forPercent}%` }} />
+                    <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500" style={{ width: `${forPercent}%` }} />
                     </div>
-                    <div className="mt-2 text-xs text-[#A0A0A5]">
+                    <div className="mt-2 text-xs text-zinc-400">
                       Quorum: {total.toLocaleString()} / 5,000 {total >= 5000 ? '✓' : '✗'}
                     </div>
                   </div>
@@ -615,19 +615,19 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
                   <div className="flex gap-3">
                     <button 
                       onClick={() => onVote(prop.id, true)}
-                      className="flex-1 px-4 py-2 bg-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#50C878]/90"
+                      className="flex-1 px-4 py-2 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-emerald-500/90"
                     >
                       Vote FOR
                     </button>
                     <button 
                       onClick={() => onVote(prop.id, false)}
-                      className="flex-1 px-4 py-2 bg-[#C41E3A] text-[#F5F3E8] rounded-lg font-bold hover:bg-[#C41E3A]/90"
+                      className="flex-1 px-4 py-2 bg-red-600 text-zinc-100 rounded-lg font-bold hover:bg-red-600/90"
                     >
                       Vote AGAINST
                     </button>
                     <button
                       onClick={() => setSelectedProposal(prop)}
-                      className="px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] text-[#A0A0A5] rounded-lg hover:text-[#00F0FF] hover:border-[#00F0FF]"
+                      className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-zinc-400 rounded-lg hover:text-cyan-400 hover:border-cyan-400"
                     >
                       View Details
                     </button>
@@ -641,46 +641,46 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
       
       {selectedProposal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setSelectedProposal(null)}>
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b border-[#3A3A3F] flex items-center justify-between">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-zinc-700 flex items-center justify-between">
               <div>
-                <div className="inline-block px-3 py-1 bg-[#00F0FF]/20 border border-[#00F0FF] rounded text-[#00F0FF] text-sm font-bold mb-2">
+                <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-cyan-400 text-sm font-bold mb-2">
                   {selectedProposal.type}
                 </div>
-                <h2 className="text-2xl font-bold text-[#F5F3E8]">#{selectedProposal.id}: {selectedProposal.title}</h2>
+                <h2 className="text-2xl font-bold text-zinc-100">#{selectedProposal.id}: {selectedProposal.title}</h2>
               </div>
-              <button onClick={() => setSelectedProposal(null)} className="text-[#A0A0A5] hover:text-[#00F0FF] text-2xl">
+              <button onClick={() => setSelectedProposal(null)} className="text-zinc-400 hover:text-cyan-400 text-2xl">
                 ✕
               </button>
             </div>
             
             <div className="p-6 space-y-4">
               <div>
-                <div className="text-[#A0A0A5] text-sm mb-1">Proposed by</div>
-                <div className="text-[#F5F3E8] font-mono">{selectedProposal.author}</div>
+                <div className="text-zinc-400 text-sm mb-1">Proposed by</div>
+                <div className="text-zinc-100 font-mono">{selectedProposal.author}</div>
               </div>
               
               <div>
-                <div className="text-[#A0A0A5] text-sm mb-1">Time Remaining</div>
+                <div className="text-zinc-400 text-sm mb-1">Time Remaining</div>
                 <ProposalCountdown endTime={selectedProposal.endTime} />
               </div>
               
               <div>
-                <div className="text-[#A0A0A5] text-sm mb-2">Description</div>
-                <div className="text-[#F5F3E8] bg-[#1A1A1D] p-4 rounded-lg">
+                <div className="text-zinc-400 text-sm mb-2">Description</div>
+                <div className="text-zinc-100 bg-zinc-900 p-4 rounded-lg">
                   {selectedProposal.description}
                 </div>
               </div>
               
               <div>
-                <div className="text-[#A0A0A5] text-sm mb-2">Voting Results</div>
+                <div className="text-zinc-400 text-sm mb-2">Voting Results</div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-[#50C878]">FOR: {selectedProposal.forVotes.toLocaleString()} votes</span>
-                    <span className="text-[#C41E3A]">AGAINST: {selectedProposal.againstVotes.toLocaleString()} votes</span>
+                    <span className="text-emerald-500">FOR: {selectedProposal.forVotes.toLocaleString()} votes</span>
+                    <span className="text-red-600">AGAINST: {selectedProposal.againstVotes.toLocaleString()} votes</span>
                   </div>
-                  <div className="w-full h-3 bg-[#1A1A1D] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#50C878]" style={{ width: `${(selectedProposal.forVotes / (selectedProposal.forVotes + selectedProposal.againstVotes)) * 100}%` }} />
+                  <div className="w-full h-3 bg-zinc-900 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500" style={{ width: `${(selectedProposal.forVotes / (selectedProposal.forVotes + selectedProposal.againstVotes)) * 100}%` }} />
                   </div>
                 </div>
               </div>
@@ -688,13 +688,13 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
               <div className="flex gap-3 pt-4">
                 <button 
                   onClick={() => { onVote(selectedProposal.id, true); setSelectedProposal(null); }}
-                  className="flex-1 px-6 py-3 bg-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#50C878]/90"
+                  className="flex-1 px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-emerald-500/90"
                 >
                   Vote FOR
                 </button>
                 <button 
                   onClick={() => { onVote(selectedProposal.id, false); setSelectedProposal(null); }}
-                  className="flex-1 px-6 py-3 bg-[#C41E3A] text-[#F5F3E8] rounded-lg font-bold hover:bg-[#C41E3A]/90"
+                  className="flex-1 px-6 py-3 bg-red-600 text-zinc-100 rounded-lg font-bold hover:bg-red-600/90"
                 >
                   Vote AGAINST
                 </button>
@@ -709,7 +709,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
 
 function ProposalCountdown({ endTime }: { endTime: number }) {
   const timeLeft = useCountdown(endTime);
-  return <div className="text-[#00F0FF] font-bold text-lg">{timeLeft}</div>;
+  return <div className="text-cyan-400 font-bold text-lg">{timeLeft}</div>;
 }
 
 function MembersTab({ searchQuery }: { searchQuery: string }) {
@@ -740,10 +740,10 @@ function MembersTab({ searchQuery }: { searchQuery: string }) {
   return (
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-[#F5F3E8]">
+              <h2 className="text-2xl font-bold text-zinc-100">
                 DAO Members & Voting Activity
               </h2>
               <button
@@ -757,7 +757,7 @@ function MembersTab({ searchQuery }: { searchQuery: string }) {
                   a.download = 'members.csv';
                   a.click();
                 }}
-                className="px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] text-[#00F0FF] rounded-lg font-bold hover:border-[#00F0FF]"
+                className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400"
               >
                 📊 Export CSV
               </button>
@@ -771,66 +771,66 @@ function MembersTab({ searchQuery }: { searchQuery: string }) {
                     onClick={() => setSortBy(key as typeof sortBy)}
                     className={`px-4 py-2 rounded-lg font-bold transition-all ${
                       sortBy === key
-                        ? 'bg-[#00F0FF] text-[#1A1A1D]'
-                        : 'bg-[#1A1A1D] text-[#A0A0A5] hover:text-[#00F0FF]'
+                        ? 'bg-cyan-400 text-zinc-900'
+                        : 'bg-zinc-900 text-zinc-400 hover:text-cyan-400'
                     }`}
                   >
                     {label}
                   </button>
                 ))}
               </div>
-              <div className="text-[#A0A0A5] text-sm">Total: {filteredMembers.length} members</div>
+              <div className="text-zinc-400 text-sm">Total: {filteredMembers.length} members</div>
             </div>
           </div>
           
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#3A3A3F]">
-                  <th className="text-left py-3 px-4 text-[#A0A0A5] text-sm">Member</th>
-                  <th className="text-right py-3 px-4 text-[#A0A0A5] text-sm">ProofScore</th>
-                  <th className="text-right py-3 px-4 text-[#A0A0A5] text-sm">Total Votes</th>
-                  <th className="text-right py-3 px-4 text-[#A0A0A5] text-sm">Participation</th>
-                  <th className="text-right py-3 px-4 text-[#A0A0A5] text-sm">Fatigue</th>
-                  <th className="text-right py-3 px-4 text-[#A0A0A5] text-sm">Last Vote</th>
+                <tr className="border-b border-zinc-700">
+                  <th className="text-left py-3 px-4 text-zinc-400 text-sm">Member</th>
+                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">ProofScore</th>
+                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">Total Votes</th>
+                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">Participation</th>
+                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">Fatigue</th>
+                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">Last Vote</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredMembers.map((member, idx) => (
-                  <tr key={member.address} className="border-b border-[#3A3A3F] hover:bg-[#1A1A1D] transition-colors">
+                  <tr key={member.address} className="border-b border-zinc-700 hover:bg-zinc-900 transition-colors">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
-                        {idx === 2 && <span className="text-[#00F0FF]">👤</span>}
-                        <span className="text-[#F5F3E8] font-mono text-sm">{member.address}</span>
-                        {idx === 2 && <span className="text-[#00F0FF] text-xs">(You)</span>}
+                        {idx === 2 && <span className="text-cyan-400">👤</span>}
+                        <span className="text-zinc-100 font-mono text-sm">{member.address}</span>
+                        {idx === 2 && <span className="text-cyan-400 text-xs">(You)</span>}
                       </div>
                     </td>
                     <td className="py-4 px-4 text-right">
-                      <span className="text-[#00F0FF] font-bold">{member.score}</span>
+                      <span className="text-cyan-400 font-bold">{member.score}</span>
                     </td>
-                    <td className="py-4 px-4 text-right text-[#F5F3E8]">{member.votes}</td>
+                    <td className="py-4 px-4 text-right text-zinc-100">{member.votes}</td>
                     <td className="py-4 px-4 text-right">
-                      <span className={member.participation >= 85 ? 'text-[#50C878]' : 'text-[#A0A0A5]'}>
+                      <span className={member.participation >= 85 ? 'text-emerald-500' : 'text-zinc-400'}>
                         {member.participation}%
                       </span>
                     </td>
                     <td className="py-4 px-4 text-right">
-                      <span className={member.fatigue > 40 ? 'text-[#FFA500]' : 'text-[#A0A0A5]'}>
+                      <span className={member.fatigue > 40 ? 'text-orange-500' : 'text-zinc-400'}>
                         {member.fatigue}%
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-right text-[#A0A0A5] text-sm">{member.lastVote}</td>
+                    <td className="py-4 px-4 text-right text-zinc-400 text-sm">{member.lastVote}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           
-          <div className="mt-6 p-4 bg-[#1A1A1D] rounded-lg">
-            <h3 className="text-lg font-bold text-[#F5F3E8] mb-3">Governance Fatigue Explanation</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-[#A0A0A5]">
+          <div className="mt-6 p-4 bg-zinc-900 rounded-lg">
+            <h3 className="text-lg font-bold text-zinc-100 mb-3">Governance Fatigue Explanation</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-zinc-400">
               <div>
-                <div className="text-[#00F0FF] font-bold mb-1">How it Works</div>
+                <div className="text-cyan-400 font-bold mb-1">How it Works</div>
                 <ul className="space-y-1 list-disc list-inside">
                   <li>Each vote costs 5% fatigue</li>
                   <li>Fatigue reduces your effective voting power</li>
@@ -839,7 +839,7 @@ function MembersTab({ searchQuery }: { searchQuery: string }) {
                 </ul>
               </div>
               <div>
-                <div className="text-[#00F0FF] font-bold mb-1">Example</div>
+                <div className="text-cyan-400 font-bold mb-1">Example</div>
                 <div className="space-y-1">
                   <div>ProofScore: 800 → Voting Power: 800</div>
                   <div>After 1 vote: 5% fatigue → Power: 760</div>
@@ -878,9 +878,9 @@ function HistoryTab({ searchQuery }: { searchQuery: string }) {
   return (
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">
+            <h2 className="text-2xl font-bold text-zinc-100">
               Your Voting History ({filteredHistory.length})
             </h2>
             <button
@@ -894,7 +894,7 @@ function HistoryTab({ searchQuery }: { searchQuery: string }) {
                 a.download = 'voting-history.csv';
                 a.click();
               }}
-              className="px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] text-[#00F0FF] rounded-lg font-bold hover:border-[#00F0FF]"
+              className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400"
             >
               📊 Export CSV
             </button>
@@ -902,27 +902,27 @@ function HistoryTab({ searchQuery }: { searchQuery: string }) {
           
           <div className="space-y-3">
             {filteredHistory.length === 0 ? (
-              <div className="text-center py-12 text-[#A0A0A5]">
+              <div className="text-center py-12 text-zinc-400">
                 No voting history found matching your search.
               </div>
             ) : null}
             {filteredHistory.map(item => (
-              <div key={item.id} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg hover:border hover:border-[#3A3A3F]">
+              <div key={item.id} className="flex items-center justify-between p-4 bg-zinc-900 rounded-lg hover:border hover:border-zinc-700">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
-                    <span className="text-[#A0A0A5] text-sm">#{item.id}</span>
-                    <span className="text-[#F5F3E8] font-bold">{item.title}</span>
+                    <span className="text-zinc-400 text-sm">#{item.id}</span>
+                    <span className="text-zinc-100 font-bold">{item.title}</span>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
-                    <span className={item.vote === 'FOR' ? 'text-[#50C878]' : 'text-[#C41E3A]'}>
+                    <span className={item.vote === 'FOR' ? 'text-emerald-500' : 'text-red-600'}>
                       Voted {item.vote}
                     </span>
-                    <span className="text-[#A0A0A5]">{item.date}</span>
-                    <span className="text-[#A0A0A5]">Power used: {item.power}</span>
+                    <span className="text-zinc-400">{item.date}</span>
+                    <span className="text-zinc-400">Power used: {item.power}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className={`font-bold ${item.result.includes('Passed') ? 'text-[#50C878]' : item.result.includes('Rejected') ? 'text-[#C41E3A]' : 'text-[#FFA500]'}`}>
+                  <div className={`font-bold ${item.result.includes('Passed') ? 'text-emerald-500' : item.result.includes('Rejected') ? 'text-red-600' : 'text-orange-500'}`}>
                     {item.result}
                   </div>
                 </div>
@@ -940,40 +940,40 @@ function StatsTab() {
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6">
               DAO Statistics
             </h2>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-[#A0A0A5]">Total Proposals</span>
-                <span className="text-[#F5F3E8] font-bold text-2xl">156</span>
+                <span className="text-zinc-400">Total Proposals</span>
+                <span className="text-zinc-100 font-bold text-2xl">156</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#A0A0A5]">Passed Proposals</span>
-                <span className="text-[#50C878] font-bold text-2xl">128 (82%)</span>
+                <span className="text-zinc-400">Passed Proposals</span>
+                <span className="text-emerald-500 font-bold text-2xl">128 (82%)</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#A0A0A5]">Rejected Proposals</span>
-                <span className="text-[#C41E3A] font-bold text-2xl">28 (18%)</span>
+                <span className="text-zinc-400">Rejected Proposals</span>
+                <span className="text-red-600 font-bold text-2xl">28 (18%)</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#A0A0A5]">Active Members</span>
-                <span className="text-[#F5F3E8] font-bold text-2xl">247</span>
+                <span className="text-zinc-400">Active Members</span>
+                <span className="text-zinc-100 font-bold text-2xl">247</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#A0A0A5]">Average Participation</span>
-                <span className="text-[#F5F3E8] font-bold text-2xl">73%</span>
+                <span className="text-zinc-400">Average Participation</span>
+                <span className="text-zinc-100 font-bold text-2xl">73%</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#A0A0A5]">Total Votes Cast</span>
-                <span className="text-[#F5F3E8] font-bold text-2xl">4,234</span>
+                <span className="text-zinc-400">Total Votes Cast</span>
+                <span className="text-zinc-100 font-bold text-2xl">4,234</span>
               </div>
             </div>
           </div>
           
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6">
               Proposal Categories
             </h2>
             <div className="space-y-4">
@@ -987,53 +987,53 @@ function StatsTab() {
               ].map(cat => (
                 <div key={cat.name}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-[#F5F3E8]">{cat.name}</span>
-                    <span className="text-[#A0A0A5]">{cat.count} ({cat.percent}%)</span>
+                    <span className="text-zinc-100">{cat.name}</span>
+                    <span className="text-zinc-400">{cat.count} ({cat.percent}%)</span>
                   </div>
-                  <div className="w-full h-2 bg-[#1A1A1D] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#00F0FF]" style={{ width: `${cat.percent}%` }} />
+                  <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden">
+                    <div className="h-full bg-cyan-400" style={{ width: `${cat.percent}%` }} />
                   </div>
                 </div>
               ))}
             </div>
           </div>
           
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6">
               Recent Pass/Fail Rate
             </h2>
             <div className="space-y-3">
               <div>
-                <div className="text-[#A0A0A5] text-sm mb-2">Last 30 Days</div>
+                <div className="text-zinc-400 text-sm mb-2">Last 30 Days</div>
                 <div className="flex gap-2">
-                  <div className="flex-1 h-12 bg-[#50C878] rounded flex items-center justify-center text-[#1A1A1D] font-bold">
+                  <div className="flex-1 h-12 bg-emerald-500 rounded flex items-center justify-center text-zinc-900 font-bold">
                     18 Passed
                   </div>
-                  <div className="w-20 h-12 bg-[#C41E3A] rounded flex items-center justify-center text-[#F5F3E8] font-bold">
+                  <div className="w-20 h-12 bg-red-600 rounded flex items-center justify-center text-zinc-100 font-bold">
                     4 Failed
                   </div>
                 </div>
               </div>
               
               <div>
-                <div className="text-[#A0A0A5] text-sm mb-2">Last 90 Days</div>
+                <div className="text-zinc-400 text-sm mb-2">Last 90 Days</div>
                 <div className="flex gap-2">
-                  <div className="flex-1 h-12 bg-[#50C878] rounded flex items-center justify-center text-[#1A1A1D] font-bold">
+                  <div className="flex-1 h-12 bg-emerald-500 rounded flex items-center justify-center text-zinc-900 font-bold">
                     52 Passed
                   </div>
-                  <div className="w-20 h-12 bg-[#C41E3A] rounded flex items-center justify-center text-[#F5F3E8] font-bold">
+                  <div className="w-20 h-12 bg-red-600 rounded flex items-center justify-center text-zinc-100 font-bold">
                     11 Failed
                   </div>
                 </div>
               </div>
               
               <div>
-                <div className="text-[#A0A0A5] text-sm mb-2">All Time</div>
+                <div className="text-zinc-400 text-sm mb-2">All Time</div>
                 <div className="flex gap-2">
-                  <div className="flex-1 h-12 bg-[#50C878] rounded flex items-center justify-center text-[#1A1A1D] font-bold">
+                  <div className="flex-1 h-12 bg-emerald-500 rounded flex items-center justify-center text-zinc-900 font-bold">
                     128 Passed
                   </div>
-                  <div className="w-20 h-12 bg-[#C41E3A] rounded flex items-center justify-center text-[#F5F3E8] font-bold">
+                  <div className="w-20 h-12 bg-red-600 rounded flex items-center justify-center text-zinc-100 font-bold">
                     28 Failed
                   </div>
                 </div>
@@ -1041,8 +1041,8 @@ function StatsTab() {
             </div>
           </div>
           
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6">
               Top Voters (This Month)
             </h2>
             <div className="space-y-3">
@@ -1053,22 +1053,22 @@ function StatsTab() {
                 { rank: 4, address: '0x9i0j...1k2l', votes: 15, score: 823 },
                 { rank: 5, address: '0x3m4n...5o6p', votes: 14, score: 801 }
               ].map(voter => (
-                <div key={voter.rank} className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded">
+                <div key={voter.rank} className="flex items-center justify-between p-3 bg-zinc-900 rounded">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                      voter.rank === 1 ? 'bg-[#FFD700] text-[#1A1A1D]' :
-                      voter.rank === 2 ? 'bg-[#C0C0C0] text-[#1A1A1D]' :
-                      voter.rank === 3 ? 'bg-[#CD7F32] text-[#1A1A1D]' :
-                      'bg-[#3A3A3F] text-[#A0A0A5]'
+                      voter.rank === 1 ? 'bg-amber-400 text-zinc-900' :
+                      voter.rank === 2 ? 'bg-zinc-400 text-zinc-900' :
+                      voter.rank === 3 ? 'bg-amber-600 text-zinc-900' :
+                      'bg-zinc-700 text-zinc-400'
                     }`}>
                       {voter.rank}
                     </div>
                     <div>
-                      <div className="text-[#F5F3E8] font-mono text-sm">{voter.address}</div>
-                      <div className="text-[#A0A0A5] text-xs">Score: {voter.score}</div>
+                      <div className="text-zinc-100 font-mono text-sm">{voter.address}</div>
+                      <div className="text-zinc-400 text-xs">Score: {voter.score}</div>
                     </div>
                   </div>
-                  <div className="text-[#00F0FF] font-bold">{voter.votes} votes</div>
+                  <div className="text-cyan-400 font-bold">{voter.votes} votes</div>
                 </div>
               ))}
             </div>
@@ -1273,11 +1273,11 @@ function SuggestionsTab() {
     .sort((a, b) => sortBy === 'popular' ? (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes) : 0);
 
   const statusColors = {
-    new: 'bg-[#00F0FF]/20 text-[#00F0FF] border-[#00F0FF]',
-    reviewing: 'bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]',
-    approved: 'bg-[#50C878]/20 text-[#50C878] border-[#50C878]',
-    rejected: 'bg-[#C41E3A]/20 text-[#C41E3A] border-[#C41E3A]',
-    implemented: 'bg-[#9B59B6]/20 text-[#9B59B6] border-[#9B59B6]'
+    new: 'bg-cyan-400/20 text-cyan-400 border-cyan-400',
+    reviewing: 'bg-amber-400/20 text-amber-400 border-amber-400',
+    approved: 'bg-emerald-500/20 text-emerald-500 border-emerald-500',
+    rejected: 'bg-red-600/20 text-red-600 border-red-600',
+    implemented: 'bg-purple-500/20 text-purple-500 border-purple-500'
   };
 
   const categoryIcons: Record<string, string> = {
@@ -1294,12 +1294,12 @@ function SuggestionsTab() {
         {/* Header with Submit Button */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">💡 Community Suggestions</h2>
-            <p className="text-[#A0A0A5]">Anyone can submit ideas. Reach {PROMOTION_THRESHOLD}+ votes to become an official proposal!</p>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-2">💡 Community Suggestions</h2>
+            <p className="text-zinc-400">Anyone can submit ideas. Reach {PROMOTION_THRESHOLD}+ votes to become an official proposal!</p>
           </div>
           <button
             onClick={() => setShowSubmitForm(!showSubmitForm)}
-            className="px-6 py-3 bg-linear-to-r from-[#50C878] to-[#00F0FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-6 py-3 bg-linear-to-r from-emerald-500 to-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all"
           >
             {showSubmitForm ? '✕ Cancel' : '+ Submit Idea'}
           </button>
@@ -1313,12 +1313,12 @@ function SuggestionsTab() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="🔍 Search suggestions..."
-              className="w-full md:w-96 px-4 py-3 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none"
+              className="w-full md:w-96 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A0A0A5] hover:text-[#F5F3E8]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-100"
               >
                 ✕
               </button>
@@ -1328,35 +1328,35 @@ function SuggestionsTab() {
 
         {/* Submit Form */}
         {showSubmitForm && (
-          <div className="bg-[#2A2A2F] border border-[#50C878] rounded-xl p-6 mb-6">
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">📝 Submit Your Idea</h3>
+          <div className="bg-zinc-800 border border-emerald-500 rounded-xl p-6 mb-6">
+            <h3 className="text-xl font-bold text-zinc-100 mb-4">📝 Submit Your Idea</h3>
             
             {!isConnected && (
-              <div className="bg-[#FFD700]/20 border border-[#FFD700] rounded-lg p-4 mb-4">
-                <p className="text-[#FFD700]">⚠️ Connect your wallet to submit suggestions with your identity. Anonymous submissions are also allowed.</p>
+              <div className="bg-amber-400/20 border border-amber-400 rounded-lg p-4 mb-4">
+                <p className="text-amber-400">⚠️ Connect your wallet to submit suggestions with your identity. Anonymous submissions are also allowed.</p>
               </div>
             )}
             
             <div className="space-y-4">
               <div>
-                <label className="block text-[#A0A0A5] text-sm mb-2">Title *</label>
+                <label className="block text-zinc-400 text-sm mb-2">Title *</label>
                 <input
                   type="text"
                   value={newSuggestion.title}
                   onChange={(e) => setNewSuggestion({ ...newSuggestion, title: e.target.value })}
                   placeholder="Brief, descriptive title for your idea..."
-                  className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#50C878] focus:outline-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-emerald-500 focus:outline-none"
                   maxLength={100}
                 />
-                <div className="text-right text-xs text-[#A0A0A5] mt-1">{newSuggestion.title.length}/100</div>
+                <div className="text-right text-xs text-zinc-400 mt-1">{newSuggestion.title.length}/100</div>
               </div>
               
               <div>
-                <label className="block text-[#A0A0A5] text-sm mb-2">Category</label>
+                <label className="block text-zinc-400 text-sm mb-2">Category</label>
                 <select
                   value={newSuggestion.category}
                   onChange={(e) => setNewSuggestion({ ...newSuggestion, category: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#50C878] focus:outline-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-emerald-500 focus:outline-none"
                 >
                   <option value="feature">🚀 New Feature</option>
                   <option value="economics">💰 Token Economics</option>
@@ -1367,29 +1367,29 @@ function SuggestionsTab() {
               </div>
               
               <div>
-                <label className="block text-[#A0A0A5] text-sm mb-2">Description *</label>
+                <label className="block text-zinc-400 text-sm mb-2">Description *</label>
                 <textarea
                   value={newSuggestion.description}
                   onChange={(e) => setNewSuggestion({ ...newSuggestion, description: e.target.value })}
                   placeholder="Explain your idea in detail. What problem does it solve? How would it work?"
                   rows={5}
-                  className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#50C878] focus:outline-none resize-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-emerald-500 focus:outline-none resize-none"
                   maxLength={2000}
                 />
-                <div className="text-right text-xs text-[#A0A0A5] mt-1">{newSuggestion.description.length}/2000</div>
+                <div className="text-right text-xs text-zinc-400 mt-1">{newSuggestion.description.length}/2000</div>
               </div>
               
               <div className="flex gap-3">
                 <button
                   onClick={handleSubmit}
                   disabled={!newSuggestion.title.trim() || !newSuggestion.description.trim()}
-                  className="flex-1 py-3 bg-[#50C878] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-emerald-500 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   🚀 Submit Suggestion
                 </button>
                 <button
                   onClick={() => setShowSubmitForm(false)}
-                  className="px-6 py-3 bg-[#3A3A3F] text-[#A0A0A5] font-bold rounded-lg hover:text-[#F5F3E8] transition-all"
+                  className="px-6 py-3 bg-zinc-700 text-zinc-400 font-bold rounded-lg hover:text-zinc-100 transition-all"
                 >
                   Cancel
                 </button>
@@ -1407,8 +1407,8 @@ function SuggestionsTab() {
                 onClick={() => setFilter(f)}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
                   filter === f
-                    ? 'bg-[#00F0FF] text-[#1A1A1D]'
-                    : 'bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#00F0FF]'
+                    ? 'bg-cyan-400 text-zinc-900'
+                    : 'bg-zinc-800 text-zinc-400 hover:text-cyan-400'
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -1418,7 +1418,7 @@ function SuggestionsTab() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as 'recent' | 'popular')}
-            className="px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8]"
+            className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100"
           >
             <option value="popular">🔥 Most Popular</option>
             <option value="recent">🕐 Most Recent</option>
@@ -1434,7 +1434,7 @@ function SuggestionsTab() {
             const isExpanded = expandedId === suggestion.id;
             
             return (
-              <div key={suggestion.id} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#50C878]/50 transition-all">
+              <div key={suggestion.id} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-emerald-500/50 transition-all">
                 <div className="flex gap-4">
                   {/* Vote Column */}
                   <div className="flex flex-col items-center gap-1 min-w-15">
@@ -1443,14 +1443,14 @@ function SuggestionsTab() {
                       disabled={hasVoted}
                       className={`w-10 h-10 rounded-lg transition-all flex items-center justify-center text-xl ${
                         hasVoted 
-                          ? 'bg-[#1A1A1D] text-[#3A3A3F] cursor-not-allowed' 
-                          : 'bg-[#1A1A1D] hover:bg-[#50C878]/20 text-[#A0A0A5] hover:text-[#50C878]'
+                          ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed' 
+                          : 'bg-zinc-900 hover:bg-emerald-500/20 text-zinc-400 hover:text-emerald-500'
                       }`}
                     >
                       ▲
                     </button>
                     <div className={`text-lg font-bold ${
-                      score > 0 ? 'text-[#50C878]' : score < 0 ? 'text-[#C41E3A]' : 'text-[#A0A0A5]'
+                      score > 0 ? 'text-emerald-500' : score < 0 ? 'text-red-600' : 'text-zinc-400'
                     }`}>
                       {score}
                     </div>
@@ -1459,13 +1459,13 @@ function SuggestionsTab() {
                       disabled={hasVoted}
                       className={`w-10 h-10 rounded-lg transition-all flex items-center justify-center text-xl ${
                         hasVoted 
-                          ? 'bg-[#1A1A1D] text-[#3A3A3F] cursor-not-allowed' 
-                          : 'bg-[#1A1A1D] hover:bg-[#C41E3A]/20 text-[#A0A0A5] hover:text-[#C41E3A]'
+                          ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed' 
+                          : 'bg-zinc-900 hover:bg-red-600/20 text-zinc-400 hover:text-red-600'
                       }`}
                     >
                       ▼
                     </button>
-                    {hasVoted && <span className="text-[#A0A0A5] text-xs">voted</span>}
+                    {hasVoted && <span className="text-zinc-400 text-xs">voted</span>}
                   </div>
                   
                   {/* Content */}
@@ -1475,9 +1475,9 @@ function SuggestionsTab() {
                         {suggestion.status.toUpperCase()}
                       </span>
                       <span className="text-lg">{categoryIcons[suggestion.category]}</span>
-                      <span className="text-[#A0A0A5] text-sm">{suggestion.category}</span>
+                      <span className="text-zinc-400 text-sm">{suggestion.category}</span>
                       {suggestion.status === 'new' && score > 0 && (
-                        <span className="text-xs text-[#FFD700]">
+                        <span className="text-xs text-amber-400">
                           🎯 {Math.round(progressToPromotion)}% to proposal
                         </span>
                       )}
@@ -1485,32 +1485,32 @@ function SuggestionsTab() {
                     
                     {/* Progress bar for new suggestions */}
                     {suggestion.status === 'new' && score > 0 && (
-                      <div className="w-full h-1 bg-[#3A3A3F] rounded-full mb-3 overflow-hidden">
+                      <div className="w-full h-1 bg-zinc-700 rounded-full mb-3 overflow-hidden">
                         <div 
-                          className="h-full bg-linear-to-r from-[#50C878] to-[#00F0FF] transition-all duration-500"
+                          className="h-full bg-linear-to-r from-emerald-500 to-cyan-400 transition-all duration-500"
                           style={{ width: `${progressToPromotion}%` }}
                         />
                       </div>
                     )}
                     
-                    <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{suggestion.title}</h3>
-                    <p className={`text-[#A0A0A5] mb-4 ${isExpanded ? '' : 'line-clamp-2'}`}>{suggestion.description}</p>
+                    <h3 className="text-xl font-bold text-zinc-100 mb-2">{suggestion.title}</h3>
+                    <p className={`text-zinc-400 mb-4 ${isExpanded ? '' : 'line-clamp-2'}`}>{suggestion.description}</p>
                     
                     <div className="flex flex-wrap items-center gap-4 text-sm">
-                      <span className="text-[#A0A0A5]">
-                        by <span className="text-[#00F0FF] font-mono">{suggestion.author}</span>
-                        <span className="text-[#50C878] ml-1">(Score: {suggestion.authorScore})</span>
+                      <span className="text-zinc-400">
+                        by <span className="text-cyan-400 font-mono">{suggestion.author}</span>
+                        <span className="text-emerald-500 ml-1">(Score: {suggestion.authorScore})</span>
                       </span>
-                      <span className="text-[#A0A0A5]">• {suggestion.timestamp}</span>
+                      <span className="text-zinc-400">• {suggestion.timestamp}</span>
                       <button 
                         onClick={() => setExpandedId(isExpanded ? null : suggestion.id)}
-                        className="text-[#A0A0A5] hover:text-[#00F0FF] transition-all"
+                        className="text-zinc-400 hover:text-cyan-400 transition-all"
                       >
                         💬 {suggestion.comments.length} comments {isExpanded ? '▲' : '▼'}
                       </button>
                       <button 
                         onClick={() => handleShare(suggestion)}
-                        className="text-[#A0A0A5] hover:text-[#00F0FF] transition-all"
+                        className="text-zinc-400 hover:text-cyan-400 transition-all"
                       >
                         {copiedId === suggestion.id ? '✓ Copied!' : '🔗 Share'}
                       </button>
@@ -1518,22 +1518,22 @@ function SuggestionsTab() {
                     
                     {/* Expanded Comments Section */}
                     {isExpanded && (
-                      <div className="mt-4 pt-4 border-t border-[#3A3A3F]">
+                      <div className="mt-4 pt-4 border-t border-zinc-700">
                         <div className="space-y-3 mb-4">
                           {suggestion.comments.length === 0 ? (
-                            <p className="text-[#A0A0A5] text-sm italic">No comments yet. Be the first!</p>
+                            <p className="text-zinc-400 text-sm italic">No comments yet. Be the first!</p>
                           ) : (
                             suggestion.comments.map(comment => (
-                              <div key={comment.id} className="bg-[#1A1A1D] rounded-lg p-3">
+                              <div key={comment.id} className="bg-zinc-900 rounded-lg p-3">
                                 <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-[#00F0FF] font-mono">{comment.author}</span>
-                                    <span className="text-[#50C878] text-xs">(Score: {comment.authorScore})</span>
-                                    <span className="text-[#A0A0A5]">• {comment.timestamp}</span>
+                                    <span className="text-cyan-400 font-mono">{comment.author}</span>
+                                    <span className="text-emerald-500 text-xs">(Score: {comment.authorScore})</span>
+                                    <span className="text-zinc-400">• {comment.timestamp}</span>
                                   </div>
-                                  <button className="text-[#A0A0A5] hover:text-[#C41E3A] text-xs">❤️ {comment.likes}</button>
+                                  <button className="text-zinc-400 hover:text-red-600 text-xs">❤️ {comment.likes}</button>
                                 </div>
-                                <p className="text-[#F5F3E8] text-sm">{comment.content}</p>
+                                <p className="text-zinc-100 text-sm">{comment.content}</p>
                               </div>
                             ))
                           )}
@@ -1547,13 +1547,13 @@ function SuggestionsTab() {
                             onChange={(e) => setNewComment(e.target.value)}
                             placeholder="Add a comment..."
                             maxLength={500}
-                            className="flex-1 px-3 py-2 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none text-sm"
+                            className="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none text-sm"
                             onKeyDown={(e) => e.key === 'Enter' && handleAddComment(suggestion.id)}
                           />
                           <button
                             onClick={() => handleAddComment(suggestion.id)}
                             disabled={!newComment.trim()}
-                            className="px-4 py-2 bg-[#00F0FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 text-sm"
+                            className="px-4 py-2 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 text-sm"
                           >
                             Post
                           </button>
@@ -1568,7 +1568,7 @@ function SuggestionsTab() {
         </div>
 
         {filteredSuggestions.length === 0 && (
-          <div className="text-center py-12 text-[#A0A0A5]">
+          <div className="text-center py-12 text-zinc-400">
             <div className="text-4xl mb-4">💡</div>
             <p>No suggestions found. Be the first to submit an idea!</p>
           </div>
@@ -1742,11 +1742,11 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
   };
 
   const categoryColors = {
-    general: 'bg-[#A0A0A5]/20 text-[#A0A0A5] border-[#A0A0A5]',
-    proposals: 'bg-[#00F0FF]/20 text-[#00F0FF] border-[#00F0FF]',
-    support: 'bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]',
-    ideas: 'bg-[#50C878]/20 text-[#50C878] border-[#50C878]',
-    announcements: 'bg-[#9B59B6]/20 text-[#9B59B6] border-[#9B59B6]'
+    general: 'bg-zinc-400/20 text-zinc-400 border-zinc-400',
+    proposals: 'bg-cyan-400/20 text-cyan-400 border-cyan-400',
+    support: 'bg-amber-400/20 text-amber-400 border-amber-400',
+    ideas: 'bg-emerald-500/20 text-emerald-500 border-emerald-500',
+    announcements: 'bg-purple-500/20 text-purple-500 border-purple-500'
   };
 
   const filteredDiscussions = discussions
@@ -1761,23 +1761,23 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
         <div className="container mx-auto px-4 max-w-4xl">
           <button
             onClick={() => setSelectedDiscussion(null)}
-            className="mb-4 text-[#00F0FF] hover:underline flex items-center gap-2"
+            className="mb-4 text-cyan-400 hover:underline flex items-center gap-2"
           >
             ← Back to Discussions
           </button>
           
           {/* Thread Header */}
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 mb-6">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 mb-6">
             <div className="flex items-center gap-2 mb-3">
-              {selectedDiscussion.isPinned && <span className="text-[#FFD700]">📌</span>}
+              {selectedDiscussion.isPinned && <span className="text-amber-400">📌</span>}
               <span className={`px-2 py-1 text-xs rounded border ${categoryColors[selectedDiscussion.category]}`}>
                 {selectedDiscussion.category.toUpperCase()}
               </span>
             </div>
-            <h1 className="text-2xl font-bold text-[#F5F3E8] mb-4">{selectedDiscussion.title}</h1>
-            <p className="text-[#A0A0A5] mb-4">{selectedDiscussion.preview}</p>
-            <div className="flex items-center gap-4 text-sm text-[#A0A0A5]">
-              <span>by <span className="text-[#00F0FF] font-mono">{selectedDiscussion.author}</span></span>
+            <h1 className="text-2xl font-bold text-zinc-100 mb-4">{selectedDiscussion.title}</h1>
+            <p className="text-zinc-400 mb-4">{selectedDiscussion.preview}</p>
+            <div className="flex items-center gap-4 text-sm text-zinc-400">
+              <span>by <span className="text-cyan-400 font-mono">{selectedDiscussion.author}</span></span>
               <span>• {selectedDiscussion.timestamp}</span>
               <span>• 👁 {selectedDiscussion.views} views</span>
             </div>
@@ -1785,29 +1785,29 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
           
           {/* Replies */}
           <div className="space-y-4 mb-6">
-            <h2 className="text-lg font-bold text-[#F5F3E8]">💬 {replies.length} Replies</h2>
+            <h2 className="text-lg font-bold text-zinc-100">💬 {replies.length} Replies</h2>
             {replies.map(reply => (
-              <div key={reply.id} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4">
+              <div key={reply.id} className="bg-zinc-800 border border-zinc-700 rounded-xl p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-[#00F0FF] font-mono">{reply.author}</span>
-                    <span className="text-[#50C878] text-xs">(Score: {reply.authorScore})</span>
-                    <span className="text-[#A0A0A5] text-sm">• {reply.timestamp}</span>
+                    <span className="text-cyan-400 font-mono">{reply.author}</span>
+                    <span className="text-emerald-500 text-xs">(Score: {reply.authorScore})</span>
+                    <span className="text-zinc-400 text-sm">• {reply.timestamp}</span>
                   </div>
-                  <button className="text-[#A0A0A5] hover:text-[#00F0FF] text-sm">
+                  <button className="text-zinc-400 hover:text-cyan-400 text-sm">
                     ❤️ {reply.likes}
                   </button>
                 </div>
-                <p className="text-[#F5F3E8]">{reply.content}</p>
+                <p className="text-zinc-100">{reply.content}</p>
               </div>
             ))}
           </div>
           
           {/* Reply Form */}
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-            <h3 className="text-lg font-bold text-[#F5F3E8] mb-4">Reply to this discussion</h3>
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+            <h3 className="text-lg font-bold text-zinc-100 mb-4">Reply to this discussion</h3>
             {!isConnected && (
-              <div className="bg-[#FFD700]/20 border border-[#FFD700] rounded-lg p-3 mb-4 text-sm text-[#FFD700]">
+              <div className="bg-amber-400/20 border border-amber-400 rounded-lg p-3 mb-4 text-sm text-amber-400">
                 ⚠️ Connect your wallet to reply with your identity
               </div>
             )}
@@ -1817,12 +1817,12 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
               placeholder="Share your thoughts..."
               rows={4}
               maxLength={1000}
-              className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none mb-4"
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none resize-none mb-4"
             />
             <button
               onClick={handleReply}
               disabled={!newReply.trim()}
-              className="px-6 py-3 bg-[#00F0FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
+              className="px-6 py-3 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
             >
               💬 Post Reply
             </button>
@@ -1839,12 +1839,12 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">💬 Community Discussions</h2>
-            <p className="text-[#A0A0A5]">Discuss proposals, share ideas, and connect with the community.</p>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-2">💬 Community Discussions</h2>
+            <p className="text-zinc-400">Discuss proposals, share ideas, and connect with the community.</p>
           </div>
           <button
             onClick={() => setShowNewThread(!showNewThread)}
-            className="px-6 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-6 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all"
           >
             {showNewThread ? '✕ Cancel' : '+ New Discussion'}
           </button>
@@ -1852,27 +1852,27 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
 
         {/* New Thread Form */}
         {showNewThread && (
-          <div className="bg-[#2A2A2F] border border-[#00F0FF] rounded-xl p-6 mb-6">
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">📝 Start a New Discussion</h3>
+          <div className="bg-zinc-800 border border-cyan-400 rounded-xl p-6 mb-6">
+            <h3 className="text-xl font-bold text-zinc-100 mb-4">📝 Start a New Discussion</h3>
             
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Title *</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Title *</label>
                   <input
                     type="text"
                     value={newThread.title}
                     onChange={(e) => setNewThread({ ...newThread, title: e.target.value })}
                     placeholder="Discussion topic..."
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
                 <div className="w-48">
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Category</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Category</label>
                   <select
                     value={newThread.category}
                     onChange={(e) => setNewThread({ ...newThread, category: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
                   >
                     <option value="general">General</option>
                     <option value="proposals">Proposals</option>
@@ -1883,21 +1883,21 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
               </div>
               
               <div>
-                <label className="block text-[#A0A0A5] text-sm mb-2">Content *</label>
+                <label className="block text-zinc-400 text-sm mb-2">Content *</label>
                 <textarea
                   value={newThread.content}
                   onChange={(e) => setNewThread({ ...newThread, content: e.target.value })}
                   placeholder="What would you like to discuss?"
                   rows={5}
                   maxLength={2000}
-                  className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none resize-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none resize-none"
                 />
               </div>
               
               <button
                 onClick={handleNewThread}
                 disabled={!newThread.title.trim() || !newThread.content.trim()}
-                className="px-6 py-3 bg-[#00F0FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
+                className="px-6 py-3 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
               >
                 🚀 Start Discussion
               </button>
@@ -1913,8 +1913,8 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
               onClick={() => setCategory(cat)}
               className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${
                 category === cat
-                  ? 'bg-[#00F0FF] text-[#1A1A1D]'
-                  : 'bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#00F0FF]'
+                  ? 'bg-cyan-400 text-zinc-900'
+                  : 'bg-zinc-800 text-zinc-400 hover:text-cyan-400'
               }`}
             >
               {cat === 'all' ? '📋 All' : 
@@ -1932,29 +1932,29 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
             <div
               key={discussion.id}
               onClick={() => setSelectedDiscussion(discussion)}
-              className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-4 hover:border-[#00F0FF]/50 transition-all cursor-pointer"
+              className="bg-zinc-800 border border-zinc-700 rounded-xl p-4 hover:border-cyan-400/50 transition-all cursor-pointer"
             >
               <div className="flex items-start gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    {discussion.isPinned && <span className="text-[#FFD700]">📌</span>}
+                    {discussion.isPinned && <span className="text-amber-400">📌</span>}
                     <span className={`px-2 py-1 text-xs rounded border ${categoryColors[discussion.category]}`}>
                       {discussion.category}
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold text-[#F5F3E8] mb-1 hover:text-[#00F0FF] transition-colors">
+                  <h3 className="text-lg font-bold text-zinc-100 mb-1 hover:text-cyan-400 transition-colors">
                     {discussion.title}
                   </h3>
-                  <p className="text-[#A0A0A5] text-sm line-clamp-1 mb-2">{discussion.preview}</p>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-[#A0A0A5]">
-                    <span>by <span className="text-[#00F0FF]">{discussion.author}</span></span>
+                  <p className="text-zinc-400 text-sm line-clamp-1 mb-2">{discussion.preview}</p>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400">
+                    <span>by <span className="text-cyan-400">{discussion.author}</span></span>
                     <span>• {discussion.timestamp}</span>
                   </div>
                 </div>
                 <div className="text-right text-sm">
-                  <div className="text-[#00F0FF] font-bold">{discussion.replies}</div>
-                  <div className="text-[#A0A0A5] text-xs">replies</div>
-                  <div className="text-[#A0A0A5] text-xs mt-1">👁 {discussion.views}</div>
+                  <div className="text-cyan-400 font-bold">{discussion.replies}</div>
+                  <div className="text-zinc-400 text-xs">replies</div>
+                  <div className="text-zinc-400 text-xs mt-1">👁 {discussion.views}</div>
                 </div>
               </div>
             </div>
@@ -1962,7 +1962,7 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
         </div>
 
         {filteredDiscussions.length === 0 && (
-          <div className="text-center py-12 text-[#A0A0A5]">
+          <div className="text-center py-12 text-zinc-400">
             <div className="text-4xl mb-4">💬</div>
             <p>No discussions found. Start a new conversation!</p>
           </div>
@@ -2043,10 +2043,10 @@ function CreateProposalTab() {
     return (
       <section className="py-8">
         <div className="container mx-auto px-4 max-w-3xl text-center">
-          <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-12">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-12">
             <div className="text-6xl mb-4">🔒</div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-4">Connect Wallet</h2>
-            <p className="text-[#A0A0A5]">You need to connect your wallet to create proposals</p>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-4">Connect Wallet</h2>
+            <p className="text-zinc-400">You need to connect your wallet to create proposals</p>
           </div>
         </div>
       </section>
@@ -2057,16 +2057,16 @@ function CreateProposalTab() {
     return (
       <section className="py-8">
         <div className="container mx-auto px-4 max-w-3xl text-center">
-          <div className="bg-[#2A2A2F] border border-[#C41E3A] rounded-xl p-12">
+          <div className="bg-zinc-800 border border-red-600 rounded-xl p-12">
             <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-4">Insufficient ProofScore</h2>
-            <p className="text-[#A0A0A5] mb-4">
-              You need at least <span className="text-[#00F0FF] font-bold">{requiredScore} ProofScore</span> to create proposals.
+            <h2 className="text-2xl font-bold text-zinc-100 mb-4">Insufficient ProofScore</h2>
+            <p className="text-zinc-400 mb-4">
+              You need at least <span className="text-cyan-400 font-bold">{requiredScore} ProofScore</span> to create proposals.
             </p>
-            <p className="text-[#A0A0A5]">
-              Your current score: <span className="text-[#FFD700] font-bold">{score || 0}</span>
+            <p className="text-zinc-400">
+              Your current score: <span className="text-amber-400 font-bold">{score || 0}</span>
             </p>
-            <div className="mt-6 text-sm text-[#8A8A8F]">
+            <div className="mt-6 text-sm text-zinc-400">
               Increase your score by holding VFIDE, being active, and maintaining good standing.
             </div>
           </div>
@@ -2078,14 +2078,14 @@ function CreateProposalTab() {
   return (
     <section className="py-8">
       <div className="container mx-auto px-4 max-w-3xl">
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-8">
-          <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6 flex items-center gap-3">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-8">
+          <h2 className="text-2xl font-bold text-zinc-100 mb-6 flex items-center gap-3">
             ✏️ Create New Proposal
           </h2>
 
           {/* Proposal Type Selection */}
           <div className="mb-6">
-            <label className="block text-[#A0A0A5] text-sm mb-3">Proposal Type</label>
+            <label className="block text-zinc-400 text-sm mb-3">Proposal Type</label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { id: 'parameter' as const, label: 'Parameter Change', icon: '⚙️' },
@@ -2099,8 +2099,8 @@ function CreateProposalTab() {
                   onClick={() => setProposalType(type.id)}
                   className={`p-4 rounded-lg border text-center transition-all ${
                     proposalType === type.id
-                      ? 'bg-[#00F0FF]/20 border-[#00F0FF] text-[#00F0FF]'
-                      : 'bg-[#1A1A1D] border-[#3A3A3F] text-[#A0A0A5] hover:border-[#00F0FF]/50'
+                      ? 'bg-cyan-400/20 border-cyan-400 text-cyan-400'
+                      : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-cyan-400/50'
                   }`}
                 >
                   <div className="text-2xl mb-1">{type.icon}</div>
@@ -2113,20 +2113,20 @@ function CreateProposalTab() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>
-              <label className="block text-[#A0A0A5] text-sm mb-2">Proposal Title *</label>
+              <label className="block text-zinc-400 text-sm mb-2">Proposal Title *</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                 placeholder="e.g., Reduce burn fee from 2% to 1.5%"
                 required
-                className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
+                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-[#A0A0A5] text-sm mb-2">Full Description *</label>
+              <label className="block text-zinc-400 text-sm mb-2">Full Description *</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -2134,7 +2134,7 @@ function CreateProposalTab() {
                 required
                 rows={6}
                 maxLength={2000}
-                className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none resize-none"
+                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none resize-none"
               />
             </div>
 
@@ -2142,23 +2142,23 @@ function CreateProposalTab() {
             {proposalType === 'treasury' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Amount (VFIDE) *</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Amount (VFIDE) *</label>
                   <input
                     type="number"
                     value={formData.treasuryAmount}
                     onChange={(e) => setFormData({...formData, treasuryAmount: e.target.value})}
                     placeholder="10000"
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Recipient Address *</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Recipient Address *</label>
                   <input
                     type="text"
                     value={formData.treasuryRecipient}
                     onChange={(e) => setFormData({...formData, treasuryRecipient: e.target.value})}
                     placeholder="0x..."
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none font-mono text-sm"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none font-mono text-sm"
                   />
                 </div>
               </div>
@@ -2168,25 +2168,25 @@ function CreateProposalTab() {
             {(proposalType === 'parameter' || proposalType === 'upgrade') && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Target Contract Address</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Target Contract Address</label>
                   <input
                     type="text"
                     value={formData.targetContract}
                     onChange={(e) => setFormData({...formData, targetContract: e.target.value})}
                     placeholder="0x..."
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none font-mono text-sm"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none font-mono text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#A0A0A5] text-sm mb-2">Calldata (hex)</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Calldata (hex)</label>
                   <input
                     type="text"
                     value={formData.calldata}
                     onChange={(e) => setFormData({...formData, calldata: e.target.value})}
                     placeholder="0x..."
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none font-mono text-sm"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none font-mono text-sm"
                   />
-                  <p className="text-xs text-[#8A8A8F] mt-1">
+                  <p className="text-xs text-zinc-400 mt-1">
                     Leave empty for text-only proposals. For technical proposals, encode the function call.
                   </p>
                 </div>
@@ -2194,9 +2194,9 @@ function CreateProposalTab() {
             )}
 
             {/* Info Box */}
-            <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg p-4">
-              <h4 className="text-[#FFD700] font-bold mb-2">📋 Proposal Guidelines</h4>
-              <ul className="text-sm text-[#A0A0A5] space-y-1">
+            <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4">
+              <h4 className="text-amber-400 font-bold mb-2">📋 Proposal Guidelines</h4>
+              <ul className="text-sm text-zinc-400 space-y-1">
                 <li>• Voting period: 7 days</li>
                 <li>• Quorum requirement: 10% of total voting power</li>
                 <li>• Execution delay: 48 hours after passing (Timelock)</li>
@@ -2210,8 +2210,8 @@ function CreateProposalTab() {
               disabled={isSubmitting || !formData.title || !formData.description}
               className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
                 isSubmitting || !formData.title || !formData.description
-                  ? 'bg-[#3A3A3F] text-[#8A8A8F] cursor-not-allowed'
-                  : 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] hover:scale-[1.02]'
+                  ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                  : 'bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 hover:scale-[1.02]'
               }`}
             >
               {isSubmitting ? '⏳ Submitting...' : '🚀 Submit Proposal'}
@@ -2298,18 +2298,18 @@ function CouncilTab() {
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
         {/* Election Status Banner */}
-        <div className="bg-linear-to-r from-[#FFD700]/20 to-[#FFA500]/20 border border-[#FFD700] rounded-xl p-6 mb-8">
+        <div className="bg-linear-to-r from-amber-400/20 to-orange-500/20 border border-amber-400 rounded-xl p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-[#FFD700] mb-1">👑 Council Election - Term {electionStatus.currentTerm + 1}</h2>
-              <p className="text-[#F5F3E8]">
-                Phase: <span className="text-[#00F0FF] font-bold">{electionStatus.phase}</span> • 
+              <h2 className="text-2xl font-bold text-amber-400 mb-1">👑 Council Election - Term {electionStatus.currentTerm + 1}</h2>
+              <p className="text-zinc-100">
+                Phase: <span className="text-cyan-400 font-bold">{electionStatus.phase}</span> • 
                 {electionStatus.daysLeft} days remaining
               </p>
             </div>
             <div className="text-right">
-              <div className="text-[#A0A0A5] text-sm">Total Candidates</div>
-              <div className="text-3xl font-bold text-[#F5F3E8]">{electionStatus.totalCandidates}</div>
+              <div className="text-zinc-400 text-sm">Total Candidates</div>
+              <div className="text-3xl font-bold text-zinc-100">{electionStatus.totalCandidates}</div>
             </div>
           </div>
         </div>
@@ -2326,13 +2326,13 @@ function CouncilTab() {
               onClick={() => setActiveSection(section.id)}
               className={`px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-all ${
                 activeSection === section.id
-                  ? 'bg-[#FFD700] text-[#1A1A1D]'
-                  : 'bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#FFD700]'
+                  ? 'bg-amber-400 text-zinc-900'
+                  : 'bg-zinc-800 text-zinc-400 hover:text-amber-400'
               }`}
             >
               {section.label}
               {section.count !== null && (
-                <span className="ml-2 px-2 py-0.5 bg-[#1A1A1D] rounded-full text-xs">{section.count}</span>
+                <span className="ml-2 px-2 py-0.5 bg-zinc-900 rounded-full text-xs">{section.count}</span>
               )}
             </button>
           ))}
@@ -2341,35 +2341,35 @@ function CouncilTab() {
         {/* Current Council Members */}
         {activeSection === 'members' && (
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Current Council (Term {electionStatus.currentTerm})</h3>
+            <h3 className="text-xl font-bold text-zinc-100 mb-4">Current Council (Term {electionStatus.currentTerm})</h3>
             <div className="grid gap-4">
               {councilMembers.map((member, idx) => (
-                <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+                <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-[#FFD700]/20 rounded-full flex items-center justify-center text-2xl">
+                      <div className="w-12 h-12 bg-amber-400/20 rounded-full flex items-center justify-center text-2xl">
                         {idx === 0 ? '👑' : '⭐'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[#F5F3E8] font-bold text-lg">{member.name}</span>
-                          {idx === 0 && <span className="px-2 py-0.5 bg-[#FFD700] text-[#1A1A1D] rounded text-xs font-bold">LEAD</span>}
+                          <span className="text-zinc-100 font-bold text-lg">{member.name}</span>
+                          {idx === 0 && <span className="px-2 py-0.5 bg-amber-400 text-zinc-900 rounded text-xs font-bold">LEAD</span>}
                         </div>
-                        <div className="text-[#A0A0A5] text-sm font-mono">{member.address}</div>
+                        <div className="text-zinc-400 text-sm font-mono">{member.address}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-6 text-sm">
                       <div>
-                        <div className="text-[#A0A0A5]">ProofScore</div>
-                        <div className="text-[#00F0FF] font-bold">{member.score}</div>
+                        <div className="text-zinc-400">ProofScore</div>
+                        <div className="text-cyan-400 font-bold">{member.score}</div>
                       </div>
                       <div>
-                        <div className="text-[#A0A0A5]">Votes Received</div>
-                        <div className="text-[#50C878] font-bold">{member.votes.toLocaleString()}</div>
+                        <div className="text-zinc-400">Votes Received</div>
+                        <div className="text-emerald-500 font-bold">{member.votes.toLocaleString()}</div>
                       </div>
                       <div>
-                        <div className="text-[#A0A0A5]">Status</div>
-                        <div className="text-[#50C878] font-bold capitalize">{member.status}</div>
+                        <div className="text-zinc-400">Status</div>
+                        <div className="text-emerald-500 font-bold capitalize">{member.status}</div>
                       </div>
                     </div>
                   </div>
@@ -2382,31 +2382,31 @@ function CouncilTab() {
         {/* Candidates */}
         {activeSection === 'candidates' && (
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">Election Candidates</h3>
+            <h3 className="text-xl font-bold text-zinc-100 mb-4">Election Candidates</h3>
             {electionStatus.phase !== 'Voting' && (
-              <div className="bg-[#FFA500]/20 border border-[#FFA500] rounded-lg p-4 mb-4">
-                <p className="text-[#FFA500]">⚠️ Voting is not currently active. Next election: {electionStatus.nextElection}</p>
+              <div className="bg-orange-500/20 border border-orange-500 rounded-lg p-4 mb-4">
+                <p className="text-orange-500">⚠️ Voting is not currently active. Next election: {electionStatus.nextElection}</p>
               </div>
             )}
             <div className="grid gap-4">
               {candidates.map((candidate, idx) => (
-                <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+                <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="text-[#F5F3E8] font-bold text-lg">{candidate.name}</span>
-                        <span className="text-[#00F0FF] text-sm">Score: {candidate.score}</span>
+                        <span className="text-zinc-100 font-bold text-lg">{candidate.name}</span>
+                        <span className="text-cyan-400 text-sm">Score: {candidate.score}</span>
                       </div>
-                      <p className="text-[#A0A0A5] text-sm mb-2">&quot;{candidate.statement}&quot;</p>
-                      <div className="text-[#A0A0A5] text-xs font-mono">{candidate.address}</div>
+                      <p className="text-zinc-400 text-sm mb-2">&quot;{candidate.statement}&quot;</p>
+                      <div className="text-zinc-400 text-xs font-mono">{candidate.address}</div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="text-[#A0A0A5] text-sm">Current Votes</div>
-                        <div className="text-[#50C878] font-bold text-xl">{candidate.votes.toLocaleString()}</div>
+                        <div className="text-zinc-400 text-sm">Current Votes</div>
+                        <div className="text-emerald-500 font-bold text-xl">{candidate.votes.toLocaleString()}</div>
                       </div>
                       {electionStatus.phase === 'Voting' && isConnected && (
-                        <button className="px-6 py-3 bg-[#50C878] text-[#1A1A1D] rounded-lg font-bold hover:bg-[#45B069] transition-colors">
+                        <button className="px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-green-500 transition-colors">
                           Vote
                         </button>
                       )}
@@ -2421,50 +2421,50 @@ function CouncilTab() {
         {/* Register as Candidate */}
         {activeSection === 'register' && (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-8">
-              <h3 className="text-2xl font-bold text-[#F5F3E8] mb-6">✋ Run for Council</h3>
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-8">
+              <h3 className="text-2xl font-bold text-zinc-100 mb-6">✋ Run for Council</h3>
               
               {!isConnected ? (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-4">🔒</div>
-                  <p className="text-[#A0A0A5]">Connect your wallet to register as a candidate</p>
+                  <p className="text-zinc-400">Connect your wallet to register as a candidate</p>
                 </div>
               ) : !canRun ? (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-4">⚠️</div>
-                  <p className="text-[#A0A0A5] mb-4">
-                    You need at least <span className="text-[#FFD700] font-bold">{requiredScoreToRun} ProofScore</span> to run for council.
+                  <p className="text-zinc-400 mb-4">
+                    You need at least <span className="text-amber-400 font-bold">{requiredScoreToRun} ProofScore</span> to run for council.
                   </p>
-                  <p className="text-[#8A8A8F]">Your score: {score || 0}</p>
+                  <p className="text-zinc-400">Your score: {score || 0}</p>
                 </div>
               ) : electionStatus.phase !== 'Registration' && electionStatus.phase !== 'Voting' ? (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-4">⏳</div>
-                  <p className="text-[#A0A0A5]">Registration is not currently open.</p>
-                  <p className="text-[#8A8A8F] mt-2">Next election: {electionStatus.nextElection}</p>
+                  <p className="text-zinc-400">Registration is not currently open.</p>
+                  <p className="text-zinc-400 mt-2">Next election: {electionStatus.nextElection}</p>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg p-4">
-                    <h4 className="text-[#FFD700] font-bold mb-2">📋 Requirements</h4>
-                    <ul className="text-sm text-[#A0A0A5] space-y-1">
-                      <li>✓ ProofScore ≥ {requiredScoreToRun} <span className="text-[#50C878]">(You: {score || 0})</span></li>
+                  <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4">
+                    <h4 className="text-amber-400 font-bold mb-2">📋 Requirements</h4>
+                    <ul className="text-sm text-zinc-400 space-y-1">
+                      <li>✓ ProofScore ≥ {requiredScoreToRun} <span className="text-emerald-500">(You: {score || 0})</span></li>
                       <li>✓ No active blacklist flags</li>
                       <li>✓ Wallet connected for at least 30 days</li>
                     </ul>
                   </div>
 
                   <div>
-                    <label className="block text-[#A0A0A5] text-sm mb-2">Your Campaign Statement *</label>
+                    <label className="block text-zinc-400 text-sm mb-2">Your Campaign Statement *</label>
                     <textarea
                       value={candidateStatement}
                       onChange={(e) => setCandidateStatement(e.target.value)}
                       placeholder="Why should voters choose you? What will you focus on as a council member?"
                       rows={4}
                       maxLength={500}
-                      className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#FFD700] focus:outline-none resize-none"
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-amber-400 focus:outline-none resize-none"
                     />
-                    <p className="text-xs text-[#8A8A8F] mt-1">{candidateStatement.length}/500 characters</p>
+                    <p className="text-xs text-zinc-400 mt-1">{candidateStatement.length}/500 characters</p>
                   </div>
 
                   <button
@@ -2472,8 +2472,8 @@ function CouncilTab() {
                     disabled={isRegistering || !candidateStatement}
                     className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
                       isRegistering || !candidateStatement
-                        ? 'bg-[#3A3A3F] text-[#8A8A8F] cursor-not-allowed'
-                        : 'bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#1A1A1D] hover:scale-[1.02]'
+                        ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                        : 'bg-linear-to-r from-amber-400 to-orange-500 text-zinc-900 hover:scale-[1.02]'
                     }`}
                   >
                     {isRegistering ? '⏳ Registering...' : '👑 Register as Candidate'}

@@ -189,17 +189,17 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[#F5F3E8] flex items-center gap-2">
-            <Users className="w-6 h-6 text-[#00F0FF]" />
+          <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
+            <Users className="w-6 h-6 text-cyan-400" />
             Friend Circles
           </h2>
-          <p className="text-sm text-[#A0A0A5] mt-1">
+          <p className="text-sm text-zinc-400 mt-1">
             Organize friends into groups with custom nicknames
           </p>
         </div>
         <button
           onClick={() => setShowCreateCircle(true)}
-          className="px-4 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-semibold hover:bg-[#00D5E0] transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           New Circle
@@ -220,8 +220,8 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
               whileTap={{ scale: 0.98 }}
               className={`p-4 rounded-xl border transition-all text-left ${
                 selectedCircle?.id === circle.id
-                  ? 'bg-[#1A1A2E] border-2'
-                  : 'bg-[#0A0A0F] border-[#2A2A2F] hover:border-[#3A3A4F]'
+                  ? 'bg-zinc-900 border-2'
+                  : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
               }`}
               style={
                 selectedCircle?.id === circle.id
@@ -245,22 +245,22 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                       e.stopPropagation();
                       handleDeleteCircle(circle.id);
                     }}
-                    className="p-1 hover:bg-[#FF6B9D]/20 rounded transition-colors"
+                    className="p-1 hover:bg-pink-400/20 rounded transition-colors"
                   >
-                    <Trash2 className="w-4 h-4 text-[#FF6B9D]" />
+                    <Trash2 className="w-4 h-4 text-pink-400" />
                   </button>
                 )}
               </div>
-              <h3 className="font-bold text-[#F5F3E8] mb-1">{circle.name}</h3>
+              <h3 className="font-bold text-zinc-100 mb-1">{circle.name}</h3>
               {circle.description && (
-                <p className="text-xs text-[#6B6B78] mb-3">{circle.description}</p>
+                <p className="text-xs text-zinc-500 mb-3">{circle.description}</p>
               )}
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
                   {circle.members.slice(0, 3).map((addr, idx) => (
                     <div
                       key={idx}
-                      className="w-6 h-6 rounded-full border-2 border-[#0A0A0F] flex items-center justify-center text-xs font-bold"
+                      className="w-6 h-6 rounded-full border-2 border-zinc-950 flex items-center justify-center text-xs font-bold"
                       style={{
                         background: `linear-gradient(135deg, ${circle.color}, ${circle.color}80)`,
                       }}
@@ -269,7 +269,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                     </div>
                   ))}
                 </div>
-                <span className="text-xs text-[#A0A0A5]">
+                <span className="text-xs text-zinc-400">
                   {memberCount} {memberCount === 1 ? 'member' : 'members'}
                 </span>
               </div>
@@ -280,7 +280,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
 
       {/* Selected Circle Details */}
       {selectedCircle && (
-        <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div
@@ -296,11 +296,11 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                 )}
               </div>
               <div>
-                <h3 className="text-xl font-bold text-[#F5F3E8]">
+                <h3 className="text-xl font-bold text-zinc-100">
                   {selectedCircle.name}
                 </h3>
                 {selectedCircle.description && (
-                  <p className="text-sm text-[#6B6B78]">
+                  <p className="text-sm text-zinc-500">
                     {selectedCircle.description}
                   </p>
                 )}
@@ -322,12 +322,12 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
           {/* Members List */}
           <div className="space-y-2">
             {getCircleMembers(selectedCircle.id).length === 0 ? (
-              <div className="text-center py-8 text-[#6B6B78]">
+              <div className="text-center py-8 text-zinc-500">
                 <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No members yet</p>
                 <button
                   onClick={() => setShowAddMembers(true)}
-                  className="mt-3 text-sm text-[#00F0FF] hover:underline"
+                  className="mt-3 text-sm text-cyan-400 hover:underline"
                 >
                   Add your first member
                 </button>
@@ -341,7 +341,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                 return (
                   <div
                     key={`${member.circleId}_${member.friendAddress}`}
-                    className="flex items-center justify-between p-3 bg-[#0A0A0F] rounded-lg border border-[#2A2A2F]"
+                    className="flex items-center justify-between p-3 bg-zinc-950 rounded-lg border border-zinc-800"
                   >
                     <div className="flex items-center gap-3">
                       <div
@@ -355,11 +355,11 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                           .toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-semibold text-[#F5F3E8] flex items-center gap-2">
+                        <div className="font-semibold text-zinc-100 flex items-center gap-2">
                           {circleNickname && (
                             <>
                               <span>{circleNickname}</span>
-                              <span className="text-xs text-[#6B6B78]">
+                              <span className="text-xs text-zinc-500">
                                 (in this circle)
                               </span>
                             </>
@@ -371,7 +371,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                             <span>{formatAddress(member.friendAddress)}</span>
                           )}
                         </div>
-                        <div className="text-xs text-[#6B6B78]">
+                        <div className="text-xs text-zinc-500">
                           {formatAddress(member.friendAddress)}
                           {friend?.proofScore !== undefined && (
                             <span className="ml-2">
@@ -383,10 +383,10 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                     </div>
                     <button
                       onClick={() => handleRemoveMember(member.friendAddress)}
-                      className="p-2 hover:bg-[#FF6B9D]/20 rounded-lg transition-colors"
+                      className="p-2 hover:bg-pink-400/20 rounded-lg transition-colors"
                       title="Remove from circle"
                     >
-                      <Trash2 className="w-4 h-4 text-[#FF6B9D]" />
+                      <Trash2 className="w-4 h-4 text-pink-400" />
                     </button>
                   </div>
                 );
@@ -411,14 +411,14 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6 max-w-md w-full"
+              className="bg-zinc-900 rounded-xl border border-zinc-700 p-6 max-w-md w-full"
             >
-              <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">
+              <h3 className="text-xl font-bold text-zinc-100 mb-4">
                 Create New Circle
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-[#A0A0A5] mb-2">
+                  <label className="block text-sm text-zinc-400 mb-2">
                     Circle Name *
                   </label>
                   <input
@@ -426,11 +426,11 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                     placeholder="e.g., College Friends, Trading Group"
                     value={circleName}
                     onChange={(e) => setCircleName(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none"
+                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-[#A0A0A5] mb-2">
+                  <label className="block text-sm text-zinc-400 mb-2">
                     Description (Optional)
                   </label>
                   <textarea
@@ -438,11 +438,11 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                     value={circleDescription}
                     onChange={(e) => setCircleDescription(e.target.value)}
                     rows={2}
-                    className="w-full px-3 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none resize-none"
+                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none resize-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-[#A0A0A5] mb-2">
+                  <label className="block text-sm text-zinc-400 mb-2">
                     Color
                   </label>
                   <div className="flex gap-2">
@@ -466,7 +466,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                   <button
                     onClick={handleCreateCircle}
                     disabled={!circleName}
-                    className="flex-1 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-semibold hover:bg-[#00D5E0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Create Circle
                   </button>
@@ -476,7 +476,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                       setCircleName('');
                       setCircleDescription('');
                     }}
-                    className="flex-1 py-2 bg-[#2A2A3F] text-[#F5F3E8] rounded-lg font-semibold hover:bg-[#3A3A4F] transition-colors"
+                    className="flex-1 py-2 bg-zinc-800 text-zinc-100 rounded-lg font-semibold hover:bg-zinc-700 transition-colors"
                   >
                     Cancel
                   </button>
@@ -502,13 +502,13 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              className="bg-zinc-900 rounded-xl border border-zinc-700 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
             >
-              <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">
+              <h3 className="text-xl font-bold text-zinc-100 mb-4">
                 Add Members to {selectedCircle.name}
               </h3>
               {availableFriendsToAdd.length === 0 ? (
-                <p className="text-center text-[#6B6B78] py-8">
+                <p className="text-center text-zinc-500 py-8">
                   All friends are already in this circle
                 </p>
               ) : (
@@ -520,8 +520,8 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                         key={friend.address}
                         className={`p-3 rounded-lg border transition-all ${
                           isSelected
-                            ? 'bg-[#00F0FF]/10 border-[#00F0FF]/50'
-                            : 'bg-[#0A0A0F] border-[#2A2A2F] hover:border-[#3A3A4F]'
+                            ? 'bg-cyan-400/10 border-cyan-400/50'
+                            : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                         }`}
                       >
                         <div className="flex items-center gap-3 mb-2">
@@ -538,17 +538,17 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                             }}
                             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                               isSelected
-                                ? 'bg-[#00F0FF] border-[#00F0FF]'
-                                : 'border-[#3A3A4F]'
+                                ? 'bg-cyan-400 border-cyan-400'
+                                : 'border-zinc-700'
                             }`}
                           >
-                            {isSelected && <Check className="w-3 h-3 text-[#0A0A0F]" />}
+                            {isSelected && <Check className="w-3 h-3 text-zinc-950" />}
                           </button>
                           <div className="flex-1">
-                            <div className="font-semibold text-[#F5F3E8]">
+                            <div className="font-semibold text-zinc-100">
                               {friend.alias || formatAddress(friend.address)}
                             </div>
-                            <div className="text-xs text-[#6B6B78]">
+                            <div className="text-xs text-zinc-500">
                               {formatAddress(friend.address)}
                             </div>
                           </div>
@@ -564,7 +564,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                                 [friend.address]: e.target.value,
                               })
                             }
-                            className="w-full px-3 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] text-sm focus:border-[#00F0FF] focus:outline-none"
+                            className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none"
                           />
                         )}
                       </div>
@@ -576,7 +576,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                 <button
                   onClick={handleAddMembers}
                   disabled={selectedFriends.length === 0}
-                  className="flex-1 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-semibold hover:bg-[#00D5E0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add {selectedFriends.length} Member{selectedFriends.length !== 1 ? 's' : ''}
                 </button>
@@ -586,7 +586,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                     setSelectedFriends([]);
                     setMemberNicknames({});
                   }}
-                  className="flex-1 py-2 bg-[#2A2A3F] text-[#F5F3E8] rounded-lg font-semibold hover:bg-[#3A3A4F] transition-colors"
+                  className="flex-1 py-2 bg-zinc-800 text-zinc-100 rounded-lg font-semibold hover:bg-zinc-700 transition-colors"
                 >
                   Cancel
                 </button>

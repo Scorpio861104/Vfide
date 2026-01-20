@@ -139,7 +139,7 @@ function TimeRangeSelector({ value, onChange }: TimeRangeSelectorProps) {
   ];
 
   return (
-    <div className="flex items-center gap-2 bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-1">
+    <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg p-1">
       {ranges.map((range) => (
         <button
           key={range.value}
@@ -170,7 +170,7 @@ function PlatformOverview({ timeRange }: PlatformOverviewProps) {
 
   if (loading) {
     return (
-      <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
         </div>
@@ -181,7 +181,7 @@ function PlatformOverview({ timeRange }: PlatformOverviewProps) {
   if (!analytics) return null;
 
   return (
-    <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
       <h2 className="text-lg font-bold text-white mb-4">Platform Overview</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
@@ -210,7 +210,7 @@ function PlatformOverview({ timeRange }: PlatformOverviewProps) {
         </div>
       </div>
       {analytics.peakHours.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-[#2A2A2F]">
+        <div className="mt-4 pt-4 border-t border-zinc-800">
           <div className="text-sm text-gray-400">
             Peak Activity:{' '}
             <span className="text-white font-medium">
@@ -247,7 +247,7 @@ function MetricCard({ title, type, range, icon: Icon, color }: MetricCardProps) 
 
   if (loading) {
     return (
-      <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
         <div className="flex items-center justify-center py-4">
           <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
         </div>
@@ -275,7 +275,7 @@ function MetricCard({ title, type, range, icon: Icon, color }: MetricCardProps) 
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6 hover:border-[#3A3A3F] transition-colors"
+      className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="text-sm text-gray-400">{title}</div>
@@ -321,7 +321,7 @@ function TimeSeriesChart({ title, type, range }: TimeSeriesChartProps) {
 
   if (loading) {
     return (
-      <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
         <h3 className="text-lg font-bold text-white mb-4">{title}</h3>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
@@ -332,7 +332,7 @@ function TimeSeriesChart({ title, type, range }: TimeSeriesChartProps) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
         <h3 className="text-lg font-bold text-white mb-4">{title}</h3>
         <div className="text-center py-12 text-gray-400">No data available</div>
       </div>
@@ -344,7 +344,7 @@ function TimeSeriesChart({ title, type, range }: TimeSeriesChartProps) {
   const chartHeight = 200;
 
   return (
-    <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
       <h3 className="text-lg font-bold text-white mb-4">{title}</h3>
       
       <div className="relative" style={{ height: chartHeight }}>
@@ -381,7 +381,7 @@ function TimeSeriesChart({ title, type, range }: TimeSeriesChartProps) {
       </div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-[#2A2A2F]">
+      <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-zinc-800">
         <div>
           <div className="text-xs text-gray-400 mb-1">Total</div>
           <div className="text-lg font-bold text-white">
