@@ -81,7 +81,7 @@ interface VoiceSpeechRecognition extends EventTarget {
 function getSpeechRecognition(): VoiceSpeechRecognition | null {
   if (typeof window === 'undefined') return null;
   
-  const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognitionAPI) return null;
   
   return new SpeechRecognitionAPI() as VoiceSpeechRecognition;
