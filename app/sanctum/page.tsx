@@ -103,7 +103,7 @@ export default function SanctumPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,107,157,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
@@ -156,7 +156,7 @@ export default function SanctumPage() {
               <motion.div 
                 key={idx} 
                 whileHover={{ scale: 1.02, y: -2 }}
-                className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
+                className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
               >
                 <stat.icon className={`w-6 h-6 mx-auto mb-2 ${stat.text}`} />
                 <div className="text-2xl font-bold text-white">{stat.value}</div>
@@ -229,7 +229,7 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -242,7 +242,7 @@ function OverviewTab() {
       {/* How It Works */}
       <GlassCard className="p-8">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-linear-to-br from-pink-500/20 to-pink-500/5">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-pink-500/5">
             <Sparkles className="w-5 h-5 text-pink-400" />
           </div>
           How The Sanctum Works

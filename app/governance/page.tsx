@@ -167,7 +167,7 @@ export default function GovernancePage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,240,255,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
@@ -346,7 +346,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
           >
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-linear-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 group"
+              className="bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 group"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Your Voting Power</div>
@@ -369,7 +369,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-linear-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6"
+              className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Active Proposals</div>
@@ -388,7 +388,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
+              className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Your Participation</div>
@@ -405,7 +405,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
+              className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Governance Fatigue</div>
@@ -432,7 +432,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             className="bg-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
           >
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-linear-to-br from-red-500/20 to-orange-500/20">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20">
                 <Clock className="w-5 h-5 text-red-400" />
               </div>
               Upcoming Voting Deadlines

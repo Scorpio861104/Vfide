@@ -10,7 +10,7 @@ export default function AboutPage() {
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Hero */}
-        <section className="py-20 bg-linear-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+        <section className="py-20 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
           <div className="container mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

@@ -199,7 +199,7 @@ export default function VestingPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.1 + idx * 0.05 }}
                   whileHover={{ scale: 1.02, y: -2 }}
-                  className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-4 text-center group`}
+                  className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-4 text-center group`}
                 >
                   <div className={`p-2 rounded-xl bg-${stat.color}-500/20 inline-block mb-2 group-hover:scale-110 transition-transform`}>
                     <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
@@ -277,7 +277,7 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
       className="grid grid-cols-1 lg:grid-cols-2 gap-8"
     >
       {/* Vesting Progress */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
         <h2 className="text-2xl font-bold text-white mb-6">Vesting Progress</h2>
         
         {/* Progress Bar */}
@@ -322,7 +322,7 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
       </div>
 
       {/* How It Works */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
         <h2 className="text-2xl font-bold text-white mb-6">How Vesting Works</h2>
         <div className="space-y-4">
           {[
@@ -368,7 +368,7 @@ function ScheduleTab({ schedule }: { schedule?: readonly Milestone[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
     >
       <h2 className="text-2xl font-bold text-white mb-6">Vesting Schedule</h2>
       
@@ -470,7 +470,7 @@ function ClaimTab({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-12 text-center"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-12 text-center"
       >
         <div className="p-4 rounded-2xl bg-purple-500/10 inline-block mb-4">
           <Lock className="w-12 h-12 text-purple-400/50" />
@@ -487,7 +487,7 @@ function ClaimTab({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-12 text-center"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-12 text-center"
       >
         <div className="p-4 rounded-2xl bg-amber-500/10 inline-block mb-4">
           <AlertTriangle className="w-12 h-12 text-amber-400/50" />
@@ -505,11 +505,11 @@ function ClaimTab({
       exit={{ opacity: 0, y: -20 }}
       className="max-w-xl mx-auto"
     >
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
         <h2 className="text-2xl font-bold text-white mb-6 text-center">Claim Vested Tokens</h2>
 
         {/* Claimable Amount */}
-        <div className="bg-linear-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20 rounded-2xl p-6 mb-6 text-center">
+        <div className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20 rounded-2xl p-6 mb-6 text-center">
           <div className="text-sm text-gray-400 mb-2">Available to Claim</div>
           <div className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-purple-400">
             {Number(claimableAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}

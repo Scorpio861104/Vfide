@@ -215,7 +215,7 @@ export default function DocsPage() {
       
       <main className="min-h-screen bg-[#1A1A1D] pt-20">
         {/* Header */}
-        <section className="py-8 sm:py-12 bg-linear-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
+        <section className="py-8 sm:py-12 bg-gradient-to-b from-[#2A2A2F] to-[#1A1A1D] border-b border-[#3A3A3F]">
           <div className="container mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -441,7 +441,7 @@ export default function DocsPage() {
               >
                 {/* Security Architecture */}
                 <div className="text-center mb-8">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
                     <Shield className="w-8 h-8 text-white" />
                   </div>
                   <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">4-Layer Security Architecture</h2>

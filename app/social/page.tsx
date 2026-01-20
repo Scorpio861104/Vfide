@@ -230,7 +230,7 @@ export default function SocialAnalyticsPage() {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
                   onClick={() => setSelectedMetric(metric.label)}
-                  className={`bg-linear-to-br ${metric.color} border border-[#3A3A4F] rounded-lg p-6 cursor-pointer transition-all hover:border-[#00F0FF]/50 group ${
+                  className={`bg-gradient-to-br ${metric.color} border border-[#3A3A4F] rounded-lg p-6 cursor-pointer transition-all hover:border-[#00F0FF]/50 group ${
                     selectedMetric === metric.label ? 'ring-2 ring-[#00F0FF]' : ''
                   }`}
                 >
@@ -273,7 +273,7 @@ export default function SocialAnalyticsPage() {
           >
             <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">Influence Score</h2>
 
-            <div className={`bg-linear-to-br ${getTierColor(mockInfluenceScore.tier)} border-2 rounded-lg p-8`}>
+            <div className={`bg-gradient-to-br ${getTierColor(mockInfluenceScore.tier)} border-2 rounded-lg p-8`}>
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Score Display */}
                 <motion.div

@@ -232,13 +232,13 @@ function Step({ number, title, description, time, index }: StepProps) {
     >
       {/* Connection line */}
       {index < 2 && (
-        <div className="absolute left-7 top-16 bottom-0 w-px bg-linear-to-b from-cyan-400/30 to-transparent" />
+        <div className="absolute left-7 top-16 bottom-0 w-px bg-gradient-to-b from-cyan-400/30 to-transparent" />
       )}
       
       {/* Step number */}
       <motion.div 
         whileHover={{ scale: 1.1, rotate: 5 }}
-        className="relative z-10 w-14 h-14 rounded-2xl bg-linear-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-zinc-950 font-bold text-xl shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
+        className="relative z-10 w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-zinc-950 font-bold text-xl shrink-0 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
       >
         {number}
       </motion.div>
@@ -312,7 +312,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-5xl sm:text-6xl lg:text-7xl font-(family-name:--font-display) font-bold text-zinc-50 mb-6 leading-[1.1]"
+                className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold text-zinc-50 mb-6 leading-[1.1]"
               >
                 Accept Crypto.
                 <br />
@@ -444,7 +444,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-zinc-50 mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-zinc-50 mb-4">
               Why VFIDE?
             </h2>
             <p className="text-lg text-zinc-500 max-w-2xl mx-auto">
@@ -510,7 +510,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-zinc-50 mb-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-zinc-50 mb-4">
               Get Started in Seconds
             </h2>
             <p className="text-lg text-zinc-500">
@@ -585,7 +585,7 @@ export default function Home() {
             </blockquote>
             
             <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-linear-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-zinc-950 font-bold">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-zinc-950 font-bold">
                 M
               </div>
               <div className="text-left">
@@ -608,7 +608,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-(family-name:--font-display) font-bold text-zinc-50 mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-zinc-50 mb-6"
           >
             Ready to Own Your Payments?
           </motion.h2>

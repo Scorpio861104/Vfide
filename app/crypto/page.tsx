@@ -28,7 +28,7 @@ export default function CryptoDashboard() {
     return (
       <div className="min-h-screen bg-[#0F0F12] flex items-center justify-center p-4">
         <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4">
             <Wallet className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
@@ -58,7 +58,7 @@ export default function CryptoDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-linear-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-6"
+            className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400 text-sm">ETH Balance</span>
@@ -72,7 +72,7 @@ export default function CryptoDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-linear-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6"
+            className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400 text-sm">VFIDE Tokens</span>
@@ -86,7 +86,7 @@ export default function CryptoDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-linear-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-6"
+            className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400 text-sm">Activity</span>

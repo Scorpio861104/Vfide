@@ -49,7 +49,7 @@ function GlassCard({ children, className = "", hover = true, gradient }: {
     <motion.div
       whileHover={hover ? { scale: 1.01, y: -2 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>

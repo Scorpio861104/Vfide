@@ -284,7 +284,7 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
       className="bg-[#1A1A2E]/80 backdrop-blur-xl border border-[#3A3A4F] rounded-2xl p-4"
     >
       <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
           ✨
         </div>
         <div className="flex-1">
@@ -353,7 +353,7 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-xl">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-xl">
             {post.author.avatar}
           </div>
           <div>
@@ -526,7 +526,7 @@ function TrendingSidebar() {
         <div className="space-y-4">
           {mockSuggested.map((user) => (
             <div key={user.address} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-lg">
                 {user.avatar}
               </div>
               <div className="flex-1 min-w-0">
@@ -548,7 +548,7 @@ function TrendingSidebar() {
       </div>
 
       {/* Stats Card */}
-      <div className="bg-linear-to-br from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-2xl p-4">
+      <div className="bg-gradient-to-br from-[#1A1A2E] to-[#2A2A3E] border border-[#3A3A4F] rounded-2xl p-4">
         <h3 className="font-semibold text-[#F8F8FC] mb-4 flex items-center gap-2">
           <Award className="w-5 h-5 text-[#FFD700]" />
           Your Stats

@@ -42,7 +42,7 @@ function AuroraBackground() {
           scale: [1, 1.2, 0.9, 1]
         }}
         transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-0 left-1/4 w-200 h-200 bg-linear-to-br from-cyan-500/20 via-blue-500/10 to-transparent rounded-full blur-[150px]"
+        className="absolute top-0 left-1/4 w-200 h-200 bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-transparent rounded-full blur-[150px]"
       />
       
       {/* Secondary aurora */}
@@ -53,7 +53,7 @@ function AuroraBackground() {
           scale: [1, 0.8, 1.1, 1]
         }}
         transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute bottom-0 right-1/4 w-175 h-175 bg-linear-to-br from-purple-500/15 via-pink-500/10 to-transparent rounded-full blur-[130px]"
+        className="absolute bottom-0 right-1/4 w-175 h-175 bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-transparent rounded-full blur-[130px]"
       />
       
       {/* Accent glow */}
@@ -63,7 +63,7 @@ function AuroraBackground() {
           scale: [1, 1.3, 1]
         }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-linear-to-br from-emerald-500/10 to-transparent rounded-full blur-[100px]"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full blur-[100px]"
       />
       
       {/* Grid overlay */}
@@ -194,7 +194,7 @@ function VaultKeyVisualization({ isSearching }: { isSearching: boolean }) {
                 : '0 0 40px rgba(6, 182, 212, 0.3)'
             }}
             transition={{ duration: 1, repeat: Infinity }}
-            className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-linear-to-br from-cyan-500/30 to-blue-600/30 backdrop-blur-xl flex items-center justify-center border border-cyan-500/50"
+            className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-cyan-500/30 to-blue-600/30 backdrop-blur-xl flex items-center justify-center border border-cyan-500/50"
           >
             <KeyRound className="h-8 w-8 md:h-10 md:w-10 text-cyan-400" />
           </motion.div>
@@ -259,10 +259,10 @@ function GlassCard({ children, className = "", hover = true, gradient, glow }: {
     <motion.div
       whileHover={hover ? { scale: 1.01, y: -4 } : {}}
       transition={{ type: "spring" as const, stiffness: 400, damping: 25 }}
-      className={`relative overflow-hidden rounded-3xl bg-linear-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 via-white/4 to-transparent'} backdrop-blur-2xl border border-white/10 ${glow && gradient ? `shadow-2xl ${glowMap[gradient]}` : ''} ${className}`}
+      className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 via-white/4 to-transparent'} backdrop-blur-2xl border border-white/10 ${glow && gradient ? `shadow-2xl ${glowMap[gradient]}` : ''} ${className}`}
     >
       {/* Shine effect */}
-      <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
       {children}
     </motion.div>
   );
@@ -314,7 +314,7 @@ function SearchMethodButton({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className={`absolute inset-0 bg-linear-to-br ${color.glow} to-transparent`}
+          className={`absolute inset-0 bg-gradient-to-br ${color.glow} to-transparent`}
         />
       )}
       
@@ -391,7 +391,7 @@ function SearchResultCard({
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring" as const, stiffness: 200, delay: 0.2 }}
-            className="w-16 h-16 rounded-2xl bg-linear-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
+            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
           >
             <ShieldCheck className="h-8 w-8 text-white" />
           </motion.div>
@@ -555,10 +555,10 @@ function ClaimFlowModal({
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: "spring" as const, stiffness: 200 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-linear-to-br from-slate-900 to-slate-800 border-2 border-white/20 shadow-2xl"
+        className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-white/20 shadow-2xl"
       >
         {/* Header with animated gradient */}
-        <div className="relative p-8 bg-linear-to-br from-cyan-500/20 via-blue-500/15 to-purple-500/10 border-b border-white/10 overflow-hidden">
+        <div className="relative p-8 bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-purple-500/10 border-b border-white/10 overflow-hidden">
           {/* Animated background orbs */}
           <motion.div
             animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
@@ -571,7 +571,7 @@ function ClaimFlowModal({
               <motion.div 
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="w-16 h-16 rounded-2xl bg-linear-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
               >
                 <Key className="h-8 w-8 text-white" />
               </motion.div>
@@ -703,7 +703,7 @@ function ClaimFlowModal({
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring" as const, stiffness: 200, delay: 0.2 }}
-                  className="w-24 h-24 mx-auto rounded-full bg-linear-to-br from-cyan-500 to-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30"
+                  className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30"
                 >
                   <CheckCircle2 className="h-12 w-12 text-white" />
                 </motion.div>
@@ -1186,7 +1186,7 @@ export default function VaultRecoveryPage() {
                     <motion.div 
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.5 }}
-                      className="w-14 h-14 rounded-2xl bg-linear-to-br from-white/20 to-white/5 flex items-center justify-center text-2xl font-black text-white border border-white/20"
+                      className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center text-2xl font-black text-white border border-white/20"
                     >
                       {item.step}
                     </motion.div>
@@ -1216,19 +1216,19 @@ export default function VaultRecoveryPage() {
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-20 -right-20 w-64 h-64 bg-linear-to-br from-amber-500/20 to-transparent rounded-full blur-3xl"
+                className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-amber-500/20 to-transparent rounded-full blur-3xl"
               />
               <motion.div
                 animate={{ rotate: -360 }}
                 transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
-                className="absolute -bottom-20 -left-20 w-48 h-48 bg-linear-to-br from-orange-500/20 to-transparent rounded-full blur-3xl"
+                className="absolute -bottom-20 -left-20 w-48 h-48 bg-gradient-to-br from-orange-500/20 to-transparent rounded-full blur-3xl"
               />
               
               <div className="relative z-10">
                 <motion.div
                   animate={{ y: [-5, 5, -5] }}
                   transition={{ duration: 3, repeat: Infinity }}
-                  className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-linear-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30"
+                  className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30"
                 >
                   <Shield className="h-10 w-10 text-white" />
                 </motion.div>

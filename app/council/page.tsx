@@ -155,7 +155,7 @@ export default function CouncilPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(168,85,247,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
@@ -247,7 +247,7 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -258,8 +258,8 @@ function OverviewTab() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <GlassCard className="p-8 text-center bg-linear-to-br from-indigo-500/10 to-purple-500/5">
-        <div className="p-4 rounded-2xl bg-linear-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 inline-block mb-4">
+      <GlassCard className="p-8 text-center bg-gradient-to-br from-indigo-500/10 to-purple-500/5">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 inline-block mb-4">
           <Users className="w-12 h-12 text-indigo-400" />
         </div>
         <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-linear-to-r from-indigo-400 to-purple-400">VFIDE Governance Council</h2>
@@ -285,7 +285,7 @@ function OverviewTab() {
           <motion.div
             key={stat.label}
             whileHover={{ scale: 1.02, y: -2 }}
-            className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 text-center`}
+            className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 text-center`}
           >
             <div className={`text-3xl font-bold ${stat.text}`}>{stat.value}</div>
             <div className="text-sm text-gray-400">{stat.label}</div>
@@ -296,7 +296,7 @@ function OverviewTab() {
       {/* Responsibilities */}
       <GlassCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-linear-to-br from-indigo-500/20 to-indigo-500/5">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5">
             <Sparkles className="w-5 h-5 text-indigo-400" />
           </div>
           Council Responsibilities
@@ -311,7 +311,7 @@ function OverviewTab() {
             <motion.div 
               key={item.title}
               whileHover={{ scale: 1.02 }}
-              className={`flex items-start gap-4 p-4 rounded-xl bg-linear-to-br ${item.bg} border ${item.border}`}
+              className={`flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br ${item.bg} border ${item.border}`}
             >
               <item.icon className={`${item.color} shrink-0`} size={24} />
               <div>
@@ -420,10 +420,10 @@ function MembersTab() {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
       >
         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-linear-to-br from-indigo-500/20 to-indigo-500/5">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5">
             <Crown className="w-5 h-5 text-indigo-400" />
           </div>
           Current Council Members
@@ -443,7 +443,7 @@ function MembersTab() {
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                   member.status === 'vacant' 
                     ? 'bg-white/5 border border-white/10 text-gray-500' 
-                    : 'bg-linear-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25'
+                    : 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25'
                 } font-bold`}>
                   {member.status === 'vacant' ? '?' : idx + 1}
                 </div>
@@ -484,10 +484,10 @@ function MembersTab() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
       >
         <div className="flex items-center gap-4 mb-4">
-          <div className="p-2 rounded-xl bg-linear-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
             <TrendingUp className="text-cyan-400" size={20} />
           </div>
           <div>
@@ -526,10 +526,10 @@ function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 p-4 sm:p-6 md:p-8"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 p-4 sm:p-6 md:p-8"
       >
         <div className="flex items-center gap-4 mb-6">
-          <div className="p-3 rounded-2xl bg-linear-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20">
             <DollarSign className="w-8 h-8 text-emerald-400" />
           </div>
           <div>
@@ -543,7 +543,7 @@ function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
             { value: '120 Days', label: 'Distribution Interval', gradient: 'from-white/10 to-white/5', border: 'border-white/10', text: 'text-white' },
             { value: 'Equal', label: 'Split among eligible', gradient: 'from-cyan-500/20 to-cyan-500/5', border: 'border-cyan-500/20', text: 'text-cyan-400' },
           ].map((stat) => (
-            <div key={stat.label} className={`bg-linear-to-br ${stat.gradient} border ${stat.border} rounded-xl p-4`}>
+            <div key={stat.label} className={`bg-gradient-to-br ${stat.gradient} border ${stat.border} rounded-xl p-4`}>
               <div className={`text-3xl font-bold ${stat.text}`}>{stat.value}</div>
               <div className="text-sm text-gray-400">{stat.label}</div>
             </div>
@@ -556,7 +556,7 @@ function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
       >
         <h3 className="text-xl font-bold text-white mb-6">Distribution History</h3>
         <div className="space-y-3">
@@ -588,7 +588,7 @@ function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
       >
         <h3 className="text-xl font-bold text-white mb-4">Distribute Salary</h3>
         <p className="text-gray-400 text-sm mb-4">
@@ -630,10 +630,10 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-red-500/10 to-orange-500/5 backdrop-blur-xl border border-red-500/20 p-4 sm:p-6 md:p-8"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500/10 to-orange-500/5 backdrop-blur-xl border border-red-500/20 p-4 sm:p-6 md:p-8"
       >
         <div className="flex items-center gap-4 mb-6">
-          <div className="p-3 rounded-2xl bg-linear-to-br from-red-500/20 to-red-500/5 border border-red-500/20">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/20">
             <Vote className="w-8 h-8 text-red-400" />
           </div>
           <div>
@@ -652,7 +652,7 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
       >
         <h3 className="text-xl font-bold text-white mb-6">Active Removal Votes</h3>
         {removalVotes.length > 0 ? (
@@ -728,7 +728,7 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
         >
           <h3 className="text-xl font-bold text-white mb-4">Initiate Member Removal</h3>
           <p className="text-gray-400 text-sm mb-4">
