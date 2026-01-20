@@ -40,15 +40,13 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
  */
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
   if (!address) {
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      console.warn(`[VFIDE] Missing contract address: ${name}`)
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+      console.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set NEXT_PUBLIC_${name.toUpperCase().replace(/([A-Z])/g, '_$1')}_ADDRESS in environment.`)
     }
     return ZERO_ADDRESS
   }
   if (!isAddress(address)) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`[VFIDE] Invalid contract address for ${name}: ${address}`)
-    }
+    console.error(`[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
     return ZERO_ADDRESS
   }
   return address as `0x${string}`

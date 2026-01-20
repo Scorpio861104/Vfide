@@ -21,7 +21,7 @@ export interface WSMessage {
   from: string;
   to?: string;
   conversationId?: string;
-  data: any;
+  data: unknown;
   timestamp: number;
 }
 
@@ -46,7 +46,7 @@ export interface WSConfig {
 export class WebSocketManager {
   private socket: Socket | null = null;
   private config: WSConfig;
-  private messageHandlers: Map<string, Set<(data: any) => void>> = new Map();
+  private messageHandlers: Map<string, Set<(data: unknown) => void>> = new Map();
   private isConnecting = false;
   private isClosed = false;
 
@@ -84,7 +84,7 @@ export class WebSocketManager {
             signature,
             message,
             address: userAddress,
-            chainId: chainId || 8453, // Default to Base mainnet
+            chainId: chainId || (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID) : 8453), // Default to Base mainnet
           },
           reconnection: true,
           reconnectionAttempts: this.config.maxReconnectAttempts,
@@ -137,7 +137,7 @@ export class WebSocketManager {
   /**
    * Emit event to Socket.IO server
    */
-  emit(event: string, data: any): boolean {
+  emit(event: string, data: unknown): boolean {
     if (!this.socket || !this.socket.connected) {
       console.error('[Socket.IO] Not connected');
       return false;
@@ -165,7 +165,7 @@ export class WebSocketManager {
   /**
    * Subscribe to Socket.IO event
    */
-  on(event: string, handler: (data: any) => void) {
+  on(event: string, handler: (data: unknown) => void) {
     if (!this.socket) {
       console.warn('[Socket.IO] Not initialized');
       return () => {};
@@ -175,7 +175,7 @@ export class WebSocketManager {
       this.messageHandlers.set(event, new Set());
       
       // Register Socket.IO listener
-      this.socket.on(event, (data: any) => {
+      this.socket.on(event, (data: unknown) => {
         const handlers = this.messageHandlers.get(event);
         if (handlers) {
           handlers.forEach(h => h(data));
@@ -183,11 +183,23 @@ export class WebSocketManager {
       });
     }
     
-    this.messageHandlers.get(event)!.add(handler);
+    // Safe access: we just ensured the map has this key
+    const handlers = this.messageHandlers.get(event);
+    if (handlers) {
+      handlers.add(handler);
+    }
 
-    // Return unsubscribe function
+    // Return unsubscribe function with proper cleanup
     return () => {
-      this.messageHandlers.get(event)?.delete(handler);
+      const handlers = this.messageHandlers.get(event);
+      if (handlers) {
+        handlers.delete(handler);
+        // If no handlers left, remove the event listener and clean up the map
+        if (handlers.size === 0) {
+          this.socket?.off(event);
+          this.messageHandlers.delete(event);
+        }
+      }
     };
   }
 

@@ -4,6 +4,35 @@ import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, sendMessageSchema } from '@/lib/auth/validation';
+import { isAddress } from 'viem';
+
+/**
+ * Server-side sanitization helper to prevent XSS attacks
+ * Strips HTML tags and dangerous content
+ */
+function sanitizeMessageContent(content: string): string {
+  if (!content || typeof content !== 'string') {
+    return '';
+  }
+  
+  // Strip HTML tags
+  let sanitized = content.replace(/<[^>]*>/g, '');
+  
+  // Remove potentially dangerous protocols
+  sanitized = sanitized.replace(/javascript:/gi, '');
+  sanitized = sanitized.replace(/data:/gi, '');
+  sanitized = sanitized.replace(/vbscript:/gi, '');
+  
+  // Trim whitespace
+  sanitized = sanitized.trim();
+  
+  // Limit length (e.g., 10000 characters max)
+  if (sanitized.length > 10000) {
+    sanitized = sanitized.substring(0, 10000);
+  }
+  
+  return sanitized;
+}
 
 interface Message {
   id: number;
@@ -68,6 +97,14 @@ export async function GET(request: NextRequest) {
 
     // If conversationWith is specified, get messages between two users
     if (conversationWith) {
+      // Validate conversationWith address
+      if (!isAddress(conversationWith)) {
+        return NextResponse.json(
+          { error: 'Invalid conversationWith address format' },
+          { status: 400 }
+        );
+      }
+
       const result = await query<Message>(
         `SELECT 
           m.*,
@@ -141,8 +178,9 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('[Messages GET API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch messages';
     return NextResponse.json(
-      { error: 'Failed to fetch messages' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -177,6 +215,16 @@ export async function POST(request: NextRequest) {
 
     const { from, to, content } = validation.data;
     const isEncrypted = false; // Default to unencrypted
+    
+    // Sanitize message content to prevent XSS
+    const sanitizedContent = sanitizeMessageContent(content);
+    
+    if (!sanitizedContent) {
+      return NextResponse.json(
+        { error: 'Message content is empty or invalid' },
+        { status: 400 }
+      );
+    }
 
     // Verify the sender is the authenticated user
     if (authResult.user.address.toLowerCase() !== from.toLowerCase()) {
@@ -223,7 +271,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO messages (sender_id, recipient_id, content, is_encrypted, is_read)
        VALUES ($1, $2, $3, $4, false)
        RETURNING *`,
-      [senderId, recipientId, content, isEncrypted || false]
+      [senderId, recipientId, sanitizedContent, isEncrypted || false]
     );
 
     const message = messageResult.rows[0];
@@ -248,8 +296,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('[Messages POST API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
     return NextResponse.json(
-      { error: 'Failed to send message' },
+      { error: errorMessage },
       { status: 500 }
     );
   } finally {
