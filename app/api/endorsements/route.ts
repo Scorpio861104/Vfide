@@ -30,8 +30,16 @@ export async function GET(request: NextRequest) {
     const endorsedAddress = searchParams.get('endorsedAddress');
     const endorserAddress = searchParams.get('endorserAddress');
     const proposalId = searchParams.get('proposalId');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+
+    // Validate parsed numbers
+    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+      return NextResponse.json(
+        { error: 'Invalid limit or offset parameter' },
+        { status: 400 }
+      );
+    }
 
     let queryText = `
       SELECT 
@@ -105,9 +113,14 @@ export async function GET(request: NextRequest) {
 
     const countResult = await query<{ count: string }>(countQuery, countParams);
 
+    const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
+    if (isNaN(totalCount)) {
+      throw new Error('Failed to get endorsement count');
+    }
+
     return NextResponse.json({
       endorsements: result.rows,
-      total: parseInt(countResult.rows[0]?.count || '0'),
+      total: totalCount,
       limit,
       offset,
     });

@@ -28,9 +28,17 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
     const search = searchParams.get('search');
+
+    // Validate parsed numbers
+    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+      return NextResponse.json(
+        { error: 'Invalid limit or offset parameter' },
+        { status: 400 }
+      );
+    }
 
     let queryText = `
       SELECT 

@@ -1,7 +1,19 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  // Rate limiting: 100 requests per minute
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const resolvedParams = await params;
     const userId = resolvedParams?.userId;
@@ -13,9 +25,33 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
+    // Verify authenticated user matches requested userId
+    const userResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authResult.user.address.toLowerCase()]
+    );
+
+    if (userResult.rows.length === 0 || userResult.rows[0].id.toString() !== userId) {
+      return NextResponse.json(
+        { error: 'You can only view your own transactions' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limitParam = parseInt(searchParams.get('limit') || '50', 10);
+    const offsetParam = parseInt(searchParams.get('offset') || '0', 10);
+
+    // Validate parsed numbers
+    if (isNaN(limitParam) || isNaN(offsetParam) || !isFinite(limitParam) || !isFinite(offsetParam)) {
+      return NextResponse.json(
+        { error: 'Invalid limit or offset parameter' },
+        { status: 400 }
+      );
+    }
+
+    const limit = Math.min(limitParam, 100); // Max 100
+    const offset = Math.max(offsetParam, 0);
 
     const result = await query(
       `SELECT t.* FROM transactions t

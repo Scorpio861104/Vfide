@@ -6,6 +6,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { isAddress } from 'viem';
 
 interface ReactionRequest {
   messageId: string;
@@ -18,6 +21,16 @@ interface ReactionRequest {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting: 30 requests per minute for reactions
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body: ReactionRequest = await request.json();
     const { messageId, conversationId, reactionType = 'emoji', emoji, imageUrl, imageName, userAddress } = body;
@@ -27,6 +40,16 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // Validate address format
+    if (!isAddress(userAddress)) {
+      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
+    }
+
+    // Verify authenticated user matches userAddress
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     // Validate reaction based on type
@@ -171,6 +194,16 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Rate limiting: 30 requests per minute for reactions
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body: ReactionRequest = await request.json();
     const { messageId, conversationId, emoji, userAddress } = body;
@@ -180,6 +213,16 @@ export async function DELETE(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // Validate address format
+    if (!isAddress(userAddress)) {
+      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
+    }
+
+    // Verify authenticated user matches userAddress
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     // Remove reaction

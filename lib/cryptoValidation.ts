@@ -155,6 +155,12 @@ export async function checkSufficientBalance(
         params: [address, 'latest'],
       });
       balance = (parseInt(balanceWei, 16) / 1e18).toString();
+      
+      // Validate parsed balance
+      const balanceNum = parseFloat(balance);
+      if (isNaN(balanceNum) || !isFinite(balanceNum)) {
+        throw new Error('Invalid balance from provider');
+      }
     } else {
       // VFIDE token balance from API
       const response = await fetch(`/api/crypto/balance/${address}`);
@@ -166,11 +172,34 @@ export async function checkSufficientBalance(
     let required = amount;
     if (currency === 'ETH' && includeGas) {
       const gasEstimate = await estimateGas(address, address, amount);
-      const totalRequired = parseFloat(amount) + gasEstimate;
+      const amountNum = parseFloat(amount);
+      
+      if (isNaN(amountNum) || !isFinite(amountNum) || isNaN(gasEstimate) || !isFinite(gasEstimate)) {
+        return {
+          sufficient: false,
+          balance,
+          required: amount,
+          error: 'Invalid amount or gas estimate',
+        };
+      }
+      
+      const totalRequired = amountNum + gasEstimate;
       required = totalRequired.toString();
     }
 
-    const sufficient = parseFloat(balance) >= parseFloat(required);
+    const balanceNum = parseFloat(balance);
+    const requiredNum = parseFloat(required);
+    
+    if (isNaN(balanceNum) || isNaN(requiredNum) || !isFinite(balanceNum) || !isFinite(requiredNum)) {
+      return {
+        sufficient: false,
+        balance,
+        required,
+        error: 'Invalid balance or required amount',
+      };
+    }
+
+    const sufficient = balanceNum >= requiredNum;
 
     return {
       sufficient,
@@ -216,7 +245,14 @@ export async function estimateGas(
     });
 
     // Calculate total gas cost in ETH
-    const gasCost = (parseInt(gasLimit, 16) * parseInt(gasPrice, 16)) / 1e18;
+    const gasLimitNum = parseInt(gasLimit, 16);
+    const gasPriceNum = parseInt(gasPrice, 16);
+    
+    if (isNaN(gasLimitNum) || isNaN(gasPriceNum) || !isFinite(gasLimitNum) || !isFinite(gasPriceNum)) {
+      throw new Error('Invalid gas limit or price from provider');
+    }
+    
+    const gasCost = (gasLimitNum * gasPriceNum) / 1e18;
 
     return gasCost;
   } catch (error) {

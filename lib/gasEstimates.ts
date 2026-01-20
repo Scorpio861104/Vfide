@@ -37,6 +37,10 @@ export async function fetchGasPrice(rpcUrl: string, chainId: number): Promise<Ga
     if (data.result) {
       // Convert hex to gwei
       const gasPriceWei = parseInt(data.result, 16);
+      if (isNaN(gasPriceWei) || !isFinite(gasPriceWei)) {
+        throw new Error('Invalid gas price from RPC');
+      }
+      
       const gasPriceGwei = gasPriceWei / 1e9;
       
       // Estimate slow, standard, fast (rough approximation)
@@ -78,6 +82,10 @@ export function getCachedGasPrice(chainId: number): GasEstimate | null {
  */
 export function formatGasPrice(gwei: string): string {
   const num = parseFloat(gwei);
+  if (isNaN(num) || !isFinite(num)) {
+    return '0 Gwei';
+  }
+  
   if (num < 1) {
     return `${num.toFixed(2)} Gwei`;
   }

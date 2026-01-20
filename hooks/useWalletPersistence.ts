@@ -127,7 +127,14 @@ export function useWalletPersistence() {
   // Get last used chain ID
   const getLastChain = useCallback((): number | null => {
     const chainStr = safeLocalStorage.getItem(LAST_CHAIN_KEY);
-    return chainStr ? parseInt(chainStr, 10) : null;
+    if (!chainStr) return null;
+    
+    const chainId = parseInt(chainStr, 10);
+    if (isNaN(chainId) || !isFinite(chainId)) {
+      return null;
+    }
+    
+    return chainId;
   }, []);
 
   // Check if session is valid (permanent sessions never expire, otherwise 30 days)
@@ -174,7 +181,14 @@ export function useWalletPersistence() {
   // Get auto-disconnect timeout in minutes
   const getAutoDisconnectMinutes = useCallback((): number => {
     const time = safeLocalStorage.getItem(AUTO_DISCONNECT_TIME_KEY);
-    return time ? parseInt(time, 10) : DEFAULT_AUTO_DISCONNECT_MINUTES;
+    if (!time) return DEFAULT_AUTO_DISCONNECT_MINUTES;
+    
+    const minutes = parseInt(time, 10);
+    if (isNaN(minutes) || !isFinite(minutes) || minutes <= 0) {
+      return DEFAULT_AUTO_DISCONNECT_MINUTES;
+    }
+    
+    return minutes;
   }, []);
 
   // Auto-reconnect on mount with feedback

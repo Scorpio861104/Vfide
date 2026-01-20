@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { isAddress } from 'viem';
 
 interface MessageDeleteRequest {
   messageId: string;
@@ -9,12 +12,32 @@ interface MessageDeleteRequest {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Rate limiting: 20 requests per minute for write operations
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Require authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body: MessageDeleteRequest = await request.json();
     const { messageId, conversationId, userAddress, hardDelete = false } = body;
 
     if (!messageId || !conversationId || !userAddress) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Validate address format
+    if (!isAddress(userAddress)) {
+      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
+    }
+
+    // Verify authenticated user matches userAddress
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const messageResult = await query(

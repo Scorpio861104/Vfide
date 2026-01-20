@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient, http, parseEther, formatEther } from 'viem';
+import { createPublicClient, http, parseEther, formatEther, isAddress } from 'viem';
 import { baseSepolia } from 'viem/chains';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 const client = createPublicClient({
   chain: baseSepolia,
@@ -65,6 +66,10 @@ function calculateTotalAmount(
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting: 100 requests per minute for fee calculations
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const amount = searchParams.get('amount');
@@ -73,6 +78,23 @@ export async function GET(request: NextRequest) {
     if (!amount || !fromAddress) {
       return NextResponse.json(
         { error: 'Missing required params: amount, from' },
+        { status: 400 }
+      );
+    }
+
+    // Validate address format
+    if (!isAddress(fromAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid Ethereum address format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate amount is a positive number
+    const amountNum = parseFloat(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      return NextResponse.json(
+        { error: 'Amount must be a positive number' },
         { status: 400 }
       );
     }

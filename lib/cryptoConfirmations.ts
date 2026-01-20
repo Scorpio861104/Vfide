@@ -43,10 +43,15 @@ export async function waitForConfirmation(
 
       // Check if transaction failed
       if (receipt.status === '0x0') {
+        const blockNum = parseInt(receipt.blockNumber, 16);
+        if (isNaN(blockNum) || !isFinite(blockNum)) {
+          throw new Error('Invalid block number in receipt');
+        }
+        
         return {
           confirmed: false,
           confirmations: 0,
-          blockNumber: parseInt(receipt.blockNumber, 16),
+          blockNumber: blockNum,
           blockHash: receipt.blockHash,
           status: 'failed',
           error: 'Transaction reverted or failed',
@@ -61,6 +66,12 @@ export async function waitForConfirmation(
 
       const txBlockNumber = parseInt(receipt.blockNumber, 16);
       const currentBlockNumber = parseInt(currentBlock, 16);
+      
+      if (isNaN(txBlockNumber) || isNaN(currentBlockNumber) || 
+          !isFinite(txBlockNumber) || !isFinite(currentBlockNumber)) {
+        throw new Error('Invalid block numbers from provider');
+      }
+      
       const confirmations = currentBlockNumber - txBlockNumber + 1;
 
       // Check if we have enough confirmations
@@ -117,10 +128,15 @@ export async function getTransactionStatus(txHash: string): Promise<Confirmation
     }
 
     if (receipt.status === '0x0') {
+      const blockNum = parseInt(receipt.blockNumber, 16);
+      if (isNaN(blockNum) || !isFinite(blockNum)) {
+        throw new Error('Invalid block number in receipt');
+      }
+      
       return {
         confirmed: false,
         confirmations: 0,
-        blockNumber: parseInt(receipt.blockNumber, 16),
+        blockNumber: blockNum,
         blockHash: receipt.blockHash,
         status: 'failed',
         error: 'Transaction failed',
@@ -134,6 +150,12 @@ export async function getTransactionStatus(txHash: string): Promise<Confirmation
 
     const txBlockNumber = parseInt(receipt.blockNumber, 16);
     const currentBlockNumber = parseInt(currentBlock, 16);
+    
+    if (isNaN(txBlockNumber) || isNaN(currentBlockNumber) || 
+        !isFinite(txBlockNumber) || !isFinite(currentBlockNumber)) {
+      throw new Error('Invalid block numbers from provider');
+    }
+    
     const confirmations = currentBlockNumber - txBlockNumber + 1;
 
     return {

@@ -3,8 +3,19 @@
 
 import { Pool, QueryResult, QueryResultRow } from 'pg';
 
+// Validate DATABASE_URL is set in production
+if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+  throw new Error(
+    'DATABASE_URL environment variable is required in production. ' +
+    'Please set it in your environment configuration.'
+  );
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/vfide_testnet',
+  connectionString: process.env.DATABASE_URL || 
+    (process.env.NODE_ENV === 'production' 
+      ? undefined // Fail in production if not set
+      : 'postgresql://postgres:postgres@localhost:5432/vfide_testnet'), // Dev fallback only
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

@@ -29,6 +29,15 @@ const nextConfig: NextConfig = {
 
   // Optimize for production builds
   reactStrictMode: true,
+  
+  // API route configuration
+  // Set default body size limit for API routes
+  // Individual routes can override this with route segment config
+  serverRuntimeConfig: {
+    // Maximum API body size - 1MB default
+    // Can be overridden per route with: export const config = { api: { bodyParser: { sizeLimit: '10mb' } } }
+    maxApiBodySize: '1mb',
+  },
 
   // Experimental features for better performance
   experimental: {
@@ -42,10 +51,28 @@ const nextConfig: NextConfig = {
   // Image optimization
   images: {
     remotePatterns: [
+      // Restrict to specific trusted domains for security
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'avatars.githubusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: '*.vercel-storage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cloudflare-ipfs.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.amazonaws.com',
+      },
+      // Add more trusted domains as needed
     ],
   },
 
@@ -61,12 +88,16 @@ const nextConfig: NextConfig = {
             value: [
               // Default: only same origin
               "default-src 'self'",
-              // Scripts: self, inline with nonce, eval for development
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
-              // Styles: self and inline styles (required by styled-jsx, Tailwind)
-              "style-src 'self' 'unsafe-inline'",
-              // Images: self, data URIs, HTTPS anywhere (for user avatars, external images)
-              "img-src 'self' data: https: blob:",
+              // Scripts: self and specific trusted domains
+              // Removed 'unsafe-inline' and 'unsafe-eval' for better security
+              // If you need inline scripts, use nonce-based CSP in middleware
+              "script-src 'self' https://vercel.live",
+              // Styles: self - removed 'unsafe-inline'
+              // For Tailwind, styles are now in external CSS files
+              // If you need inline styles, use nonce-based CSP in middleware
+              "style-src 'self'",
+              // Images: self, data URIs, HTTPS for user avatars (restrict to specific domains in production)
+              "img-src 'self' data: https:",
               // Fonts: self and data URIs
               "font-src 'self' data:",
               // Connect: self and WebSocket (for real-time features)

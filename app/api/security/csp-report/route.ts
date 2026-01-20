@@ -85,7 +85,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not available' }, { status: 404 });
   }
 
-  const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50');
+  const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50', 10);
+  
+  // Validate parsed number
+  if (isNaN(limit) || limit < 0) {
+    return NextResponse.json(
+      { error: 'Invalid limit parameter' },
+      { status: 400 }
+    );
+  }
+  
   const recentViolations = violations.slice(-limit).reverse();
 
   // Group by directive

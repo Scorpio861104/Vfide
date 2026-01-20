@@ -92,6 +92,10 @@ export function useGasPrice() {
       });
 
       const gasPriceWei = parseInt(gasPriceHex, 16);
+      if (isNaN(gasPriceWei) || !isFinite(gasPriceWei)) {
+        throw new Error('Invalid gas price from provider');
+      }
+      
       const gasPriceGwei = gasPriceWei / 1e9;
 
       // Estimate different speed tiers

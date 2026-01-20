@@ -9,7 +9,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+
+    // Validate parsed number
+    if (isNaN(limit) || limit < 0) {
+      return NextResponse.json(
+        { error: 'Invalid limit parameter' },
+        { status: 400 }
+      );
+    }
 
     const result = await query(
       `SELECT * FROM security_violations ORDER BY detected_at DESC LIMIT $1`,
