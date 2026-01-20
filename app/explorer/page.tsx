@@ -2,11 +2,15 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Search, TrendingUp, Users, Activity, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 
+const ETHEREUM_ADDRESS_LENGTH = 42
+
 export default function ExplorerPage() {
   const [searchQuery, setSearchQuery] = useState('')
+  const router = useRouter()
 
   // Mock data for recent activity
   const recentActivity = [
@@ -22,8 +26,8 @@ export default function ExplorerPage() {
     {
       id: '2',
       type: 'endorsement',
-      from: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-      to: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
+      from: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+      to: '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
       amount: '+5',
       timestamp: '5 minutes ago',
       status: 'completed'
@@ -31,8 +35,8 @@ export default function ExplorerPage() {
     {
       id: '3',
       type: 'payment',
-      from: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-      to: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
+      from: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+      to: '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc',
       amount: '125.50',
       timestamp: '15 minutes ago',
       status: 'completed'
@@ -59,8 +63,8 @@ export default function ExplorerPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery.startsWith('0x') && searchQuery.length === 42) {
-      window.location.href = `/explorer/${searchQuery}`
+    if (searchQuery.startsWith('0x') && searchQuery.length === ETHEREUM_ADDRESS_LENGTH) {
+      router.push(`/explorer/${searchQuery}`)
     }
   }
 
