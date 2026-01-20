@@ -54,7 +54,7 @@ export default function BenefitsPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,240,255,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,215,0,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
@@ -141,7 +141,7 @@ function _GlassCard({ children, className = "", gradient }: {
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${gradient || 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient || 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -191,7 +191,7 @@ function OverviewTab() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="bg-linear-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-xl p-8 text-center">
+      <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-xl p-8 text-center">
         <Gift className="w-16 h-16 text-purple-400 mx-auto mb-4" />
         <h2 className="text-3xl font-bold text-[#F5F3E8] mb-4">Active Participation Benefits</h2>
         <p className="text-[#A0A0A5] max-w-2xl mx-auto">
@@ -202,8 +202,8 @@ function OverviewTab() {
 
       {/* Benefits Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {benefits.map((benefit, idx) => (
-          <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#00F0FF]/30 transition-colors">
+        {benefits.map((benefit) => (
+          <div key={benefit.title} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#00F0FF]/30 transition-colors">
             <benefit.icon size={32} style={{ color: benefit.color }} className="mb-4" />
             <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{benefit.title}</h3>
             <p className="text-[#A0A0A5] text-sm">{benefit.description}</p>
@@ -281,9 +281,9 @@ function TiersTab() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        {tiers.map((tier, idx) => (
+        {tiers.map((tier) => (
           <div 
-            key={idx} 
+            key={tier.name} 
             className="bg-[#2A2A2F] border-2 rounded-xl p-6 text-center hover:scale-105 transition-transform"
             style={{ borderColor: tier.color }}
           >
@@ -294,7 +294,7 @@ function TiersTab() {
             <div className="border-t border-[#3A3A3F] pt-4">
               <ul className="text-xs text-[#A0A0A5] space-y-1">
                 {tier.benefits.map((benefit, bidx) => (
-                  <li key={bidx} className="flex items-center gap-2">
+                  <li key={`${tier.name}-${bidx}`} className="flex items-center gap-2">
                     <Sparkles size={12} style={{ color: tier.color }} />
                     {benefit}
                   </li>
@@ -342,7 +342,7 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
       {isConnected ? (
         <>
           {/* Claimable Rewards */}
-          <div className="bg-linear-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
+          <div className="bg-gradient-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
             <div className="flex items-center gap-4 mb-6">
               <Award className="w-12 h-12 text-green-400" />
               <div>
@@ -362,8 +362,8 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
           <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
             <h3 className="text-xl font-bold text-[#F5F3E8] mb-6">Reward Breakdown</h3>
             <div className="space-y-3">
-              {availableRewards.map((reward, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg">
+              {availableRewards.map((reward) => (
+                <div key={reward.name} className="flex items-center justify-between p-4 bg-[#1A1A1D] rounded-lg">
                   <div className="flex items-center gap-4">
                     <Gift className={reward.claimable ? 'text-green-400' : 'text-[#505055]'} size={20} />
                     <div>
@@ -440,9 +440,9 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
   return (
     <div className="space-y-8">
       {/* User Summary */}
-      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
+      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="w-20 h-20 bg-linear-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-3xl font-bold text-white">
+          <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-3xl font-bold text-white">
             G
           </div>
           <div className="text-center md:text-left">
@@ -495,8 +495,8 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
             { action: 'Referral bonus received', amount: '+250 VFIDE', time: '1 day ago' },
             { action: 'ProofScore increased', amount: '+5 points', time: '3 days ago' },
             { action: 'Transaction cashback', amount: '+75 VFIDE', time: '5 days ago' },
-          ].map((activity, idx) => (
-            <div key={idx} className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
+          ].map((activity) => (
+            <div key={`${activity.action}-${activity.time}`} className="flex items-center justify-between p-3 bg-[#1A1A1D] rounded-lg">
               <div>
                 <div className="text-[#F5F3E8] text-sm">{activity.action}</div>
                 <div className="text-xs text-[#A0A0A5]">{activity.time}</div>

@@ -3,7 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ address: string }> }) {
   try {
-    const { address } = await params;
+    const resolvedParams = await params;
+    const address = resolvedParams?.address;
+
+    if (!address || typeof address !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid address parameter' },
+        { status: 400 }
+      );
+    }
 
     const result = await query(
       `SELECT tb.* FROM token_balances tb
@@ -15,6 +23,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ balances: result.rows });
   } catch (error) {
     console.error('[Balance API] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch balances' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch balances';
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
   }
 }

@@ -269,7 +269,7 @@ export default function StoriesPage() {
                     className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                     onClick={() => setShowCreator(true)}
                   >
-                    <div className="w-20 h-20 rounded-full bg-linear-to-br from-[#00F0FF]/20 to-[#A78BFA]/20 border-2 border-dashed border-[#00F0FF] flex items-center justify-center hover:bg-[#00F0FF]/10 transition-colors">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00F0FF]/20 to-[#A78BFA]/20 border-2 border-dashed border-[#00F0FF] flex items-center justify-center hover:bg-[#00F0FF]/10 transition-colors">
                       <Plus className="w-8 h-8 text-[#00F0FF]" />
                     </div>
                     <p className="text-[#00F0FF] text-sm font-medium">Add Story</p>

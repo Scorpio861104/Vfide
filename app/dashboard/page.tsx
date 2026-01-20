@@ -43,7 +43,7 @@ function GlassCard({ children, className = "", hover = true }: {
     <motion.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -125,10 +125,10 @@ function QuickAction({
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.98 }}
         className={`p-4 rounded-2xl font-semibold transition-all flex flex-col items-center gap-3 text-center ${isPrimary 
-          ? 'bg-linear-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25' 
+          ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25' 
           : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20'}`}
       >
-        <div className={`p-3 rounded-xl ${isPrimary ? 'bg-white/20' : 'bg-linear-to-br from-white/10 to-white/5'}`}>
+        <div className={`p-3 rounded-xl ${isPrimary ? 'bg-white/20' : 'bg-gradient-to-br from-white/10 to-white/5'}`}>
           <Icon size={24} />
         </div>
         <span className="text-sm">{label}</span>
@@ -181,7 +181,7 @@ export default function DashboardPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-              className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-linear-to-br from-cyan-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center backdrop-blur-xl"
+              className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center backdrop-blur-xl"
             >
               <Wallet className="text-cyan-400" size={48} />
             </motion.div>
@@ -637,7 +637,7 @@ function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
             ))}
           </div>
           
-          <div className="mt-8 p-6 bg-linear-to-br from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30">
+          <div className="mt-8 p-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30">
             <div className="flex justify-between items-center mb-4">
               <span className="text-white/80">Current Score</span>
               <span className="text-xl font-bold text-white">{currentScore}</span>

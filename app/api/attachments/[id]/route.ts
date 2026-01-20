@@ -9,7 +9,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (rateLimit) return rateLimit;
 
   try {
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams?.id;
+
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid id parameter' },
+        { status: 400 }
+      );
+    }
 
     const result = await query(`SELECT * FROM attachments WHERE id = $1`, [id]);
 
@@ -20,7 +28,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ attachment: result.rows[0] });
   } catch (error) {
     console.error('[Attachments GET] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch attachment' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch attachment';
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
   }
 }
 
@@ -34,7 +46,15 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams?.id;
+
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid id parameter' },
+        { status: 400 }
+      );
+    }
 
     const result = await query(`DELETE FROM attachments WHERE id = $1 RETURNING *`, [id]);
 
@@ -45,6 +65,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ success: true, attachment: result.rows[0] });
   } catch (error) {
     console.error('[Attachments DELETE] Error:', error);
-    return NextResponse.json({ error: 'Failed to delete attachment' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete attachment';
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
   }
 }

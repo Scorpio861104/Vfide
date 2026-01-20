@@ -39,7 +39,7 @@ export default function LiveDemoPage() {
   
   return (
     <>
-      <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-[#1A1A2E] py-16 sm:py-20 px-3 sm:px-4 pt-20 sm:pt-24 overflow-x-hidden">
+      <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] to-[#1A1A2E] py-16 sm:py-20 px-3 sm:px-4 pt-20 sm:pt-24 overflow-x-hidden">
       <TransactionNotification 
         notification={notification}
         onClose={closeNotification}

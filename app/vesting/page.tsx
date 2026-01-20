@@ -188,10 +188,10 @@ export default function VestingPage() {
               className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
             >
               {[
-                { icon: Lock, color: 'purple', value: formatUnits(vestingStatus[0], 18).split('.')[0], label: 'Total Allocation' },
-                { icon: Unlock, color: 'emerald', value: formatUnits(vestingStatus[1], 18).split('.')[0], label: 'Vested' },
-                { icon: CheckCircle, color: 'cyan', value: formatUnits(vestingStatus[2], 18).split('.')[0], label: 'Claimed' },
-                { icon: TrendingUp, color: 'amber', value: formatUnits(vestingStatus[3], 18).split('.')[0], label: 'Claimable Now', highlight: true }
+                { icon: Lock, bgColor: 'bg-purple-500/20', iconColor: 'text-purple-400', value: formatUnits(vestingStatus[0], 18).split('.')[0], label: 'Total Allocation' },
+                { icon: Unlock, bgColor: 'bg-emerald-500/20', iconColor: 'text-emerald-400', value: formatUnits(vestingStatus[1], 18).split('.')[0], label: 'Vested' },
+                { icon: CheckCircle, bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400', value: formatUnits(vestingStatus[2], 18).split('.')[0], label: 'Claimed' },
+                { icon: TrendingUp, bgColor: 'bg-amber-500/20', iconColor: 'text-amber-400', value: formatUnits(vestingStatus[3], 18).split('.')[0], label: 'Claimable Now', highlight: true }
               ].map((stat, idx) => (
                 <motion.div
                   key={idx}
@@ -199,10 +199,10 @@ export default function VestingPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.1 + idx * 0.05 }}
                   whileHover={{ scale: 1.02, y: -2 }}
-                  className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-4 text-center group`}
+                  className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-4 text-center group`}
                 >
-                  <div className={`p-2 rounded-xl bg-${stat.color}-500/20 inline-block mb-2 group-hover:scale-110 transition-transform`}>
-                    <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
+                  <div className={`p-2 rounded-xl ${stat.bgColor} inline-block mb-2 group-hover:scale-110 transition-transform`}>
+                    <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
                   </div>
                   <div className={`text-2xl font-bold ${stat.highlight ? 'text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400' : 'text-white'}`}>
                     {stat.value}
@@ -277,7 +277,7 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
       className="grid grid-cols-1 lg:grid-cols-2 gap-8"
     >
       {/* Vesting Progress */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
         <h2 className="text-2xl font-bold text-white mb-6">Vesting Progress</h2>
         
         {/* Progress Bar */}
@@ -322,16 +322,16 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
       </div>
 
       {/* How It Works */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
         <h2 className="text-2xl font-bold text-white mb-6">How Vesting Works</h2>
         <div className="space-y-4">
           {[
-            { title: 'Cliff Period', desc: '60-day cliff before first unlock begins', color: 'purple' },
-            { title: 'Linear Vesting', desc: 'Tokens unlock bi-monthly over 36 months', color: 'cyan' },
-            { title: 'Claim Anytime', desc: 'Claim vested tokens whenever convenient', color: 'emerald' },
-            { title: 'Beneficiary Only', desc: 'Only designated beneficiary can claim', color: 'amber' },
-            { title: 'Presale Sync', desc: 'Vesting starts from presale launch', color: 'violet' },
-            { title: 'Pause Protection', desc: 'Claims can be paused for emergencies', color: 'rose' },
+            { title: 'Cliff Period', desc: '60-day cliff before first unlock begins', bgColor: 'bg-purple-500/20', iconColor: 'text-purple-400' },
+            { title: 'Linear Vesting', desc: 'Tokens unlock bi-monthly over 36 months', bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400' },
+            { title: 'Claim Anytime', desc: 'Claim vested tokens whenever convenient', bgColor: 'bg-emerald-500/20', iconColor: 'text-emerald-400' },
+            { title: 'Beneficiary Only', desc: 'Only designated beneficiary can claim', bgColor: 'bg-amber-500/20', iconColor: 'text-amber-400' },
+            { title: 'Presale Sync', desc: 'Vesting starts from presale launch', bgColor: 'bg-violet-500/20', iconColor: 'text-violet-400' },
+            { title: 'Pause Protection', desc: 'Claims can be paused for emergencies', bgColor: 'bg-rose-500/20', iconColor: 'text-rose-400' },
           ].map((item, idx) => (
             <motion.div 
               key={idx}
@@ -340,8 +340,8 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
               transition={{ delay: idx * 0.1 }}
               className="flex items-start gap-3 p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
             >
-              <div className={`p-1.5 rounded-lg bg-${item.color}-500/20`}>
-                <CheckCircle className={`w-5 h-5 text-${item.color}-400`} />
+              <div className={`p-1.5 rounded-lg ${item.bgColor}`}>
+                <CheckCircle className={`w-5 h-5 ${item.iconColor}`} />
               </div>
               <div>
                 <div className="text-white font-bold">{item.title}</div>
@@ -368,7 +368,7 @@ function ScheduleTab({ schedule }: { schedule?: readonly Milestone[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
     >
       <h2 className="text-2xl font-bold text-white mb-6">Vesting Schedule</h2>
       
@@ -470,7 +470,7 @@ function ClaimTab({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-12 text-center"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-12 text-center"
       >
         <div className="p-4 rounded-2xl bg-purple-500/10 inline-block mb-4">
           <Lock className="w-12 h-12 text-purple-400/50" />
@@ -487,7 +487,7 @@ function ClaimTab({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-12 text-center"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-12 text-center"
       >
         <div className="p-4 rounded-2xl bg-amber-500/10 inline-block mb-4">
           <AlertTriangle className="w-12 h-12 text-amber-400/50" />
@@ -505,11 +505,11 @@ function ClaimTab({
       exit={{ opacity: 0, y: -20 }}
       className="max-w-xl mx-auto"
     >
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8">
         <h2 className="text-2xl font-bold text-white mb-6 text-center">Claim Vested Tokens</h2>
 
         {/* Claimable Amount */}
-        <div className="bg-linear-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20 rounded-2xl p-6 mb-6 text-center">
+        <div className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20 rounded-2xl p-6 mb-6 text-center">
           <div className="text-sm text-gray-400 mb-2">Available to Claim</div>
           <div className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-purple-400">
             {Number(claimableAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}

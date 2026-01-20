@@ -4,6 +4,7 @@ import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, sendMessageSchema } from '@/lib/auth/validation';
+import { isAddress } from 'viem';
 
 interface Message {
   id: number;
@@ -68,6 +69,14 @@ export async function GET(request: NextRequest) {
 
     // If conversationWith is specified, get messages between two users
     if (conversationWith) {
+      // Validate conversationWith address
+      if (!isAddress(conversationWith)) {
+        return NextResponse.json(
+          { error: 'Invalid conversationWith address format' },
+          { status: 400 }
+        );
+      }
+
       const result = await query<Message>(
         `SELECT 
           m.*,
@@ -141,8 +150,9 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('[Messages GET API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch messages';
     return NextResponse.json(
-      { error: 'Failed to fetch messages' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -177,6 +187,8 @@ export async function POST(request: NextRequest) {
 
     const { from, to, content } = validation.data;
     const isEncrypted = false; // Default to unencrypted
+    
+    // Content is already sanitized by sendMessageSchema via validateBody
 
     // Verify the sender is the authenticated user
     if (authResult.user.address.toLowerCase() !== from.toLowerCase()) {
@@ -248,8 +260,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('[Messages POST API] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
     return NextResponse.json(
-      { error: 'Failed to send message' },
+      { error: errorMessage },
       { status: 500 }
     );
   } finally {

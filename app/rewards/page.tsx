@@ -68,19 +68,11 @@ type TabId = 'overview' | 'duty' | 'promotional' | 'liquidity' | 'referral'
 export default function RewardsPage() {
   const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
-  const [_stakeAmount, _setStakeAmount] = useState('')
-  const [_selectedPool, _setSelectedPool] = useState<string | null>(null)
-  const [claimingId, _setClaimingId] = useState<string | null>(null)
+  const [claimingId, setClaimingId] = useState<string | null>(null)
   
-
-  
-
-
-  
-
   // Contract write hooks
-  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
-  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Read duty points
   const { data: dutyPoints } = useReadContract({
@@ -156,60 +148,6 @@ export default function RewardsPage() {
     });
   };
 
-  const _handleClaimEducation = (milestone: string) => {
-    writeContract({
-      address: PROMOTIONAL_TREASURY_ADDRESS,
-      abi: PROMOTIONAL_TREASURY_ABI,
-      functionName: 'claimEducationReward',
-      args: [milestone],
-    });
-  };
-
-  const _handleClaimMilestone = (milestone: string) => {
-    writeContract({
-      address: PROMOTIONAL_TREASURY_ADDRESS,
-      abi: PROMOTIONAL_TREASURY_ABI,
-      functionName: 'claimUserMilestone',
-      args: [milestone],
-    });
-  };
-
-  const _handleStake = (lpToken: string, amount: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'stake',
-      args: [lpToken as `0x${string}`, parseUnits(amount, 18)],
-    });
-  };
-
-  const _handleUnstake = (lpToken: string, amount: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'unstake',
-      args: [lpToken as `0x${string}`, parseUnits(amount, 18)],
-    });
-  };
-
-  const _handleClaimLPRewards = (lpToken: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'claimRewards',
-      args: [lpToken as `0x${string}`],
-    });
-  };
-
-  const _handleCompound = (lpToken: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'compound',
-      args: [lpToken as `0x${string}`],
-    });
-  };
-
   // Generic claim handler for different reward types
   const handleClaim = (id: string) => {
     switch (id) {
@@ -227,7 +165,7 @@ export default function RewardsPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,215,0,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(80,200,120,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
@@ -247,7 +185,7 @@ export default function RewardsPage() {
                   <motion.div 
                     animate={{ rotate: [0, 5, -5, 0] }}
                     transition={{ duration: 4, repeat: Infinity }}
-                    className="w-16 h-16 bg-linear-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-amber-500/30"
+                    className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-amber-500/30"
                   >
                     <Gift className="w-8 h-8 text-white" />
                   </motion.div>
@@ -268,7 +206,7 @@ export default function RewardsPage() {
                 <div className="flex gap-4">
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
-                    className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 flex-1 min-w-0"
+                    className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 flex-1 min-w-0"
                   >
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-emerald-400" />
@@ -278,7 +216,7 @@ export default function RewardsPage() {
                   </motion.div>
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
-                    className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 flex-1 min-w-0"
+                    className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 flex-1 min-w-0"
                   >
                     <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-amber-400" />

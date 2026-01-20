@@ -24,9 +24,9 @@ export default function AchievementsPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-linear-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-2xl p-8 md:p-12 text-center"
+                className="bg-gradient-to-br from-[#1A1A2E] to-[#0A0A0F] border border-[#3A3A4F] rounded-2xl p-8 md:p-12 text-center"
               >
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-linear-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center">
                   <Trophy className="w-10 h-10 text-[#0A0A0F]" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-[#F5F3E8] mb-4">

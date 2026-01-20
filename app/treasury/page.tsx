@@ -55,7 +55,7 @@ export default function TreasuryPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(16,185,129,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(124,58,237,0.08),transparent_50%)]" />
@@ -144,7 +144,7 @@ function GlassCard({ children, className = "", gradient }: {
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${gradient || 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient || 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -180,10 +180,10 @@ function OverviewTab() {
             key={idx} 
             variants={itemVariants}
             whileHover={{ scale: 1.02, y: -4 }}
-            className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 group`}
+            className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 group`}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-2 rounded-xl bg-linear-to-br ${stat.gradient}`}>
+              <div className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
                 <stat.icon className={`w-5 h-5 ${stat.text}`} />
               </div>
               <span className="text-xs text-emerald-400 flex items-center gap-1">
@@ -200,23 +200,23 @@ function OverviewTab() {
       {/* Allocation Chart */}
       <GlassCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-linear-to-br from-purple-500/20 to-purple-500/5">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5">
             <PieChart className="w-5 h-5 text-purple-400" />
           </div>
           Fee Distribution Breakdown
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-linear-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-2xl">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-2xl">
             <div className="text-4xl font-bold text-orange-400 mb-2">40%</div>
             <div className="text-white font-bold">Burn</div>
             <div className="text-xs text-gray-500">Deflationary mechanism</div>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-linear-to-br from-pink-500/10 to-rose-500/5 border border-pink-500/20 rounded-2xl">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-pink-500/10 to-rose-500/5 border border-pink-500/20 rounded-2xl">
             <div className="text-4xl font-bold text-pink-400 mb-2">10%</div>
             <div className="text-white font-bold">Sanctum</div>
             <div className="text-xs text-gray-400">Charity fund</div>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-linear-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-2xl">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-2xl">
             <div className="text-4xl font-bold text-cyan-400 mb-2">50%</div>
             <div className="text-white font-bold">Ecosystem</div>
             <div className="text-xs text-gray-400">Council, staking, incentives</div>
@@ -273,7 +273,7 @@ function SanctumTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Sanctum Overview */}
-      <div className="bg-linear-to-br from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Heart className="w-12 h-12 text-pink-400" />
           <div>
@@ -370,7 +370,7 @@ function EcosystemTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Ecosystem Overview */}
-      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Users className="w-12 h-12 text-cyan-400" />
           <div>
@@ -455,7 +455,7 @@ function RevenueTab() {
   return (
     <div className="space-y-8">
       {/* Revenue Splitter Overview */}
-      <div className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <TrendingUp className="w-12 h-12 text-yellow-400" />
           <div>
@@ -531,7 +531,7 @@ function VestingTab() {
   return (
     <div className="space-y-8">
       {/* Vesting Overview */}
-      <div className="bg-linear-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Clock className="w-12 h-12 text-purple-400" />
           <div>

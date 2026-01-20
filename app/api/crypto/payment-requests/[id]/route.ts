@@ -3,7 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams?.id;
+
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid id parameter' },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     const { status, txHash } = body;
 
@@ -26,6 +35,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ success: true, request: result.rows[0] });
   } catch (error) {
     console.error('[Payment Request PATCH] Error:', error);
-    return NextResponse.json({ error: 'Failed to update request' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update request';
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
   }
 }

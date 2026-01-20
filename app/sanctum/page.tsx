@@ -34,76 +34,24 @@ const IS_SANCTUM_DEPLOYED = SANCTUM_VAULT_ADDRESS !== '0x00000000000000000000000
 type TabType = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history';
 
 export default function SanctumPage() {
-  const { address: _address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [donateAmount, _setDonateAmount] = useState('');
-  const [donateNote, _setDonateNote] = useState('');
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
-  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  // Read vault balance (only if deployed)
-  const { data: _vaultBalance } = useReadContract({
-    address: SANCTUM_VAULT_ADDRESS,
-    abi: SANCTUM_VAULT_ABI,
-    functionName: 'getBalance',
-    args: [VFIDE_TOKEN_ADDRESS],
-    query: { enabled: IS_SANCTUM_DEPLOYED },
-  });
+  // Mock data since contracts not deployed yet
+  const vaultBalance = 0;
+  const charityCount = 0;
 
-  // Read charity count (only if deployed)
-  const { data: _charityCount } = useReadContract({
-    address: SANCTUM_VAULT_ADDRESS,
-    abi: SANCTUM_VAULT_ABI,
-    functionName: 'getCharityCount',
-    query: { enabled: IS_SANCTUM_DEPLOYED },
-  });
-
-  // Read next proposal ID (to know how many exist)
-  const { data: _nextProposalId } = useReadContract({
-    address: SANCTUM_VAULT_ADDRESS,
-    abi: SANCTUM_VAULT_ABI,
-    functionName: '_nextProposalId',
-    query: { enabled: IS_SANCTUM_DEPLOYED },
-  });
-
-  // Handlers
-  const _handleDonate = () => {
-    if (!IS_SANCTUM_DEPLOYED) return;
-    if (!donateAmount || safeParseFloat(donateAmount, 0) <= 0) return;
-    writeContract({
-      address: SANCTUM_VAULT_ADDRESS,
-      abi: SANCTUM_VAULT_ABI,
-      functionName: 'deposit',
-      args: [VFIDE_TOKEN_ADDRESS, parseUnits(donateAmount, 18), donateNote || 'Direct donation'],
-    });
-  };
-
-  const _handleApproveDisbursement = (proposalId: number) => {
-    writeContract({
-      address: SANCTUM_VAULT_ADDRESS,
-      abi: SANCTUM_VAULT_ABI,
-      functionName: 'approveDisbursement',
-      args: [BigInt(proposalId)],
-    });
-  };
-
-  const _handleExecuteDisbursement = (proposalId: number) => {
-    writeContract({
-      address: SANCTUM_VAULT_ADDRESS,
-      abi: SANCTUM_VAULT_ABI,
-      functionName: 'executeDisbursement',
-      args: [BigInt(proposalId)],
-    });
-  };
 
   return (
     <>
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,107,157,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
@@ -152,11 +100,11 @@ export default function SanctumPage() {
               { label: 'Active Charities', value: '8', unit: '', icon: Users, gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
               { label: 'Disbursements', value: '24', unit: 'completed', icon: CheckCircle, gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
               { label: 'Fee Allocation', value: '~3%', unit: 'of fees', icon: DollarSign, gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-            ].map((stat, idx) => (
+            ].map((stat) => (
               <motion.div 
-                key={idx} 
+                key={stat.label} 
                 whileHover={{ scale: 1.02, y: -2 }}
-                className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
+                className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
               >
                 <stat.icon className={`w-6 h-6 mx-auto mb-2 ${stat.text}`} />
                 <div className="text-2xl font-bold text-white">{stat.value}</div>
@@ -229,7 +177,7 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -242,7 +190,7 @@ function OverviewTab() {
       {/* How It Works */}
       <GlassCard className="p-8">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-linear-to-br from-pink-500/20 to-pink-500/5">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-pink-500/5">
             <Sparkles className="w-5 h-5 text-pink-400" />
           </div>
           How The Sanctum Works
@@ -254,8 +202,8 @@ function OverviewTab() {
             { step: '3', title: 'Proposal Creation', desc: 'Council members propose disbursements to charities' },
             { step: '4', title: 'Multi-Sig Approval', desc: 'Required approvers sign off on disbursement' },
             { step: '5', title: 'Execution', desc: 'Funds transferred transparently on-chain' },
-          ].map((item, idx) => (
-            <div key={idx} className="flex gap-4">
+          ].map((item) => (
+            <div key={item.step} className="flex gap-4">
               <div className="w-8 h-8 bg-pink-500/20 text-pink-400 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
                 {item.step}
               </div>

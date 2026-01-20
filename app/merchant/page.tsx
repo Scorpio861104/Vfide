@@ -73,13 +73,13 @@ function FeatureCard({
     <motion.div
       variants={scaleVariants}
       whileHover={{ y: -5, scale: 1.02 }}
-      className={`group relative p-6 rounded-2xl bg-linear-to-br ${c.bg} border ${c.border} backdrop-blur-xl transition-all duration-300 hover:shadow-xl ${c.glow}`}
+      className={`group relative p-6 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} backdrop-blur-xl transition-all duration-300 hover:shadow-xl ${c.glow}`}
     >
       {/* Glow effect */}
-      <div className={`absolute inset-0 rounded-2xl bg-linear-to-br ${c.bg} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
+      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${c.bg} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
       
       <div className="relative z-10 text-center">
-        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-linear-to-br ${c.bg} border ${c.border} flex items-center justify-center`}>
+        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} flex items-center justify-center`}>
           <Icon className={`w-8 h-8 ${c.text}`} />
         </div>
         <h3 className={`font-bold text-lg mb-2 ${c.text}`}>{title}</h3>
@@ -132,7 +132,7 @@ function Step({ number, title, description }: { number: number; title: string; d
       whileHover={{ x: 5 }}
       className="flex gap-4 items-start group"
     >
-      <div className="shrink-0 w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+      <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
         {number}
       </div>
       <div>
@@ -168,7 +168,7 @@ export default function MerchantPage() {
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="inline-flex items-center justify-center w-24 h-24 mb-6 rounded-3xl bg-linear-to-br from-purple-500 via-blue-500 to-cyan-500 shadow-2xl shadow-purple-500/30"
+              className="inline-flex items-center justify-center w-24 h-24 mb-6 rounded-3xl bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 shadow-2xl shadow-purple-500/30"
             >
               <Store className="w-12 h-12 text-white" />
             </motion.div>
@@ -210,7 +210,7 @@ export default function MerchantPage() {
             {/* Merchant Dashboard Section */}
             <motion.div variants={itemVariants}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-linear-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20">
                   <Store className="w-5 h-5 text-purple-400" />
                 </div>
                 <h2 className="text-xl font-bold text-white">Merchant Dashboard</h2>
@@ -221,7 +221,7 @@ export default function MerchantPage() {
             {/* Payment Interface Section */}
             <motion.div variants={itemVariants}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-linear-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20">
                   <CreditCard className="w-5 h-5 text-blue-400" />
                 </div>
                 <h2 className="text-xl font-bold text-white">Make Payment</h2>
@@ -233,7 +233,7 @@ export default function MerchantPage() {
           {/* QR Code Section */}
           <motion.div variants={itemVariants} className="mb-16">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-xl bg-linear-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
                 <QrCode className="w-5 h-5 text-cyan-400" />
               </div>
               <h2 className="text-xl font-bold text-white">Generate Payment QR Code</h2>
@@ -329,10 +329,10 @@ export default function MerchantPage() {
           {/* Getting Started */}
           <motion.section
             variants={containerVariants}
-            className="p-8 rounded-3xl bg-linear-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl"
+            className="p-8 rounded-3xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl"
           >
             <motion.div variants={itemVariants} className="flex items-center gap-3 mb-8">
-              <div className="p-2 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-white">Getting Started</h2>

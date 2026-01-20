@@ -414,7 +414,7 @@ export default function TokenLaunchPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="relative overflow-hidden rounded-2xl bg-linear-to-br from-cyan-500/20 to-blue-500/10 backdrop-blur-xl border-2 border-cyan-500/50 p-6"
+                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/10 backdrop-blur-xl border-2 border-cyan-500/50 p-6"
               >
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <div className="text-3xl">🎁</div>
@@ -475,7 +475,7 @@ export default function TokenLaunchPage() {
                   transition={{ delay: 0.1 + idx * 0.1 }}
                   whileHover={{ scale: 1.02, y: -5 }}
                   onClick={() => setSelectedTier(key as "founding" | "oath" | "public")}
-                  className={`relative cursor-pointer overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border-2 p-8 pt-10 transition-all ${
+                  className={`relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border-2 p-8 pt-10 transition-all ${
                     selectedTier === key 
                       ? 'border-cyan-400 shadow-lg shadow-cyan-500/20' 
                       : 'border-white/10 hover:border-white/20'
@@ -544,7 +544,7 @@ export default function TokenLaunchPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="mt-12 max-w-4xl mx-auto relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-cyan-500/30 p-8"
+              className="mt-12 max-w-4xl mx-auto relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-cyan-500/30 p-8"
             >
               <h3 className="text-2xl font-bold text-white mb-6 text-center">Token Holder Benefits</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -577,7 +577,7 @@ export default function TokenLaunchPage() {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-2xl mx-auto relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
+                className="max-w-2xl mx-auto relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
               >
                 <h2 className="text-3xl font-bold text-white mb-8 text-center">
                   Step 2: Enter Purchase Amount
@@ -635,7 +635,7 @@ export default function TokenLaunchPage() {
                   </div>
 
                   {/* Referral Code - Prominent */}
-                  <div className="bg-linear-to-br from-cyan-500/10 to-blue-500/10 border-2 border-cyan-500/30 rounded-xl p-6">
+                  <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-2 border-cyan-500/30 rounded-xl p-6">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-2xl">🎁</span>
                       <label className="text-white font-bold text-lg">
@@ -666,7 +666,7 @@ export default function TokenLaunchPage() {
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-linear-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/30 rounded-xl p-6"
+                      className="bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/30 rounded-xl p-6"
                     >
                       <h3 className="text-xl font-bold text-white mb-4">Purchase Summary</h3>
                       <div className="space-y-2 text-sm">
@@ -719,7 +719,7 @@ export default function TokenLaunchPage() {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-3xl mx-auto relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
+                className="max-w-3xl mx-auto relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
               >
                 <h2 className="text-3xl font-bold text-white mb-4 text-center">
                   Step 3: Confirm Understanding
@@ -785,7 +785,7 @@ export default function TokenLaunchPage() {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 mb-6"
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 mb-6"
                 >
                   <h3 className="text-lg font-bold text-white mb-4">Payment Method</h3>
                   
@@ -830,7 +830,7 @@ export default function TokenLaunchPage() {
                     <motion.div 
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
+                      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
                     >
                       <div className="p-4 rounded-2xl bg-cyan-500/10 inline-block mb-4">
                         <Wallet className="w-10 h-10 text-cyan-400" />
@@ -1004,7 +1004,7 @@ export default function TokenLaunchPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 hover:bg-white/5 transition-colors"
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 hover:bg-white/5 transition-colors"
                 >
                   <h3 className="text-xl font-bold text-white mb-3">{faq.q}</h3>
                   <p className="text-gray-400 leading-relaxed">{faq.a}</p>
@@ -1022,7 +1022,7 @@ export default function TokenLaunchPage() {
                 <motion.div 
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
                 >
                   <h3 className="text-xl font-bold text-cyan-400 mb-3">Tokenomics</h3>
                   <ul className="space-y-2 text-sm text-gray-400">
@@ -1037,7 +1037,7 @@ export default function TokenLaunchPage() {
                 <motion.div 
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
                 >
                   <h3 className="text-xl font-bold text-cyan-400 mb-3">Smart Contract</h3>
                   <ul className="space-y-2 text-sm text-gray-400">
@@ -1052,7 +1052,7 @@ export default function TokenLaunchPage() {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 text-center"
+                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 text-center"
               >
                 <p className="text-gray-400 text-sm leading-relaxed">
                   <strong className="text-white">Important:</strong> Cryptocurrency purchases involve risk. 
