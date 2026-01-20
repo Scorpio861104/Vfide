@@ -53,13 +53,13 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600/20 border border-red-500 rounded-full mb-4">
               <AlertTriangle className="text-red-400" size={32} />
             </div>
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">Something went wrong</h3>
-            <p className="text-[#A0A0A5] mb-4">
+            <h3 className="text-xl font-bold text-zinc-100 mb-2">Something went wrong</h3>
+            <p className="text-zinc-400 mb-4">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
             <button
               onClick={this.handleReset}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-colors"
             >
               <RefreshCw size={16} />
               Try Again

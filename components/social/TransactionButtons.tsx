@@ -45,28 +45,28 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6 max-w-md w-full"
+        className="bg-zinc-900 rounded-xl border border-zinc-700 p-6 max-w-md w-full"
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center">
-              {type === 'send' ? <Send className="w-6 h-6 text-[#0A0A0F]" /> : <DollarSign className="w-6 h-6 text-[#0A0A0F]" />}
+            <div className="w-12 h-12 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
+              {type === 'send' ? <Send className="w-6 h-6 text-zinc-950" /> : <DollarSign className="w-6 h-6 text-zinc-950" />}
             </div>
             <div>
-              <h3 className="text-xl font-bold text-[#F5F3E8]">
+              <h3 className="text-xl font-bold text-zinc-100">
                 {type === 'send' ? 'Send Payment' : 'Request Payment'}
               </h3>
-              <p className="text-sm text-[#A0A0A5]">
+              <p className="text-sm text-zinc-400">
                 {type === 'send' ? 'to' : 'from'} {friend.alias || formatAddress(friend.address)}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-[#2A2A3F] rounded-lg transition-colors"
+            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-[#6B6B78]" />
+            <X className="w-5 h-5 text-zinc-500" />
           </button>
         </div>
 
@@ -74,7 +74,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
         <div className="space-y-4">
           {/* Amount */}
           <div>
-            <label className="block text-sm font-semibold text-[#F5F3E8] mb-2">
+            <label className="block text-sm font-semibold text-zinc-100 mb-2">
               Amount
             </label>
             <div className="relative">
@@ -85,12 +85,12 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full px-4 py-3 pr-24 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] text-lg font-bold focus:border-[#00F0FF] focus:outline-none"
+                className="w-full px-4 py-3 pr-24 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-lg font-bold focus:border-cyan-400 focus:outline-none"
               />
               <select
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-[#2A2A3F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] text-sm font-semibold focus:outline-none"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm font-semibold focus:outline-none"
               >
                 <option value="VFIDE">VFIDE</option>
                 <option value="ETH">ETH</option>
@@ -101,7 +101,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
 
           {/* Message */}
           <div>
-            <label className="block text-sm font-semibold text-[#F5F3E8] mb-2">
+            <label className="block text-sm font-semibold text-zinc-100 mb-2">
               Message (Optional)
             </label>
             <textarea
@@ -109,28 +109,28 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
-              className="w-full px-4 py-3 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] focus:outline-none resize-none"
+              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none resize-none"
             />
           </div>
 
           {/* Preview */}
-          <div className="p-4 bg-[#0A0A0F] border border-[#2A2A2F] rounded-lg">
+          <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-lg">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-[#6B6B78]">
+              <span className="text-sm text-zinc-500">
                 {type === 'send' ? 'You will send' : 'You will request'}
               </span>
               <div className="flex items-center gap-2">
-                <Coins className="w-4 h-4 text-[#FFD700]" />
-                <span className="text-lg font-bold text-[#F5F3E8]">
+                <Coins className="w-4 h-4 text-amber-400" />
+                <span className="text-lg font-bold text-zinc-100">
                   {amount || '0'} {token}
                 </span>
               </div>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-[#6B6B78]">
+              <span className="text-zinc-500">
                 {type === 'send' ? 'To' : 'From'}
               </span>
-              <span className="text-[#A0A0A5]">
+              <span className="text-zinc-400">
                 {friend.alias || formatAddress(friend.address)}
               </span>
             </div>
@@ -140,14 +140,14 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
           <div className="flex gap-3 pt-2">
             <button
               onClick={handleSubmit}
-              className="flex-1 py-3 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-bold hover:bg-[#00D5E0] transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-cyan-400 text-zinc-950 rounded-lg font-bold hover:bg-cyan-400 transition-colors flex items-center justify-center gap-2"
             >
               {type === 'send' ? <Send className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
               {type === 'send' ? 'Send Payment' : 'Request Payment'}
             </button>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-[#2A2A3F] text-[#F5F3E8] rounded-lg font-semibold hover:bg-[#3A3A4F] transition-colors"
+              className="px-6 py-3 bg-zinc-800 text-zinc-100 rounded-lg font-semibold hover:bg-zinc-700 transition-colors"
             >
               Cancel
             </button>
@@ -172,14 +172,14 @@ export function TransactionButtons({ friend, onPaymentRequest, onPaymentSend }: 
       <div className="flex gap-2">
         <button
           onClick={() => setShowModal('send')}
-          className="flex-1 px-4 py-2 bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/30 rounded-lg font-semibold hover:bg-[#00F0FF]/30 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 px-4 py-2 bg-cyan-400/20 text-cyan-400 border border-cyan-400/30 rounded-lg font-semibold hover:bg-cyan-400/30 transition-colors flex items-center justify-center gap-2"
         >
           <Send className="w-4 h-4" />
           <span className="hidden sm:inline">Send Payment</span>
         </button>
         <button
           onClick={() => setShowModal('request')}
-          className="flex-1 px-4 py-2 bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 rounded-lg font-semibold hover:bg-[#FFD700]/30 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 px-4 py-2 bg-amber-400/20 text-amber-400 border border-amber-400/30 rounded-lg font-semibold hover:bg-amber-400/30 transition-colors flex items-center justify-center gap-2"
         >
           <DollarSign className="w-4 h-4" />
           <span className="hidden sm:inline">Request</span>

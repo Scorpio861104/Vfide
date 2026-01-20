@@ -125,7 +125,7 @@ export function Shimmer({ className = "h-4 w-24", rounded = "md" }: ShimmerProps
   };
   
   return (
-    <div className={`relative overflow-hidden bg-[#1F1F2A] ${roundedClasses[rounded]} ${className}`}>
+    <div className={`relative overflow-hidden bg-zinc-900 ${roundedClasses[rounded]} ${className}`}>
       <motion.div
         className="absolute inset-0 bg-linear-to-r from-transparent via-[#2A2A35] to-transparent"
         animate={{ x: ["-100%", "100%"] }}
@@ -154,7 +154,7 @@ export function SuccessCheck({ show, onComplete }: SuccessCheckProps) {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0, opacity: 0 }}
           onAnimationComplete={onComplete}
-          className="w-16 h-16 rounded-full bg-linear-to-br from-[#22C55E] to-[#16A34A] flex items-center justify-center shadow-lg shadow-[#22C55E]/30"
+          className="w-16 h-16 rounded-full bg-linear-to-br from-[#22C55E] to-[#16A34A] flex items-center justify-center shadow-lg shadow-emerald-500/30"
         >
           <motion.svg
             initial={{ pathLength: 0 }}

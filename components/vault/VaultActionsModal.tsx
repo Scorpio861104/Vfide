@@ -188,7 +188,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-[#1a1a2e] border border-cyan-500/30 rounded-2xl p-6 w-full max-w-md mx-4"
+          className="bg-zinc-900 border border-cyan-500/30 rounded-2xl p-6 w-full max-w-md mx-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

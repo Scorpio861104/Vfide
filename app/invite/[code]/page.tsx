@@ -143,7 +143,7 @@ export default function InvitePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
           <p className="text-gray-400">Loading invite...</p>
@@ -154,11 +154,11 @@ export default function InvitePage() {
 
   if (error && !inviteData) {
     return (
-      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#1A1A1F] border border-red-900/30 rounded-xl p-8 max-w-md w-full text-center"
+          className="bg-zinc-900 border border-red-900/30 rounded-xl p-8 max-w-md w-full text-center"
         >
           <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <X className="w-8 h-8 text-red-400" />
@@ -178,11 +178,11 @@ export default function InvitePage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[#1A1A1F] border border-green-900/30 rounded-xl p-8 max-w-md w-full text-center"
+          className="bg-zinc-900 border border-green-900/30 rounded-xl p-8 max-w-md w-full text-center"
         >
           <div className="w-16 h-16 bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-green-400" />
@@ -200,11 +200,11 @@ export default function InvitePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-8 max-w-md w-full"
+        className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 max-w-md w-full"
       >
         {/* Group Info */}
         <div className="text-center mb-6">
@@ -220,7 +220,7 @@ export default function InvitePage() {
         </div>
 
         {/* Invite Details */}
-        <div className="bg-[#0F0F14] rounded-lg p-4 mb-6 space-y-3">
+        <div className="bg-zinc-900 rounded-lg p-4 mb-6 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-400 flex items-center gap-2">
               <Clock className="w-4 h-4" />

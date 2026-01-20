@@ -16,9 +16,9 @@ export function SurfaceCard({
   className?: string;
 }) {
   const base = {
-    default: "bg-[#0F0F14]/90 border border-[#1F1F2A]",
-    muted: "bg-[#0C0C10] border border-[#1A1A22]",
-    glow: "bg-linear-to-br from-[#0F1624] via-[#0B111C] to-[#0F0F14] border border-[#1F2A38] shadow-[0_20px_60px_-24px_rgba(0,240,255,0.35)]",
+    default: "bg-zinc-900/90 border border-zinc-800",
+    muted: "bg-zinc-950 border border-zinc-900",
+    glow: "bg-linear-to-br from-[#0F1624] via-[#0B111C] to-zinc-900 border border-zinc-800 shadow-[0_20px_60px_-24px_rgba(0,240,255,0.35)]",
   }[variant];
 
   const Comp = interactive ? motion.div : "div";
@@ -43,7 +43,7 @@ export function SurfaceCard({
 
 export function AccentBadge({ label, color = "cyan", className = "" }: { label: string; color?: "cyan" | "emerald" | "amber" | "purple"; className?: string }) {
   const palette = {
-    cyan: "bg-[#00F0FF]/15 text-[#00F0FF] border border-[#00F0FF]/30",
+    cyan: "bg-cyan-400/15 text-cyan-400 border border-cyan-400/30",
     emerald: "bg-emerald-500/15 text-emerald-300 border border-emerald-400/30",
     amber: "bg-amber-500/15 text-amber-300 border border-amber-400/30",
     purple: "bg-purple-500/15 text-purple-300 border border-purple-400/30",
@@ -77,10 +77,10 @@ export function SectionHeading({
   return (
     <div className={cn("flex flex-col gap-3", align === "center" ? "text-center items-center" : "text-left", className)}>
       {badge && <AccentBadge label={badge} color={badgeColorResolved} />}
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F8F8FC]">
+      <h1 className="text-3xl md:text-4xl lg:text-5xl font-[family-name:var(--font-display)] font-bold text-zinc-50">
         <span className="gradient-text">{title}</span>
       </h1>
-      {subtitle && <p className="text-[#A0A0A5] text-base md:text-lg max-w-3xl">{subtitle}</p>}
+      {subtitle && <p className="text-zinc-400 text-base md:text-lg max-w-3xl">{subtitle}</p>}
       {actions && <div className="flex flex-wrap gap-3 mt-2">{actions}</div>}
     </div>
   );

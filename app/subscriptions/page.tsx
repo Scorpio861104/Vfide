@@ -98,14 +98,14 @@ export default function SubscriptionsPage() {
   return (
     <>
       
-      <main className="min-h-screen bg-[#1A1A1D] pt-20">
+      <main className="min-h-screen bg-zinc-900 pt-20">
         {/* Header */}
-        <section className="py-12 bg-[#2A2A2F] border-b border-[#3A3A3F]">
+        <section className="py-12 bg-zinc-800 border-b border-zinc-700">
           <div className="container mx-auto px-3 sm:px-4">
-            <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-2">
+            <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-zinc-100 mb-2">
               Subscription Manager
             </h1>
-            <p className="text-xl text-[#A0A0A5] font-[family-name:var(--font-body)]">
+            <p className="text-xl text-zinc-400 font-[family-name:var(--font-body)]">
               Recurring crypto payments made easy
             </p>
           </div>
@@ -114,12 +114,12 @@ export default function SubscriptionsPage() {
         {/* Active Subscriptions */}
         <section className="py-8">
           <div className="container mx-auto px-3 sm:px-4">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8]">
+                <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-zinc-100">
                   Active Subscriptions
                 </h2>
-                <button className="px-6 py-2 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform">
+                <button className="px-6 py-2 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
                   New Subscription
                 </button>
               </div>
@@ -127,61 +127,61 @@ export default function SubscriptionsPage() {
               <div className="space-y-4">
                 {subscriptions.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-[#00F0FF]/10 rounded-xl flex items-center justify-center">
-                      <svg className="w-8 h-8 text-[#00F0FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-cyan-400/10 rounded-xl flex items-center justify-center">
+                      <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">No Active Subscriptions</h3>
-                    <p className="text-[#A0A0A5] mb-4">
+                    <h3 className="text-xl font-bold text-zinc-100 mb-2">No Active Subscriptions</h3>
+                    <p className="text-zinc-400 mb-4">
                       {isConnected 
                         ? "Subscribe to a merchant service to see your recurring payments here."
                         : "Connect your wallet to view and manage your subscriptions."}
                     </p>
                   </div>
                 ) : subscriptions.map((sub) => (
-                  <div key={sub.id} className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-6">
+                  <div key={sub.id} className="bg-zinc-900 border border-zinc-700 rounded-xl p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-xl font-bold text-[#F5F3E8] mb-1">{sub.name}</h3>
-                        <div className="text-[#A0A0A5] text-sm font-mono mb-2">{sub.merchant}</div>
+                        <h3 className="text-xl font-bold text-zinc-100 mb-1">{sub.name}</h3>
+                        <div className="text-zinc-400 text-sm font-mono mb-2">{sub.merchant}</div>
                         <div className={`inline-block px-3 py-1 rounded text-sm font-bold ${
                           sub.status === "Active" 
-                            ? "bg-[#50C878]/20 border border-[#50C878] text-[#50C878]"
-                            : "bg-[#FFA500]/20 border border-[#FFA500] text-[#FFA500]"
+                            ? "bg-emerald-500/20 border border-emerald-500 text-emerald-500"
+                            : "bg-orange-500/20 border border-orange-500 text-orange-500"
                         }`}>
                           {sub.status}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-[#00F0FF]">{sub.amount}</div>
-                        <div className="text-[#A0A0A5] text-sm">{sub.frequency}</div>
+                        <div className="text-2xl font-bold text-cyan-400">{sub.amount}</div>
+                        <div className="text-zinc-400 text-sm">{sub.frequency}</div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between pt-4 border-t border-[#3A3A3F]">
-                      <div className="text-[#A0A0A5] text-sm">
+                    <div className="flex items-center justify-between pt-4 border-t border-zinc-700">
+                      <div className="text-zinc-400 text-sm">
                         Next payment: {sub.nextPayment}
                       </div>
                       <div className="flex gap-2">
                         {sub.status === "Active" ? (
                           <button 
                             onClick={() => handlePause(sub.id)}
-                            className="px-4 py-2 border border-[#FFA500] text-[#FFA500] rounded hover:bg-[#FFA500]/10 transition-colors"
+                            className="px-4 py-2 border border-orange-500 text-orange-500 rounded hover:bg-orange-500/10 transition-colors"
                           >
                             Pause
                           </button>
                         ) : (
                           <button 
                             onClick={() => handleResume(sub.id)}
-                            className="px-4 py-2 border border-[#50C878] text-[#50C878] rounded hover:bg-[#50C878]/10 transition-colors"
+                            className="px-4 py-2 border border-emerald-500 text-emerald-500 rounded hover:bg-emerald-500/10 transition-colors"
                           >
                             Resume
                           </button>
                         )}
                         <button 
                           onClick={() => handleCancel(sub.id)}
-                          className="px-4 py-2 border border-[#C41E3A] text-[#C41E3A] rounded hover:bg-[#C41E3A]/10 transition-colors"
+                          className="px-4 py-2 border border-red-600 text-red-600 rounded hover:bg-red-600/10 transition-colors"
                         >
                           Cancel
                         </button>
@@ -197,39 +197,39 @@ export default function SubscriptionsPage() {
         {/* Create Subscription */}
         <section className="py-8">
           <div className="container mx-auto px-3 sm:px-4">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-zinc-100 mb-6">
                 Create New Subscription
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-[#A0A0A5] font-[family-name:var(--font-body)] text-sm mb-2">
+                  <label className="block text-zinc-400 font-[family-name:var(--font-body)] text-sm mb-2">
                     Merchant Address
                   </label>
                   <input
                     type="text"
                     placeholder="0x..."
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] outline-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-[#A0A0A5] font-[family-name:var(--font-body)] text-sm mb-2">
+                  <label className="block text-zinc-400 font-[family-name:var(--font-body)] text-sm mb-2">
                     Amount (USD)
                   </label>
                   <input
                     type="number"
                     placeholder="29.99"
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] outline-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-[#A0A0A5] font-[family-name:var(--font-body)] text-sm mb-2">
+                  <label className="block text-zinc-400 font-[family-name:var(--font-body)] text-sm mb-2">
                     Frequency
                   </label>
-                  <select className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] outline-none">
+                  <select className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 outline-none">
                     <option>Monthly</option>
                     <option>Weekly</option>
                     <option>Daily</option>
@@ -237,17 +237,17 @@ export default function SubscriptionsPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-[#A0A0A5] font-[family-name:var(--font-body)] text-sm mb-2">
+                  <label className="block text-zinc-400 font-[family-name:var(--font-body)] text-sm mb-2">
                     Start Date
                   </label>
                   <input
                     type="date"
-                    className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#00F0FF] outline-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
               </div>
               
-              <button className="mt-6 w-full px-6 py-3 bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] rounded-lg font-bold hover:scale-105 transition-transform">
+              <button className="mt-6 w-full px-6 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
                 Create Subscription
               </button>
             </div>
@@ -257,32 +257,32 @@ export default function SubscriptionsPage() {
         {/* How It Works */}
         <section className="py-8">
           <div className="container mx-auto px-3 sm:px-4">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-zinc-100 mb-6">
                 How Subscriptions Work
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-4 bg-[#1A1A1D] rounded-lg">
-                  <div className="text-4xl font-bold text-[#00F0FF] mb-3">1</div>
-                  <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">Set & Forget</h3>
-                  <p className="text-[#A0A0A5] text-sm">
+                <div className="p-4 bg-zinc-900 rounded-lg">
+                  <div className="text-4xl font-bold text-cyan-400 mb-3">1</div>
+                  <h3 className="text-xl font-bold text-zinc-100 mb-2">Set & Forget</h3>
+                  <p className="text-zinc-400 text-sm">
                     Configure payment amount, frequency, and merchant. Smart contract handles the rest.
                   </p>
                 </div>
                 
-                <div className="p-4 bg-[#1A1A1D] rounded-lg">
-                  <div className="text-4xl font-bold text-[#00F0FF] mb-3">2</div>
-                  <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">Auto-Payment</h3>
-                  <p className="text-[#A0A0A5] text-sm">
+                <div className="p-4 bg-zinc-900 rounded-lg">
+                  <div className="text-4xl font-bold text-cyan-400 mb-3">2</div>
+                  <h3 className="text-xl font-bold text-zinc-100 mb-2">Auto-Payment</h3>
+                  <p className="text-zinc-400 text-sm">
                     Payments execute automatically on schedule. Funds pulled from your vault.
                   </p>
                 </div>
                 
-                <div className="p-4 bg-[#1A1A1D] rounded-lg">
-                  <div className="text-4xl font-bold text-[#00F0FF] mb-3">3</div>
-                  <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">Full Control</h3>
-                  <p className="text-[#A0A0A5] text-sm">
+                <div className="p-4 bg-zinc-900 rounded-lg">
+                  <div className="text-4xl font-bold text-cyan-400 mb-3">3</div>
+                  <h3 className="text-xl font-bold text-zinc-100 mb-2">Full Control</h3>
+                  <p className="text-zinc-400 text-sm">
                     Pause, resume, or cancel anytime. No penalties. No hidden fees.
                   </p>
                 </div>
@@ -294,8 +294,8 @@ export default function SubscriptionsPage() {
         {/* Payment History */}
         <section className="py-8">
           <div className="container mx-auto px-3 sm:px-4">
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
-              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-[#F5F3E8] mb-6">
+            <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+              <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-zinc-100 mb-6">
                 Payment History
               </h2>
               
@@ -306,14 +306,14 @@ export default function SubscriptionsPage() {
                   { service: "Cloud Storage Pro", amount: "$29.99", date: "Oct 15, 2025", status: "Completed" },
                   { service: "VPN Service", amount: "$12.99", date: "Oct 20, 2025", status: "Completed" },
                 ].map((payment, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg">
+                  <div key={idx} className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-700 rounded-lg">
                     <div>
-                      <div className="text-[#F5F3E8] font-bold">{payment.service}</div>
-                      <div className="text-[#A0A0A5] text-sm">{payment.date}</div>
+                      <div className="text-zinc-100 font-bold">{payment.service}</div>
+                      <div className="text-zinc-400 text-sm">{payment.date}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[#00F0FF] font-bold">{payment.amount}</div>
-                      <div className="text-[#50C878] text-sm">{payment.status}</div>
+                      <div className="text-cyan-400 font-bold">{payment.amount}</div>
+                      <div className="text-emerald-500 text-sm">{payment.status}</div>
                     </div>
                   </div>
                 ))}

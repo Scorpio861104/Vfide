@@ -153,7 +153,7 @@ function MemberCard({ member, currentUserId, canManage, canRemove, onEdit, onRem
   const isOwner = member.role === GroupRole.OWNER;
 
   return (
-    <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-4 hover:border-[#3A3A3F] transition-colors">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-zinc-700 transition-colors">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1">
           {/* Avatar */}
@@ -295,7 +295,7 @@ function PermissionEditModal({ member, groupId, currentUserId: _currentUserId, o
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -310,7 +310,7 @@ function PermissionEditModal({ member, groupId, currentUserId: _currentUserId, o
         </div>
 
         {/* Member Info */}
-        <div className="bg-[#0F0F14] rounded-lg p-4 mb-6">
+        <div className="bg-zinc-900 rounded-lg p-4 mb-6">
           <div className="text-sm text-gray-400 mb-1">Member</div>
           <div className="text-white font-medium">
             {member.userId.slice(0, 8)}...{member.userId.slice(-6)}
@@ -334,7 +334,7 @@ function PermissionEditModal({ member, groupId, currentUserId: _currentUserId, o
                   className={`p-3 rounded-lg border-2 transition-all ${
                     isSelected
                       ? 'border-blue-500 bg-blue-900/20'
-                      : 'border-[#2A2A2F] bg-[#0F0F14] hover:border-[#3A3A3F]'
+                      : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
                   } ${isOwner ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className={`font-medium ${info.color} mb-1`}>{info.label}</div>
@@ -353,7 +353,7 @@ function PermissionEditModal({ member, groupId, currentUserId: _currentUserId, o
           <div className="text-sm font-medium text-gray-400">Custom Permissions</div>
 
           {Object.entries(permissionsByCategory).map(([category, permissions]) => (
-            <div key={category} className="bg-[#0F0F14] rounded-lg p-4">
+            <div key={category} className="bg-zinc-900 rounded-lg p-4">
               <div className="text-sm font-medium text-white mb-3">{category}</div>
               <div className="space-y-2">
                 {permissions.map((permission) => {
@@ -380,7 +380,7 @@ function PermissionEditModal({ member, groupId, currentUserId: _currentUserId, o
                           className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                             hasCustom
                               ? 'bg-green-900/30 text-green-400'
-                              : 'bg-[#1A1A1F] text-gray-600 hover:text-gray-400'
+                              : 'bg-zinc-900 text-gray-600 hover:text-gray-400'
                           }`}
                           title="Grant permission"
                         >
@@ -391,7 +391,7 @@ function PermissionEditModal({ member, groupId, currentUserId: _currentUserId, o
                           className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                             isBanned
                               ? 'bg-red-900/30 text-red-400'
-                              : 'bg-[#1A1A1F] text-gray-600 hover:text-gray-400'
+                              : 'bg-zinc-900 text-gray-600 hover:text-gray-400'
                           }`}
                           title="Deny permission"
                         >

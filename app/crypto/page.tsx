@@ -9,6 +9,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, TrendingUp, History, Award } from 'lucide-react';
+import { WalletButton as _WalletButton } from '@/components/crypto/WalletButton';
 import { TransactionHistory } from '@/components/crypto/TransactionHistory';
 import { RewardsDisplay } from '@/components/crypto/RewardsDisplay';
 import { useAccount, useBalance } from 'wagmi';
@@ -25,9 +26,9 @@ export default function CryptoDashboard() {
 
   if (!isConnected || !address) {
     return (
-      <div className="min-h-screen bg-[#0F0F12] flex items-center justify-center p-4">
-        <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4">
             <Wallet className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
@@ -41,7 +42,7 @@ export default function CryptoDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F0F12] p-4 md:p-8">
+    <div className="min-h-screen bg-zinc-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
@@ -57,7 +58,7 @@ export default function CryptoDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-6"
+            className="bg-linear-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400 text-sm">ETH Balance</span>
@@ -71,7 +72,7 @@ export default function CryptoDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6"
+            className="bg-linear-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400 text-sm">VFIDE Tokens</span>
@@ -85,7 +86,7 @@ export default function CryptoDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-6"
+            className="bg-linear-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400 text-sm">Activity</span>
@@ -97,7 +98,7 @@ export default function CryptoDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-2 mb-6 border-b border-[#2A2A2F]">
+        <div className="flex items-center gap-2 mb-6 border-b border-zinc-800">
           <button
             onClick={() => setActiveTab('transactions')}
             className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
@@ -123,7 +124,7 @@ export default function CryptoDashboard() {
         </div>
 
         {/* Content */}
-        <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           {activeTab === 'transactions' && <TransactionHistory userId={address} />}
           {activeTab === 'rewards' && <RewardsDisplay userId={address} />}
         </div>

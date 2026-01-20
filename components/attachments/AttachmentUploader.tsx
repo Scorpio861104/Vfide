@@ -99,12 +99,12 @@ export function AttachmentUploader({ messageId, userId, onUploaded }: Attachment
         className={`border-2 border-dashed rounded-lg p-6 transition-all ${
           isDragging
             ? 'border-blue-500 bg-blue-900/20'
-            : 'border-[#2A2A2F] hover:border-[#3A3A3F]'
+            : 'border-zinc-800 hover:border-zinc-700'
         }`}
       >
         <div className="flex flex-col items-center gap-3">
           <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-            isDragging ? 'bg-blue-900/30' : 'bg-[#1A1A1F]'
+            isDragging ? 'bg-blue-900/30' : 'bg-zinc-900'
           }`}>
             <Upload className={`w-6 h-6 ${isDragging ? 'text-blue-400' : 'text-gray-400'}`} />
           </div>
@@ -158,12 +158,12 @@ export function AttachmentUploader({ messageId, userId, onUploaded }: Attachment
       {progress.length > 0 && (
         <div className="space-y-2">
           {progress.map((p) => (
-            <div key={p.fileId} className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-3">
+            <div key={p.fileId} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-white truncate flex-1">{p.fileName}</span>
                 <span className="text-sm text-gray-400 ml-2">{p.percentage}%</span>
               </div>
-              <div className="w-full h-1.5 bg-[#0F0F14] rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${p.percentage}%` }}
@@ -235,7 +235,7 @@ function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-3 flex items-center gap-3 hover:border-[#3A3A3F] transition-colors"
+      className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center gap-3 hover:border-zinc-700 transition-colors"
     >
       <div className="w-10 h-10 bg-linear-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
         {renderIconForType(attachment.type, "w-5 h-5 text-blue-400")}

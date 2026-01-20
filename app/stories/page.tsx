@@ -231,8 +231,8 @@ export default function StoriesPage() {
             className="mb-8"
           >
             <div className="text-center mb-8">
-              <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-3">Stories</h1>
-              <p className="text-[#A0A0A5] text-lg max-w-2xl mx-auto">
+              <h1 className="text-4xl md:text-5xl font-bold text-zinc-100 mb-3">Stories</h1>
+              <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
                 Share moments that disappear in 24 hours. See what the community is up to!
               </p>
             </div>
@@ -244,10 +244,10 @@ export default function StoriesPage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-12"
             >
-              <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-8 max-w-md mx-auto">
+              <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto">
                 <div className="text-6xl mb-4">📸</div>
-                <h2 className="text-xl font-bold text-[#F5F3E8] mb-4">Connect Your Wallet</h2>
-                <p className="text-[#A0A0A5] mb-6">
+                <h2 className="text-xl font-bold text-zinc-100 mb-4">Connect Your Wallet</h2>
+                <p className="text-zinc-400 mb-6">
                   Connect your wallet to view and share stories with the community.
                 </p>
                 <ConnectButton />
@@ -259,7 +259,7 @@ export default function StoriesPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-6 mb-8"
+                className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 mb-8"
               >
                 <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-[#3A3A4F] scrollbar-track-transparent">
                   {/* Add Story Button */}
@@ -269,10 +269,10 @@ export default function StoriesPage() {
                     className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                     onClick={() => setShowCreator(true)}
                   >
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00F0FF]/20 to-[#A78BFA]/20 border-2 border-dashed border-[#00F0FF] flex items-center justify-center hover:bg-[#00F0FF]/10 transition-colors">
-                      <Plus className="w-8 h-8 text-[#00F0FF]" />
+                    <div className="w-20 h-20 rounded-full bg-linear-to-br from-cyan-400/20 to-violet-400/20 border-2 border-dashed border-cyan-400 flex items-center justify-center hover:bg-cyan-400/10 transition-colors">
+                      <Plus className="w-8 h-8 text-cyan-400" />
                     </div>
-                    <p className="text-[#00F0FF] text-sm font-medium">Add Story</p>
+                    <p className="text-cyan-400 text-sm font-medium">Add Story</p>
                   </motion.div>
 
                   {/* My Stories */}
@@ -311,26 +311,26 @@ export default function StoriesPage() {
                 transition={{ delay: 0.2 }}
                 className="grid md:grid-cols-3 gap-6"
               >
-                <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-6 text-center hover:border-[#00F0FF]/50 transition-colors">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 text-center hover:border-cyan-400/50 transition-colors">
                   <div className="text-4xl mb-4">✍️</div>
-                  <h3 className="text-lg font-bold text-[#F5F3E8] mb-2">Text Stories</h3>
-                  <p className="text-[#A0A0A5] text-sm">
+                  <h3 className="text-lg font-bold text-zinc-100 mb-2">Text Stories</h3>
+                  <p className="text-zinc-400 text-sm">
                     Share thoughts with beautiful gradient backgrounds
                   </p>
                 </div>
 
-                <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-6 text-center hover:border-[#00F0FF]/50 transition-colors">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 text-center hover:border-cyan-400/50 transition-colors">
                   <div className="text-4xl mb-4">📸</div>
-                  <h3 className="text-lg font-bold text-[#F5F3E8] mb-2">Photo & Video</h3>
-                  <p className="text-[#A0A0A5] text-sm">
+                  <h3 className="text-lg font-bold text-zinc-100 mb-2">Photo & Video</h3>
+                  <p className="text-zinc-400 text-sm">
                     Upload photos and videos with captions
                   </p>
                 </div>
 
-                <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-6 text-center hover:border-[#00F0FF]/50 transition-colors">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 text-center hover:border-cyan-400/50 transition-colors">
                   <div className="text-4xl mb-4">⏰</div>
-                  <h3 className="text-lg font-bold text-[#F5F3E8] mb-2">24 Hour Limit</h3>
-                  <p className="text-[#A0A0A5] text-sm">
+                  <h3 className="text-lg font-bold text-zinc-100 mb-2">24 Hour Limit</h3>
+                  <p className="text-zinc-400 text-sm">
                     Stories disappear after 24 hours automatically
                   </p>
                 </div>
@@ -344,13 +344,13 @@ export default function StoriesPage() {
                   className="text-center py-12 mt-8"
                 >
                   <div className="text-6xl mb-4">📭</div>
-                  <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">No Stories Yet</h3>
-                  <p className="text-[#A0A0A5] mb-6">
+                  <h3 className="text-xl font-bold text-zinc-100 mb-2">No Stories Yet</h3>
+                  <p className="text-zinc-400 mb-6">
                     Be the first to share a story with the community!
                   </p>
                   <button
                     onClick={() => setShowCreator(true)}
-                    className="px-6 py-3 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-bold hover:bg-[#00D9E8] transition-colors inline-flex items-center gap-2"
+                    className="px-6 py-3 bg-cyan-400 text-zinc-950 rounded-lg font-bold hover:bg-cyan-400 transition-colors inline-flex items-center gap-2"
                   >
                     <Camera size={20} />
                     Create Your First Story

@@ -43,7 +43,7 @@ export function TransactionPending({
 
   const statusConfig = {
     pending: {
-      icon: <Loader2 className="animate-spin text-[#00F0FF]" size={48} />,
+      icon: <Loader2 className="animate-spin text-cyan-400" size={48} />,
       title: title || 'Confirm in Wallet',
       message: message || 'Please confirm the transaction in your wallet...',
       color: '#00F0FF',
@@ -84,7 +84,7 @@ export function TransactionPending({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-[#1A1A1D] border border-[#2A2A2F] rounded-2xl p-8 max-w-md w-full text-center"
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-md w-full text-center"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Icon */}
@@ -93,12 +93,12 @@ export function TransactionPending({
             </div>
 
             {/* Title */}
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">
+            <h2 className="text-2xl font-bold text-zinc-100 mb-2">
               {config.title}
             </h2>
 
             {/* Message */}
-            <p className="text-[#A0A0A5] mb-6">
+            <p className="text-zinc-400 mb-6">
               {config.message}
             </p>
 
@@ -108,7 +108,7 @@ export function TransactionPending({
                 href={`${explorerUrl}/tx/${hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-[#00F0FF] hover:text-[#00D4FF] transition-colors mb-6"
+                className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-400 transition-colors mb-6"
               >
                 <span className="font-mono text-sm">
                   {hash.slice(0, 10)}...{hash.slice(-8)}
@@ -119,7 +119,7 @@ export function TransactionPending({
 
             {/* Progress indicator for pending/confirming */}
             {(status === 'pending' || status === 'confirming') && (
-              <div className="w-full bg-[#2A2A2F] rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
                 <motion.div
                   className="h-full rounded-full"
                   style={{ backgroundColor: config.color }}
@@ -134,7 +134,7 @@ export function TransactionPending({
             {(status === 'success' || status === 'error') && onClose && (
               <button
                 onClick={onClose}
-                className="mt-6 px-6 py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-colors"
+                className="mt-6 px-6 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-colors"
               >
                 Close
               </button>

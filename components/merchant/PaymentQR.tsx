@@ -117,19 +117,19 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-linear-to-br from-[#00F0FF]/10 to-[#0080FF]/10 border-2 border-[#00F0FF]/30 rounded-xl p-6">
+      <div className="bg-linear-to-br from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
-          <QrCode className="w-8 h-8 text-[#00F0FF]" />
+          <QrCode className="w-8 h-8 text-cyan-400" />
           <div>
-            <h2 className="text-xl font-bold text-[#F5F3E8]">Payment QR Code</h2>
-            <p className="text-[#A0A0A5] text-sm">Customers scan to pay instantly</p>
+            <h2 className="text-xl font-bold text-zinc-100">Payment QR Code</h2>
+            <p className="text-zinc-400 text-sm">Customers scan to pay instantly</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* QR Code Display */}
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 flex flex-col items-center">
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 flex flex-col items-center">
           <div className="bg-white p-4 rounded-xl mb-4">
             <QRCodeSVG
               id="payment-qr-code"
@@ -149,24 +149,24 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           {/* Amount Display */}
           {amount && (
             <div className="text-center mb-4">
-              <div className="text-3xl font-bold text-[#00F0FF]">
+              <div className="text-3xl font-bold text-cyan-400">
                 {parseFloat(amount).toLocaleString()} VFIDE
               </div>
-              <div className="text-[#A0A0A5] text-sm">
+              <div className="text-zinc-400 text-sm">
                 ≈ ${parseFloat(usdValue).toLocaleString()} USD
               </div>
             </div>
           )}
           
           {/* Merchant Name */}
-          <div className="text-center text-[#F5F3E8] font-bold mb-4">
+          <div className="text-center text-zinc-100 font-bold mb-4">
             {merchantInfo.businessName}
           </div>
           
           {/* Order ID */}
           {orderId && (
-            <div className="bg-[#1A1A1D] rounded-lg px-4 py-2 text-sm text-[#A0A0A5]">
-              Order: <span className="text-[#F5F3E8] font-mono">{orderId}</span>
+            <div className="bg-zinc-900 rounded-lg px-4 py-2 text-sm text-zinc-400">
+              Order: <span className="text-zinc-100 font-mono">{orderId}</span>
             </div>
           )}
 
@@ -174,14 +174,14 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           <div className="flex gap-3 mt-4 w-full">
             <button
               onClick={downloadQR}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#3A3A3F] hover:bg-[#4A4A4F] rounded-lg text-[#F5F3E8] transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-zinc-700 hover:bg-zinc-700 rounded-lg text-zinc-100 transition-colors"
             >
               <Download size={18} />
               <span>Download</span>
             </button>
             <button
               onClick={sharePayment}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#00F0FF] hover:bg-[#00D0DD] rounded-lg text-[#1A1A1D] font-bold transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-cyan-400 hover:bg-cyan-400 rounded-lg text-zinc-900 font-bold transition-colors"
             >
               <Share2 size={18} />
               <span>Share</span>
@@ -190,14 +190,14 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
         </div>
 
         {/* Amount & Order Form */}
-        <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-bold text-[#F5F3E8] mb-4">Configure Payment</h3>
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 space-y-4">
+          <h3 className="text-lg font-bold text-zinc-100 mb-4">Configure Payment</h3>
 
           {/* Amount Input */}
           <div>
-            <label className="text-sm text-[#A0A0A5] mb-2 block">Amount (VFIDE)</label>
+            <label className="text-sm text-zinc-400 mb-2 block">Amount (VFIDE)</label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A0A0A5]" size={18} />
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
               <input
                 type="number"
                 value={amount}
@@ -205,11 +205,11 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 placeholder="0.00 (leave empty for any amount)"
                 step="0.01"
                 min="0"
-                className="w-full bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg pl-10 pr-4 py-3 text-[#F5F3E8] placeholder-[#6A6A6F] focus:border-[#00F0FF] focus:outline-none"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-zinc-100 placeholder-[#6A6A6F] focus:border-cyan-400 focus:outline-none"
               />
             </div>
             {amount && (
-              <div className="text-sm text-[#A0A0A5] mt-1">
+              <div className="text-sm text-zinc-400 mt-1">
                 ≈ ${usdValue} USD
               </div>
             )}
@@ -223,8 +223,8 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 onClick={() => setAmount(preset)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
                   amount === preset
-                    ? 'bg-[#00F0FF] text-[#1A1A1D]'
-                    : 'bg-[#3A3A3F] text-[#A0A0A5] hover:bg-[#4A4A4F] hover:text-[#F5F3E8]'
+                    ? 'bg-cyan-400 text-zinc-900'
+                    : 'bg-zinc-700 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100'
                 }`}
               >
                 {preset}
@@ -234,34 +234,34 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
 
           {/* Order ID Input */}
           <div>
-            <label className="text-sm text-[#A0A0A5] mb-2 block">Order ID / Reference (Optional)</label>
+            <label className="text-sm text-zinc-400 mb-2 block">Order ID / Reference (Optional)</label>
             <input
               type="text"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
               placeholder="INV-12345"
-              className="w-full bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg px-4 py-3 text-[#F5F3E8] placeholder-[#6A6A6F] focus:border-[#00F0FF] focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-[#6A6A6F] focus:border-cyan-400 focus:outline-none"
             />
           </div>
 
           {/* Copy Payment Link */}
-          <div className="pt-4 border-t border-[#3A3A3F]">
-            <label className="text-sm text-[#A0A0A5] mb-2 block">Payment Link</label>
+          <div className="pt-4 border-t border-zinc-700">
+            <label className="text-sm text-zinc-400 mb-2 block">Payment Link</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={paymentUrl}
                 readOnly
-                className="flex-1 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg px-4 py-3 text-[#A0A0A5] text-sm truncate"
+                className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-400 text-sm truncate"
               />
               <button
                 onClick={copyPaymentLink}
-                className="px-4 py-3 bg-[#3A3A3F] hover:bg-[#4A4A4F] rounded-lg transition-colors"
+                className="px-4 py-3 bg-zinc-700 hover:bg-zinc-700 rounded-lg transition-colors"
               >
                 {copied ? (
-                  <Check className="text-[#50C878]" size={20} />
+                  <Check className="text-emerald-500" size={20} />
                 ) : (
-                  <Copy className="text-[#A0A0A5]" size={20} />
+                  <Copy className="text-zinc-400" size={20} />
                 )}
               </button>
             </div>
@@ -270,9 +270,9 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
       </div>
 
       {/* Instructions */}
-      <div className="bg-[#1A1A1D] border border-[#3A3A3F] rounded-xl p-4">
-        <h4 className="font-bold text-[#F5F3E8] mb-2">How it works</h4>
-        <ol className="text-sm text-[#A0A0A5] space-y-1 list-decimal list-inside">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4">
+        <h4 className="font-bold text-zinc-100 mb-2">How it works</h4>
+        <ol className="text-sm text-zinc-400 space-y-1 list-decimal list-inside">
           <li>Set the payment amount (or leave empty for any amount)</li>
           <li>Optionally add an order ID for your records</li>
           <li>Customer scans QR code with their camera or wallet app</li>

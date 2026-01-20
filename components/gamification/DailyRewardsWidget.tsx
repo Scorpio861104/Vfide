@@ -116,7 +116,7 @@ export default function DailyRewardsWidget() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative bg-linear-to-br from-[#FFD700]/10 to-[#FFA500]/10 border-2 border-[#FFD700]/30 rounded-2xl p-6 overflow-hidden"
+      className="relative bg-linear-to-br from-amber-400/10 to-orange-500/10 border-2 border-amber-400/30 rounded-2xl p-6 overflow-hidden"
     >
       {/* Confetti animation */}
       <AnimatePresence>
@@ -168,13 +168,13 @@ export default function DailyRewardsWidget() {
           <motion.div 
             animate={canClaim ? { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] } : {}}
             transition={{ duration: 1.5, repeat: canClaim ? Infinity : 0 }}
-            className="bg-linear-to-br from-[#FFD700] to-[#FFA500] rounded-xl p-3 shadow-lg shadow-yellow-500/30"
+            className="bg-linear-to-br from-amber-400 to-orange-500 rounded-xl p-3 shadow-lg shadow-yellow-500/30"
           >
             <Gift className="w-6 h-6 text-black" />
           </motion.div>
           <div>
             <h3 className="text-xl font-bold text-white">Daily Reward</h3>
-            <p className="text-sm text-[#A0A0A5] flex items-center gap-1">
+            <p className="text-sm text-zinc-400 flex items-center gap-1">
               {canClaim ? (
                 <>
                   <Sparkles className="w-3 h-3 text-yellow-500" />
@@ -203,7 +203,7 @@ export default function DailyRewardsWidget() {
             </motion.div>
             <span className="text-2xl font-bold">{streak}</span>
           </div>
-          <div className="text-xs text-[#A0A0A5]">Day Streak</div>
+          <div className="text-xs text-zinc-400">Day Streak</div>
         </motion.div>
       </div>
 
@@ -222,10 +222,10 @@ export default function DailyRewardsWidget() {
               whileHover={{ scale: 1.05, y: -2 }}
               className={`relative aspect-square rounded-xl p-2 text-center transition-all ${
                 isClaimed
-                  ? 'bg-[#50C878]/20 border border-[#50C878]/50'
+                  ? 'bg-emerald-500/20 border border-emerald-500/50'
                   : isToday
-                  ? 'bg-linear-to-br from-[#FFD700]/30 to-[#FFA500]/20 border-2 border-[#FFD700]'
-                  : 'bg-[#2A2A2F] border border-[#3A3A3F]'
+                  ? 'bg-linear-to-br from-amber-400/30 to-orange-500/20 border-2 border-amber-400'
+                  : 'bg-zinc-800 border border-zinc-700'
               }`}
             >
               {/* Pulsing effect for today */}
@@ -233,23 +233,23 @@ export default function DailyRewardsWidget() {
                 <motion.div
                   animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.05, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
-                  className="absolute inset-0 rounded-xl bg-linear-to-br from-[#FFD700]/20 to-transparent pointer-events-none"
+                  className="absolute inset-0 rounded-xl bg-linear-to-br from-amber-400/20 to-transparent pointer-events-none"
                 />
               )}
               
               <div className="relative">
-                <div className="text-xs text-[#A0A0A5] mb-1">Day {reward.day}</div>
+                <div className="text-xs text-zinc-400 mb-1">Day {reward.day}</div>
                 {isClaimed ? (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 500 }}
                   >
-                    <CheckCircle2 className="w-5 h-5 text-[#50C878] mx-auto" />
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
                   </motion.div>
                 ) : (
                   <div>
-                    <div className="text-sm font-bold text-[#FFD700]">{reward.vfide}</div>
+                    <div className="text-sm font-bold text-amber-400">{reward.vfide}</div>
                     {reward.bonus && (
                       <motion.div
                         animate={{ rotate: [0, 10, -10, 0] }}
@@ -269,26 +269,26 @@ export default function DailyRewardsWidget() {
       {/* Today's Reward */}
       <motion.div 
         whileHover={{ scale: 1.01 }}
-        className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-4 mb-4"
+        className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4"
       >
         <div className="text-center mb-4">
-          <div className="text-sm text-[#A0A0A5] mb-2">Today&apos;s Reward</div>
+          <div className="text-sm text-zinc-400 mb-2">Today&apos;s Reward</div>
           <div className="flex items-center justify-center gap-6">
             <motion.div 
               whileHover={{ scale: 1.1 }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30"
             >
-              <Gift className="w-5 h-5 text-[#FFD700]" />
-              <span className="text-2xl font-bold text-[#FFD700]">{todayReward.vfide}</span>
-              <span className="text-sm text-[#A0A0A5]">VFIDE</span>
+              <Gift className="w-5 h-5 text-amber-400" />
+              <span className="text-2xl font-bold text-amber-400">{todayReward.vfide}</span>
+              <span className="text-sm text-zinc-400">VFIDE</span>
             </motion.div>
             <motion.div 
               whileHover={{ scale: 1.1 }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30"
             >
-              <Zap className="w-5 h-5 text-[#9333EA]" />
-              <span className="text-2xl font-bold text-[#9333EA]">{todayReward.xp}</span>
-              <span className="text-sm text-[#A0A0A5]">XP</span>
+              <Zap className="w-5 h-5 text-purple-600" />
+              <span className="text-2xl font-bold text-purple-600">{todayReward.xp}</span>
+              <span className="text-sm text-zinc-400">XP</span>
             </motion.div>
           </div>
           {todayReward.bonus && (
@@ -311,8 +311,8 @@ export default function DailyRewardsWidget() {
           whileTap={canClaim ? { scale: 0.98 } : {}}
           className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
             canClaim && !claiming
-              ? 'bg-linear-to-r from-[#FFD700] to-[#FFA500] text-black shadow-lg shadow-yellow-500/30 hover:shadow-yellow-500/50'
-              : 'bg-[#2A2A2F] text-[#6A6A6F] cursor-not-allowed'
+              ? 'bg-linear-to-r from-amber-400 to-orange-500 text-black shadow-lg shadow-yellow-500/30 hover:shadow-yellow-500/50'
+              : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
           }`}
         >
           {claiming ? (
@@ -343,9 +343,9 @@ export default function DailyRewardsWidget() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="bg-[#0A0A0B] rounded-xl p-4"
+        className="bg-zinc-950 rounded-xl p-4"
       >
-        <div className="text-xs text-[#A0A0A5] mb-3 flex items-center gap-2">
+        <div className="text-xs text-zinc-400 mb-3 flex items-center gap-2">
           <Calendar className="w-4 h-4" />
           Streak Milestones
         </div>
@@ -361,11 +361,11 @@ export default function DailyRewardsWidget() {
               whileHover={{ scale: 1.05 }}
               className={`text-center p-2 rounded-lg transition-all ${
                 milestone.unlocked 
-                  ? 'bg-[#50C878]/10 border border-[#50C878]/30' 
-                  : 'bg-[#1A1A1F] border border-[#2A2A2F]'
+                  ? 'bg-emerald-500/10 border border-emerald-500/30' 
+                  : 'bg-zinc-900 border border-zinc-800'
               }`}
             >
-              <div className={`text-xs mb-1 ${milestone.unlocked ? 'text-[#50C878]' : 'text-[#6A6A6F]'}`}>
+              <div className={`text-xs mb-1 ${milestone.unlocked ? 'text-emerald-500' : 'text-zinc-500'}`}>
                 {milestone.unlocked ? (
                   <CheckCircle2 className="w-4 h-4 mx-auto" />
                 ) : (
@@ -375,7 +375,7 @@ export default function DailyRewardsWidget() {
               <div className={`text-sm font-medium ${milestone.unlocked ? 'text-white' : 'text-gray-500'}`}>
                 {milestone.days}d
               </div>
-              <div className={`text-xs ${milestone.unlocked ? 'text-[#50C878]' : 'text-[#A0A0A5]'}`}>
+              <div className={`text-xs ${milestone.unlocked ? 'text-emerald-500' : 'text-zinc-400'}`}>
                 {milestone.multiplier} XP
               </div>
             </motion.div>

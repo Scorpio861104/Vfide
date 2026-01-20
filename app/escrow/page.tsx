@@ -179,7 +179,7 @@ export default function EscrowPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-linear-to-b from-zinc-950 via-[#0f0f18] to-zinc-950" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,240,255,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(34,197,94,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
@@ -239,9 +239,9 @@ export default function EscrowPage() {
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.02, y: -2 }}
                 transition={{ delay: idx * 0.1 }}
-                className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4`}
+                className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4`}
               >
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-3`}>
+                <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-3`}>
                   <div className={stat.text}>{stat.icon}</div>
                 </div>
                 <p className="text-2xl font-bold text-white">{stat.value}</p>
@@ -302,7 +302,7 @@ export default function EscrowPage() {
                   exit={{ opacity: 0, y: -20 }}
                   className="text-center py-16"
                 >
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
+                  <div className="p-4 rounded-2xl bg-linear-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
                     <Wallet className="w-12 h-12 text-cyan-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h3>
@@ -327,7 +327,7 @@ export default function EscrowPage() {
                   exit={{ opacity: 0, y: -20 }}
                   className="text-center py-16"
                 >
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
+                  <div className="p-4 rounded-2xl bg-linear-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
                     <Package className="w-12 h-12 text-cyan-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">No Escrows Found</h3>
@@ -357,7 +357,7 @@ export default function EscrowPage() {
                       animate={{ opacity: 1, y: 0 }}
                       whileHover={{ scale: 1.005, y: -2 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
+                      className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
                     >
                       <div className="p-6">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -522,9 +522,9 @@ export default function EscrowPage() {
                 whileHover={{ scale: 1.02, y: -4 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.15 }}
-                className={`text-center bg-gradient-to-br ${step.gradient} backdrop-blur-xl border ${step.border} rounded-2xl p-6`}
+                className={`text-center bg-linear-to-br ${step.gradient} backdrop-blur-xl border ${step.border} rounded-2xl p-6`}
               >
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${step.gradient} border ${step.border} flex items-center justify-center mx-auto mb-4`}>
+                <div className={`w-14 h-14 rounded-xl bg-linear-to-br ${step.gradient} border ${step.border} flex items-center justify-center mx-auto mb-4`}>
                   <div className={step.text}>{step.icon}</div>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
@@ -537,7 +537,7 @@ export default function EscrowPage() {
           <div className="mt-16 max-w-3xl mx-auto">
             <motion.div 
               whileHover={{ scale: 1.01, y: -2 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
+              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0">
@@ -584,7 +584,7 @@ export default function EscrowPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
+              className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6 max-w-lg w-full"
             >
               <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-linear-to-r from-cyan-400 to-emerald-400">Create Escrow</h2>
               

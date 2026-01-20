@@ -70,11 +70,11 @@ export function OfflineIndicator() {
       exit={{ y: 100, opacity: 0 }}
       className="fixed bottom-4 right-4 z-50"
     >
-      <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl shadow-2xl overflow-hidden">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden">
         {/* Compact View */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-full p-4 flex items-center justify-between gap-3 hover:bg-[#1F1F24] transition-colors"
+          className="w-full p-4 flex items-center justify-between gap-3 hover:bg-zinc-900 transition-colors"
         >
           <div className="flex items-center gap-3">
             {online ? (
@@ -114,11 +114,11 @@ export function OfflineIndicator() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="border-t border-[#2A2A2F]"
+              className="border-t border-zinc-800"
             >
               <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
                 {/* Status Info */}
-                <div className="bg-[#0F0F14] rounded-lg p-3 space-y-2">
+                <div className="bg-zinc-900 rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-400">Connection</span>
                     <span className={online ? 'text-green-400' : 'text-red-400'}>
@@ -145,7 +145,7 @@ export function OfflineIndicator() {
                       {queue.slice(0, 5).map((action) => (
                         <div
                           key={action.id}
-                          className="flex items-center justify-between p-2 bg-[#0F0F14] rounded text-xs"
+                          className="flex items-center justify-between p-2 bg-zinc-900 rounded text-xs"
                         >
                           <div className="flex items-center gap-2">
                             {action.status === SyncStatus.PENDING && (

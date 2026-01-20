@@ -13,9 +13,9 @@ interface EmptyStateProps {
 }
 
 const variantIcons = {
-  default: <Inbox className="text-[#A0A0A5]" size={48} />,
-  search: <Search className="text-[#A0A0A5]" size={48} />,
-  error: <FileQuestion className="text-[#A0A0A5]" size={48} />,
+  default: <Inbox className="text-zinc-400" size={48} />,
+  search: <Search className="text-zinc-400" size={48} />,
+  error: <FileQuestion className="text-zinc-400" size={48} />,
 };
 
 /**
@@ -34,11 +34,11 @@ export function EmptyState({
       <div className="mb-4">
         {icon || variantIcons[variant]}
       </div>
-      <h3 className="text-lg font-semibold text-[#F5F3E8] mb-1 text-center">
+      <h3 className="text-lg font-semibold text-zinc-100 mb-1 text-center">
         {title}
       </h3>
       {description && (
-        <p className="text-[#A0A0A5] text-center max-w-sm mb-4">
+        <p className="text-zinc-400 text-center max-w-sm mb-4">
           {description}
         </p>
       )}

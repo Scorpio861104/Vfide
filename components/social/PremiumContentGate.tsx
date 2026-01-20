@@ -75,10 +75,10 @@ export function PremiumContentGate({
   if (isChecking) {
     return (
       <div className={`relative ${className}`}>
-        <div className="absolute inset-0 bg-[#1A1A1F]/80 backdrop-blur-lg rounded-xl border border-[#2A2A2F] flex items-center justify-center z-10">
+        <div className="absolute inset-0 bg-zinc-900/80 backdrop-blur-lg rounded-xl border border-zinc-800 flex items-center justify-center z-10">
           <div className="text-center">
             <Loader className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-[#A0A0A5]">Checking access...</p>
+            <p className="text-sm text-zinc-400">Checking access...</p>
           </div>
         </div>
         {preview || children}
@@ -109,7 +109,7 @@ export function PremiumContentGate({
   return (
     <div className={`relative ${className}`}>
       {/* Locked Overlay */}
-      <div className="absolute inset-0 bg-linear-to-b from-[#1A1A1F]/60 via-[#1A1A1F]/80 to-[#1A1A1F]/95 backdrop-blur-md rounded-xl border-2 border-purple-500/20 flex items-center justify-center z-10">
+      <div className="absolute inset-0 bg-linear-to-b from-zinc-900/60 via-[#1A1A1F]/80 to-zinc-900/95 backdrop-blur-md rounded-xl border-2 border-purple-500/20 flex items-center justify-center z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -126,10 +126,10 @@ export function PremiumContentGate({
           </motion.div>
 
           {/* Title */}
-          <h3 className="text-2xl font-bold text-[#F5F3E8] mb-2">
+          <h3 className="text-2xl font-bold text-zinc-100 mb-2">
             {getContentTypeLabel()}
           </h3>
-          <p className="text-[#A0A0A5] mb-6">
+          <p className="text-zinc-400 mb-6">
             Unlock exclusive content from {sellerName}
           </p>
 
@@ -145,7 +145,7 @@ export function PremiumContentGate({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="flex items-center gap-3 text-sm text-[#D0D0D8]"
+                className="flex items-center gap-3 text-sm text-zinc-300"
               >
                 <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
                   <Check className="w-3 h-3 text-purple-400" />
@@ -156,14 +156,14 @@ export function PremiumContentGate({
           </div>
 
           {/* Price */}
-          <div className="bg-[#0A0A0F] border border-[#2A2A2F] rounded-xl p-4 mb-6">
-            <div className="text-sm text-[#6B6B78] mb-1">Price</div>
+          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 mb-6">
+            <div className="text-sm text-zinc-500 mb-1">Price</div>
             <div className="flex items-baseline justify-center gap-2">
-              <span className="text-3xl font-bold text-[#F5F3E8]">{price}</span>
+              <span className="text-3xl font-bold text-zinc-100">{price}</span>
               <span className="text-xl font-medium text-purple-400">{currency}</span>
             </div>
             {isConnected && (
-              <div className="text-xs text-[#6B6B78] mt-2">
+              <div className="text-xs text-zinc-500 mt-2">
                 Connected to {address?.slice(0, 6)}...{address?.slice(-4)}
               </div>
             )}

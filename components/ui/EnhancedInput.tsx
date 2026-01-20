@@ -19,9 +19,9 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
     
     const variantStyles = {
       default: `
-        bg-[#0F0F12] 
-        border border-[#1F1F2A]
-        focus:border-[#00F0FF]/50 
+        bg-zinc-900 
+        border border-zinc-800
+        focus:border-cyan-400/50 
         focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]
       `,
       glass: `
@@ -33,10 +33,10 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
         focus:shadow-[0_0_20px_rgba(0,240,255,0.15)]
       `,
       glow: `
-        bg-[#0A0A0F] 
-        border border-[#00F0FF]/30
+        bg-zinc-950 
+        border border-cyan-400/30
         shadow-[0_0_10px_rgba(0,240,255,0.1),inset_0_0_10px_rgba(0,240,255,0.05)]
-        focus:border-[#00F0FF]/50
+        focus:border-cyan-400/50
         focus:shadow-[0_0_30px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       `
     };
@@ -44,14 +44,14 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[#F8F8FC] mb-2">
+          <label className="block text-sm font-medium text-zinc-50 mb-2">
             {label}
           </label>
         )}
         
         <div className="relative">
           {icon && iconPosition === "left" && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A8A8F]">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
               {icon}
             </div>
           )}
@@ -60,7 +60,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
             ref={ref}
             className={`
               w-full px-4 py-3 rounded-xl
-              text-[#F8F8FC] placeholder:text-[#5A5A5F]
+              text-zinc-50 placeholder:text-zinc-500
               transition-all duration-300
               outline-none
               ${variantStyles[variant]}
@@ -73,7 +73,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
           />
           
           {icon && iconPosition === "right" && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8A8F]">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400">
               {icon}
             </div>
           )}
@@ -106,9 +106,9 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
     
     const variantStyles = {
       default: `
-        bg-[#0F0F12] 
-        border border-[#1F1F2A]
-        focus:border-[#00F0FF]/50 
+        bg-zinc-900 
+        border border-zinc-800
+        focus:border-cyan-400/50 
         focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]
       `,
       glass: `
@@ -120,10 +120,10 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
         focus:shadow-[0_0_20px_rgba(0,240,255,0.15)]
       `,
       glow: `
-        bg-[#0A0A0F] 
-        border border-[#00F0FF]/30
+        bg-zinc-950 
+        border border-cyan-400/30
         shadow-[0_0_10px_rgba(0,240,255,0.1),inset_0_0_10px_rgba(0,240,255,0.05)]
-        focus:border-[#00F0FF]/50
+        focus:border-cyan-400/50
         focus:shadow-[0_0_30px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       `
     };
@@ -131,7 +131,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[#F8F8FC] mb-2">
+          <label className="block text-sm font-medium text-zinc-50 mb-2">
             {label}
           </label>
         )}
@@ -140,7 +140,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
           ref={ref}
           className={`
             w-full px-4 py-3 rounded-xl
-            text-[#F8F8FC] placeholder:text-[#5A5A5F]
+            text-zinc-50 placeholder:text-zinc-500
             transition-all duration-300
             outline-none
             resize-none
@@ -179,9 +179,9 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
     
     const variantStyles = {
       default: `
-        bg-[#0F0F12] 
-        border border-[#1F1F2A]
-        focus:border-[#00F0FF]/50 
+        bg-zinc-900 
+        border border-zinc-800
+        focus:border-cyan-400/50 
         focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]
       `,
       glass: `
@@ -193,10 +193,10 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
         focus:shadow-[0_0_20px_rgba(0,240,255,0.15)]
       `,
       glow: `
-        bg-[#0A0A0F] 
-        border border-[#00F0FF]/30
+        bg-zinc-950 
+        border border-cyan-400/30
         shadow-[0_0_10px_rgba(0,240,255,0.1),inset_0_0_10px_rgba(0,240,255,0.05)]
-        focus:border-[#00F0FF]/50
+        focus:border-cyan-400/50
         focus:shadow-[0_0_30px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       `
     };
@@ -204,7 +204,7 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[#F8F8FC] mb-2">
+          <label className="block text-sm font-medium text-zinc-50 mb-2">
             {label}
           </label>
         )}
@@ -213,7 +213,7 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
           ref={ref}
           className={`
             w-full px-4 py-3 rounded-xl
-            text-[#F8F8FC]
+            text-zinc-50
             transition-all duration-300
             outline-none
             cursor-pointer
@@ -227,7 +227,7 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
             <option 
               key={option.value} 
               value={option.value}
-              className="bg-[#0F0F12] text-[#F8F8FC]"
+              className="bg-zinc-900 text-zinc-50"
             >
               {option.label}
             </option>

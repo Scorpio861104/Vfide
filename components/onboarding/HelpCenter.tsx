@@ -190,14 +190,14 @@ export function HelpCenter() {
       {/* Floating Help Button - positioned above mobile nav */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 md:bottom-6 right-6 z-40 w-14 h-14 bg-linear-to-r from-[#00F0FF] to-[#0080FF] rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-24 md:bottom-6 right-6 z-40 w-14 h-14 bg-linear-to-r from-cyan-400 to-blue-500 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 1, type: "spring" }}
       >
-        <HelpCircle size={28} className="text-[#1A1A1D]" />
+        <HelpCircle size={28} className="text-zinc-900" />
       </motion.button>
 
       {/* Help Panel */}
@@ -222,22 +222,22 @@ export function HelpCenter() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25 }}
-              className="fixed right-0 top-0 bottom-0 w-full sm:w-[90vw] md:w-125 bg-linear-to-br from-[#2A2A2F] to-[#1A1A1D] border-l-2 border-[#00F0FF] shadow-2xl z-91 overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 w-full sm:w-[90vw] md:w-125 bg-linear-to-br from-zinc-800 to-zinc-900 border-l-2 border-cyan-400 shadow-2xl z-91 overflow-y-auto"
             >
               {/* Header */}
-              <div className="sticky top-0 bg-[#1A1A1D] border-b border-[#3A3A3F] p-6 flex items-center justify-between">
+              <div className="sticky top-0 bg-zinc-900 border-b border-zinc-700 p-6 flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#F5F3E8]" style={{ fontFamily: 'var(--font-display)' }}>
+                  <h2 className="text-2xl font-bold text-zinc-100" style={{ fontFamily: 'var(--font-display)' }}>
                     Help Center
                   </h2>
-                  <p className="text-sm text-[#A0A0A5]">Learn how to use VFIDE</p>
+                  <p className="text-sm text-zinc-400">Learn how to use VFIDE</p>
                 </div>
                 <button
                   onClick={() => {
                     setIsOpen(false);
                     setSelectedTopic(null);
                   }}
-                  className="p-2 text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#3A3A3F] rounded-lg transition-colors"
+                  className="p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700 rounded-lg transition-colors"
                 >
                   <X size={24} />
                 </button>
@@ -252,34 +252,34 @@ export function HelpCenter() {
                       <button
                         key={topic.id}
                         onClick={() => setSelectedTopic(topic)}
-                        className="w-full p-4 bg-[#1A1A1D] border border-[#3A3A3F] hover:border-[#00F0FF] rounded-lg text-left transition-all group"
+                        className="w-full p-4 bg-zinc-900 border border-zinc-700 hover:border-cyan-400 rounded-lg text-left transition-all group"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="shrink-0 w-12 h-12 bg-[#00F0FF]/20 rounded-lg flex items-center justify-center text-[#00F0FF]">
+                          <div className="shrink-0 w-12 h-12 bg-cyan-400/20 rounded-lg flex items-center justify-center text-cyan-400">
                             {topic.icon}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-[#F5F3E8] mb-1 group-hover:text-[#00F0FF] transition-colors">
+                            <h3 className="font-bold text-zinc-100 mb-1 group-hover:text-cyan-400 transition-colors">
                               {topic.title}
                             </h3>
-                            <p className="text-sm text-[#A0A0A5]">
+                            <p className="text-sm text-zinc-400">
                               {topic.description}
                             </p>
                           </div>
-                          <ChevronRight size={20} className="text-[#A0A0A5] group-hover:text-[#00F0FF] transition-colors" />
+                          <ChevronRight size={20} className="text-zinc-400 group-hover:text-cyan-400 transition-colors" />
                         </div>
                       </button>
                     ))}
 
                     {/* Quick Actions */}
-                    <div className="mt-8 p-4 bg-[#00F0FF]/10 border border-[#00F0FF] rounded-lg">
-                      <h3 className="font-bold text-[#00F0FF] mb-3">Quick Actions</h3>
+                    <div className="mt-8 p-4 bg-cyan-400/10 border border-cyan-400 rounded-lg">
+                      <h3 className="font-bold text-cyan-400 mb-3">Quick Actions</h3>
                       <div className="space-y-2">
                         {isTestnet && (
                           <a
                             href="/testnet"
                             onClick={() => setIsOpen(false)}
-                            className="block w-full px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] hover:border-[#00F0FF] rounded-lg text-[#F5F3E8] text-sm text-left transition-all"
+                            className="block w-full px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-cyan-400 rounded-lg text-zinc-100 text-sm text-left transition-all"
                           >
                             💧 Get Test ETH (Faucet Links)
                           </a>
@@ -295,14 +295,14 @@ export function HelpCenter() {
                               win.startVFIDETour();
                             }
                           }}
-                          className="w-full px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] hover:border-[#00F0FF] rounded-lg text-[#F5F3E8] text-sm text-left transition-all"
+                          className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-cyan-400 rounded-lg text-zinc-100 text-sm text-left transition-all"
                         >
                           🎓 Restart Platform Tour
                         </button>
                         <a
                           href="/docs"
                           onClick={() => setIsOpen(false)}
-                          className="block w-full px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] hover:border-[#00F0FF] rounded-lg text-[#F5F3E8] text-sm text-left transition-all"
+                          className="block w-full px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-cyan-400 rounded-lg text-zinc-100 text-sm text-left transition-all"
                         >
                           📚 Full Documentation
                         </a>
@@ -314,20 +314,20 @@ export function HelpCenter() {
                   <div>
                     <button
                       onClick={() => setSelectedTopic(null)}
-                      className="mb-4 text-[#00F0FF] hover:text-[#00D4FF] text-sm flex items-center gap-2"
+                      className="mb-4 text-cyan-400 hover:text-cyan-400 text-sm flex items-center gap-2"
                     >
                       ← Back to topics
                     </button>
 
                     <div className="flex items-center gap-4 mb-6">
-                      <div className="w-16 h-16 bg-[#00F0FF]/20 rounded-lg flex items-center justify-center text-[#00F0FF]">
+                      <div className="w-16 h-16 bg-cyan-400/20 rounded-lg flex items-center justify-center text-cyan-400">
                         {selectedTopic.icon}
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold text-[#F5F3E8]" style={{ fontFamily: 'var(--font-display)' }}>
+                        <h3 className="text-2xl font-bold text-zinc-100" style={{ fontFamily: 'var(--font-display)' }}>
                           {selectedTopic.title}
                         </h3>
-                        <p className="text-sm text-[#A0A0A5]">
+                        <p className="text-sm text-zinc-400">
                           {selectedTopic.description}
                         </p>
                       </div>
@@ -337,9 +337,9 @@ export function HelpCenter() {
                       {selectedTopic.content.map((item, index) => (
                         <div
                           key={index}
-                          className="p-4 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg"
+                          className="p-4 bg-zinc-900 border border-zinc-700 rounded-lg"
                         >
-                          <p className="text-[#F5F3E8] leading-relaxed">{item}</p>
+                          <p className="text-zinc-100 leading-relaxed">{item}</p>
                         </div>
                       ))}
                     </div>

@@ -348,7 +348,7 @@ function CompactTile({
       <span 
         className={`
           flex-1 text-sm font-medium transition-colors duration-200 truncate
-          ${isActive ? 'text-[#F8F8FC]' : 'text-[#A0A0A5] group-hover:text-[#F8F8FC]'}
+          ${isActive ? 'text-zinc-50' : 'text-zinc-400 group-hover:text-zinc-50'}
         `}
       >
         {item.label}
@@ -471,7 +471,7 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
               exit={{ rotate: 90, opacity: 0 }}
               transition={{ duration: 0.15 }}
             >
-              <X size={20} className="text-[#FF6B6B]" />
+              <X size={20} className="text-red-400" />
             </motion.div>
           ) : (
             <motion.div

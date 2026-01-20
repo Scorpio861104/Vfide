@@ -30,15 +30,15 @@ export default function FeedPage() {
             className="mb-8"
           >
             <div className="text-center mb-8">
-              <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-3">
+              <h1 className="text-4xl md:text-5xl font-bold text-zinc-100 mb-3">
                 Activity Feed
               </h1>
-              <p className="text-[#A0A0A5] text-lg max-w-2xl mx-auto mb-4">
+              <p className="text-zinc-400 text-lg max-w-2xl mx-auto mb-4">
                 See what the community is sharing and celebrating
               </p>
               <Link 
                 href="/social-hub" 
-                className="inline-flex items-center gap-2 text-[#00F0FF] hover:underline"
+                className="inline-flex items-center gap-2 text-cyan-400 hover:underline"
               >
                 Go to full Social Hub <ArrowRight className="w-4 h-4" />
               </Link>
@@ -51,12 +51,12 @@ export default function FeedPage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-12"
             >
-              <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl p-8 max-w-md mx-auto">
+              <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto">
                 <div className="text-6xl mb-4">🔗</div>
-                <h2 className="text-xl font-bold text-[#F5F3E8] mb-4">
+                <h2 className="text-xl font-bold text-zinc-100 mb-4">
                   Connect Your Wallet
                 </h2>
-                <p className="text-[#A0A0A5] mb-6">
+                <p className="text-zinc-400 mb-6">
                   Connect your wallet to view the feed and interact with the community.
                 </p>
                 <ConnectButton />

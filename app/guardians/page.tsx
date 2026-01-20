@@ -28,7 +28,7 @@ export default function GuardiansPage() {
       <motion.main 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="min-h-screen bg-[#0D0D0F] pt-20 relative overflow-hidden"
+        className="min-h-screen bg-zinc-950 pt-20 relative overflow-hidden"
       >
         {/* Premium Background Effects */}
         <div className="fixed inset-0 pointer-events-none">
@@ -61,7 +61,7 @@ export default function GuardiansPage() {
         </section>
 
         {/* Tab Navigation */}
-        <section className="bg-[#0D0D0F]/80 backdrop-blur-xl border-b border-white/10 sticky top-20 z-40">
+        <section className="bg-zinc-950/80 backdrop-blur-xl border-b border-white/10 sticky top-20 z-40">
           <div className="container mx-auto px-3 sm:px-4">
             <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label="Guardian management sections">
               {[

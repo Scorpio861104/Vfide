@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useChainId } from 'wagmi';
 import { QrCode, Copy, Check, Download, Share2, X } from 'lucide-react';
 import { IS_TESTNET } from '@/lib/chains';
+import { logger } from '@/lib/logger';
 
 /**
  * Wallet QR Code Component
@@ -66,8 +67,8 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
           url: `https://${IS_TESTNET ? 'sepolia.' : ''}basescan.org/address/${address}`,
         });
       } catch (_err) {
-        // User cancelled or share failed
-        console.log('Share cancelled');
+        // User cancelled or share failed - this is expected behavior, not an error
+        logger.debug('Share cancelled or failed', { address });
       }
     } else {
       // Fallback to copy

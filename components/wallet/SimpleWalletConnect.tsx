@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useReconnect, useChainId } from 'wagmi';
 import { useToast } from '@/components/ui/toast';
 import { useEnhancedWalletConnect } from '@/hooks/useEnhancedWalletConnect';
+import { useWalletPersistence } from '@/hooks/useWalletPersistence';
 import { useENS } from '@/hooks/useENS';
 import { measureLatency, getCachedLatency, getLatencyColor, type LatencyData } from '@/lib/networkLatency';
 import { addConnectionToHistory } from '@/lib/connectionHistory';
@@ -16,14 +17,14 @@ import { scrollToTop } from '@/lib/focusTrap';
 import { POLLING_INTERVALS, ANIMATION_DURATION } from '@/lib/walletConstants';
 
 /**
- * Enhanced Simple Wallet Connect Component
+ * Enhanced Simple Wallet Connect Component (Mobile-First)
  * 
  * Phase 1 Enhancements:
  * - Improved button responsiveness
  * - Better loading states with status indicators
  * - Enhanced error handling
  * - Smooth animations
- * - Mobile optimized
+ * - Mobile optimized with WalletConnect priority
  * - Keyboard navigation support (Enter, Escape)
  * - Copy address to clipboard functionality
  * 
@@ -43,11 +44,18 @@ import { POLLING_INTERVALS, ANIMATION_DURATION } from '@/lib/walletConstants';
  * - Optimistic UI updates
  * - Smooth scroll-to-top after connection
  * - Gas price estimates in tooltips
+ * 
+ * Mobile-First Features:
+ * - Automatic mobile device detection
+ * - WalletConnect integration for mobile wallets
+ * - Support for Trust Wallet, MetaMask app, Rainbow, etc.
+ * - No app switching required on mobile
  */
 export function SimpleWalletConnect() {
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
   const { sessionDurationFormatted, isInCooldown, cooldownRemaining } = useEnhancedWalletConnect();
+  const { isReconnecting: isAutoReconnecting, reconnectError, minutesUntilDisconnect } = useWalletPersistence();
   // Get connector info and reconnect status from wagmi
   const { connector, address, isConnected } = useAccount();
   const chainId = useChainId();
@@ -120,11 +128,11 @@ export function SimpleWalletConnect() {
     }
   }, [showToast]);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts - standardized across all wallet components
   useEffect(() => {
     const handleKeyboard = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + W to open wallet modal (if not connected)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+      // Cmd/Ctrl + Shift + W to toggle wallet (consistent with QuickWalletConnect)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'w') {
         e.preventDefault();
         // This will be handled by the button's onClick
       }
@@ -135,7 +143,33 @@ export function SimpleWalletConnect() {
   }, []);
 
   return (
-    <ConnectButton.Custom>
+    <>
+      {/* Inactivity Warning Banner */}
+      <AnimatePresence>
+        {minutesUntilDisconnect !== null && minutesUntilDisconnect > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg shadow-lg backdrop-blur-sm"
+            role="alert"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <Clock size={16} className="animate-pulse" />
+              <span className="hidden sm:inline">
+                Wallet will auto-disconnect in {minutesUntilDisconnect} minute{minutesUntilDisconnect !== 1 ? 's' : ''} due to inactivity
+              </span>
+              <span className="sm:hidden">
+                Auto-disconnect in {minutesUntilDisconnect}m
+              </span>
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <ConnectButton.Custom>
       {({
         account,
         chain,
@@ -170,14 +204,37 @@ export function SimpleWalletConnect() {
             })}
           >
             {(() => {
-              // Show reconnecting state (auto-reconnect from session)
+              // Show auto-reconnecting state (from useWalletPersistence)
+              if (isAutoReconnecting) {
+                return (
+                  <motion.div
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="show"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-cyan-500/10 text-cyan-400 font-bold rounded-lg border border-cyan-500/30"
+                  >
+                    <span className="flex items-center gap-2">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <RefreshCw size={16} />
+                      </motion.div>
+                      <span className="hidden sm:inline">Auto-reconnecting to previous session...</span>
+                      <span className="sm:hidden">Auto-reconnect...</span>
+                    </span>
+                  </motion.div>
+                );
+              }
+
+              // Show reconnecting state (manual reconnect from wagmi)
               if (isReconnecting) {
                 return (
                   <motion.div
                     variants={fadeIn}
                     initial="hidden"
                     animate="show"
-                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-cyan-400 font-bold rounded-lg border border-cyan-500/30"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-zinc-800 text-cyan-400 font-bold rounded-lg border border-cyan-500/30"
                   >
                     <span className="flex items-center gap-2">
                       <motion.div
@@ -192,6 +249,23 @@ export function SimpleWalletConnect() {
                   </motion.div>
                 );
               }
+              
+              // Show reconnect error if present
+              if (reconnectError) {
+                return (
+                  <motion.div
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="show"
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-red-500/10 text-red-400 font-medium rounded-lg border border-red-500/30"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="hidden sm:inline">Reconnect failed. Click to try again.</span>
+                      <span className="sm:hidden">Reconnect failed</span>
+                    </span>
+                  </motion.div>
+                );
+              }
 
               if (isLoading) {
                 return (
@@ -201,7 +275,7 @@ export function SimpleWalletConnect() {
                     animate="show"
                     className="flex items-center gap-2"
                   >
-                    <div className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-[#2A2A2F] text-[#A0A0A5] font-bold rounded-lg border border-[#3A3A3F]">
+                    <div className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-zinc-800 text-zinc-400 font-bold rounded-lg border border-zinc-700">
                       <span className="flex items-center gap-2">
                         <motion.svg 
                           className="h-4 w-4"
@@ -253,7 +327,7 @@ export function SimpleWalletConnect() {
                     className={`px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-bold rounded-lg transition-all font-[family-name:var(--font-body)] touch-manipulation focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F0F12] ${
                       isInCooldown
                         ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                        : 'bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] hover:shadow-lg hover:shadow-[#00F0FF]/50 cursor-pointer focus:ring-[#00F0FF]'
+                        : 'bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 hover:shadow-lg hover:shadow-cyan-400/50 cursor-pointer focus:ring-cyan-400'
                     }`}
                   >
                     <AnimatePresence mode="wait">
@@ -322,7 +396,7 @@ export function SimpleWalletConnect() {
                     type="button"
                     aria-label={`Current network: ${chain.name}${latencyData ? ` - ${latencyData.status} (${latencyData.latency}ms)` : ''}`}
                     title={latencyData ? `Network latency: ${latencyData.latency}ms (${latencyData.status})` : chain.name}
-                    className="hidden sm:flex px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] text-[#F5F3E8] rounded-lg hover:border-[#00F0FF] transition-all font-[family-name:var(--font-body)] text-sm items-center cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
+                    className="hidden sm:flex px-4 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-all font-[family-name:var(--font-body)] text-sm items-center cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0F0F12]"
                   >
                     {/* Phase 3: Network latency indicator */}
                     {latencyData && (
@@ -371,7 +445,7 @@ export function SimpleWalletConnect() {
                     type="button"
                     aria-label="Open account menu"
                     title={sessionDurationFormatted ? `Connected for ${sessionDurationFormatted}` : 'Open account menu'}
-                    className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-[#00F0FF] to-[#0080FF] text-[#1A1A1D] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00F0FF]/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
+                    className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
                   >
                     <span className="hidden sm:flex items-center gap-2">
                       {/* Phase 3: Show ENS name if available */}
@@ -387,12 +461,12 @@ export function SimpleWalletConnect() {
                       {/* Copy button */}
                       <button
                         onClick={(e) => copyAddress(account.address, e)}
-                        className="ml-1 p-1 hover:bg-[#1A1A1D]/20 rounded transition-colors"
+                        className="ml-1 p-1 hover:bg-zinc-900/20 rounded transition-colors"
                         title={`Copy address${ensName ? ` (${account.address})` : ''}`}
                         aria-label="Copy wallet address"
                       >
                         {copied ? (
-                          <Check size={14} className="text-[#50C878]" />
+                          <Check size={14} className="text-emerald-500" />
                         ) : (
                           <Copy size={14} />
                         )}
@@ -407,5 +481,6 @@ export function SimpleWalletConnect() {
         );
       }}
     </ConnectButton.Custom>
+    </>
   );
 }

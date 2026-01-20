@@ -16,11 +16,11 @@ const categoryIcons: Record<string, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  new: "border-[#00F0FF] text-[#00F0FF]",
-  reviewing: "border-[#FFD700] text-[#FFD700]",
-  approved: "border-[#50C878] text-[#50C878]",
-  rejected: "border-[#C41E3A] text-[#C41E3A]",
-  implemented: "border-[#50C878] text-[#50C878]",
+  new: "border-cyan-400 text-cyan-400",
+  reviewing: "border-amber-400 text-amber-400",
+  approved: "border-emerald-500 text-emerald-500",
+  rejected: "border-red-600 text-red-600",
+  implemented: "border-emerald-500 text-emerald-500",
 }
 
 type SuggestionStatus = "new" | "reviewing" | "approved" | "rejected" | "implemented"
@@ -213,8 +213,8 @@ export function SuggestionsTab() {
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-[#F5F3E8]">💡 Submit & Vote on Ideas</h2>
-            <p className="text-[#A0A0A5]">Community suggestions that can graduate to formal proposals.</p>
+            <h2 className="text-2xl font-bold text-zinc-100">💡 Submit & Vote on Ideas</h2>
+            <p className="text-zinc-400">Community suggestions that can graduate to formal proposals.</p>
           </div>
           <div className="flex gap-3">
             <input
@@ -222,11 +222,11 @@ export function SuggestionsTab() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search suggestions..."
-              className="px-4 py-2 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none"
+              className="px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
             />
             <button
               onClick={() => setShowSubmitForm(!showSubmitForm)}
-              className="px-4 py-2 bg-linear-to-r from-[#50C878] to-[#00F0FF] text-[#1A1A1D] rounded-lg font-bold hover:opacity-90 transition-all"
+              className="px-4 py-2 bg-linear-to-r from-emerald-500 to-cyan-400 text-zinc-900 rounded-lg font-bold hover:opacity-90 transition-all"
             >
               {showSubmitForm ? "✕ Cancel" : "+ Submit Idea"}
             </button>
@@ -234,35 +234,35 @@ export function SuggestionsTab() {
         </div>
 
         {showSubmitForm && (
-          <div className="bg-[#2A2A2F] border border-[#50C878] rounded-xl p-6 mb-6">
-            <h3 className="text-xl font-bold text-[#F5F3E8] mb-4">📝 Submit Your Idea</h3>
+          <div className="bg-zinc-800 border border-emerald-500 rounded-xl p-6 mb-6">
+            <h3 className="text-xl font-bold text-zinc-100 mb-4">📝 Submit Your Idea</h3>
 
             {!isConnected && (
-              <div className="bg-[#FFD700]/20 border border-[#FFD700] rounded-lg p-4 mb-4">
-                <p className="text-[#FFD700]">⚠️ Connect your wallet to submit suggestions with your identity. Anonymous submissions are also allowed.</p>
+              <div className="bg-amber-400/20 border border-amber-400 rounded-lg p-4 mb-4">
+                <p className="text-amber-400">⚠️ Connect your wallet to submit suggestions with your identity. Anonymous submissions are also allowed.</p>
               </div>
             )}
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[#A0A0A5] text-sm mb-2">Title *</label>
+                <label className="block text-zinc-400 text-sm mb-2">Title *</label>
                 <input
                   type="text"
                   value={newSuggestion.title}
                   onChange={(e) => setNewSuggestion({ ...newSuggestion, title: e.target.value })}
                   placeholder="Brief, descriptive title for your idea..."
-                  className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#50C878] focus:outline-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-emerald-500 focus:outline-none"
                   maxLength={100}
                 />
-                <div className="text-right text-xs text-[#A0A0A5] mt-1">{newSuggestion.title.length}/100</div>
+                <div className="text-right text-xs text-zinc-400 mt-1">{newSuggestion.title.length}/100</div>
               </div>
 
               <div>
-                <label className="block text-[#A0A0A5] text-sm mb-2">Category</label>
+                <label className="block text-zinc-400 text-sm mb-2">Category</label>
                 <select
                   value={newSuggestion.category}
                   onChange={(e) => setNewSuggestion({ ...newSuggestion, category: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] focus:border-[#50C878] focus:outline-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-emerald-500 focus:outline-none"
                 >
                   <option value="feature">🚀 New Feature</option>
                   <option value="economics">💰 Token Economics</option>
@@ -273,29 +273,29 @@ export function SuggestionsTab() {
               </div>
 
               <div>
-                <label className="block text-[#A0A0A5] text-sm mb-2">Description *</label>
+                <label className="block text-zinc-400 text-sm mb-2">Description *</label>
                 <textarea
                   value={newSuggestion.description}
                   onChange={(e) => setNewSuggestion({ ...newSuggestion, description: e.target.value })}
                   placeholder="Explain your idea in detail. What problem does it solve? How would it work?"
                   rows={5}
-                  className="w-full px-4 py-3 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#50C878] focus:outline-none resize-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-emerald-500 focus:outline-none resize-none"
                   maxLength={2000}
                 />
-                <div className="text-right text-xs text-[#A0A0A5] mt-1">{newSuggestion.description.length}/2000</div>
+                <div className="text-right text-xs text-zinc-400 mt-1">{newSuggestion.description.length}/2000</div>
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={handleSubmit}
                   disabled={!newSuggestion.title.trim() || !newSuggestion.description.trim()}
-                  className="flex-1 py-3 bg-[#50C878] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-emerald-500 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   🚀 Submit Suggestion
                 </button>
                 <button
                   onClick={() => setShowSubmitForm(false)}
-                  className="px-6 py-3 bg-[#3A3A3F] text-[#A0A0A5] font-bold rounded-lg hover:text-[#F5F3E8] transition-all"
+                  className="px-6 py-3 bg-zinc-700 text-zinc-400 font-bold rounded-lg hover:text-zinc-100 transition-all"
                 >
                   Cancel
                 </button>
@@ -311,7 +311,7 @@ export function SuggestionsTab() {
                 key={f}
                 onClick={() => setFilter(f as SuggestionStatus | "all")}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                  filter === f ? "bg-[#00F0FF] text-[#1A1A1D]" : "bg-[#2A2A2F] text-[#A0A0A5] hover:text-[#00F0FF]"
+                  filter === f ? "bg-cyan-400 text-zinc-900" : "bg-zinc-800 text-zinc-400 hover:text-cyan-400"
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -321,7 +321,7 @@ export function SuggestionsTab() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-4 py-2 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8]"
+            className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100"
           >
             <option value="popular">🔥 Most Popular</option>
             <option value="recent">🕐 Most Recent</option>
@@ -338,7 +338,7 @@ export function SuggestionsTab() {
             return (
               <div
                 key={suggestion.id}
-                className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-[#50C878]/50 transition-all"
+                className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-emerald-500/50 transition-all"
               >
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center gap-1 min-w-[60px]">
@@ -347,15 +347,15 @@ export function SuggestionsTab() {
                       disabled={hasVoted}
                       className={`w-10 h-10 rounded-lg transition-all flex items-center justify-center text-xl ${
                         hasVoted
-                          ? "bg-[#1A1A1D] text-[#3A3A3F] cursor-not-allowed"
-                          : "bg-[#1A1A1D] hover:bg-[#50C878]/20 text-[#A0A0A5] hover:text-[#50C878]"
+                          ? "bg-zinc-900 text-zinc-700 cursor-not-allowed"
+                          : "bg-zinc-900 hover:bg-emerald-500/20 text-zinc-400 hover:text-emerald-500"
                       }`}
                     >
                       ▲
                     </button>
                     <div
                       className={`text-lg font-bold ${
-                        score > 0 ? "text-[#50C878]" : score < 0 ? "text-[#C41E3A]" : "text-[#A0A0A5]"
+                        score > 0 ? "text-emerald-500" : score < 0 ? "text-red-600" : "text-zinc-400"
                       }`}
                     >
                       {score}
@@ -365,13 +365,13 @@ export function SuggestionsTab() {
                       disabled={hasVoted}
                       className={`w-10 h-10 rounded-lg transition-all flex items-center justify-center text-xl ${
                         hasVoted
-                          ? "bg-[#1A1A1D] text-[#3A3A3F] cursor-not-allowed"
-                          : "bg-[#1A1A1D] hover:bg-[#C41E3A]/20 text-[#A0A0A5] hover:text-[#C41E3A]"
+                          ? "bg-zinc-900 text-zinc-700 cursor-not-allowed"
+                          : "bg-zinc-900 hover:bg-red-600/20 text-zinc-400 hover:text-red-600"
                       }`}
                     >
                       ▼
                     </button>
-                    {hasVoted && <span className="text-[#A0A0A5] text-xs">voted</span>}
+                    {hasVoted && <span className="text-zinc-400 text-xs">voted</span>}
                   </div>
 
                   <div className="flex-1">
@@ -380,61 +380,61 @@ export function SuggestionsTab() {
                         {suggestion.status.toUpperCase()}
                       </span>
                       <span className="text-lg">{categoryIcons[suggestion.category] || "💡"}</span>
-                      <span className="text-[#A0A0A5] text-sm">{suggestion.category}</span>
+                      <span className="text-zinc-400 text-sm">{suggestion.category}</span>
                       {suggestion.status === "new" && score > 0 && (
-                        <span className="text-xs text-[#FFD700]">🎯 {Math.round(progressToPromotion)}% to proposal</span>
+                        <span className="text-xs text-amber-400">🎯 {Math.round(progressToPromotion)}% to proposal</span>
                       )}
                     </div>
 
                     {suggestion.status === "new" && score > 0 && (
-                      <div className="w-full h-1 bg-[#3A3A3F] rounded-full mb-3 overflow-hidden">
+                      <div className="w-full h-1 bg-zinc-700 rounded-full mb-3 overflow-hidden">
                         <div
-                          className="h-full bg-linear-to-r from-[#50C878] to-[#00F0FF] transition-all duration-500"
+                          className="h-full bg-linear-to-r from-emerald-500 to-cyan-400 transition-all duration-500"
                           style={{ width: `${progressToPromotion}%` }}
                         />
                       </div>
                     )}
 
-                    <h3 className="text-xl font-bold text-[#F5F3E8] mb-2">{suggestion.title}</h3>
-                    <p className={`text-[#A0A0A5] mb-4 ${isExpanded ? "" : "line-clamp-2"}`}>{suggestion.description}</p>
+                    <h3 className="text-xl font-bold text-zinc-100 mb-2">{suggestion.title}</h3>
+                    <p className={`text-zinc-400 mb-4 ${isExpanded ? "" : "line-clamp-2"}`}>{suggestion.description}</p>
 
                     <div className="flex flex-wrap items-center gap-4 text-sm">
-                      <span className="text-[#A0A0A5]">
-                        by <span className="text-[#00F0FF] font-mono">{suggestion.author}</span>
-                        <span className="text-[#50C878] ml-1">(Score: {suggestion.authorScore})</span>
+                      <span className="text-zinc-400">
+                        by <span className="text-cyan-400 font-mono">{suggestion.author}</span>
+                        <span className="text-emerald-500 ml-1">(Score: {suggestion.authorScore})</span>
                       </span>
-                      <span className="text-[#A0A0A5]">• {suggestion.timestamp}</span>
+                      <span className="text-zinc-400">• {suggestion.timestamp}</span>
                       <button
                         onClick={() => setExpandedId(isExpanded ? null : suggestion.id)}
-                        className="text-[#A0A0A5] hover:text-[#00F0FF] transition-all"
+                        className="text-zinc-400 hover:text-cyan-400 transition-all"
                       >
                         💬 {suggestion.comments.length} comments {isExpanded ? "▲" : "▼"}
                       </button>
                       <button
                         onClick={() => handleShare(suggestion)}
-                        className="text-[#A0A0A5] hover:text-[#00F0FF] transition-all"
+                        className="text-zinc-400 hover:text-cyan-400 transition-all"
                       >
                         {copiedId === suggestion.id ? "✓ Copied!" : "🔗 Share"}
                       </button>
                     </div>
 
                     {isExpanded && (
-                      <div className="mt-4 pt-4 border-t border-[#3A3A3F]">
+                      <div className="mt-4 pt-4 border-t border-zinc-700">
                         <div className="space-y-3 mb-4">
                           {suggestion.comments.length === 0 ? (
-                            <p className="text-[#A0A0A5] text-sm italic">No comments yet. Be the first!</p>
+                            <p className="text-zinc-400 text-sm italic">No comments yet. Be the first!</p>
                           ) : (
                             suggestion.comments.map((comment) => (
-                              <div key={comment.id} className="bg-[#1A1A1D] rounded-lg p-3">
+                              <div key={comment.id} className="bg-zinc-900 rounded-lg p-3">
                                 <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-[#00F0FF] font-mono">{comment.author}</span>
-                                    <span className="text-[#50C878] text-xs">(Score: {comment.authorScore})</span>
-                                    <span className="text-[#A0A0A5]">• {comment.timestamp}</span>
+                                    <span className="text-cyan-400 font-mono">{comment.author}</span>
+                                    <span className="text-emerald-500 text-xs">(Score: {comment.authorScore})</span>
+                                    <span className="text-zinc-400">• {comment.timestamp}</span>
                                   </div>
-                                  <button className="text-[#A0A0A5] hover:text-[#C41E3A] text-xs">❤️ {comment.likes}</button>
+                                  <button className="text-zinc-400 hover:text-red-600 text-xs">❤️ {comment.likes}</button>
                                 </div>
-                                <p className="text-[#F5F3E8] text-sm">{comment.content}</p>
+                                <p className="text-zinc-100 text-sm">{comment.content}</p>
                               </div>
                             ))
                           )}
@@ -447,13 +447,13 @@ export function SuggestionsTab() {
                             onChange={(e) => setNewComment(e.target.value)}
                             placeholder="Add a comment..."
                             maxLength={500}
-                            className="flex-1 px-3 py-2 bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] placeholder-[#A0A0A5] focus:border-[#00F0FF] focus:outline-none text-sm"
+                            className="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none text-sm"
                             onKeyDown={(e) => e.key === "Enter" && handleAddComment(suggestion.id)}
                           />
                           <button
                             onClick={() => handleAddComment(suggestion.id)}
                             disabled={!newComment.trim()}
-                            className="px-4 py-2 bg-[#00F0FF] text-[#1A1A1D] font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 text-sm"
+                            className="px-4 py-2 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 text-sm"
                           >
                             Post
                           </button>
@@ -468,7 +468,7 @@ export function SuggestionsTab() {
         </div>
 
         {filteredSuggestions.length === 0 && (
-          <div className="text-center py-12 text-[#A0A0A5]">
+          <div className="text-center py-12 text-zinc-400">
             <div className="text-4xl mb-4">💡</div>
             <p>No suggestions found. Be the first to submit an idea!</p>
           </div>

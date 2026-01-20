@@ -34,24 +34,76 @@ const IS_SANCTUM_DEPLOYED = SANCTUM_VAULT_ADDRESS !== '0x00000000000000000000000
 type TabType = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history';
 
 export default function SanctumPage() {
-  const { isConnected } = useAccount();
+  const { address: _address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [donateAmount, _setDonateAmount] = useState('');
+  const [donateNote, _setDonateNote] = useState('');
 
   // Contract write hooks
-  const { writeContract, data: hash } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
+  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  // Mock data since contracts not deployed yet
-  const vaultBalance = 0;
-  const charityCount = 0;
+  // Read vault balance (only if deployed)
+  const { data: _vaultBalance } = useReadContract({
+    address: SANCTUM_VAULT_ADDRESS,
+    abi: SANCTUM_VAULT_ABI,
+    functionName: 'getBalance',
+    args: [VFIDE_TOKEN_ADDRESS],
+    query: { enabled: IS_SANCTUM_DEPLOYED },
+  });
 
+  // Read charity count (only if deployed)
+  const { data: _charityCount } = useReadContract({
+    address: SANCTUM_VAULT_ADDRESS,
+    abi: SANCTUM_VAULT_ABI,
+    functionName: 'getCharityCount',
+    query: { enabled: IS_SANCTUM_DEPLOYED },
+  });
+
+  // Read next proposal ID (to know how many exist)
+  const { data: _nextProposalId } = useReadContract({
+    address: SANCTUM_VAULT_ADDRESS,
+    abi: SANCTUM_VAULT_ABI,
+    functionName: '_nextProposalId',
+    query: { enabled: IS_SANCTUM_DEPLOYED },
+  });
+
+  // Handlers
+  const _handleDonate = () => {
+    if (!IS_SANCTUM_DEPLOYED) return;
+    if (!donateAmount || safeParseFloat(donateAmount, 0) <= 0) return;
+    writeContract({
+      address: SANCTUM_VAULT_ADDRESS,
+      abi: SANCTUM_VAULT_ABI,
+      functionName: 'deposit',
+      args: [VFIDE_TOKEN_ADDRESS, parseUnits(donateAmount, 18), donateNote || 'Direct donation'],
+    });
+  };
+
+  const _handleApproveDisbursement = (proposalId: number) => {
+    writeContract({
+      address: SANCTUM_VAULT_ADDRESS,
+      abi: SANCTUM_VAULT_ABI,
+      functionName: 'approveDisbursement',
+      args: [BigInt(proposalId)],
+    });
+  };
+
+  const _handleExecuteDisbursement = (proposalId: number) => {
+    writeContract({
+      address: SANCTUM_VAULT_ADDRESS,
+      abi: SANCTUM_VAULT_ABI,
+      functionName: 'executeDisbursement',
+      args: [BigInt(proposalId)],
+    });
+  };
 
   return (
     <>
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f18] to-[#0a0a0f]" />
+        <div className="absolute inset-0 bg-linear-to-b from-zinc-950 via-[#0f0f18] to-zinc-950" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,107,157,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
@@ -100,11 +152,11 @@ export default function SanctumPage() {
               { label: 'Active Charities', value: '8', unit: '', icon: Users, gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
               { label: 'Disbursements', value: '24', unit: 'completed', icon: CheckCircle, gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
               { label: 'Fee Allocation', value: '~3%', unit: 'of fees', icon: DollarSign, gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-            ].map((stat) => (
+            ].map((stat, idx) => (
               <motion.div 
-                key={stat.label} 
+                key={idx} 
                 whileHover={{ scale: 1.02, y: -2 }}
-                className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
+                className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-4 text-center`}
               >
                 <stat.icon className={`w-6 h-6 mx-auto mb-2 ${stat.text}`} />
                 <div className="text-2xl font-bold text-white">{stat.value}</div>
@@ -177,7 +229,7 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
     >
       {children}
     </motion.div>
@@ -190,7 +242,7 @@ function OverviewTab() {
       {/* How It Works */}
       <GlassCard className="p-8">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-pink-500/5">
+          <div className="p-2 rounded-xl bg-linear-to-br from-pink-500/20 to-pink-500/5">
             <Sparkles className="w-5 h-5 text-pink-400" />
           </div>
           How The Sanctum Works
@@ -202,8 +254,8 @@ function OverviewTab() {
             { step: '3', title: 'Proposal Creation', desc: 'Council members propose disbursements to charities' },
             { step: '4', title: 'Multi-Sig Approval', desc: 'Required approvers sign off on disbursement' },
             { step: '5', title: 'Execution', desc: 'Funds transferred transparently on-chain' },
-          ].map((item) => (
-            <div key={item.step} className="flex gap-4">
+          ].map((item, idx) => (
+            <div key={idx} className="flex gap-4">
               <div className="w-8 h-8 bg-pink-500/20 text-pink-400 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
                 {item.step}
               </div>
@@ -277,22 +329,22 @@ function CharitiesTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[#F5F3E8]">Approved Charities</h2>
-        <div className="text-sm text-[#A0A0A5]">DAO-verified organizations</div>
+        <h2 className="text-2xl font-bold text-zinc-100">Approved Charities</h2>
+        <div className="text-sm text-zinc-400">DAO-verified organizations</div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {charities.map((charity, idx) => (
-          <div key={idx} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 hover:border-pink-500/50 transition-colors">
+          <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-pink-500/50 transition-colors">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold text-[#F5F3E8]">{charity.name}</h3>
+                  <h3 className="text-lg font-bold text-zinc-100">{charity.name}</h3>
                   {charity.verified && (
                     <CheckCircle className="w-4 h-4 text-green-400" />
                   )}
                 </div>
-                <div className="text-sm text-[#A0A0A5]">{charity.category}</div>
+                <div className="text-sm text-zinc-400">{charity.category}</div>
               </div>
               <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
                 {charity.status}
@@ -301,9 +353,9 @@ function CharitiesTab() {
             <div className="flex justify-between items-center">
               <div>
                 <div className="text-2xl font-bold text-pink-400">{charity.totalReceived.toLocaleString()}</div>
-                <div className="text-xs text-[#A0A0A5]">VFIDE received</div>
+                <div className="text-xs text-zinc-400">VFIDE received</div>
               </div>
-              <button className="text-[#00F0FF] text-sm hover:underline flex items-center gap-1">
+              <button className="text-cyan-400 text-sm hover:underline flex items-center gap-1">
                 View Details <ExternalLink size={12} />
               </button>
             </div>
@@ -331,7 +383,7 @@ function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[#F5F3E8]">Disbursement Proposals</h2>
+        <h2 className="text-2xl font-bold text-zinc-100">Disbursement Proposals</h2>
         {isConnected && (
           <button className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-bold transition-colors">
             + New Proposal
@@ -341,17 +393,17 @@ function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
 
       <div className="space-y-4">
         {disbursements.map((d) => (
-          <div key={d.id} className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6">
+          <div key={d.id} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
             <div className="flex flex-wrap justify-between items-center gap-4">
               <div>
-                <div className="text-[#F5F3E8] font-bold text-lg">{d.charity}</div>
-                <div className="text-sm text-[#A0A0A5]">Proposal #{d.id} · {d.date}</div>
+                <div className="text-zinc-100 font-bold text-lg">{d.charity}</div>
+                <div className="text-sm text-zinc-400">Proposal #{d.id} · {d.date}</div>
               </div>
               <div className="text-2xl font-bold text-pink-400">{d.amount.toLocaleString()} VFIDE</div>
               <div className="flex items-center gap-4">
                 <div className="text-center">
-                  <div className="text-[#F5F3E8] font-bold">{d.approvals}</div>
-                  <div className="text-xs text-[#A0A0A5]">Approvals</div>
+                  <div className="text-zinc-100 font-bold">{d.approvals}</div>
+                  <div className="text-xs text-zinc-400">Approvals</div>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-bold ${
                   d.status === 'executed' ? 'bg-green-500/20 text-green-400' :
@@ -363,11 +415,11 @@ function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
               </div>
             </div>
             {d.status === 'pending' && isConnected && (
-              <div className="mt-4 pt-4 border-t border-[#3A3A3F] flex gap-3">
+              <div className="mt-4 pt-4 border-t border-zinc-700 flex gap-3">
                 <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold">
                   Approve
                 </button>
-                <button className="px-4 py-2 bg-[#3A3A3F] hover:bg-[#4A4A4F] text-[#F5F3E8] rounded-lg text-sm font-bold">
+                <button className="px-4 py-2 bg-zinc-700 hover:bg-zinc-700 text-zinc-100 rounded-lg text-sm font-bold">
                   View Details
                 </button>
               </div>
@@ -385,27 +437,27 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
 
   if (!isConnected) {
     return (
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-12 text-center">
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-12 text-center">
         <Heart className="w-16 h-16 mx-auto mb-4 text-pink-400/50" />
-        <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">Connect to Donate</h2>
-        <p className="text-[#A0A0A5]">Connect your wallet to make a direct donation to The Sanctum</p>
+        <h2 className="text-2xl font-bold text-zinc-100 mb-2">Connect to Donate</h2>
+        <p className="text-zinc-400">Connect your wallet to make a direct donation to The Sanctum</p>
       </div>
     );
   }
 
   return (
     <div className="max-w-xl mx-auto">
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-8">
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-8">
         <div className="text-center mb-8">
           <Heart className="w-12 h-12 mx-auto mb-4 text-pink-400" />
-          <h2 className="text-2xl font-bold text-[#F5F3E8] mb-2">Make a Donation</h2>
-          <p className="text-[#A0A0A5]">Direct donations to The Sanctum charity fund</p>
+          <h2 className="text-2xl font-bold text-zinc-100 mb-2">Make a Donation</h2>
+          <p className="text-zinc-400">Direct donations to The Sanctum charity fund</p>
         </div>
 
         <div className="space-y-6">
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="text-[#A0A0A5] text-sm">Amount (VFIDE)</label>
+              <label className="text-zinc-400 text-sm">Amount (VFIDE)</label>
               <button
                 onClick={() => setAmount('10000')}
                 className="text-xs text-pink-400 hover:text-pink-300 font-bold"
@@ -418,7 +470,7 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Enter amount"
-              className="w-full bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg px-4 py-3 text-[#F5F3E8] placeholder-[#505055] focus:border-pink-500 focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-pink-500 focus:outline-none"
             />
           </div>
 
@@ -427,7 +479,7 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
               <button
                 key={preset}
                 onClick={() => setAmount(String(preset))}
-                className="flex-1 py-2 bg-[#1A1A1D] hover:bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] text-sm transition-colors"
+                className="flex-1 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm transition-colors"
               >
                 {preset.toLocaleString()}
               </button>
@@ -435,13 +487,13 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
           </div>
 
           <div>
-            <label className="text-[#A0A0A5] text-sm mb-2 block">Note (optional)</label>
+            <label className="text-zinc-400 text-sm mb-2 block">Note (optional)</label>
             <input
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="In memory of... / For..."
-              className="w-full bg-[#1A1A1D] border border-[#3A3A3F] rounded-lg px-4 py-3 text-[#F5F3E8] placeholder-[#505055] focus:border-pink-500 focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-pink-500 focus:outline-none"
             />
           </div>
 
@@ -455,7 +507,7 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
           <div className="bg-pink-500/10 border border-pink-500/30 rounded-lg p-4">
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-5 h-5 text-pink-400 shrink-0 mt-0.5" />
-              <div className="text-sm text-[#A0A0A5]">
+              <div className="text-sm text-zinc-400">
                 Donations are permanent and non-refundable. Funds are distributed to DAO-approved charities only.
               </div>
             </div>
@@ -477,23 +529,23 @@ function HistoryTab() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-[#F5F3E8]">Transaction History</h2>
+      <h2 className="text-2xl font-bold text-zinc-100">Transaction History</h2>
 
-      <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl overflow-hidden">
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-[#1A1A1D]">
-                <th className="text-left text-[#A0A0A5] text-sm font-medium px-6 py-4">Type</th>
-                <th className="text-left text-[#A0A0A5] text-sm font-medium px-6 py-4">Details</th>
-                <th className="text-right text-[#A0A0A5] text-sm font-medium px-6 py-4">Amount</th>
-                <th className="text-left text-[#A0A0A5] text-sm font-medium px-6 py-4">Date</th>
-                <th className="text-left text-[#A0A0A5] text-sm font-medium px-6 py-4">Tx</th>
+              <tr className="bg-zinc-900">
+                <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Type</th>
+                <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Details</th>
+                <th className="text-right text-zinc-400 text-sm font-medium px-6 py-4">Amount</th>
+                <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Date</th>
+                <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Tx</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#3A3A3F]">
               {history.map((tx, idx) => (
-                <tr key={idx} className="hover:bg-[#1A1A1D]/50">
+                <tr key={idx} className="hover:bg-zinc-900/50">
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded text-xs font-bold ${
                       tx.type === 'disbursement' ? 'bg-green-500/20 text-green-400' :
@@ -503,7 +555,7 @@ function HistoryTab() {
                       {tx.type.replace('_', ' ').toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-[#F5F3E8]">
+                  <td className="px-6 py-4 text-zinc-100">
                     {tx.type === 'disbursement' ? `To: ${tx.charity}` :
                      tx.type === 'donation' ? `From: ${tx.donor}` :
                      tx.source}
@@ -513,13 +565,13 @@ function HistoryTab() {
                       {tx.type === 'disbursement' ? '-' : '+'}{tx.amount.toLocaleString()} VFIDE
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-[#A0A0A5]">{tx.date}</td>
+                  <td className="px-6 py-4 text-zinc-400">{tx.date}</td>
                   <td className="px-6 py-4">
                     <a 
                       href={`https://basescan.org/tx/${tx.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#00F0FF] hover:underline text-sm"
+                      className="text-cyan-400 hover:underline text-sm"
                     >
                       {tx.txHash}
                     </a>

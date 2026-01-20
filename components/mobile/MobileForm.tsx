@@ -58,7 +58,7 @@ export const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
         {label && (
           <label
             htmlFor={props.id}
-            className="block text-sm font-medium text-[#F5F3E8]"
+            className="block text-sm font-medium text-zinc-100"
           >
             {label}
           </label>
@@ -70,12 +70,12 @@ export const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
             w-full
             px-4 py-3
             text-base
-            bg-[#2A2A2F]
-            border-2 border-[#3A3A3F]
+            bg-zinc-800
+            border-2 border-zinc-700
             rounded-lg
-            text-[#F5F3E8]
+            text-zinc-100
             placeholder-[#A0A0A5]
-            focus:border-[#00F0FF]
+            focus:border-cyan-400
             focus:outline-none
             transition-colors
             min-h-[44px]
@@ -92,7 +92,7 @@ export const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
         )}
 
         {helpText && !error && (
-          <span className="text-xs text-[#A0A0A5]">{helpText}</span>
+          <span className="text-xs text-zinc-400">{helpText}</span>
         )}
       </div>
     );
@@ -178,8 +178,8 @@ export const MobileButton = React.forwardRef<HTMLButtonElement, MobileButtonProp
     `;
 
     const variantClass = {
-      primary: 'bg-[#00F0FF] text-[#1A1A1D] hover:bg-[#00D4FF]',
-      secondary: 'bg-gray-100 text-[#1A1A1D] hover:bg-gray-200 border border-gray-300',
+      primary: 'bg-cyan-400 text-zinc-900 hover:bg-cyan-400',
+      secondary: 'bg-gray-100 text-zinc-900 hover:bg-gray-200 border border-gray-300',
       danger: 'bg-red-600 text-white hover:bg-red-700',
     }[variant];
 
@@ -262,7 +262,7 @@ export const MobileSelect = React.forwardRef<
       {label && (
         <label
           htmlFor={props.id}
-          className="block text-sm font-medium text-[#F5F3E8]"
+          className="block text-sm font-medium text-zinc-100"
         >
           {label}
         </label>
@@ -279,11 +279,11 @@ export const MobileSelect = React.forwardRef<
           w-full
           px-4 py-3
           text-base
-          bg-[#2A2A2F]
-          border-2 border-[#3A3A3F]
+          bg-zinc-800
+          border-2 border-zinc-700
           rounded-lg
-          text-[#F5F3E8]
-          focus:border-[#00F0FF]
+          text-zinc-100
+          focus:border-cyan-400
           focus:outline-none
           transition-colors
           min-h-[44px]
@@ -336,7 +336,7 @@ export function MobileToggle({
         disabled={disabled}
         className={`
           relative w-14 h-8 rounded-full transition-colors
-          ${checked ? 'bg-[#00F0FF]' : 'bg-[#3A3A3F]'}
+          ${checked ? 'bg-cyan-400' : 'bg-zinc-700'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
         role="switch"
@@ -352,7 +352,7 @@ export function MobileToggle({
       </button>
 
       {label && (
-        <label className="text-sm font-medium text-[#F5F3E8]">
+        <label className="text-sm font-medium text-zinc-100">
           {label}
         </label>
       )}
@@ -400,8 +400,8 @@ export function MobileCard({
       className={`
         p-4
         sm:p-6
-        bg-[#2A2A2F]
-        border border-[#3A3A3F]
+        bg-zinc-800
+        border border-zinc-700
         rounded-xl
         ${interactive ? 'cursor-pointer active:scale-95 transition-transform' : ''}
       `}
@@ -483,7 +483,7 @@ export function MobileNumberInput({
   return (
     <div className="w-full space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-[#F5F3E8]">
+        <label className="block text-sm font-medium text-zinc-100">
           {label}
         </label>
       )}
@@ -494,7 +494,7 @@ export function MobileNumberInput({
           onClick={decrement}
           type="button"
           disabled={current === min}
-          className="flex-1 py-3 px-4 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] font-bold text-lg disabled:opacity-50"
+          className="flex-1 py-3 px-4 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 font-bold text-lg disabled:opacity-50"
           style={{ minWidth: 44, minHeight: 44, width: 48, height: 48 }}
         >
           −
@@ -506,7 +506,7 @@ export function MobileNumberInput({
           onChange={(e) => handleChange(safeParseInt(e.target.value, min, { min, max }))}
           min={min}
           max={max}
-          className="flex-1 py-3 px-4 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] text-center font-semibold"
+          className="flex-1 py-3 px-4 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-center font-semibold"
           aria-invalid={Boolean(error)}
         />
 
@@ -515,7 +515,7 @@ export function MobileNumberInput({
           onClick={increment}
           type="button"
           disabled={current === max}
-          className="flex-1 py-3 px-4 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg text-[#F5F3E8] font-bold text-lg disabled:opacity-50"
+          className="flex-1 py-3 px-4 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 font-bold text-lg disabled:opacity-50"
           style={{ minWidth: 44, minHeight: 44, width: 48, height: 48 }}
         >
           +

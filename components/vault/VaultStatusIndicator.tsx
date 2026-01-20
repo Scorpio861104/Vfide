@@ -13,23 +13,23 @@ export function VaultStatusIndicator() {
   return (
     <Link
       href="/vault"
-      className="flex items-center gap-2 px-3 py-1.5 bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg hover:border-[#00F0FF] transition-colors text-sm"
+      className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg hover:border-cyan-400 transition-colors text-sm"
       title={hasVault ? `Vault: ${vaultAddress}` : 'No vault detected'}
     >
       {isLoadingVault ? (
         <>
-          <div className="w-2 h-2 bg-[#FFA500] rounded-full animate-pulse" />
-          <span className="text-[#A0A0A5]">Checking...</span>
+          <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+          <span className="text-zinc-400">Checking...</span>
         </>
       ) : hasVault ? (
         <>
-          <div className="w-2 h-2 bg-[#50C878] rounded-full" />
-          <span className="text-[#50C878] font-semibold">🏦 Vault</span>
+          <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+          <span className="text-emerald-500 font-semibold">🏦 Vault</span>
         </>
       ) : (
         <>
-          <div className="w-2 h-2 bg-[#FFA500] rounded-full animate-pulse" />
-          <span className="text-[#FFA500]">⚠️ No Vault</span>
+          <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+          <span className="text-orange-500">⚠️ No Vault</span>
         </>
       )}
     </Link>

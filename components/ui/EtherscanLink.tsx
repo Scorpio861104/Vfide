@@ -68,7 +68,7 @@ export function EtherscanLink({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1 text-[#00F0FF] hover:text-[#00D4FF] transition-colors font-mono text-sm"
+        className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-400 transition-colors font-mono text-sm"
       >
         {displayValue}
         <ExternalLink size={12} className="opacity-60" />
@@ -76,13 +76,13 @@ export function EtherscanLink({
       {showCopy && (
         <button
           onClick={handleCopy}
-          className="p-1 hover:bg-[#2A2A2F] rounded transition-colors"
+          className="p-1 hover:bg-zinc-800 rounded transition-colors"
           title="Copy to clipboard"
         >
           {copied ? (
             <Check size={12} className="text-green-400" />
           ) : (
-            <Copy size={12} className="text-[#A0A0A5] hover:text-[#F5F3E8]" />
+            <Copy size={12} className="text-zinc-400 hover:text-zinc-100" />
           )}
         </button>
       )}
@@ -108,9 +108,9 @@ export function ContractLink({
   useChainId();
 
   return (
-    <div className={`flex items-center justify-between p-3 bg-[#2A2A2F] rounded-lg ${className}`}>
+    <div className={`flex items-center justify-between p-3 bg-zinc-800 rounded-lg ${className}`}>
       <div className="flex items-center gap-2">
-        <span className="text-[#F5F3E8] font-medium">{name}</span>
+        <span className="text-zinc-100 font-medium">{name}</span>
         {verified && (
           <span className="px-1.5 py-0.5 bg-green-600/20 text-green-400 text-xs rounded">
             ✓ Verified

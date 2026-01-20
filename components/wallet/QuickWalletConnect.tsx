@@ -11,20 +11,29 @@ import { WalletQRCode } from './WalletQRCode';
 import { PendingTransactionsList, usePendingTransactions } from './PendingTransactions';
 import { GasIndicator } from './GasPriceAlert';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { useWalletPersistence } from '@/hooks/useWalletPersistence';
+import { isMobileDevice } from '@/lib/mobileDetection';
 
 interface QuickWalletConnectProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
 /**
- * Streamlined One-Click Wallet Connection
+ * Streamlined One-Click Wallet Connection (Mobile-First)
  * 
- * Improvements over the original:
- * 1. One-click MetaMask connection (no modal)
- * 2. Inline wallet dropdown (no separate modal)
- * 3. Quick balance display
- * 4. Fast network switching
- * 5. Minimal UI, maximum speed
+ * Key Features:
+ * 1. Mobile-first: WalletConnect prioritized on mobile devices
+ * 2. Desktop-optimized: Browser extensions prioritized on desktop
+ * 3. One-click connection with smart connector selection
+ * 4. Inline wallet dropdown (no separate modal)
+ * 5. Quick balance display and network switching
+ * 6. Minimal UI, maximum speed
+ * 
+ * Mobile UX:
+ * - Detects mobile devices automatically
+ * - Uses WalletConnect for seamless in-browser experience
+ * - No app switching required
+ * - Works with Trust Wallet, MetaMask app, Rainbow, etc.
  */
 export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
@@ -35,6 +44,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const { data: balance } = useBalance({ address });
   const { pendingCount } = usePendingTransactions();
   const { playConnect, playClick } = useTransactionSounds();
+  const { isReconnecting: isAutoReconnecting, reconnectError, minutesUntilDisconnect } = useWalletPersistence();
   
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -43,7 +53,18 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const [showQR, setShowQR] = useState(false);
   const [activeTab, setActiveTab] = useState<'menu' | 'transactions'>('menu');
 
-  // Get MetaMask connector for one-click connect
+  // Mobile detection (SSR-safe, memoized)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(isMobileDevice());
+  }, []);
+
+  // Get WalletConnect connector (prioritize for mobile)
+  const walletConnectConnector = connectors.find(c => 
+    c.id === 'walletConnect' || c.name === 'WalletConnect'
+  );
+
+  // Get MetaMask connector for desktop
   const metaMaskConnector = connectors.find(c => 
     c.id === 'io.metamask' || c.id === 'metaMask' || c.name === 'MetaMask'
   );
@@ -51,8 +72,10 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   // Get injected connector as fallback
   const injectedConnector = connectors.find(c => c.id === 'injected');
   
-  // Primary connector to use
-  const primaryConnector = metaMaskConnector || injectedConnector;
+  // Primary connector to use - WalletConnect on mobile, MetaMask on desktop
+  const primaryConnector = isMobile 
+    ? (walletConnectConnector || metaMaskConnector || injectedConnector)
+    : (metaMaskConnector || injectedConnector);
 
   // Expected chain
   const expectedChain = IS_TESTNET ? baseSepolia : base;
@@ -126,8 +149,8 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
     return () => document.removeEventListener('click', handleClick);
   }, [isOpen]);
 
-  // Loading state
-  if (isConnecting || isPending || isReconnecting) {
+  // Loading state (includes both auto-reconnecting and manual reconnecting)
+  if (isConnecting || isPending || isReconnecting || isAutoReconnecting) {
     return (
       <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800/80 rounded-xl border border-zinc-700">
         <motion.div
@@ -136,7 +159,9 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
         >
           <RefreshCw size={18} className="text-cyan-400" />
         </motion.div>
-        <span className="text-sm text-zinc-300">Connecting...</span>
+        <span className="text-sm text-zinc-300">
+          {isAutoReconnecting ? 'Auto-reconnecting...' : 'Connecting...'}
+        </span>
       </div>
     );
   }
@@ -203,7 +228,28 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
 
   // Connected - show wallet info with dropdown
   return (
-    <div className="relative wallet-dropdown">
+    <>
+      {/* Inactivity Warning Banner */}
+      <AnimatePresence>
+        {minutesUntilDisconnect !== null && minutesUntilDisconnect > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute -top-14 right-0 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg shadow-lg backdrop-blur-sm whitespace-nowrap z-50"
+            role="alert"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <span className="flex items-center gap-2 text-xs font-medium">
+              <Clock size={14} className="animate-pulse" />
+              <span>Auto-disconnect in {minutesUntilDisconnect}m</span>
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <div className="relative wallet-dropdown">
       {/* Wrong network warning */}
       {isWrongNetwork && (
         <motion.button
@@ -405,5 +451,6 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }

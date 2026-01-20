@@ -145,12 +145,12 @@ export function TransactionSuccess({
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.8, y: 20 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative bg-linear-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#50C878] rounded-2xl p-8 max-w-md w-full text-center"
+            className="relative bg-linear-to-br from-zinc-800 to-zinc-900 border-2 border-emerald-500 rounded-2xl p-8 max-w-md w-full text-center"
           >
             {/* Close button */}
             <button 
               onClick={onClose}
-              className="absolute top-4 right-4 text-[#A0A0A5] hover:text-[#F5F3E8]"
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100"
             >
               <X size={20} />
             </button>
@@ -160,9 +160,9 @@ export function TransactionSuccess({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', delay: 0.2 }}
-              className="w-20 h-20 mx-auto mb-4 bg-[#50C878]/20 rounded-full flex items-center justify-center"
+              className="w-20 h-20 mx-auto mb-4 bg-emerald-500/20 rounded-full flex items-center justify-center"
             >
-              <CheckCircle2 className="w-12 h-12 text-[#50C878]" />
+              <CheckCircle2 className="w-12 h-12 text-emerald-500" />
             </motion.div>
 
             {/* Title */}
@@ -170,7 +170,7 @@ export function TransactionSuccess({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-2xl font-bold text-[#F5F3E8] mb-2"
+              className="text-2xl font-bold text-zinc-100 mb-2"
             >
               {titles[type]}
             </motion.h2>
@@ -181,7 +181,7 @@ export function TransactionSuccess({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-3xl font-bold text-[#00F0FF] mb-4"
+                className="text-3xl font-bold text-cyan-400 mb-4"
               >
                 {amount} VFIDE
               </motion.div>
@@ -192,10 +192,10 @@ export function TransactionSuccess({
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5, type: 'spring' }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFD700]/20 border border-[#FFD700] rounded-full mb-4"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-400/20 border border-amber-400 rounded-full mb-4"
             >
-              <Sparkles className="w-4 h-4 text-[#FFD700]" />
-              <span className="text-[#FFD700] font-bold">+{scoreIncrease} ProofScore</span>
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span className="text-amber-400 font-bold">+{scoreIncrease} ProofScore</span>
             </motion.div>
 
             {/* Badge Unlocked */}
@@ -204,10 +204,10 @@ export function TransactionSuccess({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="flex items-center justify-center gap-2 p-3 bg-[#A78BFA]/20 border border-[#A78BFA] rounded-lg mb-4"
+                className="flex items-center justify-center gap-2 p-3 bg-violet-400/20 border border-violet-400 rounded-lg mb-4"
               >
-                <Trophy className="w-5 h-5 text-[#A78BFA]" />
-                <span className="text-[#A78BFA] font-bold">Badge Unlocked: {badgeUnlocked}</span>
+                <Trophy className="w-5 h-5 text-violet-400" />
+                <span className="text-violet-400 font-bold">Badge Unlocked: {badgeUnlocked}</span>
               </motion.div>
             )}
 
@@ -220,7 +220,7 @@ export function TransactionSuccess({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.7 }}
-                className="block text-[#00F0FF] text-sm hover:underline mb-4"
+                className="block text-cyan-400 text-sm hover:underline mb-4"
               >
                 View on Explorer →
               </motion.a>
@@ -232,7 +232,7 @@ export function TransactionSuccess({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
               onClick={handleShare}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-black border border-[#3A3A3F] rounded-lg text-[#F5F3E8] hover:bg-[#1A1A1D] transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-black border border-zinc-700 rounded-lg text-zinc-100 hover:bg-zinc-900 transition-colors"
             >
               <Share2 className="w-4 h-4" />
               Share on X

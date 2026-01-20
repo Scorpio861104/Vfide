@@ -81,7 +81,7 @@ export function DemoMode() {
           onClick={() => setShowDemo(true)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="fixed bottom-6 right-6 px-6 py-3 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#1A1A1D] font-bold rounded-full shadow-lg hover:shadow-2xl transition-all z-40 flex items-center gap-2"
+          className="fixed bottom-6 right-6 px-6 py-3 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-900 font-bold rounded-full shadow-lg hover:shadow-2xl transition-all z-40 flex items-center gap-2"
         >
           <span className="text-xl">🎮</span>
           Try Demo Mode
@@ -111,28 +111,28 @@ export function DemoMode() {
                 <motion.div
                   initial={{ x: -50, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  className="bg-[#2A2A2F] border-2 border-[#FFD700] rounded-2xl p-8"
+                  className="bg-zinc-800 border-2 border-amber-400 rounded-2xl p-8"
                 >
                   <div className="flex justify-between items-start mb-6">
-                    <div className="text-[#FFD700] font-bold text-sm font-(family-name:--font-body)">
+                    <div className="text-amber-400 font-bold text-sm font-(family-name:--font-body)">
                       🎮 DEMO MODE
                     </div>
                     <button
                       onClick={() => setShowDemo(false)}
-                      className="text-[#A0A0A5] hover:text-[#F5F3E8] text-2xl"
+                      className="text-zinc-400 hover:text-zinc-100 text-2xl"
                     >
                       ×
                     </button>
                   </div>
 
                   <div className="text-center mb-8">
-                    <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-[#00F0FF]/10 rounded-full border border-[#00F0FF]/30">
+                    <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-cyan-400/10 rounded-full border border-cyan-400/30">
                       {steps[currentStep]?.icon}
                     </div>
-                    <h2 className="text-3xl font-bold text-[#F5F3E8] mb-3 font-(family-name:--font-display)">
+                    <h2 className="text-3xl font-bold text-zinc-100 mb-3 font-(family-name:--font-display)">
                       {steps[currentStep]?.title}
                     </h2>
-                    <p className="text-lg text-[#A0A0A5] leading-relaxed font-(family-name:--font-body)">
+                    <p className="text-lg text-zinc-400 leading-relaxed font-(family-name:--font-body)">
                       {steps[currentStep]?.description}
                     </p>
                   </div>
@@ -141,7 +141,7 @@ export function DemoMode() {
                     onClick={handleStepAction}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-full px-6 py-4 bg-linear-to-r from-[#FFD700] to-[#FFA500] text-[#1A1A1D] font-bold rounded-lg text-lg hover:shadow-lg hover:shadow-[#FFD700]/50 transition-all"
+                    className="w-full px-6 py-4 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-900 font-bold rounded-lg text-lg hover:shadow-lg hover:shadow-amber-400/50 transition-all"
                   >
                     {steps[currentStep]?.action} →
                   </motion.button>
@@ -151,7 +151,7 @@ export function DemoMode() {
                       <div
                         key={index}
                         className={`h-2 flex-1 rounded-full transition-all ${
-                          index <= currentStep ? "bg-[#FFD700]" : "bg-[#3A3A3F]"
+                          index <= currentStep ? "bg-amber-400" : "bg-zinc-700"
                         }`}
                       />
                     ))}
@@ -162,50 +162,50 @@ export function DemoMode() {
                 <motion.div
                   initial={{ x: 50, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  className="bg-[#1A1A1D] border-2 border-[#3A3A3F] rounded-2xl p-8"
+                  className="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-8"
                 >
-                  <div className="text-[#A0A0A5] text-sm mb-6 font-(family-name:--font-body)">
+                  <div className="text-zinc-400 text-sm mb-6 font-(family-name:--font-body)">
                     YOUR DEMO VAULT
                   </div>
 
                   {/* Demo Balance */}
                   <motion.div
                     animate={demoBalance > 0 ? { scale: [1, 1.1, 1] } : {}}
-                    className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6 mb-4"
+                    className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 mb-4"
                   >
-                    <div className="text-[#A0A0A5] text-sm mb-2">Balance</div>
-                    <div className="text-4xl font-bold text-[#00F0FF]">
+                    <div className="text-zinc-400 text-sm mb-2">Balance</div>
+                    <div className="text-4xl font-bold text-cyan-400">
                       ${demoBalance.toFixed(2)}
                     </div>
-                    <div className="text-[#A0A0A5] text-sm mt-1">USDC</div>
+                    <div className="text-zinc-400 text-sm mt-1">USDC</div>
                   </motion.div>
 
                   {/* Demo ProofScore */}
                   <motion.div
                     animate={demoProofScore > 650 ? { scale: [1, 1.1, 1] } : {}}
-                    className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-xl p-6"
+                    className="bg-zinc-800 border border-zinc-700 rounded-xl p-6"
                   >
-                    <div className="text-[#A0A0A5] text-sm mb-2">ProofScore</div>
+                    <div className="text-zinc-400 text-sm mb-2">ProofScore</div>
                     <div className="flex items-center gap-4">
-                      <div className="text-4xl font-bold text-[#FFD700]">
+                      <div className="text-4xl font-bold text-amber-400">
                         {demoProofScore}
                       </div>
                       {demoProofScore > 650 && (
                         <motion.div
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="text-[#50C878] text-xl"
+                          className="text-emerald-500 text-xl"
                         >
                           +10
                         </motion.div>
                       )}
                     </div>
-                    <div className="text-[#A0A0A5] text-sm mt-1">TRUSTED Tier</div>
+                    <div className="text-zinc-400 text-sm mt-1">TRUSTED Tier</div>
                   </motion.div>
 
                   {/* Recent Activity */}
                   <div className="mt-6">
-                    <div className="text-[#A0A0A5] text-sm mb-3 font-(family-name:--font-body)">
+                    <div className="text-zinc-400 text-sm mb-3 font-(family-name:--font-body)">
                       RECENT ACTIVITY
                     </div>
                     <div className="space-y-2">
@@ -213,18 +213,18 @@ export function DemoMode() {
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="bg-[#50C878]/20 border border-[#50C878] rounded-lg p-3"
+                          className="bg-emerald-500/20 border border-emerald-500 rounded-lg p-3"
                         >
                           <div className="flex justify-between items-center">
                             <div>
-                              <div className="text-[#50C878] font-bold text-sm">
+                              <div className="text-emerald-500 font-bold text-sm">
                                 Received
                               </div>
-                              <div className="text-[#A0A0A5] text-xs">
+                              <div className="text-zinc-400 text-xs">
                                 From: Friend&apos;s Wallet
                               </div>
                             </div>
-                            <div className="text-[#50C878] font-bold">+$25.00</div>
+                            <div className="text-emerald-500 font-bold">+$25.00</div>
                           </div>
                         </motion.div>
                       )}
@@ -232,18 +232,18 @@ export function DemoMode() {
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="bg-[#00F0FF]/20 border border-[#00F0FF] rounded-lg p-3"
+                          className="bg-cyan-400/20 border border-cyan-400 rounded-lg p-3"
                         >
                           <div className="flex justify-between items-center">
                             <div>
-                              <div className="text-[#00F0FF] font-bold text-sm">
+                              <div className="text-cyan-400 font-bold text-sm">
                                 🍕 Sent
                               </div>
-                              <div className="text-[#A0A0A5] text-xs">
+                              <div className="text-zinc-400 text-xs">
                                 To: Pizza Shop
                               </div>
                             </div>
-                            <div className="text-[#00F0FF] font-bold">-$15.00</div>
+                            <div className="text-cyan-400 font-bold">-$15.00</div>
                           </div>
                         </motion.div>
                       )}

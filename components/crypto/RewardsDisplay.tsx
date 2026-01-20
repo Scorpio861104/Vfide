@@ -110,7 +110,7 @@ export function RewardsDisplay({ userId }: RewardsDisplayProps) {
 
       {/* Empty State */}
       {rewards.length === 0 && (
-        <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-8 text-center">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center">
           <Award className="w-12 h-12 text-gray-600 mx-auto mb-3" />
           <p className="text-gray-400 mb-2">No rewards yet</p>
           <p className="text-gray-500 text-sm">
@@ -120,7 +120,7 @@ export function RewardsDisplay({ userId }: RewardsDisplayProps) {
       )}
 
       {/* Rewards Info */}
-      <div className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-lg p-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
         <h4 className="text-white font-medium mb-3">Earn VFIDE Tokens</h4>
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-gray-400">
@@ -159,7 +159,7 @@ const RewardCard = React.memo(function RewardCard({ reward }: { reward: TokenRew
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
-      className="bg-[#1A1A1F] border border-purple-500/20 rounded-lg p-3 flex items-center gap-3 hover:border-purple-500/40 transition-colors"
+      className="bg-zinc-900 border border-purple-500/20 rounded-lg p-3 flex items-center gap-3 hover:border-purple-500/40 transition-colors"
     >
       <div className="w-10 h-10 bg-linear-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center shrink-0">
         {renderIconForAction(reward.action, "w-5 h-5 text-purple-400")}

@@ -82,26 +82,26 @@ export function FeatureTooltip({
           transition={{ duration: 0.2 }}
           className={`absolute ${positionClasses[position]} z-50 w-64`}
         >
-          <div className="relative bg-linear-to-br from-[#2A2A2F] to-[#1A1A1D] border-2 border-[#00F0FF] rounded-lg shadow-2xl p-4">
+          <div className="relative bg-linear-to-br from-zinc-800 to-zinc-900 border-2 border-cyan-400 rounded-lg shadow-2xl p-4">
             {arrow && <div className={arrowClasses[position]} />}
             
             <div className="flex items-start gap-3">
-              <div className="shrink-0 w-8 h-8 bg-[#00F0FF]/20 rounded-full flex items-center justify-center">
-                <Lightbulb size={16} className="text-[#00F0FF]" />
+              <div className="shrink-0 w-8 h-8 bg-cyan-400/20 rounded-full flex items-center justify-center">
+                <Lightbulb size={16} className="text-cyan-400" />
               </div>
               
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-[#F5F3E8] mb-1">
+                <h4 className="text-sm font-bold text-zinc-100 mb-1">
                   {title}
                 </h4>
-                <p className="text-xs text-[#A0A0A5] leading-relaxed">
+                <p className="text-xs text-zinc-400 leading-relaxed">
                   {description}
                 </p>
               </div>
               
               <button
                 onClick={handleClose}
-                className="shrink-0 text-[#A0A0A5] hover:text-[#F5F3E8] transition-colors"
+                className="shrink-0 text-zinc-400 hover:text-zinc-100 transition-colors"
                 aria-label="Dismiss tooltip"
               >
                 <X size={16} />

@@ -109,7 +109,7 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 10 }}
       transition={{ duration: 0.2 }}
-      className="absolute bottom-full left-0 mb-2 bg-[#1A1A1F] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 min-w-[320px]"
+      className="absolute bottom-full left-0 mb-2 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 min-w-[320px]"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}

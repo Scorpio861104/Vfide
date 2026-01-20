@@ -40,7 +40,7 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
       
       {/* Card */}
       <div
-        className="relative bg-[#0F0F0F]/80 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 border transition-all duration-300"
+        className="relative bg-zinc-950/80 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 border transition-all duration-300"
         style={{
           borderColor: isHovered ? color : `${color}30`,
           backgroundColor: isHovered ? `${color}05` : '#0F0F0F80',
@@ -49,7 +49,7 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
         <div className="space-y-1 sm:space-y-2 md:space-y-3">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs md:text-sm text-[#F5F3E8]/60 truncate pr-1">{label}</span>
+            <span className="text-[10px] sm:text-xs md:text-sm text-zinc-100/60 truncate pr-1">{label}</span>
             <motion.div
               className="text-lg sm:text-xl md:text-2xl shrink-0"
               animate={{
@@ -73,7 +73,7 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
           {/* Sub value & Trend */}
           <div className="flex items-center justify-between">
             {subValue && (
-              <span className="text-xs text-[#F5F3E8]/50">{subValue}</span>
+              <span className="text-xs text-zinc-100/50">{subValue}</span>
             )}
             
             {trend && trendPercent !== undefined && (
@@ -114,7 +114,7 @@ export function LiveSystemStats() {
         <motion.h2
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-xl sm:text-2xl md:text-3xl font-bold text-[#F5F3E8]"
+          className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-100"
         >
           Network Statistics
         </motion.h2>
@@ -122,9 +122,9 @@ export function LiveSystemStats() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center justify-center gap-2 text-sm text-[#F5F3E8]/60"
+          className="flex items-center justify-center gap-2 text-sm text-zinc-100/60"
         >
-          <div className="w-2 h-2 bg-[#00FF88] rounded-full" />
+          <div className="w-2 h-2 bg-emerald-400 rounded-full" />
           Live updates every 5 seconds
         </motion.div>
         
@@ -132,7 +132,7 @@ export function LiveSystemStats() {
           label="Total Value Locked"
           value={`$${(totalValueLocked / 1000000).toFixed(2)}M`}
           subValue="in user vaults"
-          icon={<Lock className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#00F0FF]" />}
+          icon={<Lock className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-cyan-400" />}
           color="#00F0FF"
           trend={trends.tvl.direction}
           trendPercent={trends.tvl.percent}
@@ -142,7 +142,7 @@ export function LiveSystemStats() {
           label="Active Vaults"
           value={totalVaults.toLocaleString()}
           subValue="non-custodial"
-          icon={<Building2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#FF6B9D]" />}
+          icon={<Building2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-pink-400" />}
           color="#FF6B9D"
           trend={trends.vaults.direction}
           trendPercent={trends.vaults.percent}
@@ -152,7 +152,7 @@ export function LiveSystemStats() {
           label="Verified Merchants"
           value={totalMerchants.toLocaleString()}
           subValue="no processor fees"
-          icon={<Store className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#FFD700]" />}
+          icon={<Store className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-amber-400" />}
           color="#FFD700"
           trend={trends.merchants.direction}
           trendPercent={trends.merchants.percent}
@@ -162,7 +162,7 @@ export function LiveSystemStats() {
           label="Transactions"
           value={totalTransactions.toLocaleString()}
           subValue="all-time"
-          icon={<Zap className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#00FF88]" />}
+          icon={<Zap className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-emerald-400" />}
           color="#00FF88"
           trend={trends.transactions.direction}
           trendPercent={trends.transactions.percent}
@@ -174,24 +174,24 @@ export function LiveSystemStats() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-[#0F0F0F]/50 backdrop-blur-xl rounded-xl p-2 sm:p-3 md:p-4 border border-[#00F0FF]/20"
+        className="bg-zinc-950/50 backdrop-blur-xl rounded-xl p-2 sm:p-3 md:p-4 border border-cyan-400/20"
       >
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 text-center">
           <div>
-            <p className="text-[10px] sm:text-xs text-[#F5F3E8]/50">Avg ProofScore</p>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-[#00F0FF]">685</p>
+            <p className="text-[10px] sm:text-xs text-zinc-100/50">Avg ProofScore</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold text-cyan-400">685</p>
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs text-[#F5F3E8]/50">DAO Proposals</p>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-[#A78BFA]">12</p>
+            <p className="text-[10px] sm:text-xs text-zinc-100/50">DAO Proposals</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold text-violet-400">12</p>
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs text-[#F5F3E8]/50">Elite Users</p>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-[#00FF88]">847</p>
+            <p className="text-[10px] sm:text-xs text-zinc-100/50">Elite Users</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold text-emerald-400">847</p>
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs text-[#F5F3E8]/50">24h Volume</p>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-[#FFD700]">$2.1M</p>
+            <p className="text-[10px] sm:text-xs text-zinc-100/50">24h Volume</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold text-amber-400">$2.1M</p>
           </div>
         </div>
       </motion.div>

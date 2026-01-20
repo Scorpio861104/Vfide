@@ -109,7 +109,7 @@ export default function StreakTracker() {
       animate={{ opacity: 1, y: 0 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="relative bg-linear-to-br from-[#FF6B35]/10 to-[#F7931E]/10 border border-[#FF6B35]/30 rounded-xl p-6 overflow-hidden"
+      className="relative bg-linear-to-br from-orange-500/10 to-orange-500/10 border border-orange-500/30 rounded-xl p-6 overflow-hidden"
     >
       {/* Animated background glow */}
       <motion.div
@@ -130,7 +130,7 @@ export default function StreakTracker() {
               rotate: [0, -5, 5, 0]
             } : {}}
             transition={{ duration: 0.5, repeat: isHovered ? Infinity : 0 }}
-            className="relative w-14 h-14 bg-linear-to-br from-[#FF6B35] to-[#F7931E] rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30"
+            className="relative w-14 h-14 bg-linear-to-br from-orange-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30"
           >
             <motion.div
               animate={{ 
@@ -152,7 +152,7 @@ export default function StreakTracker() {
           </motion.div>
           <div>
             <h3 className="text-xl font-bold text-white">Login Streak</h3>
-            <p className="text-sm text-[#A0A0A5]">Keep the fire burning!</p>
+            <p className="text-sm text-zinc-400">Keep the fire burning!</p>
           </div>
         </div>
         <motion.div 
@@ -164,20 +164,20 @@ export default function StreakTracker() {
             key={streak.currentStreak}
             initial={{ scale: 1.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-[#FF6B35] to-[#F7931E]"
+            className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-orange-500"
           >
             <AnimatedNumber value={streak.currentStreak} />
           </motion.div>
-          <div className="text-xs text-[#A0A0A5]">days</div>
+          <div className="text-xs text-zinc-400">days</div>
         </motion.div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         {[
-          { label: 'Current', value: streak.currentStreak, color: 'text-[#FF6B35]', icon: Flame },
-          { label: 'Longest', value: streak.longestStreak, color: 'text-[#FFD700]', icon: Award },
-          { label: 'Total', value: streak.totalDays, color: 'text-[#50C878]', icon: Calendar },
+          { label: 'Current', value: streak.currentStreak, color: 'text-orange-500', icon: Flame },
+          { label: 'Longest', value: streak.longestStreak, color: 'text-amber-400', icon: Award },
+          { label: 'Total', value: streak.totalDays, color: 'text-emerald-500', icon: Calendar },
         ].map((stat, index) => (
           <motion.div 
             key={stat.label}
@@ -185,10 +185,10 @@ export default function StreakTracker() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
             whileHover={{ scale: 1.05, y: -2 }}
-            className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-3 text-center"
+            className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-center"
           >
             <stat.icon className={`w-4 h-4 mx-auto mb-1 ${stat.color}`} />
-            <div className="text-xs text-[#A0A0A5] mb-1">{stat.label}</div>
+            <div className="text-xs text-zinc-400 mb-1">{stat.label}</div>
             <div className={`text-xl font-bold ${stat.color}`}>
               <AnimatedNumber value={stat.value} />
             </div>
@@ -205,17 +205,17 @@ export default function StreakTracker() {
       >
         <div className="flex items-center justify-between text-sm mb-2">
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-[#A0A0A5]" />
-            <span className="text-[#A0A0A5]">Next Milestone: {nextMilestone} Days</span>
+            <Target className="w-4 h-4 text-zinc-400" />
+            <span className="text-zinc-400">Next Milestone: {nextMilestone} Days</span>
           </div>
           <span className="text-white font-semibold">{streak.currentStreak} / {nextMilestone}</span>
         </div>
-        <div className="relative w-full bg-[#2A2A2F] rounded-full h-3 overflow-hidden">
+        <div className="relative w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressToMilestone}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="h-full bg-linear-to-r from-[#FF6B35] to-[#F7931E] rounded-full relative"
+            className="h-full bg-linear-to-r from-orange-500 to-orange-500 rounded-full relative"
           >
             {/* Animated glow on progress bar */}
             <motion.div
@@ -226,8 +226,8 @@ export default function StreakTracker() {
           </motion.div>
         </div>
         <div className="flex justify-between mt-1">
-          <span className="text-xs text-[#A0A0A5]">{Math.round(progressToMilestone)}% complete</span>
-          <span className="text-xs text-[#FF6B35]">{nextMilestone - streak.currentStreak} days to go</span>
+          <span className="text-xs text-zinc-400">{Math.round(progressToMilestone)}% complete</span>
+          <span className="text-xs text-orange-500">{nextMilestone - streak.currentStreak} days to go</span>
         </div>
       </motion.div>
 
@@ -238,14 +238,14 @@ export default function StreakTracker() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
           whileHover={{ scale: 1.02 }}
-          className="bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl p-4"
+          className="bg-zinc-900 border border-zinc-800 rounded-xl p-4"
         >
           <div className="flex items-center gap-2 mb-3">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
             >
-              <Gift className="w-5 h-5 text-[#FFD700]" />
+              <Gift className="w-5 h-5 text-amber-400" />
             </motion.div>
             <span className="text-sm font-semibold text-white">Upcoming Reward</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-500">
@@ -255,17 +255,17 @@ export default function StreakTracker() {
           <div className="flex items-center gap-4">
             <motion.div 
               whileHover={{ scale: 1.1 }}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#50C878]/10 border border-[#50C878]/30"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30"
             >
-              <Zap className="w-4 h-4 text-[#50C878]" />
-              <span className="text-[#50C878] font-semibold">+{upcomingReward.xp} XP</span>
+              <Zap className="w-4 h-4 text-emerald-500" />
+              <span className="text-emerald-500 font-semibold">+{upcomingReward.xp} XP</span>
             </motion.div>
             <motion.div 
               whileHover={{ scale: 1.1 }}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/30"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-400/10 border border-amber-400/30"
             >
-              <Target className="w-4 h-4 text-[#FFD700]" />
-              <span className="text-[#FFD700] font-semibold">+{upcomingReward.vfide} VFIDE</span>
+              <Target className="w-4 h-4 text-amber-400" />
+              <span className="text-amber-400 font-semibold">+{upcomingReward.vfide} VFIDE</span>
             </motion.div>
           </div>
         </motion.div>

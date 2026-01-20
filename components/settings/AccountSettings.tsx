@@ -108,7 +108,7 @@ export function AccountSettings() {
 
   if (!address) {
     return (
-      <div className="text-center py-12 text-[#6B6B78]">
+      <div className="text-center py-12 text-zinc-500">
         <User className="w-16 h-16 mx-auto mb-4 opacity-50" />
         <p>Connect your wallet to manage your account</p>
       </div>
@@ -120,18 +120,18 @@ export function AccountSettings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[#F5F3E8] flex items-center gap-2">
-            <User className="w-6 h-6 text-[#00F0FF]" />
+          <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
+            <User className="w-6 h-6 text-cyan-400" />
             Account Settings
           </h2>
-          <p className="text-sm text-[#A0A0A5] mt-1">
+          <p className="text-sm text-zinc-400 mt-1">
             Set your username and display name
           </p>
         </div>
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            className="px-4 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg font-semibold hover:bg-[#00D5E0] transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors flex items-center gap-2"
           >
             <Edit2 className="w-4 h-4" />
             Edit Profile
@@ -141,7 +141,7 @@ export function AccountSettings() {
             <button
               onClick={handleSave}
               disabled={saving || !!usernameError || (usernameAvailable === false)}
-              className="px-4 py-2 bg-[#50C878] text-[#0A0A0F] rounded-lg font-semibold hover:bg-[#45B369] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-emerald-500 text-zinc-950 rounded-lg font-semibold hover:bg-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               {saving ? 'Saving...' : 'Save'}
@@ -149,7 +149,7 @@ export function AccountSettings() {
             <button
               onClick={handleCancel}
               disabled={saving}
-              className="px-4 py-2 bg-[#2A2A3F] text-[#F5F3E8] rounded-lg font-semibold hover:bg-[#3A3A4F] transition-colors"
+              className="px-4 py-2 bg-zinc-800 text-zinc-100 rounded-lg font-semibold hover:bg-zinc-700 transition-colors"
             >
               Cancel
             </button>
@@ -162,7 +162,7 @@ export function AccountSettings() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
-          className="p-4 bg-[#50C878]/20 border border-[#50C878]/50 rounded-lg flex items-center gap-2 text-[#50C878]"
+          className="p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-lg flex items-center gap-2 text-emerald-500"
         >
           <Check className="w-5 h-5" />
           <span className="font-semibold">Profile saved successfully!</span>
@@ -170,24 +170,24 @@ export function AccountSettings() {
       )}
 
       {/* Profile Form */}
-      <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] p-6 space-y-6">
+      <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-6 space-y-6">
         {/* Wallet Address (Read-only) */}
         <div>
-          <label className="block text-sm font-semibold text-[#A0A0A5] mb-2">
+          <label className="block text-sm font-semibold text-zinc-400 mb-2">
             Wallet Address
           </label>
-          <div className="px-4 py-3 bg-[#0A0A0F] border border-[#2A2A2F] rounded-lg text-[#6B6B78] font-mono">
+          <div className="px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-500 font-mono">
             {address}
           </div>
-          <p className="text-xs text-[#6B6B78] mt-1">
+          <p className="text-xs text-zinc-500 mt-1">
             Your wallet address cannot be changed
           </p>
         </div>
 
         {/* Username */}
         <div>
-          <label className="block text-sm font-semibold text-[#F5F3E8] mb-2 flex items-center gap-2">
-            <AtSign className="w-4 h-4 text-[#00F0FF]" />
+          <label className="block text-sm font-semibold text-zinc-100 mb-2 flex items-center gap-2">
+            <AtSign className="w-4 h-4 text-cyan-400" />
             Username
           </label>
           <div className="relative">
@@ -197,23 +197,23 @@ export function AccountSettings() {
               value={username}
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
               disabled={!editing}
-              className={`w-full px-4 py-3 bg-[#0A0A0F] border rounded-lg text-[#F5F3E8] focus:outline-none transition-colors ${
+              className={`w-full px-4 py-3 bg-zinc-950 border rounded-lg text-zinc-100 focus:outline-none transition-colors ${
                 editing
                   ? usernameError
-                    ? 'border-[#FF6B9D] focus:border-[#FF6B9D]'
+                    ? 'border-pink-400 focus:border-pink-400'
                     : usernameAvailable === true
-                    ? 'border-[#50C878] focus:border-[#50C878]'
-                    : 'border-[#3A3A4F] focus:border-[#00F0FF]'
-                  : 'border-[#2A2A2F] cursor-not-allowed'
+                    ? 'border-emerald-500 focus:border-emerald-500'
+                    : 'border-zinc-700 focus:border-cyan-400'
+                  : 'border-zinc-800 cursor-not-allowed'
               }`}
             />
             {editing && username && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 {usernameAvailable === true && !usernameError && (
-                  <Check className="w-5 h-5 text-[#50C878]" />
+                  <Check className="w-5 h-5 text-emerald-500" />
                 )}
                 {(usernameAvailable === false || usernameError) && (
-                  <X className="w-5 h-5 text-[#FF6B9D]" />
+                  <X className="w-5 h-5 text-pink-400" />
                 )}
               </div>
             )}
@@ -221,27 +221,27 @@ export function AccountSettings() {
           {editing && (
             <div className="mt-2 space-y-1">
               {usernameError && (
-                <p className="text-xs text-[#FF6B9D]">{usernameError}</p>
+                <p className="text-xs text-pink-400">{usernameError}</p>
               )}
               {usernameAvailable === true && !usernameError && username !== profile?.username && (
-                <p className="text-xs text-[#50C878]">✓ Username available!</p>
+                <p className="text-xs text-emerald-500">✓ Username available!</p>
               )}
-              <p className="text-xs text-[#6B6B78]">
+              <p className="text-xs text-zinc-500">
                 {USERNAME_CONSTRAINTS.MIN_LENGTH}-{USERNAME_CONSTRAINTS.MAX_LENGTH} characters, letters, numbers, underscore, hyphen only
               </p>
             </div>
           )}
           {!editing && profile?.username && (
-            <p className="text-xs text-[#A0A0A5] mt-1">
-              Your username: <span className="text-[#00F0FF]">@{profile.username}</span>
+            <p className="text-xs text-zinc-400 mt-1">
+              Your username: <span className="text-cyan-400">@{profile.username}</span>
             </p>
           )}
         </div>
 
         {/* Display Name */}
         <div>
-          <label className="block text-sm font-semibold text-[#F5F3E8] mb-2 flex items-center gap-2">
-            <Type className="w-4 h-4 text-[#A78BFA]" />
+          <label className="block text-sm font-semibold text-zinc-100 mb-2 flex items-center gap-2">
+            <Type className="w-4 h-4 text-violet-400" />
             Display Name (Optional)
           </label>
           <input
@@ -251,21 +251,21 @@ export function AccountSettings() {
             onChange={(e) => setDisplayName(e.target.value)}
             disabled={!editing}
             maxLength={50}
-            className={`w-full px-4 py-3 bg-[#0A0A0F] border rounded-lg text-[#F5F3E8] focus:outline-none ${
+            className={`w-full px-4 py-3 bg-zinc-950 border rounded-lg text-zinc-100 focus:outline-none ${
               editing
-                ? 'border-[#3A3A4F] focus:border-[#A78BFA]'
-                : 'border-[#2A2A2F] cursor-not-allowed'
+                ? 'border-zinc-700 focus:border-violet-400'
+                : 'border-zinc-800 cursor-not-allowed'
             }`}
           />
-          <p className="text-xs text-[#6B6B78] mt-1">
+          <p className="text-xs text-zinc-500 mt-1">
             A friendly name shown alongside your username (max 50 characters)
           </p>
         </div>
 
         {/* Bio */}
         <div>
-          <label className="block text-sm font-semibold text-[#F5F3E8] mb-2 flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[#50C878]" />
+          <label className="block text-sm font-semibold text-zinc-100 mb-2 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-emerald-500" />
             Bio (Optional)
           </label>
           <textarea
@@ -275,30 +275,30 @@ export function AccountSettings() {
             disabled={!editing}
             rows={3}
             maxLength={200}
-            className={`w-full px-4 py-3 bg-[#0A0A0F] border rounded-lg text-[#F5F3E8] focus:outline-none resize-none ${
+            className={`w-full px-4 py-3 bg-zinc-950 border rounded-lg text-zinc-100 focus:outline-none resize-none ${
               editing
-                ? 'border-[#3A3A4F] focus:border-[#50C878]'
-                : 'border-[#2A2A2F] cursor-not-allowed'
+                ? 'border-zinc-700 focus:border-emerald-500'
+                : 'border-zinc-800 cursor-not-allowed'
             }`}
           />
           <div className="flex justify-between items-center mt-1">
-            <p className="text-xs text-[#6B6B78]">
+            <p className="text-xs text-zinc-500">
               A short bio about yourself
             </p>
-            <p className="text-xs text-[#6B6B78]">
+            <p className="text-xs text-zinc-500">
               {bio.length}/200
             </p>
           </div>
         </div>
 
         {/* Metadata */}
-        <div className="pt-4 border-t border-[#2A2A2F] space-y-2">
-          <div className="flex items-center gap-2 text-sm text-[#6B6B78]">
+        <div className="pt-4 border-t border-zinc-800 space-y-2">
+          <div className="flex items-center gap-2 text-sm text-zinc-500">
             <Calendar className="w-4 h-4" />
             <span>Joined: {new Date(profile?.joinedDate || 0).toLocaleDateString()}</span>
           </div>
           {profile?.proofScore !== undefined && (
-            <div className="flex items-center gap-2 text-sm text-[#6B6B78]">
+            <div className="flex items-center gap-2 text-sm text-zinc-500">
               <Shield className="w-4 h-4" />
               <span>ProofScore: {(profile.proofScore / 100).toFixed(0)}%</span>
             </div>

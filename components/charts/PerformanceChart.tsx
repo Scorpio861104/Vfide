@@ -27,7 +27,7 @@ export default function PerformanceChart({
   className = '' 
 }: PerformanceChartProps) {
   return (
-    <div className={`p-6 bg-[#0F0F14] rounded-xl border border-[#2A2A2F] ${className}`}>
+    <div className={`p-6 bg-zinc-900 rounded-xl border border-zinc-800 ${className}`}>
       <h3 className="text-lg font-semibold text-white mb-4">Performance</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>

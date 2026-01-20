@@ -72,7 +72,7 @@ const mockSocialMetrics: SocialMetric[] = [
     change: 312,
     changePercent: 12.3,
     icon: <Users className="w-6 h-6" />,
-    color: 'from-[#00F0FF] to-[#A78BFA]',
+    color: 'from-cyan-400 to-violet-400',
   },
   {
     label: 'Total Likes',
@@ -80,7 +80,7 @@ const mockSocialMetrics: SocialMetric[] = [
     change: 2134,
     changePercent: 20.6,
     icon: <Heart className="w-6 h-6" />,
-    color: 'from-[#FF6B9D] to-[#FF006E]',
+    color: 'from-pink-400 to-rose-500',
   },
   {
     label: 'Comments & Replies',
@@ -88,7 +88,7 @@ const mockSocialMetrics: SocialMetric[] = [
     change: 456,
     changePercent: 15.4,
     icon: <MessageCircle className="w-6 h-6" />,
-    color: 'from-[#A78BFA] to-[#7C3AED]',
+    color: 'from-violet-400 to-violet-600',
   },
   {
     label: 'Total Shares',
@@ -96,7 +96,7 @@ const mockSocialMetrics: SocialMetric[] = [
     change: 123,
     changePercent: 16.3,
     icon: <Share2 className="w-6 h-6" />,
-    color: 'from-[#50C878] to-[#00D084]',
+    color: 'from-emerald-500 to-[#00D084]',
   },
 ];
 
@@ -158,13 +158,13 @@ export default function SocialAnalyticsPage() {
   const getHealthColor = (health: string) => {
     switch (health) {
       case 'excellent':
-        return 'bg-[#50C878]/20 text-[#50C878] border-[#50C878]/50';
+        return 'bg-emerald-500/20 text-emerald-500 border-emerald-500/50';
       case 'good':
-        return 'bg-[#00F0FF]/20 text-[#00F0FF] border-[#00F0FF]/50';
+        return 'bg-cyan-400/20 text-cyan-400 border-cyan-400/50';
       case 'average':
-        return 'bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/50';
+        return 'bg-amber-400/20 text-amber-400 border-amber-400/50';
       default:
-        return 'bg-[#FF6B9D]/20 text-[#FF6B9D] border-[#FF6B9D]/50';
+        return 'bg-pink-400/20 text-pink-400 border-pink-400/50';
     }
   };
 
@@ -181,28 +181,28 @@ export default function SocialAnalyticsPage() {
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-[#F5F3E8] mb-3">Social Analytics</h1>
-                <p className="text-[#A0A0A5] text-lg mb-2">
+                <h1 className="text-4xl md:text-5xl font-bold text-zinc-100 mb-3">Social Analytics</h1>
+                <p className="text-zinc-400 text-lg mb-2">
                   Analyze your influence, engagement, and community growth in real-time
                 </p>
                 <Link 
                   href="/social-hub" 
-                  className="inline-flex items-center gap-2 text-[#00F0FF] hover:underline text-sm"
+                  className="inline-flex items-center gap-2 text-cyan-400 hover:underline text-sm"
                 >
                   Go to Social Hub <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
               {/* Time Range Selector */}
-              <div className="flex gap-2 bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-2">
+              <div className="flex gap-2 bg-zinc-900 border border-zinc-700 rounded-lg p-2">
                 {['7d', '30d', '90d', '1y'].map((range) => (
                   <button
                     key={range}
                     onClick={() => setTimeRange(range as any)}
                     className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
                       timeRange === range
-                        ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                        : 'text-[#A0A0A5] hover:text-[#F5F3E8]'
+                        ? 'bg-cyan-400 text-zinc-950'
+                        : 'text-zinc-400 hover:text-zinc-100'
                     }`}
                   >
                     {range === '7d' ? 'Week' : range === '30d' ? 'Month' : range === '90d' ? '3 Months' : 'Year'}
@@ -219,7 +219,7 @@ export default function SocialAnalyticsPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">Key Metrics</h2>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6">Key Metrics</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {mockSocialMetrics.map((metric, idx) => (
@@ -230,19 +230,19 @@ export default function SocialAnalyticsPage() {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
                   onClick={() => setSelectedMetric(metric.label)}
-                  className={`bg-gradient-to-br ${metric.color} border border-[#3A3A4F] rounded-lg p-6 cursor-pointer transition-all hover:border-[#00F0FF]/50 group ${
-                    selectedMetric === metric.label ? 'ring-2 ring-[#00F0FF]' : ''
+                  className={`bg-linear-to-br ${metric.color} border border-zinc-700 rounded-lg p-6 cursor-pointer transition-all hover:border-cyan-400/50 group ${
+                    selectedMetric === metric.label ? 'ring-2 ring-cyan-400' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="text-[#F5F3E8] opacity-80 group-hover:opacity-100 transition-opacity">
+                    <div className="text-zinc-100 opacity-80 group-hover:opacity-100 transition-opacity">
                       {metric.icon}
                     </div>
                     <div
                       className={`text-sm font-bold px-3 py-1 rounded-full ${
                         metric.changePercent > 0
-                          ? 'bg-[#50C878]/20 text-[#50C878] flex items-center gap-1'
-                          : 'bg-[#FF6B9D]/20 text-[#FF6B9D] flex items-center gap-1'
+                          ? 'bg-emerald-500/20 text-emerald-500 flex items-center gap-1'
+                          : 'bg-pink-400/20 text-pink-400 flex items-center gap-1'
                       }`}
                     >
                       {metric.changePercent > 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
@@ -250,13 +250,13 @@ export default function SocialAnalyticsPage() {
                     </div>
                   </div>
 
-                  <h3 className="text-[#A0A0A5] text-sm font-semibold mb-2">{metric.label}</h3>
+                  <h3 className="text-zinc-400 text-sm font-semibold mb-2">{metric.label}</h3>
 
                   <div className="flex items-baseline gap-2">
-                    <div className="text-3xl md:text-4xl font-bold text-[#F5F3E8]">{metric.value.toLocaleString()}</div>
+                    <div className="text-3xl md:text-4xl font-bold text-zinc-100">{metric.value.toLocaleString()}</div>
                   </div>
 
-                  <p className="text-xs text-[#6B6B78] mt-3">
+                  <p className="text-xs text-zinc-500 mt-3">
                     {metric.change > 0 ? '+' : ''}{metric.change} this {timeRange === '7d' ? 'week' : 'period'}
                   </p>
                 </motion.div>
@@ -271,9 +271,9 @@ export default function SocialAnalyticsPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">Influence Score</h2>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6">Influence Score</h2>
 
-            <div className={`bg-gradient-to-br ${getTierColor(mockInfluenceScore.tier)} border-2 rounded-lg p-8`}>
+            <div className={`bg-linear-to-br ${getTierColor(mockInfluenceScore.tier)} border-2 rounded-lg p-8`}>
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Score Display */}
                 <motion.div
@@ -360,9 +360,9 @@ export default function SocialAnalyticsPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">Engagement Trends</h2>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6">Engagement Trends</h2>
 
-            <div className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-8">
+            <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-8">
               {/* Chart Placeholder */}
               <div className="h-64 flex items-end justify-around gap-2 mb-6">
                 {mockEngagementData.map((data, idx) => (
@@ -372,7 +372,7 @@ export default function SocialAnalyticsPage() {
                     whileInView={{ height: `${(data.likes / 600) * 100}%` }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.05, duration: 0.8 }}
-                    className="flex-1 bg-linear-to-t from-[#00F0FF] to-[#A78BFA] rounded-t-lg opacity-80 hover:opacity-100 transition-opacity group cursor-pointer"
+                    className="flex-1 bg-linear-to-t from-cyan-400 to-violet-400 rounded-t-lg opacity-80 hover:opacity-100 transition-opacity group cursor-pointer"
                   >
                     <div className="h-full flex items-start justify-center pt-2">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white font-bold">
@@ -387,7 +387,7 @@ export default function SocialAnalyticsPage() {
               <div className="flex justify-center gap-3 sm:gap-6 text-sm flex-wrap">
                 {mockEngagementData.map((data) => (
                   <div key={data.date} className="text-center">
-                    <div className="text-[#F5F3E8] font-semibold">{data.date}</div>
+                    <div className="text-zinc-100 font-semibold">{data.date}</div>
                   </div>
                 ))}
               </div>
@@ -401,7 +401,7 @@ export default function SocialAnalyticsPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">Community Health</h2>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6">Community Health</h2>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Health Status */}
@@ -426,12 +426,12 @@ export default function SocialAnalyticsPage() {
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.05 }}
-                    className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-4"
+                    className="bg-zinc-900 border border-zinc-700 rounded-lg p-4"
                   >
-                    <div className="text-2xl font-bold text-[#00F0FF] mb-1">
+                    <div className="text-2xl font-bold text-cyan-400 mb-1">
                       {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
                     </div>
-                    <div className="text-xs text-[#A0A0A5]">{stat.label}</div>
+                    <div className="text-xs text-zinc-400">{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -445,7 +445,7 @@ export default function SocialAnalyticsPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <h2 className="text-2xl font-bold text-[#F5F3E8] mb-6">Insights & Recommendations</h2>
+            <h2 className="text-2xl font-bold text-zinc-100 mb-6">Insights & Recommendations</h2>
 
             <div className="space-y-4">
               {[
@@ -474,16 +474,16 @@ export default function SocialAnalyticsPage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-[#1A1A2E] border border-[#3A3A4F] rounded-lg p-6 hover:border-[#A78BFA] transition-colors"
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-6 hover:border-violet-400 transition-colors"
                 >
                   <div className="flex items-start gap-4">
                     <div className="text-3xl shrink-0">{insight.icon}</div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-[#F5F3E8] mb-2">{insight.title}</h3>
-                      <p className="text-[#A0A0A5]">{insight.description}</p>
+                      <h3 className="text-lg font-bold text-zinc-100 mb-2">{insight.title}</h3>
+                      <p className="text-zinc-400">{insight.description}</p>
                     </div>
                     {insight.actionable && (
-                      <button className="px-4 py-2 bg-[#00F0FF] text-[#0A0A0F] rounded-lg hover:bg-[#00D9E8] transition-colors font-semibold text-sm shrink-0">
+                      <button className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg hover:bg-cyan-400 transition-colors font-semibold text-sm shrink-0">
                         Learn More
                       </button>
                     )}

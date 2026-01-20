@@ -67,7 +67,7 @@ export function HelpTooltip({
       onTouchStart={() => setIsOpen(!isOpen)}
     >
       <HelpCircle 
-        className="w-4 h-4 text-[#A0A0A5] hover:text-[#00F0FF] cursor-help transition-colors" 
+        className="w-4 h-4 text-zinc-400 hover:text-cyan-400 cursor-help transition-colors" 
       />
       
       <AnimatePresence>
@@ -78,9 +78,9 @@ export function HelpTooltip({
             exit={{ opacity: 0, scale: 0.95 }}
             className={`absolute z-50 ${positionClasses[position]}`}
           >
-            <div className="bg-[#2A2A2F] border border-[#3A3A3F] rounded-lg p-3 shadow-xl max-w-xs">
-              <div className="font-bold text-[#00F0FF] text-sm mb-1">{term}</div>
-              <div className="text-[#F5F3E8] text-xs leading-relaxed">{explanation}</div>
+            <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-xl max-w-xs">
+              <div className="font-bold text-cyan-400 text-sm mb-1">{term}</div>
+              <div className="text-zinc-100 text-xs leading-relaxed">{explanation}</div>
             </div>
             {/* Arrow */}
             <div className={`absolute w-0 h-0 border-4 ${arrowClasses[position]}`} />
@@ -101,7 +101,7 @@ export function HelpTerm({
 }) {
   return (
     <span className="inline-flex items-center gap-1">
-      <span className="border-b border-dotted border-[#A0A0A5]">{term}</span>
+      <span className="border-b border-dotted border-zinc-400">{term}</span>
       <HelpTooltip term={term}>{children}</HelpTooltip>
     </span>
   )

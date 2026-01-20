@@ -131,19 +131,19 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
   });
 
   return (
-    <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col overflow-hidden">
+    <div className="bg-zinc-900 rounded-xl border border-zinc-700 h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-[#3A3A4F]">
+      <div className="p-4 border-b border-zinc-700">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-[#F5F3E8] flex items-center gap-2">
+          <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
             >
-              <Users className="w-5 h-5 text-[#00F0FF]" />
+              <Users className="w-5 h-5 text-cyan-400" />
             </motion.div>
             Friends
-            <span className="text-sm font-normal text-[#6B6B78]">({friends.length})</span>
+            <span className="text-sm font-normal text-zinc-500">({friends.length})</span>
             {onlineCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
@@ -163,8 +163,8 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             }}
             className={`p-2 rounded-lg transition-colors ${
               showAddFriend 
-                ? 'bg-[#00F0FF] text-[#0A0A0F]' 
-                : 'bg-[#00F0FF]/10 text-[#00F0FF] hover:bg-[#00F0FF]/20'
+                ? 'bg-cyan-400 text-zinc-950' 
+                : 'bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20'
             }`}
           >
             {showAddFriend ? <X className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
@@ -173,18 +173,18 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
 
         {/* Search */}
         <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B6B78]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <input
             type="text"
             placeholder="Search friends..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-[#0A0A0F] border border-[#3A3A4F] rounded-xl text-[#F5F3E8] text-sm focus:border-[#00F0FF] focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
           />
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-1 p-1 bg-[#0A0A0F] rounded-xl">
+        <div className="flex gap-1 p-1 bg-zinc-950 rounded-xl">
           {[
             { key: 'all', label: 'All' },
             { key: 'favorites', label: 'Favorites', icon: Star },
@@ -200,14 +200,14 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
               whileTap={{ scale: 0.98 }}
               className={`relative flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
                 filter === tab.key
-                  ? 'text-[#0A0A0F]'
-                  : 'text-[#A0A0A5] hover:text-[#F5F3E8]'
+                  ? 'text-zinc-950'
+                  : 'text-zinc-400 hover:text-zinc-100'
               }`}
             >
               {filter === tab.key && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-[#00F0FF] rounded-lg"
+                  className="absolute inset-0 bg-cyan-400 rounded-lg"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
@@ -228,12 +228,12 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="border-b border-[#3A3A4F] overflow-hidden"
+            className="border-b border-zinc-700 overflow-hidden"
           >
-            <div className="p-4 bg-linear-to-b from-[#00F0FF]/5 to-transparent">
+            <div className="p-4 bg-linear-to-b from-cyan-400/5 to-transparent">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[#F5F3E8] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#00F0FF]" />
+                <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
                   Add New Friend
                 </h3>
               </div>
@@ -242,21 +242,21 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                 placeholder="Wallet address (0x...)"
                 value={newFriendAddress}
                 onChange={(e) => setNewFriendAddress(e.target.value)}
-                className="w-full px-3 py-2.5 mb-2 bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl text-[#F5F3E8] text-sm focus:border-[#00F0FF] focus:outline-none transition-colors"
+                className="w-full px-3 py-2.5 mb-2 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
               />
               <input
                 type="text"
                 placeholder="Nickname (optional)"
                 value={newFriendAlias}
                 onChange={(e) => setNewFriendAlias(e.target.value)}
-                className="w-full px-3 py-2.5 mb-3 bg-[#1A1A2E] border border-[#3A3A4F] rounded-xl text-[#F5F3E8] text-sm focus:border-[#00F0FF] focus:outline-none transition-colors"
+                className="w-full px-3 py-2.5 mb-3 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
               />
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddFriend}
                 disabled={!newFriendAddress}
-                className="w-full py-2.5 bg-linear-to-r from-[#00F0FF] to-[#00D5E0] text-[#0A0A0F] rounded-xl font-semibold text-sm hover:from-[#00D5E0] hover:to-[#00F0FF] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-linear-to-r from-cyan-400 to-[#00D5E0] text-zinc-950 rounded-xl font-semibold text-sm hover:from-[#00D5E0] hover:to-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-4 h-4" />
                 Add Friend
@@ -279,12 +279,12 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                 animate={{ y: [0, -5, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                <Users className="w-14 h-14 text-[#3A3A4F] mb-3" />
+                <Users className="w-14 h-14 text-zinc-700 mb-3" />
               </motion.div>
-              <p className="text-[#6B6B78] text-sm">
+              <p className="text-zinc-500 text-sm">
                 {friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
               </p>
-              <p className="text-[#6B6B78] text-xs mt-1">
+              <p className="text-zinc-500 text-xs mt-1">
                 Add friends to start messaging
               </p>
             </motion.div>
@@ -315,8 +315,8 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                     }}
                     className={`p-3 rounded-xl cursor-pointer transition-all group relative overflow-hidden ${
                       selectedFriend?.address === friend.address
-                        ? 'bg-[#00F0FF]/20 border border-[#00F0FF]/50'
-                        : 'hover:bg-[#2A2A3F] border border-transparent'
+                        ? 'bg-cyan-400/20 border border-cyan-400/50'
+                        : 'hover:bg-zinc-800 border border-transparent'
                     }`}
                   >
                     {/* Online glow effect */}
@@ -345,7 +345,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                       <div className="relative">
                         <motion.div 
                           whileHover={{ scale: 1.1 }}
-                          className="w-11 h-11 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold text-sm shadow-lg"
+                          className="w-11 h-11 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm shadow-lg"
                         >
                           {friend.alias ? friend.alias?.[0]?.toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
                         </motion.div>
@@ -355,7 +355,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-sm font-semibold text-[#F5F3E8] truncate">
+                          <span className="text-sm font-semibold text-zinc-100 truncate">
                             {friend.alias || formatAddress(friend.address)}
                           </span>
                           {friend.isFavorite && (
@@ -363,15 +363,15 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                               animate={{ rotate: [0, 10, -10, 0] }}
                               transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
                             >
-                              <Star className="w-3 h-3 text-[#FFD700] fill-[#FFD700]" />
+                              <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                             </motion.div>
                           )}
                           {friend.proofScore && friend.proofScore >= 8000 && (
-                            <Shield className="w-3 h-3 text-[#00F0FF]" />
+                            <Shield className="w-3 h-3 text-cyan-400" />
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-[#6B6B78]">
+                          <span className="text-xs text-zinc-500">
                             {friend.alias ? formatAddress(friend.address) : 'No nickname'}
                           </span>
                           {isOnline && (
@@ -389,9 +389,9 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                             e.stopPropagation();
                             handleToggleFavorite(friend.address);
                           }}
-                          className="p-1.5 rounded-lg hover:bg-[#3A3A4F] text-[#A0A0A5] hover:text-[#FFD700] transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-amber-400 transition-colors"
                         >
-                          <Star className={`w-4 h-4 ${friend.isFavorite ? 'fill-[#FFD700] text-[#FFD700]' : ''}`} />
+                          <Star className={`w-4 h-4 ${friend.isFavorite ? 'fill-amber-400 text-amber-400' : ''}`} />
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.15 }}
@@ -400,7 +400,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                             e.stopPropagation();
                             onSelectFriend(friend);
                           }}
-                          className="p-1.5 rounded-lg hover:bg-[#3A3A4F] text-[#A0A0A5] hover:text-[#00F0FF] transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-cyan-400 transition-colors"
                         >
                           <MessageCircle className="w-4 h-4" />
                         </motion.button>
@@ -411,7 +411,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                             e.stopPropagation();
                             handleRemoveFriend(friend.address);
                           }}
-                          className="p-1.5 rounded-lg hover:bg-[#3A3A4F] text-[#A0A0A5] hover:text-[#FF6B9D] transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-pink-400 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </motion.button>

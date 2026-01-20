@@ -284,14 +284,14 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   };
 
   return (
-    <div className="bg-[#1A1A2E] rounded-xl border border-[#3A3A4F] h-full flex flex-col">
+    <div className="bg-zinc-900 rounded-xl border border-zinc-700 h-full flex flex-col">
       {/* Chat Header */}
-      <div className="border-b border-[#3A3A4F]">
+      <div className="border-b border-zinc-700">
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center text-[#0A0A0F] font-bold text-sm">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm">
                 {friend.alias ? friend.alias?.[0]?.toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
               </div>
             </div>
@@ -299,13 +299,13 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
             {/* Info */}
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-[#F5F3E8]">
+                <h3 className="text-sm font-bold text-zinc-100">
                   {friend.alias || formatAddress(friend.address)}
                 </h3>
                 <PresenceIndicator address={friend.address} size="sm" showLabel />
               </div>
               <div className="flex items-center gap-2">
-                <p className="text-xs text-[#6B6B78] flex items-center gap-1">
+                <p className="text-xs text-zinc-500 flex items-center gap-1">
                   <Lock className="w-3 h-3" />
                   End-to-end encrypted
                 </p>
@@ -317,25 +317,25 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         {/* Status indicator */}
         <div className="flex items-center gap-2">
           {encryptionStatus === 'encrypting' && (
-            <div className="flex items-center gap-1 text-xs text-[#00F0FF]">
+            <div className="flex items-center gap-1 text-xs text-cyan-400">
               <Shield className="w-3 h-3 animate-pulse" />
               Encrypting...
             </div>
           )}
           {encryptionStatus === 'error' && (
-            <div className="flex items-center gap-1 text-xs text-[#FF6B9D]">
+            <div className="flex items-center gap-1 text-xs text-pink-400">
               <AlertCircle className="w-3 h-3" />
               Error
             </div>
           )}
-          <button className="p-2 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors">
+          <button className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors">
             <MoreVertical className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Transaction Buttons - Only show if user has vault */}
-      <div className="px-4 pb-4 border-b border-[#3A3A4F]">
+      <div className="px-4 pb-4 border-b border-zinc-700">
         {hasVault ? (
           <TransactionButtons
             friend={friend}
@@ -373,20 +373,20 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           }}
           />
         ) : (
-          <div className="p-3 bg-[#0A0A0F] border border-[#2A2A2F] rounded-lg">
+          <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#00F0FF] to-[#A78BFA] flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5 text-[#0A0A0F]" />
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-zinc-950" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm font-semibold text-[#F5F3E8]">Enable Payments</p>
+                  <p className="text-sm font-semibold text-zinc-100">Enable Payments</p>
                   <VaultInfoTooltip trigger="click" />
                 </div>
-                <p className="text-xs text-[#A0A0A5] mb-2">Create a vault to send and request crypto payments in messages.</p>
+                <p className="text-xs text-zinc-400 mb-2">Create a vault to send and request crypto payments in messages.</p>
                 <a
                   href="/vault"
-                  className="inline-flex items-center gap-1 text-xs text-[#00F0FF] hover:underline"
+                  className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:underline"
                   onClick={() => analytics.trackVaultFunnel('clicked_create')}
                 >
                   Create Vault →
@@ -399,7 +399,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
 
       {/* Mutual Friends */}
       {address && (
-        <div className="px-4 pb-4 border-b border-[#3A3A4F]">
+        <div className="px-4 pb-4 border-b border-zinc-700">
           <MutualFriends userAddress={friend.address} currentUserAddress={address} />
         </div>
       )}
@@ -409,11 +409,11 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-full bg-[#00F0FF]/10 flex items-center justify-center mb-4">
-              <Lock className="w-8 h-8 text-[#00F0FF]" />
+            <div className="w-16 h-16 rounded-full bg-cyan-400/10 flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-cyan-400" />
             </div>
-            <h3 className="text-lg font-bold text-[#F5F3E8] mb-2">No messages yet</h3>
-            <p className="text-sm text-[#6B6B78] max-w-xs">
+            <h3 className="text-lg font-bold text-zinc-100 mb-2">No messages yet</h3>
+            <p className="text-sm text-zinc-500 max-w-xs">
               Send an encrypted message to start the conversation
             </p>
           </div>
@@ -451,8 +451,8 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                     <div
                       className={`px-4 py-2 rounded-2xl ${
                         isOwn
-                          ? 'bg-[#00F0FF] text-[#0A0A0F]'
-                          : 'bg-[#2A2A3F] text-[#F5F3E8]'
+                          ? 'bg-cyan-400 text-zinc-950'
+                          : 'bg-zinc-800 text-zinc-100'
                       }`}
                     >
                       <p className="text-sm wrap-break-word whitespace-pre-wrap">
@@ -473,23 +473,23 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                           compact
                         />
                       )}
-                      <span className="text-xs text-[#6B6B78]">
+                      <span className="text-xs text-zinc-500">
                         {formatTimestamp(message.timestamp)}
                       </span>
                       <EditedIndicator editedAt={message.editedAt} />
                       {message.verified && (
                         <span title="Verified signature">
-                          <Shield className="w-3 h-3 text-[#50C878]" />
+                          <Shield className="w-3 h-3 text-emerald-500" />
                         </span>
                       )}
                       {isOwn && (
                         message.read ? (
                           <span title="Read">
-                            <CheckCheck className="w-3 h-3 text-[#00F0FF]" />
+                            <CheckCheck className="w-3 h-3 text-cyan-400" />
                           </span>
                         ) : (
                           <span title="Sent">
-                            <Check className="w-3 h-3 text-[#6B6B78]" />
+                            <Check className="w-3 h-3 text-zinc-500" />
                           </span>
                         )
                       )}
@@ -516,7 +516,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-[#3A3A4F]">
+      <div className="p-4 border-t border-zinc-700">
         {/* Payment Button Above Input */}
         {address && (
           <div className="mb-3 flex items-center gap-2">
@@ -533,7 +533,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         <div className="flex items-end gap-2">
           <button 
             aria-label="Open emoji picker"
-            className="p-2 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors"
+            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           >
             <Smile className="w-5 h-5" />
           </button>
@@ -551,14 +551,14 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
               placeholder="Type an encrypted message..."
               aria-label="Message input"
               rows={1}
-              className="w-full px-4 py-2 bg-[#0A0A0F] border border-[#3A3A4F] rounded-lg text-[#F5F3E8] text-sm resize-none focus:border-[#00F0FF] focus:outline-none"
+              className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm resize-none focus:border-cyan-400 focus:outline-none"
               style={{ minHeight: '40px', maxHeight: '120px' }}
             />
           </div>
 
           <button 
             aria-label="Attach file"
-            className="p-2 rounded-lg text-[#A0A0A5] hover:text-[#F5F3E8] hover:bg-[#2A2A3F] transition-colors"
+            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           >
             <Paperclip className="w-5 h-5" />
           </button>
@@ -567,14 +567,14 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isSending}
             aria-label={isSending ? 'Sending message' : 'Send message'}
-            className="p-2 rounded-lg bg-[#00F0FF] text-[#0A0A0F] hover:bg-[#00D5E0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-lg bg-cyan-400 text-zinc-950 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-5 h-5" />
           </button>
         </div>
 
         {/* Encryption notice */}
-        <div className="flex items-center justify-center gap-1 mt-2 text-xs text-[#6B6B78]">
+        <div className="flex items-center justify-center gap-1 mt-2 text-xs text-zinc-500">
           <Lock className="w-3 h-3" />
           <span>Messages are encrypted using your wallet signature</span>
         </div>

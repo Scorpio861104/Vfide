@@ -374,7 +374,7 @@ export default function TokenLaunchPage() {
   return (
     <>
       
-      <main className="min-h-screen bg-[#0D0D0F] pt-20 relative overflow-hidden">
+      <main className="min-h-screen bg-zinc-950 pt-20 relative overflow-hidden">
         {/* Premium Background Effects */}
         <div className="fixed inset-0 pointer-events-none">
           <div className="absolute top-1/4 -left-32 w-125 h-125 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />

@@ -66,7 +66,7 @@ function AnimatedToggle({ checked, onChange, disabled }: AnimatedToggleProps) {
       className={`relative w-12 h-6 rounded-full transition-colors ${
         checked 
           ? 'bg-linear-to-r from-yellow-500 to-amber-500' 
-          : 'bg-[#3A3A3F]'
+          : 'bg-zinc-700'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       whileTap={{ scale: 0.95 }}
     >
@@ -103,13 +103,13 @@ interface ToggleRowProps {
 function ToggleRow({ label, description, checked, onChange, icon }: ToggleRowProps) {
   return (
   <motion.div 
-    className="flex items-start justify-between gap-3 p-4 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl hover:border-[#3A3A3F] transition-colors group"
+    className="flex items-start justify-between gap-3 p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors group"
     whileHover={{ scale: 1.01 }}
     transition={{ type: "spring", stiffness: 400, damping: 25 }}
   >
     <div className="flex items-start gap-3">
       {icon && (
-        <div className="w-8 h-8 rounded-lg bg-[#2A2A2F] flex items-center justify-center text-gray-400 group-hover:text-yellow-500 transition-colors">
+        <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-gray-400 group-hover:text-yellow-500 transition-colors">
           {icon}
         </div>
       )}
@@ -135,13 +135,13 @@ interface SelectRowProps {
 function SelectRow({ label, value, onChange, options, description, icon }: SelectRowProps) {
   return (
   <motion.div 
-    className="p-4 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl hover:border-[#3A3A3F] transition-colors group"
+    className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors group"
     whileHover={{ scale: 1.01 }}
     transition={{ type: "spring", stiffness: 400, damping: 25 }}
   >
     <div className="flex items-start gap-3 mb-3">
       {icon && (
-        <div className="w-8 h-8 rounded-lg bg-[#2A2A2F] flex items-center justify-center text-gray-400 group-hover:text-yellow-500 transition-colors">
+        <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-gray-400 group-hover:text-yellow-500 transition-colors">
           {icon}
         </div>
       )}
@@ -153,7 +153,7 @@ function SelectRow({ label, value, onChange, options, description, icon }: Selec
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-[#3A3A3F] rounded-lg bg-[#2A2A2F] text-gray-100 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none cursor-pointer"
+      className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none cursor-pointer"
       aria-label={label}
     >
       {options.map((opt) => (
@@ -182,9 +182,9 @@ function Section({ title, subtitle, icon, iconColor, children, delay = 0 }: Sect
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
-      className="bg-[#0F0F12] border border-[#2A2A2F] rounded-2xl overflow-hidden"
+      className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden"
     >
-      <div className="px-6 py-4 border-b border-[#2A2A2F] flex items-center gap-3">
+      <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-3">
         <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${iconColor} flex items-center justify-center text-white shadow-lg`}>
           {icon}
         </div>
@@ -413,7 +413,7 @@ export function SettingsDashboard({
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-[#1A1A1F] via-[#0F0F12] to-[#1A1A1F] border border-[#2A2A2F] p-6"
+        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900 via-[#0F0F12] to-zinc-900 border border-zinc-800 p-6"
       >
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -465,7 +465,7 @@ export function SettingsDashboard({
               onClick={handleReset}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="px-4 py-2.5 bg-[#2A2A2F] text-gray-300 rounded-xl hover:bg-[#3A3A3F] transition-colors"
+              className="px-4 py-2.5 bg-zinc-800 text-gray-300 rounded-xl hover:bg-zinc-700 transition-colors"
             >
               Reset to defaults
             </motion.button>
@@ -473,7 +473,7 @@ export function SettingsDashboard({
               onClick={handleExport}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="px-4 py-2.5 bg-[#2A2A2F] text-gray-300 rounded-xl hover:bg-[#3A3A3F] transition-colors flex items-center gap-2"
+              className="px-4 py-2.5 bg-zinc-800 text-gray-300 rounded-xl hover:bg-zinc-700 transition-colors flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               Export
@@ -542,14 +542,14 @@ export function SettingsDashboard({
                   className={`relative p-4 rounded-xl cursor-pointer transition-all ${
                     isSelected
                       ? 'bg-linear-to-br from-yellow-500/20 to-amber-500/10 border-2 border-yellow-500'
-                      : 'bg-[#1A1A1F] border border-[#2A2A2F] hover:border-[#3A3A3F]'
+                      : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                       isSelected 
                         ? 'bg-yellow-500 text-black' 
-                        : 'bg-[#2A2A2F] text-gray-400'
+                        : 'bg-zinc-800 text-gray-400'
                     }`}>
                       <ThemeIcon className="w-5 h-5" />
                     </div>
@@ -731,11 +731,11 @@ export function SettingsDashboard({
           
           {/* Session timeout */}
           <motion.div 
-            className="p-4 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl hover:border-[#3A3A3F] transition-colors group"
+            className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors group"
             whileHover={{ scale: 1.01 }}
           >
             <div className="flex items-start gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#2A2A2F] flex items-center justify-center text-gray-400 group-hover:text-yellow-500 transition-colors">
+              <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-gray-400 group-hover:text-yellow-500 transition-colors">
                 <Clock className="w-4 h-4" />
               </div>
               <div>
@@ -750,7 +750,7 @@ export function SettingsDashboard({
                 max={480}
                 value={settings.security.sessionTimeoutMinutes}
                 onChange={(e) => updateSecurity({ sessionTimeoutMinutes: safeParseInt(e.target.value, 30, { min: 5, max: 480 }) })}
-                className="w-24 px-3 py-2 border border-[#3A3A3F] rounded-lg bg-[#2A2A2F] text-gray-100 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none"
+                className="w-24 px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none"
                 aria-label="Session timeout in minutes"
               />
               <span className="text-sm text-gray-400">minutes</span>
@@ -759,11 +759,11 @@ export function SettingsDashboard({
 
           {/* Backup email */}
           <motion.div 
-            className="md:col-span-2 p-4 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl hover:border-[#3A3A3F] transition-colors group"
+            className="md:col-span-2 p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors group"
             whileHover={{ scale: 1.005 }}
           >
             <div className="flex items-start gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#2A2A2F] flex items-center justify-center text-gray-400 group-hover:text-yellow-500 transition-colors">
+              <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-gray-400 group-hover:text-yellow-500 transition-colors">
                 <Mail className="w-4 h-4" />
               </div>
               <div>
@@ -776,7 +776,7 @@ export function SettingsDashboard({
               value={settings.security.backupEmail || ''}
               onChange={(e) => updateSecurity({ backupEmail: e.target.value })}
               placeholder="user@company.com"
-              className="w-full px-3 py-2 border border-[#3A3A3F] rounded-lg bg-[#2A2A2F] text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none"
+              className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none"
               aria-label="Backup email"
             />
           </motion.div>
@@ -860,11 +860,11 @@ export function SettingsDashboard({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Import */}
           <motion.div 
-            className="p-4 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl"
+            className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl"
             whileHover={{ scale: 1.005 }}
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#2A2A2F] flex items-center justify-center text-gray-400">
+              <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-gray-400">
                 <Upload className="w-4 h-4" />
               </div>
               <div className="text-sm font-medium text-gray-100">Import settings</div>
@@ -873,7 +873,7 @@ export function SettingsDashboard({
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
               placeholder="Paste JSON here..."
-              className="w-full h-32 px-3 py-2 border border-[#3A3A3F] rounded-lg bg-[#2A2A2F] text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none resize-none font-mono text-xs"
+              className="w-full h-32 px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none resize-none font-mono text-xs"
               aria-label="Import settings JSON"
             />
             <motion.button
@@ -890,12 +890,12 @@ export function SettingsDashboard({
 
           {/* Export */}
           <motion.div 
-            className="p-4 bg-[#1A1A1F] border border-[#2A2A2F] rounded-xl"
+            className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl"
             whileHover={{ scale: 1.005 }}
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#2A2A2F] flex items-center justify-center text-gray-400">
+                <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-gray-400">
                   <Download className="w-4 h-4" />
                 </div>
                 <div className="text-sm font-medium text-gray-100">Export preview</div>
@@ -904,7 +904,7 @@ export function SettingsDashboard({
                 onClick={handleCopyExport}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-lg bg-[#2A2A2F] hover:bg-[#3A3A3F] transition-colors"
+                className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
                 title="Copy to clipboard"
               >
                 <AnimatePresence mode="wait">
@@ -930,7 +930,7 @@ export function SettingsDashboard({
                 </AnimatePresence>
               </motion.button>
             </div>
-            <pre className="w-full h-32 overflow-auto px-3 py-2 border border-[#3A3A3F] rounded-lg bg-[#2A2A2F] text-xs text-gray-300 font-mono">
+            <pre className="w-full h-32 overflow-auto px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-xs text-gray-300 font-mono">
               {exportSettings()}
             </pre>
             <p className="text-xs text-gray-500 mt-3 flex items-center gap-2">

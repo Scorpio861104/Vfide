@@ -68,7 +68,7 @@ export function ProofScoreVisualizer({
   
   if (isLoading) {
     return (
-      <div className={`${sizeClasses[size]} rounded-full bg-transparent animate-pulse border-4 border-[#F5F3E8]/20`} />
+      <div className={`${sizeClasses[size]} rounded-full bg-transparent animate-pulse border-4 border-zinc-100/20`} />
     )
   }
   
@@ -184,7 +184,7 @@ export function ProofScoreVisualizer({
           </motion.div>
           
           {/* Benefits */}
-          <div className={`space-y-1 ${detailSizes[size]} text-[#F5F3E8]/70`}>
+          <div className={`space-y-1 ${detailSizes[size]} text-zinc-100/70`}>
             <div className="flex items-center justify-center gap-2">
               <span className="opacity-60">Burn Fee:</span>
               <span style={{ color }} className="font-bold">
@@ -196,7 +196,7 @@ export function ProofScoreVisualizer({
             <div className="flex gap-2 justify-center flex-wrap mt-2">
               {canVote && (
                 <motion.span
-                  className="px-2 py-0.5 rounded bg-[#00F0FF]/20 text-[#00F0FF] text-xs"
+                  className="px-2 py-0.5 rounded bg-cyan-400/20 text-cyan-400 text-xs"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.4 }}
@@ -206,7 +206,7 @@ export function ProofScoreVisualizer({
               )}
               {canMerchant && (
                 <motion.span
-                  className="px-2 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] text-xs"
+                  className="px-2 py-0.5 rounded bg-amber-400/20 text-amber-400 text-xs"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.5 }}
@@ -216,7 +216,7 @@ export function ProofScoreVisualizer({
               )}
               {isElite && (
                 <motion.span
-                  className="px-2 py-0.5 rounded bg-[#00FF88]/20 text-[#00FF88] text-xs"
+                  className="px-2 py-0.5 rounded bg-emerald-400/20 text-emerald-400 text-xs"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.6 }}
@@ -238,7 +238,7 @@ export function ProofScoreVisualizer({
           transition={{ delay: 0.5 }}
           className="mt-6 space-y-3"
         >
-          <div className={`text-center ${detailSizes[size]} text-[#F5F3E8]/70`}>
+          <div className={`text-center ${detailSizes[size]} text-zinc-100/70`}>
             {tokenIds.length} Badge{tokenIds.length !== 1 ? 's' : ''} Earned
           </div>
           
@@ -263,7 +263,7 @@ export function ProofScoreVisualizer({
           </div>
           
           {tokenIds.length > 3 && (
-            <div className={`text-center ${detailSizes[size]} text-[#F5F3E8]/50`}>
+            <div className={`text-center ${detailSizes[size]} text-zinc-100/50`}>
               +{tokenIds.length - 3} more
             </div>
           )}
@@ -276,68 +276,68 @@ export function ProofScoreVisualizer({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="mt-6 p-4 rounded-lg bg-[#0F0F0F]/50 backdrop-blur-xl border border-[#F5F3E8]/10 w-full max-w-md"
+          className="mt-6 p-4 rounded-lg bg-zinc-950/50 backdrop-blur-xl border border-zinc-100/10 w-full max-w-md"
         >
           <div className={`font-bold mb-3 ${detailSizes[size]}`}>Score Breakdown</div>
           
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-[#F5F3E8]/70">Base Score:</span>
+              <span className="text-zinc-100/70">Base Score:</span>
               <span style={{ color }}>{breakdown.baseScore}</span>
             </div>
             
             {breakdown.vaultBonus > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-[#F5F3E8]/70">Vault Bonus:</span>
+                <span className="text-zinc-100/70">Vault Bonus:</span>
                 <span style={{ color }}>+{breakdown.vaultBonus}</span>
               </div>
             )}
             
             {breakdown.ageBonus > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-[#F5F3E8]/70">Age Bonus:</span>
+                <span className="text-zinc-100/70">Age Bonus:</span>
                 <span style={{ color }}>+{breakdown.ageBonus}</span>
               </div>
             )}
             
             {breakdown.activityPoints > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-[#F5F3E8]/70">Activity Points:</span>
+                <span className="text-zinc-100/70">Activity Points:</span>
                 <span style={{ color }}>+{breakdown.activityPoints}</span>
               </div>
             )}
             
             {breakdown.endorsementPoints > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-[#F5F3E8]/70">Endorsement Points:</span>
+                <span className="text-zinc-100/70">Endorsement Points:</span>
                 <span style={{ color }}>+{breakdown.endorsementPoints}</span>
               </div>
             )}
             
             {breakdown.badgePoints > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-[#F5F3E8]/70">Badge Points:</span>
+                <span className="text-zinc-100/70">Badge Points:</span>
                 <span style={{ color }}>+{breakdown.badgePoints}</span>
               </div>
             )}
             
             {breakdown.hasDiversityBonus && (
               <div className="flex items-center justify-between">
-                <span className="text-[#F5F3E8]/70">Diversity Bonus:</span>
+                <span className="text-zinc-100/70">Diversity Bonus:</span>
                 <span style={{ color }}>+50</span>
               </div>
             )}
             
             {breakdown.reputationDelta !== 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-[#F5F3E8]/70">Reputation:</span>
+                <span className="text-zinc-100/70">Reputation:</span>
                 <span style={{ color: breakdown.reputationDelta > 0 ? '#00FF88' : '#FF4444' }}>
                   {breakdown.reputationDelta > 0 ? '+' : ''}{breakdown.reputationDelta}
                 </span>
               </div>
             )}
             
-            <div className="pt-2 mt-2 border-t border-[#F5F3E8]/10 flex items-center justify-between font-bold">
+            <div className="pt-2 mt-2 border-t border-zinc-100/10 flex items-center justify-between font-bold">
               <span>Total:</span>
               <span style={{ color }}>{breakdown.totalScore}</span>
             </div>

@@ -384,8 +384,8 @@ function NotificationItem({
       exit={{ opacity: 0, x: 100, scale: 0.9 }}
       whileHover={{ scale: 1.01, x: 4 }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      className={`relative bg-[#1A1A1F] border rounded-xl p-4 md:p-5 transition-all cursor-pointer overflow-hidden ${
-        !isRead ? 'border-yellow-500/30' : 'border-[#2A2A2F]'
+      className={`relative bg-zinc-900 border rounded-xl p-4 md:p-5 transition-all cursor-pointer overflow-hidden ${
+        !isRead ? 'border-yellow-500/30' : 'border-zinc-800'
       }`}
       onClick={() => !isRead && onRead(notification.id)}
     >
@@ -403,14 +403,14 @@ function NotificationItem({
         <div className="relative shrink-0">
           <motion.div
             whileHover={{ scale: 1.1, rotate: 5 }}
-            className="w-12 h-12 rounded-xl bg-[#2A2A2F] flex items-center justify-center"
+            className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center"
           >
             {getTypeIcon(notification.type)}
           </motion.div>
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full ${getPriorityColor(notification.priority)} ring-2 ring-[#1A1A1F]`} 
+            className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full ${getPriorityColor(notification.priority)} ring-2 ring-zinc-900`} 
           />
         </div>
 
@@ -460,7 +460,7 @@ function NotificationItem({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleArchive}
-            className="p-2 rounded-lg bg-[#2A2A2F] text-gray-400 hover:bg-[#3A3A3F] hover:text-gray-300 transition-colors"
+            className="p-2 rounded-lg bg-zinc-800 text-gray-400 hover:bg-zinc-700 hover:text-gray-300 transition-colors"
             title="Archive"
           >
             <Archive className="w-4 h-4" />
@@ -798,7 +798,7 @@ export default function NotificationCenter() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#1A1A1F] rounded-xl p-8 text-center border border-[#2A2A2F]"
+              className="bg-zinc-900 rounded-xl p-8 text-center border border-zinc-800"
             >
               <motion.div
                 animate={{ y: [0, -5, 0] }}

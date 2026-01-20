@@ -17,10 +17,10 @@ const sizeConfig = {
 };
 
 function getTierInfo(score: number) {
-  if (score >= 8000) return { tier: "ELITE", color: "#FFD700", gradient: "from-[#FFD700] to-[#FFA500]" };
-  if (score >= 7000) return { tier: "VERIFIED", color: "#A78BFA", gradient: "from-[#A78BFA] to-[#8B5CF6]" };
-  if (score >= 5000) return { tier: "TRUSTED", color: "#00FF88", gradient: "from-[#00FF88] to-[#00CC6A]" };
-  return { tier: "NEUTRAL", color: "#00F0FF", gradient: "from-[#00F0FF] to-[#0080FF]" };
+  if (score >= 8000) return { tier: "ELITE", color: "#FFD700", gradient: "from-amber-400 to-orange-500" };
+  if (score >= 7000) return { tier: "VERIFIED", color: "#A78BFA", gradient: "from-violet-400 to-violet-500" };
+  if (score >= 5000) return { tier: "TRUSTED", color: "#00FF88", gradient: "from-emerald-400 to-[#00CC6A]" };
+  return { tier: "NEUTRAL", color: "#00F0FF", gradient: "from-cyan-400 to-blue-500" };
 }
 
 export function ProofScoreRing({ score, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {
@@ -148,7 +148,7 @@ export function ProofScoreCard({ score, feeRate, className = "" }: ProofScoreCar
   return (
     <div className={`glass-card rounded-2xl p-6 ${className}`}>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-[#F8F8FC]">Your ProofScore</h3>
+        <h3 className="text-lg font-semibold text-zinc-50">Your ProofScore</h3>
         <div 
           className="px-3 py-1 rounded-full text-xs font-bold"
           style={{ 
@@ -173,11 +173,11 @@ export function ProofScoreCard({ score, feeRate, className = "" }: ProofScoreCar
               transition={{ delay: idx * 0.1 }}
               className="flex items-center justify-between text-sm"
             >
-              <span className="flex items-center gap-2 text-[#A8A8B3]">
+              <span className="flex items-center gap-2 text-zinc-400">
                 <span>{item.icon}</span>
                 {item.label}
               </span>
-              <span className="font-medium text-[#F8F8FC]">
+              <span className="font-medium text-zinc-50">
                 +{Math.round(Math.max(0, item.value)).toLocaleString()}
               </span>
             </motion.div>
@@ -186,12 +186,12 @@ export function ProofScoreCard({ score, feeRate, className = "" }: ProofScoreCar
       </div>
       
       {/* Fee scale */}
-      <div className="mt-6 pt-6 border-t border-[#1F1F2A]">
-        <div className="flex justify-between text-xs text-[#6B6B78] mb-2">
+      <div className="mt-6 pt-6 border-t border-zinc-800">
+        <div className="flex justify-between text-xs text-zinc-500 mb-2">
           <span>5% fee</span>
           <span>0.25% fee</span>
         </div>
-        <div className="relative h-2 bg-[#1A1A1F] rounded-full overflow-hidden">
+        <div className="relative h-2 bg-zinc-900 rounded-full overflow-hidden">
           <div 
             className="absolute inset-y-0 left-0 bg-linear-to-r from-[#EF4444] via-[#FFD700] to-[#22C55E] rounded-full"
             style={{ width: `${(score / 10000) * 100}%` }}
@@ -203,7 +203,7 @@ export function ProofScoreCard({ score, feeRate, className = "" }: ProofScoreCar
             transition={{ duration: 2, repeat: Infinity }}
           />
         </div>
-        <p className="text-xs text-[#6B6B78] mt-3 text-center">
+        <p className="text-xs text-zinc-500 mt-3 text-center">
           💡 Increase your score through governance, badges, and transactions
         </p>
       </div>
