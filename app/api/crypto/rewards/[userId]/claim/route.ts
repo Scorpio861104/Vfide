@@ -8,15 +8,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const rateLimitResponse = await withRateLimit(request, 'claim');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const { userId } = await params;
-
-  // Require ownership - only the user can claim their own rewards
-  const authResult = requireOwnership(request, userId);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
   try {
-    const { userId } = await params;
+    const resolvedParams = await params;
+    const userId = resolvedParams?.userId;
+
+    if (!userId || typeof userId !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid userId parameter' },
+        { status: 400 }
+      );
+    }
+
+    // Require ownership - only the user can claim their own rewards
+    const authResult = requireOwnership(request, userId);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     const body = await request.json();
     const { rewardIds } = body;
 
@@ -42,6 +50,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
   } catch (error) {
     console.error('[Rewards Claim] Error:', error);
-    return NextResponse.json({ error: 'Failed to claim rewards' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to claim rewards';
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
   }
 }

@@ -14,7 +14,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return authResult;
   }
   try {
-    const { userId } = await params;
+    const resolvedParams = await params;
+    const userId = resolvedParams?.userId;
+
+    if (!userId || typeof userId !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid userId parameter' },
+        { status: 400 }
+      );
+    }
 
     const result = await query(
       `SELECT * FROM user_rewards
@@ -34,6 +42,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
   } catch (error) {
     console.error('[Rewards GET] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch rewards' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch rewards';
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
   }
 }

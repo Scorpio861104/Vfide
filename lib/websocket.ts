@@ -295,7 +295,22 @@ export function useWebSocket(config: WSConfig, userAddress?: string) {
   }, []);
 
   const subscribe = useCallback((type: WSMessageType, handler: (message: WSMessage) => void) => {
-    return wsRef.current?.on(type, handler) || (() => {});
+    // Wrap handler to ensure type safety when receiving unknown data
+    const wrappedHandler = (data: unknown) => {
+      // Type guard: ensure data is a valid WSMessage
+      if (
+        data &&
+        typeof data === 'object' &&
+        'type' in data &&
+        'from' in data &&
+        'timestamp' in data
+      ) {
+        handler(data as WSMessage);
+      } else {
+        console.warn('[useWebSocket] Received invalid message format:', data);
+      }
+    };
+    return wsRef.current?.on(type, wrappedHandler) || (() => {});
   }, []);
 
   const getWebSocket = useCallback(() => wsRef.current, []);

@@ -24,11 +24,15 @@ export function TypingIndicator({ conversationId, currentUserAddress, otherUserN
     // Subscribe to typing events
     const unsubscribe = subscribe('typing', (message) => {
       if (message.conversationId === conversationId && message.from !== currentUserAddress) {
-        if (message.data.typing) {
-          setTypingUsers(prev => [...new Set([...prev, message.from])]);
-          setIsTyping(true);
-        } else {
-          setTypingUsers(prev => prev.filter(u => u !== message.from));
+        // Type guard for message.data
+        const data = message.data as { typing?: boolean };
+        if (data && typeof data === 'object' && 'typing' in data) {
+          if (data.typing) {
+            setTypingUsers(prev => [...new Set([...prev, message.from])]);
+            setIsTyping(true);
+          } else {
+            setTypingUsers(prev => prev.filter(u => u !== message.from));
+          }
         }
       }
     });
@@ -156,7 +160,11 @@ export function PresenceIndicator({
 
     const unsubscribe = subscribe('presence', (message) => {
       if (message.from === userAddress) {
-        setIsOnline(message.data.online);
+        // Type guard for message.data
+        const data = message.data as { online?: boolean };
+        if (data && typeof data === 'object' && 'online' in data && typeof data.online === 'boolean') {
+          setIsOnline(data.online);
+        }
       }
     });
 

@@ -3,7 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   try {
-    const { userId } = await params;
+    const resolvedParams = await params;
+    const userId = resolvedParams?.userId;
+
+    if (!userId || typeof userId !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid userId parameter' },
+        { status: 400 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
@@ -19,6 +28,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ transactions: result.rows, total: result.rows.length });
   } catch (error) {
     console.error('[Transactions API] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions';
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
   }
 }
