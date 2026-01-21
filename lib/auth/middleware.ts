@@ -19,7 +19,7 @@ export interface AuthResult {
 /**
  * Verify authentication from request headers
  */
-export function verifyAuth(request: NextRequest): AuthResult {
+export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
   const authHeader = request.headers.get('authorization');
   const token = extractToken(authHeader);
 
@@ -31,7 +31,7 @@ export function verifyAuth(request: NextRequest): AuthResult {
     };
   }
 
-  const payload = verifyToken(token);
+  const payload = await verifyToken(token);
 
   if (!payload) {
     return {
@@ -50,8 +50,8 @@ export function verifyAuth(request: NextRequest): AuthResult {
 /**
  * Require authentication - returns error response if not authenticated
  */
-export function requireAuth(request: NextRequest): { user: JWTPayload } | NextResponse {
-  const result = verifyAuth(request);
+export async function requireAuth(request: NextRequest): Promise<{ user: JWTPayload } | NextResponse> {
+  const result = await verifyAuth(request);
 
   if (!result.authenticated || !result.user) {
     return NextResponse.json(
@@ -76,11 +76,11 @@ export function checkOwnership(
 /**
  * Require the user to be the owner of the resource
  */
-export function requireOwnership(
+export async function requireOwnership(
   request: NextRequest,
   targetAddress: string
-): { user: JWTPayload } | NextResponse {
-  const authResult = requireAuth(request);
+): Promise<{ user: JWTPayload } | NextResponse> {
+  const authResult = await requireAuth(request);
 
   if (authResult instanceof NextResponse) {
     return authResult;

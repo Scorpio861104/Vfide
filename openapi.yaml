@@ -1,0 +1,627 @@
+openapi: 3.0.3
+info:
+  title: Vfide API
+  description: |
+    Vfide Decentralized Payment Protocol API
+    
+    This API provides endpoints for:
+    - Authentication (wallet-based)
+    - Messages and social features
+    - Payment requests
+    - Rewards and gamification
+    - Governance and proposals
+    - User management
+    
+    ## Authentication
+    
+    Most endpoints require authentication using a JWT token obtained from wallet signature verification.
+    
+    Include the token in the `Authorization` header:
+    ```
+    Authorization: Bearer <token>
+    ```
+    
+    ## CSRF Protection
+    
+    All state-changing operations (POST, PUT, PATCH, DELETE) require a CSRF token.
+    
+    1. Get a CSRF token from `GET /api/csrf`
+    2. Include it in the `x-csrf-token` header for state-changing requests
+    
+    ## Rate Limiting
+    
+    All endpoints are rate-limited. Limits vary by endpoint type:
+    - Auth: 10 req/min
+    - Read: 200 req/min
+    - Write: 30 req/min
+    - Claim: 5 req/hour
+    - Upload: 10 req/min
+    
+    Rate limit headers are included in responses:
+    - `X-RateLimit-Limit`: Maximum requests allowed
+    - `X-RateLimit-Remaining`: Requests remaining
+    - `X-RateLimit-Reset`: Time when limit resets
+    
+  version: 1.0.0
+  contact:
+    name: Vfide Support
+    url: https://vfide.io
+    email: support@vfide.io
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://app.vfide.io/api
+    description: Production server
+  - url: https://testnet.vfide.io/api
+    description: Testnet server
+  - url: http://localhost:3000/api
+    description: Local development
+
+tags:
+  - name: Authentication
+    description: Wallet-based authentication endpoints
+  - name: Users
+    description: User profile and management
+  - name: Messages
+    description: Messaging and communication
+  - name: Payment Requests
+    description: Payment request creation and management
+  - name: Rewards
+    description: User rewards and claims
+  - name: Gamification
+    description: Quests, achievements, and badges
+  - name: Governance
+    description: Proposals and voting
+  - name: Leaderboards
+    description: Competition leaderboards
+  - name: Security
+    description: Security and CSRF endpoints
+  - name: Health
+    description: System health and status
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from wallet signature verification
+    
+    csrfToken:
+      type: apiKey
+      in: header
+      name: x-csrf-token
+      description: CSRF token required for state-changing operations
+  
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        message:
+          type: string
+          description: Detailed error description
+        code:
+          type: string
+          description: Error code
+      required:
+        - error
+    
+    User:
+      type: object
+      properties:
+        wallet_address:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{40}$'
+          description: Ethereum wallet address
+        username:
+          type: string
+          description: User's display name
+        email:
+          type: string
+          format: email
+          description: User's email address
+        bio:
+          type: string
+          description: User biography
+        avatar_url:
+          type: string
+          format: uri
+          description: Avatar image URL
+        proof_score:
+          type: integer
+          description: User's trust score
+        is_council_member:
+          type: boolean
+          description: Whether user is a council member
+        is_verified:
+          type: boolean
+          description: Whether user is verified
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        from_user_id:
+          type: string
+          format: uuid
+        to_user_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+          description: Encrypted message content
+        created_at:
+          type: string
+          format: date-time
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+    
+    PaymentRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        from_user_id:
+          type: string
+          format: uuid
+        to_user_id:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          description: Payment amount in token units
+        token:
+          type: string
+          description: Token symbol (e.g., ETH, USDC)
+        memo:
+          type: string
+          description: Optional payment memo
+        status:
+          type: string
+          enum: [pending, completed, cancelled]
+        created_at:
+          type: string
+          format: date-time
+    
+    Proposal:
+      type: object
+      properties:
+        id:
+          type: integer
+        proposer_id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [active, passed, rejected, cancelled]
+        votes_for:
+          type: string
+          description: Votes in favor
+        votes_against:
+          type: string
+          description: Votes against
+        voting_ends_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the API is running
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+  
+  /csrf:
+    get:
+      tags:
+        - Security
+      summary: Get CSRF token
+      description: Obtain a CSRF token for state-changing operations
+      responses:
+        '200':
+          description: CSRF token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: CSRF token to include in subsequent requests
+                  message:
+                    type: string
+  
+  /auth:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate with wallet signature
+      description: Verify wallet signature and obtain JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address:
+                  type: string
+                  pattern: '^0x[a-fA-F0-9]{40}$'
+                signature:
+                  type: string
+                message:
+                  type: string
+                chainId:
+                  type: integer
+              required:
+                - address
+                - signature
+                - message
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token for subsequent requests
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Invalid signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Search users
+      description: Search for users by username or wallet address
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search term for username or address
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  total:
+                    type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /users/{address}:
+    get:
+      tags:
+        - Users
+      summary: Get user profile
+      description: Get detailed user profile by wallet address
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^0x[a-fA-F0-9]{40}$'
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      tags:
+        - Users
+      summary: Update user profile
+      description: Update authenticated user's profile
+      security:
+        - bearerAuth: []
+        - csrfToken: []
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                bio:
+                  type: string
+                avatar_url:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden - cannot update other user's profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /messages:
+    get:
+      tags:
+        - Messages
+      summary: Get messages
+      description: Get messages for authenticated user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Messages list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+    
+    post:
+      tags:
+        - Messages
+      summary: Send message
+      description: Send an encrypted message to another user
+      security:
+        - bearerAuth: []
+        - csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                toUserId:
+                  type: string
+                  format: uuid
+                content:
+                  type: string
+                  description: Encrypted message content
+              required:
+                - toUserId
+                - content
+      responses:
+        '200':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    $ref: '#/components/schemas/Message'
+  
+  /crypto/payment-requests:
+    get:
+      tags:
+        - Payment Requests
+      summary: Get payment requests
+      description: Get payment requests for authenticated user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment requests list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentRequest'
+    
+    post:
+      tags:
+        - Payment Requests
+      summary: Create payment request
+      description: Create a new payment request
+      security:
+        - bearerAuth: []
+        - csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fromUserId:
+                  type: string
+                toUserId:
+                  type: string
+                amount:
+                  type: string
+                token:
+                  type: string
+                memo:
+                  type: string
+              required:
+                - fromUserId
+                - toUserId
+                - amount
+      responses:
+        '200':
+          description: Payment request created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  request:
+                    $ref: '#/components/schemas/PaymentRequest'
+  
+  /proposals:
+    get:
+      tags:
+        - Governance
+      summary: Get proposals
+      description: Get governance proposals with optional filters
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, passed, rejected, cancelled]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Proposals list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  proposals:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Proposal'
+                  total:
+                    type: integer
+
+# Additional endpoints would be documented here...
+# This is a starter template covering the main endpoints
+# Complete documentation should include all 49 endpoints

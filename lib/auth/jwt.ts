@@ -5,6 +5,7 @@
 
 import jwt from 'jsonwebtoken';
 import { validateEnvironment } from '../startup-validation';
+import { isTokenRevoked, hashToken } from './tokenRevocation';
 
 // Validate environment on module load
 if (typeof window === 'undefined') {
@@ -69,13 +70,23 @@ export function generateToken(address: string, chainId?: number): TokenResponse 
 
 /**
  * Verify and decode a JWT token
+ * Also checks if token has been revoked
  */
-export function verifyToken(token: string): JWTPayload | null {
+export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const decoded = jwt.verify(token, JWT_SECRET, {
       issuer: JWT_ISSUER,
       audience: JWT_AUDIENCE,
     }) as JWTPayload;
+
+    // Check if token has been revoked
+    const tokenHash = await hashToken(token);
+    const revoked = await isTokenRevoked(tokenHash);
+    
+    if (revoked) {
+      console.warn('[JWT] Token has been revoked');
+      return null;
+    }
 
     return decoded;
   } catch (error) {
