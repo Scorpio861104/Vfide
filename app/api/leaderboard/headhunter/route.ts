@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
  * GET /api/leaderboard/headhunter
@@ -39,6 +40,10 @@ function calculateReward(rank: number, points: number, totalPoints: number): str
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limiting for read operations
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const year = searchParams.get('year');

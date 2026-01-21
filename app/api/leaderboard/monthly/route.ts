@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
  * GET /api/leaderboard/monthly
  * Fetch monthly leaderboard with rankings and prize pool info
  */
 export async function GET(request: NextRequest) {
+  // Rate limiting for read operations
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const monthYear = searchParams.get('month') || new Date().toISOString().slice(0, 7); // Default to current month
@@ -154,6 +159,10 @@ export async function GET(request: NextRequest) {
  * Update user's monthly stats
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting for write operations
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const {
       userAddress,
