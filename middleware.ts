@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { validateContentType } from './lib/api/contentTypeValidation';
+import { validateCSRF } from './lib/security/csrf';
 
 /**
  * Maximum request body sizes by endpoint type
@@ -106,6 +107,12 @@ export function middleware(request: NextRequest) {
     const contentTypeError = validateContentType(request);
     if (contentTypeError) {
       return contentTypeError;
+    }
+    
+    // Validate CSRF token for state-changing operations
+    const csrfError = validateCSRF(request);
+    if (csrfError) {
+      return csrfError;
     }
   }
   
