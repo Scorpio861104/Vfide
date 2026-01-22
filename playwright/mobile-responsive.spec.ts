@@ -5,8 +5,9 @@ import { test, expect, devices } from '@playwright/test';
  * Tests mobile navigation, wallet connection, transactions, and touch gestures
  */
 
+// Mobile tests - use mobile-safari or mobile-chrome project from config
 test.describe('Mobile Responsive Tests', () => {
-  test.use({ ...devices['iPhone 12'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should load homepage on mobile', async ({ page }) => {
     await page.goto('/');
@@ -120,7 +121,7 @@ test.describe('Mobile Responsive Tests', () => {
 });
 
 test.describe('Mobile Wallet Connection', () => {
-  test.use({ ...devices['iPhone 12'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should connect wallet on mobile', async ({ page }) => {
     await page.addInitScript(() => {
@@ -198,7 +199,7 @@ test.describe('Mobile Wallet Connection', () => {
 });
 
 test.describe('Mobile Transactions', () => {
-  test.use({ ...devices['iPhone 12'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should send transaction on mobile', async ({ page }) => {
     await page.addInitScript(() => {
@@ -267,7 +268,7 @@ test.describe('Mobile Transactions', () => {
 });
 
 test.describe('Mobile Touch Gestures', () => {
-  test.use({ ...devices['iPhone 12'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should support tap gestures', async ({ page }) => {
     await page.goto('/');
@@ -352,7 +353,7 @@ test.describe('Mobile Touch Gestures', () => {
 });
 
 test.describe('Mobile Layout Tests', () => {
-  test.use({ ...devices['iPhone 12'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should stack elements vertically on mobile', async ({ page }) => {
     await page.goto('/dashboard');
@@ -411,7 +412,7 @@ test.describe('Mobile Layout Tests', () => {
 });
 
 test.describe('Mobile Form Interactions', () => {
-  test.use({ ...devices['iPhone 12'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should show mobile keyboard for inputs', async ({ page }) => {
     await page.goto('/dashboard');
@@ -477,7 +478,7 @@ test.describe('Mobile Form Interactions', () => {
 });
 
 test.describe('Mobile Performance', () => {
-  test.use({ ...devices['iPhone 12'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should load quickly on mobile', async ({ page }) => {
     const startTime = Date.now();
@@ -506,7 +507,7 @@ test.describe('Mobile Performance', () => {
 });
 
 test.describe('Mobile Navigation', () => {
-  test.use({ ...devices['iPhone 12'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should have bottom navigation on mobile', async ({ page }) => {
     await page.goto('/dashboard');
@@ -554,7 +555,7 @@ test.describe('Mobile Navigation', () => {
 });
 
 test.describe('Mobile Accessibility', () => {
-  test.use({ ...devices['iPhone 12'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should have proper heading hierarchy', async ({ page }) => {
     await page.goto('/');
@@ -589,7 +590,7 @@ test.describe('Mobile Accessibility', () => {
 });
 
 test.describe('Android Mobile Tests', () => {
-  test.use({ ...devices['Pixel 5'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Android tests run on mobile-chrome project');
 
   test('should work on Android devices', async ({ page }) => {
     await page.goto('/');
@@ -613,7 +614,7 @@ test.describe('Android Mobile Tests', () => {
 });
 
 test.describe('Tablet Tests', () => {
-  test.use({ ...devices['iPad Pro'] });
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Tablet tests run on tablet project');
 
   test('should work on tablet', async ({ page }) => {
     await page.goto('/');
