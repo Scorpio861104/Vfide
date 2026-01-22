@@ -3,6 +3,7 @@ import { verifyMessage } from 'viem';
 import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, authSchema } from '@/lib/auth/validation';
+import { setAuthCookie, getAuthCookie, clearAuthCookies } from '@/lib/auth/cookieAuth';
 
 /**
  * POST /api/auth
@@ -80,12 +81,18 @@ export async function POST(request: NextRequest) {
     // Generate secure JWT token
     const tokenResponse = generateToken(address);
 
-    return NextResponse.json({
+    // Create response with HTTPOnly cookie for enhanced security
+    const response = NextResponse.json({
       success: true,
       token: tokenResponse.token,
       address: tokenResponse.address,
       expiresIn: tokenResponse.expiresIn,
     });
+
+    // Set HTTPOnly cookie (XSS protection)
+    await setAuthCookie(tokenResponse.token, response);
+
+    return response;
   } catch (error) {
     console.error('[Auth API] Error:', error);
     return NextResponse.json(
@@ -105,8 +112,14 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Check Authorization header first, then fall back to HTTPOnly cookie
     const authHeader = request.headers.get('authorization');
-    const token = extractToken(authHeader);
+    let token = extractToken(authHeader);
+
+    // Fall back to HTTPOnly cookie if no header token
+    if (!token) {
+      token = await getAuthCookie(request);
+    }
 
     if (!token) {
       return NextResponse.json(

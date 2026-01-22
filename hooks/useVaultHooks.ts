@@ -2,12 +2,13 @@
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { parseEther, formatEther } from 'viem'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI, UserVaultABI } from '../lib/abis'
 import { validateAddress } from '../lib/validation'
 import { parseContractError, logError } from '@/lib/errorHandling';
+import { useAppStore } from '@/lib/store/appStore';
 
 // ============================================
 // VAULT HOOKS - Non-custodial vault management
@@ -76,6 +77,8 @@ export function useCreateVault() {
 
 export function useVaultBalance() {
   const { vaultAddress } = useUserVault()
+  const setVault = useAppStore((state) => state.setVault)
+  const updateVaultBalance = useAppStore((state) => state.updateVaultBalance)
   
   const { data: balance, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken,
@@ -88,8 +91,29 @@ export function useVaultBalance() {
     }
   })
   
+  const formattedBalance = balance ? formatEther(balance as bigint) : '0';
+  
+  // Sync with Zustand store for global state access
+  useEffect(() => {
+    if (vaultAddress && balance !== undefined) {
+      setVault({
+        address: vaultAddress,
+        balance: formattedBalance,
+        lockedBalance: '0', // TODO: fetch locked balance
+        lastUpdated: Date.now(),
+      });
+    }
+  }, [vaultAddress, balance, formattedBalance, setVault]);
+  
+  // Also update balance directly when it changes
+  useEffect(() => {
+    if (formattedBalance && formattedBalance !== '0') {
+      updateVaultBalance(formattedBalance);
+    }
+  }, [formattedBalance, updateVaultBalance]);
+  
   return {
-    balance: balance ? formatEther(balance as bigint) : '0',
+    balance: formattedBalance,
     balanceRaw: (balance as bigint) || 0n,
     isLoading,
     refetch,

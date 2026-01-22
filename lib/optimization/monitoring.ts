@@ -403,3 +403,29 @@ export function checkAlertThresholds(metrics: DashboardMetrics): Array<{
 
   return alerts;
 }
+
+/**
+ * Simple API call tracking for server-side routes
+ * Use this in API route handlers to track performance
+ */
+export function trackApiCallSimple(
+  endpoint: string,
+  method: string,
+  statusCode: number,
+  durationMs: number
+): void {
+  sendMetric({
+    event: 'api_call',
+    value: durationMs,
+    properties: {
+      endpoint,
+      method,
+      statusCode,
+      success: statusCode >= 200 && statusCode < 400,
+    },
+    timestamp: Date.now(),
+  });
+}
+
+// Re-export with alternate name for convenience
+export { trackApiCallSimple as trackApiRoute };

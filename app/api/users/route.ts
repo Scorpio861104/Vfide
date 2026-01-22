@@ -4,6 +4,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { 
+  parsePaginationParams, 
+  createPaginatedResponse,
+  addCacheHeaders,
+  filterFields,
+  parseFieldsParam,
+} from '@/lib/optimization/apiOptimization';
+import { trackApiCallSimple } from '@/lib/optimization/monitoring';
 
 interface User {
   id: string;
@@ -22,23 +30,20 @@ interface User {
 
 // GET /api/users - Get all users
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
   try {
+    // Use standardized pagination parsing
+    const { page, limit } = parsePaginationParams(request);
+    const offset = (page - 1) * limit;
+    const fields = parseFieldsParam(request);
+    
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
     const search = searchParams.get('search');
-
-    // Validate parsed numbers
-    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
-      return NextResponse.json(
-        { error: 'Invalid limit or offset parameter' },
-        { status: 400 }
-      );
-    }
 
     let queryText = `
       SELECT 
@@ -60,14 +65,30 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await query<User>(queryText, params);
-
-    return NextResponse.json({
-      users: result.rows,
-      total: result.rowCount,
-      limit,
-      offset,
-    });
+    
+    // Get total count for pagination
+    const countQuery = search 
+      ? 'SELECT COUNT(*) FROM users WHERE username ILIKE $1 OR display_name ILIKE $1 OR wallet_address ILIKE $1'
+      : 'SELECT COUNT(*) FROM users';
+    const countResult = await query<{ count: string }>(countQuery, search ? [`%${search}%`] : []);
+    const total = parseInt(countResult.rows[0]?.count || '0', 10);
+    
+    // Apply field filtering if requested
+    const filteredUsers = fields 
+      ? result.rows.map(user => filterFields(user as Record<string, unknown>, fields))
+      : result.rows;
+    
+    // Create standardized paginated response
+    const paginatedData = createPaginatedResponse(filteredUsers, total, page, limit);
+    
+    // Track API call for monitoring
+    trackApiCallSimple('/api/users', 'GET', 200, Date.now() - startTime);
+    
+    // Add cache headers for performance
+    const response = NextResponse.json(paginatedData);
+    return addCacheHeaders(response, { maxAge: 30, sMaxAge: 60, staleWhileRevalidate: 120 });
   } catch (error: unknown) {
+    trackApiCallSimple('/api/users', 'GET', 500, Date.now() - startTime);
     console.error('Error fetching users:', error);
     return NextResponse.json(
       { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },

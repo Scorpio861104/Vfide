@@ -14,6 +14,10 @@
 
 // ==================== COMPONENTS ====================
 
+// Enhanced Wallet UX Components (from PR #56)
+export { EnhancedWalletConnect } from './EnhancedWalletConnect';
+export { EnhancedNetworkBanner, NetworkSwitchWidget } from './EnhancedNetworkBanner';
+
 export { PremiumWalletConnect, PremiumWalletConnectCompact } from './PremiumWalletConnect';
 export { UltimateWalletConnect, UltimateWalletConnectCompact } from './UltimateWalletConnect';
 

@@ -7,6 +7,7 @@ import { HelpCenter } from "@/components/onboarding/HelpCenter";
 import { ToastProvider } from "@/components/ui/toast";
 // Network-agnostic: Works on testnet and mainnet identically
 import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
+import { EnhancedNetworkBanner } from "@/components/wallet/EnhancedNetworkBanner";
 import { DemoModeBanner } from "@/components/layout/DemoModeBanner";
 import { TestnetNotification } from "@/components/ui/TestnetNotification";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -18,6 +19,10 @@ import { AccessibilityProvider } from "@/components/accessibility/AccessibilityP
 import { AchievementToastContainer } from "@/components/gamification/AchievementToast";
 import { PieMenu } from "@/components/navigation/PieMenu";
 import CommandBar from "@/components/CommandBar";
+// Core integrations from PR #56
+import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegistration";
+import { ZustandHydration } from "@/components/core/ZustandHydration";
+import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
 
 const inter = Inter({
   variable: "--font-body",
@@ -101,6 +106,10 @@ export default function RootLayout({
                   <PresenceManager />
                   <DevErrorConsole />
                   <DemoModeBanner />
+                  <ServiceWorkerRegistration />
+                  <ZustandHydration />
+                  <WebVitalsTracker />
+                  <EnhancedNetworkBanner />
                 <NetworkSwitchOverlay />
                 <TestnetNotification />
                 {/* Network detection handled by wallet connection */}
