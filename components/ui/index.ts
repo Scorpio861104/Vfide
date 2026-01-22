@@ -87,3 +87,48 @@ export {
   ProofScoreRing,
   ProofScoreCard,
 } from './ProofScoreRing';
+
+// =============================================================================
+// VFIDE SIGNATURE VISUAL ELEMENTS
+// =============================================================================
+
+// Hexagon Pattern Components
+export { HexagonPattern, FloatingHexagon, HexagonShield } from './HexagonPattern';
+
+// Trust Ring Components
+export { TrustRing, TrustRings, TrustRipple } from './TrustRing';
+
+// Trust Theme Components
+export { 
+  TrustThemeProvider, 
+  useTrustTheme, 
+  TrustBadge, 
+  TrustCard, 
+  TrustProgressBar,
+  getTrustLevel,
+  getTrustTheme,
+  trustThemes,
+} from './TrustTheme';
+
+// Delightful Loaders
+export { 
+  ShieldLoader, 
+  HexagonSpinner, 
+  PulseDotsLoader, 
+  TrustRingLoader, 
+  BlockchainLoader, 
+  SuccessCheckmark,
+} from './DelightfulLoaders';
+
+// Easter Eggs & Celebrations
+export {
+  useKonamiCode,
+  fireConfetti,
+  fireVFIDEConfetti,
+  fireStarShower,
+  SecretModeOverlay,
+  EasterEggsProvider,
+  useFirstTransactionCelebration,
+  useMilestoneCelebration,
+  SparkleOnHover,
+} from './EasterEggs';
