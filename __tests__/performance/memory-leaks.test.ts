@@ -463,8 +463,8 @@ describe('Memory Leak Tests', () => {
           const largeObject = { data: new Array(10000).fill('test') };
           
           const handleClick = () => {
-            // Using the large object
-            console.log(largeObject.data.length);
+            // Using the large object - testing closure retention
+            return largeObject.data.length;
           };
 
           return <button onClick={handleClick}>Click</button>;

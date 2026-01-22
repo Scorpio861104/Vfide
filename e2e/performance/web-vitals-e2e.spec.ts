@@ -9,9 +9,10 @@ test.describe('Web Vitals E2E Tests', () => {
   test.setTimeout(60000);
 
   const measureWebVitals = async (page: Page) => {
-    // Inject web-vitals library
+    // Inject web-vitals library - using specific version for stability
+    // Note: In production, bundle this locally for better security and reliability
     await page.addScriptTag({
-      url: 'https://unpkg.com/web-vitals@3/dist/web-vitals.iife.js',
+      url: 'https://unpkg.com/web-vitals@3.5.1/dist/web-vitals.iife.js',
     });
 
     // Setup web vitals collection
@@ -28,10 +29,11 @@ test.describe('Web Vitals E2E Tests', () => {
 
         let metricsCollected = 0;
         const totalMetrics = 6;
+        const MIN_METRICS_REQUIRED = totalMetrics - 2; // FID and INP might not fire in tests
 
         const checkComplete = () => {
           metricsCollected++;
-          if (metricsCollected >= totalMetrics - 2) { // FID and INP might not fire
+          if (metricsCollected >= MIN_METRICS_REQUIRED) {
             setTimeout(() => resolve(metrics), 2000);
           }
         };

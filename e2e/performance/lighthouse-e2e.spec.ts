@@ -9,6 +9,8 @@ import type { Page } from '@playwright/test';
 test.describe('Lighthouse E2E Performance Tests', () => {
   test.setTimeout(120000); // 2 minutes timeout for lighthouse tests
 
+  const CHROME_DEVTOOLS_PORT = parseInt(process.env.CHROME_PORT || '9222', 10);
+
   const runLighthouseAudit = async (page: Page, url: string, thresholds: any = {}) => {
     await page.goto(url);
     await page.waitForLoadState('networkidle');
@@ -23,7 +25,7 @@ test.describe('Lighthouse E2E Performance Tests', () => {
           seo: 90,
           ...thresholds,
         },
-        port: 9222,
+        port: CHROME_DEVTOOLS_PORT,
       });
     } catch (error) {
       console.error('Lighthouse audit failed:', error);

@@ -35,10 +35,12 @@ describe('Lighthouse Performance Budgets', () => {
   });
 
   const runLighthouse = async (url: string): Promise<RunnerResult | undefined> => {
-    const port = new URL(page.url() || BASE_URL).port || '9222';
+    const pageUrl = new URL(page.url() || BASE_URL);
+    const port = pageUrl.port || (pageUrl.protocol === 'https:' ? '443' : '80');
+    const chromePort = parseInt(process.env.CHROME_PORT || '9222', 10);
     
     return await lighthouse(url, {
-      port: parseInt(port),
+      port: chromePort,
       output: 'json',
       onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
       formFactor: 'desktop',

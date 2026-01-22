@@ -242,7 +242,7 @@ describe('API Performance Tests', () => {
 
   describe('WebSocket Performance', () => {
     test('WebSocket connection should establish quickly', async () => {
-      const wsUrl = BASE_URL.replace('http', 'ws') + '/ws';
+      const wsUrl = BASE_URL.replace(/^https?/, (match) => match === 'https' ? 'wss' : 'ws') + '/ws';
       
       const startTime = performance.now();
       
@@ -277,7 +277,7 @@ describe('API Performance Tests', () => {
     }, 10000);
 
     test('WebSocket messages should have low latency', async () => {
-      const wsUrl = BASE_URL.replace('http', 'ws') + '/ws';
+      const wsUrl = BASE_URL.replace(/^https?/, (match) => match === 'https' ? 'wss' : 'ws') + '/ws';
       
       return new Promise<void>((resolve) => {
         const ws = new WebSocket(wsUrl);
