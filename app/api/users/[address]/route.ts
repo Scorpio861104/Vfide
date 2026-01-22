@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getAvatarUrl } from '@/lib/constants';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 interface User {
   wallet_address: string;
@@ -30,6 +31,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ address: string }> }
 ) {
+  // Rate limiting for read operations
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
@@ -100,6 +105,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ address: string }> }
 ) {
+  // Rate limiting for write operations
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
@@ -156,6 +165,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ address: string }> }
 ) {
+  // Rate limiting for upload operations
+  const rateLimitResponse = await withRateLimit(request, 'upload');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;

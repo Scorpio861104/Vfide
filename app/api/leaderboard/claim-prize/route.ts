@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
  * POST /api/leaderboard/claim-prize
  * Claim monthly competition prize
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting - strict for prize claims
+  const rateLimitResponse = await withRateLimit(request, 'claim');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { userAddress, monthYear } = await request.json();
 
