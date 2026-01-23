@@ -172,7 +172,11 @@ Validates scalability and efficiency:
 | Streak Tracking | 33 | 100% | Daily activity |
 | Integration | 16 | 100% | Multi-system scenarios |
 | Performance | 16 | 100% | Scalability |
-| **TOTAL** | **140** | **100%** | **Complete** |
+| Escrow Timeouts | 31 | 100% | Commerce escrow release/timeout |
+| Payroll Streaming | 32 | 100% | Continuous token accrual |
+| Presale Unlock | 30 | 100% | 90/180-day lock periods |
+| Governance Timelock | 17 | 100% | DAO proposal delays & vault recovery |
+| **TOTAL** | **250** | **100%** | **Complete** |
 
 ## Tools for Best-in-Class Testing
 
@@ -310,21 +314,28 @@ npm test -- __tests__/vesting-schedule.test.ts \
             __tests__/badge-time-dependent.test.ts \
             __tests__/streak-tracking.test.ts \
             __tests__/integration-time-dependent.test.ts \
-            __tests__/performance-benchmarks.test.ts
+            __tests__/performance-benchmarks.test.ts \
+            __tests__/escrow-time-dependent.test.ts \
+            __tests__/payroll-streaming.test.ts \
+            __tests__/presale-unlock.test.ts \
+            __tests__/governance-vault-timelock.test.ts
 
 # Run with coverage
 npm test -- --coverage __tests__/*time*.test.ts
 
 # Run specific suite
 npm test -- __tests__/vesting-schedule.test.ts
+
+# Run escrow and payroll tests
+npm test -- __tests__/escrow-time-dependent.test.ts __tests__/payroll-streaming.test.ts
 ```
 
 ### Expected Output
 ```
-Test Suites: 5 passed, 5 total
-Tests:       140 passed, 140 total
+Test Suites: 9 passed, 9 total
+Tests:       250 passed, 250 total
 Snapshots:   0 total
-Time:        ~2.5s
+Time:        ~3.5s
 ```
 
 ## Documentation
@@ -337,9 +348,14 @@ Time:        ~2.5s
 
 The VFIDE project now has **production-ready testing infrastructure** for all time-dependent features:
 
-✅ **140 passing tests** covering 3-year vesting schedules  
-✅ **Comprehensive badge system** validation  
+✅ **250 passing tests** covering all time-dependent features  
+✅ **3-year vesting schedules** thoroughly validated  
+✅ **Comprehensive badge system** with expiration logic  
 ✅ **Streak tracking** with real-world scenarios  
+✅ **Commerce escrow** timeout and release windows  
+✅ **Payroll streaming** with per-second accrual  
+✅ **Presale unlock** mechanisms (90/180-day locks)  
+✅ **Governance timelock** delays and vault recovery  
 ✅ **Integration testing** across multiple systems  
 ✅ **Performance benchmarks** ensuring scalability  
 ✅ **Complete documentation** for ongoing maintenance  
@@ -349,7 +365,7 @@ This framework enables confident deployment of features that would otherwise req
 ### Key Achievements
 
 1. **Time Compression:** Test 3+ years in seconds
-2. **Comprehensive Coverage:** 140 tests across 5 suites
+2. **Comprehensive Coverage:** 250 tests across 9 suites
 3. **Performance Validated:** All operations <100ms
 4. **Scalable:** Tested with 10,000+ users
 5. **Well Documented:** Complete guides and examples
@@ -363,9 +379,73 @@ This framework enables confident deployment of features that would otherwise req
 4. ✅ Set up CI/CD automation for continuous testing
 5. ✅ Consider formal verification for critical calculations
 
+#### Suite 6: Escrow Time-Dependent Features (31 tests)
+**Location:** `__tests__/escrow-time-dependent.test.ts`
+
+Tests commerce escrow timeout and release mechanics:
+- ✅ Release timing validation
+- ✅ Dispute window enforcement
+- ✅ Automatic timeout claims
+- ✅ Multiple escrow coordination
+- ✅ Edge cases (leap years, month boundaries)
+
+**Key Validations:**
+- Release time restrictions
+- 3-day dispute windows
+- 30-day timeout periods
+- Multi-escrow prioritization
+
+#### Suite 7: Payroll Streaming (32 tests)
+**Location:** `__tests__/payroll-streaming.test.ts`
+
+Tests continuous token streaming and accrual:
+- ✅ Linear per-second token accrual
+- ✅ Stream exhaustion calculations
+- ✅ Pause/resume mechanics
+- ✅ Withdrawal timing
+- ✅ Real-world salary scenarios
+
+**Key Validations:**
+- Correct per-second rate calculations
+- Proper handling of paused periods
+- Accurate withdrawal resets
+- Monthly/weekly/hourly payment streams
+
+#### Suite 8: Presale Unlock Mechanisms (30 tests)
+**Location:** `__tests__/presale-unlock.test.ts`
+
+Tests presale lock periods and bonus tiers:
+- ✅ No-lock immediate claiming
+- ✅ 90-day lock period validation
+- ✅ 180-day lock period validation
+- ✅ Partial claim tracking
+- ✅ Multiple purchase coordination
+
+**Key Validations:**
+- Lock period enforcement
+- Unlock time calculations
+- Bonus tier differentials
+- Over-claim prevention
+
+#### Suite 9: Governance & Vault Timelock (17 tests)
+**Location:** `__tests__/governance-vault-timelock.test.ts`
+
+Tests DAO governance delays and vault recovery:
+- ✅ Proposal execution delays (1-30 days)
+- ✅ Expiration window enforcement
+- ✅ Queue management
+- ✅ 7-day vault recovery delay
+- ✅ Multi-signature approval timing
+
+**Key Validations:**
+- 2-day standard timelock delay
+- 7-day execution windows
+- Emergency fast-track (6 hours)
+- Vault recovery coordination
+
 ---
 
 **Status:** ✅ **Production Ready**  
-**Test Coverage:** 140 tests, 100% passing  
+**Test Coverage:** 250 tests, 100% passing  
 **Performance:** All benchmarks met  
 **Documentation:** Complete

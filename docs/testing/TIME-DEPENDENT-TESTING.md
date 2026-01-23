@@ -6,7 +6,11 @@ This guide covers comprehensive testing strategies for VFIDE's time-dependent fe
 - 3-year developer token vesting schedules
 - Badge expiration and renewal systems
 - Streak tracking and gamification
+- Commerce escrow timeout mechanisms
+- Payroll streaming and continuous token accrual
+- Presale lock periods (90-day, 180-day)
 - DAO governance timelocks
+- Vault recovery delays
 - Integration scenarios across multiple systems
 
 ## Testing Tools
@@ -441,6 +445,10 @@ const users = UserProfileGenerator.generateUsers(
                 __tests__/badge-time-dependent.test.ts \
                 __tests__/streak-tracking.test.ts \
                 __tests__/integration-time-dependent.test.ts \
+                __tests__/escrow-time-dependent.test.ts \
+                __tests__/payroll-streaming.test.ts \
+                __tests__/presale-unlock.test.ts \
+                __tests__/governance-vault-timelock.test.ts \
                 --coverage
 
 - name: Run performance benchmarks
