@@ -1,6 +1,6 @@
 'use client'
 
-// Rewards & Staking Management System
+// Rewards Management System (Howey-compliant - no staking)
 import { Footer } from '@/components/layout/Footer'
 import { safeParseFloat } from '@/lib/validation'
 import { toast } from '@/lib/toast'
@@ -9,7 +9,6 @@ import {
     CheckCircle2,
     Clock,
     Coins,
-    Droplets,
     Gift,
     GraduationCap,
     Lock,
@@ -26,16 +25,7 @@ import { formatUnits, parseUnits } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 
 // Contract ABIs
-const LIQUIDITY_INCENTIVES_ABI = [
-  { name: 'stake', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'lpToken', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [] },
-  { name: 'unstake', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'lpToken', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [] },
-  { name: 'claimRewards', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'lpToken', type: 'address' }], outputs: [] },
-  { name: 'compound', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'lpToken', type: 'address' }], outputs: [] },
-  { name: 'pendingRewards', type: 'function', stateMutability: 'view', inputs: [{ name: 'lpToken', type: 'address' }, { name: 'user', type: 'address' }], outputs: [{ name: 'base', type: 'uint256' }, { name: 'withBonus', type: 'uint256' }] },
-  { name: 'getUserStake', type: 'function', stateMutability: 'view', inputs: [{ name: 'lpToken', type: 'address' }, { name: 'user', type: 'address' }], outputs: [{ name: 'amount', type: 'uint256' }, { name: 'rewardDebt', type: 'uint256' }, { name: 'stakedAt', type: 'uint256' }, { name: 'unstakeRequestTime', type: 'uint256' }, { name: 'unstakeAmount', type: 'uint256' }] },
-  { name: 'getPoolInfo', type: 'function', stateMutability: 'view', inputs: [{ name: 'lpToken', type: 'address' }], outputs: [{ name: 'name', type: 'string' }, { name: 'totalStaked', type: 'uint256' }, { name: 'rewardRate', type: 'uint256' }, { name: 'lastUpdate', type: 'uint256' }, { name: 'rewardPerTokenStored', type: 'uint256' }, { name: 'active', type: 'bool' }] },
-  { name: 'getAllPools', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'address[]' }] },
-] as const;
+// LIQUIDITY_INCENTIVES_ABI removed for Howey compliance - no staking contracts
 
 const DUTY_DISTRIBUTOR_ABI = [
   { name: 'claimRewards', type: 'function', stateMutability: 'nonpayable', inputs: [], outputs: [] },
@@ -54,29 +44,20 @@ const PROMOTIONAL_TREASURY_ABI = [
 ] as const;
 
 // Contract addresses from environment (these contracts not deployed to testnet yet)
-const LIQUIDITY_INCENTIVES_ADDRESS = (process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+// LIQUIDITY_INCENTIVES_ADDRESS removed for Howey compliance
 const DUTY_DISTRIBUTOR_ADDRESS = (process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 const PROMOTIONAL_TREASURY_ADDRESS = (process.env.NEXT_PUBLIC_PROMOTIONAL_TREASURY_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 
 // Check if contracts are deployed (not zero address)
-const IS_LIQUIDITY_DEPLOYED = LIQUIDITY_INCENTIVES_ADDRESS !== '0x0000000000000000000000000000000000000000';
 const IS_DUTY_DEPLOYED = DUTY_DISTRIBUTOR_ADDRESS !== '0x0000000000000000000000000000000000000000';
 const IS_PROMO_DEPLOYED = PROMOTIONAL_TREASURY_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
-type TabId = 'overview' | 'duty' | 'promotional' | 'liquidity' | 'referral'
+type TabId = 'overview' | 'duty' | 'promotional' | 'referral'
 
 export default function RewardsPage() {
   const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
-  const [_stakeAmount, _setStakeAmount] = useState('')
-  const [_selectedPool, _setSelectedPool] = useState<string | null>(null)
   const [claimingId, _setClaimingId] = useState<string | null>(null)
-  
-
-  
-
-
-  
 
   // Contract write hooks
   const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
@@ -129,13 +110,7 @@ export default function RewardsPage() {
     query: { enabled: IS_PROMO_DEPLOYED },
   });
 
-  // Read LP pools
-  const { data: _allPools } = useReadContract({
-    address: LIQUIDITY_INCENTIVES_ADDRESS,
-    abi: LIQUIDITY_INCENTIVES_ABI,
-    functionName: 'getAllPools',
-    query: { enabled: IS_LIQUIDITY_DEPLOYED },
-  });
+  // LP pools read removed for Howey compliance
 
   // Calculate totals from contract data with safe conversions
   const dutyClaimable = dutyPoints && rewardPerPoint && dutyClaimed
@@ -174,41 +149,7 @@ export default function RewardsPage() {
     });
   };
 
-  const _handleStake = (lpToken: string, amount: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'stake',
-      args: [lpToken as `0x${string}`, parseUnits(amount, 18)],
-    });
-  };
-
-  const _handleUnstake = (lpToken: string, amount: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'unstake',
-      args: [lpToken as `0x${string}`, parseUnits(amount, 18)],
-    });
-  };
-
-  const _handleClaimLPRewards = (lpToken: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'claimRewards',
-      args: [lpToken as `0x${string}`],
-    });
-  };
-
-  const _handleCompound = (lpToken: string) => {
-    writeContract({
-      address: LIQUIDITY_INCENTIVES_ADDRESS,
-      abi: LIQUIDITY_INCENTIVES_ABI,
-      functionName: 'compound',
-      args: [lpToken as `0x${string}`],
-    });
-  };
+  // Liquidity staking handlers removed for Howey compliance
 
   // Generic claim handler for different reward types
   const handleClaim = (id: string) => {
@@ -300,7 +241,6 @@ export default function RewardsPage() {
                 { id: 'overview' as const, label: 'Overview', icon: Gift, color: 'amber' },
                 { id: 'duty' as const, label: 'Duty Rewards', icon: Vote, color: 'purple' },
                 { id: 'promotional' as const, label: 'Promotional', icon: Trophy, color: 'emerald' },
-                { id: 'liquidity' as const, label: 'LP Staking', icon: Droplets, color: 'cyan' },
                 { id: 'referral' as const, label: 'Referrals', icon: Users, color: 'pink' },
               ].map(tab => {
                 const isActive = activeTab === tab.id;
@@ -335,7 +275,6 @@ export default function RewardsPage() {
           {activeTab === 'overview' && <OverviewTab isConnected={isConnected} totalClaimable={totalClaimable} dutyClaimable={dutyClaimable} onClaim={handleClaim} claimingId={claimingId} />}
           {activeTab === 'duty' && <DutyRewardsTab isConnected={isConnected} dutyClaimable={dutyClaimable} onClaim={handleClaim} claimingId={claimingId} />}
           {activeTab === 'promotional' && <PromotionalTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
-          {activeTab === 'liquidity' && <LiquidityTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
           {activeTab === 'referral' && <ReferralTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
         </div>
       </main>
@@ -356,7 +295,6 @@ function OverviewTab({ isConnected, totalClaimable, dutyClaimable, onClaim, clai
   const rewardSources = [
     { id: 'duty', name: 'Governance Voting', amount: dutyClaimable, icon: Vote, color: '#00F0FF', description: 'Rewards for participating in DAO votes' },
     { id: 'promo', name: 'Promotional Rewards', amount: 0, icon: Trophy, color: '#FFD700', description: 'Education, milestones, and pioneer badges' },
-    { id: 'lp', name: 'LP Staking', amount: 0, icon: Droplets, color: '#50C878', description: 'Liquidity provider incentives' },
     { id: 'referral', name: 'Referral Bonus', amount: 0, icon: Users, color: '#A78BFA', description: 'Rewards for inviting new users' },
   ]
 
@@ -450,11 +388,10 @@ function OverviewTab({ isConnected, totalClaimable, dutyClaimable, onClaim, clai
           <Zap className="text-amber-400" size={24} />
           How Rewards Work
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { icon: Vote, title: 'Vote on Proposals', desc: 'Earn duty points for each governance vote' },
             { icon: GraduationCap, title: 'Complete Tasks', desc: 'Educational rewards for learning VFIDE' },
-            { icon: Droplets, title: 'Provide Liquidity', desc: 'Stake LP tokens for variable protocol rewards' },
             { icon: Users, title: 'Refer Friends', desc: 'One-time bonus when referrals purchase' },
           ].map((item) => (
             <div key={item.title} className="p-4 bg-zinc-900 rounded-lg border border-zinc-700">
@@ -676,157 +613,7 @@ function PromotionalTab({ isConnected, onClaim, claimingId }: {
   )
 }
 
-function LiquidityTab({ isConnected, onClaim, claimingId }: {
-  isConnected: boolean;
-  onClaim: (id: string) => void;
-  claimingId: string | null;
-}) {
-  const [stakeAmount, setStakeAmount] = useState('')
-  const [isStaking, setIsStaking] = useState(false)
-  const [_selectedPool, setSelectedPool] = useState<string | null>(null)
-  const { writeContractAsync } = useWriteContract();
-
-  const pools = [
-    { id: 'vfide-eth', address: process.env.NEXT_PUBLIC_VFIDE_ETH_LP || '0x0000000000000000000000000000000000000000', name: 'VFIDE/ETH', estimatedRate: 42.5, tvl: '2.4M', yourStake: 0, earned: 0, multiplier: '2x' },
-    { id: 'vfide-usdc', address: process.env.NEXT_PUBLIC_VFIDE_USDC_LP || '0x0000000000000000000000000000000000000000', name: 'VFIDE/USDC', estimatedRate: 28.3, tvl: '1.8M', yourStake: 0, earned: 0, multiplier: '1.5x' },
-  ]
-
-  const handleStake = async (lpTokenAddress: string) => {
-    if (!stakeAmount || !lpTokenAddress) return
-    setIsStaking(true)
-    setSelectedPool(lpTokenAddress)
-    try {
-      // Stake LP tokens
-      await writeContractAsync({
-        address: LIQUIDITY_INCENTIVES_ADDRESS,
-        abi: LIQUIDITY_INCENTIVES_ABI,
-        functionName: 'stake',
-        args: [lpTokenAddress as `0x${string}`, parseUnits(stakeAmount, 18)],
-      });
-      setStakeAmount('')
-      toast.success('Staked successfully')
-    } catch (error) {
-      console.error('Staking failed:', error)
-      toast.error('Staking failed. Please try again.')
-    } finally {
-      setIsStaking(false)
-      setSelectedPool(null)
-    }
-  }
-
-  if (!isConnected) {
-    return (
-      <div className="text-center py-16">
-        <Droplets className="w-16 h-16 mx-auto mb-4 text-zinc-400" />
-        <h2 className="text-2xl font-bold text-zinc-100 mb-4">Connect Wallet</h2>
-        <p className="text-zinc-400">Connect to stake LP tokens for variable protocol rewards (not guaranteed)</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Info Banner */}
-      <div className="bg-emerald-500/10 border border-emerald-500 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-emerald-500 mb-2 flex items-center gap-2">
-          <Droplets size={20} /> Liquidity Mining
-        </h3>
-        <p className="text-zinc-100">
-          Provide liquidity to VFIDE trading pairs and receive variable protocol rewards. Rewards require active staking participation and are not guaranteed.
-        </p>
-        <p className="text-zinc-400 text-sm mt-2">
-          *Estimated rates are variable and not guaranteed. Rates depend on pool activity, total staked amount, and protocol allocations. Past rates do not predict future results.
-        </p>
-      </div>
-
-      {/* Pools */}
-      <div className="space-y-4">
-        {pools.map((pool) => (
-          <div key={pool.id} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                  <Droplets className="text-emerald-500" size={28} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-xl font-bold text-zinc-100">{pool.name}</h4>
-                    <span className="px-2 py-0.5 bg-amber-400/20 text-amber-400 text-xs font-bold rounded">{pool.multiplier}</span>
-                  </div>
-                  <div className="text-zinc-400 text-sm">TVL: ${pool.tvl}</div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-                <div>
-                  <div className="text-zinc-400 text-sm">Est. Rate*</div>
-                  <div className="text-2xl font-bold text-emerald-500">{pool.estimatedRate}%</div>
-                </div>
-                <div>
-                  <div className="text-zinc-400 text-sm">Your Stake</div>
-                  <div className="text-xl font-bold text-zinc-100">{pool.yourStake.toLocaleString()} LP</div>
-                </div>
-                <div>
-                  <div className="text-zinc-400 text-sm">Earned</div>
-                  <div className="text-xl font-bold text-amber-400">{pool.earned.toLocaleString()} VFIDE</div>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                {pool.earned > 0 && (
-                  <button
-                    onClick={() => onClaim(pool.id)}
-                    disabled={claimingId === pool.id}
-                    className="px-4 py-2 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-green-500 transition-colors"
-                  >
-                    {claimingId === pool.id ? 'Claiming...' : 'Claim'}
-                  </button>
-                )}
-                <button className="px-4 py-2 bg-cyan-400 text-zinc-900 rounded-lg font-bold hover:bg-cyan-400 transition-colors">
-                  Stake
-                </button>
-                {pool.yourStake > 0 && (
-                  <button className="px-4 py-2 border border-zinc-400 text-zinc-400 rounded-lg font-bold hover:border-zinc-100 hover:text-zinc-100 transition-colors">
-                    Unstake
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Stake Form */}
-      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-zinc-100">Quick Stake</h3>
-          <button
-            onClick={() => setStakeAmount('1000')}
-            className="text-xs text-cyan-400 hover:text-cyan-400 font-bold"
-          >
-            MAX
-          </button>
-        </div>
-        <div className="flex gap-4">
-          <input
-            type="number"
-            value={stakeAmount}
-            onChange={(e) => setStakeAmount(e.target.value)}
-            placeholder="LP Token Amount"
-            className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
-          />
-          <button
-            onClick={() => handleStake(pools[0]?.address || '')}
-            disabled={isStaking || !stakeAmount}
-            className="px-8 py-3 bg-linear-to-r from-cyan-400 to-emerald-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform"
-          >
-            {isStaking ? 'Staking...' : 'Stake LP'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+// LiquidityTab removed for Howey compliance - no staking/reward expectations
 
 function ReferralTab({ isConnected, onClaim, claimingId }: {
   isConnected: boolean;
