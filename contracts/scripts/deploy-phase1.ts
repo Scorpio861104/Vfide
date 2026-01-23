@@ -58,6 +58,13 @@ async function main() {
   printDeploymentSummary(contracts);
   
   console.log('\n🎉 Phase 1 deployment complete!\n');
+
+  // Optionally verify contracts
+  if (process.env.VERIFY_CONTRACTS === 'true') {
+    await verifyContracts(contracts, config);
+  } else {
+    console.log('ℹ️  Skipping contract verification. Set VERIFY_CONTRACTS=true to enable.\n');
+  }
 }
 
 /**

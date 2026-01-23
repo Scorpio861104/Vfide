@@ -15,7 +15,9 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: 200,
       },
-      viaIR: true,
+      // viaIR increases compilation time but can improve optimization
+      // Enable only for production builds
+      viaIR: process.env.NODE_ENV === "production",
     },
   },
   networks: {

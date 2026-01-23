@@ -415,12 +415,12 @@ contract VFIDETokenV2 is ERC20, VFIDEAccessControl, VFIDEReentrancyGuard {
     }
 
     function safe32(uint n, string memory errorMessage) internal pure returns (uint32) {
-        require(n < 2**32, errorMessage);
+        require(n < (1 << 32), errorMessage);
         return uint32(n);
     }
 
     function safe224(uint n, string memory errorMessage) internal pure returns (uint224) {
-        require(n < 2**224, errorMessage);
+        require(n < (1 << 224), errorMessage);
         return uint224(n);
     }
 }

@@ -186,6 +186,8 @@ contract AdminMultiSig {
 
         proposal.status = ProposalStatus.Executed;
 
+        // Use 500k gas limit for safety - prevents gas griefing
+        // Can be increased via governance if needed for complex operations
         (bool success, ) = proposal.target.call{gas: 500000}(proposal.data);
         require(success, "AdminMultiSig: execution failed");
 

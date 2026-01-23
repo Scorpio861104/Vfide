@@ -363,6 +363,8 @@ contract CircuitBreaker is VFIDEAccessControl {
         }));
 
         // Call emergency controller to pause contracts
+        // Use limited gas for safety - emergency controller should be simple
+        // For critical situations, governance can directly pause contracts
         if (emergencyController != address(0)) {
             (bool success, ) = emergencyController.call{gas: 100000}(
                 abi.encodeWithSignature("emergencyPause()")

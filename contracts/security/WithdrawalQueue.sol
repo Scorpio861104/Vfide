@@ -298,6 +298,9 @@ contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
         return dailyCap - withdrawn;
     }
 
+    error MustOverrideExecuteWithdrawal();
+    error MustOverrideGetUserBalance();
+
     /**
      * @notice Internal function to execute withdrawal (to be overridden)
      * @param _user User address
@@ -305,7 +308,7 @@ contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
      * @dev MUST be overridden in implementing contract with actual withdrawal logic
      */
     function _executeWithdrawal(address _user, uint256 _amount) internal virtual {
-        require(false, "WithdrawalQueue: must override _executeWithdrawal");
+        revert MustOverrideExecuteWithdrawal();
     }
 
     /**
@@ -315,8 +318,7 @@ contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
      * @dev MUST be overridden in implementing contract with actual balance logic
      */
     function _getUserBalance(address _user) internal view virtual returns (uint256) {
-        require(false, "WithdrawalQueue: must override _getUserBalance");
-        return 0;
+        revert MustOverrideGetUserBalance();
     }
 
     /**
