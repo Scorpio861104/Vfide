@@ -364,7 +364,7 @@ contract CircuitBreaker is VFIDEAccessControl {
 
         // Call emergency controller to pause contracts
         if (emergencyController != address(0)) {
-            (bool success, ) = emergencyController.call(
+            (bool success, ) = emergencyController.call{gas: 100000}(
                 abi.encodeWithSignature("emergencyPause()")
             );
             // Don't revert if emergency controller call fails

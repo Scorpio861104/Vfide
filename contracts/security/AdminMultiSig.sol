@@ -163,7 +163,7 @@ contract AdminMultiSig {
     }
 
     /**
-     * @notice Execute an approved proposal
+     * @notice Execute a proposal
      * @param _proposalId ID of the proposal to execute
      */
     function executeProposal(uint256 _proposalId) 
@@ -186,7 +186,7 @@ contract AdminMultiSig {
 
         proposal.status = ProposalStatus.Executed;
 
-        (bool success, ) = proposal.target.call(proposal.data);
+        (bool success, ) = proposal.target.call{gas: 500000}(proposal.data);
         require(success, "AdminMultiSig: execution failed");
 
         emit ProposalExecuted(_proposalId, msg.sender);

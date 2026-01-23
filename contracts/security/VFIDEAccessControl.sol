@@ -103,7 +103,7 @@ contract VFIDEAccessControl is AccessControl {
      * @return count Number of members with the role
      */
     function getRoleMemberCount(bytes32 role) external view returns (uint256 count) {
-        count = getRoleMemberCount(role);
+        return super.getRoleMemberCount(role);
     }
 
     /**

@@ -238,7 +238,7 @@ contract VFIDETokenV2 is ERC20, VFIDEAccessControl, VFIDEReentrancyGuard {
     function getPriorVotes(address _account, uint256 _blockNumber) 
         external 
         view 
-        returns (uint96) 
+        returns (uint224) 
     {
         require(_blockNumber < block.number, "VFIDETokenV2: not yet determined");
 
