@@ -4,8 +4,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { 
   MockDate, 
-  TIME,
-  TimeScenarioBuilder 
+  TIME 
 } from './utils/time-travel';
 
 /**
