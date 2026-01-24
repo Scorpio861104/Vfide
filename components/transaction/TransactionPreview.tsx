@@ -487,7 +487,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
             </div>
             <AnimatePresence>
               {warnings.map((warning, index) => (
-                <WarningCard key={index} warning={warning} />
+                <WarningCard key={`${warning.level}-${warning.title}-${index}`} warning={warning} />
               ))}
             </AnimatePresence>
           </div>

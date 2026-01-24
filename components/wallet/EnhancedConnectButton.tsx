@@ -62,6 +62,10 @@ const SUPPORTED_CHAINS: ChainInfo[] = [
   { id: 300, name: 'zkSync Sepolia', icon: '⚡', isTestnet: true },
 ];
 
+// Pre-filter chains for better performance
+const MAINNET_CHAINS = SUPPORTED_CHAINS.filter(c => !c.isTestnet);
+const TESTNET_CHAINS = SUPPORTED_CHAINS.filter(c => c.isTestnet);
+
 // ==================== HOOKS ====================
 
 function useNetworkStatus() {
@@ -151,7 +155,7 @@ function ChainSelector({
           >
             <div className="p-2">
               <p className="text-xs text-gray-500 px-2 py-1 uppercase tracking-wide">Mainnets</p>
-              {SUPPORTED_CHAINS.filter(c => !c.isTestnet).map((chain) => (
+              {MAINNET_CHAINS.map((chain) => (
                 <button
                   key={chain.id}
                   onClick={() => {
@@ -178,7 +182,7 @@ function ChainSelector({
             
             <div className="border-t border-gray-200 dark:border-gray-700 p-2">
               <p className="text-xs text-gray-500 px-2 py-1 uppercase tracking-wide">Testnets</p>
-              {SUPPORTED_CHAINS.filter(c => c.isTestnet).map((chain) => (
+              {TESTNET_CHAINS.map((chain) => (
                 <button
                   key={chain.id}
                   onClick={() => {
