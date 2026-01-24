@@ -85,13 +85,18 @@ export function usePayroll() {
     }
   });
 
-  // Update time every second for real-time claimable display
+  // Update time more efficiently - only when there are active streams
+  // Using a longer interval (5 seconds) to reduce unnecessary re-renders
   useEffect(() => {
+    // Only run interval if there are active receiving streams
+    if (streams.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 1000);
+    }, 5000); // Update every 5 seconds instead of every second
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [streams.length]);
 
   // Calculate claimable amount for a stream
   const calculateClaimable = useCallback((stream: PayrollStream): bigint => {

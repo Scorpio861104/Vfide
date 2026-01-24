@@ -21,11 +21,11 @@ type LeaderboardCategory = 'xp' | 'level' | 'achievements' | 'friends';
 export function Leaderboard() {
   const { address } = useAccount();
   const [isLoading, setIsLoading] = useState(true);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [rawProgress, setRawProgress] = useState<ReturnType<typeof getAllUserProgress>>([]);
   const [category, setCategory] = useState<LeaderboardCategory>('xp');
   const [timeRange, _setTimeRange] = useState<'all' | 'week' | 'month'>('all');
 
-  // Load leaderboard data
+  // Load leaderboard data once
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -34,41 +34,43 @@ export function Leaderboard() {
     try {
       // Get all user progress from gamification system
       const allProgress = getAllUserProgress();
-      
-      // Sort based on category
-      const sorted = [...allProgress].sort((a, b) => {
-        switch (category) {
-          case 'xp':
-            return b.totalXP - a.totalXP;
-          case 'level':
-            return b.level - a.level || b.totalXP - a.totalXP;
-          case 'achievements':
-            return b.unlockedAchievements.length - a.unlockedAchievements.length;
-          case 'friends':
-            return (b.stats.friendsAdded || 0) - (a.stats.friendsAdded || 0);
-          default:
-            return 0;
-        }
-      });
-
-      // Add ranks
-      const withRanks: LeaderboardEntry[] = sorted.map((entry, index) => ({
-        address: entry.address,
-        alias: entry.alias,
-        level: entry.level,
-        totalXP: entry.totalXP,
-        achievementCount: entry.unlockedAchievements.length,
-        rank: index + 1,
-      }));
-
-      setLeaderboard(withRanks);
+      setRawProgress(allProgress);
     } catch (e) {
       console.error('Failed to load leaderboard:', e);
-      setLeaderboard([]);
+      setRawProgress([]);
     } finally {
       setIsLoading(false);
     }
-  }, [category, timeRange]);
+  }, [timeRange]);
+
+  // Memoize sorting and ranking computation
+  const leaderboard = useMemo(() => {
+    // Sort based on category
+    const sorted = [...rawProgress].sort((a, b) => {
+      switch (category) {
+        case 'xp':
+          return b.totalXP - a.totalXP;
+        case 'level':
+          return b.level - a.level || b.totalXP - a.totalXP;
+        case 'achievements':
+          return b.unlockedAchievements.length - a.unlockedAchievements.length;
+        case 'friends':
+          return (b.stats.friendsAdded || 0) - (a.stats.friendsAdded || 0);
+        default:
+          return 0;
+      }
+    });
+
+    // Add ranks
+    return sorted.map((entry, index) => ({
+      address: entry.address,
+      alias: entry.alias,
+      level: entry.level,
+      totalXP: entry.totalXP,
+      achievementCount: entry.unlockedAchievements.length,
+      rank: index + 1,
+    }));
+  }, [rawProgress, category]);
 
   const currentUserRank = useMemo(() => {
     if (!address) return null;
