@@ -1,20 +1,6 @@
 import { NextRequest } from 'next/server';
 import { GET } from '@/app/api/leaderboard/monthly/route';
 
-// Polyfill for Node.js environment
-if (typeof Request === 'undefined') {
-  global.Request = class Request {
-    constructor(public url: string, public init?: any) {}
-  } as any;
-}
-
-if (typeof Response === 'undefined') {
-  global.Response = class Response {
-    constructor(public body: any, public init?: any) {}
-    json() { return Promise.resolve(JSON.parse(this.body)); }
-  } as any;
-}
-
 // Mock the database client
 const mockQuery = jest.fn();
 const mockRelease = jest.fn();
