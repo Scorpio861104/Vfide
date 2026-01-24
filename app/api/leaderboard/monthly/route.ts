@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
     const userAddress = searchParams.get('userAddress');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100); // Cap at 100, default to 50
 
-    // Validate parsed number
+    // Validate parsed number - require at least 1 for leaderboard (0 would be meaningless)
     if (isNaN(limit) || limit < 1) {
       return NextResponse.json(
-        { error: 'Invalid limit parameter' },
+        { error: 'Invalid limit parameter (must be >= 1)' },
         { status: 400 }
       );
     }

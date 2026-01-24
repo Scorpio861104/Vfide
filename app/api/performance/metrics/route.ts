@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
     const metric = searchParams.get('metric');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100); // Cap at 100, default to 50
 
-    // Validate parsed number
-    if (isNaN(limit) || limit < 1) {
+    // Validate parsed number - allow 0 for backward compatibility
+    if (isNaN(limit) || limit < 0) {
       return NextResponse.json(
         { error: 'Invalid limit parameter' },
         { status: 400 }
