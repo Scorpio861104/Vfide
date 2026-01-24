@@ -2,7 +2,7 @@
  * useDebounce Hook Tests
  */
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useDebounce } from '../../../hooks/useDebounce';
 
 describe('useDebounce Hook', () => {
@@ -31,7 +31,9 @@ describe('useDebounce Hook', () => {
     rerender({ value: 'second', delay: 500 });
     expect(result.current).toBe('first');
     
-    jest.advanceTimersByTime(500);
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
     expect(result.current).toBe('second');
   });
 
@@ -42,14 +44,20 @@ describe('useDebounce Hook', () => {
     );
     
     rerender({ value: 'ab' });
-    jest.advanceTimersByTime(250);
+    act(() => {
+      jest.advanceTimersByTime(250);
+    });
     
     rerender({ value: 'abc' });
-    jest.advanceTimersByTime(250);
+    act(() => {
+      jest.advanceTimersByTime(250);
+    });
     
     expect(result.current).toBe('a');
     
-    jest.advanceTimersByTime(250);
+    act(() => {
+      jest.advanceTimersByTime(250);
+    });
     expect(result.current).toBe('abc');
   });
 
@@ -60,10 +68,14 @@ describe('useDebounce Hook', () => {
     );
     
     rerender({ value: 'updated', delay: 1000 });
-    jest.advanceTimersByTime(500);
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
     expect(result.current).toBe('test');
     
-    jest.advanceTimersByTime(500);
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
     expect(result.current).toBe('updated');
   });
 
@@ -79,7 +91,9 @@ describe('useDebounce Hook', () => {
     expect(result.current).toBe(obj1);
     
     rerender({ value: obj2 });
-    jest.advanceTimersByTime(500);
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
     
     expect(result.current).toBe(obj2);
   });
@@ -88,7 +102,9 @@ describe('useDebounce Hook', () => {
     const { unmount } = renderHook(() => useDebounce('test', 500));
     
     unmount();
-    jest.advanceTimersByTime(500);
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
     
     expect(true).toBe(true);
   });
@@ -100,7 +116,9 @@ describe('useDebounce Hook', () => {
     );
     
     rerender({ value: 'updated' });
-    jest.advanceTimersByTime(0);
+    act(() => {
+      jest.advanceTimersByTime(0);
+    });
     
     expect(result.current).toBe('updated');
   });

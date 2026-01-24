@@ -10,7 +10,6 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 describe('/api/leaderboard/headhunter', () => {
-  const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
 
   beforeEach(() => {
@@ -21,18 +20,28 @@ describe('/api/leaderboard/headhunter', () => {
     it('should return headhunter leaderboard', async () => {
       withRateLimit.mockResolvedValue(null);
 
-      query.mockResolvedValue({
-        rows: [
-          { wallet_address: '0x123', username: 'user1', referrals: 10, rank: 1 },
-        ],
-      });
+      // Note: The API requires year and quarter params, and returns data (not leaderboard)
+      // Without a subgraph URL, it returns an empty data array with a message
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/headhunter?year=2025&quarter=1');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.data).toEqual([]);
+      expect(data.meta.year).toBe(2025);
+      expect(data.meta.quarter).toBe(1);
+    });
+
+    it('should return 400 when year and quarter are missing', async () => {
+      withRateLimit.mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/leaderboard/headhunter');
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(data.leaderboard).toHaveLength(1);
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Year and quarter are required');
     });
   });
 });

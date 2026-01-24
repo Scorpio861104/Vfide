@@ -98,7 +98,7 @@ describe('Form Components', () => {
       
       const Form = () => (
         <form onSubmit={onSubmit}>
-          <input required placeholder="Name" />
+          <input required placeholder="Name" defaultValue="Test Name" />
           <button type="submit">Submit</button>
         </form>
       );
@@ -418,7 +418,7 @@ describe('Form Components', () => {
       expect(document.activeElement).toBe(screen.getByPlaceholderText(/email/i));
     });
 
-    it('should handle tab navigation', () => {
+    it('should handle tab navigation', async () => {
       const Form = () => (
         <form>
           <input placeholder="First" />
@@ -434,7 +434,7 @@ describe('Form Components', () => {
       
       expect(document.activeElement).toBe(first);
       
-      userEvent.tab();
+      await userEvent.tab();
       
       expect(document.activeElement).toBe(screen.getByPlaceholderText(/second/i));
     });

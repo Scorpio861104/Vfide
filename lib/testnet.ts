@@ -54,12 +54,12 @@ export const FAUCET_URLS = {
 }
 
 // Explorer URLs (use getExplorerUrlForChainId from lib/chains for dynamic URLs)
-export const EXPLORER_URL = isTestnetChain 
+export const EXPLORER_URL = (CURRENT_CHAIN_ID === TESTNET_CHAIN_ID || isTestnetChain)
   ? 'https://sepolia.basescan.org'
   : 'https://basescan.org'
 
 // Bridge URLs (for getting ETH to Base)
-export const BRIDGE_URL = isTestnetChain
+export const BRIDGE_URL = (CURRENT_CHAIN_ID === TESTNET_CHAIN_ID || isTestnetChain)
   ? 'https://sepolia-bridge.base.org'
   : 'https://bridge.base.org'
 

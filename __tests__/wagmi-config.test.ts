@@ -18,6 +18,7 @@ jest.mock('wagmi', () => ({
     storage: options.storage,
   })),
   http: jest.fn((url) => url || 'default-rpc'),
+  fallback: jest.fn((transports) => transports[0] || 'fallback-transport'),
   createStorage: jest.fn(() => ({
     getItem: jest.fn(),
     setItem: jest.fn(),

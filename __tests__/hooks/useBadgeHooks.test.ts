@@ -46,46 +46,24 @@ describe('useBadgeHooks', () => {
   })
 
   describe('useUserBadges', () => {
-    it('returns empty array when no badges', () => {
-      const { badgeIds, isLoading } = useUserBadges()
+    it('returns empty array (deprecated hook)', () => {
+      const { badgeIds, isLoading, isAvailable } = useUserBadges()
+      // This hook is deprecated and always returns empty array
       expect(badgeIds).toEqual([])
       expect(isLoading).toBe(false)
+      expect(isAvailable).toBe(false)
     })
 
-    it('returns badge IDs when user has badges', () => {
-      jest.mocked(useReadContract).mockReturnValue({
-        data: ['0xbadge1', '0xbadge2'] as unknown as undefined,
-        isLoading: false,
-        refetch: jest.fn(),
-      } as ReturnType<typeof useReadContract>)
-
-      const { badgeIds } = useUserBadges()
-      expect(badgeIds).toEqual(['0xbadge1', '0xbadge2'])
+    it('always returns empty array regardless of address (deprecated)', () => {
+      const { badgeIds, isAvailable } = useUserBadges('0xABCD1234567890123456789012345678901234AB' as `0x${string}`)
+      // Deprecated hook - use useBadgeNFTs instead
+      expect(badgeIds).toEqual([])
+      expect(isAvailable).toBe(false)
     })
 
-    it('uses connected address when no address provided', () => {
-      useUserBadges()
-      expect(useAccount).toHaveBeenCalled()
-    })
-
-    it('uses provided address when specified', () => {
-      useUserBadges('0xABCD1234567890123456789012345678901234AB' as `0x${string}`)
-      expect(useReadContract).toHaveBeenCalledWith(
-        expect.objectContaining({
-          args: expect.arrayContaining(['0xABCD1234567890123456789012345678901234AB']),
-        })
-      )
-    })
-
-    it('handles loading state', () => {
-      jest.mocked(useReadContract).mockReturnValue({
-        data: null,
-        isLoading: true,
-        refetch: jest.fn(),
-      } as unknown as ReturnType<typeof useReadContract>)
-
-      const { isLoading } = useUserBadges()
-      expect(isLoading).toBe(true)
+    it('indicates unavailability for migration purposes', () => {
+      const result = useUserBadges()
+      expect(result.isAvailable).toBe(false)
     })
   })
 

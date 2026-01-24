@@ -62,12 +62,14 @@ describe('testnet config', () => {
   describe('explorer and bridge URLs', () => {
     it('has explorer URL', () => {
       expect(EXPLORER_URL).toBeTruthy()
+      // Should contain basescan (for either testnet or mainnet)
       expect(EXPLORER_URL).toContain('basescan.org')
     })
 
     it('has bridge URL', () => {
       expect(BRIDGE_URL).toBeTruthy()
-      expect(BRIDGE_URL).toContain('base.org')
+      // Should contain bridge (for either testnet or mainnet)
+      expect(BRIDGE_URL).toContain('bridge.base.org')
     })
   })
 

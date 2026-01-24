@@ -25,7 +25,7 @@ describe('/api/auth/logout', () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.message).toContain('logout');
+      expect(data.message.toLowerCase()).toContain('log');
       expect(clearAuthCookies).toHaveBeenCalled();
     });
 

@@ -27,15 +27,19 @@ describe('/api/quests/weekly', () => {
           .mockResolvedValueOnce({
             rows: [{
               id: 1,
-              quest_key: 'weekly_trading',
+              challenge_key: 'weekly_trading',
               title: 'Weekly Trader',
               description: 'Make 10 trades this week',
-              difficulty: 'medium',
-              target_value: 10,
+              category: 'trading',
+              target: 10,
               reward_xp: 200,
-              reward_vfide: 50,
+              reward_vfide: '50000000000000000000',
+              icon: '💹',
+              week_start: '2026-01-20',
+              week_end: '2026-01-26',
               progress: 5,
               completed: false,
+              claimed: false,
             }],
           }),
         release: jest.fn(),
@@ -47,7 +51,7 @@ describe('/api/quests/weekly', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.quests).toHaveLength(1);
+      expect(data.challenges).toHaveLength(1);
       expect(mockClient.release).toHaveBeenCalled();
     });
 

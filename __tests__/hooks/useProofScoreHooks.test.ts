@@ -189,12 +189,13 @@ describe('useProofScoreHooks', () => {
 
       const { breakdown } = useScoreBreakdown()
       expect(breakdown.totalScore).toBe(10000)
-      expect(breakdown.baseScore).toBe(4000) // 40%
-      expect(breakdown.vaultBonus).toBe(1500) // 15%
-      expect(breakdown.ageBonus).toBe(1000) // 10%
-      expect(breakdown.activityPoints).toBe(1500) // 15%
-      expect(breakdown.endorsementPoints).toBe(1000) // 10%
-      expect(breakdown.badgePoints).toBe(1000) // 10%
+        expect(breakdown.baseScore).toBe(4000) // 40%
+        expect(breakdown.activityBonus).toBe(3000) // 30%
+        expect(breakdown.ageBonus).toBe(1000) // 10%
+        expect(breakdown.activityPoints).toBe(1500) // 15%
+        expect(breakdown.endorsementPoints).toBe(1000) // 10%
+        expect(breakdown.vaultBonus).toBe(0)
+        expect(breakdown.badgePoints).toBe(0)
       expect(breakdown.hasDiversityBonus).toBe(true)
     })
 

@@ -11,6 +11,7 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  checkOwnership: jest.fn(),
 }));
 
 jest.mock('@/lib/auth/validation', () => ({
@@ -21,7 +22,7 @@ jest.mock('@/lib/auth/validation', () => ({
 describe('/api/quests/claim', () => {
   const { getClient } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { requireAuth } = require('@/lib/auth/middleware');
+  const { requireAuth, checkOwnership } = require('@/lib/auth/middleware');
   const { validateBody } = require('@/lib/auth/validation');
 
   beforeEach(() => {
@@ -31,7 +32,8 @@ describe('/api/quests/claim', () => {
   describe('POST', () => {
     it('should claim quest rewards successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x123', id: 1 } });
+      checkOwnership.mockReturnValue(true);
       validateBody.mockResolvedValue({
         success: true,
         data: {
@@ -75,7 +77,8 @@ describe('/api/quests/claim', () => {
 
     it('should return 400 when quest is not completed', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x123', id: 1 } });
+      checkOwnership.mockReturnValue(true);
       validateBody.mockResolvedValue({
         success: true,
         data: {
@@ -115,7 +118,8 @@ describe('/api/quests/claim', () => {
 
     it('should return 400 when quest already claimed', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x123', id: 1 } });
+      checkOwnership.mockReturnValue(true);
       validateBody.mockResolvedValue({
         success: true,
         data: {

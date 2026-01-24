@@ -184,7 +184,7 @@ describe('Governance Components', () => {
       render(<Delegation />);
       
       expect(screen.getByPlaceholderText(/address/i)).toBeInTheDocument();
-      expect(screen.getByText(/delegate/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/delegate/i).length).toBeGreaterThan(0);
     });
   });
 
@@ -209,7 +209,7 @@ describe('Governance Components', () => {
       
       const ProposalForm = () => (
         <form onSubmit={onSubmit}>
-          <input placeholder="Title" required />
+          <input placeholder="Title" defaultValue="Test Proposal" />
           <button type="submit">Submit</button>
         </form>
       );

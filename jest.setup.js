@@ -1,5 +1,11 @@
 import '@testing-library/jest-dom'
 
+// Set up environment variables for tests
+process.env.JWT_SECRET = 'test-jwt-secret-for-jest-testing-12345';
+process.env.NEXTAUTH_SECRET = 'test-nextauth-secret-for-jest-testing-12345';
+process.env.NEXTAUTH_URL = 'http://localhost:3000';
+process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID = '84532'; // Base Sepolia for testing
+
 // Polyfill TextEncoder/TextDecoder for jsdom
 import { TextEncoder, TextDecoder } from 'util'
 global.TextEncoder = TextEncoder
@@ -217,84 +223,361 @@ jest.mock('viem/chains', () => ({
   zkSyncSepoliaTestnet: { id: 300, name: 'zkSync Sepolia', network: 'zksync-sepolia', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, blockExplorers: { default: { url: 'https://sepolia.explorer.zksync.io' } } },
 }))
 
-// Mock wagmi hooks
+// Mock wagmi hooks - comprehensive mock for all commonly used hooks
 jest.mock('wagmi', () => ({
+  // Account & Connection
   useAccount: jest.fn(() => ({
     address: '0x1234567890123456789012345678901234567890',
-    isConnected: false,
-    chain: { id: 1 },
+    isConnected: true,
+    isConnecting: false,
+    isDisconnected: false,
+    isReconnecting: false,
+    chain: { id: 1, name: 'Ethereum' },
+    connector: { id: 'mock', name: 'Mock Connector' },
+    status: 'connected',
   })),
+  useConnect: jest.fn(() => ({
+    connect: jest.fn(),
+    connectAsync: jest.fn(),
+    connectors: [
+      { id: 'metamask', name: 'MetaMask', type: 'injected' },
+      { id: 'walletconnect', name: 'WalletConnect', type: 'walletConnect' },
+    ],
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    data: null,
+    reset: jest.fn(),
+  })),
+  useDisconnect: jest.fn(() => ({
+    disconnect: jest.fn(),
+    disconnectAsync: jest.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    reset: jest.fn(),
+  })),
+  useReconnect: jest.fn(() => ({
+    reconnect: jest.fn(),
+    isPending: false,
+  })),
+
+  // Balance & Token
   useBalance: jest.fn(() => ({
-    data: { formatted: '0', symbol: 'ETH' },
+    data: { 
+      formatted: '1.5', 
+      symbol: 'ETH',
+      decimals: 18,
+      value: BigInt('1500000000000000000'),
+    },
     isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
   })),
+  useToken: jest.fn(() => ({
+    data: { name: 'Mock Token', symbol: 'MOCK', decimals: 18 },
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+
+  // Contract Interactions
   useReadContract: jest.fn(() => ({
     data: null,
     isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
     refetch: jest.fn(),
+    isFetching: false,
+    isPending: false,
   })),
   useReadContracts: jest.fn(() => ({
     data: [],
     isLoading: false,
+    isSuccess: true,
+    isError: false,
     error: null,
+    refetch: jest.fn(),
   })),
   useContractRead: jest.fn(() => ({
     data: null,
     isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
     refetch: jest.fn(),
   })),
   useContractWrite: jest.fn(() => ({
     write: jest.fn(),
+    writeAsync: jest.fn(),
     isLoading: false,
     isSuccess: false,
+    isError: false,
+    error: null,
+    data: null,
+    reset: jest.fn(),
   })),
   useWriteContract: jest.fn(() => ({
     writeContract: jest.fn(),
-    writeContractAsync: jest.fn(),
+    writeContractAsync: jest.fn().mockResolvedValue('0xhash'),
     data: undefined,
     isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    reset: jest.fn(),
+  })),
+  useSimulateContract: jest.fn(() => ({
+    data: { request: {} },
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  })),
+  usePrepareContractWrite: jest.fn(() => ({
+    config: {},
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  })),
+
+  // Transactions
+  useSendTransaction: jest.fn(() => ({
+    sendTransaction: jest.fn(),
+    sendTransactionAsync: jest.fn().mockResolvedValue('0xhash'),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    data: null,
+    reset: jest.fn(),
   })),
   useWaitForTransaction: jest.fn(() => ({
     isLoading: false,
-    isSuccess: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+    data: { status: 'success', blockNumber: BigInt(1000000) },
   })),
   useWaitForTransactionReceipt: jest.fn(() => ({
     isLoading: false,
-    isSuccess: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+    data: { status: 'success', blockNumber: BigInt(1000000) },
   })),
+  useTransaction: jest.fn(() => ({
+    data: null,
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  })),
+  useTransactionReceipt: jest.fn(() => ({
+    data: null,
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  })),
+
+  // Chain & Network
   useNetwork: jest.fn(() => ({
-    chain: { id: 1, name: 'Ethereum' },
+    chain: { id: 1, name: 'Ethereum', nativeCurrency: { symbol: 'ETH', decimals: 18 } },
+    chains: [{ id: 1, name: 'Ethereum' }, { id: 8453, name: 'Base' }],
+  })),
+  useChainId: jest.fn(() => 1),
+  useChain: jest.fn(() => ({
+    id: 1,
+    name: 'Ethereum',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    blockExplorers: { default: { url: 'https://etherscan.io' } },
   })),
   useSwitchNetwork: jest.fn(() => ({
     switchNetwork: jest.fn(),
+    switchNetworkAsync: jest.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
   })),
-  useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({
     switchChain: jest.fn(),
+    switchChainAsync: jest.fn(),
     isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    chains: [{ id: 1, name: 'Ethereum' }, { id: 8453, name: 'Base' }],
   })),
-  useConnect: jest.fn(() => ({
-    connect: jest.fn(),
+
+  // Signing
+  useSignMessage: jest.fn(() => ({
+    signMessage: jest.fn(),
+    signMessageAsync: jest.fn().mockResolvedValue('0xsignature'),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    data: null,
+    reset: jest.fn(),
+  })),
+  useSignTypedData: jest.fn(() => ({
+    signTypedData: jest.fn(),
+    signTypedDataAsync: jest.fn().mockResolvedValue('0xsignature'),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    data: null,
+    reset: jest.fn(),
+  })),
+  useVerifyMessage: jest.fn(() => ({
+    data: true,
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+
+  // Gas & Fee Data
+  useGasPrice: jest.fn(() => ({
+    data: BigInt('20000000000'), // 20 gwei
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  })),
+  useFeeData: jest.fn(() => ({
+    data: {
+      gasPrice: BigInt('20000000000'),
+      maxFeePerGas: BigInt('25000000000'),
+      maxPriorityFeePerGas: BigInt('2000000000'),
+    },
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+    refetch: jest.fn(),
+  })),
+  useEstimateGas: jest.fn(() => ({
+    data: BigInt('21000'),
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  })),
+  useEstimateFeesPerGas: jest.fn(() => ({
+    data: {
+      maxFeePerGas: BigInt('25000000000'),
+      maxPriorityFeePerGas: BigInt('2000000000'),
+    },
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+
+  // ENS
+  useEnsName: jest.fn(() => ({
+    data: null,
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  })),
+  useEnsAvatar: jest.fn(() => ({
+    data: null,
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  })),
+  useEnsAddress: jest.fn(() => ({
+    data: null,
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  })),
+  useEnsResolver: jest.fn(() => ({
+    data: null,
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+
+  // Block Data
+  useBlockNumber: jest.fn(() => ({
+    data: BigInt(1000000),
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  })),
+  useBlock: jest.fn(() => ({
+    data: { number: BigInt(1000000), timestamp: BigInt(Date.now() / 1000) },
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
+  useWatchBlockNumber: jest.fn(() => undefined),
+  useWatchBlocks: jest.fn(() => undefined),
+  useWatchPendingTransactions: jest.fn(() => undefined),
+
+  // Clients
+  usePublicClient: jest.fn(() => ({
+    getBlock: jest.fn(),
+    getBalance: jest.fn(),
+    getTransaction: jest.fn(),
+    estimateGas: jest.fn(),
+    readContract: jest.fn(),
+    simulateContract: jest.fn(),
+    waitForTransactionReceipt: jest.fn(),
+  })),
+  useWalletClient: jest.fn(() => ({
+    data: {
+      account: { address: '0x1234567890123456789012345678901234567890' },
+      chain: { id: 1, name: 'Ethereum' },
+      signMessage: jest.fn(),
+      signTypedData: jest.fn(),
+      sendTransaction: jest.fn(),
+      writeContract: jest.fn(),
+    },
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  })),
+  useConfig: jest.fn(() => ({
+    chains: [{ id: 1, name: 'Ethereum' }, { id: 8453, name: 'Base' }],
     connectors: [],
+    state: { chainId: 1 },
   })),
-  useDisconnect: jest.fn(() => ({
-    disconnect: jest.fn(),
+  useConnectorClient: jest.fn(() => ({
+    data: null,
+    isLoading: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
   })),
-  usePublicClient: jest.fn(() => ({})),
-  useWalletClient: jest.fn(() => ({ data: null })),
-  useEnsName: jest.fn(() => ({ data: null, isLoading: false })),
-  useEnsAvatar: jest.fn(() => ({ data: null, isLoading: false })),
-  useBlockNumber: jest.fn(() => ({ data: BigInt(1000000), isLoading: false })),
-  useTransaction: jest.fn(() => ({ data: null, isLoading: false })),
-  useTransactionReceipt: jest.fn(() => ({ data: null, isLoading: false })),
-  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), isPending: false })),
-  useSimulateContract: jest.fn(() => ({ data: null, isLoading: false })),
-  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), isPending: false })),
-  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), isPending: false })),
-  useConfig: jest.fn(() => ({})),
-  useConnectorClient: jest.fn(() => ({ data: null })),
+  useConnections: jest.fn(() => []),
+  useConnectors: jest.fn(() => [
+    { id: 'metamask', name: 'MetaMask', type: 'injected' },
+  ]),
+
+  // Utilities
   createConfig: jest.fn(() => ({})),
   http: jest.fn(() => ({})),
+  fallback: jest.fn((transports) => transports[0] || {}),
+  WagmiProvider: ({ children }) => children,
+  WagmiConfig: ({ children }) => children,
 }))
 
 // Mock wagmi/chains
@@ -368,6 +651,21 @@ jest.mock('@/lib/testnet', () => ({
   IS_TESTNET: true,
   CURRENT_CHAIN_ID: 84532,
   CURRENT_CHAIN_NAME: 'Base Sepolia',
+  TESTNET_CHAIN_ID: 84532,
+  MAINNET_CHAIN_ID: 8453,
+  isTestnetChain: true,
+  NETWORK_INFO: {
+    name: 'Base Sepolia',
+    shortName: 'Base',
+    symbol: 'ETH',
+  },
+  FAUCET_URLS: {
+    coinbase: 'https://portal.cdp.coinbase.com/products/faucet',
+    alchemy: 'https://www.alchemy.com/faucets/base-sepolia',
+    quicknode: 'https://faucet.quicknode.com/base/sepolia',
+  },
+  EXPLORER_URL: 'https://sepolia.basescan.org',
+  BRIDGE_URL: 'https://sepolia-bridge.base.org',
 }))
 
 // Mock window.matchMedia - only if window exists
@@ -384,6 +682,56 @@ if (typeof window !== 'undefined') {
       removeEventListener: jest.fn(),
       dispatchEvent: jest.fn(),
     })),
+  })
+
+  // Mock window.ethereum for Web3 interactions
+  Object.defineProperty(window, 'ethereum', {
+    writable: true,
+    value: {
+      isMetaMask: true,
+      isConnected: jest.fn(() => true),
+      selectedAddress: '0x1234567890123456789012345678901234567890',
+      chainId: '0x1',
+      networkVersion: '1',
+      request: jest.fn(async ({ method, params }) => {
+        switch (method) {
+          case 'eth_requestAccounts':
+          case 'eth_accounts':
+            return ['0x1234567890123456789012345678901234567890'];
+          case 'eth_chainId':
+            return '0x1';
+          case 'net_version':
+            return '1';
+          case 'eth_gasPrice':
+            return '0x4a817c800'; // 20 gwei in hex
+          case 'eth_estimateGas':
+            return '0x5208'; // 21000 in hex
+          case 'eth_getBalance':
+            return '0x16345785D8A0000'; // 0.1 ETH in hex
+          case 'eth_blockNumber':
+            return '0xF4240'; // block 1000000 in hex
+          case 'eth_call':
+            return '0x';
+          case 'eth_sendTransaction':
+            return '0x' + '0'.repeat(64);
+          case 'personal_sign':
+          case 'eth_signTypedData_v4':
+            return '0x' + '0'.repeat(130);
+          case 'wallet_switchEthereumChain':
+          case 'wallet_addEthereumChain':
+            return null;
+          default:
+            return null;
+        }
+      }),
+      on: jest.fn((event, callback) => {}),
+      removeListener: jest.fn((event, callback) => {}),
+      removeAllListeners: jest.fn((event) => {}),
+      enable: jest.fn(async () => ['0x1234567890123456789012345678901234567890']),
+      sendAsync: jest.fn((request, callback) => {
+        callback(null, { result: null });
+      }),
+    },
   })
 }
 
@@ -451,11 +799,94 @@ jest.mock('@/hooks/useTransactionSounds', () => ({
   }),
 }))
 
-// Mock ResponsiveContainer
+// Mock ResponsiveContainer and all mobile utilities
 jest.mock('@/lib/mobile', () => ({
-  ResponsiveContainer: ({ children }) => <div>{children}</div>,
+  ResponsiveContainer: ({ children }) => <div data-testid="responsive-container">{children}</div>,
+  ResponsiveSection: ({ children }) => <section data-testid="responsive-section">{children}</section>,
   useMediaQuery: jest.fn(() => false),
   useMobile: jest.fn(() => false),
+  useMedia: jest.fn(() => false),
+  responsiveSpacing: {
+    px: { mobile: 'px-4', sm: 'sm:px-6', lg: 'lg:px-8' },
+    py: { mobile: 'py-4', sm: 'sm:py-6', lg: 'lg:py-8' },
+    gap: { mobile: 'gap-3', sm: 'sm:gap-4', lg: 'lg:gap-6' },
+  },
+  touchTargets: {
+    small: 'min-h-[44px] min-w-[44px]',
+    medium: 'min-h-[48px] min-w-[48px]',
+    large: 'min-h-[56px] min-w-[56px]',
+  },
+  responsiveTypography: {
+    h1: 'text-2xl sm:text-3xl lg:text-4xl font-bold',
+    h2: 'text-xl sm:text-2xl lg:text-3xl font-bold',
+    h3: 'text-lg sm:text-xl lg:text-2xl font-semibold',
+    body: 'text-base sm:text-lg leading-relaxed',
+    small: 'text-sm sm:text-base',
+  },
+  responsiveGrids: {
+    balanced: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+    twoCol: 'grid-cols-1 lg:grid-cols-2',
+    singleToDouble: 'grid-cols-1 md:grid-cols-2',
+    auto: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+  },
+  safeArea: {
+    top: 'pt-safe',
+    bottom: 'pb-safe',
+    left: 'pl-safe',
+    right: 'pr-safe',
+  },
+  breakpoints: {
+    mobile: 0,
+    sm: 640,
+    md: 768,
+    lg: 1024,
+    xl: 1280,
+    '2xl': 1536,
+  },
+  visibility: {
+    mobileOnly: 'block sm:hidden',
+    tabletUp: 'hidden sm:block',
+    desktopOnly: 'hidden lg:block',
+    mobileTablet: 'block lg:hidden',
+  },
+  responsivePadding: {
+    container: 'px-4 sm:px-6 md:px-8 lg:px-12',
+    section: 'py-6 sm:py-8 md:py-12 lg:py-16',
+    card: 'p-4 sm:p-6 md:p-8',
+  },
+  responsiveFlex: {
+    stackToRow: 'flex flex-col md:flex-row',
+    centerToSpaceBetween: 'flex flex-col sm:flex-row sm:justify-between sm:items-center',
+    centered: 'flex items-center justify-center',
+  },
+  imageSizes: {
+    full: '100vw',
+    container: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 1024px',
+    thumbnail: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw',
+    icon: '44px',
+  },
+  scalingFontSizes: {
+    heading1: 'text-4xl sm:text-5xl lg:text-6xl',
+    heading2: 'text-3xl sm:text-4xl lg:text-5xl',
+    heading3: 'text-2xl sm:text-3xl lg:text-4xl',
+    body: 'text-base sm:text-lg leading-relaxed',
+    caption: 'text-xs sm:text-sm',
+  },
+  zIndex: {
+    hide: '-z-10',
+    base: 'z-0',
+    dropdown: 'z-10',
+    sticky: 'z-20',
+    fixed: 'z-30',
+    modal: 'z-40',
+    popover: 'z-50',
+  },
+  safeAreaInsets: {
+    top: 'env(safe-area-inset-top)',
+    bottom: 'env(safe-area-inset-bottom)',
+    left: 'env(safe-area-inset-left)',
+    right: 'env(safe-area-inset-right)',
+  },
 }))
 
 // Mock AvatarUpload

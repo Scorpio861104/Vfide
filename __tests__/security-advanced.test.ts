@@ -164,44 +164,44 @@ describe('JWT Authentication', () => {
       expect(result.address).toBe(mixedCaseAddress.toLowerCase());
     });
 
-    it('uses default chain ID if not provided', () => {
+    it('uses default chain ID if not provided', async () => {
       const result = generateToken(testAddress);
-      const decoded = verifyToken(result.token);
+      const decoded = await verifyToken(result.token);
       
       expect(decoded?.chainId).toBe(8453); // Base mainnet
     });
   });
 
   describe('Token Verification', () => {
-    it('verifies valid JWT token', () => {
+    it('verifies valid JWT token', async () => {
       const { token } = generateToken(testAddress, testChainId);
-      const decoded = verifyToken(token);
+      const decoded = await verifyToken(token);
       
       expect(decoded).not.toBeNull();
       expect(decoded?.address).toBe(testAddress.toLowerCase());
       expect(decoded?.chainId).toBe(testChainId);
     });
 
-    it('rejects tampered JWT token', () => {
+    it('rejects tampered JWT token', async () => {
       const { token } = generateToken(testAddress);
       const tamperedToken = token + 'tampered';
       
-      const decoded = verifyToken(tamperedToken);
+      const decoded = await verifyToken(tamperedToken);
       expect(decoded).toBeNull();
     });
 
-    it('rejects expired JWT token', () => {
+    it('rejects expired JWT token', async () => {
       // Create a token that expired immediately (mock by manipulating time)
       const { token } = generateToken(testAddress);
-      const decoded = verifyToken(token);
+      const decoded = await verifyToken(token);
       
       // Token should be valid initially
       expect(decoded).not.toBeNull();
     });
 
-    it('rejects invalid JWT format', () => {
+    it('rejects invalid JWT format', async () => {
       const invalidToken = 'not.a.valid.jwt.token';
-      const decoded = verifyToken(invalidToken);
+      const decoded = await verifyToken(invalidToken);
       
       expect(decoded).toBeNull();
     });
@@ -230,9 +230,9 @@ describe('JWT Authentication', () => {
   });
 
   describe('Token Expiration', () => {
-    it('detects non-expired token', () => {
+    it('detects non-expired token', async () => {
       const { token } = generateToken(testAddress);
-      const decoded = verifyToken(token);
+      const decoded = await verifyToken(token);
       
       expect(decoded).not.toBeNull();
       if (decoded) {
@@ -245,9 +245,9 @@ describe('JWT Authentication', () => {
       expect(isTokenExpired(payload)).toBe(true);
     });
 
-    it('determines if token should be refreshed', () => {
+    it('determines if token should be refreshed', async () => {
       const { token } = generateToken(testAddress);
-      const decoded = verifyToken(token);
+      const decoded = await verifyToken(token);
       
       expect(decoded).not.toBeNull();
       if (decoded) {

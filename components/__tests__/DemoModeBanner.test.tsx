@@ -34,7 +34,7 @@ describe('DemoModeBanner', () => {
       chain: undefined,
     } as any)
 
-    const { container } = render(<DemoModeBanner />)
-    expect(container.querySelector('svg')).toBeInTheDocument()
+    render(<DemoModeBanner />)
+    expect(screen.getByTestId('icon-AlertCircle')).toBeInTheDocument()
   })
 })

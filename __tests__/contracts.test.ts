@@ -59,16 +59,16 @@ describe('contracts', () => {
       expect(Array.isArray(MERCHANT_PORTAL_ABI)).toBe(true)
     })
 
-    it('exports BADGE_NFT_ABI', async () => {
-      const { BADGE_NFT_ABI } = await import('@/lib/contracts')
-      expect(BADGE_NFT_ABI).toBeDefined()
-      expect(Array.isArray(BADGE_NFT_ABI)).toBe(true)
+    it('exports VFIDEBadgeNFTABI', async () => {
+      const { VFIDEBadgeNFTABI } = await import('@/lib/contracts')
+      expect(VFIDEBadgeNFTABI).toBeDefined()
+      expect(Array.isArray(VFIDEBadgeNFTABI)).toBe(true)
     })
 
-    it('exports PRESALE_ABI', async () => {
-      const { PRESALE_ABI } = await import('@/lib/contracts')
-      expect(PRESALE_ABI).toBeDefined()
-      expect(Array.isArray(PRESALE_ABI)).toBe(true)
+    it('exports VFIDEPresaleABI', async () => {
+      const { VFIDEPresaleABI } = await import('@/lib/contracts')
+      expect(VFIDEPresaleABI).toBeDefined()
+      expect(Array.isArray(VFIDEPresaleABI)).toBe(true)
     })
   })
 })

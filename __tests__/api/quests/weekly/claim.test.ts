@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST } from '@/app/api/quests/weekly/claim/route';
 
 jest.mock('@/lib/db', () => ({
@@ -11,12 +11,13 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  checkOwnership: jest.fn(),
 }));
 
 describe('/api/quests/weekly/claim', () => {
   const { getClient } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { requireAuth } = require('@/lib/auth/middleware');
+  const { requireAuth, checkOwnership } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,14 +26,28 @@ describe('/api/quests/weekly/claim', () => {
   describe('POST', () => {
     it('should claim weekly quest successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      // Route doesn't await requireAuth, so it uses sync return
+      requireAuth.mockReturnValue({ user: { address: '0x123', id: 1 } });
+      checkOwnership.mockReturnValue(true);
 
       const mockClient = {
         query: jest.fn()
-          .mockResolvedValueOnce({ rows: [{ id: 1 }] })
-          .mockResolvedValueOnce({ rows: [{ completed: true, claimed: false }] })
-          .mockResolvedValueOnce({ rows: [] })
-          .mockResolvedValueOnce({ rows: [] }),
+          .mockResolvedValueOnce({ rows: [] }) // BEGIN (implicit)
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // user lookup
+          .mockResolvedValueOnce({ 
+            rows: [{ 
+              completed: true, 
+              claimed: false, 
+              reward_xp: 200, 
+              reward_vfide: '50000000000000000000',
+              title: 'Weekly Trader',
+              week_start: '2026-01-20'
+            }] 
+          }) // progress check
+          .mockResolvedValueOnce({ rows: [] }) // claim update
+          .mockResolvedValueOnce({ rows: [] }) // XP update
+          .mockResolvedValueOnce({ rows: [] }) // reward record
+          .mockResolvedValueOnce({ rows: [] }), // COMMIT
         release: jest.fn(),
       };
       getClient.mockResolvedValue(mockClient);
@@ -41,7 +56,7 @@ describe('/api/quests/weekly/claim', () => {
         method: 'POST',
         body: JSON.stringify({
           userAddress: '0x123',
-          questId: 1,
+          challengeId: 1,
         }),
       });
 
@@ -55,8 +70,8 @@ describe('/api/quests/weekly/claim', () => {
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);

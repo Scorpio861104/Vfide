@@ -138,29 +138,30 @@ describe('formatUSD', () => {
 })
 
 describe('getScoreTierColor', () => {
-  it('returns green for VERIFIED (900+)', () => {
-    expect(getScoreTierColor(900)).toBe('#50C878')
-    expect(getScoreTierColor(1000)).toBe('#50C878')
+  // Note: Function uses 0-10000 scale (10x precision) matching the Seer contract
+  it('returns green for VERIFIED (9000+)', () => {
+    expect(getScoreTierColor(9000)).toBe('#50C878')
+    expect(getScoreTierColor(10000)).toBe('#50C878')
   })
 
-  it('returns cyan for TRUSTED (700-899)', () => {
-    expect(getScoreTierColor(700)).toBe('#00F0FF')
-    expect(getScoreTierColor(899)).toBe('#00F0FF')
+  it('returns cyan for TRUSTED (7000-8999)', () => {
+    expect(getScoreTierColor(7000)).toBe('#00F0FF')
+    expect(getScoreTierColor(8999)).toBe('#00F0FF')
   })
 
-  it('returns orange for ESTABLISHED (400-699)', () => {
-    expect(getScoreTierColor(400)).toBe('#FFA500')
-    expect(getScoreTierColor(699)).toBe('#FFA500')
+  it('returns orange for ESTABLISHED (4000-6999)', () => {
+    expect(getScoreTierColor(4000)).toBe('#FFA500')
+    expect(getScoreTierColor(6999)).toBe('#FFA500')
   })
 
-  it('returns gold for PROBATIONARY (200-399)', () => {
-    expect(getScoreTierColor(200)).toBe('#FFD700')
-    expect(getScoreTierColor(399)).toBe('#FFD700')
+  it('returns gold for PROBATIONARY (2000-3999)', () => {
+    expect(getScoreTierColor(2000)).toBe('#FFD700')
+    expect(getScoreTierColor(3999)).toBe('#FFD700')
   })
 
-  it('returns grey for UNRANKED (0-199)', () => {
+  it('returns grey for UNRANKED (0-1999)', () => {
     expect(getScoreTierColor(0)).toBe('#A0A0A5')
-    expect(getScoreTierColor(199)).toBe('#A0A0A5')
+    expect(getScoreTierColor(1999)).toBe('#A0A0A5')
   })
 })
 

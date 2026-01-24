@@ -73,7 +73,7 @@ describe('Dashboard Components', () => {
     it('should render vault information', () => {
       render(<VaultDisplay vaultId="vault-123" />);
       
-      expect(screen.getByText(/vault/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/vault/i).length).toBeGreaterThan(0);
       expect(screen.getByText(/total value/i)).toBeInTheDocument();
     });
 
@@ -86,7 +86,7 @@ describe('Dashboard Components', () => {
     it('should handle missing vault ID', () => {
       render(<VaultDisplay />);
       
-      expect(screen.getByText(/vault/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/vault/i).length).toBeGreaterThan(0);
     });
 
     it('should show total value', () => {

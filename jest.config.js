@@ -12,6 +12,7 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^uncrypto$': '<rootDir>/__mocks__/uncrypto.js',
   },
   collectCoverageFrom: [
     'lib/utils.ts',
@@ -78,7 +79,7 @@ const customJestConfig = {
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(wagmi|@wagmi|viem|@tanstack|@rainbow-me|@walletconnect|@noble|@scure|abitype|ox)/)',
+    'node_modules/(?!(wagmi|@wagmi|viem|@tanstack|@rainbow-me|@walletconnect|@noble|@scure|abitype|ox|uncrypto|@upstash)/)',
   ],
   testPathIgnorePatterns: [
     '/node_modules/',

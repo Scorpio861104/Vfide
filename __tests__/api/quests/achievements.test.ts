@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { GET } from '@/app/api/quests/achievements/route';
 
 jest.mock('@/lib/db', () => ({
-  query: jest.fn(),
+  getClient: jest.fn(),
 }));
 
 jest.mock('@/lib/auth/rateLimit', () => ({
@@ -10,7 +10,7 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 describe('/api/quests/achievements', () => {
-  const { query } = require('@/lib/db');
+  const { getClient } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
 
   beforeEach(() => {
@@ -21,15 +21,31 @@ describe('/api/quests/achievements', () => {
     it('should return user achievements', async () => {
       withRateLimit.mockResolvedValue(null);
 
-      query.mockResolvedValue({
-        rows: [{
-          id: 1,
-          name: 'First Quest',
-          description: 'Complete your first quest',
-          icon: '🎯',
-          earned_at: new Date().toISOString(),
-        }],
-      });
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // user lookup
+          .mockResolvedValueOnce({
+            rows: [{
+              id: 1,
+              milestone_key: 'first_quest',
+              title: 'First Quest',
+              description: 'Complete your first quest',
+              category: 'quests',
+              requirement_type: 'quests_completed',
+              target: 1,
+              reward_xp: 100,
+              reward_vfide: '0',
+              reward_badge: null,
+              icon: '🎯',
+              rarity: 'common',
+              progress: 1,
+              unlocked: true,
+              claimed: false,
+            }],
+          }),
+        release: jest.fn(),
+      };
+      getClient.mockResolvedValue(mockClient);
 
       const request = new NextRequest('http://localhost:3000/api/quests/achievements?userAddress=0x123');
       const response = await GET(request);
