@@ -6,19 +6,31 @@ describe('useProofScore', () => {
     it('returns Elite for scores >= 8000', () => {
       expect(getScoreTier(8000)).toBe('Elite')
       expect(getScoreTier(8500)).toBe('Elite')
-      expect(getScoreTier(10000)).toBe('Elite')
+      expect(getScoreTier(9999)).toBe('Elite')
     })
 
-    it('returns High Trust for scores 7000-7999', () => {
-      expect(getScoreTier(7000)).toBe('High Trust')
-      expect(getScoreTier(7500)).toBe('High Trust')
-      expect(getScoreTier(7999)).toBe('High Trust')
+    it('returns Council for scores 7000-7999', () => {
+      expect(getScoreTier(7000)).toBe('Council')
+      expect(getScoreTier(7500)).toBe('Council')
+      expect(getScoreTier(7999)).toBe('Council')
     })
 
-    it('returns Neutral for scores 5000-6999', () => {
+    it('returns Trusted for scores 5600-6999', () => {
+      expect(getScoreTier(5600)).toBe('Trusted')
+      expect(getScoreTier(6000)).toBe('Trusted')
+      expect(getScoreTier(6999)).toBe('Trusted')
+    })
+
+    it('returns Governance for scores 5400-5599', () => {
+      expect(getScoreTier(5400)).toBe('Governance')
+      expect(getScoreTier(5500)).toBe('Governance')
+      expect(getScoreTier(5599)).toBe('Governance')
+    })
+
+    it('returns Neutral for scores 5000-5399', () => {
       expect(getScoreTier(5000)).toBe('Neutral')
-      expect(getScoreTier(5500)).toBe('Neutral')
-      expect(getScoreTier(6999)).toBe('Neutral')
+      expect(getScoreTier(5200)).toBe('Neutral')
+      expect(getScoreTier(5399)).toBe('Neutral')
     })
 
     it('returns Low Trust for scores 3500-4999', () => {

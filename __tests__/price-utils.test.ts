@@ -9,13 +9,13 @@ import {
 describe('price-utils', () => {
   describe('constants', () => {
     it('has correct presale prices', () => {
-      expect(PRESALE_PRICES.founding).toBe(0.05)
-      expect(PRESALE_PRICES.oath).toBe(0.08)
-      expect(PRESALE_PRICES.public).toBe(0.10)
+      expect(PRESALE_PRICES.founding).toBe(0.03)
+      expect(PRESALE_PRICES.oath).toBe(0.05)
+      expect(PRESALE_PRICES.public).toBe(0.07)
     })
 
-    it('has default price set to public tier', () => {
-      expect(DEFAULT_VFIDE_PRICE).toBe(0.10)
+    it('has default price set to oath tier', () => {
+      expect(DEFAULT_VFIDE_PRICE).toBe(0.05)
     })
   })
 
@@ -29,30 +29,30 @@ describe('price-utils', () => {
     })
 
     it('formats small amounts correctly', () => {
-      // Values < $1 use 4 decimal places
-      expect(vfideToUsd(1)).toBe('$0.1000') // 1 * 0.10 = $0.10
-      expect(vfideToUsd(5)).toBe('$0.5000') // 5 * 0.10 = $0.50
+      // Values < $1 use 4 decimal places (default price 0.05)
+      expect(vfideToUsd(1)).toBe('$0.0500') // 1 * 0.05 = $0.05
+      expect(vfideToUsd(5)).toBe('$0.2500') // 5 * 0.05 = $0.25
     })
 
     it('formats amounts >= $1 with 2 decimals', () => {
-      expect(vfideToUsd(10)).toBe('$1.00')
-      expect(vfideToUsd(100)).toBe('$10.00')
-      expect(vfideToUsd(150)).toBe('$15.00')
+      expect(vfideToUsd(20)).toBe('$1.00')   // 20 * 0.05 = $1.00
+      expect(vfideToUsd(100)).toBe('$5.00')  // 100 * 0.05 = $5.00
+      expect(vfideToUsd(200)).toBe('$10.00') // 200 * 0.05 = $10.00
     })
 
     it('formats thousands with K suffix', () => {
-      expect(vfideToUsd(10000)).toBe('$1.0K') // 10000 * 0.10 = $1000
-      expect(vfideToUsd(50000)).toBe('$5.0K') // 50000 * 0.10 = $5000
+      expect(vfideToUsd(20000)).toBe('$1.0K') // 20000 * 0.05 = $1000
+      expect(vfideToUsd(100000)).toBe('$5.0K') // 100000 * 0.05 = $5000
     })
 
     it('formats millions with M suffix', () => {
-      expect(vfideToUsd(10000000)).toBe('$1.00M') // 10M * 0.10 = $1M
-      expect(vfideToUsd(50000000)).toBe('$5.00M')
+      expect(vfideToUsd(20000000)).toBe('$1.00M') // 20M * 0.05 = $1M
+      expect(vfideToUsd(100000000)).toBe('$5.00M')
     })
 
     it('accepts string amounts', () => {
-      expect(vfideToUsd('100')).toBe('$10.00')
-      expect(vfideToUsd('10000')).toBe('$1.0K')
+      expect(vfideToUsd('100')).toBe('$5.00')   // 100 * 0.05 = $5
+      expect(vfideToUsd('20000')).toBe('$1.0K') // 20000 * 0.05 = $1000
     })
 
     it('uses custom price when provided', () => {
@@ -61,7 +61,7 @@ describe('price-utils', () => {
     })
 
     it('handles very small amounts with 4 decimals', () => {
-      expect(vfideToUsd(0.1)).toBe('$0.0100') // 0.1 * 0.10 = $0.01
+      expect(vfideToUsd(0.1)).toBe('$0.0050') // 0.1 * 0.05 = $0.005
     })
   })
 
@@ -69,13 +69,13 @@ describe('price-utils', () => {
     it('returns both vfide and usd formatted', () => {
       const result = formatVfideWithUsd(1000)
       expect(result.vfide).toBe('1,000')
-      expect(result.usd).toBe('$100.00')
+      expect(result.usd).toBe('$50.00') // 1000 * 0.05 = $50
     })
 
     it('handles string input', () => {
       const result = formatVfideWithUsd('5000')
       expect(result.vfide).toBe('5,000')
-      expect(result.usd).toBe('$500.00')
+      expect(result.usd).toBe('$250.00') // 5000 * 0.05 = $250
     })
 
     it('uses custom price', () => {
@@ -84,9 +84,9 @@ describe('price-utils', () => {
     })
 
     it('handles large amounts', () => {
-      const result = formatVfideWithUsd(10000000)
-      expect(result.vfide).toBe('10,000,000')
-      expect(result.usd).toBe('$1.00M')
+      const result = formatVfideWithUsd(20000000)
+      expect(result.vfide).toBe('20,000,000')
+      expect(result.usd).toBe('$1.00M') // 20M * 0.05 = $1M
     })
   })
 })
