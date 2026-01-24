@@ -19,7 +19,7 @@ describe('Skeleton components', () => {
   describe('Skeleton', () => {
     it('renders with default props', () => {
       render(<Skeleton />)
-      const skeleton = document.querySelector('.bg-\\[\\#2A2A2F\\]')
+      const skeleton = document.querySelector('.bg-zinc-800')
       expect(skeleton).toBeInTheDocument()
     })
 
@@ -31,7 +31,7 @@ describe('Skeleton components', () => {
 
     it('applies width and height styles', () => {
       render(<Skeleton width={100} height={50} />)
-      const skeleton = document.querySelector('.bg-\\[\\#2A2A2F\\]')
+      const skeleton = document.querySelector('.bg-zinc-800')
       expect(skeleton).toHaveStyle({ width: '100px', height: '50px' })
     })
 
@@ -50,13 +50,13 @@ describe('Skeleton components', () => {
   describe('SkeletonText', () => {
     it('renders default 3 lines', () => {
       render(<SkeletonText />)
-      const lines = document.querySelectorAll('.bg-\\[\\#2A2A2F\\]')
+      const lines = document.querySelectorAll('.bg-zinc-800')
       expect(lines.length).toBe(3)
     })
 
     it('renders custom number of lines', () => {
       render(<SkeletonText lines={5} />)
-      const lines = document.querySelectorAll('.bg-\\[\\#2A2A2F\\]')
+      const lines = document.querySelectorAll('.bg-zinc-800')
       expect(lines.length).toBe(5)
     })
 
@@ -70,13 +70,13 @@ describe('Skeleton components', () => {
   describe('SkeletonCard', () => {
     it('renders with card structure', () => {
       render(<SkeletonCard />)
-      const card = document.querySelector('.bg-\\[\\#1A1A1D\\]')
+      const card = document.querySelector('.bg-zinc-900')
       expect(card).toBeInTheDocument()
     })
 
     it('contains skeleton elements', () => {
       render(<SkeletonCard />)
-      const skeletons = document.querySelectorAll('.bg-\\[\\#2A2A2F\\]')
+      const skeletons = document.querySelectorAll('.bg-zinc-800')
       expect(skeletons.length).toBeGreaterThan(0)
     })
 

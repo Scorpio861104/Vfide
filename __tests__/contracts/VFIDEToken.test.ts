@@ -286,8 +286,6 @@ describe('VFIDEToken Contract', () => {
       });
 
       it('should return remaining daily limit', async () => {
-        mockContractRead.mockResolvedValueOnce(parseEther('10000')); // dailyLimit
-        mockContractRead.mockResolvedValueOnce(parseEther('3000')); // dailyTransferred
         mockContractRead.mockResolvedValueOnce(parseEther('7000')); // remainingDailyLimit
 
         const result = await mockContractRead({ 
@@ -319,8 +317,6 @@ describe('VFIDEToken Contract', () => {
       });
 
       it('should calculate cooldown remaining time', async () => {
-        const currentTime = Math.floor(Date.now() / 1000);
-        mockContractRead.mockResolvedValueOnce(currentTime - 30); // last transfer 30 sec ago
         mockContractRead.mockResolvedValueOnce(30); // 30 seconds remaining
 
         const remaining = await mockContractRead({ 
@@ -332,8 +328,6 @@ describe('VFIDEToken Contract', () => {
       });
 
       it('should return zero cooldown when period elapsed', async () => {
-        const currentTime = Math.floor(Date.now() / 1000);
-        mockContractRead.mockResolvedValueOnce(currentTime - 120); // last transfer 2 min ago
         mockContractRead.mockResolvedValueOnce(0); // no cooldown remaining
 
         const remaining = await mockContractRead({ 
@@ -580,8 +574,6 @@ describe('VFIDEToken Contract', () => {
     });
 
     it('should automatically deactivate when expired', async () => {
-      const pastExpiry = Math.floor(Date.now() / 1000) - 100;
-      mockContractRead.mockResolvedValueOnce(pastExpiry);
       mockContractRead.mockResolvedValueOnce(false); // isCircuitBreakerActive
 
       const isActive = await mockContractRead({ functionName: 'isCircuitBreakerActive' });

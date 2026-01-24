@@ -104,7 +104,7 @@ describe('ConfirmModal', () => {
   it('applies info variant styling', () => {
     render(<ConfirmModal {...defaultProps} variant="info" />)
     // Info variant has cyan background styling  
-    expect(document.querySelector('.bg-\\[\\#00F0FF\\]\\/20')).toBeInTheDocument()
+    expect(document.querySelector('.bg-cyan-400\/20')).toBeInTheDocument()
   })
 
   it('disables cancel button when loading', () => {

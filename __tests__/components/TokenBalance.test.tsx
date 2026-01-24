@@ -59,7 +59,7 @@ describe('TokenBalance', () => {
     })
     
     const { container } = render(<TokenBalance />)
-    expect(container.querySelector('.bg-\\[\\#2A2A2F\\]')).toBeInTheDocument()
+    expect(container.querySelector('.bg-zinc-800')).toBeInTheDocument()
   })
 
   it('hides native balance when showNative is false', async () => {

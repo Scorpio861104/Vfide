@@ -81,7 +81,7 @@ describe('LoadingButton', () => {
   it('applies secondary variant', () => {
     render(<LoadingButton variant="secondary">Submit</LoadingButton>)
     const button = screen.getByRole('button')
-    expect(button.className).toContain('bg-[#2A2A2F]')
+    expect(button.className).toContain('bg-zinc-800')
   })
 
   it('applies danger variant', () => {

@@ -103,7 +103,6 @@ describe('RevenueSplitter Contract', () => {
     });
 
     it('should reject duplicate payee', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // already exists
       mockContractWrite.mockRejectedValueOnce(new Error('Payee already exists'));
 
       await expect(async () => {
@@ -181,7 +180,6 @@ describe('RevenueSplitter Contract', () => {
     });
 
     it('should reject release with no pending payment', async () => {
-      mockContractRead.mockResolvedValueOnce(0n);
       mockContractWrite.mockRejectedValueOnce(new Error('No payment due'));
 
       await expect(async () => {
@@ -325,7 +323,6 @@ describe('RevenueSplitter Contract', () => {
     });
 
     it('should prevent releases when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('Contract paused'));
 
       await expect(async () => {
@@ -424,7 +421,6 @@ describe('RevenueSplitter Contract', () => {
     });
 
     it('should prevent division by zero', async () => {
-      mockContractRead.mockResolvedValueOnce(0n); // no shares
       mockContractWrite.mockRejectedValueOnce(new Error('No shares'));
 
       await expect(async () => {
