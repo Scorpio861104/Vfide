@@ -83,8 +83,8 @@ export default function NotFound() {
             <Link href="/token-launch" className="text-cyan-400 hover:underline text-sm">
               Token Launch
             </Link>
-            <Link href="/faq" className="text-cyan-400 hover:underline text-sm">
-              FAQ
+            <Link href="/docs" className="text-cyan-400 hover:underline text-sm">
+              Documentation
             </Link>
           </div>
         </motion.div>

@@ -96,7 +96,7 @@ export function MerchantPOS() {
     }
   }
   
-  const fees = calculateProcessorFees(subtotal)
+  const processorFees = calculateProcessorFees(subtotal)
   
   // Track pending payment for event matching
   const pendingPaymentRef = useRef<{
@@ -153,7 +153,7 @@ export function MerchantPOS() {
       items: [...pendingPaymentRef.current.cartSnapshot],
       subtotal: subtotal,
       vfideAmount: amount,
-      fee: fees.vfide,
+      fee: processorFees.vfide,
       customerAddress: customerAddress,
       customerEmail: undefined,
       emailSent: false,
@@ -165,7 +165,7 @@ export function MerchantPOS() {
     setShowEmailPrompt(true) // Ask for email after payment confirmed
     clearCart()
     pendingPaymentRef.current = null
-  }, [subtotal, fees.vfide])
+  }, [subtotal, processorFees.vfide])
 
   // Add product to catalog
   const handleAddProduct = () => {
@@ -455,24 +455,24 @@ export function MerchantPOS() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-100/70">Stripe</span>
-                        <span className="text-red-500 font-mono">${fees.stripe.toFixed(2)}</span>
+                        <span className="text-red-500 font-mono">${processorFees.stripe.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-100/70">Square</span>
-                        <span className="text-red-400 font-mono">${fees.square.toFixed(2)}</span>
+                        <span className="text-red-400 font-mono">${processorFees.square.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-100/70">Clover</span>
-                        <span className="text-red-400 font-mono">${fees.clover.toFixed(2)}</span>
+                        <span className="text-red-400 font-mono">${processorFees.clover.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-100/70">PayPal</span>
-                        <span className="text-red-300 font-mono">${fees.paypal.toFixed(2)}</span>
+                        <span className="text-red-300 font-mono">${processorFees.paypal.toFixed(2)}</span>
                       </div>
                       <div className="h-px bg-cyan-400/20" />
                       <div className="flex justify-between items-center">
                         <span className="text-emerald-400 font-bold">VFIDE</span>
-                        <span className="text-emerald-400 font-bold font-mono">${fees.vfide.toFixed(2)}</span>
+                        <span className="text-emerald-400 font-bold font-mono">${processorFees.vfide.toFixed(2)}</span>
                       </div>
                     </div>
                     
@@ -482,7 +482,7 @@ export function MerchantPOS() {
                       className="bg-emerald-400/10 border border-emerald-400/30 rounded px-3 py-2 text-center"
                     >
                       <p className="text-emerald-400 font-bold text-lg">
-                        Save ${Math.max(fees.stripe, fees.square, fees.clover, fees.paypal).toFixed(2)}!
+                        Save ${Math.max(processorFees.stripe, processorFees.square, processorFees.clover, processorFees.paypal).toFixed(2)}!
                       </p>
                       <p className="text-xs text-zinc-100/60">vs most expensive</p>
                     </motion.div>
@@ -740,7 +740,7 @@ export function MerchantPOS() {
                 </div>
                 <div className="flex justify-between text-zinc-100/60">
                   <span>VFIDE Fee</span>
-                  <span className="font-bold text-emerald-400">${fees.vfide.toFixed(2)}</span>
+                  <span className="font-bold text-emerald-400">${processorFees.vfide.toFixed(2)}</span>
                 </div>
                 <div className="h-px bg-cyan-400/20 my-2" />
                 
@@ -748,19 +748,19 @@ export function MerchantPOS() {
                   <p className="text-zinc-100/40 mb-1">Other processors would charge:</p>
                   <div className="flex justify-between">
                     <span className="text-zinc-100/60">Stripe:</span>
-                    <span className="text-red-500">${fees.stripe.toFixed(2)}</span>
+                    <span className="text-red-500">${processorFees.stripe.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-100/60">Square:</span>
-                    <span className="text-red-400">${fees.square.toFixed(2)}</span>
+                    <span className="text-red-400">${processorFees.square.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-100/60">Clover:</span>
-                    <span className="text-red-400">${fees.clover.toFixed(2)}</span>
+                    <span className="text-red-400">${processorFees.clover.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-100/60">PayPal:</span>
-                    <span className="text-red-300">${fees.paypal.toFixed(2)}</span>
+                    <span className="text-red-300">${processorFees.paypal.toFixed(2)}</span>
                   </div>
                 </div>
                 
@@ -770,7 +770,7 @@ export function MerchantPOS() {
                   className="bg-emerald-400/20 border border-emerald-400 rounded-lg p-3 text-center"
                 >
                   <p className="text-emerald-400 font-bold text-lg">
-                    You Save Up To ${(Math.max(fees.stripe, fees.square, fees.clover, fees.paypal) - fees.vfide).toFixed(2)}!
+                    You Save Up To ${(Math.max(processorFees.stripe, processorFees.square, processorFees.clover, processorFees.paypal) - processorFees.vfide).toFixed(2)}!
                   </p>
                 </motion.div>
               </div>

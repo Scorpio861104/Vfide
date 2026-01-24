@@ -496,7 +496,7 @@ function RecentActivitySection() {
         </div>
       )}
       <div className="mt-4 text-center">
-        <Link href="/history" className="text-cyan-400 hover:text-cyan-300 text-sm font-medium inline-flex items-center gap-1">
+        <Link href="/explorer" className="text-cyan-400 hover:text-cyan-300 text-sm font-medium inline-flex items-center gap-1">
           View All Activity <ChevronRight size={14} />
         </Link>
       </div>

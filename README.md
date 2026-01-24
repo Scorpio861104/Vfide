@@ -30,7 +30,7 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 
 ## Deployed Contracts
 
-See [BASE_SEPOLIA_DEPLOYMENT.md](../BASE_SEPOLIA_DEPLOYMENT.md) for contract addresses.
+See contract configuration in `config/contracts.ts` for contract addresses.
 
 ## Learn More
 
