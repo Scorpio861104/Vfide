@@ -15,12 +15,12 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const monthYear = searchParams.get('month') || new Date().toISOString().slice(0, 7); // Default to current month
     const userAddress = searchParams.get('userAddress');
-    const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100); // Cap at 100, default to 50
 
-    // Validate parsed number
-    if (isNaN(limit) || limit < 0) {
+    // Validate parsed number - require at least 1 for leaderboard (0 would be meaningless)
+    if (isNaN(limit) || limit < 1) {
       return NextResponse.json(
-        { error: 'Invalid limit parameter' },
+        { error: 'Invalid limit parameter (must be >= 1)' },
         { status: 400 }
       );
     }
@@ -28,12 +28,41 @@ export async function GET(request: NextRequest) {
     const client = await getClient();
 
     try {
-      // Get prize pool info
-      const poolResult = await client.query(`
-        SELECT total_pool, distributed_amount, distribution_complete, distribution_date
-        FROM monthly_prize_pool
-        WHERE month_year = $1
-      `, [monthYear]);
+      // Parallel execution of prize pool and leaderboard queries for better performance
+      const [poolResult, leaderboardResult] = await Promise.all([
+        // Get prize pool info
+        client.query(`
+          SELECT total_pool, distributed_amount, distribution_complete, distribution_date
+          FROM monthly_prize_pool
+          WHERE month_year = $1
+        `, [monthYear]),
+        
+        // Get leaderboard with optimized query - only select necessary columns
+        client.query(`
+          SELECT 
+            ml.user_id,
+            u.username,
+            u.wallet_address,
+            ml.total_xp_earned,
+            ml.quests_completed,
+            ml.challenges_completed,
+            ml.current_streak,
+            ml.transactions_count,
+            ml.social_interactions,
+            ml.governance_votes,
+            ml.activity_score,
+            ml.final_rank,
+            ml.prize_amount,
+            ml.prize_claimed,
+            pt.tier_name
+          FROM monthly_leaderboard ml
+          INNER JOIN users u ON ml.user_id = u.id
+          LEFT JOIN prize_tiers pt ON ml.final_rank >= pt.rank_start AND ml.final_rank <= pt.rank_end
+          WHERE ml.month_year = $1
+          ORDER BY ml.activity_score DESC, ml.updated_at ASC
+          LIMIT $2
+        `, [monthYear, limit])
+      ]);
 
       const prizePool = poolResult.rows[0] || {
         total_pool: '0',
@@ -41,32 +70,6 @@ export async function GET(request: NextRequest) {
         distribution_complete: false,
         distribution_date: null,
       };
-
-      // Get leaderboard
-      const leaderboardResult = await client.query(`
-        SELECT 
-          ml.user_id,
-          u.username,
-          u.wallet_address,
-          ml.total_xp_earned,
-          ml.quests_completed,
-          ml.challenges_completed,
-          ml.current_streak,
-          ml.transactions_count,
-          ml.social_interactions,
-          ml.governance_votes,
-          ml.activity_score,
-          ml.final_rank,
-          ml.prize_amount,
-          ml.prize_claimed,
-          pt.tier_name
-        FROM monthly_leaderboard ml
-        JOIN users u ON ml.user_id = u.id
-        LEFT JOIN prize_tiers pt ON ml.final_rank >= pt.rank_start AND ml.final_rank <= pt.rank_end
-        WHERE ml.month_year = $1
-        ORDER BY ml.activity_score DESC, ml.updated_at ASC
-        LIMIT $2
-      `, [monthYear, limit]);
 
       const leaderboard = leaderboardResult.rows.map((row, index) => ({
         rank: index + 1,
@@ -89,45 +92,70 @@ export async function GET(request: NextRequest) {
         prizeClaimed: row.prize_claimed,
       }));
 
-      // Get user's position if userAddress provided
+      // Get user's position if userAddress provided - check in leaderboard first
       let userPosition = null;
       if (userAddress) {
-        const userResult = await client.query(`
-          SELECT 
-            ml.*,
-            pt.tier_name,
-            ROW_NUMBER() OVER (ORDER BY ml.activity_score DESC, ml.updated_at ASC) as current_rank
-          FROM monthly_leaderboard ml
-          JOIN users u ON ml.user_id = u.id
-          LEFT JOIN prize_tiers pt ON ml.final_rank >= pt.rank_start AND ml.final_rank <= pt.rank_end
-          WHERE ml.month_year = $1 AND u.wallet_address = $2
-        `, [monthYear, userAddress]);
-
-        if (userResult.rows.length > 0) {
-          const user = userResult.rows[0];
-          const currentRank = parseInt(user.current_rank, 10);
-          
-          if (isNaN(currentRank) || !isFinite(currentRank)) {
-            throw new Error('Invalid rank data');
-          }
-          
+        // First check if user is in the top results we already fetched
+        const userInLeaderboard = leaderboard.find(
+          entry => entry.walletAddress.toLowerCase() === userAddress.toLowerCase()
+        );
+        
+        if (userInLeaderboard) {
+          // User is already in the top results, no need for another query
           userPosition = {
-            rank: currentRank,
-            finalRank: user.final_rank,
-            activityScore: user.activity_score,
-            tier: user.tier_name,
-            prizeAmount: (BigInt(user.prize_amount || '0') / BigInt(10 ** 18)).toString(),
-            prizeClaimed: user.prize_claimed,
-            stats: {
-              totalXp: user.total_xp_earned,
-              questsCompleted: user.quests_completed,
-              challengesCompleted: user.challenges_completed,
-              currentStreak: user.current_streak,
-              transactionsCount: user.transactions_count,
-              socialInteractions: user.social_interactions,
-              governanceVotes: user.governance_votes,
-            },
+            rank: userInLeaderboard.rank,
+            finalRank: userInLeaderboard.finalRank,
+            activityScore: userInLeaderboard.activityScore,
+            tier: userInLeaderboard.tier,
+            prizeAmount: userInLeaderboard.prizeAmount,
+            prizeClaimed: userInLeaderboard.prizeClaimed,
+            stats: userInLeaderboard.stats,
           };
+        } else {
+          // User is not in top results, fetch their specific position
+          const userResult = await client.query(`
+            SELECT 
+              ml.*,
+              pt.tier_name,
+              (
+                SELECT COUNT(*) + 1 
+                FROM monthly_leaderboard ml2 
+                WHERE ml2.month_year = $1 
+                  AND (ml2.activity_score > ml.activity_score 
+                    OR (ml2.activity_score = ml.activity_score AND ml2.updated_at < ml.updated_at))
+              ) as current_rank
+            FROM monthly_leaderboard ml
+            INNER JOIN users u ON ml.user_id = u.id
+            LEFT JOIN prize_tiers pt ON ml.final_rank >= pt.rank_start AND ml.final_rank <= pt.rank_end
+            WHERE ml.month_year = $1 AND u.wallet_address = $2
+          `, [monthYear, userAddress]);
+
+          if (userResult.rows.length > 0) {
+            const user = userResult.rows[0];
+            const currentRank = parseInt(user.current_rank, 10);
+            
+            if (isNaN(currentRank) || !isFinite(currentRank)) {
+              throw new Error('Invalid rank data');
+            }
+            
+            userPosition = {
+              rank: currentRank,
+              finalRank: user.final_rank,
+              activityScore: user.activity_score,
+              tier: user.tier_name,
+              prizeAmount: (BigInt(user.prize_amount || '0') / BigInt(10 ** 18)).toString(),
+              prizeClaimed: user.prize_claimed,
+              stats: {
+                totalXp: user.total_xp_earned,
+                questsCompleted: user.quests_completed,
+                challengesCompleted: user.challenges_completed,
+                currentStreak: user.current_streak,
+                transactionsCount: user.transactions_count,
+                socialInteractions: user.social_interactions,
+                governanceVotes: user.governance_votes,
+              },
+            };
+          }
         }
       }
 

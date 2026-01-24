@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useWatchContractEvent } from 'wagmi'
 import { QRCodeSVG } from 'qrcode.react'
@@ -97,6 +97,12 @@ export function MerchantPOS() {
   }
   
   const processorFees = calculateProcessorFees(subtotal)
+  
+  // Memoize product categories to avoid recalculating on every render
+  const productCategories = useMemo(() => {
+    const uniqueCategories = new Set(products.map(p => p.category));
+    return ['All', ...Array.from(uniqueCategories)];
+  }, [products]);
   
   // Track pending payment for event matching
   const pendingPaymentRef = useRef<{
@@ -338,7 +344,7 @@ export function MerchantPOS() {
                 
                 {/* Category Filter */}
                 <div className="flex gap-2 mb-4 flex-wrap">
-                  {['All', ...Array.from(new Set(products.map(p => p.category)))].map(cat => (
+                  {productCategories.map(cat => (
                     <button
                       key={cat}
                       className="px-4 py-2 rounded-lg bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20 transition-colors text-sm"

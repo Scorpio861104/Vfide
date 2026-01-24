@@ -5,6 +5,161 @@ import { TextEncoder, TextDecoder } from 'util'
 global.TextEncoder = TextEncoder
 global.TextDecoder = TextDecoder
 
+
+// Polyfill Request, Response, and Headers for Next.js API route tests
+// Create minimal but functional Web API polyfills
+if (typeof global.Headers === 'undefined') {
+  global.Headers = class Headers {
+    constructor(init) {
+      this._headers = new Map();
+      if (init) {
+        if (init instanceof Headers) {
+          init.forEach((value, key) => this._headers.set(key, value));
+        } else if (Array.isArray(init)) {
+          init.forEach(([key, value]) => this._headers.set(key, value));
+        } else if (typeof init === 'object') {
+          Object.entries(init).forEach(([key, value]) => this._headers.set(key, value));
+        }
+      }
+    }
+    
+    get(name) { return this._headers.get(name.toLowerCase()) || null; }
+    set(name, value) { this._headers.set(name.toLowerCase(), String(value)); }
+    has(name) { return this._headers.has(name.toLowerCase()); }
+    delete(name) { this._headers.delete(name.toLowerCase()); }
+    append(name, value) { 
+      const existing = this.get(name);
+      if (existing) {
+        this.set(name, `${existing}, ${value}`);
+      } else {
+        this.set(name, value);
+      }
+    }
+    forEach(callback, thisArg) { 
+      this._headers.forEach((value, key) => callback.call(thisArg, value, key, this)); 
+    }
+    entries() { return this._headers.entries(); }
+    keys() { return this._headers.keys(); }
+    values() { return this._headers.values(); }
+    [Symbol.iterator]() { return this._headers.entries(); }
+  };
+}
+
+if (typeof global.Request === 'undefined') {
+  global.Request = class Request {
+    constructor(input, init = {}) {
+      this._url = typeof input === 'string' ? input : input.url;
+      this._method = init.method || 'GET';
+      this._headers = new global.Headers(init.headers);
+      this._body = init.body;
+      this._cache = init.cache || 'default';
+      this._credentials = init.credentials || 'same-origin';
+      this._destination = '';
+      this._integrity = init.integrity || '';
+      this._mode = init.mode || 'cors';
+      this._redirect = init.redirect || 'follow';
+      this._referrer = init.referrer || 'about:client';
+      this._referrerPolicy = init.referrerPolicy || '';
+    }
+    
+    get url() { return this._url; }
+    get method() { return this._method; }
+    get headers() { return this._headers; }
+    get body() { return this._body; }
+    get cache() { return this._cache; }
+    get credentials() { return this._credentials; }
+    get destination() { return this._destination; }
+    get integrity() { return this._integrity; }
+    get mode() { return this._mode; }
+    get redirect() { return this._redirect; }
+    get referrer() { return this._referrer; }
+    get referrerPolicy() { return this._referrerPolicy; }
+    
+    clone() {
+      return new Request(this._url, {
+        method: this._method,
+        headers: this._headers,
+        body: this._body,
+        cache: this._cache,
+        credentials: this._credentials,
+        integrity: this._integrity,
+        mode: this._mode,
+        redirect: this._redirect,
+        referrer: this._referrer,
+        referrerPolicy: this._referrerPolicy,
+      });
+    }
+    
+    async json() {
+      if (typeof this._body === 'string') {
+        return JSON.parse(this._body);
+      }
+      return this._body;
+    }
+    
+    async text() {
+      if (typeof this._body === 'string') {
+        return this._body;
+      }
+      return JSON.stringify(this._body);
+    }
+  };
+}
+
+if (typeof global.Response === 'undefined') {
+  global.Response = class Response {
+    constructor(body, init = {}) {
+      this._body = body;
+      this.status = init.status || 200;
+      this.statusText = init.statusText || '';
+      this.headers = new global.Headers(init.headers);
+      this.ok = this.status >= 200 && this.status < 300;
+      this.redirected = false;
+      this.type = 'default';
+      this.url = '';
+    }
+    
+    async json() {
+      if (typeof this._body === 'string') {
+        return JSON.parse(this._body);
+      }
+      return this._body;
+    }
+    
+    async text() {
+      if (typeof this._body === 'string') {
+        return this._body;
+      }
+      return JSON.stringify(this._body);
+    }
+    
+    async arrayBuffer() {
+      const text = await this.text();
+      return new TextEncoder().encode(text).buffer;
+    }
+    
+    async blob() {
+      return new Blob([await this.text()]);
+    }
+    
+    clone() {
+      return new Response(this._body, {
+        status: this.status,
+        statusText: this.statusText,
+        headers: this.headers,
+      });
+    }
+    static json(data, init = {}) {
+      return new Response(JSON.stringify(data), {
+        ...init,
+        headers: {
+          "content-type": "application/json",
+          ...(init.headers || {}),
+        },
+      });
+    }
+  };
+}
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -308,3 +463,19 @@ jest.mock('@/components/profile/AvatarUpload', () => ({
   AvatarUploadCompact: () => <div data-testid="avatar-upload">Avatar</div>,
 }))
 
+
+// Mock NextResponse to work with our polyfills
+try {
+  const { NextResponse: OriginalNextResponse } = require('next/server');
+  
+  // Override NextResponse.json to store body in a way our polyfill can read
+  const originalJson = OriginalNextResponse.json;
+  OriginalNextResponse.json = function(data, init) {
+    const response = originalJson.call(this, data, init);
+    // Store the data so our json() method can access it
+    response._body = JSON.stringify(data);
+    return response;
+  };
+} catch (e) {
+  // Next.js not available yet, that's okay
+}

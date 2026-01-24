@@ -10,9 +10,9 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const metric = searchParams.get('metric');
-    const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100); // Cap at 100, default to 50
 
-    // Validate parsed number
+    // Validate parsed number - allow 0 for backward compatibility
     if (isNaN(limit) || limit < 0) {
       return NextResponse.json(
         { error: 'Invalid limit parameter' },
