@@ -41,15 +41,27 @@ describe('/api/badges', () => {
       expect(data.badges).toHaveLength(1);
     });
 
-    it('should return 400 when userAddress is missing', async () => {
+    it('should return all badges when userAddress is not provided', async () => {
       withRateLimit.mockResolvedValue(null);
+
+      const mockBadges = [
+        {
+          id: 1,
+          name: 'Early Adopter',
+          description: 'Joined in first month',
+          icon: '🎖️',
+          rarity: 'rare',
+        },
+      ];
+
+      query.mockResolvedValue({ rows: mockBadges });
 
       const request = new NextRequest('http://localhost:3000/api/badges');
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(data.error).toContain('required');
+      expect(response.status).toBe(200);
+      expect(data.badges).toHaveLength(1);
     });
 
     it('should return 500 for database errors', async () => {

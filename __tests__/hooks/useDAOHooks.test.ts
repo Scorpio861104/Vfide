@@ -54,7 +54,7 @@ describe('useDAOHooks', () => {
 
   describe('useVote', () => {
     it('provides vote function', () => {
-      const { vote } = useVote(1n, true)
+      const { vote } = useVote()
       expect(typeof vote).toBe('function')
     })
 
@@ -66,8 +66,8 @@ describe('useDAOHooks', () => {
         isPending: false,
       } as unknown as ReturnType<typeof useWriteContract>)
 
-      const { vote } = useVote(1n, true)
-      vote()
+      const { vote } = useVote()
+      vote(1n, true)
 
       expect(mockWriteContract).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -85,8 +85,8 @@ describe('useDAOHooks', () => {
         isPending: false,
       } as unknown as ReturnType<typeof useWriteContract>)
 
-      const { vote } = useVote(5n, false)
-      vote()
+      const { vote } = useVote()
+      vote(5n, false)
 
       expect(mockWriteContract).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -102,7 +102,7 @@ describe('useDAOHooks', () => {
         isPending: true,
       } as unknown as ReturnType<typeof useWriteContract>)
 
-      const { isVoting } = useVote(1n, true)
+      const { isVoting } = useVote()
       expect(isVoting).toBe(true)
     })
 
@@ -112,7 +112,7 @@ describe('useDAOHooks', () => {
         isSuccess: false,
       } as ReturnType<typeof useWaitForTransactionReceipt>)
 
-      const { isVoting } = useVote(1n, true)
+      const { isVoting } = useVote()
       expect(isVoting).toBe(true)
     })
 
@@ -122,7 +122,7 @@ describe('useDAOHooks', () => {
         isSuccess: true,
       } as ReturnType<typeof useWaitForTransactionReceipt>)
 
-      const { isSuccess } = useVote(1n, true)
+      const { isSuccess } = useVote()
       expect(isSuccess).toBe(true)
     })
   })

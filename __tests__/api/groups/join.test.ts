@@ -3,6 +3,7 @@ import { POST } from '@/app/api/groups/join/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
+  getClient: jest.fn(),
 }));
 
 jest.mock('@/lib/auth/rateLimit', () => ({

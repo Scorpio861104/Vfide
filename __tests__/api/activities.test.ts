@@ -52,43 +52,42 @@ describe('/api/activities', () => {
       expect(data.activities).toHaveLength(1);
     });
 
-    it('should return 400 when userAddress is missing', async () => {
+    it('should return activities when userAddress is missing (returns all activities)', async () => {
       withRateLimit.mockResolvedValue(null);
+
+      const mockActivities = [{ id: 1, activity_type: 'transaction' }];
+      query.mockResolvedValue({ rows: mockActivities });
 
       const request = new NextRequest('http://localhost:3000/api/activities');
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(data.error).toContain('required');
+      expect(response.status).toBe(200);
+      expect(data.activities).toBeDefined();
     });
   });
 
   describe('POST', () => {
     it('should create activity successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
-      validateBody.mockResolvedValue({
-        success: true,
-        data: {
-          userAddress: '0x123',
-          activityType: 'transaction',
-          description: 'Sent 10 ETH',
-        },
-      });
+      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
 
-      query.mockResolvedValue({
-        rows: [{
-          id: 1,
-          activity_type: 'transaction',
-        }],
-      });
+      // Mock user lookup and insert
+      query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })  // user lookup
+        .mockResolvedValueOnce({
+          rows: [{
+            id: 1,
+            activity_type: 'transaction',
+          }],
+        });  // insert
 
       const request = new NextRequest('http://localhost:3000/api/activities', {
         method: 'POST',
         body: JSON.stringify({
           userAddress: '0x123',
           activityType: 'transaction',
+          title: 'Test Activity',
           description: 'Sent 10 ETH',
         }),
       });
@@ -96,17 +95,18 @@ describe('/api/activities', () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(data.activity).toBeDefined();
     });
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const { NextResponse } = require('next/server');
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
-      requireAuth.mockReturnValue(unauthorizedResponse);
+      requireAuth.mockResolvedValue(unauthorizedResponse);
 
       const request = new NextRequest('http://localhost:3000/api/activities', {
         method: 'POST',

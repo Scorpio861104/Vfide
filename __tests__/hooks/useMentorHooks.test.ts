@@ -46,7 +46,7 @@ describe('useMentorHooks', () => {
         connector: undefined,
       })
       jest.mocked(useReadContract).mockReturnValue({
-        data: false,
+        data: [false, '0x0000000000000000000000000000000000000000', 0n, false, false, 0n, 0n] as readonly [boolean, `0x${string}`, bigint, boolean, boolean, bigint, bigint],
         isLoading: false,
         isError: false,
         error: null,
@@ -89,7 +89,7 @@ describe('useMentorHooks', () => {
         connector: undefined,
       })
       jest.mocked(useReadContract).mockReturnValue({
-        data: true,
+        data: [true, '0x0000000000000000000000000000000000000000', 5n, false, true, 100n, 150n] as readonly [boolean, `0x${string}`, bigint, boolean, boolean, bigint, bigint],
         isLoading: false,
         isError: false,
         error: null,
@@ -174,7 +174,7 @@ describe('useMentorHooks', () => {
         connector: undefined,
       })
       jest.mocked(useReadContract).mockReturnValue({
-        data: true,
+        data: [true, '0x0000000000000000000000000000000000000000', 3n, false, true, 100n, 200n] as readonly [boolean, `0x${string}`, bigint, boolean, boolean, bigint, bigint],
         isLoading: false,
         isError: false,
         error: null,

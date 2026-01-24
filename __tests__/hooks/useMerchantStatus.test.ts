@@ -29,8 +29,9 @@ describe('useMerchantStatus', () => {
   })
 
   it('returns isMerchant true when user is merchant', () => {
+    // getMerchantInfo returns: (registered, suspended, businessName, category, registeredAt, totalVolume, txCount)
     jest.mocked(useReadContract).mockReturnValue({
-      data: true as unknown as undefined,
+      data: [true, false, 'Test Business', 'retail', 1000n, 5000n, 10n] as unknown as undefined,
       isError: false,
       isLoading: false,
     } as ReturnType<typeof useReadContract>)
@@ -40,8 +41,9 @@ describe('useMerchantStatus', () => {
   })
 
   it('returns isMerchant false when user is not merchant', () => {
+    // getMerchantInfo returns: (registered, suspended, businessName, category, registeredAt, totalVolume, txCount)
     jest.mocked(useReadContract).mockReturnValue({
-      data: false as unknown as undefined,
+      data: [false, false, '', '', 0n, 0n, 0n] as unknown as undefined,
       isError: false,
       isLoading: false,
     } as ReturnType<typeof useReadContract>)

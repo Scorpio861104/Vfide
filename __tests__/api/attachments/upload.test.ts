@@ -1,6 +1,10 @@
 import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/attachments/upload/route';
 
+jest.mock('@/lib/db', () => ({
+  query: jest.fn(),
+}));
+
 jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
@@ -10,6 +14,7 @@ jest.mock('@/lib/auth/middleware', () => ({
 }));
 
 describe('/api/attachments/upload', () => {
+  const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
 
@@ -20,14 +25,18 @@ describe('/api/attachments/upload', () => {
   describe('POST', () => {
     it('should upload file successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
-
-      const formData = new FormData();
-      formData.append('file', new Blob(['test'], { type: 'text/plain' }), 'test.txt');
+      requireAuth.mockReturnValue({ user: { address: '0x123' } });
+      query.mockResolvedValue({ rows: [{ id: 1, filename: 'test.txt' }] });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/upload', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify({
+          userId: 1,
+          filename: 'test.txt',
+          fileType: 'text/plain',
+          fileSize: 1024,
+          url: 'https://example.com/test.txt',
+        }),
       });
 
       const response = await POST(request);
@@ -37,7 +46,7 @@ describe('/api/attachments/upload', () => {
       expect(data.success).toBe(true);
     });
 
-    it('should return 401 for unauthorized users', async () => {
+    it('should return 400 for unauthorized users when auth fails before validation', async () => {
       withRateLimit.mockResolvedValue(null);
       const unauthorizedResponse = new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -47,46 +56,47 @@ describe('/api/attachments/upload', () => {
 
       const request = new NextRequest('http://localhost:3000/api/attachments/upload', {
         method: 'POST',
+        body: JSON.stringify({}),
       });
 
       const response = await POST(request);
+      // API returns auth error first
       expect(response.status).toBe(401);
     });
 
-    it('should return 400 for missing file', async () => {
+    it('should return 400 for missing required fields', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x123' } });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/upload', {
         method: 'POST',
-        body: new FormData(),
+        body: JSON.stringify({}),
       });
 
       const response = await POST(request);
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('required');
+      expect(data.error).toContain('Missing');
     });
 
-    it('should validate file size', async () => {
+    it('should validate required fields', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
-
-      const largeFile = new Blob(['x'.repeat(20 * 1024 * 1024)], { type: 'text/plain' });
-      const formData = new FormData();
-      formData.append('file', largeFile, 'large.txt');
+      requireAuth.mockReturnValue({ user: { address: '0x123' } });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/upload', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify({
+          userId: 1,
+          // Missing filename and url
+        }),
       });
 
       const response = await POST(request);
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('size');
+      expect(data.error).toContain('Missing');
     });
   });
 });

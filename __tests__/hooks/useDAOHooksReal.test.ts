@@ -88,13 +88,13 @@ describe('useVote', () => {
   })
 
   it('provides vote function', () => {
-    const { result } = renderHook(() => useVote(BigInt(1), true))
+    const { result } = renderHook(() => useVote())
     
     expect(typeof result.current.vote).toBe('function')
   })
 
   it('returns isVoting false when not pending', () => {
-    const { result } = renderHook(() => useVote(BigInt(1), true))
+    const { result } = renderHook(() => useVote())
     
     expect(result.current.isVoting).toBe(false)
   })
@@ -106,7 +106,7 @@ describe('useVote', () => {
       isPending: true,
     })
     
-    const { result } = renderHook(() => useVote(BigInt(1), true))
+    const { result } = renderHook(() => useVote())
     
     expect(result.current.isVoting).toBe(true)
   })
@@ -117,7 +117,7 @@ describe('useVote', () => {
       isSuccess: false,
     })
     
-    const { result } = renderHook(() => useVote(BigInt(1), true))
+    const { result } = renderHook(() => useVote())
     
     expect(result.current.isVoting).toBe(true)
   })
@@ -128,15 +128,15 @@ describe('useVote', () => {
       isSuccess: true,
     })
     
-    const { result } = renderHook(() => useVote(BigInt(1), true))
+    const { result } = renderHook(() => useVote())
     
     expect(result.current.isSuccess).toBe(true)
   })
 
   it('calls writeContract when vote is called', () => {
-    const { result } = renderHook(() => useVote(BigInt(5), true))
+    const { result } = renderHook(() => useVote())
     
-    result.current.vote()
+    result.current.vote(BigInt(5), true)
     
     expect(mockWriteContract).toHaveBeenCalledWith(expect.objectContaining({
       functionName: 'vote',
@@ -145,9 +145,9 @@ describe('useVote', () => {
   })
 
   it('calls with support=false', () => {
-    const { result } = renderHook(() => useVote(BigInt(3), false))
+    const { result } = renderHook(() => useVote())
     
-    result.current.vote()
+    result.current.vote(BigInt(3), false)
     
     expect(mockWriteContract).toHaveBeenCalledWith(expect.objectContaining({
       functionName: 'vote',

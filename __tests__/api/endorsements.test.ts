@@ -3,6 +3,7 @@ import { GET, POST } from '@/app/api/endorsements/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
+  getClient: jest.fn(),
 }));
 
 jest.mock('@/lib/auth/rateLimit', () => ({
@@ -14,7 +15,7 @@ jest.mock('@/lib/auth/middleware', () => ({
 }));
 
 describe('/api/endorsements', () => {
-  const { query } = require('@/lib/db');
+  const { query, getClient } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
 
@@ -50,11 +51,15 @@ describe('/api/endorsements', () => {
   describe('POST', () => {
     it('should create endorsement successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x123' } });
 
-      query.mockResolvedValue({
-        rows: [{ id: 1, endorser: '0x123', endorsed: '0x456' }],
-      });
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // user lookup
+          .mockResolvedValueOnce({ rows: [{ id: 1, endorser: '0x123', endorsed: '0x456' }] }),
+        release: jest.fn(),
+      };
+      getClient.mockResolvedValue(mockClient);
 
       const request = new NextRequest('http://localhost:3000/api/endorsements', {
         method: 'POST',
@@ -79,6 +84,12 @@ describe('/api/endorsements', () => {
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);
+      
+      const mockClient = {
+        query: jest.fn(),
+        release: jest.fn(),
+      };
+      getClient.mockResolvedValue(mockClient);
 
       const request = new NextRequest('http://localhost:3000/api/endorsements', {
         method: 'POST',

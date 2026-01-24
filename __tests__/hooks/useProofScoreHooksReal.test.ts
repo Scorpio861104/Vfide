@@ -277,8 +277,8 @@ describe('useEndorse', () => {
     })
     
     expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
-      functionName: 'endorseUser',
-      args: ['0xTarget'],
+      functionName: 'endorse',
+      args: ['0xTarget', 'endorsement'],
     }))
   })
 
@@ -306,8 +306,8 @@ describe('useEndorse', () => {
     })
     
     expect(response!.success).toBe(false)
-    expect(response!.error).toBe('Already endorsed')
-    expect(result.current.error).toBe('Already endorsed')
+    expect(response!.error).toBe('Failed to endorse: Already endorsed')
+    expect(result.current.error).toBe('Failed to endorse: Already endorsed')
   })
 
   it('returns isEndorsing true when pending', () => {

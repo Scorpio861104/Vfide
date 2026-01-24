@@ -205,8 +205,9 @@ describe('/api/gamification', () => {
 
     it('should return 401 for non-admin users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const { NextResponse } = require('next/server');
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
       requireAdmin.mockReturnValue(unauthorizedResponse);
@@ -221,8 +222,9 @@ describe('/api/gamification', () => {
     });
 
     it('should return 429 for rate limit exceeded', async () => {
-      const rateLimitResponse = new Response(
-        JSON.stringify({ error: 'Rate limit exceeded' }),
+      const { NextResponse } = require('next/server');
+      const rateLimitResponse = NextResponse.json(
+        { error: 'Rate limit exceeded' },
         { status: 429 }
       );
       withRateLimit.mockResolvedValue(rateLimitResponse);

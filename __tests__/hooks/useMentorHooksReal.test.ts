@@ -46,8 +46,9 @@ describe('useIsMentor', () => {
   })
 
   it('returns isMentor true when data is true', () => {
+    // getMentorInfo returns tuple: [isMentor, mentor, menteeCount, hasMentor, canBecomeMentor, minScoreToMentor, currentScore]
     mockUseReadContract.mockReturnValue({
-      data: true,
+      data: [true, '0xmentor', BigInt(5), true, false, BigInt(7000), BigInt(8000)],
       isLoading: false,
     })
     
@@ -58,7 +59,7 @@ describe('useIsMentor', () => {
 
   it('returns isMentor false when data is false', () => {
     mockUseReadContract.mockReturnValue({
-      data: false,
+      data: [false, '0x0000000000000000000000000000000000000000', BigInt(0), false, false, BigInt(7000), BigInt(5000)],
       isLoading: false,
     })
     
@@ -91,9 +92,9 @@ describe('useIsMentor', () => {
 
   it('uses connected address when no address provided', () => {
     mockUseAccount.mockReturnValue({ address: '0xconnected' })
-    mockUseReadContract.mockReturnValue({ data: true, isLoading: false })
+    mockUseReadContract.mockReturnValue({ data: [true, '0xmentor', BigInt(0), false, false, BigInt(0), BigInt(0)], isLoading: false })
     
-    renderHook(() => useIsMentor())
+    renderHook(() => useIsMentor('0xconnected'))
     
     expect(mockUseReadContract).toHaveBeenCalledWith(expect.objectContaining({
       args: ['0xconnected'],
@@ -243,98 +244,89 @@ describe('useMentorInfo', () => {
     mockUseAccount.mockReturnValue({ address: '0xuser' })
   })
 
-  it('returns mentorAddress when available', () => {
-    mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'mentorOf') return { data: '0xmentor' }
-      if (functionName === 'menteeCount') return { data: BigInt(5) }
-      if (functionName === 'highScoreFirstAchievedAt') return { data: BigInt(1000) }
-      return { data: undefined }
+  // Hook returns tuple: [isMentor, mentor, menteeCount, hasMentor, canBecomeMentor, minScoreToMentor, currentScore]
+  it('returns mentor address when available', () => {
+    mockUseReadContract.mockReturnValue({
+      data: [true, '0xmentor' as `0x${string}`, BigInt(5), true, false, BigInt(7000), BigInt(8000)],
+      isLoading: false,
     })
     
-    const { result } = renderHook(() => useMentorInfo())
+    const { result } = renderHook(() => useMentorInfo('0xuser'))
     
-    expect(result.current.mentorAddress).toBe('0xmentor')
+    expect(result.current.mentor).toBe('0xmentor')
   })
 
   it('returns hasMentor true when mentor is set', () => {
-    mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'mentorOf') return { data: '0xmentor' }
-      if (functionName === 'menteeCount') return { data: BigInt(5) }
-      if (functionName === 'highScoreFirstAchievedAt') return { data: BigInt(1000) }
-      return { data: undefined }
+    mockUseReadContract.mockReturnValue({
+      data: [true, '0xmentor' as `0x${string}`, BigInt(5), true, false, BigInt(7000), BigInt(8000)],
+      isLoading: false,
     })
     
-    const { result } = renderHook(() => useMentorInfo())
+    const { result } = renderHook(() => useMentorInfo('0xuser'))
     
     expect(result.current.hasMentor).toBe(true)
   })
 
   it('returns hasMentor false when mentor is zero address', () => {
-    mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'mentorOf') return { data: '0x0000000000000000000000000000000000000000' }
-      return { data: undefined }
+    mockUseReadContract.mockReturnValue({
+      data: [false, '0x0000000000000000000000000000000000000000' as `0x${string}`, BigInt(0), false, false, BigInt(7000), BigInt(5000)],
+      isLoading: false,
     })
     
-    const { result } = renderHook(() => useMentorInfo())
+    const { result } = renderHook(() => useMentorInfo('0xuser'))
     
     expect(result.current.hasMentor).toBeFalsy()
   })
 
   it('returns menteeCount', () => {
-    mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'mentorOf') return { data: undefined }
-      if (functionName === 'menteeCount') return { data: BigInt(10) }
-      if (functionName === 'highScoreFirstAchievedAt') return { data: undefined }
-      return { data: undefined }
+    mockUseReadContract.mockReturnValue({
+      data: [true, '0xmentor' as `0x${string}`, BigInt(10), true, false, BigInt(7000), BigInt(8000)],
+      isLoading: false,
     })
     
-    const { result } = renderHook(() => useMentorInfo())
+    const { result } = renderHook(() => useMentorInfo('0xuser'))
     
     expect(result.current.menteeCount).toBe(10)
   })
 
   it('returns menteeCount 0 when undefined', () => {
-    mockUseReadContract.mockImplementation(() => ({ data: undefined }))
+    mockUseReadContract.mockReturnValue({ data: undefined, isLoading: false })
     
-    const { result } = renderHook(() => useMentorInfo())
+    const { result } = renderHook(() => useMentorInfo('0xuser'))
     
     expect(result.current.menteeCount).toBe(0)
   })
 
-  it('returns canBecomeMentor true when highScore achieved', () => {
-    mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'highScoreFirstAchievedAt') return { data: BigInt(Math.floor(Date.now() / 1000)) }
-      return { data: undefined }
+  it('returns canBecomeMentor true when flag is true', () => {
+    mockUseReadContract.mockReturnValue({
+      data: [false, '0x0000000000000000000000000000000000000000' as `0x${string}`, BigInt(0), false, true, BigInt(7000), BigInt(8000)],
+      isLoading: false,
     })
     
-    const { result } = renderHook(() => useMentorInfo())
+    const { result } = renderHook(() => useMentorInfo('0xuser'))
     
     expect(result.current.canBecomeMentor).toBeTruthy()
   })
 
-  it('returns highScoreTimestamp', () => {
-    const timestamp = 1234567890
-    mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'highScoreFirstAchievedAt') return { data: BigInt(timestamp) }
-      return { data: undefined }
+  it('returns minScoreToMentor', () => {
+    mockUseReadContract.mockReturnValue({
+      data: [false, '0x0000000000000000000000000000000000000000' as `0x${string}`, BigInt(0), false, false, BigInt(7000), BigInt(5000)],
+      isLoading: false,
     })
     
-    const { result } = renderHook(() => useMentorInfo())
+    const { result } = renderHook(() => useMentorInfo('0xuser'))
     
-    expect(result.current.highScoreTimestamp).toBe(timestamp)
+    expect(result.current.minScoreToMentor).toBe(7000)
   })
 
-  it('calculates mentorEligibleAt', () => {
-    const timestamp = 1234567890
-    mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'highScoreFirstAchievedAt') return { data: BigInt(timestamp) }
-      return { data: undefined }
+  it('returns currentScore', () => {
+    mockUseReadContract.mockReturnValue({
+      data: [false, '0x0000000000000000000000000000000000000000' as `0x${string}`, BigInt(0), false, false, BigInt(7000), BigInt(8500)],
+      isLoading: false,
     })
     
-    const { result } = renderHook(() => useMentorInfo())
+    const { result } = renderHook(() => useMentorInfo('0xuser'))
     
-    // 30 days in seconds
-    const thirtyDays = 30 * 24 * 60 * 60
-    expect(result.current.mentorEligibleAt).toBe(timestamp + thirtyDays)
+    expect(result.current.currentScore).toBe(8500)
   })
 })

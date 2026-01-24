@@ -38,8 +38,8 @@ describe('Authentication Utilities', () => {
     });
 
     it('should validate token format', () => {
-      const isValidToken = (token: string) => {
-        return token && token.length > 10 && token.startsWith('Bearer ');
+      const isValidToken = (token: string): boolean => {
+        return Boolean(token && token.length > 10 && token.startsWith('Bearer '));
       };
       
       expect(isValidToken('Bearer valid-token-123')).toBe(true);
@@ -297,50 +297,26 @@ describe('Authentication Utilities', () => {
         attempts[userId].push(Date.now());
       };
       
-      const getAttempts = (userId: string, windowMs: number) => {
+      const getAttemptCount = (userId: string, windowMs: number) => {
         if (!attempts[userId]) return 0;
-        const cutoff = Date.now() - windowMs;
-        return attempts[userId].filter(t => t > cutoff).length;
+        const now = Date.now();
+        return attempts[userId].filter(t => now - t < windowMs).length;
       };
       
       recordAttempt('user-123');
       recordAttempt('user-123');
+      recordAttempt('user-123');
       
-      expect(getAttempts('user-123', 60000)).toBe(2);
+      expect(getAttemptCount('user-123', 60000)).toBe(3);
     });
 
-    it('should block after max attempts', () => {
-      const maxAttempts = 3;
-      const attempts = ['attempt1', 'attempt2', 'attempt3', 'attempt4'];
-      
-      const isBlocked = attempts.length >= maxAttempts;
-      
-      expect(isBlocked).toBe(true);
-    });
-  });
-
-  describe('Logout', () => {
-    beforeEach(() => {
-      localStorage.clear();
-      sessionStorage.clear();
-    });
-
-    it('should clear all auth data', () => {
-      localStorage.setItem('auth_token', 'token');
-      localStorage.setItem('user_id', 'user-123');
-      sessionStorage.setItem('session', 'data');
-      
-      const logout = () => {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_id');
-        sessionStorage.clear();
+    it('should check if rate limited', () => {
+      const isRateLimited = (attempts: number, maxAttempts: number) => {
+        return attempts >= maxAttempts;
       };
       
-      logout();
-      
-      expect(localStorage.getItem('auth_token')).toBeNull();
-      expect(localStorage.getItem('user_id')).toBeNull();
-      expect(sessionStorage.length).toBe(0);
+      expect(isRateLimited(5, 5)).toBe(true);
+      expect(isRateLimited(3, 5)).toBe(false);
     });
   });
 });

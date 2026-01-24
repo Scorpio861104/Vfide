@@ -103,7 +103,8 @@ describe('useVaultRecovery', () => {
     
     const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
     
-    expect(result.current.isGuardianMature).toBe(true)
+    // Hook exposes this as isUserGuardianMature
+    expect(result.current.isUserGuardianMature).toBe(true)
   })
 
   it('returns nextOfKin', () => {
@@ -240,7 +241,7 @@ describe('useVaultRecovery', () => {
       })
       
       expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
-        functionName: 'guardianApproveRecovery',
+        functionName: 'approveRecovery',
       }))
     })
 

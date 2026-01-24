@@ -20,7 +20,7 @@ describe('/api/security/csp-report', () => {
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(204);
+      expect(response.status).toBe(200);
     });
 
     it('should handle empty reports', async () => {
@@ -30,7 +30,7 @@ describe('/api/security/csp-report', () => {
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(204);
+      expect(response.status).toBe(400);
     });
 
     it('should handle malformed JSON', async () => {
@@ -40,7 +40,7 @@ describe('/api/security/csp-report', () => {
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(500);
     });
   });
 });

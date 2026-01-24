@@ -190,7 +190,7 @@ describe('useVaultRecovery', () => {
     })
     
     jest.mocked(useReadContract).mockReturnValue({
-      data: 3,
+      data: undefined,
       isLoading: false,
       isError: false,
       error: null,
@@ -255,7 +255,7 @@ describe('useVaultRecovery', () => {
     })
     
     jest.mocked(useReadContract).mockReturnValue({
-      data: true,
+      data: undefined,
       isLoading: false,
       isError: false,
       error: null,

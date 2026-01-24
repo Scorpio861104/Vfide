@@ -5,160 +5,278 @@
 import { renderHook, act } from '@testing-library/react';
 import { useErrorTracking } from '../../../hooks/useErrorTracking';
 
-// Mock Sentry
-jest.mock('@sentry/react', () => ({
-  captureException: jest.fn(),
-  captureMessage: jest.fn(),
-  withScope: jest.fn((callback) => callback({ setTag: jest.fn(), setContext: jest.fn() })),
+// Mock storage
+jest.mock('@/lib/storage', () => ({
+  safeGetJSON: jest.fn(() => []),
+  safeSetJSON: jest.fn(),
+}));
+
+// Mock performance dashboard config
+jest.mock('@/config/performance-dashboard', () => ({
+  ErrorCategory: {
+    NETWORK: 'network',
+    VALIDATION: 'validation',
+    AUTH: 'auth',
+    UNKNOWN: 'unknown',
+  },
 }));
 
 describe('useErrorTracking Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    console.error = jest.fn();
   });
 
-  it('should track errors', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Test error'));
+  describe('Initial State', () => {
+    it('should initialize with empty errors array', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      expect(result.current.errors).toEqual([]);
     });
-    
-    expect(console.error).toHaveBeenCalled();
+
+    it('should have errorStats property', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      expect(result.current.errorStats).toBeDefined();
+      expect(result.current.errorStats.total).toBe(0);
+    });
   });
 
-  it('should categorize errors', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Network error'), { 
-        category: 'network' 
+  describe('Adding Errors', () => {
+    it('should add error with addError', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Test error',
+          category: 'network' as any,
+          severity: 'high',
+          url: '/test',
+        });
       });
+      
+      expect(result.current.errors).toHaveLength(1);
+      expect(result.current.errors[0].message).toBe('Test error');
     });
-    
-    expect(result.current.errors).toHaveLength(1);
-    expect(result.current.errors[0].category).toBe('network');
-  });
 
-  it('should track error frequency', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Error 1'));
-      result.current.trackError(new Error('Error 2'));
-      result.current.trackError(new Error('Error 3'));
-    });
-    
-    expect(result.current.errorCount).toBe(3);
-  });
-
-  it('should deduplicate similar errors', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Same error'));
-      result.current.trackError(new Error('Same error'));
-      result.current.trackError(new Error('Same error'));
-    });
-    
-    expect(result.current.uniqueErrors.length).toBeLessThan(3);
-  });
-
-  it('should clear errors', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Test'));
-      result.current.clearErrors();
-    });
-    
-    expect(result.current.errors).toHaveLength(0);
-  });
-
-  it('should provide error summary', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Network'));
-      result.current.trackError(new Error('Validation'));
-    });
-    
-    expect(result.current.summary).toBeDefined();
-    expect(result.current.summary.total).toBe(2);
-  });
-
-  it('should track error context', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Test'), { 
-        context: { userId: '123', action: 'submit' }
+    it('should auto-generate id and timestamp', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Test error',
+          category: 'network' as any,
+          severity: 'high',
+          url: '/test',
+        });
       });
+      
+      expect(result.current.errors[0].id).toBeDefined();
+      expect(result.current.errors[0].timestamp).toBeDefined();
     });
-    
-    expect(result.current.errors[0].context).toBeDefined();
+
+    it('should add multiple errors', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Error 1',
+          category: 'network' as any,
+          severity: 'low',
+          url: '/test1',
+        });
+        result.current.addError({
+          message: 'Error 2',
+          category: 'validation' as any,
+          severity: 'medium',
+          url: '/test2',
+        });
+      });
+      
+      expect(result.current.errors).toHaveLength(2);
+    });
   });
 
-  it('should handle error boundaries', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    const errorInfo = { componentStack: 'Component stack' };
-    
-    act(() => {
-      result.current.trackError(new Error('Boundary error'), { errorInfo });
+  describe('Clearing Errors', () => {
+    it('should clear all errors', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Test',
+          category: 'network' as any,
+          severity: 'low',
+          url: '/test',
+        });
+      });
+      
+      expect(result.current.errors).toHaveLength(1);
+      
+      act(() => {
+        result.current.clearErrors();
+      });
+      
+      expect(result.current.errors).toHaveLength(0);
     });
-    
-    expect(result.current.errors).toHaveLength(1);
   });
 
-  it('should track error severity', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Critical'), { severity: 'high' });
-      result.current.trackError(new Error('Minor'), { severity: 'low' });
+  describe('Resolving Errors', () => {
+    it('should resolve error by id', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Test',
+          category: 'network' as any,
+          severity: 'low',
+          url: '/test',
+        });
+      });
+      
+      const errorId = result.current.errors[0].id;
+      
+      act(() => {
+        result.current.resolveError(errorId);
+      });
+      
+      expect(result.current.errors[0].resolved).toBe(true);
     });
-    
-    const highSeverity = result.current.errors.filter(e => e.severity === 'high');
-    expect(highSeverity).toHaveLength(1);
   });
 
-  it('should provide error stats', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Error 1'));
-      result.current.trackError(new Error('Error 2'));
+  describe('Filtering Errors', () => {
+    it('should filter by severity', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Low',
+          category: 'network' as any,
+          severity: 'low',
+          url: '/test',
+        });
+        result.current.addError({
+          message: 'High',
+          category: 'network' as any,
+          severity: 'high',
+          url: '/test',
+        });
+      });
+      
+      const highErrors = result.current.filterBySeverity('high');
+      
+      expect(highErrors).toHaveLength(1);
+      expect(highErrors[0].message).toBe('High');
     });
-    
-    expect(result.current.stats).toBeDefined();
-    expect(result.current.stats.totalErrors).toBe(2);
+
+    it('should filter by category', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Network',
+          category: 'network' as any,
+          severity: 'low',
+          url: '/test',
+        });
+        result.current.addError({
+          message: 'Validation',
+          category: 'validation' as any,
+          severity: 'low',
+          url: '/test',
+        });
+      });
+      
+      const networkErrors = result.current.filterByCategory('network' as any);
+      
+      expect(networkErrors).toHaveLength(1);
+      expect(networkErrors[0].message).toBe('Network');
+    });
   });
 
-  it('should limit error storage', () => {
-    const { result } = renderHook(() => 
-      useErrorTracking({ maxErrors: 5 })
-    );
-    
-    act(() => {
-      for (let i = 0; i < 10; i++) {
-        result.current.trackError(new Error(`Error ${i}`));
-      }
+  describe('Searching Errors', () => {
+    it('should search errors by message', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Network timeout',
+          category: 'network' as any,
+          severity: 'low',
+          url: '/test',
+        });
+        result.current.addError({
+          message: 'Validation failed',
+          category: 'validation' as any,
+          severity: 'low',
+          url: '/test',
+        });
+      });
+      
+      const found = result.current.searchErrors('timeout');
+      
+      expect(found).toHaveLength(1);
+      expect(found[0].message).toContain('timeout');
     });
-    
-    expect(result.current.errors.length).toBeLessThanOrEqual(5);
   });
 
-  it('should export error logs', () => {
-    const { result } = renderHook(() => useErrorTracking());
-    
-    act(() => {
-      result.current.trackError(new Error('Test'));
+  describe('Exporting Errors', () => {
+    it('should export as JSON', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Test',
+          category: 'network' as any,
+          severity: 'low',
+          url: '/test',
+        });
+      });
+      
+      const exported = result.current.exportErrors('json');
+      
+      expect(typeof exported).toBe('string');
+      const parsed = JSON.parse(exported);
+      expect(Array.isArray(parsed)).toBe(true);
     });
-    
-    const exported = result.current.exportErrors();
-    expect(exported).toBeDefined();
-    expect(Array.isArray(exported)).toBe(true);
+
+    it('should export as CSV', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Test',
+          category: 'network' as any,
+          severity: 'low',
+          url: '/test',
+        });
+      });
+      
+      const exported = result.current.exportErrors('csv');
+      
+      expect(typeof exported).toBe('string');
+      expect(exported).toContain('ID,Category,Severity');
+    });
+  });
+
+  describe('Error Stats', () => {
+    it('should calculate total errors', () => {
+      const { result } = renderHook(() => useErrorTracking());
+      
+      act(() => {
+        result.current.addError({
+          message: 'Error 1',
+          category: 'network' as any,
+          severity: 'low',
+          url: '/test',
+        });
+        result.current.addError({
+          message: 'Error 2',
+          category: 'network' as any,
+          severity: 'high',
+          url: '/test',
+        });
+      });
+      
+      expect(result.current.errorStats.total).toBe(2);
+    });
   });
 });
