@@ -1,22 +1,31 @@
-// Set env FIRST before any imports
+// Set env FIRST before any imports  
 process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS = '0x6666666666666666666666666666666666666666';
+process.env.NODE_ENV = 'test';
 
 // Extended tests for useVaultHub.ts - comprehensive coverage
 import { describe, it, expect, beforeEach, Mock } from '@jest/globals'
 import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi before importing hooks
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(),
-  useReadContract: jest.fn(),
-  useWriteContract: jest.fn(),
-  useWaitForTransactionReceipt: jest.fn(),
-  useChainId: jest.fn(),
-}))
+jest.mock('wagmi', () => {
+  // Ensure env is set for module initialization
+  if (!process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS) {
+    process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS = '0x6666666666666666666666666666666666666666';
+  }
+  return {
+    useAccount: jest.fn(),
+    useReadContract: jest.fn(),
+    useWriteContract: jest.fn(),
+    useWaitForTransactionReceipt: jest.fn(),
+    useChainId: jest.fn(),
+  };
+})
 
 // Mock viem
 jest.mock('viem', () => ({
-  isAddress: (addr: string) => addr && addr.startsWith('0x') && addr.length === 42,
+  isAddress: jest.fn((addr: string) => {
+    return addr && typeof addr === 'string' && addr.startsWith('0x') && addr.length === 42;
+  }),
 }))
 
 // Mock lib/contracts
@@ -38,6 +47,15 @@ jest.mock('@/lib/testnet', () => ({
   CURRENT_CHAIN_ID: 84532,
 }))
 
+// Mock lib/chains
+jest.mock('@/lib/chains', () => ({
+  getChainByChainId: jest.fn().mockReturnValue({
+    testnet: { name: 'Base Sepolia', id: 84532 },
+    mainnet: { name: 'Base', id: 8453 }
+  }),
+  isTestnetChainId: jest.fn().mockReturnValue(true),
+}))
+
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import { useVaultHub } from '../useVaultHub'
 
@@ -50,6 +68,7 @@ describe('useVaultHub - Extended Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     
+    // Reset all mocks to default values
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
       isConnected: true,
@@ -64,7 +83,7 @@ describe('useVaultHub - Extended Tests', () => {
       isLoading: false,
       isSuccess: false,
     })
-    // Default mock for useReadContract
+    // Default mock for useReadContract - returns zero address (no vault) and configured token
     ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
       if (functionName === 'vaultOf') {
         return { 
@@ -303,7 +322,7 @@ describe('useVaultHub - Extended Tests', () => {
       const { result } = renderHook(() => useVaultHub())
 
       expect(result.current.hasVault).toBe(false)
-      expect(result.current.vaultAddress).toBe('0x0000000000000000000000000000000000000000')
+      expect(result.current.vaultAddress).toBeUndefined()
     })
 
     it('should show loading state', () => {

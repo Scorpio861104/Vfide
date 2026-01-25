@@ -162,13 +162,18 @@ describe('useSimpleVault - Extended Tests', () => {
 
       const { result } = renderHook(() => useSimpleVault())
 
-      act(() => {
+      // Execute the action
+      await act(async () => {
         result.current.executeVaultAction('Complete', mockTargetContract, mockCallData)
       })
 
-      // Advance through all timers
+      // Advance through all timers (500ms + 3000ms)
       await act(async () => {
-        jest.advanceTimersByTime(5000)
+        jest.advanceTimersByTime(500)
+      })
+      
+      await act(async () => {
+        jest.advanceTimersByTime(3000)
       })
 
       expect(result.current.actionStatus).toBe('success')
@@ -183,13 +188,22 @@ describe('useSimpleVault - Extended Tests', () => {
 
       const { result } = renderHook(() => useSimpleVault())
 
-      act(() => {
+      // Execute the action
+      await act(async () => {
         result.current.executeVaultAction('Reset Test', mockTargetContract, mockCallData)
       })
 
-      // Advance through all timers including the 3s reset
+      // Advance through all timers (500ms + 3000ms to success + 3000ms to reset)
       await act(async () => {
-        jest.advanceTimersByTime(10000)
+        jest.advanceTimersByTime(500)
+      })
+      
+      await act(async () => {
+        jest.advanceTimersByTime(3000)
+      })
+      
+      await act(async () => {
+        jest.advanceTimersByTime(3000)
       })
 
       expect(result.current.actionStatus).toBe('idle')
@@ -322,12 +336,18 @@ describe('useSimpleVault - Extended Tests', () => {
 
       const { result } = renderHook(() => useSimpleVault())
 
-      act(() => {
+      // Execute the action
+      await act(async () => {
         result.current.executeVaultAction('Success', mockTargetContract, mockCallData)
       })
 
+      // Advance through all timers to reach success
       await act(async () => {
-        jest.advanceTimersByTime(5000)
+        jest.advanceTimersByTime(500)
+      })
+      
+      await act(async () => {
+        jest.advanceTimersByTime(3000)
       })
 
       expect(result.current.actionStatus).toBe('success')
