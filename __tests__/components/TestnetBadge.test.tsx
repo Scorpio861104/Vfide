@@ -35,19 +35,19 @@ describe('TestnetBadge', () => {
     jest.clearAllMocks()
   })
 
-  it('renders testnet indicator on Base Sepolia', () => {
-    render(<TestnetBadge />)
-    expect(screen.getByText(/Base Sepolia/)).toBeInTheDocument()
+  it('returns null (legacy component)', () => {
+    const { container } = render(<TestnetBadge />)
+    expect(container.firstChild).toBeNull()
   })
 
-  it('shows testnet mode warning', () => {
-    render(<TestnetBadge />)
-    expect(screen.getByText(/TESTNET MODE/)).toBeInTheDocument()
+  it('no longer shows testnet mode warning', () => {
+    const { container } = render(<TestnetBadge />)
+    expect(container.firstChild).toBeNull()
   })
 
-  it('shows no real value warning', () => {
-    render(<TestnetBadge />)
-    expect(screen.getByText(/no real value/)).toBeInTheDocument()
+  it('no longer shows no real value warning', () => {
+    const { container } = render(<TestnetBadge />)
+    expect(container.firstChild).toBeNull()
   })
 
   it('returns null when IS_TESTNET is false', async () => {
@@ -64,20 +64,20 @@ describe('TestnetBadge', () => {
 })
 
 describe('TestnetBadge - Different Chains', () => {
-  it('shows Polygon Amoy when on that chain', async () => {
+  it('returns null (legacy - no longer shows Polygon Amoy)', async () => {
     const { useChainId } = await import('wagmi')
     ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(80002)
     
-    render(<TestnetBadge />)
-    expect(screen.getByText(/Polygon Amoy/)).toBeInTheDocument()
+    const { container } = render(<TestnetBadge />)
+    expect(container.firstChild).toBeNull()
   })
 
-  it('shows zkSync Sepolia when on that chain', async () => {
+  it('returns null (legacy - no longer shows zkSync Sepolia)', async () => {
     const { useChainId } = await import('wagmi')
     ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(300)
     
-    render(<TestnetBadge />)
-    expect(screen.getByText(/zkSync Sepolia/)).toBeInTheDocument()
+    const { container } = render(<TestnetBadge />)
+    expect(container.firstChild).toBeNull()
   })
 
   it('returns null when on non-testnet chain', async () => {
@@ -97,31 +97,31 @@ describe('TestnetCornerBadge', () => {
     ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
   })
 
-  it('renders when connected on correct network', async () => {
+  it('returns null (legacy component)', async () => {
     const { container } = render(<TestnetCornerBadge />)
-    // Component should render
-    expect(container.firstChild).not.toBeNull()
+    // Component should return null now
+    expect(container.firstChild).toBeNull()
   })
 
-  it('links to setup page', async () => {
+  it('no longer links to setup page', async () => {
     const { container } = render(<TestnetCornerBadge />)
     const link = container.querySelector('a')
-    expect(link).toHaveAttribute('href', '/setup')
+    expect(link).toBeNull()
   })
 
-  it('shows setup guide when not connected', async () => {
+  it('no longer shows setup guide when not connected', async () => {
     const { useAccount } = await import('wagmi')
     ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: false })
     
     const { container } = render(<TestnetCornerBadge />)
-    expect(container.textContent).toMatch(/Setup Guide/)
+    expect(container.firstChild).toBeNull()
   })
 
-  it('shows setup guide when on wrong network', async () => {
+  it('no longer shows setup guide when on wrong network', async () => {
     const { useChainId } = await import('wagmi')
     ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(1) // Wrong chain
     
     const { container } = render(<TestnetCornerBadge />)
-    expect(container.textContent).toMatch(/Setup Guide/)
+    expect(container.firstChild).toBeNull()
   })
 })
