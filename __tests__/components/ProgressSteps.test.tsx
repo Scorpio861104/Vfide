@@ -55,9 +55,9 @@ describe('ProgressSteps', () => {
 
   it('highlights current step', () => {
     render(<ProgressSteps steps={mockSteps} currentStep={1} />)
-    // Current step (Step 2) should have cyan color
+    // Current step (Step 2) should have zinc-100 color
     const step2 = screen.getByText('Step 2')
-    expect(step2.className).toContain('text-[#F5F3E8]')
+    expect(step2.className).toContain('text-zinc-100')
   })
 
   it('renders step descriptions when provided', () => {
