@@ -75,6 +75,8 @@ describe('/api/endorsements', () => {
           .mockResolvedValueOnce({ rows: [{ id: 2 }] }) // endorsed lookup
           .mockResolvedValueOnce({ rows: [] }) // check existing
           .mockResolvedValueOnce({ rows: [{ id: 1, endorser_id: 1, endorsed_id: 2 }] }) // INSERT
+          .mockResolvedValueOnce({ rows: [] }) // notification
+          .mockResolvedValueOnce({ rows: [] }) // activity
           .mockResolvedValueOnce({ rows: [] }), // COMMIT
         release: jest.fn(),
       };
@@ -93,7 +95,7 @@ describe('/api/endorsements', () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(data.endorsement).toBeDefined();
     });
 

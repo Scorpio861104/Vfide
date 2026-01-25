@@ -211,7 +211,7 @@ describe('/api/leaderboard/monthly', () => {
         .mockResolvedValueOnce({ rows: [] }) // Prize pool
         .mockResolvedValueOnce({ rows: mockLeaderboard }); // Leaderboard
 
-      const request = new NextRequest('http://localhost:3000/api/leaderboard/monthly?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/monthly?userAddress=0x1111111111111111111111111111111111111123');
       const response = await GET(request);
       const data = await response.json();
 

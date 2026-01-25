@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 
 /**
  * POST /api/leaderboard/claim-prize
@@ -10,6 +11,13 @@ export async function POST(request: NextRequest) {
   // Rate limiting - strict for prize claims
   const rateLimitResponse = await withRateLimit(request, 'claim');
   if (rateLimitResponse) return rateLimitResponse;
+
+  // Authentication
+  const authResult = requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const { userAddress, monthYear } = await request.json();

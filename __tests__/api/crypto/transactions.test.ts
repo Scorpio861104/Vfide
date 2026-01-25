@@ -9,9 +9,14 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
 describe('/api/crypto/transactions/[userId]', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -20,6 +25,7 @@ describe('/api/crypto/transactions/[userId]', () => {
   describe('GET', () => {
     it('should return user transactions', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
       const mockTransactions = [
         {
@@ -33,7 +39,8 @@ describe('/api/crypto/transactions/[userId]', () => {
         },
       ];
 
-      query.mockResolvedValue({ rows: mockTransactions });
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({ rows: mockTransactions });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/transactions/1');
       const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
@@ -58,7 +65,9 @@ describe('/api/crypto/transactions/[userId]', () => {
 
     it('should support pagination', async () => {
       withRateLimit.mockResolvedValue(null);
-      query.mockResolvedValue({ rows: [] });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/transactions/1?limit=10&offset=0');
       await GET(request, { params: Promise.resolve({ userId: '1' }) });

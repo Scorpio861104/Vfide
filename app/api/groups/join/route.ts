@@ -21,6 +21,9 @@ export async function POST(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const client = await getClient();
   

@@ -33,6 +33,9 @@ export async function GET(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult;
   }
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const searchParams = request.nextUrl.searchParams;

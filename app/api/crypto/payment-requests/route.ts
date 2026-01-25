@@ -13,6 +13,9 @@ export async function GET(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult;
   }
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const { searchParams } = new URL(request.url);
@@ -53,20 +56,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   // Rate limiting: 20 requests per minute for write operations
-  const clientId = getClientIdentifier(request);
-  const rateLimit = checkRateLimit(clientId, { maxRequests: 20, windowMs: 60000 });
-  
-  if (!rateLimit.success) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please slow down.' },
-      { status: 429, headers: getRateLimitHeaders(rateLimit) }
-    );
-  }
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
 
   // Require authentication
   const authResult = requireAuth(request);
   if (authResult instanceof NextResponse) {
     return authResult;
+  }
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {

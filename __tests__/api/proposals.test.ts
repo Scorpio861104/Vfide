@@ -11,6 +11,7 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  checkOwnership: jest.fn(),
 }));
 
 jest.mock('@/lib/auth/validation', () => ({
@@ -21,7 +22,7 @@ jest.mock('@/lib/auth/validation', () => ({
 describe('/api/proposals', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { requireAuth } = require('@/lib/auth/middleware');
+  const { requireAuth, checkOwnership } = require('@/lib/auth/middleware');
   const { validateBody } = require('@/lib/auth/validation');
 
   beforeEach(() => {
@@ -70,17 +71,19 @@ describe('/api/proposals', () => {
   describe('POST', () => {
     it('should create proposal successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      checkOwnership.mockReturnValue(true);
       validateBody.mockResolvedValue({
         success: true,
         data: {
+          proposerAddress: '0x1111111111111111111111111111111111111123',
           title: 'New Proposal',
           description: 'Description',
-          proposer: '0x1111111111111111111111111111111111111123',
         },
       });
 
-      query.mockResolvedValue({
+      query.mockResolvedValueOnce({ rows: [{ id: 1, is_council_member: false }] });
+      query.mockResolvedValueOnce({
         rows: [{
           id: 1,
           title: 'New Proposal',
@@ -90,16 +93,16 @@ describe('/api/proposals', () => {
       const request = new NextRequest('http://localhost:3000/api/proposals', {
         method: 'POST',
         body: JSON.stringify({
+          proposerAddress: '0x1111111111111111111111111111111111111123',
           title: 'New Proposal',
           description: 'Description',
-          proposer: '0x1111111111111111111111111111111111111123',
         }),
       });
 
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(data.proposal).toBeDefined();
     });
 

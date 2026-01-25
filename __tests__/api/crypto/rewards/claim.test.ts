@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST } from '@/app/api/crypto/rewards/[userId]/claim/route';
 
 jest.mock('@/lib/db', () => ({

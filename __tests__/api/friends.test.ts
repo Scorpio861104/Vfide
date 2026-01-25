@@ -51,8 +51,8 @@ describe('/api/friends', () => {
 
       mockQuery.mockResolvedValue({ rows: mockFriends });
 
-      // API uses 'address' param, not 'userAddress'
-      const request = new NextRequest('http://localhost:3000/api/friends?address=0x123');
+      // API uses 'address' param, not 'userAddress' - must match requireAuth address
+      const request = new NextRequest('http://localhost:3000/api/friends?address=0x1111111111111111111111111111111111111123');
       const response = await GET(request);
       const data = await response.json();
 

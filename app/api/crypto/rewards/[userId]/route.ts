@@ -13,6 +13,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (authResult instanceof NextResponse) {
     return authResult;
   }
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const resolvedParams = await params;
     const userId = resolvedParams?.userId;
@@ -32,13 +35,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     );
 
     const total = result.rows.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
-    const unclaimed = result.rows.filter(r => r.status === 'pending').reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
+    const totalUnclaimed = result.rows.filter(r => r.status === 'pending' || !r.claimed).reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
 
     return NextResponse.json({
       rewards: result.rows,
       total,
-      unclaimed,
-      claimed: total - unclaimed
+      totalUnclaimed: totalUnclaimed.toString(),
+      unclaimed: totalUnclaimed,
+      claimed: total - totalUnclaimed
     });
   } catch (error) {
     console.error('[Rewards GET] Error:', error);
