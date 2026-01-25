@@ -779,13 +779,15 @@ export default function AdvancedSearch({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Content Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="content-type-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Content Type
                   </label>
                   <select
+                    id="content-type-filter"
                     value={filters.contentType[0]}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange('contentType', [e.target.value as ContentType])}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    aria-label="Content Type"
                   >
                     <option value="all">All Content</option>
                     <option value="proposal">Proposals</option>
@@ -799,13 +801,15 @@ export default function AdvancedSearch({
 
                 {/* Date Range */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="date-range-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Date Range
                   </label>
                   <select
+                    id="date-range-filter"
                     value={filters.dateRange}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange('dateRange', e.target.value as DateRange)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    aria-label="Date Range"
                   >
                     <option value="all">All Time</option>
                     <option value="today">Today</option>
@@ -818,13 +822,15 @@ export default function AdvancedSearch({
 
                 {/* Status */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Status
                   </label>
                   <select
+                    id="status-filter"
                     value={filters.status[0]}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange('status', [e.target.value as SearchStatus])}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    aria-label="Status"
                   >
                     <option value="all">All Statuses</option>
                     <option value="active">Active</option>
