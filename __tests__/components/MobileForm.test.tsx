@@ -257,10 +257,7 @@ describe('MobileSelect Component', () => {
     );
 
     const select = screen.getByRole('combobox');
-    await user.click(select);
-
-    const ethereumOption = screen.getByText('Ethereum');
-    await user.click(ethereumOption);
+    await user.selectOptions(select, 'eth');
 
     expect(handleChange).toHaveBeenCalled();
   });
