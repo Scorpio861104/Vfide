@@ -37,7 +37,6 @@ describe('VaultRegistry Contract', () => {
     });
 
     it('should prevent duplicate vault registration', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // already registered
       mockContractWrite.mockRejectedValueOnce(new Error('Vault already registered'));
 
       await expect(async () => {

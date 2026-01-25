@@ -167,7 +167,6 @@ describe('BadgeRegistry Contract', () => {
     });
 
     it('should only allow authorized issuers', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not issuer
       mockContractWrite.mockRejectedValueOnce(new Error('Not authorized issuer'));
 
       await expect(async () => {
@@ -179,7 +178,6 @@ describe('BadgeRegistry Contract', () => {
     });
 
     it('should prevent duplicate badge assignment', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // already has badge
       mockContractWrite.mockRejectedValueOnce(new Error('Badge already assigned'));
 
       await expect(async () => {
@@ -202,7 +200,6 @@ describe('BadgeRegistry Contract', () => {
     });
 
     it('should increment badge count on assignment', async () => {
-      mockContractRead.mockResolvedValueOnce(5n); // previous count
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -254,7 +251,6 @@ describe('BadgeRegistry Contract', () => {
     });
 
     it('should prevent assignment of inactive badge type', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // inactive
       mockContractWrite.mockRejectedValueOnce(new Error('Badge type not active'));
 
       await expect(async () => {
@@ -779,7 +775,6 @@ describe('BadgeRegistry Contract', () => {
     });
 
     it('should prevent operations when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('Contract is paused'));
 
       await expect(async () => {

@@ -102,7 +102,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should increment escrow count', async () => {
-      mockContractRead.mockResolvedValueOnce(5n); // previous
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
