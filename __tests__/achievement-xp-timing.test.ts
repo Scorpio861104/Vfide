@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { 
   MockDate, 
   TIME 
-} from './utils/time-travel';
+} from './utils/time-travel.helpers';
 
 /**
  * Achievement Unlock & XP System Time-Dependent Tests

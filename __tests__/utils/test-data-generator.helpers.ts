@@ -8,7 +8,7 @@
  * - Streak activity records
  */
 
-import { TIME } from './time-travel';
+import { TIME } from './time-travel.helpers';
 import { BADGE_REGISTRY } from '@/lib/badge-registry';
 
 export interface UserVestingData {

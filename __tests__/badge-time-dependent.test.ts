@@ -7,7 +7,7 @@ import {
   BadgeTimeTravel, 
   TIME, 
   TEST_PERIODS 
-} from './utils/time-travel';
+} from './utils/time-travel.helpers';
 import { BADGE_REGISTRY } from '@/lib/badge-registry';
 
 describe('Badge Time-Dependent Features', () => {

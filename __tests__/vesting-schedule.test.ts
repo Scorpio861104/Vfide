@@ -7,7 +7,7 @@ import {
   VestingTimeTravel, 
   TIME, 
   TEST_PERIODS 
-} from './utils/time-travel';
+} from './utils/time-travel.helpers';
 
 describe('3-Year Developer Vesting Schedule', () => {
   let vestingSchedule: VestingTimeTravel;

@@ -6,7 +6,7 @@ import {
   MockDate, 
   StreakTimeTravel, 
   TIME 
-} from './utils/time-travel';
+} from './utils/time-travel.helpers';
 
 describe('Gamification Streak Tracking', () => {
   const startTime = new Date('2024-01-01T00:00:00Z').getTime();
