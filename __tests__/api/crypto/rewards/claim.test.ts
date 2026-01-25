@@ -10,13 +10,13 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 jest.mock('@/lib/auth/middleware', () => ({
-  requireAuth: jest.fn(),
+  requireOwnership: jest.fn(),
 }));
 
 describe('/api/crypto/rewards/[userId]/claim', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { requireAuth } = require('@/lib/auth/middleware');
+  const { requireOwnership } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,16 +25,19 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
   describe('POST', () => {
     it('should claim rewards successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireOwnership.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: '1' } });
 
-      query.mockResolvedValue({
-        rows: [{ id: 1, claimed: true, amount: '100' }],
+      query.mockResolvedValueOnce({
+        rows: [{ id: 1, amount: '100', reward_type: 'quest', source_contract: '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' }],
+      });
+      query.mockResolvedValueOnce({
+        rows: [{ id: 1 }],
       });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1/claim', {
         method: 'POST',
         body: JSON.stringify({
-          rewardIds: [1, 2],
+          rewardIds: ['1', '2'],
         }),
       });
 
@@ -51,7 +54,7 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401 }
       );
-      requireAuth.mockReturnValue(unauthorizedResponse);
+      requireOwnership.mockReturnValue(unauthorizedResponse);
 
       const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1/claim', {
         method: 'POST',

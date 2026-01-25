@@ -25,15 +25,24 @@ describe('/api/messages/delete', () => {
   describe('DELETE', () => {
     it('should delete message successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValue({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({ 
+        rows: [{ 
+          id: 1, 
+          sender: '0x1111111111111111111111111111111111111123',
+          conversation_id: 1,
+          is_deleted: false 
+        }] 
+      });
+      query.mockResolvedValueOnce({ rows: [{ id: 1, success: true }] });
 
       const request = new NextRequest('http://localhost:3000/api/messages/delete', {
         method: 'DELETE',
         body: JSON.stringify({
-          messageId: 1,
-          userAddress: '0x123',
+          messageId: '1',
+          conversationId: '1',
+          userAddress: '0x1111111111111111111111111111111111111123',
         }),
       });
 

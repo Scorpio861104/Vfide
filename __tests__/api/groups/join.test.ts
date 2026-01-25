@@ -36,7 +36,7 @@ describe('/api/groups/join', () => {
       validateBody.mockResolvedValue({
         success: true,
         data: {
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           groupId: 1,
         },
       });
@@ -50,7 +50,7 @@ describe('/api/groups/join', () => {
       const request = new NextRequest('http://localhost:3000/api/groups/join', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           groupId: 1,
         }),
       });
@@ -85,7 +85,7 @@ describe('/api/groups/join', () => {
       validateBody.mockResolvedValue({
         success: true,
         data: {
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           groupId: 1,
         },
       });
@@ -98,7 +98,7 @@ describe('/api/groups/join', () => {
       const request = new NextRequest('http://localhost:3000/api/groups/join', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           groupId: 1,
         }),
       });

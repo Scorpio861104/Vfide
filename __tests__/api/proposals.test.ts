@@ -76,7 +76,7 @@ describe('/api/proposals', () => {
         data: {
           title: 'New Proposal',
           description: 'Description',
-          proposer: '0x123',
+          proposer: '0x1111111111111111111111111111111111111123',
         },
       });
 
@@ -92,7 +92,7 @@ describe('/api/proposals', () => {
         body: JSON.stringify({
           title: 'New Proposal',
           description: 'Description',
-          proposer: '0x123',
+          proposer: '0x1111111111111111111111111111111111111123',
         }),
       });
 

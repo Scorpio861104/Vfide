@@ -29,8 +29,8 @@ describe('/api/crypto/payment-requests/[id]', () => {
       query.mockResolvedValue({
         rows: [{
           id: 1,
-          from_address: '0x123',
-          to_address: '0x456',
+          from_address: '0x1111111111111111111111111111111111111123',
+          to_address: '0x2222222222222222222222222222222222222456',
           amount: '1.5',
           status: 'pending',
         }],

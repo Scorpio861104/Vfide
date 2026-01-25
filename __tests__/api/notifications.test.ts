@@ -180,7 +180,7 @@ describe('/api/notifications', () => {
 
     it('should return 400 for invalid request body', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123' } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
       const request = new NextRequest('http://localhost:3000/api/notifications', {
         method: 'POST',

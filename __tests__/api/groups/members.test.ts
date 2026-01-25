@@ -24,7 +24,7 @@ describe('/api/groups/members', () => {
       query.mockResolvedValue({
         rows: [
           {
-            user_address: '0x123',
+            user_address: '0x1111111111111111111111111111111111111123',
             username: 'user1',
             role: 'member',
             joined_at: new Date().toISOString(),

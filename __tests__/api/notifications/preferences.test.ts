@@ -60,7 +60,7 @@ describe('/api/notifications/preferences', () => {
       const request = new NextRequest('http://localhost:3000/api/notifications/preferences', {
         method: 'PUT',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           emailNotifications: false,
         }),
       });

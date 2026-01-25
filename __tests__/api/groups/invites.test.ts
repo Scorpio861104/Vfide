@@ -31,8 +31,8 @@ describe('/api/groups/invites', () => {
           {
             id: 1,
             group_id: 1,
-            inviter_address: '0x123',
-            invitee_address: '0x456',
+            inviter_address: '0x1111111111111111111111111111111111111123',
+            invitee_address: '0x2222222222222222222222222222222222222456',
             status: 'pending',
           },
         ],
@@ -60,8 +60,8 @@ describe('/api/groups/invites', () => {
         method: 'POST',
         body: JSON.stringify({
           groupId: 1,
-          inviterAddress: '0x123',
-          inviteeAddress: '0x456',
+          inviterAddress: '0x1111111111111111111111111111111111111123',
+          inviteeAddress: '0x2222222222222222222222222222222222222456',
         }),
       });
 

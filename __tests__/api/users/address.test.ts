@@ -24,19 +24,19 @@ describe('/api/users/[address]', () => {
       query.mockResolvedValue({
         rows: [{
           id: 1,
-          wallet_address: '0x123',
+          wallet_address: '0x1111111111111111111111111111111111111123',
           username: 'user1',
           display_name: 'User One',
         }],
       });
 
       const request = new NextRequest('http://localhost:3000/api/users/0x123');
-      const response = await GET(request, { params: Promise.resolve({ address: '0x123' }) });
+      const response = await GET(request, { params: Promise.resolve({ address: '0x1111111111111111111111111111111111111123' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(data.user).toBeDefined();
-      expect(data.user.wallet_address).toBe('0x123');
+      expect(data.user.wallet_address).toBe('0x1111111111111111111111111111111111111123');
     });
 
     it('should return 404 when user not found', async () => {
@@ -59,7 +59,7 @@ describe('/api/users/[address]', () => {
       withRateLimit.mockResolvedValue(rateLimitResponse);
 
       const request = new NextRequest('http://localhost:3000/api/users/0x123');
-      const response = await GET(request, { params: Promise.resolve({ address: '0x123' }) });
+      const response = await GET(request, { params: Promise.resolve({ address: '0x1111111111111111111111111111111111111123' }) });
 
       expect(response.status).toBe(429);
     });

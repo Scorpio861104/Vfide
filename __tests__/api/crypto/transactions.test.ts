@@ -25,7 +25,7 @@ describe('/api/crypto/transactions/[userId]', () => {
         {
           id: 1,
           user_id: 1,
-          hash: '0xabc',
+          hash: '0xabcabcabcabcabcabcabcabcabcabcabcabcabca',
           type: 'transfer',
           amount: '1.5',
           status: 'confirmed',

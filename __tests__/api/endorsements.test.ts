@@ -30,8 +30,8 @@ describe('/api/endorsements', () => {
       const mockEndorsements = [
         {
           id: 1,
-          endorser: '0x123',
-          endorsed: '0x456',
+          endorser: '0x1111111111111111111111111111111111111123',
+          endorsed: '0x2222222222222222222222222222222222222456',
           skill: 'Trading',
           created_at: new Date().toISOString(),
         },
@@ -51,12 +51,15 @@ describe('/api/endorsements', () => {
   describe('POST', () => {
     it('should create endorsement successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123' } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
       const mockClient = {
         query: jest.fn()
-          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // user lookup
-          .mockResolvedValueOnce({ rows: [{ id: 1, endorser: '0x123', endorsed: '0x456' }] }),
+          .mockResolvedValueOnce({ rows: [] }) // BEGIN
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // endorser lookup
+          .mockResolvedValueOnce({ rows: [{ id: 2 }] }) // endorsed lookup
+          .mockResolvedValueOnce({ rows: [{ id: 1, endorser_id: 1, endorsed_id: 2 }] }) // INSERT
+          .mockResolvedValueOnce({ rows: [] }), // COMMIT
         release: jest.fn(),
       };
       getClient.mockResolvedValue(mockClient);
@@ -64,9 +67,10 @@ describe('/api/endorsements', () => {
       const request = new NextRequest('http://localhost:3000/api/endorsements', {
         method: 'POST',
         body: JSON.stringify({
-          endorser: '0x123',
-          endorsed: '0x456',
+          fromAddress: '0x1111111111111111111111111111111111111123',
+          toAddress: '0x2222222222222222222222222222222222222456',
           skill: 'Trading',
+          message: 'Great trader!',
         }),
       });
 
@@ -93,7 +97,12 @@ describe('/api/endorsements', () => {
 
       const request = new NextRequest('http://localhost:3000/api/endorsements', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          fromAddress: '0x1111111111111111111111111111111111111123',
+          toAddress: '0x2222222222222222222222222222222222222456',
+          skill: 'Trading',
+          message: 'Great trader!',
+        }),
       });
 
       const response = await POST(request);

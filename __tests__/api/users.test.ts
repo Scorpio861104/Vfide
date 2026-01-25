@@ -144,7 +144,7 @@ describe('/api/users', () => {
       parsePaginationParams.mockReturnValue({ page: 1, limit: 10 });
       parseFieldsParam.mockReturnValue(['wallet_address', 'username']);
 
-      const mockUsers = [{ wallet_address: '0x123', username: 'user1' }];
+      const mockUsers = [{ wallet_address: '0x1111111111111111111111111111111111111123', username: 'user1' }];
       query
         .mockResolvedValueOnce({ rows: mockUsers })
         .mockResolvedValueOnce({ rows: [{ count: '1' }] });

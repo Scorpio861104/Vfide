@@ -27,7 +27,7 @@ describe('/api/quests/weekly/claim', () => {
     it('should claim weekly quest successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       // Route doesn't await requireAuth, so it uses sync return
-      requireAuth.mockReturnValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
       checkOwnership.mockReturnValue(true);
 
       const mockClient = {
@@ -55,7 +55,7 @@ describe('/api/quests/weekly/claim', () => {
       const request = new NextRequest('http://localhost:3000/api/quests/weekly/claim', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           challengeId: 1,
         }),
       });

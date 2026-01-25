@@ -25,7 +25,7 @@ describe('/api/quests/achievements/claim', () => {
   describe('POST', () => {
     it('should claim achievement successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
 
       // Mock getClient for database operations
       jest.doMock('@/lib/db', () => ({
@@ -42,7 +42,7 @@ describe('/api/quests/achievements/claim', () => {
       const request = new NextRequest('http://localhost:3000/api/quests/achievements/claim', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           milestoneId: 1,
         }),
       });

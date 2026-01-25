@@ -30,8 +30,8 @@ describe('/api/crypto/payment-requests', () => {
         rows: [
           {
             id: 1,
-            from_address: '0x123',
-            to_address: '0x456',
+            from_address: '0x1111111111111111111111111111111111111123',
+            to_address: '0x2222222222222222222222222222222222222456',
             amount: '1.5',
             status: 'pending',
           },
@@ -53,14 +53,14 @@ describe('/api/crypto/payment-requests', () => {
       requireAuth.mockReturnValue(true);
 
       query.mockResolvedValue({
-        rows: [{ id: 1, from_address: '0x123', to_address: '0x456' }],
+        rows: [{ id: 1, from_address: '0x1111111111111111111111111111111111111123', to_address: '0x2222222222222222222222222222222222222456' }],
       });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests', {
         method: 'POST',
         body: JSON.stringify({
-          fromAddress: '0x123',
-          toAddress: '0x456',
+          fromAddress: '0x1111111111111111111111111111111111111123',
+          toAddress: '0x2222222222222222222222222222222222222456',
           amount: '1.5',
         }),
       });

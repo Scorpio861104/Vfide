@@ -31,7 +31,7 @@ describe('/api/crypto/balance/[address]', () => {
       query.mockResolvedValue({ rows: [{ token: 'VFIDE', balance: '1000' }] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/balance/0x123');
-      const response = await GET(request, { params: Promise.resolve({ address: '0x123' }) });
+      const response = await GET(request, { params: Promise.resolve({ address: '0x1111111111111111111111111111111111111123' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -55,7 +55,7 @@ describe('/api/crypto/balance/[address]', () => {
       withRateLimit.mockResolvedValue(rateLimitResponse);
 
       const request = new NextRequest('http://localhost:3000/api/crypto/balance/0x123');
-      const response = await GET(request, { params: Promise.resolve({ address: '0x123' }) });
+      const response = await GET(request, { params: Promise.resolve({ address: '0x1111111111111111111111111111111111111123' }) });
 
       expect(response.status).toBe(429);
     });

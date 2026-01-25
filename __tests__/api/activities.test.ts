@@ -35,7 +35,7 @@ describe('/api/activities', () => {
       const mockActivities = [
         {
           id: 1,
-          user_address: '0x123',
+          user_address: '0x1111111111111111111111111111111111111123',
           activity_type: 'transaction',
           description: 'Sent 10 ETH',
           created_at: new Date().toISOString(),
@@ -70,7 +70,7 @@ describe('/api/activities', () => {
   describe('POST', () => {
     it('should create activity successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
       // Mock user lookup and insert
       query
@@ -85,7 +85,7 @@ describe('/api/activities', () => {
       const request = new NextRequest('http://localhost:3000/api/activities', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           activityType: 'transaction',
           title: 'Test Activity',
           description: 'Sent 10 ETH',
