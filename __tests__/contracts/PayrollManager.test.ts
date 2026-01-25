@@ -150,7 +150,6 @@ describe('PayrollManager Contract', () => {
     });
 
     it('should prevent duplicate employee addition', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // already added
       mockContractWrite.mockRejectedValueOnce(new Error('Employee already exists'));
 
       await expect(async () => {
@@ -270,7 +269,6 @@ describe('PayrollManager Contract', () => {
     });
 
     it('should prevent distribution with insufficient balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('1000')); // insufficient
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient balance'));
 
       await expect(async () => {
@@ -459,7 +457,6 @@ describe('PayrollManager Contract', () => {
     });
 
     it('should prevent distribution before schedule', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not due
       mockContractWrite.mockRejectedValueOnce(new Error('Distribution not due'));
 
       await expect(async () => {
@@ -538,7 +535,6 @@ describe('PayrollManager Contract', () => {
     });
 
     it('should prevent withdrawal of needed funds', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('25000')); // needed
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient buffer'));
 
       await expect(async () => {
@@ -689,7 +685,6 @@ describe('PayrollManager Contract', () => {
     });
 
     it('should prevent operations when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('Contract is paused'));
 
       await expect(async () => {

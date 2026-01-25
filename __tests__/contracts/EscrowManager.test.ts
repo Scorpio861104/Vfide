@@ -446,8 +446,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should allow buyer to claim expired escrow', async () => {
-      const expiredTime = Math.floor(Date.now() / 1000) - 100;
-      mockContractRead.mockResolvedValueOnce(expiredTime);
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({

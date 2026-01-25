@@ -56,7 +56,6 @@ describe('EmergencyControl Contract', () => {
     });
 
     it('should block operations when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('System paused'));
 
       await expect(async () => {
@@ -170,8 +169,6 @@ describe('EmergencyControl Contract', () => {
     });
 
     it('should automatically expire circuit breaker', async () => {
-      const pastExpiry = Math.floor(Date.now() / 1000) - 100;
-      mockContractRead.mockResolvedValueOnce(pastExpiry);
       mockContractRead.mockResolvedValueOnce(false);
 
       const result = await mockContractRead({
@@ -229,7 +226,6 @@ describe('EmergencyControl Contract', () => {
     });
 
     it('should reject withdrawal exceeding balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50')); // balance
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient balance'));
 
       await expect(async () => {
@@ -263,7 +259,6 @@ describe('EmergencyControl Contract', () => {
     });
 
     it('should prevent all operations when kill switch active', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // kill switch active
       mockContractWrite.mockRejectedValueOnce(new Error('Kill switch active'));
 
       await expect(async () => {
@@ -275,7 +270,6 @@ describe('EmergencyControl Contract', () => {
     });
 
     it('should require multi-sig for kill switch', async () => {
-      mockContractRead.mockResolvedValueOnce(2); // requires 2 signatures
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient signatures'));
 
       await expect(async () => {
@@ -455,8 +449,6 @@ describe('EmergencyControl Contract', () => {
     });
 
     it('should execute when threshold met', async () => {
-      mockContractRead.mockResolvedValueOnce(3n); // 3 signatures
-      mockContractRead.mockResolvedValueOnce(3); // requires 3
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -500,7 +492,6 @@ describe('EmergencyControl Contract', () => {
     });
 
     it('should allow only critical operations in recovery', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // in recovery
       mockContractWrite.mockRejectedValueOnce(new Error('Non-critical operation blocked'));
 
       await expect(async () => {

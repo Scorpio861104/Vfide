@@ -34,7 +34,6 @@ describe('VaultHub Contract', () => {
   describe('Vault Creation', () => {
     it('should create new vault for user', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      mockContractRead.mockResolvedValueOnce(vault1); // new vault address
 
       const result = await mockContractWrite({
         functionName: 'createVault',
@@ -45,7 +44,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should prevent duplicate vault creation', async () => {
-      mockContractRead.mockResolvedValueOnce(vault1); // existing vault
       mockContractWrite.mockRejectedValueOnce(new Error('Vault already exists'));
 
       await expect(async () => {
@@ -91,7 +89,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should increment vault count on creation', async () => {
-      mockContractRead.mockResolvedValueOnce(5n); // previous count
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -172,7 +169,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should prevent operations on locked vault', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // isLocked
       mockContractWrite.mockRejectedValueOnce(new Error('Vault is locked'));
 
       await expect(async () => {
@@ -239,7 +235,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should prevent operations on deactivated vault', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not active
       mockContractWrite.mockRejectedValueOnce(new Error('Vault not active'));
 
       await expect(async () => {
@@ -264,7 +259,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should only allow designated recovery address to initiate', async () => {
-      mockContractRead.mockResolvedValueOnce(recoveryAddress);
       mockContractWrite.mockRejectedValueOnce(new Error('Not recovery address'));
 
       await expect(async () => {
@@ -276,8 +270,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should enforce recovery delay period', async () => {
-      const eta = Math.floor(Date.now() / 1000) + 86400; // 24 hours
-      mockContractRead.mockResolvedValueOnce(eta);
       mockContractWrite.mockRejectedValueOnce(new Error('Recovery delay not passed'));
 
       await expect(async () => {
@@ -300,8 +292,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should execute recovery after delay', async () => {
-      const eta = Math.floor(Date.now() / 1000) - 100; // expired
-      mockContractRead.mockResolvedValueOnce(eta);
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -395,7 +385,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should validate source vault has sufficient balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50')); // insufficient
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient balance'));
 
       await expect(async () => {
@@ -407,7 +396,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should prevent transfer from locked vault', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // locked
       mockContractWrite.mockRejectedValueOnce(new Error('Source vault locked'));
 
       await expect(async () => {
@@ -419,8 +407,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should prevent transfer to locked vault', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // source not locked
-      mockContractRead.mockResolvedValueOnce(true); // destination locked
       mockContractWrite.mockRejectedValueOnce(new Error('Destination vault locked'));
 
       await expect(async () => {
@@ -505,7 +491,6 @@ describe('VaultHub Contract', () => {
 
   describe('State Transitions', () => {
     it('should transition from Active to Locked', async () => {
-      mockContractRead.mockResolvedValueOnce(0); // Active
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -524,7 +509,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should transition from Locked to Active', async () => {
-      mockContractRead.mockResolvedValueOnce(1); // Locked
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -594,7 +578,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should prevent invalid state transitions', async () => {
-      mockContractRead.mockResolvedValueOnce(3); // Deactivated
       mockContractWrite.mockRejectedValueOnce(new Error('Invalid state transition'));
 
       await expect(async () => {
@@ -673,7 +656,6 @@ describe('VaultHub Contract', () => {
     });
 
     it('should prevent operations when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('Contract is paused'));
 
       await expect(async () => {
