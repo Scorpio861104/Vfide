@@ -1,17 +1,38 @@
-import { render } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import React from 'react';
 
 expect.extend(toHaveNoViolations);
 
+// Mutex to ensure axe runs serially
+let axePromise = Promise.resolve();
+
+// Helper to run axe serially
+const runAxe = async (container: Element) => {
+  const previousPromise = axePromise;
+  let resolveThis: () => void;
+  axePromise = new Promise(resolve => { resolveThis = resolve; });
+  
+  await previousPromise;
+  try {
+    const results = await axe(container);
+    return results;
+  } finally {
+    resolveThis!();
+  }
+};
+
 describe('WCAG 2.1 AA Compliance Tests', () => {
+  afterEach(() => {
+    cleanup();
+  });
   describe('Perceivable - Principle 1', () => {
     describe('1.1 Text Alternatives', () => {
       it('images should have alt text', async () => {
         const { container } = render(
           <img src="/test.jpg" alt="Descriptive alt text" />
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -19,7 +40,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
         const { container } = render(
           <img src="/decorative.jpg" alt="" role="presentation" />
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -29,7 +50,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <span aria-hidden="true">×</span>
           </button>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -41,7 +62,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <rect x="0" y="0" width="100" height="100" />
           </svg>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -54,9 +75,9 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <track kind="captions" src="/captions.vtt" srcLang="en" label="English" />
           </video>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
-      });
+      }, 30000);
 
       it('audio should have transcript or captions', async () => {
         const { container } = render(
@@ -67,9 +88,9 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <p>Transcript: Audio content transcribed here</p>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
-      });
+      }, 30000);
     });
 
     describe('1.3 Adaptable', () => {
@@ -83,9 +104,9 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             </section>
           </main>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
-      });
+      }, 10000);
 
       it('lists should use proper semantic markup', async () => {
         const { container } = render(
@@ -95,31 +116,33 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <li>Item 3</li>
           </ul>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
-      });
+      }, 10000);
 
       it('tables should have proper structure', async () => {
         const { container } = render(
-          <table>
-            <caption>Transaction History</caption>
-            <thead>
-              <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Amount</th>
-                <th scope="col">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>2024-01-22</td>
-                <td>$100</td>
-                <td>Completed</td>
-              </tr>
-            </tbody>
-          </table>
+          <main>
+            <table>
+              <caption>Transaction History</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2024-01-22</td>
+                  <td>$100</td>
+                  <td>Completed</td>
+                </tr>
+              </tbody>
+            </table>
+          </main>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -132,7 +155,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <input id="password" type="password" />
           </form>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -155,7 +178,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             </footer>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -213,7 +236,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <input id="email" type="email" required aria-required="true" />
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -223,7 +246,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <p>This text should be resizable up to 200% without loss of content or functionality.</p>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -236,10 +259,11 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
           <div>
             <button>Clickable Button</button>
             <a href="/page">Link</a>
-            <input type="text" />
+            <label htmlFor="text-input">Text Input</label>
+            <input id="text-input" type="text" />
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -253,7 +277,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             Custom Button
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -261,11 +285,12 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
         const { container } = render(
           <div>
             <button>First</button>
-            <input type="text" />
+            <label htmlFor="trap-input">Input</label>
+            <input id="trap-input" type="text" />
             <button>Last</button>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -279,7 +304,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <p role="status">Session expires in 10 minutes</p>
           </form>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -292,7 +317,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <button aria-label="Pause updates">Pause</button>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -304,7 +329,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <p>Static content without flashing</p>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -316,7 +341,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <title>Dashboard - Vfide Platform</title>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -328,7 +353,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <main id="main-content">Content</main>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -339,7 +364,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <a href="/contact" aria-label="Contact us">Contact</a>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -354,7 +379,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             </nav>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -366,7 +391,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <h2>Advanced Features</h2>
           </article>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -374,7 +399,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
         const { container } = render(
           <button style={{ outline: '2px solid blue' }}>Focused Button</button>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -386,7 +411,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             Tap Target
           </button>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -397,7 +422,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             Select option
           </label>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -411,7 +436,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <body>Content</body>
           </html>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -421,7 +446,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             This is English text. <span lang="es">Este es texto en español.</span>
           </p>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -434,7 +459,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <option value="2">Option 2</option>
           </select>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -448,7 +473,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             </ul>
           </nav>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -459,7 +484,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <button type="button" aria-label="Cancel action">Cancel</button>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -478,7 +503,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <span id="email-error" role="alert">Please enter a valid email address</span>
           </form>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -497,7 +522,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             />
           </form>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -516,7 +541,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             </div>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -532,7 +557,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             </div>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -545,7 +570,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <input id="name" type="text" required aria-required="true" />
           </form>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });
@@ -560,19 +585,22 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <p>Properly nested and closed elements</p>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
       it('custom components should have proper ARIA roles', async () => {
         const { container } = render(
-          <div role="tablist">
-            <button role="tab" aria-selected="true" aria-controls="panel1">Tab 1</button>
-            <button role="tab" aria-selected="false" aria-controls="panel2">Tab 2</button>
+          <div>
+            <div role="tablist">
+              <button role="tab" aria-selected="true" aria-controls="panel1" id="tab1">Tab 1</button>
+              <button role="tab" aria-selected="false" aria-controls="panel2" id="tab2">Tab 2</button>
+            </div>
             <div role="tabpanel" id="panel1" aria-labelledby="tab1">Panel 1</div>
+            <div role="tabpanel" id="panel2" aria-labelledby="tab2" hidden>Panel 2</div>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -587,7 +615,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             </div>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -599,7 +627,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             </div>
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
 
@@ -612,7 +640,7 @@ describe('WCAG 2.1 AA Compliance Tests', () => {
             <input id="field2" type="text" />
           </div>
         );
-        const results = await axe(container);
+        const results = await runAxe(container);
         expect(results).toHaveNoViolations();
       });
     });

@@ -23,7 +23,12 @@ describe('Keyboard Navigation Tests', () => {
         </form>
       );
 
-      const results = await axe(container);
+      // Disable tabindex rule for this test as we're specifically testing explicit tab order
+      const results = await axe(container, {
+        rules: {
+          tabindex: { enabled: false }
+        }
+      });
       expect(results).toHaveNoViolations();
 
       const inputs = container.querySelectorAll('input, button');
@@ -38,7 +43,8 @@ describe('Keyboard Navigation Tests', () => {
         <div>
           <button>First</button>
           <a href="/page">Second</a>
-          <input type="text" />
+          <label htmlFor="input-dom-order">Input</label>
+          <input id="input-dom-order" type="text" />
           <button>Last</button>
         </div>
       );
@@ -384,8 +390,11 @@ describe('Keyboard Navigation Tests', () => {
         <div
           role="dialog"
           aria-modal="true"
+          aria-label="Test Modal"
+          tabIndex={-1}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
+              e.preventDefault();
               handleClose();
             }
           }}

@@ -41,15 +41,17 @@ describe('State Management Integration Tests', () => {
       const store = {
         state: { count: 0, items: [] as number[] },
         setState: jest.fn(function(this: any, updates) {
+          const oldState = this.state;
           this.state = { ...this.state, ...updates };
           return this.state;
         }),
       };
 
+      const oldState = store.state;
       const newState = store.setState({ count: 1 });
       
       expect(newState.count).toBe(1);
-      expect(newState).not.toBe(store.state);
+      expect(newState).not.toBe(oldState);
     });
 
     it('should handle nested state updates', () => {

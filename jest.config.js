@@ -10,6 +10,7 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
+  maxConcurrency: 1, // Run tests serially to avoid axe-core concurrency issues
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^uncrypto$': '<rootDir>/__mocks__/uncrypto.js',

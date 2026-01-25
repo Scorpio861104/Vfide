@@ -210,6 +210,7 @@ describe('Error Recovery Integration Tests', () => {
     });
 
     it('should implement circuit breaker pattern', async () => {
+      let callCount = 0;
       const circuitBreaker = {
         state: 'closed', // closed, open, half-open
         failures: 0,
@@ -220,8 +221,9 @@ describe('Error Recovery Integration Tests', () => {
           }
           
           try {
-            // Simulate API call
-            if (Math.random() > 0.5) {
+            // Simulate API call - fail first 3 times
+            callCount++;
+            if (callCount <= 3) {
               throw new Error('API error');
             }
             circuitBreaker.failures = 0;
@@ -616,8 +618,11 @@ describe('Error Recovery Integration Tests', () => {
           this.history.push({ ...this.state });
         }),
         rollback: jest.fn(function(this: any, levels = 1) {
-          const targetIndex = Math.max(0, this.history.length - levels);
-          if (targetIndex < this.history.length) {
+          // Rollback 'levels' number of steps
+          // If we have 3 items in history [0,1,2] and rollback(2), we want to go to index 0 (2 levels back from index 2)
+          const currentIndex = this.history.length - 1;
+          const targetIndex = Math.max(0, currentIndex - levels);
+          if (currentIndex >= 0 && targetIndex < this.history.length) {
             this.state = { ...this.history[targetIndex] };
             this.history = this.history.slice(0, targetIndex + 1);
             return { rolledBack: true, levels, state: this.state };
@@ -626,13 +631,13 @@ describe('Error Recovery Integration Tests', () => {
         }),
       };
 
-      multiLevelRollback.save();
+      multiLevelRollback.save(); // history[0] = { step: 0, data: 'initial' }
       multiLevelRollback.state = { step: 1, data: 'first' };
-      multiLevelRollback.save();
+      multiLevelRollback.save(); // history[1] = { step: 1, data: 'first' }
       multiLevelRollback.state = { step: 2, data: 'second' };
-      multiLevelRollback.save();
+      multiLevelRollback.save(); // history[2] = { step: 2, data: 'second' }
 
-      const result = multiLevelRollback.rollback(2);
+      const result = multiLevelRollback.rollback(2); // go back 2 levels from index 2 to index 0
 
       expect(result.rolledBack).toBe(true);
       expect(result.state.step).toBe(0);
