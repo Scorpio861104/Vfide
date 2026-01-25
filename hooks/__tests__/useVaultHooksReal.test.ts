@@ -396,7 +396,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
       })
 
       await waitFor(() => {
-        expect(result.current.error).toBe('Cannot remove guardians during active recovery')
+        expect(result.current.error).toBe('Cannot modify guardians during active recovery')
       })
     })
 

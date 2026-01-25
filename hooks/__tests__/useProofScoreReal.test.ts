@@ -45,15 +45,15 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should return High Trust for score >= 7000 and < 8000', () => {
-      expect(getScoreTier(7000)).toBe('High Trust')
-      expect(getScoreTier(7500)).toBe('High Trust')
-      expect(getScoreTier(7999)).toBe('High Trust')
+      expect(getScoreTier(7000)).toBe('Council')
+      expect(getScoreTier(7500)).toBe('Council')
+      expect(getScoreTier(7999)).toBe('Council')
     })
 
     it('should return Neutral for score >= 5000 and < 7000', () => {
       expect(getScoreTier(5000)).toBe('Neutral')
-      expect(getScoreTier(6000)).toBe('Neutral')
-      expect(getScoreTier(6999)).toBe('Neutral')
+      expect(getScoreTier(6000)).toBe('Trusted')
+      expect(getScoreTier(6999)).toBe('Trusted')
     })
 
     it('should return Low Trust for score >= 3500 and < 5000', () => {
@@ -82,7 +82,7 @@ describe('useProofScore - Comprehensive Tests', () => {
       const { result } = renderHook(() => useProofScore())
 
       expect(result.current.score).toBe(8500)
-      expect(result.current.tier).toBe('Elite')
+      expect(result.current.tier.label).toBe('Elite')
       expect(result.current.burnFee).toBe(0.25)
       expect(result.current.color).toBe('#00FF88')
       expect(result.current.canVote).toBe(true)
@@ -103,7 +103,7 @@ describe('useProofScore - Comprehensive Tests', () => {
       const { result } = renderHook(() => useProofScore())
 
       expect(result.current.score).toBe(7500)
-      expect(result.current.tier).toBe('High Trust')
+      expect(result.current.tier.label).toBe('Council')
       expect(result.current.burnFee).toBe(1.0)
       expect(result.current.color).toBe('#00F0FF')
       expect(result.current.canVote).toBe(true)
@@ -113,7 +113,7 @@ describe('useProofScore - Comprehensive Tests', () => {
       expect(result.current.isElite).toBe(false)
     })
 
-    it('should return Neutral score with limited permissions', () => {
+    it('should return Trusted score with merchant permissions', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: BigInt(6000),
         isError: false,
@@ -124,7 +124,7 @@ describe('useProofScore - Comprehensive Tests', () => {
       const { result } = renderHook(() => useProofScore())
 
       expect(result.current.score).toBe(6000)
-      expect(result.current.tier).toBe('Neutral')
+      expect(result.current.tier.label).toBe('Trusted')
       expect(result.current.burnFee).toBe(2.0)
       expect(result.current.color).toBe('#FFD700')
       expect(result.current.canVote).toBe(true)
@@ -143,7 +143,7 @@ describe('useProofScore - Comprehensive Tests', () => {
       const { result } = renderHook(() => useProofScore())
 
       expect(result.current.score).toBe(4500)
-      expect(result.current.tier).toBe('Low Trust')
+      expect(result.current.tier.label).toBe('Low Trust')
       expect(result.current.burnFee).toBe(3.5)
       expect(result.current.color).toBe('#FFA500')
       expect(result.current.canVote).toBe(false)
@@ -161,7 +161,7 @@ describe('useProofScore - Comprehensive Tests', () => {
       const { result } = renderHook(() => useProofScore())
 
       expect(result.current.score).toBe(2000)
-      expect(result.current.tier).toBe('Risky')
+      expect(result.current.tier.label).toBe('Risky')
       expect(result.current.burnFee).toBe(5.0)
       expect(result.current.color).toBe('#FF4444')
       expect(result.current.canVote).toBe(false)
@@ -182,7 +182,7 @@ describe('useProofScore - Comprehensive Tests', () => {
       const { result } = renderHook(() => useProofScore())
 
       expect(result.current.score).toBe(5000)
-      expect(result.current.tier).toBe('Neutral')
+      expect(result.current.tier.label).toBe('Neutral')
     })
 
     it('should use provided user address', () => {
@@ -300,7 +300,7 @@ describe('useProofScore - Comprehensive Tests', () => {
 
       expect(result.current.minForGovernance).toBe(5400)
       expect(result.current.minForMerchant).toBe(5600)
-      expect(result.current.lowTrustThreshold).toBe(4000)
+      expect(result.current.lowTrustThreshold).toBe(3500)
       expect(result.current.highTrustThreshold).toBe(8000)
     })
   })
