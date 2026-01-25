@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST } from '@/app/api/attachments/upload/route';
 
 jest.mock('@/lib/db', () => ({
@@ -48,8 +48,8 @@ describe('/api/attachments/upload', () => {
 
     it('should return 400 for unauthorized users when auth fails before validation', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);

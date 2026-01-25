@@ -85,10 +85,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401 }
-      );
+      const unauthorizedResponse = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       requireAuth.mockReturnValue(unauthorizedResponse);
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST } from '@/app/api/sync/route';
 
 jest.mock('@/lib/db', () => ({
@@ -59,10 +59,7 @@ describe('/api/sync', () => {
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401 }
-      );
+      const unauthorizedResponse = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       requireAuth.mockReturnValue(unauthorizedResponse);
 
       const request = new NextRequest('http://localhost:3000/api/sync', {

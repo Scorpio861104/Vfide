@@ -83,10 +83,7 @@ describe('/api/endorsements', () => {
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401 }
-      );
+      const unauthorizedResponse = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       requireAuth.mockReturnValue(unauthorizedResponse);
       
       const mockClient = {
