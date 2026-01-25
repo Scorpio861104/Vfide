@@ -31,8 +31,6 @@ describe('DAO Governance Contract', () => {
 
   describe('Proposal Creation', () => {
     it('should create a valid proposal', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // isEligible
-      mockContractRead.mockResolvedValueOnce(1000n); // seer score
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -49,7 +47,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should reject proposal from ineligible proposer', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // isEligible
       mockContractWrite.mockRejectedValueOnce(new Error('Not eligible to propose'));
 
       await expect(async () => {
@@ -61,7 +58,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should require minimum Seer score to propose', async () => {
-      mockContractRead.mockResolvedValueOnce(100n); // seer score too low
       mockContractWrite.mockRejectedValueOnce(new Error('Seer score too low'));
 
       await expect(async () => {
@@ -216,8 +212,6 @@ describe('DAO Governance Contract', () => {
     const proposalId = 1n;
 
     it('should allow eligible voter to vote FOR', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // isEligible
-      mockContractRead.mockResolvedValueOnce(parseEther('1000')); // voting power
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -229,7 +223,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should allow eligible voter to vote AGAINST', async () => {
-      mockContractRead.mockResolvedValueOnce(true);
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -241,7 +234,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should allow eligible voter to ABSTAIN', async () => {
-      mockContractRead.mockResolvedValueOnce(true);
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -253,7 +245,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should reject vote from ineligible voter', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not eligible
       mockContractWrite.mockRejectedValueOnce(new Error('Not eligible to vote'));
 
       await expect(async () => {
@@ -265,7 +256,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should prevent double voting', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // hasVoted
       mockContractWrite.mockRejectedValueOnce(new Error('Already voted'));
 
       await expect(async () => {
@@ -277,7 +267,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should reject vote on inactive proposal', async () => {
-      mockContractRead.mockResolvedValueOnce(0); // Pending state
       mockContractWrite.mockRejectedValueOnce(new Error('Proposal not active'));
 
       await expect(async () => {
@@ -289,7 +278,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should reject vote after voting period ended', async () => {
-      mockContractRead.mockResolvedValueOnce(3); // Defeated/Ended
       mockContractWrite.mockRejectedValueOnce(new Error('Voting ended'));
 
       await expect(async () => {
@@ -384,7 +372,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should calculate minimum votes required', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('100000')); // total supply
       mockContractRead.mockResolvedValueOnce(parseEther('10000')); // 10% quorum
 
       const minVotes = await mockContractRead({
@@ -395,8 +382,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should fail proposal if quorum not met', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('5000')); // total votes
-      mockContractRead.mockResolvedValueOnce(parseEther('10000')); // required
       mockContractRead.mockResolvedValueOnce(3); // Defeated
 
       const state = await mockContractRead({
@@ -408,9 +393,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should pass proposal if quorum met and majority for', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('15000')); // votes for
-      mockContractRead.mockResolvedValueOnce(parseEther('5000')); // votes against
-      mockContractRead.mockResolvedValueOnce(parseEther('10000')); // quorum
       mockContractRead.mockResolvedValueOnce(4); // Queued
 
       const state = await mockContractRead({
@@ -457,7 +439,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should reject voter with insufficient Seer score', async () => {
-      mockContractRead.mockResolvedValueOnce(false);
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient Seer score'));
 
       await expect(async () => {
@@ -469,8 +450,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should calculate voting power based on Seer score', async () => {
-      mockContractRead.mockResolvedValueOnce(1000n); // seer score
-      mockContractRead.mockResolvedValueOnce(parseEther('10000')); // token balance
       mockContractRead.mockResolvedValueOnce(parseEther('11000')); // boosted power
 
       const power = await mockContractRead({
@@ -514,7 +493,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should reject queueing proposal that did not pass', async () => {
-      mockContractRead.mockResolvedValueOnce(3); // Defeated
       mockContractWrite.mockRejectedValueOnce(new Error('Proposal did not pass'));
 
       await expect(async () => {
@@ -526,8 +504,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should enforce timelock delay before execution', async () => {
-      const eta = Math.floor(Date.now() / 1000) + 86400; // 24 hours
-      mockContractRead.mockResolvedValueOnce(eta);
       mockContractWrite.mockRejectedValueOnce(new Error('Timelock not expired'));
 
       await expect(async () => {
@@ -539,8 +515,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should allow execution after timelock expires', async () => {
-      const eta = Math.floor(Date.now() / 1000) - 100; // expired
-      mockContractRead.mockResolvedValueOnce(eta);
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -677,7 +651,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should reject execution of already executed proposal', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // already executed
       mockContractWrite.mockRejectedValueOnce(new Error('Already executed'));
 
       await expect(async () => {
@@ -689,7 +662,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should reject execution of cancelled proposal', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // cancelled
       mockContractWrite.mockRejectedValueOnce(new Error('Proposal cancelled'));
 
       await expect(async () => {
@@ -714,7 +686,6 @@ describe('DAO Governance Contract', () => {
 
   describe('Edge Cases', () => {
     it('should handle voting with zero power gracefully', async () => {
-      mockContractRead.mockResolvedValueOnce(0n); // zero voting power
       mockContractWrite.mockRejectedValueOnce(new Error('No voting power'));
 
       await expect(async () => {
@@ -738,7 +709,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should handle vote changing before finalization', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // hasVoted = false (changed)
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -835,7 +805,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should increase fatigue on vote', async () => {
-      mockContractRead.mockResolvedValueOnce(100n); // fatigue per vote
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -869,7 +838,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should prevent voting with excessive fatigue', async () => {
-      mockContractRead.mockResolvedValueOnce(1000n); // excessive fatigue
       mockContractWrite.mockRejectedValueOnce(new Error('Voter fatigue too high'));
 
       await expect(async () => {
@@ -894,7 +862,6 @@ describe('DAO Governance Contract', () => {
     });
 
     it('should prevent voting by restricted users', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // restricted
       mockContractWrite.mockRejectedValueOnce(new Error('User restricted by guardian'));
 
       await expect(async () => {

@@ -125,7 +125,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should only allow proposers to queue', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not proposer
       mockContractWrite.mockRejectedValueOnce(new Error('Not proposer'));
 
       await expect(async () => {
@@ -148,7 +147,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should prevent duplicate operation queueing', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // already queued
       mockContractWrite.mockRejectedValueOnce(new Error('Already queued'));
 
       await expect(async () => {
@@ -254,7 +252,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should only allow executors to execute', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not executor
       mockContractWrite.mockRejectedValueOnce(new Error('Not executor'));
 
       await expect(async () => {
@@ -266,8 +263,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should prevent execution before delay expires', async () => {
-      const futureTime = Math.floor(Date.now() / 1000) + 86400;
-      mockContractRead.mockResolvedValueOnce(futureTime);
       mockContractWrite.mockRejectedValueOnce(new Error('Operation not ready'));
 
       await expect(async () => {
@@ -290,7 +285,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should prevent execution of unqueued operation', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not queued
       mockContractWrite.mockRejectedValueOnce(new Error('Operation not queued'));
 
       await expect(async () => {
@@ -352,7 +346,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should enforce predecessor requirement', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // predecessor not executed
       mockContractWrite.mockRejectedValueOnce(new Error('Predecessor not executed'));
 
       await expect(async () => {
@@ -377,7 +370,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should only allow proposer or admin to cancel', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not authorized
       mockContractWrite.mockRejectedValueOnce(new Error('Not authorized'));
 
       await expect(async () => {
@@ -400,7 +392,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should prevent cancellation of executed operation', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // already executed
       mockContractWrite.mockRejectedValueOnce(new Error('Already executed'));
 
       await expect(async () => {
@@ -423,7 +414,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should prevent execution of cancelled operation', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // cancelled
       mockContractWrite.mockRejectedValueOnce(new Error('Operation cancelled'));
 
       await expect(async () => {
@@ -580,12 +570,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should transition from Queued to Ready', async () => {
-      mockContractRead.mockResolvedValueOnce(1); // Queued
-      
-      // Wait for delay
-      const pastTime = Math.floor(Date.now() / 1000) - 100;
-      mockContractRead.mockResolvedValueOnce(pastTime);
-      
       mockContractRead.mockResolvedValueOnce(2); // Ready
 
       const state = await mockContractRead({
@@ -743,7 +727,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should prevent operations when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('Contract is paused'));
 
       await expect(async () => {
@@ -801,7 +784,6 @@ describe('DAOTimelock Contract', () => {
     });
 
     it('should prevent execution with insufficient contract balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('5')); // insufficient
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient balance'));
 
       await expect(async () => {
