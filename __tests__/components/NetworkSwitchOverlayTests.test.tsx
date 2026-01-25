@@ -3,6 +3,7 @@
  * Tests for NetworkSwitchOverlay component (0% coverage)
  * Simplified tests that work with the component's rendering logic
  */
+import React from 'react'
 import { describe, it, expect,  beforeEach, afterEach } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 

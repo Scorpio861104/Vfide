@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GET, POST } from '@/app/api/groups/invites/route';
 
 jest.mock('@/lib/db', () => ({
@@ -31,14 +31,15 @@ describe('/api/groups/invites', () => {
           {
             id: 1,
             group_id: 1,
-            inviter_address: '0x123',
-            invitee_address: '0x456',
+            code: 'ABC123',
+            inviter_address: '0x1111111111111111111111111111111111111123',
+            invitee_address: '0x2222222222222222222222222222222222222456',
             status: 'pending',
           },
         ],
       });
 
-      const request = new NextRequest('http://localhost:3000/api/groups/invites?userAddress=0x456');
+      const request = new NextRequest('http://localhost:3000/api/groups/invites?groupId=1');
       const response = await GET(request);
       const data = await response.json();
 
@@ -50,32 +51,35 @@ describe('/api/groups/invites', () => {
   describe('POST', () => {
     it('should create group invite', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValue({
-        rows: [{ id: 1, status: 'pending' }],
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({ rows: [{ role: 'admin' }] });
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({
+        rows: [{ id: 1, code: 'ABC123', status: 'pending' }],
       });
 
       const request = new NextRequest('http://localhost:3000/api/groups/invites', {
         method: 'POST',
         body: JSON.stringify({
           groupId: 1,
-          inviterAddress: '0x123',
-          inviteeAddress: '0x456',
+          expiresIn: 604800000,
+          maxUses: 10,
         }),
       });
 
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(data.invite).toBeDefined();
     });
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);

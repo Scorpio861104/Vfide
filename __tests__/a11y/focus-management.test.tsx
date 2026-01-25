@@ -383,6 +383,7 @@ describe('Focus Management Tests', () => {
               <div 
                 role="dialog" 
                 aria-modal="true"
+                aria-label="Modal Dialog"
                 onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
               >
                 <button onClick={() => setOpen(false)}>Close</button>
@@ -412,7 +413,7 @@ describe('Focus Management Tests', () => {
         return (
           <div ref={fallbackRef} tabIndex={-1}>
             {modalOpen && (
-              <div role="dialog" aria-modal="true">
+              <div role="dialog" aria-modal="true" aria-label="Confirmation Dialog">
                 <button onClick={() => setModalOpen(false)}>Close</button>
               </div>
             )}
@@ -724,7 +725,7 @@ describe('Focus Management Tests', () => {
         <div>
           <button>Main Content Button</button>
           <div id="portal-root">
-            <div role="dialog" aria-modal="true">
+            <div role="dialog" aria-modal="true" aria-label="Portal Dialog">
               <button>Portal Button</button>
             </div>
           </div>

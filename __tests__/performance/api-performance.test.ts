@@ -4,6 +4,21 @@
  */
 import '@testing-library/jest-dom';
 
+// Mock fetch globally for these tests
+global.fetch = jest.fn((url: string) => {
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    json: async () => ({ data: 'mock' }),
+    headers: {
+      get: (key: string) => {
+        if (key === 'cache-control') return 'public, max-age=3600';
+        return null;
+      }
+    }
+  } as Response);
+}) as jest.Mock;
+
 describe('API Performance Tests', () => {
   const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
   const API_BASE = `${BASE_URL}/api`;

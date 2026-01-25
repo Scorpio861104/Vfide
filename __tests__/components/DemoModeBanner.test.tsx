@@ -22,10 +22,10 @@ describe('DemoModeBanner', () => {
     })
 
     render(<DemoModeBanner />)
-    expect(screen.getByText(/DEMO MODE/)).toBeInTheDocument()
+    expect(screen.getByText(/Connect your wallet to access all features/)).toBeInTheDocument()
   })
 
-  it('shows testnet mode when on testnet', async () => {
+  it('does not show banner when wallet is connected', async () => {
     const { useAccount } = await import('wagmi')
     const mockUseAccount = useAccount as ReturnType<typeof jest.fn>
     
@@ -37,9 +37,8 @@ describe('DemoModeBanner', () => {
       },
     })
 
-    render(<DemoModeBanner />)
-    expect(screen.getByText(/TESTNET MODE/)).toBeInTheDocument()
-    expect(screen.getByText(/Base Sepolia/)).toBeInTheDocument()
+    const { container } = render(<DemoModeBanner />)
+    expect(container.firstChild).toBeNull()
   })
 
   it('does not render when on mainnet with connected wallet', async () => {
@@ -68,7 +67,7 @@ describe('DemoModeBanner', () => {
     })
 
     render(<DemoModeBanner />)
-    const banner = screen.getByText(/DEMO MODE/)
+    const banner = screen.getByText(/Connect your wallet to access all features/)
     expect(banner).toBeInTheDocument()
     // Just verify banner is visible
   })

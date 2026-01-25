@@ -102,7 +102,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should increment escrow count', async () => {
-      mockContractRead.mockResolvedValueOnce(5n); // previous
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -177,7 +176,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should require token approval before deposit', async () => {
-      mockContractRead.mockResolvedValueOnce(0n); // no allowance
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient allowance'));
 
       await expect(async () => {
@@ -189,7 +187,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should verify sufficient balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('500')); // insufficient
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient balance'));
 
       await expect(async () => {
@@ -230,7 +227,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should prevent deposit to already funded escrow', async () => {
-      mockContractRead.mockResolvedValueOnce(1); // Already funded
       mockContractWrite.mockRejectedValueOnce(new Error('Already funded'));
 
       await expect(async () => {
@@ -288,7 +284,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should prevent release of unfunded escrow', async () => {
-      mockContractRead.mockResolvedValueOnce(0); // Not funded
       mockContractWrite.mockRejectedValueOnce(new Error('Escrow not funded'));
 
       await expect(async () => {
@@ -351,7 +346,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should prevent partial release exceeding balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('1000')); // balance
       mockContractWrite.mockRejectedValueOnce(new Error('Amount exceeds balance'));
 
       await expect(async () => {
@@ -452,8 +446,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should allow buyer to claim expired escrow', async () => {
-      const expiredTime = Math.floor(Date.now() / 1000) - 100;
-      mockContractRead.mockResolvedValueOnce(expiredTime);
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -465,8 +457,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should prevent claim of non-expired escrow', async () => {
-      const futureTime = Math.floor(Date.now() / 1000) + 86400;
-      mockContractRead.mockResolvedValueOnce(futureTime);
       mockContractWrite.mockRejectedValueOnce(new Error('Escrow not expired'));
 
       await expect(async () => {
@@ -686,7 +676,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should prevent invalid state transitions', async () => {
-      mockContractRead.mockResolvedValueOnce(2); // Completed
       mockContractWrite.mockRejectedValueOnce(new Error('Invalid state transition'));
 
       await expect(async () => {
@@ -947,7 +936,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should prevent operations when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('Contract is paused'));
 
       await expect(async () => {
@@ -994,7 +982,6 @@ describe('EscrowManager Contract', () => {
     });
 
     it('should prevent operations on cancelled escrow', async () => {
-      mockContractRead.mockResolvedValueOnce(5); // Cancelled
       mockContractWrite.mockRejectedValueOnce(new Error('Escrow cancelled'));
 
       await expect(async () => {

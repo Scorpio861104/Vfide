@@ -91,20 +91,23 @@ describe('ConfirmModal', () => {
 
   it('applies warning variant by default', () => {
     render(<ConfirmModal {...defaultProps} />)
-    // Warning variant has yellow background styling
-    expect(document.querySelector('.bg-yellow-600\\/20')).toBeInTheDocument()
+    // Warning variant has yellow background styling - use getAllByRole to find the icon div
+    const iconContainers = document.querySelectorAll('.bg-yellow-600\\/20')
+    expect(iconContainers.length).toBeGreaterThan(0)
   })
 
   it('applies danger variant styling', () => {
     render(<ConfirmModal {...defaultProps} variant="danger" />)
     // Danger variant has red background styling
-    expect(document.querySelector('.bg-red-600\\/20')).toBeInTheDocument()
+    const iconContainers = document.querySelectorAll('.bg-red-600\\/20')
+    expect(iconContainers.length).toBeGreaterThan(0)
   })
 
   it('applies info variant styling', () => {
     render(<ConfirmModal {...defaultProps} variant="info" />)
-    // Info variant has cyan background styling  
-    expect(document.querySelector('.bg-cyan-400\/20')).toBeInTheDocument()
+    // Info variant has cyan background styling - use proper escaped selector
+    const iconContainers = document.querySelectorAll('[class*="bg-cyan-400"]')
+    expect(iconContainers.length).toBeGreaterThan(0)
   })
 
   it('disables cancel button when loading', () => {

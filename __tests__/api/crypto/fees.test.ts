@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GET } from '@/app/api/crypto/fees/route';
 
 jest.mock('viem', () => ({
@@ -12,14 +12,12 @@ jest.mock('viem/chains', () => ({
   baseSepolia: { id: 84532 },
 }));
 
-jest.mock('@/lib/rateLimit', () => ({
-  checkRateLimit: jest.fn(),
-  getClientIdentifier: jest.fn(),
-  getRateLimitHeaders: jest.fn(),
+jest.mock('@/lib/auth/rateLimit', () => ({
+  withRateLimit: jest.fn(),
 }));
 
 describe('/api/crypto/fees', () => {
-  const { checkRateLimit, getClientIdentifier, getRateLimitHeaders } = require('@/lib/rateLimit');
+  const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { createPublicClient } = require('viem');
 
   beforeEach(() => {
@@ -29,8 +27,7 @@ describe('/api/crypto/fees', () => {
 
   describe('GET', () => {
     it('should return gas fee estimates', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
 
       const mockClient = {
         estimateMaxPriorityFeePerGas: jest.fn().mockResolvedValue(BigInt(1000000000)), // 1 gwei
@@ -51,14 +48,11 @@ describe('/api/crypto/fees', () => {
     });
 
     it('should return 429 for rate limit exceeded', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({
-        success: false,
-        limit: 60,
-        remaining: 0,
-        reset: Date.now() + 60000,
-      });
-      getRateLimitHeaders.mockReturnValue({});
+      const rateLimitResponse = new Response(
+        JSON.stringify({ error: 'Rate limit exceeded' }),
+        { status: 429 }
+      );
+      withRateLimit.mockResolvedValue(rateLimitResponse);
 
       const request = new NextRequest('http://localhost:3000/api/crypto/fees');
       const response = await GET(request);
@@ -69,8 +63,7 @@ describe('/api/crypto/fees', () => {
     });
 
     it('should handle RPC errors gracefully', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
 
       const mockClient = {
         estimateMaxPriorityFeePerGas: jest.fn().mockRejectedValue(new Error('RPC error')),
@@ -88,8 +81,7 @@ describe('/api/crypto/fees', () => {
     });
 
     it('should return different fee tiers', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
 
       const mockClient = {
         estimateMaxPriorityFeePerGas: jest.fn().mockResolvedValue(BigInt(1000000000)),
@@ -108,8 +100,7 @@ describe('/api/crypto/fees', () => {
     });
 
     it('should include timestamp in response', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
 
       const mockClient = {
         estimateMaxPriorityFeePerGas: jest.fn().mockResolvedValue(BigInt(1000000000)),

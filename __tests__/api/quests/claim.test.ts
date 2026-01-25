@@ -32,29 +32,35 @@ describe('/api/quests/claim', () => {
   describe('POST', () => {
     it('should claim quest rewards successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
       checkOwnership.mockReturnValue(true);
       validateBody.mockResolvedValue({
         success: true,
         data: {
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           questId: 1,
         },
       });
 
       const mockClient = {
         query: jest.fn()
-          .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+          .mockResolvedValueOnce({ rows: [] }) // BEGIN
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // SELECT user
           .mockResolvedValueOnce({
             rows: [{
+              id: 1,
               completed: true,
               claimed: false,
               reward_xp: 100,
               reward_vfide: 25,
+              title: 'Test Quest',
             }],
-          })
-          .mockResolvedValueOnce({ rows: [] })
-          .mockResolvedValueOnce({ rows: [] }),
+          }) // SELECT quest progress
+          .mockResolvedValueOnce({ rows: [] }) // UPDATE quest progress
+          .mockResolvedValueOnce({ rows: [] }) // UPDATE gamification
+          .mockResolvedValueOnce({ rows: [] }) // INSERT reward
+          .mockResolvedValueOnce({ rows: [] }) // INSERT notification
+          .mockResolvedValueOnce({ rows: [] }), // COMMIT
         release: jest.fn(),
       };
       getClient.mockResolvedValue(mockClient);
@@ -62,7 +68,7 @@ describe('/api/quests/claim', () => {
       const request = new NextRequest('http://localhost:3000/api/quests/claim', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           questId: 1,
         }),
       });
@@ -77,25 +83,22 @@ describe('/api/quests/claim', () => {
 
     it('should return 400 when quest is not completed', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
       checkOwnership.mockReturnValue(true);
       validateBody.mockResolvedValue({
         success: true,
         data: {
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           questId: 1,
         },
       });
 
       const mockClient = {
         query: jest.fn()
-          .mockResolvedValueOnce({ rows: [{ id: 1 }] })
-          .mockResolvedValueOnce({
-            rows: [{
-              completed: false,
-              claimed: false,
-            }],
-          }),
+          .mockResolvedValueOnce({ rows: [] }) // BEGIN
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // SELECT user
+          .mockResolvedValueOnce({ rows: [] }) // SELECT quest progress (empty = not completed/claimed)
+          .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
         release: jest.fn(),
       };
       getClient.mockResolvedValue(mockClient);
@@ -103,7 +106,7 @@ describe('/api/quests/claim', () => {
       const request = new NextRequest('http://localhost:3000/api/quests/claim', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           questId: 1,
         }),
       });
@@ -118,25 +121,22 @@ describe('/api/quests/claim', () => {
 
     it('should return 400 when quest already claimed', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
       checkOwnership.mockReturnValue(true);
       validateBody.mockResolvedValue({
         success: true,
         data: {
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           questId: 1,
         },
       });
 
       const mockClient = {
         query: jest.fn()
-          .mockResolvedValueOnce({ rows: [{ id: 1 }] })
-          .mockResolvedValueOnce({
-            rows: [{
-              completed: true,
-              claimed: true,
-            }],
-          }),
+          .mockResolvedValueOnce({ rows: [] }) // BEGIN
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // SELECT user
+          .mockResolvedValueOnce({ rows: [] }) // SELECT quest progress (empty = already claimed)
+          .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
         release: jest.fn(),
       };
       getClient.mockResolvedValue(mockClient);
@@ -144,7 +144,7 @@ describe('/api/quests/claim', () => {
       const request = new NextRequest('http://localhost:3000/api/quests/claim', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           questId: 1,
         }),
       });

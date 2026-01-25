@@ -36,14 +36,14 @@ describe('/api/friends', () => {
       withRateLimit.mockResolvedValue(null);
       // The API requires authentication and checks the user address
       requireAuth.mockReturnValue({
-        user: { address: '0x123' }
+        user: { address: '0x1111111111111111111111111111111111111123' }
       });
 
       const mockFriends = [
         {
           id: 1,
-          user_address: '0x123',
-          friend_address: '0x456',
+          user_address: '0x1111111111111111111111111111111111111123',
+          friend_address: '0x2222222222222222222222222222222222222456',
           status: 'accepted',
           created_at: new Date().toISOString(),
         },
@@ -51,8 +51,8 @@ describe('/api/friends', () => {
 
       mockQuery.mockResolvedValue({ rows: mockFriends });
 
-      // API uses 'address' param, not 'userAddress'
-      const request = new NextRequest('http://localhost:3000/api/friends?address=0x123');
+      // API uses 'address' param, not 'userAddress' - must match requireAuth address
+      const request = new NextRequest('http://localhost:3000/api/friends?address=0x1111111111111111111111111111111111111123');
       const response = await GET(request);
       const data = await response.json();
 
@@ -63,7 +63,7 @@ describe('/api/friends', () => {
     it('should return 400 when address is missing', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({
-        user: { address: '0x123' }
+        user: { address: '0x1111111111111111111111111111111111111123' }
       });
 
       const request = new NextRequest('http://localhost:3000/api/friends');
@@ -79,12 +79,12 @@ describe('/api/friends', () => {
     it('should send friend request successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({
-        user: { address: '0x123' }
+        user: { address: '0x1111111111111111111111111111111111111123' }
       });
 
       validateBody.mockResolvedValue({
         success: true,
-        data: { from: '0x123', to: '0x456' }
+        data: { from: '0x1111111111111111111111111111111111111123', to: '0x2222222222222222222222222222222222222456' }
       });
 
       // Mock client with all required query calls in sequence
@@ -104,8 +104,8 @@ describe('/api/friends', () => {
       const request = new NextRequest('http://localhost:3000/api/friends', {
         method: 'POST',
         body: JSON.stringify({
-          from: '0x123',
-          to: '0x456',
+          from: '0x1111111111111111111111111111111111111123',
+          to: '0x2222222222222222222222222222222222222456',
         }),
       });
 

@@ -163,7 +163,7 @@ describe('Crypto API Routes - Contract Tests', () => {
             hash: '0xabc123',
             type: 'send',
             amount: '100',
-            to: '0x456',
+            to: '0x2222222222222222222222222222222222222456',
             status: 'confirmed',
             timestamp: Date.now(),
           },
@@ -251,7 +251,7 @@ describe('Crypto API Routes - Contract Tests', () => {
     });
 
     it('should validate batch request structure', () => {
-      const addresses = ['0x123', '0x456', '0x789'];
+      const addresses = ['0x1111111111111111111111111111111111111123', '0x2222222222222222222222222222222222222456', '0x789'];
       const batchRequest = {
         addresses,
         results: addresses.map(addr => ({

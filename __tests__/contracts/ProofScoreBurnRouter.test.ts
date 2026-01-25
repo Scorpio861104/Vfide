@@ -170,7 +170,6 @@ describe('ProofScoreBurnRouter Contract', () => {
     });
 
     it('should require token approval before burn', async () => {
-      mockContractRead.mockResolvedValueOnce(0n); // no allowance
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient allowance'));
 
       await expect(async () => {
@@ -182,7 +181,6 @@ describe('ProofScoreBurnRouter Contract', () => {
     });
 
     it('should verify sufficient balance before burn', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50')); // insufficient
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient balance'));
 
       await expect(async () => {
@@ -194,7 +192,6 @@ describe('ProofScoreBurnRouter Contract', () => {
     });
 
     it('should update total burned after burn', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('500')); // previous
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -248,7 +245,6 @@ describe('ProofScoreBurnRouter Contract', () => {
     });
 
     it('should apply burn boost during promotional periods', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // boost active
       mockContractRead.mockResolvedValueOnce(250n); // boosted score
 
       const score = await mockContractRead({
@@ -260,7 +256,6 @@ describe('ProofScoreBurnRouter Contract', () => {
     });
 
     it('should enforce minimum burn amount', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('10')); // min amount
       mockContractWrite.mockRejectedValueOnce(new Error('Below minimum burn'));
 
       await expect(async () => {
@@ -272,7 +267,6 @@ describe('ProofScoreBurnRouter Contract', () => {
     });
 
     it('should enforce maximum burn per transaction', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('1000')); // max
       mockContractWrite.mockRejectedValueOnce(new Error('Exceeds maximum burn'));
 
       await expect(async () => {
@@ -641,7 +635,6 @@ describe('ProofScoreBurnRouter Contract', () => {
     });
 
     it('should prevent operations when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('Contract is paused'));
 
       await expect(async () => {

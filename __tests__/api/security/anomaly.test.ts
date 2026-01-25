@@ -28,7 +28,7 @@ describe('/api/security/anomaly', () => {
   describe('GET', () => {
     it('should return anomaly stats for authenticated user', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       getAnomalyStats.mockResolvedValue({ totalEvents: 10, anomalies: 0 });
       recordActivity.mockResolvedValue(undefined);
 

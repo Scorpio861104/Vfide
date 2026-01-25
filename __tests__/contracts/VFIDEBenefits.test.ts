@@ -37,7 +37,6 @@ describe('VFIDEBenefits Contract', () => {
     });
 
     it('should calculate tier based on token balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('10000')); // balance
       mockContractRead.mockResolvedValueOnce(1); // Silver tier
 
       const result = await mockContractRead({
@@ -306,7 +305,6 @@ describe('VFIDEBenefits Contract', () => {
 
   describe('Edge Cases', () => {
     it('should handle zero balance tier calculation', async () => {
-      mockContractRead.mockResolvedValueOnce(0n); // balance
       mockContractRead.mockResolvedValueOnce(0); // Bronze tier
 
       const result = await mockContractRead({
@@ -318,7 +316,6 @@ describe('VFIDEBenefits Contract', () => {
     });
 
     it('should prevent claiming with zero rewards', async () => {
-      mockContractRead.mockResolvedValueOnce(0n); // no rewards
       mockContractWrite.mockRejectedValueOnce(new Error('No rewards to claim'));
 
       await expect(async () => {

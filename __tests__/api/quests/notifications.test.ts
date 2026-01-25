@@ -25,7 +25,7 @@ describe('/api/quests/notifications', () => {
   describe('GET', () => {
     it('should return quest notifications', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
 
       const mockClient = {
         query: jest.fn()
@@ -56,7 +56,7 @@ describe('/api/quests/notifications', () => {
 
     it('should return 400 when userAddress is missing', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
 
       const request = new NextRequest('http://localhost:3000/api/quests/notifications');
       const response = await GET(request);

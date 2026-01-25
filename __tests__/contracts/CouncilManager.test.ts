@@ -44,7 +44,6 @@ describe('CouncilManager Contract', () => {
     });
 
     it('should require minimum Seer score for candidacy', async () => {
-      mockContractRead.mockResolvedValueOnce(100n); // too low
       mockContractWrite.mockRejectedValueOnce(new Error('Seer score too low'));
 
       await expect(async () => {
@@ -180,7 +179,6 @@ describe('CouncilManager Contract', () => {
     });
 
     it('should prevent voting when election is not active', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not active
       mockContractWrite.mockRejectedValueOnce(new Error('Election not active'));
 
       await expect(async () => {
@@ -192,7 +190,6 @@ describe('CouncilManager Contract', () => {
     });
 
     it('should prevent double voting', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // already voted
       mockContractWrite.mockRejectedValueOnce(new Error('Already voted'));
 
       await expect(async () => {
@@ -204,7 +201,6 @@ describe('CouncilManager Contract', () => {
     });
 
     it('should require minimum voting power', async () => {
-      mockContractRead.mockResolvedValueOnce(0n); // no voting power
       mockContractWrite.mockRejectedValueOnce(new Error('No voting power'));
 
       await expect(async () => {
@@ -446,7 +442,6 @@ describe('CouncilManager Contract', () => {
     });
 
     it('should prevent distribution with insufficient balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('1000')); // insufficient
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient balance'));
 
       await expect(async () => {
@@ -775,7 +770,6 @@ describe('CouncilManager Contract', () => {
     });
 
     it('should prevent operations when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('Contract is paused'));
 
       await expect(async () => {

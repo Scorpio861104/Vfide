@@ -10,6 +10,7 @@ jest.mock('next/navigation', () => ({
 
 // Mock next/link
 jest.mock('next/link', () => ({
+  __esModule: true,
   default: ({ children, href, className }: any) => (
     <a href={href} className={className}>{children}</a>
   ),
@@ -18,6 +19,14 @@ jest.mock('next/link', () => ({
 // Mock wallet components
 jest.mock('@/components/wallet/SimpleWalletConnect', () => ({
   SimpleWalletConnect: () => <div data-testid="wallet-connect">Wallet</div>,
+}));
+
+jest.mock('@/components/wallet/QuickWalletConnect', () => ({
+  QuickWalletConnect: () => <div data-testid="quick-wallet-connect">Quick Wallet</div>,
+}));
+
+jest.mock('@/components/wallet/NetworkSwitcher', () => ({
+  NetworkSwitcher: () => <div data-testid="network-switcher">Network</div>,
 }));
 
 jest.mock('@/components/wallet/FaucetButton', () => ({
@@ -51,6 +60,7 @@ jest.mock('framer-motion', () => ({
     svg: ({ children, ...props }: any) => <svg {...props}>{children}</svg>,
     nav: ({ children, className, ...props }: any) => <nav className={className} {...props}>{children}</nav>,
   },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
 // Mock lucide-react icons
@@ -59,6 +69,21 @@ jest.mock('lucide-react', () => ({
   Twitter: () => <span data-testid="twitter-icon">Twitter</span>,
   MessageCircle: () => <span data-testid="discord-icon">Discord</span>,
   ExternalLink: () => <span data-testid="external-link-icon">↗</span>,
+  MoreHorizontal: () => <span data-testid="more-icon">⋯</span>,
+  User: () => <span data-testid="user-icon">👤</span>,
+}));
+
+// Mock MetallicIcons
+jest.mock('@/components/icons/MetallicIcons', () => ({
+  MetalDashboardIcon: () => <span data-testid="dashboard-icon">📊</span>,
+  MetalVaultIcon: () => <span data-testid="vault-icon">🏦</span>,
+  MetalSocialIcon: () => <span data-testid="social-icon">👥</span>,
+  MetalMerchantIcon: () => <span data-testid="merchant-icon">🏪</span>,
+  MetalGovernanceIcon: () => <span data-testid="governance-icon">⚖️</span>,
+  MetalHeadhunterIcon: () => <span data-testid="headhunter-icon">🎯</span>,
+  MetalShieldIcon: () => <span data-testid="shield-icon">🛡️</span>,
+  MetalRewardsIcon: () => <span data-testid="rewards-icon">🎁</span>,
+  MetalTokenIcon: () => <span data-testid="token-icon">🪙</span>,
 }));
 
 import { GlobalNav } from '@/components/layout/GlobalNav';
@@ -80,17 +105,16 @@ describe('GlobalNav', () => {
     
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Vault')).toBeInTheDocument();
+    expect(screen.getByText('Wallet')).toBeInTheDocument();
+    expect(screen.getByText('Messages')).toBeInTheDocument();
     expect(screen.getByText('Merchant')).toBeInTheDocument();
-    expect(screen.getByText('Leaderboard')).toBeInTheDocument();
     expect(screen.getByText('Governance')).toBeInTheDocument();
-    expect(screen.getByText('Launch')).toBeInTheDocument();
-    expect(screen.getByText('Docs')).toBeInTheDocument();
   });
 
   it('should render wallet connect button', () => {
     render(<GlobalNav />);
     
-    expect(screen.getAllByTestId('wallet-connect').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('quick-wallet-connect').length).toBeGreaterThan(0);
   });
 
   it('should render notification center', () => {

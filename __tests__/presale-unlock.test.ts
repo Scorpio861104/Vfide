@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { MockDate, TIME, TimelockTimeTravel } from './utils/time-travel';
+import { MockDate, TIME, TimelockTimeTravel } from './utils/time-travel.helpers';
 
 /**
  * Presale Lock & Unlock Time-Dependent Tests

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GET, POST } from '@/app/api/crypto/payment-requests/route';
 
 jest.mock('@/lib/db', () => ({
@@ -25,20 +25,22 @@ describe('/api/crypto/payment-requests', () => {
   describe('GET', () => {
     it('should return payment requests', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       
-      query.mockResolvedValue({
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({
         rows: [
           {
             id: 1,
-            from_address: '0x123',
-            to_address: '0x456',
+            from_address: '0x1111111111111111111111111111111111111123',
+            to_address: '0x2222222222222222222222222222222222222456',
             amount: '1.5',
             status: 'pending',
           },
         ],
       });
 
-      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests?userId=1');
       const response = await GET(request);
       const data = await response.json();
 
@@ -50,17 +52,18 @@ describe('/api/crypto/payment-requests', () => {
   describe('POST', () => {
     it('should create payment request', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValue({
-        rows: [{ id: 1, from_address: '0x123', to_address: '0x456' }],
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({
+        rows: [{ id: 1, from_address: '0x1111111111111111111111111111111111111123', to_address: '0x2222222222222222222222222222222222222456' }],
       });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests', {
         method: 'POST',
         body: JSON.stringify({
-          fromAddress: '0x123',
-          toAddress: '0x456',
+          fromUserId: 1,
+          toUserId: 2,
           amount: '1.5',
         }),
       });
@@ -69,7 +72,7 @@ describe('/api/crypto/payment-requests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.request).toBeDefined();
+      expect(data.success).toBe(true);
     });
   });
 });

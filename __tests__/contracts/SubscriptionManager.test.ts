@@ -134,7 +134,6 @@ describe('SubscriptionManager Contract', () => {
     });
 
     it('should enforce payment interval', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not due yet
       mockContractWrite.mockRejectedValueOnce(new Error('Payment not due'));
 
       await expect(async () => {

@@ -198,7 +198,6 @@ describe('SeerGuardian Contract', () => {
     });
 
     it('should escalate restriction level with violations', async () => {
-      mockContractRead.mockResolvedValueOnce(2); // Level 2
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -368,7 +367,6 @@ describe('SeerGuardian Contract', () => {
     });
 
     it('should reduce restriction level on successful rehabilitation', async () => {
-      mockContractRead.mockResolvedValueOnce(3); // Current level
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -470,7 +468,6 @@ describe('SeerGuardian Contract', () => {
     });
 
     it('should only allow guardians to record violations', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // isGuardian
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
@@ -482,7 +479,6 @@ describe('SeerGuardian Contract', () => {
     });
 
     it('should reject non-guardian violation recording', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not guardian
       mockContractWrite.mockRejectedValueOnce(new Error('Not guardian'));
 
       await expect(async () => {

@@ -38,6 +38,9 @@ export async function POST(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const body = await request.json();
@@ -144,6 +147,9 @@ export async function PATCH(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const body = await request.json();
@@ -229,6 +235,9 @@ export async function DELETE(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const code = request.nextUrl.searchParams.get('code');

@@ -1,11 +1,16 @@
 import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/performance/metrics/route';
 
+jest.mock('@/lib/db', () => ({
+  query: jest.fn(),
+}));
+
 jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
 describe('/api/performance/metrics', () => {
+  const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
 
   beforeEach(() => {
@@ -15,13 +20,14 @@ describe('/api/performance/metrics', () => {
   describe('POST', () => {
     it('should accept performance metrics', async () => {
       withRateLimit.mockResolvedValue(null);
+      query.mockResolvedValue({ rows: [{ id: 1, metric_name: 'lcp', value: 2500 }] });
 
       const request = new NextRequest('http://localhost:3000/api/performance/metrics', {
         method: 'POST',
         body: JSON.stringify({
-          url: '/dashboard',
-          fcp: 1200,
-          lcp: 2500,
+          metricName: 'lcp',
+          value: 2500,
+          metadata: { url: '/dashboard', fcp: 1200 },
         }),
       });
 

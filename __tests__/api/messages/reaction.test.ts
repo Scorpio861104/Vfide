@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST } from '@/app/api/messages/reaction/route';
 
 jest.mock('@/lib/db', () => ({
@@ -25,18 +25,28 @@ describe('/api/messages/reaction', () => {
   describe('POST', () => {
     it('should add reaction successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValue({
-        rows: [{ id: 1, message_id: 1, emoji: '👍' }],
-      });
+      query
+        .mockResolvedValueOnce({ rows: [] }) // Check existing reaction
+        .mockResolvedValueOnce({ rows: [] }) // Insert reaction
+        .mockResolvedValueOnce({
+          rows: [{
+            reaction_type: 'emoji',
+            emoji: '👍',
+            image_url: null,
+            image_name: null,
+            users: [{ address: '0x1111111111111111111111111111111111111123', username: 'test', avatar: null }],
+          }],
+        }); // Get all reactions
 
       const request = new NextRequest('http://localhost:3000/api/messages/reaction', {
         method: 'POST',
         body: JSON.stringify({
-          messageId: 1,
+          messageId: '1',
+          conversationId: '1',
           emoji: '👍',
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
         }),
       });
 
@@ -44,20 +54,26 @@ describe('/api/messages/reaction', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.reaction).toBeDefined();
+      expect(data.reactions).toBeDefined();
     });
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);
+      query.mockResolvedValue({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/messages/reaction', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          messageId: '1',
+          conversationId: '1',
+          emoji: '👍',
+          userAddress: '0x1111111111111111111111111111111111111123',
+        }),
       });
 
       const response = await POST(request);

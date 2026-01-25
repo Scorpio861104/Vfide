@@ -126,7 +126,7 @@ describe('BadgeNFTMinter', () => {
 
   it('renders mint button', () => {
     render(<BadgeNFTMinter badgeId="0x1234567890abcdef1234567890abcdef12345678" />)
-    const mintButton = screen.queryByText(/mint/i)
+    const mintButtons = screen.queryAllByText(/mint/i)
     // May or may not have mint button depending on state
     expect(document.body).toBeInTheDocument()
   })

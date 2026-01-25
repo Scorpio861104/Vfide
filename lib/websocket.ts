@@ -325,11 +325,17 @@ export function useWebSocket(config: WSConfig, userAddress?: string) {
 
   const getWebSocket = useCallback(() => wsRef.current, []);
 
+  const disconnect = useCallback(() => {
+    wsRef.current?.disconnect();
+    setIsConnected(false);
+  }, []);
+
   return {
     isConnected,
     send,
     subscribe,
     getWebSocket,
+    disconnect,
   };
 }
 

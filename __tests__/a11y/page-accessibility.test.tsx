@@ -97,23 +97,29 @@ describe('Page-Specific Accessibility Tests', () => {
       const FeatureCards = () => (
         <section aria-labelledby="features-heading">
           <h2 id="features-heading">Key Features</h2>
-          <div role="list">
-            <article role="listitem">
-              <img src="/security-icon.svg" alt="" aria-hidden="true" />
-              <h3>Enhanced Security</h3>
-              <p>Multi-layer security protocols</p>
-            </article>
-            <article role="listitem">
-              <img src="/speed-icon.svg" alt="" aria-hidden="true" />
-              <h3>Lightning Fast</h3>
-              <p>Process transactions in seconds</p>
-            </article>
-            <article role="listitem">
-              <img src="/support-icon.svg" alt="" aria-hidden="true" />
-              <h3>24/7 Support</h3>
-              <p>Always here to help you</p>
-            </article>
-          </div>
+          <ul>
+            <li>
+              <article>
+                <img src="/security-icon.svg" alt="" aria-hidden="true" />
+                <h3>Enhanced Security</h3>
+                <p>Multi-layer security protocols</p>
+              </article>
+            </li>
+            <li>
+              <article>
+                <img src="/speed-icon.svg" alt="" aria-hidden="true" />
+                <h3>Lightning Fast</h3>
+                <p>Process transactions in seconds</p>
+              </article>
+            </li>
+            <li>
+              <article>
+                <img src="/support-icon.svg" alt="" aria-hidden="true" />
+                <h3>24/7 Support</h3>
+                <p>Always here to help you</p>
+              </article>
+            </li>
+          </ul>
         </section>
       );
 
@@ -455,19 +461,19 @@ describe('Page-Specific Accessibility Tests', () => {
           <caption>User List</caption>
           <thead>
             <tr>
-              <th>
-                <button aria-sort="ascending">
+              <th aria-sort="ascending">
+                <button>
                   Name
                   <span aria-hidden="true"> ↑</span>
                 </button>
               </th>
-              <th>
-                <button aria-sort="none">
+              <th aria-sort="none">
+                <button>
                   Email
                 </button>
               </th>
-              <th>
-                <button aria-sort="none">
+              <th aria-sort="none">
+                <button>
                   Join Date
                 </button>
               </th>
@@ -486,7 +492,8 @@ describe('Page-Specific Accessibility Tests', () => {
       const { container } = render(<SortableTable />);
 
       const sortButton = screen.getByRole('button', { name: /name/i });
-      expect(sortButton).toHaveAttribute('aria-sort', 'ascending');
+      const sortHeader = sortButton.closest('th');
+      expect(sortHeader).toHaveAttribute('aria-sort', 'ascending');
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();

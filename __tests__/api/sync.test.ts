@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST } from '@/app/api/sync/route';
 
 jest.mock('@/lib/db', () => ({
@@ -31,12 +31,15 @@ describe('/api/sync', () => {
   describe('POST', () => {
     it('should sync user data successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' },
+      });
       validateBody.mockResolvedValue({
         success: true,
         data: {
-          userAddress: '0x123',
-          lastSync: Date.now(),
+          userId: '1',
+          entity: 'quests',
+          lastSyncTimestamp: new Date().toISOString(),
         },
       });
 
@@ -45,8 +48,9 @@ describe('/api/sync', () => {
       const request = new NextRequest('http://localhost:3000/api/sync', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
-          lastSync: Date.now(),
+          userId: '1',
+          entity: 'quests',
+          lastSyncTimestamp: new Date().toISOString(),
         }),
       });
 
@@ -59,10 +63,7 @@ describe('/api/sync', () => {
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401 }
-      );
+      const unauthorizedResponse = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       requireAuth.mockReturnValue(unauthorizedResponse);
 
       const request = new NextRequest('http://localhost:3000/api/sync', {
@@ -76,12 +77,15 @@ describe('/api/sync', () => {
 
     it('should handle sync conflicts', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' },
+      });
       validateBody.mockResolvedValue({
         success: true,
         data: {
-          userAddress: '0x123',
-          lastSync: Date.now() - 1000000,
+          userId: '1',
+          entity: 'quests',
+          lastSyncTimestamp: new Date(Date.now() - 1000000).toISOString(),
         },
       });
 
@@ -92,8 +96,9 @@ describe('/api/sync', () => {
       const request = new NextRequest('http://localhost:3000/api/sync', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
-          lastSync: Date.now() - 1000000,
+          userId: '1',
+          entity: 'quests',
+          lastSyncTimestamp: new Date(Date.now() - 1000000).toISOString(),
         }),
       });
 

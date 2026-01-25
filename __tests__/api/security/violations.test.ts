@@ -30,7 +30,7 @@ describe('/api/security/violations', () => {
       query.mockResolvedValue({
         rows: [{
           id: 1,
-          user_address: '0x123',
+          user_address: '0x1111111111111111111111111111111111111123',
           violation_type: 'rate_limit',
           created_at: new Date().toISOString(),
         }],
@@ -68,7 +68,7 @@ describe('/api/security/violations', () => {
       const request = new NextRequest('http://localhost:3000/api/security/violations', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111123',
           violationType: 'suspicious_activity',
           details: 'Multiple failed login attempts',
         }),

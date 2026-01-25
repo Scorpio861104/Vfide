@@ -37,7 +37,7 @@ describe('/api/auth/revoke', () => {
 
   describe('POST', () => {
     it('should revoke token successfully', async () => {
-      requireAuth.mockResolvedValue({ user: { address: '0x123', exp: Math.floor(Date.now() / 1000) + 3600 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123', exp: Math.floor(Date.now() / 1000) + 3600 } });
 
       const request = new NextRequest('http://localhost:3000/api/auth/revoke', {
         method: 'POST',

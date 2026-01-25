@@ -33,7 +33,8 @@ describe('/api/notifications', () => {
     const mockUserAddress = '0x1234567890123456789012345678901234567890';
 
     it('should return user notifications', async () => {
-      requireAuth.mockResolvedValue({ user: { address: mockUserAddress } });
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
 
       const mockNotifications = [
         {
@@ -58,6 +59,7 @@ describe('/api/notifications', () => {
     });
 
     it('should return 401 for unauthorized users', async () => {
+      withRateLimit.mockResolvedValue(null);
       const { NextResponse } = require('next/server');
       const unauthorizedResponse = NextResponse.json(
         { error: 'Unauthorized' },
@@ -72,6 +74,7 @@ describe('/api/notifications', () => {
     });
 
     it('should return 400 when userAddress is missing', async () => {
+      withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue(true);
 
       const request = new NextRequest('http://localhost:3000/api/notifications');
@@ -83,6 +86,7 @@ describe('/api/notifications', () => {
     });
 
     it('should filter unread notifications', async () => {
+      withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
       query.mockResolvedValue({ rows: [] });
 
@@ -98,6 +102,7 @@ describe('/api/notifications', () => {
     });
 
     it('should return 500 for database errors', async () => {
+      withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
       query.mockRejectedValue(new Error('Database error'));
 
@@ -175,7 +180,7 @@ describe('/api/notifications', () => {
 
     it('should return 400 for invalid request body', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123' } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
       const request = new NextRequest('http://localhost:3000/api/notifications', {
         method: 'POST',

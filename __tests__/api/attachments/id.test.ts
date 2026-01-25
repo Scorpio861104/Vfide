@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GET, DELETE } from '@/app/api/attachments/[id]/route';
 
 jest.mock('@/lib/db', () => ({
@@ -36,7 +36,7 @@ describe('/api/attachments/[id]', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/1');
-      const response = await GET(request, { params: { id: '1' } });
+      const response = await GET(request, { params: Promise.resolve({ id: '1' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -48,7 +48,7 @@ describe('/api/attachments/[id]', () => {
       query.mockResolvedValue({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/999');
-      const response = await GET(request, { params: { id: '999' } });
+      const response = await GET(request, { params: Promise.resolve({ id: '999' }) });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -67,7 +67,7 @@ describe('/api/attachments/[id]', () => {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request, { params: { id: '1' } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: '1' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -76,8 +76,8 @@ describe('/api/attachments/[id]', () => {
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);
@@ -86,7 +86,7 @@ describe('/api/attachments/[id]', () => {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request, { params: { id: '1' } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: '1' }) });
       expect(response.status).toBe(401);
     });
   });

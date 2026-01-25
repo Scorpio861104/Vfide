@@ -39,7 +39,7 @@ describe('/api/leaderboard/monthly', () => {
       const mockLeaderboard = [
         {
           user_id: 1,
-          wallet_address: '0x123',
+          wallet_address: '0x1111111111111111111111111111111111111123',
           username: 'user1',
           total_xp_earned: 1000,
           quests_completed: 10,
@@ -56,7 +56,7 @@ describe('/api/leaderboard/monthly', () => {
         },
         {
           user_id: 2,
-          wallet_address: '0x456',
+          wallet_address: '0x2222222222222222222222222222222222222456',
           username: 'user2',
           total_xp_earned: 500,
           quests_completed: 5,
@@ -85,7 +85,7 @@ describe('/api/leaderboard/monthly', () => {
       expect(response.status).toBe(200);
       expect(data.leaderboard).toHaveLength(2);
       expect(data.leaderboard[0].rank).toBe(1);
-      expect(data.leaderboard[0].walletAddress).toBe('0x123');
+      expect(data.leaderboard[0].walletAddress).toBe('0x1111111111111111111111111111111111111123');
       expect(data.prizePool.total).toBe('1000');
       expect(mockRelease).toHaveBeenCalled();
     });
@@ -190,7 +190,7 @@ describe('/api/leaderboard/monthly', () => {
       const mockLeaderboard = [
         {
           user_id: 1,
-          wallet_address: '0x123',
+          wallet_address: '0x1111111111111111111111111111111111111123',
           username: 'user1',
           total_xp_earned: 1000,
           quests_completed: 10,
@@ -211,7 +211,7 @@ describe('/api/leaderboard/monthly', () => {
         .mockResolvedValueOnce({ rows: [] }) // Prize pool
         .mockResolvedValueOnce({ rows: mockLeaderboard }); // Leaderboard
 
-      const request = new NextRequest('http://localhost:3000/api/leaderboard/monthly?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/monthly?userAddress=0x1111111111111111111111111111111111111123');
       const response = await GET(request);
       const data = await response.json();
 
@@ -229,7 +229,7 @@ describe('/api/leaderboard/monthly', () => {
       const mockLeaderboard = [
         {
           user_id: 1,
-          wallet_address: '0x123',
+          wallet_address: '0x1111111111111111111111111111111111111123',
           username: 'user1',
           total_xp_earned: 1000,
           quests_completed: 10,
@@ -248,7 +248,7 @@ describe('/api/leaderboard/monthly', () => {
 
       const mockUserPosition = {
         user_id: 2,
-        wallet_address: '0x456',
+        wallet_address: '0x2222222222222222222222222222222222222456',
         total_xp_earned: 100,
         quests_completed: 1,
         challenges_completed: 1,

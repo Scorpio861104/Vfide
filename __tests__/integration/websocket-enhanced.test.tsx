@@ -23,29 +23,63 @@ type MockSocket = {
 };
 
 let mockSocket: MockSocket;
-const createMockSocket = (): MockSocket => ({
-  on: jest.fn((event: string, handler: Function) => {
-    if (event === 'connect') {
-      setTimeout(() => handler(), 0);
-    }
-    return mockSocket;
-  }),
-  emit: jest.fn(),
-  off: jest.fn(),
-  disconnect: jest.fn(),
-  connected: false,
-  id: 'mock-socket-id',
-  io: {
-    opts: {
-      auth: undefined,
-    },
-  },
-});
+let socketHandlers: Map<string, Set<Function>>;
 
+const createMockSocket = (): MockSocket => {
+  socketHandlers = new Map();
+  
+  const socket: MockSocket = {
+    on: jest.fn((event: string, handler: Function) => {
+      if (!socketHandlers.has(event)) {
+        socketHandlers.set(event, new Set());
+      }
+      socketHandlers.get(event)!.add(handler);
+      return socket;
+    }),
+    emit: jest.fn((event: string, data?: unknown) => {
+      if (socketHandlers.has(event)) {
+        socketHandlers.get(event)!.forEach(h => h(data));
+      }
+    }),
+    off: jest.fn((event: string, handler?: Function) => {
+      if (handler && socketHandlers.has(event)) {
+        socketHandlers.get(event)!.delete(handler);
+      } else if (socketHandlers.has(event)) {
+        socketHandlers.get(event)!.clear();
+      }
+      return socket;
+    }),
+    disconnect: jest.fn(() => {
+      socket.connected = false;
+      triggerSocketEvent('disconnect', 'client disconnect');
+    }),
+    connected: true, // Start as connected for simplicity
+    id: 'mock-socket-id',
+    io: {
+      opts: {
+        auth: undefined,
+      },
+    },
+  };
+  
+  return socket;
+};
+
+// Helper function to manually trigger socket events (for use in tests)
+const triggerSocketEvent = (event: string, data?: unknown) => {
+  if (socketHandlers && socketHandlers.has(event)) {
+    socketHandlers.get(event)!.forEach(h => h(data));
+  }
+};
+
+// Auto-trigger connect event after socket creation
 jest.mock('socket.io-client', () => ({
   io: jest.fn(() => {
     mockSocket = createMockSocket();
-    mockSocket.connected = true;
+    // Trigger connect after a microtask to let event handlers register
+    Promise.resolve().then(() => {
+      triggerSocketEvent('connect');
+    });
     return mockSocket;
   }),
 }));
@@ -83,29 +117,31 @@ describe('Enhanced WebSocket Integration Tests', () => {
       const disconnectHandler = jest.fn();
       const errorHandler = jest.fn();
 
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'connect') {
-          setTimeout(() => handler(), 0);
-        }
-        if (event === 'disconnect') {
-          setTimeout(() => handler('transport close'), 10);
-        }
-        if (event === 'error') {
-          setTimeout(() => handler(new Error('Connection error')), 20);
-        }
-        return mockSocket;
-      });
-
-      await wsManager.connect('0x123');
-
       wsManager.on('connect', connectHandler);
       wsManager.on('disconnect', disconnectHandler);
       wsManager.on('error', errorHandler);
 
+      await wsManager.connect('0x123');
+
+      // Wait for connect event to fire
       await waitFor(() => {
-        expect(mockSocket.on).toHaveBeenCalledWith('connect', expect.any(Function));
-        expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
-        expect(mockSocket.on).toHaveBeenCalledWith('error', expect.any(Function));
+        expect(connectHandler).toHaveBeenCalled();
+      });
+
+      // Trigger disconnect
+      triggerSocketEvent('disconnect', 'transport close');
+      
+      // Wait for disconnect event
+      await waitFor(() => {
+        expect(disconnectHandler).toHaveBeenCalled();
+      });
+
+      // Trigger error
+      triggerSocketEvent('error', new Error('Connection error'));
+      
+      // Wait for error event
+      await waitFor(() => {
+        expect(errorHandler).toHaveBeenCalled();
       });
     });
 

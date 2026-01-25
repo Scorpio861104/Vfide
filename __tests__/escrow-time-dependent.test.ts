@@ -7,7 +7,7 @@ import {
   TimelockTimeTravel, 
   TIME, 
   TEST_PERIODS 
-} from './utils/time-travel';
+} from './utils/time-travel.helpers';
 
 /**
  * Escrow Time-Dependent Feature Tests

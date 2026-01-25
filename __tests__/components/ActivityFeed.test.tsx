@@ -20,7 +20,8 @@ describe('ActivityFeed - Component Rendering', () => {
   test('renders all statistics cards', () => {
     render(<ActivityFeed />);
     expect(screen.getByText('Total Activities')).toBeInTheDocument();
-    expect(screen.getByText('Today')).toBeInTheDocument();
+    const todayElements = screen.getAllByText('Today');
+    expect(todayElements.length).toBeGreaterThan(0);
     expect(screen.getByText('This Week')).toBeInTheDocument();
     expect(screen.getByText('Transactions')).toBeInTheDocument();
   });

@@ -65,14 +65,14 @@ describe('GlowingCard', () => {
 });
 
 describe('TestnetBadge', () => {
-  it('renders testnet badge on testnet', () => {
-    render(<TestnetBadge />);
-    expect(screen.getByText(/testnet mode/i)).toBeInTheDocument();
+  it('renders nothing (legacy component)', () => {
+    const { container } = render(<TestnetBadge />);
+    expect(container.firstChild).toBeNull();
   });
 
-  it('shows network name', () => {
-    render(<TestnetBadge />);
-    expect(screen.getByText(/base sepolia/i)).toBeInTheDocument();
+  it('is backwards compatible', () => {
+    const { container } = render(<TestnetBadge />);
+    expect(container.firstChild).toBeNull();
   });
 
   it('exports TestnetBadge function', () => {

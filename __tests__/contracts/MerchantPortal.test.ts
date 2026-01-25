@@ -42,7 +42,6 @@ describe('MerchantPortal Contract', () => {
     });
 
     it('should prevent duplicate merchant registration', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // already registered
       mockContractWrite.mockRejectedValueOnce(new Error('Already registered'));
 
       await expect(async () => {
@@ -161,7 +160,6 @@ describe('MerchantPortal Contract', () => {
     });
 
     it('should prevent payment to unregistered merchant', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not registered
       mockContractWrite.mockRejectedValueOnce(new Error('Merchant not registered'));
 
       await expect(async () => {
@@ -173,7 +171,6 @@ describe('MerchantPortal Contract', () => {
     });
 
     it('should prevent payment to inactive merchant', async () => {
-      mockContractRead.mockResolvedValueOnce(false); // not active
       mockContractWrite.mockRejectedValueOnce(new Error('Merchant not active'));
 
       await expect(async () => {
@@ -196,7 +193,6 @@ describe('MerchantPortal Contract', () => {
     });
 
     it('should require sufficient customer balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50')); // insufficient
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient balance'));
 
       await expect(async () => {
@@ -260,7 +256,6 @@ describe('MerchantPortal Contract', () => {
     });
 
     it('should prevent refund of already refunded payment', async () => {
-      mockContractRead.mockResolvedValueOnce(2); // Already refunded
       mockContractWrite.mockRejectedValueOnce(new Error('Already refunded'));
 
       await expect(async () => {
@@ -296,7 +291,6 @@ describe('MerchantPortal Contract', () => {
     });
 
     it('should prevent settlement with zero pending', async () => {
-      mockContractRead.mockResolvedValueOnce(0n); // no pending
       mockContractWrite.mockRejectedValueOnce(new Error('No pending settlement'));
 
       await expect(async () => {
@@ -344,7 +338,6 @@ describe('MerchantPortal Contract', () => {
     });
 
     it('should enforce minimum settlement amount', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50')); // below minimum
       mockContractWrite.mockRejectedValueOnce(new Error('Below minimum settlement'));
 
       await expect(async () => {
@@ -356,7 +349,6 @@ describe('MerchantPortal Contract', () => {
     });
 
     it('should enforce settlement period', async () => {
-      mockContractRead.mockResolvedValueOnce(1234567890n); // last settlement
       mockContractWrite.mockRejectedValueOnce(new Error('Settlement period not elapsed'));
 
       await expect(async () => {
@@ -686,7 +678,6 @@ describe('MerchantPortal Contract', () => {
     });
 
     it('should prevent operations when paused', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // paused
       mockContractWrite.mockRejectedValueOnce(new Error('Contract is paused'));
 
       await expect(async () => {

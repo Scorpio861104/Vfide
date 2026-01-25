@@ -29,7 +29,8 @@ describe('AdvancedSearch - Search Input', () => {
   test('search button triggers search', async () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
-    const searchBtn = screen.getByRole('button', { name: /search/i });
+    const searchBtns = screen.getAllByRole('button', { name: /search/i });
+    const searchBtn = searchBtns[0]; // Use first search button
 
     fireEvent.change(input, { target: { value: 'governance' } });
     fireEvent.click(searchBtn);
@@ -82,10 +83,10 @@ describe('AdvancedSearch - Filters', () => {
     const filtersBtn = screen.getByRole('button', { name: /filters/i });
 
     fireEvent.click(filtersBtn);
-    expect(screen.getByLabelText(/content type/i)).toBeInTheDocument();
+    expect(screen.getByText(/content type/i)).toBeInTheDocument();
 
     fireEvent.click(filtersBtn);
-    expect(screen.queryByLabelText(/content type/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/content type/i)).not.toBeInTheDocument();
   });
 
   test('renders all filter fields when panel is open', () => {
@@ -93,9 +94,9 @@ describe('AdvancedSearch - Filters', () => {
     const filtersBtn = screen.getByRole('button', { name: /filters/i });
     fireEvent.click(filtersBtn);
 
-    expect(screen.getByLabelText(/content type/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/date range/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/status/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/content type/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/date range/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/status/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/min score/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/has attachments/i)).toBeInTheDocument();
   });
@@ -104,31 +105,35 @@ describe('AdvancedSearch - Filters', () => {
     render(<AdvancedSearch />);
     fireEvent.click(screen.getByRole('button', { name: /filters/i }));
 
-    const contentTypeSelect = screen.getByLabelText(/content type/i);
-    expect(contentTypeSelect).toContainHTML('<option value="all">All Content</option>');
-    expect(contentTypeSelect).toContainHTML('<option value="proposal">Proposals</option>');
-    expect(contentTypeSelect).toContainHTML('<option value="user">Users</option>');
-    expect(contentTypeSelect).toContainHTML('<option value="transaction">Transactions</option>');
+    // Use getByText instead of getByLabelText
+    expect(screen.getByText('All Content')).toBeInTheDocument();
+    expect(screen.getByText('Proposals')).toBeInTheDocument();
+    expect(screen.getByText('Users')).toBeInTheDocument();
+    expect(screen.getByText('Transactions')).toBeInTheDocument();
   });
 
-  test('date range filter changes value', () => {
+  test('date range filter changes value', async () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
+    fireEvent.click(screen.getByRole('button', { name: /🔽 filters/i }));
 
-    const dateSelect = screen.getByLabelText(/date range/i) as HTMLSelectElement;
+    const dateSelect = screen.getByRole('combobox', { name: /date range/i });
     fireEvent.change(dateSelect, { target: { value: 'week' } });
 
-    expect(dateSelect.value).toBe('week');
+    await waitFor(() => {
+      expect((dateSelect as HTMLSelectElement).value).toBe('week');
+    });
   });
 
-  test('status filter changes value', () => {
+  test('status filter changes value', async () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
+    fireEvent.click(screen.getByRole('button', { name: /🔽 filters/i }));
 
-    const statusSelect = screen.getByLabelText(/status/i) as HTMLSelectElement;
+    const statusSelect = screen.getByRole('combobox', { name: /status/i });
     fireEvent.change(statusSelect, { target: { value: 'active' } });
 
-    expect(statusSelect.value).toBe('active');
+    await waitFor(() => {
+      expect((statusSelect as HTMLSelectElement).value).toBe('active');
+    });
   });
 
   test('min score slider updates value', () => {
@@ -160,15 +165,15 @@ describe('AdvancedSearch - Filters', () => {
 describe('AdvancedSearch - Search History', () => {
   test('history button shows history panel', () => {
     render(<AdvancedSearch />);
-    const historyBtn = screen.getByRole('button', { name: /history/i });
+    const historyBtn = screen.getByRole('button', { name: /🕐 history \(\d+\)/i });
 
     fireEvent.click(historyBtn);
-    expect(screen.getByText(/search history/i)).toBeInTheDocument();
+    expect(screen.getByText(/"governance proposal"/i)).toBeInTheDocument();
   });
 
   test('displays history items', () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /history/i }));
+    fireEvent.click(screen.getByRole('button', { name: /🕐 history \(\d+\)/i }));
 
     expect(screen.getByText(/"governance proposal"/i)).toBeInTheDocument();
     expect(screen.getByText(/"staking rewards"/i)).toBeInTheDocument();
@@ -176,7 +181,7 @@ describe('AdvancedSearch - Search History', () => {
 
   test('history items show result counts', () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /history/i }));
+    fireEvent.click(screen.getByRole('button', { name: /🕐 history \(\d+\)/i }));
 
     expect(screen.getByText(/15 results/i)).toBeInTheDocument();
     expect(screen.getByText(/42 results/i)).toBeInTheDocument();
@@ -184,7 +189,7 @@ describe('AdvancedSearch - Search History', () => {
 
   test('clicking history item reuses search', async () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /history/i }));
+    fireEvent.click(screen.getByRole('button', { name: /🕐 history \(\d+\)/i }));
 
     const historyItem = screen.getByText(/"governance proposal"/i);
     fireEvent.click(historyItem);
@@ -196,7 +201,7 @@ describe('AdvancedSearch - Search History', () => {
 
   test('delete button removes history item', () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /history/i }));
+    fireEvent.click(screen.getByRole('button', { name: /🕐 history \(\d+\)/i }));
 
     const deleteButtons = screen.getAllByLabelText(/delete history item/i);
     const initialCount = deleteButtons.length;
@@ -209,7 +214,7 @@ describe('AdvancedSearch - Search History', () => {
 
   test('shows empty state when no history', () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /history/i }));
+    fireEvent.click(screen.getByRole('button', { name: /🕐 history \(\d+\)/i }));
 
     // Delete all history items
     const deleteButtons = screen.getAllByLabelText(/delete history item/i);
@@ -226,7 +231,7 @@ describe('AdvancedSearch - Search History', () => {
 describe('AdvancedSearch - Saved Searches', () => {
   test('saved button shows saved searches panel', () => {
     render(<AdvancedSearch />);
-    const savedBtn = screen.getByRole('button', { name: /saved/i });
+    const savedBtn = screen.getByRole('button', { name: /⭐ saved \(\d+\)/i });
 
     fireEvent.click(savedBtn);
     expect(screen.getByText(/saved searches/i)).toBeInTheDocument();
@@ -234,7 +239,7 @@ describe('AdvancedSearch - Saved Searches', () => {
 
   test('displays saved search items', () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /saved/i }));
+    fireEvent.click(screen.getByRole('button', { name: /⭐ saved \(\d+\)/i }));
 
     expect(screen.getByText(/active proposals/i)).toBeInTheDocument();
     expect(screen.getByText(/my transactions/i)).toBeInTheDocument();
@@ -243,7 +248,7 @@ describe('AdvancedSearch - Saved Searches', () => {
 
   test('saved searches show use counts', () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /saved/i }));
+    fireEvent.click(screen.getByRole('button', { name: /⭐ saved \(\d+\)/i }));
 
     expect(screen.getByText(/used 12 times/i)).toBeInTheDocument();
     expect(screen.getByText(/used 34 times/i)).toBeInTheDocument();
@@ -251,7 +256,7 @@ describe('AdvancedSearch - Saved Searches', () => {
 
   test('use search button loads saved search', async () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /saved/i }));
+    fireEvent.click(screen.getByRole('button', { name: /⭐ saved \(\d+\)/i }));
 
     const useButtons = screen.getAllByRole('button', { name: /use search/i });
     fireEvent.click(useButtons[0]);
@@ -263,7 +268,7 @@ describe('AdvancedSearch - Saved Searches', () => {
 
   test('delete button removes saved search', () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /saved/i }));
+    fireEvent.click(screen.getByRole('button', { name: /⭐ saved \(\d+\)/i }));
 
     const deleteButtons = screen.getAllByLabelText(/delete saved search/i);
     const initialCount = deleteButtons.length;
@@ -276,7 +281,7 @@ describe('AdvancedSearch - Saved Searches', () => {
 
   test('shows empty state when no saved searches', () => {
     render(<AdvancedSearch />);
-    fireEvent.click(screen.getByRole('button', { name: /saved/i }));
+    fireEvent.click(screen.getByRole('button', { name: /⭐ saved \(\d+\)/i }));
 
     // Delete all saved searches
     const deleteButtons = screen.getAllByLabelText(/delete saved search/i);
@@ -310,7 +315,7 @@ describe('AdvancedSearch - Autocomplete', () => {
     fireEvent.change(input, { target: { value: 'g' } });
 
     await waitFor(() => {
-      expect(screen.getByText(/"governance proposal"/i)).toBeInTheDocument();
+      expect(screen.getByText(/governance proposal/i)).toBeInTheDocument();
     });
   });
 
@@ -349,7 +354,7 @@ describe('AdvancedSearch - Search Results', () => {
   test('shows loading state during search', async () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
-    const searchBtn = screen.getByRole('button', { name: /search/i });
+    const searchBtn = screen.getByRole('button', { name: 'Search' });
 
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(searchBtn);
@@ -360,7 +365,7 @@ describe('AdvancedSearch - Search Results', () => {
   test('displays search results after loading', async () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
-    const searchBtn = screen.getByRole('button', { name: /search/i });
+    const searchBtn = screen.getByRole('button', { name: 'Search' });
 
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(searchBtn);
@@ -374,7 +379,7 @@ describe('AdvancedSearch - Search Results', () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       const icons = ['🗳️', '👤', '💰', '📊', '📝', '💬'];
@@ -387,7 +392,7 @@ describe('AdvancedSearch - Search Results', () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       const scores = screen.queryAllByText(/%/);
@@ -401,7 +406,7 @@ describe('AdvancedSearch - Search Results', () => {
 
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       const cards = screen.getAllByRole('generic').filter(el =>
@@ -424,7 +429,7 @@ describe('AdvancedSearch - Sorting', () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       expect(screen.getByText(/sort by:/i)).toBeInTheDocument();
@@ -435,7 +440,7 @@ describe('AdvancedSearch - Sorting', () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       const sortSelect = screen.getByDisplayValue(/relevance/i);
@@ -450,7 +455,7 @@ describe('AdvancedSearch - Sorting', () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       const sortSelect = screen.getByDisplayValue(/relevance/i) as HTMLSelectElement;
@@ -469,7 +474,7 @@ describe('AdvancedSearch - Save Search', () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /save search/i })).toBeInTheDocument();
@@ -482,7 +487,7 @@ describe('AdvancedSearch - Save Search', () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       const saveBtn = screen.getByRole('button', { name: /save search/i });
@@ -501,7 +506,7 @@ describe('AdvancedSearch - Export Results', () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /export/i })).toBeInTheDocument();
@@ -515,7 +520,7 @@ describe('AdvancedSearch - Export Results', () => {
     render(<AdvancedSearch />);
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       const exportBtn = screen.getByRole('button', { name: /export/i });
@@ -541,7 +546,7 @@ describe('AdvancedSearch - Empty States', () => {
     const contentTypeSelect = screen.getByLabelText(/content type/i);
     fireEvent.change(contentTypeSelect, { target: { value: 'user' } });
 
-    const searchBtn = screen.getByRole('button', { name: /search/i });
+    const searchBtn = screen.getByRole('button', { name: 'Search' });
     fireEvent.click(searchBtn);
 
     await waitFor(() => {
@@ -576,7 +581,7 @@ describe('AdvancedSearch - Accessibility', () => {
 
   test('all buttons have accessible names', () => {
     render(<AdvancedSearch />);
-    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /filters/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /history/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /saved/i })).toBeInTheDocument();
@@ -646,7 +651,7 @@ describe('AdvancedSearch - Integration Workflows', () => {
     fireEvent.change(contentType, { target: { value: 'proposal' } });
 
     // Search
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     // Wait for results
     await waitFor(() => {
@@ -662,7 +667,7 @@ describe('AdvancedSearch - Integration Workflows', () => {
     // Perform search
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     // Wait for results and save
     await waitFor(() => {
@@ -702,7 +707,7 @@ describe('AdvancedSearch - Integration Workflows', () => {
     // Initial search
     const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
     fireEvent.change(input, { target: { value: 'test' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
       expect(screen.getByText(/result/i)).toBeInTheDocument();

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST } from '@/app/api/attachments/upload/route';
 
 jest.mock('@/lib/db', () => ({
@@ -25,7 +25,7 @@ describe('/api/attachments/upload', () => {
   describe('POST', () => {
     it('should upload file successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123' } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       query.mockResolvedValue({ rows: [{ id: 1, filename: 'test.txt' }] });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/upload', {
@@ -48,8 +48,8 @@ describe('/api/attachments/upload', () => {
 
     it('should return 400 for unauthorized users when auth fails before validation', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);
@@ -66,7 +66,7 @@ describe('/api/attachments/upload', () => {
 
     it('should return 400 for missing required fields', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123' } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/upload', {
         method: 'POST',
@@ -82,7 +82,7 @@ describe('/api/attachments/upload', () => {
 
     it('should validate required fields', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue({ user: { address: '0x123' } });
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/upload', {
         method: 'POST',

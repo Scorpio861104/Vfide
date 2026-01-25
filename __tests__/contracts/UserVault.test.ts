@@ -42,7 +42,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should prevent deposit to locked vault', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // isLocked
       mockContractWrite.mockRejectedValueOnce(new Error('Vault is locked'));
 
       await expect(async () => {
@@ -65,7 +64,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should require token approval before deposit', async () => {
-      mockContractRead.mockResolvedValueOnce(0n); // no allowance
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient allowance'));
 
       await expect(async () => {
@@ -77,7 +75,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should update balance after deposit', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('500')); // initial
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -164,7 +161,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should prevent withdrawal from locked vault', async () => {
-      mockContractRead.mockResolvedValueOnce(true); // isLocked
       mockContractWrite.mockRejectedValueOnce(new Error('Vault is locked'));
 
       await expect(async () => {
@@ -176,7 +172,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should prevent withdrawal exceeding balance', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50')); // balance
       mockContractWrite.mockRejectedValueOnce(new Error('Insufficient balance'));
 
       await expect(async () => {
@@ -199,7 +194,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should update balance after withdrawal', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('500')); // initial
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       await mockContractWrite({
@@ -274,8 +268,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should enforce daily withdrawal limits', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('900')); // daily withdrawn
-      mockContractRead.mockResolvedValueOnce(parseEther('1000')); // daily limit
       mockContractWrite.mockRejectedValueOnce(new Error('Daily limit exceeded'));
 
       await expect(async () => {
@@ -333,8 +325,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should get available balance (excluding locked)', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('1000')); // total
-      mockContractRead.mockResolvedValueOnce(parseEther('200')); // locked
       mockContractRead.mockResolvedValueOnce(parseEther('800')); // available
 
       const available = await mockContractRead({
@@ -469,8 +459,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should prevent unlock before time expires', async () => {
-      const expiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour future
-      mockContractRead.mockResolvedValueOnce(expiry);
       mockContractWrite.mockRejectedValueOnce(new Error('Lock not expired'));
 
       await expect(async () => {
@@ -506,7 +494,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should only allow designated recovery address', async () => {
-      mockContractRead.mockResolvedValueOnce(recoveryAddress);
       mockContractWrite.mockRejectedValueOnce(new Error('Not recovery address'));
 
       await expect(async () => {
@@ -539,8 +526,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should enforce recovery delay', async () => {
-      const eta = Math.floor(Date.now() / 1000) + 86400;
-      mockContractRead.mockResolvedValueOnce(eta);
       mockContractWrite.mockRejectedValueOnce(new Error('Recovery delay not passed'));
 
       await expect(async () => {
@@ -563,8 +548,6 @@ describe('UserVault Contract', () => {
     });
 
     it('should execute recovery after delay', async () => {
-      const eta = Math.floor(Date.now() / 1000) - 100;
-      mockContractRead.mockResolvedValueOnce(eta);
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({

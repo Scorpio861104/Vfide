@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { MockDate, TIME } from './utils/time-travel';
+import { MockDate, TIME } from './utils/time-travel.helpers';
 import {
   UserProfileGenerator,
   VestingDataGenerator,
@@ -10,7 +10,7 @@ import {
   GovernanceDataGenerator,
   StreakDataGenerator,
   SnapshotGenerator,
-} from './utils/test-data-generator';
+} from './utils/test-data-generator.helpers';
 import { BADGE_REGISTRY } from '@/lib/badge-registry';
 
 /**

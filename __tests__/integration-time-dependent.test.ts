@@ -8,7 +8,7 @@ import {
   BadgeTimeTravel,
   TimelockTimeTravel,
   TIME 
-} from './utils/time-travel';
+} from './utils/time-travel.helpers';
 import { BADGE_REGISTRY } from '@/lib/badge-registry';
 
 /**
