@@ -242,7 +242,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
 
       act(() => {
         result.current.transfer(
-          '0xaabbccdd1122334455667788990011223344556677' as `0x${string}`,
+          '0xaabbccdd11223344556677889900112233445566' as `0x${string}`,
           '10'
         )
       })
@@ -270,7 +270,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
 
       act(() => {
         result.current.transfer(
-          '0xaabbccdd1122334455667788990011223344556677' as `0x${string}`,
+          '0xaabbccdd11223344556677889900112233445566' as `0x${string}`,
           '10'
         )
       })

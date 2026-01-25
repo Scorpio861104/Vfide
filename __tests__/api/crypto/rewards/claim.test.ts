@@ -38,7 +38,7 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
         }),
       });
 
-      const response = await POST(request, { params: { userId: '1' } });
+      const response = await POST(request, { params: Promise.resolve({ userId: '1' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -58,7 +58,7 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
         body: JSON.stringify({}),
       });
 
-      const response = await POST(request, { params: { userId: '1' } });
+      const response = await POST(request, { params: Promise.resolve({ userId: '1' }) });
       expect(response.status).toBe(401);
     });
   });

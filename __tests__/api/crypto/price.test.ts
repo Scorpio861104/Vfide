@@ -13,16 +13,14 @@ jest.mock('viem/chains', () => ({
   },
 }));
 
-jest.mock('@/lib/rateLimit', () => ({
-  checkRateLimit: jest.fn(),
-  getClientIdentifier: jest.fn(),
-  getRateLimitHeaders: jest.fn(),
+jest.mock('@/lib/auth/rateLimit', () => ({
+  withRateLimit: jest.fn(),
 }));
 
 global.fetch = jest.fn();
 
 describe('/api/crypto/price', () => {
-  const { checkRateLimit, getClientIdentifier, getRateLimitHeaders } = require('@/lib/rateLimit');
+  const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { createPublicClient } = require('viem');
 
   beforeEach(() => {
@@ -33,8 +31,7 @@ describe('/api/crypto/price', () => {
 
   describe('GET', () => {
     it('should return price data with tokenomics pricing', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
@@ -65,8 +62,7 @@ describe('/api/crypto/price', () => {
       };
       createPublicClient.mockReturnValue(mockClient);
 
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
@@ -81,14 +77,11 @@ describe('/api/crypto/price', () => {
     });
 
     it('should return 429 for rate limit exceeded', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({
-        success: false,
-        limit: 60,
-        remaining: 0,
-        reset: Date.now() + 60000,
-      });
-      getRateLimitHeaders.mockReturnValue({});
+      const rateLimitResponse = new Response(
+        JSON.stringify({ error: 'Rate limit exceeded' }),
+        { status: 429 }
+      );
+      withRateLimit.mockResolvedValue(rateLimitResponse);
 
       const request = new NextRequest('http://localhost:3000/api/crypto/price');
       const response = await GET(request);
@@ -99,8 +92,7 @@ describe('/api/crypto/price', () => {
     });
 
     it('should handle CoinGecko API failure with fallback', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockRejectedValue(new Error('CoinGecko API error'));
 
       const request = new NextRequest('http://localhost:3000/api/crypto/price');
@@ -115,8 +107,7 @@ describe('/api/crypto/price', () => {
     });
 
     it('should support force refresh parameter', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
         json: async () => ({ ethereum: { usd: 2500 } }),
       });
@@ -130,8 +121,7 @@ describe('/api/crypto/price', () => {
     });
 
     it('should calculate market cap correctly', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
@@ -147,8 +137,7 @@ describe('/api/crypto/price', () => {
     });
 
     it('should include timestamp in response', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
@@ -171,8 +160,7 @@ describe('/api/crypto/price', () => {
       };
       createPublicClient.mockReturnValue(mockClient);
 
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
@@ -186,8 +174,7 @@ describe('/api/crypto/price', () => {
     });
 
     it('should use default ETH price when CoinGecko returns no data', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
         json: async () => ({}),
       });

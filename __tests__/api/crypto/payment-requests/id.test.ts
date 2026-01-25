@@ -37,7 +37,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1');
-      const response = await GET(request, { params: { id: '1' } });
+      const response = await GET(request, { params: Promise.resolve({ id: '1' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -49,7 +49,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       query.mockResolvedValue({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/999');
-      const response = await GET(request, { params: { id: '999' } });
+      const response = await GET(request, { params: Promise.resolve({ id: '999' }) });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -76,7 +76,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
         }),
       });
 
-      const response = await PUT(request, { params: { id: '1' } });
+      const response = await PUT(request, { params: Promise.resolve({ id: '1' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -96,7 +96,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
         body: JSON.stringify({}),
       });
 
-      const response = await PUT(request, { params: { id: '1' } });
+      const response = await PUT(request, { params: Promise.resolve({ id: '1' }) });
       expect(response.status).toBe(401);
     });
   });

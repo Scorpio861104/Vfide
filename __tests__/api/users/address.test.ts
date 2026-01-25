@@ -31,7 +31,7 @@ describe('/api/users/[address]', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/users/0x123');
-      const response = await GET(request, { params: { address: '0x123' } });
+      const response = await GET(request, { params: Promise.resolve({ address: '0x123' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -44,7 +44,7 @@ describe('/api/users/[address]', () => {
       query.mockResolvedValue({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/users/0x999');
-      const response = await GET(request, { params: { address: '0x999' } });
+      const response = await GET(request, { params: Promise.resolve({ address: '0x999' }) });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -59,7 +59,7 @@ describe('/api/users/[address]', () => {
       withRateLimit.mockResolvedValue(rateLimitResponse);
 
       const request = new NextRequest('http://localhost:3000/api/users/0x123');
-      const response = await GET(request, { params: { address: '0x123' } });
+      const response = await GET(request, { params: Promise.resolve({ address: '0x123' }) });
 
       expect(response.status).toBe(429);
     });

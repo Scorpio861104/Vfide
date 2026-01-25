@@ -36,7 +36,7 @@ describe('/api/attachments/[id]', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/1');
-      const response = await GET(request, { params: { id: '1' } });
+      const response = await GET(request, { params: Promise.resolve({ id: '1' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -48,7 +48,7 @@ describe('/api/attachments/[id]', () => {
       query.mockResolvedValue({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/999');
-      const response = await GET(request, { params: { id: '999' } });
+      const response = await GET(request, { params: Promise.resolve({ id: '999' }) });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -67,7 +67,7 @@ describe('/api/attachments/[id]', () => {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request, { params: { id: '1' } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: '1' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -86,7 +86,7 @@ describe('/api/attachments/[id]', () => {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request, { params: { id: '1' } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: '1' }) });
       expect(response.status).toBe(401);
     });
   });

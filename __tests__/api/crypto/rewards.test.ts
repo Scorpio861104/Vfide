@@ -34,7 +34,7 @@ describe('/api/crypto/rewards/[userId]', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1');
-      const response = await GET(request, { params: { userId: '1' } });
+      const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -52,7 +52,7 @@ describe('/api/crypto/rewards/[userId]', () => {
       });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1');
-      const response = await GET(request, { params: { userId: '1' } });
+      const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);

@@ -6,12 +6,6 @@ jest.mock('@/lib/db', () => ({
   getClient: jest.fn(),
 }));
 
-jest.mock('@/lib/rateLimit', () => ({
-  checkRateLimit: jest.fn(),
-  getClientIdentifier: jest.fn(),
-  getRateLimitHeaders: jest.fn(),
-}));
-
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
 }));
@@ -31,7 +25,6 @@ jest.mock('viem', () => ({
 
 describe('/api/messages', () => {
   const { query, getClient } = require('@/lib/db');
-  const { checkRateLimit, getClientIdentifier } = require('@/lib/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { validateBody } = require('@/lib/auth/validation');
@@ -46,8 +39,7 @@ describe('/api/messages', () => {
     const mockOtherAddress = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
 
     it('should return messages for a conversation', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue(true);
       isAddress.mockReturnValue(true);
 
@@ -75,13 +67,11 @@ describe('/api/messages', () => {
     });
 
     it('should return 429 for rate limit exceeded', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({
-        success: false,
-        limit: 100,
-        remaining: 0,
-        reset: Date.now() + 60000,
-      });
+      const rateLimitResponse = new Response(
+        JSON.stringify({ error: 'Rate limit exceeded' }),
+        { status: 429 }
+      );
+      withRateLimit.mockResolvedValue(rateLimitResponse);
 
       const request = new NextRequest('http://localhost:3000/api/messages');
       const response = await GET(request);
@@ -90,8 +80,7 @@ describe('/api/messages', () => {
     });
 
     it('should return 401 for unauthorized users', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       const unauthorizedResponse = new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401 }
@@ -105,8 +94,7 @@ describe('/api/messages', () => {
     });
 
     it('should return 400 for invalid limit parameter', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue(true);
 
       const request = new NextRequest(
@@ -120,8 +108,7 @@ describe('/api/messages', () => {
     });
 
     it('should default to limit 50 when not specified', async () => {
-      getClientIdentifier.mockReturnValue('test-client');
-      checkRateLimit.mockReturnValue({ success: true });
+      withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue(true);
       isAddress.mockReturnValue(true);
       query.mockResolvedValue({ rows: [] });
