@@ -10,6 +10,7 @@ jest.mock('next/navigation', () => ({
 
 // Mock next/link
 jest.mock('next/link', () => ({
+  __esModule: true,
   default: ({ children, href, className }: any) => (
     <a href={href} className={className}>{children}</a>
   ),

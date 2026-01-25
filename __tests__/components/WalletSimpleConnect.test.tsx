@@ -1,6 +1,7 @@
 import { describe, expect, it, } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
+import { ToastProvider } from '@/components/ui/toast'
 
 // Mock framer-motion
 jest.mock('framer-motion', () => ({
@@ -38,15 +39,20 @@ jest.mock('next/image', () => ({
 // Import after mocking
 import { SimpleWalletConnect } from '@/components/wallet/SimpleWalletConnect'
 
+// Helper to render with providers
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(<ToastProvider>{component}</ToastProvider>);
+};
+
 describe('SimpleWalletConnect', () => {
   it('renders connected state', () => {
-    render(<SimpleWalletConnect />)
+    renderWithProviders(<SimpleWalletConnect />)
     // With mocked connected state, should show chain/account buttons
     expect(document.body).toBeInTheDocument()
   })
 
   it('renders without crashing', () => {
-    const { container } = render(<SimpleWalletConnect />)
+    const { container } = renderWithProviders(<SimpleWalletConnect />)
     expect(container).toBeInTheDocument()
   })
 })
@@ -69,7 +75,7 @@ describe('SimpleWalletConnect - Disconnected', () => {
   })
 
   it('handles disconnected state', () => {
-    const { container } = render(<SimpleWalletConnect />)
+    const { container } = renderWithProviders(<SimpleWalletConnect />)
     expect(container).toBeInTheDocument()
   })
 })
@@ -92,7 +98,7 @@ describe('SimpleWalletConnect - Wrong Network', () => {
   })
 
   it('handles wrong network state', () => {
-    const { container } = render(<SimpleWalletConnect />)
+    const { container } = renderWithProviders(<SimpleWalletConnect />)
     expect(container).toBeInTheDocument()
   })
 })
