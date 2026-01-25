@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GET, POST } from '@/app/api/endorsements/route';
 
 jest.mock('@/lib/db', () => ({
@@ -14,10 +14,16 @@ jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/validation', () => ({
+  validateBody: jest.fn(),
+  endorsementSchema: {},
+}));
+
 describe('/api/endorsements', () => {
   const { query, getClient } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
+  const { validateBody } = require('@/lib/auth/validation');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -52,12 +58,22 @@ describe('/api/endorsements', () => {
     it('should create endorsement successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      validateBody.mockResolvedValue({
+        success: true,
+        data: {
+          fromAddress: '0x1111111111111111111111111111111111111123',
+          toAddress: '0x2222222222222222222222222222222222222456',
+          skill: 'Trading',
+          message: 'Great trader!',
+        },
+      });
 
       const mockClient = {
         query: jest.fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // endorser lookup
           .mockResolvedValueOnce({ rows: [{ id: 2 }] }) // endorsed lookup
+          .mockResolvedValueOnce({ rows: [] }) // check existing
           .mockResolvedValueOnce({ rows: [{ id: 1, endorser_id: 1, endorsed_id: 2 }] }) // INSERT
           .mockResolvedValueOnce({ rows: [] }), // COMMIT
         release: jest.fn(),
