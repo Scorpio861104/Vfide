@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http } from 'viem';
 import { baseSepolia } from 'viem/chains';
-import { checkRateLimit, getClientIdentifier, getRateLimitHeaders } from '@/lib/rateLimit';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 // VFIDE Token address - from environment or deployment
 const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x0000000000000000000000000000000000000000';
@@ -73,15 +73,8 @@ const VFIDE_WETH_POOL = process.env.NEXT_PUBLIC_VFIDE_WETH_POOL_ADDRESS;
  */
 export async function GET(request: NextRequest) {
   // Rate limiting: 60 requests per minute
-  const clientId = getClientIdentifier(request);
-  const rateLimit = checkRateLimit(`price:${clientId}`, { windowMs: 60000, maxRequests: 60 });
-  
-  if (!rateLimit.success) {
-    return NextResponse.json(
-      { success: false, error: 'Rate limit exceeded' },
-      { status: 429, headers: getRateLimitHeaders(rateLimit) }
-    );
-  }
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
   
   try {
     const { searchParams } = new URL(request.url);

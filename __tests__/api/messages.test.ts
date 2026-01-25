@@ -40,7 +40,7 @@ describe('/api/messages', () => {
 
     it('should return messages for a conversation', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
       isAddress.mockReturnValue(true);
 
       const mockMessages = [
@@ -81,8 +81,9 @@ describe('/api/messages', () => {
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const { NextResponse } = require('next/server');
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);
@@ -95,7 +96,7 @@ describe('/api/messages', () => {
 
     it('should return 400 for invalid limit parameter', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
 
       const request = new NextRequest(
         `http://localhost:3000/api/messages?limit=invalid&userAddress=${mockUserAddress}&conversationWith=${mockOtherAddress}`
@@ -109,7 +110,7 @@ describe('/api/messages', () => {
 
     it('should default to limit 50 when not specified', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
       isAddress.mockReturnValue(true);
       query.mockResolvedValue({ rows: [] });
 
@@ -129,22 +130,24 @@ describe('/api/messages', () => {
 
     it('should send a message successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
       validateBody.mockResolvedValue({
         success: true,
         data: {
-          senderAddress: mockUserAddress,
-          recipientAddress: mockRecipientAddress,
+          from: mockUserAddress,
+          to: mockRecipientAddress,
           content: 'Hello!',
-          isEncrypted: false,
         },
       });
 
       const mockClient = {
         query: jest.fn()
+          .mockResolvedValueOnce({}) // BEGIN
           .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // sender
           .mockResolvedValueOnce({ rows: [{ id: 2 }] }) // recipient
-          .mockResolvedValueOnce({ rows: [{ id: 1, content: 'Hello!' }] }), // insert message
+          .mockResolvedValueOnce({ rows: [{ id: 1, content: 'Hello!' }] }) // insert message
+          .mockResolvedValueOnce({}) // insert notification
+          .mockResolvedValueOnce({}), // COMMIT
         release: jest.fn(),
       };
       getClient.mockResolvedValue(mockClient);
@@ -152,8 +155,8 @@ describe('/api/messages', () => {
       const request = new NextRequest('http://localhost:3000/api/messages', {
         method: 'POST',
         body: JSON.stringify({
-          senderAddress: mockUserAddress,
-          recipientAddress: mockRecipientAddress,
+          from: mockUserAddress,
+          to: mockRecipientAddress,
           content: 'Hello!',
         }),
       });
@@ -161,7 +164,7 @@ describe('/api/messages', () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(data.message).toBeDefined();
       expect(mockClient.release).toHaveBeenCalled();
     });
@@ -184,8 +187,9 @@ describe('/api/messages', () => {
 
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+      const { NextResponse } = require('next/server');
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);
@@ -201,7 +205,7 @@ describe('/api/messages', () => {
 
     it('should return 400 for invalid request body', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
       validateBody.mockResolvedValue({
         success: false,
         error: 'Invalid request body',
@@ -222,18 +226,20 @@ describe('/api/messages', () => {
 
     it('should return 500 for database errors', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
       validateBody.mockResolvedValue({
         success: true,
         data: {
-          senderAddress: mockUserAddress,
-          recipientAddress: mockRecipientAddress,
+          from: mockUserAddress,
+          to: mockRecipientAddress,
           content: 'Hello!',
         },
       });
 
       const mockClient = {
-        query: jest.fn().mockRejectedValue(new Error('Database error')),
+        query: jest.fn()
+          .mockResolvedValueOnce({}) // BEGIN
+          .mockRejectedValueOnce(new Error('Database error')), // fail on sender query
         release: jest.fn(),
       };
       getClient.mockResolvedValue(mockClient);
@@ -241,8 +247,8 @@ describe('/api/messages', () => {
       const request = new NextRequest('http://localhost:3000/api/messages', {
         method: 'POST',
         body: JSON.stringify({
-          senderAddress: mockUserAddress,
-          recipientAddress: mockRecipientAddress,
+          from: mockUserAddress,
+          to: mockRecipientAddress,
           content: 'Hello!',
         }),
       });
@@ -251,7 +257,7 @@ describe('/api/messages', () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toContain('Failed');
+      expect(data.error).toBe('Database error');
       expect(mockClient.release).toHaveBeenCalled();
     });
   });
