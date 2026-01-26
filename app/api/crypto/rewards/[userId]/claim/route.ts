@@ -28,7 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Require ownership - only the user can claim their own rewards
-    const authResult = requireOwnership(request, userId);
+    const authResult = await requireOwnership(request, userId);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
