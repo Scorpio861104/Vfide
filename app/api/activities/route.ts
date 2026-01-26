@@ -32,10 +32,10 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
-    // Validate parsed numbers
-    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+    // Validate parsed numbers - check for positive values and reasonable limits
+    if (isNaN(limit) || isNaN(offset) || limit <= 0 || offset < 0 || limit > 100) {
       return NextResponse.json(
-        { error: 'Invalid limit or offset parameter' },
+        { error: 'Invalid limit or offset parameter. Limit must be 1-100, offset must be >= 0' },
         { status: 400 }
       );
     }

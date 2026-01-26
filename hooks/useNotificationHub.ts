@@ -127,7 +127,7 @@ export function useNotificationHub(): UseNotificationHubResult {
         });
 
         // Simulate delivery
-        setTimeout(() => {
+        const deliveryTimeoutId = setTimeout(() => {
           setNotifications((prev) =>
             prev.map((n) =>
               n.id === newNotification.id
@@ -145,6 +145,11 @@ export function useNotificationHub(): UseNotificationHubResult {
             )
           );
         }, 1000);
+
+        // Store timeout ID for cleanup
+        return () => {
+          clearTimeout(deliveryTimeoutId);
+        };
 
         // Fire browser notification if supported
         if (typeof window !== 'undefined' && 'Notification' in window) {
