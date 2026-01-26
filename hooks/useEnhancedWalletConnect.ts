@@ -122,6 +122,7 @@ export function useEnhancedWalletConnect() {
       // Clear any existing timeout first
       if (connectionTimeout) {
         clearTimeout(connectionTimeout);
+        setConnectionTimeout(null);
       }
       
       const timeout = setTimeout(() => {
@@ -129,14 +130,14 @@ export function useEnhancedWalletConnect() {
         setLastError('Connection timed out');
         // Force disconnect to reset state
         disconnect();
+        setConnectionTimeout(null);
       }, CONNECTION_TIMEOUT_MS);
 
       setConnectionTimeout(timeout);
 
       return () => {
-        if (timeout) {
-          clearTimeout(timeout);
-        }
+        clearTimeout(timeout);
+        setConnectionTimeout(null);
       };
     } else {
       if (connectionTimeout) {
@@ -145,7 +146,7 @@ export function useEnhancedWalletConnect() {
       }
     }
     return undefined;
-  }, [isConnecting, isPending, showToast, connectionTimeout]);
+  }, [isConnecting, isPending, showToast, disconnect]);
 
   // Show toast notifications for connection events
   useEffect(() => {

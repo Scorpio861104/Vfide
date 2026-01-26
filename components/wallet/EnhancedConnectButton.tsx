@@ -75,13 +75,23 @@ function useNetworkStatus() {
   const currentChain = SUPPORTED_CHAINS.find(c => c.id === chainId);
   const isSupported = !!currentChain;
   
+  // Validate chain ID before switching
+  const validateAndSwitchChain = (targetChainId: number) => {
+    const supportedIds = [8453, 137, 324, 84532, 80002, 300];
+    if (!supportedIds.includes(targetChainId)) {
+      console.warn(`Unsupported chain ID: ${targetChainId}`);
+      return;
+    }
+    switchChain({ chainId: targetChainId as 8453 | 137 | 324 | 84532 | 80002 | 300 });
+  };
+  
   return {
     chainId,
     currentChain,
     isSupported,
     isSwitching,
     switchError,
-    switchChain: (targetChainId: number) => switchChain({ chainId: targetChainId as 8453 | 137 | 324 | 84532 | 80002 | 300 }),
+    switchChain: validateAndSwitchChain,
   };
 }
 

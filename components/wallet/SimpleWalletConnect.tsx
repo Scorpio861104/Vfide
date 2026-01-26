@@ -66,6 +66,7 @@ export function SimpleWalletConnect() {
   
   // Phase 3: Network latency monitoring - moved outside render prop
   const [latencyData, setLatencyData] = useState<LatencyData | null>(chainId ? getCachedLatency(chainId) : null);
+  const latencyAbortController = useRef<AbortController | null>(null);
 
   // Get RPC URL for a chain
   const getRpcUrl = useCallback((id: number): string => {
@@ -89,6 +90,12 @@ export function SimpleWalletConnect() {
         setLatencyData(cached);
       }
 
+      // Cancel any existing measurement
+      if (latencyAbortController.current) {
+        latencyAbortController.current.abort();
+      }
+      latencyAbortController.current = new AbortController();
+
       // Defer latency measurement to avoid blocking connection flow
       const deferredMeasure = setTimeout(async () => {
         const rpcUrl = getRpcUrl(chainId);
@@ -98,6 +105,12 @@ export function SimpleWalletConnect() {
 
       // Less frequent polling after initial measurement
       const interval = setInterval(async () => {
+        // Cancel previous measurement if still running
+        if (latencyAbortController.current) {
+          latencyAbortController.current.abort();
+        }
+        latencyAbortController.current = new AbortController();
+        
         const rpcUrl = getRpcUrl(chainId);
         const data = await measureLatency(rpcUrl, chainId);
         setLatencyData(data);
@@ -106,6 +119,9 @@ export function SimpleWalletConnect() {
       return () => {
         clearTimeout(deferredMeasure);
         clearInterval(interval);
+        if (latencyAbortController.current) {
+          latencyAbortController.current.abort();
+        }
       };
     }
     return undefined;
@@ -131,12 +147,35 @@ export function SimpleWalletConnect() {
   const copyAddress = useCallback(async (address: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent modal from opening
     try {
+      // Try modern clipboard API first
       await navigator.clipboard.writeText(address);
       setCopied(true);
       showToast('Address copied to clipboard', 'success', 2000);
       setTimeout(() => setCopied(false), 2000);
-    } catch (_err) {
-      showToast('Failed to copy address', 'error', 2000);
+    } catch (err) {
+      // Fallback for non-HTTPS contexts or if clipboard API fails
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = address;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        textArea.remove();
+        
+        if (successful) {
+          setCopied(true);
+          showToast('Address copied to clipboard', 'success', 2000);
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          throw new Error('Copy command failed');
+        }
+      } catch {
+        showToast('Failed to copy address. Please copy manually.', 'error', 3000);
+      }
     }
   }, [showToast]);
 

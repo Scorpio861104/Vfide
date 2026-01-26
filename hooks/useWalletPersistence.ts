@@ -210,8 +210,14 @@ export function useWalletPersistence() {
       setIsReconnecting(true);
       setReconnectError(null);
       
+      // Use AbortController to cancel reconnect on timeout
+      const abortController = new AbortController();
+      let isAborted = false;
+      
       // Attempt reconnection with timeout
       const timeoutId = setTimeout(() => {
+        isAborted = true;
+        abortController.abort();
         setIsReconnecting(false);
         setReconnectError('Reconnection timed out');
       }, RECONNECTION_TIMEOUT_MS);
@@ -221,16 +227,27 @@ export function useWalletPersistence() {
       
       void reconnectPromise
         .then(() => {
-          clearTimeout(timeoutId);
-          setIsReconnecting(false);
-          setReconnectError(null);
+          if (!isAborted) {
+            clearTimeout(timeoutId);
+            setIsReconnecting(false);
+            setReconnectError(null);
+          }
         })
         .catch((error: Error) => {
-          clearTimeout(timeoutId);
-          setIsReconnecting(false);
-          setReconnectError(error.message || 'Failed to reconnect');
+          if (!isAborted) {
+            clearTimeout(timeoutId);
+            setIsReconnecting(false);
+            setReconnectError(error.message || 'Failed to reconnect');
+          }
         });
+      
+      // Cleanup on unmount
+      return () => {
+        clearTimeout(timeoutId);
+        abortController.abort();
+      };
     }
+    return undefined;
   }, [isConnected, getSession, isSessionValid, connectors, reconnect]);
 
   // Save session when connection state changes
@@ -242,11 +259,14 @@ export function useWalletPersistence() {
 
   // Clear session on disconnect
   useEffect(() => {
-    if (!isConnected && hasAttemptedReconnect.current) {
-      // Only clear if we've already attempted reconnect (actual disconnect)
-      const session = getSession();
-      if (session) {
-        clearSession();
+    if (!isConnected) {
+      // Clear session whenever disconnected, whether from user action or other reasons
+      // But only after mount to avoid clearing valid sessions on initial load
+      if (hasAttemptedReconnect.current) {
+        const session = getSession();
+        if (session) {
+          clearSession();
+        }
       }
     }
   }, [isConnected, getSession, clearSession]);
@@ -333,7 +353,7 @@ export function useWalletPersistence() {
       const timeoutMs = timeoutMinutes * 60 * 1000;
       const now = Date.now();
       const timeSinceActivity = now - lastActivityTime.current;
-      const remainingMs = timeoutMs - timeSinceActivity;
+      const remainingMs = Math.max(0, timeoutMs - timeSinceActivity);
       const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
 
       // Show warning when less than 5 minutes remain

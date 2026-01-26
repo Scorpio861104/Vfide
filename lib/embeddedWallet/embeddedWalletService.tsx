@@ -290,12 +290,36 @@ export class EmbeddedWalletService {
       if (!stored) return null;
       
       const parsed = JSON.parse(stored);
+      
+      // Validate required fields
+      if (!parsed || !parsed.address || !parsed.userId || !parsed.email) {
+        return null;
+      }
+      
+      // Safely parse dates with validation
+      let createdAt: Date;
+      let lastLoginAt: Date;
+      
+      try {
+        createdAt = new Date(parsed.createdAt);
+        lastLoginAt = new Date(parsed.lastLoginAt);
+        
+        // Validate dates are valid
+        if (isNaN(createdAt.getTime()) || isNaN(lastLoginAt.getTime())) {
+          return null;
+        }
+      } catch {
+        return null;
+      }
+      
       return {
         ...parsed,
-        createdAt: new Date(parsed.createdAt),
-        lastLoginAt: new Date(parsed.lastLoginAt),
+        createdAt,
+        lastLoginAt,
       };
     } catch {
+      // Corrupted session, clear it
+      this.clearSession();
       return null;
     }
   }

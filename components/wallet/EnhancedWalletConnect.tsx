@@ -86,7 +86,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
 
   // Auto-switch to Base after connection
   useEffect(() => {
-    if (isConnected && chainId !== PREFERRED_CHAIN.id && prefs.autoSwitchToBase && switchChainFn) {
+    if (isConnected && switchChainFn && chainId !== PREFERRED_CHAIN.id && prefs.autoSwitchToBase) {
       autoSwitchToBaseIfNeeded(isConnected, chainId, switchChainFn);
     }
   }, [isConnected, chainId, prefs.autoSwitchToBase, switchChainFn]);
