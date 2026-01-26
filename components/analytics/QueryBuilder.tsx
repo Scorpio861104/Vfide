@@ -169,9 +169,12 @@ export function QueryBuilder({
     if (sortBy.length > 0) {
       results.sort((a, b) => {
         for (const sort of sortBy) {
-          const aVal = a[sort.field];
-          const bVal = b[sort.field];
+          const aVal = a[sort.field] as string | number | boolean | null | undefined;
+          const bVal = b[sort.field] as string | number | boolean | null | undefined;
           
+          if (aVal === bVal) continue;
+          if (aVal == null) return sort.direction === 'asc' ? -1 : 1;
+          if (bVal == null) return sort.direction === 'asc' ? 1 : -1;
           if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
           if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
         }
