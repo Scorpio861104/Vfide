@@ -194,7 +194,7 @@ export function useEnhancedWalletConnect() {
       await navigator.clipboard.writeText(addressToCopy);
       showToast('Address copied to clipboard', 'success', 2000);
       return true;
-    } catch (err) {
+    } catch (_err) {
       // Fallback for non-HTTPS contexts or if clipboard API fails
       try {
         const textArea = document.createElement('textarea');

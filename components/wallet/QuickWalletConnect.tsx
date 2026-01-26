@@ -130,7 +130,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
       await navigator.clipboard.writeText(address);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch (_err) {
       // Fallback for non-HTTPS contexts or if clipboard API fails
       try {
         const textArea = document.createElement('textarea');
