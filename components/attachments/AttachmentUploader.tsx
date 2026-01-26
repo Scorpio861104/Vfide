@@ -32,7 +32,7 @@ import React, { useRef, useState } from 'react';
 interface AttachmentUploaderProps {
   messageId: string;
   userId: string;
-  onUploaded?: (attachments: any[]) => void;
+  onUploaded?: (attachments: Attachment[]) => void;
 }
 
 export function AttachmentUploader({ messageId, userId, onUploaded }: AttachmentUploaderProps) {

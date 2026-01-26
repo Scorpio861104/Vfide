@@ -10,19 +10,19 @@ interface ExportOptions {
   compression?: boolean;
 }
 
-interface DataExportProps {
-  data: any[];
+interface DataExportProps<T = Record<string, unknown>> {
+  data: T[];
   filename?: string;
-  onExport?: (data: any[], options: ExportOptions) => void;
+  onExport?: (data: T[], options: ExportOptions) => void;
   className?: string;
 }
 
-export function DataExport({
+export function DataExport<T = Record<string, unknown>>({
   data,
   filename = 'export',
   onExport,
   className = ''
-}: DataExportProps) {
+}: DataExportProps<T>) {
   const [isExporting, setIsExporting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [options, setOptions] = useState<ExportOptions>({
@@ -33,7 +33,7 @@ export function DataExport({
   });
   const { playSuccess, playNotification } = useTransactionSounds();
 
-  const convertToCSV = (data: any[]): string => {
+  const convertToCSV = (data: T[]): string => {
     if (data.length === 0) return '';
 
     const headers = Object.keys(data[0]);
@@ -55,7 +55,7 @@ export function DataExport({
     return csvRows.join('\n');
   };
 
-  const convertToJSON = (data: any[]): string => {
+  const convertToJSON = (data: T[]): string => {
     return JSON.stringify(data, null, 2);
   };
 

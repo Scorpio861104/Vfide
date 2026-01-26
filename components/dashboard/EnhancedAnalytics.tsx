@@ -186,7 +186,7 @@ export function PortfolioValueChart({ data }: { data: PortfolioDataPoint[] }) {
               padding: '12px',
             }}
             labelStyle={{ color: '#f3f4f6' }}
-            formatter={(value: any) => [`$${value.toLocaleString()}`, 'Value']}
+            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Value']}
           />
           <Area
             type="monotone"
@@ -221,7 +221,7 @@ export function AssetAllocationChart({ allocations }: { allocations: AssetAlloca
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: any) => `$${value.toLocaleString()}`}
+            formatter={(value: number) => `$${value.toLocaleString()}`}
             contentStyle={{
               backgroundColor: '#1f2937',
               border: '1px solid #374151',
@@ -248,7 +248,7 @@ export function TransactionVolumeChart({ data }: { data: PortfolioDataPoint[] })
               border: '1px solid #374151',
               borderRadius: '8px',
             }}
-            formatter={(value: any) => `$${value.toLocaleString()}`}
+            formatter={(value: number) => `$${value.toLocaleString()}`}
           />
           <Legend />
           <Bar dataKey="eth" stackId="a" fill="#627eea" name="ETH" />

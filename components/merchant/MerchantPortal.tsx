@@ -436,8 +436,8 @@ function PaymentRequestsSection({
   onCreateRequest,
 }: {
   requests: PaymentRequest[];
-  newRequest: any;
-  setNewRequest: any;
+  newRequest: Partial<PaymentRequest>;
+  setNewRequest: (request: Partial<PaymentRequest>) => void;
   onCreateRequest: () => void;
 }) {
   return (
