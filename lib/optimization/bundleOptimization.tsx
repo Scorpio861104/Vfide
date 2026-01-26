@@ -51,7 +51,9 @@ export function preloadComponent(route: string) {
     loader().catch(() => {
       // Silently fail preloading
     });
+    return;
   }
+  return;
 }
 
 /**
@@ -170,7 +172,7 @@ export async function analyzeBundleSize() {
  * Tracks size over time to prevent bundle bloat
  */
 export function trackBundleMetrics() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return undefined;
 
   // Use Navigation Timing API
   const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
@@ -192,6 +194,8 @@ export function trackBundleMetrics() {
 
     return metrics;
   }
+  
+  return undefined;
 }
 
 /**

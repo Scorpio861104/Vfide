@@ -108,8 +108,8 @@ export default function HardwareWalletPage() {
 
   // Check if hardware wallet is already connected
   useEffect(() => {
-    if (isConnected && connector?.name) {
-      const connectorName = connector.name.toLowerCase();
+    if (isConnected && connector) {
+      const connectorName = (connector.name || '').toLowerCase();
       if (connectorName.includes('ledger')) {
         setSelectedWallet('ledger');
         setDeviceConnected(true);
@@ -146,7 +146,10 @@ export default function HardwareWalletPage() {
     
     if (hwConnectors.length > 0) {
       try {
-        await connect({ connector: hwConnectors[0] });
+        const connector = hwConnectors[0];
+        if (connector) {
+          await connect({ connector });
+        }
         setDeviceConnected(true);
         setCurrentStep(3);
       } catch (error) {

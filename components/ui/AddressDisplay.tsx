@@ -3,8 +3,32 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, ExternalLink, User } from 'lucide-react';
-import { useENS, useENSProfile, formatAddressWithENS, type ENSProfile } from '@/hooks/useENS';
+import { useENS, formatAddressWithENS } from '@/hooks/useENS';
 import Image from 'next/image';
+
+export interface ENSProfile {
+  address: string;
+  name: string | null;
+  avatar: string | null;
+  description?: string;
+  twitter?: string;
+  github?: string;
+  url?: string;
+}
+
+function useENSProfile(address: string | undefined): { profile: ENSProfile | null } {
+  const { ensName, ensAvatar } = useENS(address);
+  
+  if (!address) return { profile: null };
+  
+  return {
+    profile: ensName ? {
+      address,
+      name: ensName,
+      avatar: ensAvatar,
+    } : null
+  };
+}
 
 // ==================== TYPES ====================
 
@@ -176,7 +200,9 @@ export function AddressDisplay({
     }
   };
 
-  const displayText = formatAddressWithENS(address, ensName, { truncate });
+  const displayText = truncate 
+    ? formatAddressWithENS(address, ensName)
+    : ensName || address;
 
   return (
     <div

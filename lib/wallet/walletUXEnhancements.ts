@@ -140,11 +140,12 @@ export const WALLET_RECOMMENDATIONS: WalletRecommendation[] = [
 export function getRecommendedWallet(isMobile: boolean): WalletRecommendation {
   if (isMobile) {
     // On mobile, recommend WalletConnect for best in-browser experience
-    return WALLET_RECOMMENDATIONS.find(w => w.id === 'walletConnect') || WALLET_RECOMMENDATIONS[0];
+    const recommended = WALLET_RECOMMENDATIONS.find(w => w.id === 'walletConnect');
+    return recommended || WALLET_RECOMMENDATIONS[0]!;
   }
   
   // On desktop, recommend MetaMask as most popular
-  return WALLET_RECOMMENDATIONS[0];
+  return WALLET_RECOMMENDATIONS[0]!;
 }
 
 // ========================================

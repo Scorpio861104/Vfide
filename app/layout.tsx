@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Web3Provider } from "@/components/wallet/Web3Provider";
 import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
@@ -24,17 +23,9 @@ import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegist
 import { ZustandHydration } from "@/components/core/ZustandHydration";
 import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
 
-const inter = Inter({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+// Use CSS variables for fonts - will load from Google Fonts via CSS
+// This avoids build-time network requests while still using Google Fonts in production
+const fontVariables = "--font-body --font-display";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://vfide.io"),
@@ -92,7 +83,15 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${spaceGrotesk.variable} font-[family-name:var(--font-body)] antialiased bg-zinc-900`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="font-sans antialiased bg-zinc-900" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
         {isE2E ? (
           children
         ) : (

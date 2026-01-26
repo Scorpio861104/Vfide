@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify JWT token
-    const payload = verifyToken(token);
+    const payload = await verifyToken(token);
 
     if (!payload) {
       return NextResponse.json(

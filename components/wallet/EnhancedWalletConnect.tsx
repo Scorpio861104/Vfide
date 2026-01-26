@@ -56,6 +56,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
   });
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
+  const switchChainFn = switchChain as ((params: { chainId: number }) => Promise<void>) | undefined;
 
   const [isMobile, setIsMobile] = useState(false);
   const [showAllWallets, setShowAllWallets] = useState(false);
@@ -86,10 +87,10 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
 
   // Auto-switch to Base after connection
   useEffect(() => {
-    if (isConnected && chainId !== PREFERRED_CHAIN.id && prefs.autoSwitchToBase) {
-      autoSwitchToBaseIfNeeded(isConnected, chainId, switchChain);
+    if (isConnected && chainId !== PREFERRED_CHAIN.id && prefs.autoSwitchToBase && switchChainFn) {
+      autoSwitchToBaseIfNeeded(isConnected, chainId, switchChainFn);
     }
-  }, [isConnected, chainId, prefs.autoSwitchToBase, switchChain]);
+  }, [isConnected, chainId, prefs.autoSwitchToBase, switchChainFn]);
 
   // Get wallet status
   const walletStatus = getWalletStatus(isConnected, chainId);
@@ -168,7 +169,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
                   VFIDE works on {PREFERRED_CHAIN_NAME}. Switch your network to continue.
                 </p>
                 <button
-                  onClick={() => switchChain({ chainId: PREFERRED_CHAIN.id })}
+                  onClick={() => switchChainFn?.({ chainId: PREFERRED_CHAIN.id })}
                   className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
                 >
                   Switch to {PREFERRED_CHAIN_NAME}

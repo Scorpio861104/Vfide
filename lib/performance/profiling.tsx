@@ -35,7 +35,7 @@ export function useRenderCount(componentName: string, logThreshold: number = 5) 
  * Detect unnecessary re-renders by comparing props
  */
 export function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
-  const previousProps = useRef<Record<string, any>>();
+  const previousProps = useRef<Record<string, any> | undefined>(undefined);
 
   useEffect(() => {
     if (previousProps.current) {
@@ -43,9 +43,10 @@ export function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
       const changedProps: Record<string, { from: any; to: any }> = {};
 
       allKeys.forEach((key) => {
-        if (previousProps.current![key] !== props[key]) {
+        const prevValue = previousProps.current?.[key];
+        if (prevValue !== props[key]) {
           changedProps[key] = {
-            from: previousProps.current![key],
+            from: prevValue,
             to: props[key],
           };
         }
@@ -101,10 +102,11 @@ export function usePerformanceMark(label: string) {
     performance.mark(markName);
   };
 
-  const measure = (operation: string) => {
+  const measure = (operation: string, startOperation?: string) => {
     const markName = `${label}:${operation}`;
+    const startMarkName = startOperation ? `${label}:${startOperation}` : markName;
     try {
-      performance.measure(markName, markName);
+      performance.measure(markName, startMarkName);
       const m = performance.getEntriesByName(markName, 'measure')[0];
       const duration = m?.duration || 0;
       
