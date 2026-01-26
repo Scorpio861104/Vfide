@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     // Revoke the token if present
     if (token) {
-      const tokenHash = hashToken(token);
+      const tokenHash = await hashToken(token);
       try {
         await revokeToken(tokenHash, 'logout', 60 * 60 * 24); // 24h TTL
       } catch (error) {
