@@ -20,19 +20,20 @@ services:
       timeout: 5s
       retries: 5
 
-  # WebSocket server (optional - if needed for local development)
-  websocket:
-    build:
-      context: ./websocket-server
-      dockerfile: Dockerfile
-    container_name: vfide-websocket
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-    environment:
-      DATABASE_URL: postgresql://vfide_user:vfide_password@postgres:5432/vfide_db
+  # WebSocket server (optional - commented out by default)
+  # Uncomment and create a Dockerfile in websocket-server/ to use this service
+  # websocket:
+  #   build:
+  #     context: ./websocket-server
+  #     dockerfile: Dockerfile
+  #   container_name: vfide-websocket
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - postgres
+  #   environment:
+  #     DATABASE_URL: postgresql://vfide_user:vfide_password@postgres:5432/vfide_db
 
 volumes:
   postgres_data:
