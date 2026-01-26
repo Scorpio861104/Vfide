@@ -545,3 +545,44 @@ npm run changeset:version
 
 See [ADDITIONAL_TOOLS_GUIDE.md](./ADDITIONAL_TOOLS_GUIDE.md) for detailed setup instructions and usage examples.
 
+
+---
+
+## Live Testing & Interactive Development
+
+For function-by-function live testing of the website, see:
+
+📘 **[LIVE_TESTING_GUIDE.md](./LIVE_TESTING_GUIDE.md)** - Complete guide to interactive testing:
+
+### Already Available Tools
+- **Storybook** (`npm run storybook`) - Component-level live testing
+- **Playwright UI Mode** (`npm run test:e2e:ui`) - Interactive E2E testing
+- **Jest Watch Mode** (`npm run test:watch`) - Auto-running unit tests
+- **Next.js Fast Refresh** - Instant hot reload (automatic)
+
+### Interactive Testing Workflow
+```bash
+# Terminal 1: Dev server with hot reload
+npm run dev
+
+# Terminal 2: Component explorer
+npm run storybook
+
+# Terminal 3: Auto-running tests
+npm run test:watch
+
+# When ready for E2E
+npm run test:e2e:ui
+```
+
+### Browser Extensions
+- **React DevTools Profiler** - Live performance analysis
+- **Chrome DevTools Performance** - Deep runtime profiling
+
+### Optional Advanced Tools
+- **Vitest UI** - Modern test runner with browser UI
+- **Testing Playground** - Interactive query builder
+- **MSW (Mock Service Worker)** - Live API mocking
+
+See [LIVE_TESTING_GUIDE.md](./LIVE_TESTING_GUIDE.md) for detailed workflows, examples, and best practices.
+
