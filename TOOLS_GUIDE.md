@@ -495,3 +495,53 @@ All tools are properly configured and ready to use. Follow the commands in this 
 ---
 
 **Last Updated**: 2026-01-26
+
+---
+
+## Additional Advanced Tools
+
+For comprehensive information on advanced testing, security, and monitoring tools, see:
+
+📘 **[ADDITIONAL_TOOLS_GUIDE.md](./ADDITIONAL_TOOLS_GUIDE.md)** - Complete guide to:
+
+### Testing & Quality
+- **fast-check** - Property-based testing for fuzzing
+- **Chromatic** - Visual regression testing
+- **Dependabot** - Automated dependency updates
+- **Codecov** - Code coverage tracking
+
+### Smart Contract Security
+- **Slither** - Static analysis for Solidity
+- **Mythril** - Security vulnerability detection
+- **Certora** - Formal verification
+
+### Development Experience
+- **Turborepo** - Monorepo build optimization
+- **Changesets** - Version and changelog management
+- **CommitLint** - Conventional commit enforcement
+
+### Monitoring
+- **OpenTelemetry** - Distributed tracing
+- **Datadog RUM** - Real user monitoring
+
+---
+
+**Quick Commands for New Tools:**
+```bash
+# Property-based testing
+npm run test:fuzz
+
+# Smart contract security analysis
+npm run contract:analyze     # Slither (requires Python)
+npm run contract:mythril     # Mythril (requires Python)
+
+# Visual regression testing
+npm run chromatic
+
+# Version management
+npm run changeset
+npm run changeset:version
+```
+
+See [ADDITIONAL_TOOLS_GUIDE.md](./ADDITIONAL_TOOLS_GUIDE.md) for detailed setup instructions and usage examples.
+

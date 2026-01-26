@@ -1,0 +1,41 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 85%
+        threshold: 2%
+        base: auto
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+ignore:
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/*.spec.tsx"
+  - "**/*.stories.ts"
+  - "**/*.stories.tsx"
+  - "__tests__/**"
+  - "e2e/**"
+  - "playwright/**"
+  - ".storybook/**"
+  - "*.config.*"
+  - "jest.setup.js"
+
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: 85%
+      - type: patch
+        target: 80%

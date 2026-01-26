@@ -58,7 +58,14 @@
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build",
     "circular-deps": "madge --circular --extensions ts,tsx ./",
-    "size:why": "size-limit --why"
+    "size:why": "size-limit --why",
+    "contract:analyze": "slither .",
+    "contract:mythril": "myth analyze contracts/VFIDETokenV2.sol",
+    "test:fuzz": "jest --testPathPattern=fuzz",
+    "chromatic": "chromatic --exit-zero-on-changes",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -147,6 +154,10 @@
     "minimatch": "^10.1.1",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
+    "fast-check": "^3.24.2",
+    "codecov": "^3.8.3",
+    "@changesets/cli": "^2.27.12",
+    "slither-analyzer": "^0.1.0",
     "storybook": "^8.6.15",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
