@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { parseUnits, formatUnits, type Address } from 'viem';
 import { useContractWrite, useWaitForTransactionReceipt } from 'wagmi';
+import { ERC20ABI } from '@/lib/abis';
 
 /**
  * Token Approval Component with Limited Approval Enforcement
@@ -19,19 +20,6 @@ interface TokenApprovalProps {
   onApprovalComplete?: (txHash: string) => void;
   onError?: (error: Error) => void;
 }
-
-const ERC20_ABI = [
-  {
-    name: 'approve',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'spender', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-    ],
-    outputs: [{ name: '', type: 'bool' }],
-  },
-] as const;
 
 export function TokenApproval({
   tokenAddress,
@@ -85,7 +73,7 @@ export function TokenApproval({
 
       await writeContract({
         address: tokenAddress,
-        abi: ERC20_ABI,
+        abi: ERC20ABI,
         functionName: 'approve',
         args: [spenderAddress, approvalAmount],
       });

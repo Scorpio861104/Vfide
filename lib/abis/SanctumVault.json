@@ -1,0 +1,13 @@
+[
+  { "name": "deposit", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "token", "type": "address" }, { "name": "amount", "type": "uint256" }, { "name": "note", "type": "string" }], "outputs": [] },
+  { "name": "proposeDisbursement", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "charity", "type": "address" }, { "name": "token", "type": "address" }, { "name": "amount", "type": "uint256" }, { "name": "reason", "type": "string" }], "outputs": [{ "type": "uint256" }] },
+  { "name": "approveDisbursement", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "proposalId", "type": "uint256" }], "outputs": [] },
+  { "name": "executeDisbursement", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "proposalId", "type": "uint256" }], "outputs": [] },
+  { "name": "getBalance", "type": "function", "stateMutability": "view", "inputs": [{ "name": "token", "type": "address" }], "outputs": [{ "type": "uint256" }] },
+  { "name": "getCharityInfo", "type": "function", "stateMutability": "view", "inputs": [{ "name": "charity", "type": "address" }], "outputs": [{ "name": "approved", "type": "bool" }, { "name": "name", "type": "string" }, { "name": "category", "type": "string" }, { "name": "totalReceived", "type": "uint256" }] },
+  { "name": "getCharityCount", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "uint256" }] },
+  { "name": "getDisbursement", "type": "function", "stateMutability": "view", "inputs": [{ "name": "proposalId", "type": "uint256" }], "outputs": [{ "name": "charity", "type": "address" }, { "name": "token", "type": "address" }, { "name": "amount", "type": "uint256" }, { "name": "reason", "type": "string" }, { "name": "approvalCount", "type": "uint8" }, { "name": "executed", "type": "bool" }, { "name": "rejected", "type": "bool" }, { "name": "proposedAt", "type": "uint256" }] },
+  { "name": "hasApproved", "type": "function", "stateMutability": "view", "inputs": [{ "name": "proposalId", "type": "uint256" }, { "name": "approver", "type": "address" }], "outputs": [{ "type": "bool" }] },
+  { "name": "approvedCharities", "type": "function", "stateMutability": "view", "inputs": [{ "name": "index", "type": "uint256" }], "outputs": [{ "type": "address" }] },
+  { "name": "_nextProposalId", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "uint256" }] }
+]

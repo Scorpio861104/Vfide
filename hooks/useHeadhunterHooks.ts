@@ -7,60 +7,7 @@
 import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { parseEther, formatEther } from 'viem';
-
-// EcosystemVault ABI (partial - only headhunter functions)
-const ECOSYSTEM_VAULT_ABI = [
-  {
-    name: 'getHeadhunterStats',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'referrer', type: 'address' }],
-    outputs: [
-      { name: 'currentYearPoints', type: 'uint16' },
-      { name: 'estimatedRank', type: 'uint8' },
-      { name: 'currentYearNumber', type: 'uint256' },
-      { name: 'currentQuarterNumber', type: 'uint256' },
-      { name: 'quarterEndsAt', type: 'uint256' }
-    ]
-  },
-  {
-    name: 'previewHeadhunterReward',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [
-      { name: 'year', type: 'uint256' },
-      { name: 'quarter', type: 'uint256' },
-      { name: 'referrer', type: 'address' }
-    ],
-    outputs: [
-      { name: 'referrerPoints', type: 'uint16' },
-      { name: 'claimed', type: 'bool' },
-      { name: 'quarterEndedFlag', type: 'bool' },
-      { name: 'poolSnapshot', type: 'uint256' }
-    ]
-  },
-  {
-    name: 'claimHeadhunterReward',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'year', type: 'uint256' },
-      { name: 'quarter', type: 'uint256' }
-    ],
-    outputs: []
-  },
-  {
-    name: 'getPendingReferral',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'referred', type: 'address' }],
-    outputs: [
-      { name: 'merchantReferrer', type: 'address' },
-      { name: 'userReferrer', type: 'address' },
-      { name: 'credited', type: 'bool' }
-    ]
-  }
-] as const;
+import { EcosystemVaultABI } from '@/lib/abis';
 
 // Contract address (update with deployed address)
 const ECOSYSTEM_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
@@ -102,7 +49,7 @@ export function useHeadhunterStats(): HeadhunterStats {
   
   const { data, isLoading, error } = useReadContract({
     address: ECOSYSTEM_VAULT_ADDRESS,
-    abi: ECOSYSTEM_VAULT_ABI,
+    abi: EcosystemVaultABI,
     functionName: 'getHeadhunterStats',
     args: address ? [address] : undefined,
     query: {
@@ -123,7 +70,9 @@ export function useHeadhunterStats(): HeadhunterStats {
     };
   }
 
-  const [currentYearPoints, estimatedRank, currentYearNumber, currentQuarterNumber, quarterEndsAt] = data;
+  // Type assertion for JSON ABI return value
+  const dataTuple = data as readonly [bigint, bigint, bigint, bigint, bigint];
+  const [currentYearPoints, estimatedRank, currentYearNumber, currentQuarterNumber, quarterEndsAt] = dataTuple;
 
   return {
     currentYearPoints: Number(currentYearPoints),
@@ -144,7 +93,7 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
 
   const { data, isLoading, error } = useReadContract({
     address: ECOSYSTEM_VAULT_ADDRESS,
-    abi: ECOSYSTEM_VAULT_ABI,
+    abi: EcosystemVaultABI,
     functionName: 'previewHeadhunterReward',
     args: address && year && quarter ? [year, quarter, address] : undefined,
     query: {
@@ -171,7 +120,9 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
     };
   }
 
-  const [referrerPoints, claimed, quarterEndedFlag, poolSnapshot] = data;
+  // Type assertion for JSON ABI return value
+  const rewardDataTuple = data as readonly [bigint, boolean, boolean, bigint];
+  const [referrerPoints, claimed, quarterEndedFlag, poolSnapshot] = rewardDataTuple;
   const rank = Number(referrerPoints) > 0 ? calculateRank(Number(referrerPoints)) : 0;
   
   // Calculate estimated reward
@@ -202,7 +153,7 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
 export function usePendingReferral(referred: `0x${string}` | undefined): PendingReferral {
   const { data, isLoading, error } = useReadContract({
     address: ECOSYSTEM_VAULT_ADDRESS,
-    abi: ECOSYSTEM_VAULT_ABI,
+    abi: EcosystemVaultABI,
     functionName: 'getPendingReferral',
     args: referred ? [referred] : undefined,
     query: {
@@ -220,7 +171,9 @@ export function usePendingReferral(referred: `0x${string}` | undefined): Pending
     };
   }
 
-  const [merchantReferrer, userReferrer, credited] = data;
+  // Type assertion for JSON ABI return value
+  const referralDataTuple = data as readonly [`0x${string}`, `0x${string}`, boolean];
+  const [merchantReferrer, userReferrer, credited] = referralDataTuple;
 
   return {
     merchantReferrer,
@@ -242,7 +195,7 @@ export function useClaimHeadhunterReward() {
     try {
       writeContract({
         address: ECOSYSTEM_VAULT_ADDRESS,
-        abi: ECOSYSTEM_VAULT_ABI,
+        abi: EcosystemVaultABI,
         functionName: 'claimHeadhunterReward',
         args: [year, quarter],
       });

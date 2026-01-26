@@ -1,0 +1,83 @@
+[
+  {
+    "name": "searchByRecoveryId",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [{ "name": "recoveryId", "type": "string" }],
+    "outputs": [{ "name": "vault", "type": "address" }]
+  },
+  {
+    "name": "searchByEmail",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [{ "name": "emailHash", "type": "bytes32" }],
+    "outputs": [{ "name": "vault", "type": "address" }]
+  },
+  {
+    "name": "searchByUsername",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [{ "name": "username", "type": "string" }],
+    "outputs": [{ "name": "vault", "type": "address" }]
+  },
+  {
+    "name": "searchByGuardian",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [{ "name": "guardian", "type": "address" }],
+    "outputs": [{ "name": "vaults", "type": "address[]" }]
+  },
+  {
+    "name": "setRecoveryId",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "vault", "type": "address" },
+      { "name": "recoveryId", "type": "string" }
+    ],
+    "outputs": []
+  },
+  {
+    "name": "setEmailRecovery",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "vault", "type": "address" },
+      { "name": "emailHash", "type": "bytes32" }
+    ],
+    "outputs": []
+  },
+  {
+    "name": "setUsername",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "vault", "type": "address" },
+      { "name": "username", "type": "string" }
+    ],
+    "outputs": []
+  },
+  {
+    "name": "getVaultInfo",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [{ "name": "vault", "type": "address" }],
+    "outputs": [
+      {
+        "name": "info",
+        "type": "tuple",
+        "components": [
+          { "name": "vault", "type": "address" },
+          { "name": "originalOwner", "type": "address" },
+          { "name": "createdAt", "type": "uint256" },
+          { "name": "lastActiveAt", "type": "uint256" },
+          { "name": "proofScore", "type": "uint256" },
+          { "name": "badgeCount", "type": "uint256" },
+          { "name": "hasGuardians", "type": "bool" },
+          { "name": "hasRecoveryId", "type": "bool" },
+          { "name": "isRecoverable", "type": "bool" }
+        ]
+      }
+    ]
+  }
+]

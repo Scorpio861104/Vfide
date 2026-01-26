@@ -1,0 +1,14 @@
+[
+  { "name": "createStream", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "payee", "type": "address" }, { "name": "token", "type": "address" }, { "name": "rate", "type": "uint256" }, { "name": "initialDeposit", "type": "uint256" }], "outputs": [{ "type": "uint256" }] },
+  { "name": "topUp", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "streamId", "type": "uint256" }, { "name": "amount", "type": "uint256" }], "outputs": [] },
+  { "name": "pauseStream", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "streamId", "type": "uint256" }], "outputs": [] },
+  { "name": "resumeStream", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "streamId", "type": "uint256" }], "outputs": [] },
+  { "name": "withdraw", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "streamId", "type": "uint256" }], "outputs": [] },
+  { "name": "cancelStream", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "streamId", "type": "uint256" }], "outputs": [] },
+  { "name": "claimable", "type": "function", "stateMutability": "view", "inputs": [{ "name": "streamId", "type": "uint256" }], "outputs": [{ "type": "uint256" }] },
+  { "name": "getStream", "type": "function", "stateMutability": "view", "inputs": [{ "name": "streamId", "type": "uint256" }], "outputs": [{ "name": "stream", "type": "tuple", "components": [{ "name": "payer", "type": "address" }, { "name": "payee", "type": "address" }, { "name": "token", "type": "address" }, { "name": "ratePerSecond", "type": "uint256" }, { "name": "startTime", "type": "uint256" }, { "name": "lastWithdrawTime", "type": "uint256" }, { "name": "depositBalance", "type": "uint256" }, { "name": "active", "type": "bool" }, { "name": "paused", "type": "bool" }, { "name": "pausedAt", "type": "uint256" }, { "name": "pausedAccrued", "type": "uint256" }] }] },
+  { "name": "getPayerStreams", "type": "function", "stateMutability": "view", "inputs": [{ "name": "payer", "type": "address" }], "outputs": [{ "type": "uint256[]" }] },
+  { "name": "getPayeeStreams", "type": "function", "stateMutability": "view", "inputs": [{ "name": "payee", "type": "address" }], "outputs": [{ "type": "uint256[]" }] },
+  { "name": "getStreamStatus", "type": "function", "stateMutability": "view", "inputs": [{ "name": "streamId", "type": "uint256" }], "outputs": [{ "name": "claimableAmount", "type": "uint256" }, { "name": "totalStreamed", "type": "uint256" }, { "name": "remainingDeposit", "type": "uint256" }, { "name": "isActive", "type": "bool" }, { "name": "isPaused", "type": "bool" }] },
+  { "name": "estimateEndTime", "type": "function", "stateMutability": "view", "inputs": [{ "name": "streamId", "type": "uint256" }], "outputs": [{ "type": "uint256" }] }
+]

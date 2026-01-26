@@ -1,6 +1,7 @@
 "use client";
 
 import { Footer } from "@/components/layout/Footer";
+import { DevReserveVestingABI } from "@/lib/abis";
 import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatUnits } from "viem";
@@ -18,85 +19,6 @@ import {
   Sparkles
 } from "lucide-react";
 
-// DevReserveVestingVault ABI
-const DEV_RESERVE_VESTING_ABI = [
-  {
-    name: 'vested',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'uint256' }]
-  },
-  {
-    name: 'claimable',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'uint256' }]
-  },
-  {
-    name: 'claimed',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'uint256' }]
-  },
-  {
-    name: 'claim',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [],
-    outputs: []
-  },
-  {
-    name: 'getVestingStatus',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [
-      { name: 'totalAllocation', type: 'uint256' },
-      { name: 'vestedAmount', type: 'uint256' },
-      { name: 'claimedAmount', type: 'uint256' },
-      { name: 'claimableNow', type: 'uint256' },
-      { name: 'currentMilestone', type: 'uint8' },
-      { name: 'nextMilestoneTime', type: 'uint64' },
-      { name: 'vestingComplete', type: 'bool' }
-    ]
-  },
-  {
-    name: 'getVestingSchedule',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [
-      {
-        name: 'milestones',
-        type: 'tuple[]',
-        components: [
-          { name: 'month', type: 'uint8' },
-          { name: 'percentage', type: 'uint8' },
-          { name: 'unlockTime', type: 'uint64' },
-          { name: 'unlocked', type: 'bool' }
-        ]
-      }
-    ]
-  },
-  {
-    name: 'claimsPaused',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'bool' }]
-  },
-  {
-    name: 'beneficiary',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'address' }]
-  }
-] as const;
-
 // Contract address from environment
 const DEV_RESERVE_VESTING_ADDRESS = (process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS || '0xFd26e4b02b55baA45A2421fFf0D47107CCE1D5E6') as `0x${string}`;
 
@@ -109,32 +31,39 @@ export default function VestingPage() {
   // Read vesting status
   const { data: vestingStatus } = useReadContract({
     address: DEV_RESERVE_VESTING_ADDRESS,
-    abi: DEV_RESERVE_VESTING_ABI,
+    abi: DevReserveVestingABI,
     functionName: 'getVestingStatus',
   });
 
   // Read vesting schedule
   const { data: vestingSchedule } = useReadContract({
     address: DEV_RESERVE_VESTING_ADDRESS,
-    abi: DEV_RESERVE_VESTING_ABI,
+    abi: DevReserveVestingABI,
     functionName: 'getVestingSchedule',
   });
 
   // Read if claims are paused
   const { data: claimsPaused } = useReadContract({
     address: DEV_RESERVE_VESTING_ADDRESS,
-    abi: DEV_RESERVE_VESTING_ABI,
+    abi: DevReserveVestingABI,
     functionName: 'claimsPaused',
   });
 
   // Read beneficiary
   const { data: beneficiary } = useReadContract({
     address: DEV_RESERVE_VESTING_ADDRESS,
-    abi: DEV_RESERVE_VESTING_ABI,
+    abi: DevReserveVestingABI,
     functionName: 'beneficiary',
   });
 
-  const isBeneficiary = address && beneficiary && address.toLowerCase() === beneficiary.toLowerCase();
+  const beneficiaryAddress = beneficiary as `0x${string}` | undefined;
+  const isBeneficiary = address && beneficiaryAddress && address.toLowerCase() === beneficiaryAddress.toLowerCase();
+
+  // Type assertions for JSON ABI return values
+  type VestingStatus = readonly [bigint, bigint, bigint, bigint, number, bigint, boolean];
+  const vestingStatusTuple = vestingStatus as VestingStatus | undefined;
+  const vestingScheduleTuple = vestingSchedule as readonly Milestone[] | undefined;
+  const claimsPausedBool = claimsPaused as boolean | undefined;
 
   const colorMap = {
     overview: { gradient: 'from-purple-500 to-violet-500', shadow: 'shadow-purple-500/25', border: 'border-purple-500/30', bg: 'bg-purple-500/20' },
@@ -180,7 +109,7 @@ export default function VestingPage() {
           </motion.div>
 
           {/* Stats Bar */}
-          {vestingStatus && (
+          {vestingStatusTuple && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -188,10 +117,10 @@ export default function VestingPage() {
               className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
             >
               {[
-                { icon: Lock, bgColor: 'bg-purple-500/20', iconColor: 'text-purple-400', value: formatUnits(vestingStatus[0], 18).split('.')[0], label: 'Total Allocation' },
-                { icon: Unlock, bgColor: 'bg-emerald-500/20', iconColor: 'text-emerald-400', value: formatUnits(vestingStatus[1], 18).split('.')[0], label: 'Vested' },
-                { icon: CheckCircle, bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400', value: formatUnits(vestingStatus[2], 18).split('.')[0], label: 'Claimed' },
-                { icon: TrendingUp, bgColor: 'bg-amber-500/20', iconColor: 'text-amber-400', value: formatUnits(vestingStatus[3], 18).split('.')[0], label: 'Claimable Now', highlight: true }
+                { icon: Lock, bgColor: 'bg-purple-500/20', iconColor: 'text-purple-400', value: formatUnits(vestingStatusTuple[0], 18).split('.')[0], label: 'Total Allocation' },
+                { icon: Unlock, bgColor: 'bg-emerald-500/20', iconColor: 'text-emerald-400', value: formatUnits(vestingStatusTuple[1], 18).split('.')[0], label: 'Vested' },
+                { icon: CheckCircle, bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400', value: formatUnits(vestingStatusTuple[2], 18).split('.')[0], label: 'Claimed' },
+                { icon: TrendingUp, bgColor: 'bg-amber-500/20', iconColor: 'text-amber-400', value: formatUnits(vestingStatusTuple[3], 18).split('.')[0], label: 'Claimable Now', highlight: true }
               ].map((stat, idx) => (
                 <motion.div
                   key={idx}
@@ -244,15 +173,15 @@ export default function VestingPage() {
 
           {/* Tab Content */}
           <AnimatePresence mode="wait">
-            {activeTab === 'overview' && <OverviewTab key="overview" vestingStatus={vestingStatus} />}
-            {activeTab === 'schedule' && <ScheduleTab key="schedule" schedule={vestingSchedule} />}
+            {activeTab === 'overview' && <OverviewTab key="overview" vestingStatus={vestingStatusTuple} />}
+            {activeTab === 'schedule' && <ScheduleTab key="schedule" schedule={vestingScheduleTuple} />}
             {activeTab === 'claim' && (
               <ClaimTab 
                 key="claim"
                 isConnected={isConnected} 
                 isBeneficiary={isBeneficiary || false}
-                claimable={vestingStatus?.[3]}
-                claimsPaused={claimsPaused || false}
+                claimable={vestingStatusTuple?.[3]}
+                claimsPaused={claimsPausedBool || false}
               />
             )}
           </AnimatePresence>
@@ -456,7 +385,7 @@ function ClaimTab({
   const handleClaim = () => {
     writeContract({
       address: DEV_RESERVE_VESTING_ADDRESS,
-      abi: DEV_RESERVE_VESTING_ABI,
+      abi: DevReserveVestingABI,
       functionName: 'claim',
     });
   };

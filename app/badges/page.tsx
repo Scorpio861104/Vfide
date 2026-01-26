@@ -1,6 +1,7 @@
 'use client'
 
 import { Footer } from '@/components/layout/Footer'
+import { VFIDEBadgeNFTABI, SeerABI } from '@/lib/abis'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
@@ -15,17 +16,6 @@ import {
   getAllBadges
 } from '@/lib/badge-registry'
 import { safeParseInt } from '@/lib/validation';
-
-// Contract ABIs
-const BADGE_NFT_ABI = [
-  { name: 'mintBadge', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'badge', type: 'bytes32' }], outputs: [{ name: 'tokenId', type: 'uint256' }] },
-  { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'owner', type: 'address' }], outputs: [{ type: 'uint256' }] },
-] as const;
-
-const SEER_ABI = [
-  { name: 'hasBadge', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }, { name: 'badge', type: 'bytes32' }], outputs: [{ type: 'bool' }] },
-  { name: 'score', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'uint256' }] },
-] as const;
 
 const BADGE_NFT_ADDRESS = (process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 const SEER_ADDRESS = (process.env.NEXT_PUBLIC_SEER_ADDRESS || '0xD22944d47bAD4Bd5fF1A366393c4bdbc9250fd8E') as `0x${string}`;
@@ -106,14 +96,14 @@ export default function BadgesPage() {
 
   const { data: nftBalance } = useReadContract({
     address: BADGE_NFT_ADDRESS,
-    abi: BADGE_NFT_ABI,
+    abi: VFIDEBadgeNFTABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
   });
 
   const { data: _proofScore } = useReadContract({
     address: SEER_ADDRESS,
-    abi: SEER_ABI,
+    abi: SeerABI,
     functionName: 'score',
     args: address ? [address] : undefined,
   });
@@ -124,7 +114,7 @@ export default function BadgesPage() {
     const badgeId = keccak256(toBytes(badgeName));
     writeContract({
       address: BADGE_NFT_ADDRESS,
-      abi: BADGE_NFT_ABI,
+      abi: VFIDEBadgeNFTABI,
       functionName: 'mintBadge',
       args: [badgeId],
     });

@@ -3,6 +3,7 @@
 // Rewards Management System (Howey-compliant - no staking)
 import { Footer } from '@/components/layout/Footer'
 import { safeParseFloat } from '@/lib/validation'
+import { DutyDistributorABI, PromotionalTreasuryABI } from '@/lib/abis'
 import { motion } from 'framer-motion'
 import {
     CheckCircle2,
@@ -22,25 +23,6 @@ import {
 import { useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
-
-// Contract ABIs
-// LIQUIDITY_INCENTIVES_ABI removed for Howey compliance - no staking contracts
-
-const DUTY_DISTRIBUTOR_ABI = [
-  { name: 'claimRewards', type: 'function', stateMutability: 'nonpayable', inputs: [], outputs: [] },
-  { name: 'points', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'uint256' }] },
-  { name: 'claimed', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'uint256' }] },
-  { name: 'rewardPerPoint', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
-] as const;
-
-const PROMOTIONAL_TREASURY_ABI = [
-  { name: 'claimEducationReward', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'milestone', type: 'string' }], outputs: [] },
-  { name: 'claimUserMilestone', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'milestone', type: 'string' }], outputs: [] },
-  { name: 'claimReferralTransactionBonus', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'referee', type: 'address' }], outputs: [] },
-  { name: 'getUserStats', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ name: 'educationClaimed', type: 'uint256' }, { name: 'referralClaimed', type: 'uint256' }, { name: 'milestoneClaimed', type: 'uint256' }, { name: 'merchantClaimed', type: 'uint256' }, { name: 'totalClaimed', type: 'uint256' }] },
-  { name: 'getRemainingBudgets', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: 'pioneer', type: 'uint256' }, { name: 'education', type: 'uint256' }, { name: 'referral', type: 'uint256' }, { name: 'milestone', type: 'uint256' }, { name: 'merchant', type: 'uint256' }] },
-  { name: 'isPromotionActive', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'bool' }] },
-] as const;
 
 // Contract addresses from environment (these contracts not deployed to testnet yet)
 // LIQUIDITY_INCENTIVES_ADDRESS removed for Howey compliance
@@ -65,7 +47,7 @@ export default function RewardsPage() {
   // Read duty points
   const { data: dutyPoints } = useReadContract({
     address: DUTY_DISTRIBUTOR_ADDRESS,
-    abi: DUTY_DISTRIBUTOR_ABI,
+    abi: DutyDistributorABI,
     functionName: 'points',
     args: address ? [address] : undefined,
     query: { enabled: IS_DUTY_DEPLOYED && !!address },
@@ -73,7 +55,7 @@ export default function RewardsPage() {
 
   const { data: dutyClaimed } = useReadContract({
     address: DUTY_DISTRIBUTOR_ADDRESS,
-    abi: DUTY_DISTRIBUTOR_ABI,
+    abi: DutyDistributorABI,
     functionName: 'claimed',
     args: address ? [address] : undefined,
     query: { enabled: IS_DUTY_DEPLOYED && !!address },
@@ -81,7 +63,7 @@ export default function RewardsPage() {
 
   const { data: rewardPerPoint } = useReadContract({
     address: DUTY_DISTRIBUTOR_ADDRESS,
-    abi: DUTY_DISTRIBUTOR_ABI,
+    abi: DutyDistributorABI,
     functionName: 'rewardPerPoint',
     query: { enabled: IS_DUTY_DEPLOYED },
   });
@@ -89,7 +71,7 @@ export default function RewardsPage() {
   // Read promotional stats
   const { data: userPromoStats } = useReadContract({
     address: PROMOTIONAL_TREASURY_ADDRESS,
-    abi: PROMOTIONAL_TREASURY_ABI,
+    abi: PromotionalTreasuryABI,
     functionName: 'getUserStats',
     args: address ? [address] : undefined,
     query: { enabled: IS_PROMO_DEPLOYED && !!address },
@@ -97,14 +79,14 @@ export default function RewardsPage() {
 
   const { data: _remainingBudgets } = useReadContract({
     address: PROMOTIONAL_TREASURY_ADDRESS,
-    abi: PROMOTIONAL_TREASURY_ABI,
+    abi: PromotionalTreasuryABI,
     functionName: 'getRemainingBudgets',
     query: { enabled: IS_PROMO_DEPLOYED },
   });
 
   const { data: _isPromoActive } = useReadContract({
     address: PROMOTIONAL_TREASURY_ADDRESS,
-    abi: PROMOTIONAL_TREASURY_ABI,
+    abi: PromotionalTreasuryABI,
     functionName: 'isPromotionActive',
     query: { enabled: IS_PROMO_DEPLOYED },
   });
@@ -112,20 +94,27 @@ export default function RewardsPage() {
   // LP pools read removed for Howey compliance
 
   // Calculate totals from contract data with safe conversions
-  const dutyClaimable = dutyPoints && rewardPerPoint && dutyClaimed
-    ? safeParseFloat(formatUnits((dutyPoints * rewardPerPoint) - dutyClaimed, 18), 0)
+  // Type assertions needed because JSON ABIs don't provide strict return types
+  const dutyPointsBigInt = dutyPoints as bigint | undefined;
+  const rewardPerPointBigInt = rewardPerPoint as bigint | undefined;
+  const dutyClaimedBigInt = dutyClaimed as bigint | undefined;
+  
+  const dutyClaimable = dutyPointsBigInt && rewardPerPointBigInt && dutyClaimedBigInt
+    ? safeParseFloat(formatUnits((dutyPointsBigInt * rewardPerPointBigInt) - dutyClaimedBigInt, 18), 0)
     : 0;
 
-  const promoTotalClaimed = userPromoStats ? safeParseFloat(formatUnits(userPromoStats[4], 18), 0) : 0;
+  // userPromoStats returns a tuple: [educationClaimed, referralClaimed, milestoneClaimed, merchantClaimed, totalClaimed]
+  const userPromoStatsTuple = userPromoStats as readonly [bigint, bigint, bigint, bigint, bigint] | undefined;
+  const promoTotalClaimed = userPromoStatsTuple ? safeParseFloat(formatUnits(userPromoStatsTuple[4], 18), 0) : 0;
 
   const totalClaimable = dutyClaimable; // Add other claimable amounts
-  const totalEarned = promoTotalClaimed + (dutyClaimed ? safeParseFloat(formatUnits(dutyClaimed, 18), 0) : 0);
+  const totalEarned = promoTotalClaimed + (dutyClaimedBigInt ? safeParseFloat(formatUnits(dutyClaimedBigInt, 18), 0) : 0);
 
   // Claim handlers
   const handleClaimDuty = () => {
     writeContract({
       address: DUTY_DISTRIBUTOR_ADDRESS,
-      abi: DUTY_DISTRIBUTOR_ABI,
+      abi: DutyDistributorABI,
       functionName: 'claimRewards',
     });
   };
@@ -133,7 +122,7 @@ export default function RewardsPage() {
   const _handleClaimEducation = (milestone: string) => {
     writeContract({
       address: PROMOTIONAL_TREASURY_ADDRESS,
-      abi: PROMOTIONAL_TREASURY_ABI,
+      abi: PromotionalTreasuryABI,
       functionName: 'claimEducationReward',
       args: [milestone],
     });
@@ -142,7 +131,7 @@ export default function RewardsPage() {
   const _handleClaimMilestone = (milestone: string) => {
     writeContract({
       address: PROMOTIONAL_TREASURY_ADDRESS,
-      abi: PROMOTIONAL_TREASURY_ABI,
+      abi: PromotionalTreasuryABI,
       functionName: 'claimUserMilestone',
       args: [milestone],
     });

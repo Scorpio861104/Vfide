@@ -1,0 +1,8 @@
+[
+  { "name": "claimEducationReward", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "milestone", "type": "string" }], "outputs": [] },
+  { "name": "claimUserMilestone", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "milestone", "type": "string" }], "outputs": [] },
+  { "name": "claimReferralTransactionBonus", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "referee", "type": "address" }], "outputs": [] },
+  { "name": "getUserStats", "type": "function", "stateMutability": "view", "inputs": [{ "name": "user", "type": "address" }], "outputs": [{ "name": "educationClaimed", "type": "uint256" }, { "name": "referralClaimed", "type": "uint256" }, { "name": "milestoneClaimed", "type": "uint256" }, { "name": "merchantClaimed", "type": "uint256" }, { "name": "totalClaimed", "type": "uint256" }] },
+  { "name": "getRemainingBudgets", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "name": "pioneer", "type": "uint256" }, { "name": "education", "type": "uint256" }, { "name": "referral", "type": "uint256" }, { "name": "milestone", "type": "uint256" }, { "name": "merchant", "type": "uint256" }] },
+  { "name": "isPromotionActive", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "bool" }] }
+]

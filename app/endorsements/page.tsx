@@ -8,37 +8,16 @@ import { Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { SeerABI } from '@/lib/abis'
 import { formatDistanceToNow } from 'date-fns'
 import { safeBigIntToNumber, ensureArray } from '@/lib/validation'
-
-const SEER_ENDORSEMENTS_ABI = [
-  {
-    name: 'getActiveEndorsements',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'subject', type: 'address' }],
-    outputs: [
-      { type: 'address[]' },
-      { type: 'uint16[]' },
-      { type: 'uint64[]' },
-      { type: 'uint64[]' },
-    ],
-  },
-  {
-    name: 'getEndorsementStats',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'subject', type: 'address' }],
-    outputs: [{ type: 'uint16' }, { type: 'uint16' }, { type: 'uint16' }],
-  },
-] as const;
 
 export default function EndorsementsPage() {
   const { address } = useAccount()
 
   const { data: endorsementData } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_ENDORSEMENTS_ABI,
+    abi: SeerABI,
     functionName: 'getActiveEndorsements',
     args: address ? [address] : undefined,
     query: { enabled: !!address },
@@ -46,7 +25,7 @@ export default function EndorsementsPage() {
 
   const { data: endorsementStats } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_ENDORSEMENTS_ABI,
+    abi: SeerABI,
     functionName: 'getEndorsementStats',
     args: address ? [address] : undefined,
     query: { enabled: !!address },

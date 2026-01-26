@@ -1,0 +1,52 @@
+[
+  {
+    "name": "getHeadhunterStats",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [{ "name": "referrer", "type": "address" }],
+    "outputs": [
+      { "name": "currentYearPoints", "type": "uint16" },
+      { "name": "estimatedRank", "type": "uint8" },
+      { "name": "currentYearNumber", "type": "uint256" },
+      { "name": "currentQuarterNumber", "type": "uint256" },
+      { "name": "quarterEndsAt", "type": "uint256" }
+    ]
+  },
+  {
+    "name": "previewHeadhunterReward",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "year", "type": "uint256" },
+      { "name": "quarter", "type": "uint256" },
+      { "name": "referrer", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "referrerPoints", "type": "uint16" },
+      { "name": "claimed", "type": "bool" },
+      { "name": "quarterEndedFlag", "type": "bool" },
+      { "name": "poolSnapshot", "type": "uint256" }
+    ]
+  },
+  {
+    "name": "claimHeadhunterReward",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "year", "type": "uint256" },
+      { "name": "quarter", "type": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "name": "getPendingReferral",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [{ "name": "referred", "type": "address" }],
+    "outputs": [
+      { "name": "merchantReferrer", "type": "address" },
+      { "name": "userReferrer", "type": "address" },
+      { "name": "credited", "type": "bool" }
+    ]
+  }
+]

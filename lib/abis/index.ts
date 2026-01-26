@@ -22,6 +22,19 @@ import MerchantPortalABI from './MerchantPortal.json'
 import ProofScoreBurnRouterABI from './ProofScoreBurnRouter.json'
 import ProofLedgerABI from './ProofLedger.json'
 import CommerceEscrowABI from './CommerceEscrow.json'
+// New consolidated ABIs
+import BurnRouterABI from './BurnRouter.json'
+import DutyDistributorABI from './DutyDistributor.json'
+import PromotionalTreasuryABI from './PromotionalTreasury.json'
+import CouncilElectionABI from './CouncilElection.json'
+import CouncilSalaryABI from './CouncilSalary.json'
+import SubscriptionManagerABI from './SubscriptionManager.json'
+import SanctumVaultABI from './SanctumVault.json'
+import DevReserveVestingABI from './DevReserveVesting.json'
+import PayrollManagerABI from './PayrollManager.json'
+import EcosystemVaultABI from './EcosystemVault.json'
+import VaultRegistryABI from './VaultRegistry.json'
+import ERC20ABI from './ERC20.json'
 
 // Runtime validation: Ensure ABIs are valid arrays
 function validateABI(abi: unknown, name: string): any[] {
@@ -56,6 +69,19 @@ validateABI(MerchantPortalABI, 'MerchantPortal');
 validateABI(ProofScoreBurnRouterABI, 'ProofScoreBurnRouter');
 validateABI(ProofLedgerABI, 'ProofLedger');
 validateABI(CommerceEscrowABI, 'CommerceEscrow');
+// Validate new ABIs
+validateABI(BurnRouterABI, 'BurnRouter');
+validateABI(DutyDistributorABI, 'DutyDistributor');
+validateABI(PromotionalTreasuryABI, 'PromotionalTreasury');
+validateABI(CouncilElectionABI, 'CouncilElection');
+validateABI(CouncilSalaryABI, 'CouncilSalary');
+validateABI(SubscriptionManagerABI, 'SubscriptionManager');
+validateABI(SanctumVaultABI, 'SanctumVault');
+validateABI(DevReserveVestingABI, 'DevReserveVesting');
+validateABI(PayrollManagerABI, 'PayrollManager');
+validateABI(EcosystemVaultABI, 'EcosystemVault');
+validateABI(VaultRegistryABI, 'VaultRegistry');
+validateABI(ERC20ABI, 'ERC20');
 
 // VaultHub ABI - use VaultInfrastructure for full features
 const VaultHubABI = VaultInfrastructureABI
@@ -83,4 +109,17 @@ export {
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
   CommerceEscrowABI,
+  // New consolidated exports
+  BurnRouterABI,
+  DutyDistributorABI,
+  PromotionalTreasuryABI,
+  CouncilElectionABI,
+  CouncilSalaryABI,
+  SubscriptionManagerABI,
+  SanctumVaultABI,
+  DevReserveVestingABI,
+  PayrollManagerABI,
+  EcosystemVaultABI,
+  VaultRegistryABI,
+  ERC20ABI,
 }

@@ -6,44 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Clock, CheckCircle, XCircle, AlertTriangle, PlayCircle, Loader2 } from "lucide-react";
 import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 import { useToast } from "@/components/ui/toast";
-
-const TIMELOCK_ABI = [
-  {
-    inputs: [],
-    name: "getQueuedTransactions",
-    outputs: [
-      { name: "ids", type: "bytes32[]" },
-      { name: "targets", type: "address[]" },
-      { name: "values", type: "uint256[]" },
-      { name: "etas", type: "uint64[]" },
-      { name: "done", type: "bool[]" },
-      { name: "expired", type: "bool[]" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "id", type: "bytes32" }],
-    name: "execute",
-    outputs: [{ name: "res", type: "bytes" }],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "id", type: "bytes32" }],
-    name: "cancel",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "delay",
-    outputs: [{ name: "", type: "uint64" }],
-    stateMutability: "view",
-    type: "function",
-  },
-] as const;
+import { DAOTimelockABI } from "@/lib/abis";
 
 function useNowSeconds(intervalMs: number = 1000) {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
@@ -72,14 +35,14 @@ export function TimelockQueue() {
   // Read queued transactions
   const { data: queueData, refetch: refetchQueue } = useReadContract({
     address: CONTRACT_ADDRESSES.DAOTimelock,
-    abi: TIMELOCK_ABI,
+    abi: DAOTimelockABI,
     functionName: "getQueuedTransactions",
   });
 
   // Read timelock delay
   const { data: delayData } = useReadContract({
     address: CONTRACT_ADDRESSES.DAOTimelock,
-    abi: TIMELOCK_ABI,
+    abi: DAOTimelockABI,
     functionName: "delay",
   });
 
@@ -119,21 +82,23 @@ export function TimelockQueue() {
     }
   }, [isCancelSuccess, toast, refetchQueue]);
 
-  const transactions: QueuedTransaction[] = queueData
-    ? (queueData[0] as readonly string[]).map((id, i) => ({
+  // Type assertion for JSON ABI return value
+  const queueDataTuple = queueData as readonly [readonly string[], readonly string[], readonly bigint[], readonly bigint[], readonly boolean[], readonly boolean[]] | undefined;
+  const transactions: QueuedTransaction[] = queueDataTuple
+    ? queueDataTuple[0].map((id, i) => ({
         id,
-        target: (queueData[1] as readonly string[])[i] ?? '',
-        value: (queueData[2] as readonly bigint[])[i] ?? BigInt(0),
-        eta: (queueData[3] as readonly bigint[])[i] ?? BigInt(0),
-        done: (queueData[4] as readonly boolean[])[i] ?? false,
-        expired: (queueData[5] as readonly boolean[])[i] ?? false,
+        target: queueDataTuple[1][i] ?? '',
+        value: queueDataTuple[2][i] ?? BigInt(0),
+        eta: queueDataTuple[3][i] ?? BigInt(0),
+        done: queueDataTuple[4][i] ?? false,
+        expired: queueDataTuple[5][i] ?? false,
       }))
     : [];
 
   const handleExecute = (txId: string) => {
     executeWrite({
       address: CONTRACT_ADDRESSES.DAOTimelock,
-      abi: TIMELOCK_ABI,
+      abi: DAOTimelockABI,
       functionName: "execute",
       args: [txId as `0x${string}`],
     });
@@ -142,7 +107,7 @@ export function TimelockQueue() {
   const handleCancel = (txId: string) => {
     cancelWrite({
       address: CONTRACT_ADDRESSES.DAOTimelock,
-      abi: TIMELOCK_ABI,
+      abi: DAOTimelockABI,
       functionName: "cancel",
       args: [txId as `0x${string}`],
     });

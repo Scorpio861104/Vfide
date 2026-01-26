@@ -1,6 +1,7 @@
 "use client";
 
 import { Footer } from "@/components/layout/Footer";
+import { CouncilElectionABI, CouncilSalaryABI } from "@/lib/abis";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,28 +18,6 @@ import {
   Crown,
   Sparkles
 } from "lucide-react";
-
-// CouncilElection ABI
-const COUNCIL_ELECTION_ABI = [
-  { name: 'register', type: 'function', stateMutability: 'nonpayable', inputs: [], outputs: [] },
-  { name: 'unregister', type: 'function', stateMutability: 'nonpayable', inputs: [], outputs: [] },
-  { name: 'getCandidates', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'address[]' }] },
-  { name: 'getCouncilMembers', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'address[]' }] },
-  { name: 'isCandidate', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'bool' }] },
-  { name: 'isCouncilMember', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'bool' }] },
-  { name: 'canRegister', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ name: 'eligible', type: 'bool' }, { name: 'reason', type: 'string' }] },
-  { name: 'canServeNextTerm', type: 'function', stateMutability: 'view', inputs: [{ name: 'member', type: 'address' }], outputs: [{ name: 'eligible', type: 'bool' }, { name: 'termsServed', type: 'uint8' }, { name: 'cooldownEnds', type: 'uint64' }] },
-  { name: 'getElectionStatus', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: 'councilSize', type: 'uint8' }, { name: 'minScore', type: 'uint16' }, { name: 'termLength', type: 'uint64' }, { name: 'refreshPeriod', type: 'uint64' }, { name: 'lastRefresh', type: 'uint64' }, { name: 'candidateCount', type: 'uint256' }] },
-  { name: 'getActualCouncilSize', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
-] as const;
-
-// CouncilSalary ABI
-const COUNCIL_SALARY_ABI = [
-  { name: 'claimSalary', type: 'function', stateMutability: 'nonpayable', inputs: [], outputs: [] },
-  { name: 'getClaimable', type: 'function', stateMutability: 'view', inputs: [{ name: 'member', type: 'address' }], outputs: [{ type: 'uint256' }] },
-  { name: 'salaryPerMonth', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
-  { name: 'lastClaim', type: 'function', stateMutability: 'view', inputs: [{ name: 'member', type: 'address' }], outputs: [{ type: 'uint256' }] },
-] as const;
 
 // Contract addresses from environment (CouncilElection and CouncilSalary not deployed to testnet yet)
 const COUNCIL_ELECTION_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
@@ -61,7 +40,7 @@ export default function CouncilPage() {
   // Read council members
   const { data: _councilMembers } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
-    abi: COUNCIL_ELECTION_ABI,
+    abi: CouncilElectionABI,
     functionName: 'getCouncilMembers',
     query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
   });
@@ -69,7 +48,7 @@ export default function CouncilPage() {
   // Read candidates
   const { data: _candidates } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
-    abi: COUNCIL_ELECTION_ABI,
+    abi: CouncilElectionABI,
     functionName: 'getCandidates',
     query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
   });
@@ -77,7 +56,7 @@ export default function CouncilPage() {
   // Read election status
   const { data: _electionStatus } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
-    abi: COUNCIL_ELECTION_ABI,
+    abi: CouncilElectionABI,
     functionName: 'getElectionStatus',
     query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
   });
@@ -85,7 +64,7 @@ export default function CouncilPage() {
   // Read if user is candidate
   const { data: _isCandidate } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
-    abi: COUNCIL_ELECTION_ABI,
+    abi: CouncilElectionABI,
     functionName: 'isCandidate',
     args: address ? [address] : undefined,
     query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED && !!address },
@@ -94,7 +73,7 @@ export default function CouncilPage() {
   // Read if user is council member
   const { data: _isCouncilMember } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
-    abi: COUNCIL_ELECTION_ABI,
+    abi: CouncilElectionABI,
     functionName: 'isCouncilMember',
     args: address ? [address] : undefined,
     query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED && !!address },
@@ -103,7 +82,7 @@ export default function CouncilPage() {
   // Read claimable salary
   const { data: _claimableSalary } = useReadContract({
     address: COUNCIL_SALARY_ADDRESS,
-    abi: COUNCIL_SALARY_ABI,
+    abi: CouncilSalaryABI,
     functionName: 'getClaimable',
     args: address ? [address] : undefined,
     query: { enabled: IS_COUNCIL_SALARY_DEPLOYED && !!address },
@@ -112,7 +91,7 @@ export default function CouncilPage() {
   // Read can register
   const { data: _canRegisterResult } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
-    abi: COUNCIL_ELECTION_ABI,
+    abi: CouncilElectionABI,
     functionName: 'canRegister',
     args: address ? [address] : undefined,
     query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED && !!address },
@@ -122,7 +101,7 @@ export default function CouncilPage() {
   const _handleRegister = () => {
     writeContract({
       address: COUNCIL_ELECTION_ADDRESS,
-      abi: COUNCIL_ELECTION_ABI,
+      abi: CouncilElectionABI,
       functionName: 'register',
     });
   };
@@ -130,7 +109,7 @@ export default function CouncilPage() {
   const _handleUnregister = () => {
     writeContract({
       address: COUNCIL_ELECTION_ADDRESS,
-      abi: COUNCIL_ELECTION_ABI,
+      abi: CouncilElectionABI,
       functionName: 'unregister',
     });
   };
@@ -138,7 +117,7 @@ export default function CouncilPage() {
   const _handleClaimSalary = () => {
     writeContract({
       address: COUNCIL_SALARY_ADDRESS,
-      abi: COUNCIL_SALARY_ABI,
+      abi: CouncilSalaryABI,
       functionName: 'claimSalary',
     });
   };

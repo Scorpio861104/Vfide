@@ -1,0 +1,12 @@
+[
+  { "name": "register", "type": "function", "stateMutability": "nonpayable", "inputs": [], "outputs": [] },
+  { "name": "unregister", "type": "function", "stateMutability": "nonpayable", "inputs": [], "outputs": [] },
+  { "name": "getCandidates", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "address[]" }] },
+  { "name": "getCouncilMembers", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "address[]" }] },
+  { "name": "isCandidate", "type": "function", "stateMutability": "view", "inputs": [{ "name": "user", "type": "address" }], "outputs": [{ "type": "bool" }] },
+  { "name": "isCouncilMember", "type": "function", "stateMutability": "view", "inputs": [{ "name": "user", "type": "address" }], "outputs": [{ "type": "bool" }] },
+  { "name": "canRegister", "type": "function", "stateMutability": "view", "inputs": [{ "name": "user", "type": "address" }], "outputs": [{ "name": "eligible", "type": "bool" }, { "name": "reason", "type": "string" }] },
+  { "name": "canServeNextTerm", "type": "function", "stateMutability": "view", "inputs": [{ "name": "member", "type": "address" }], "outputs": [{ "name": "eligible", "type": "bool" }, { "name": "termsServed", "type": "uint8" }, { "name": "cooldownEnds", "type": "uint64" }] },
+  { "name": "getElectionStatus", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "name": "councilSize", "type": "uint8" }, { "name": "minScore", "type": "uint16" }, { "name": "termLength", "type": "uint64" }, { "name": "refreshPeriod", "type": "uint64" }, { "name": "lastRefresh", "type": "uint64" }, { "name": "candidateCount", "type": "uint256" }] },
+  { "name": "getActualCouncilSize", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "uint256" }] }
+]

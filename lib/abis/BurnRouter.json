@@ -1,0 +1,65 @@
+[
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "baseBurnBps",
+    "outputs": [{ "type": "uint16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "baseSanctumBps",
+    "outputs": [{ "type": "uint16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "baseEcosystemBps",
+    "outputs": [{ "type": "uint16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "highTrustReduction",
+    "outputs": [{ "type": "uint16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lowTrustPenalty",
+    "outputs": [{ "type": "uint16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxTotalBps",
+    "outputs": [{ "type": "uint16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "name": "_baseBurnBps", "type": "uint16" },
+      { "name": "_baseSanctumBps", "type": "uint16" },
+      { "name": "_baseEcosystemBps", "type": "uint16" },
+      { "name": "_highTrustReduction", "type": "uint16" },
+      { "name": "_lowTrustPenalty", "type": "uint16" },
+      { "name": "_maxTotalBps", "type": "uint16" }
+    ],
+    "name": "setPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

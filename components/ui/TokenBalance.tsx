@@ -3,25 +3,9 @@
 import { useAccount, useReadContract, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
 import { Skeleton } from './Skeleton';
+import { VFIDETokenABI } from '@/lib/abis';
 
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS as `0x${string}`;
-
-const TOKEN_ABI = [
-  {
-    name: 'balanceOf',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'account', type: 'address' }],
-    outputs: [{ name: '', type: 'uint256' }],
-  },
-  {
-    name: 'decimals',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ name: '', type: 'uint8' }],
-  },
-] as const;
 
 interface TokenBalanceProps {
   className?: string;
@@ -47,7 +31,7 @@ export function TokenBalance({
   // VFIDE token balance
   const { data: tokenBalance, isLoading: tokenLoading } = useReadContract({
     address: TOKEN_ADDRESS,
-    abi: TOKEN_ABI,
+    abi: VFIDETokenABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {

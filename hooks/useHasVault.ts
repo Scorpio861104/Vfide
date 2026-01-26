@@ -2,17 +2,7 @@
 
 import { useAccount, useReadContract } from 'wagmi';
 import { useMemo } from 'react';
-
-// VaultHub ABI - just the functions we need
-const VAULT_HUB_ABI = [
-  {
-    name: 'userVaults',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'user', type: 'address' }],
-    outputs: [{ name: 'vault', type: 'address' }],
-  },
-] as const;
+import { VaultHubABI } from '@/lib/abis';
 
 // VaultHub address (from deployment)
 // Base: 0x090014f269f642656394E2FEaB038b92387B4db3
@@ -28,7 +18,7 @@ export function useHasVault() {
 
   const { data: vaultAddress, isLoading, isError, error } = useReadContract({
     address: VAULT_HUB_ADDRESS,
-    abi: VAULT_HUB_ABI,
+    abi: VaultHubABI,
     functionName: 'userVaults',
     args: address ? [address] : undefined,
     query: {

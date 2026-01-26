@@ -1,27 +1,13 @@
 "use client";
 
 import { Footer } from "@/components/layout/Footer";
+import { SanctumVaultABI } from "@/lib/abis";
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { parseUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Shield, DollarSign, Users, CheckCircle, Clock, AlertTriangle, ExternalLink, Sparkles } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
-
-// SanctumVault ABI
-const SANCTUM_VAULT_ABI = [
-  { name: 'deposit', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'note', type: 'string' }], outputs: [] },
-  { name: 'proposeDisbursement', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'charity', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'reason', type: 'string' }], outputs: [{ type: 'uint256' }] },
-  { name: 'approveDisbursement', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'proposalId', type: 'uint256' }], outputs: [] },
-  { name: 'executeDisbursement', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'proposalId', type: 'uint256' }], outputs: [] },
-  { name: 'getBalance', type: 'function', stateMutability: 'view', inputs: [{ name: 'token', type: 'address' }], outputs: [{ type: 'uint256' }] },
-  { name: 'getCharityInfo', type: 'function', stateMutability: 'view', inputs: [{ name: 'charity', type: 'address' }], outputs: [{ name: 'approved', type: 'bool' }, { name: 'name', type: 'string' }, { name: 'category', type: 'string' }, { name: 'totalReceived', type: 'uint256' }] },
-  { name: 'getCharityCount', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
-  { name: 'getDisbursement', type: 'function', stateMutability: 'view', inputs: [{ name: 'proposalId', type: 'uint256' }], outputs: [{ name: 'charity', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'reason', type: 'string' }, { name: 'approvalCount', type: 'uint8' }, { name: 'executed', type: 'bool' }, { name: 'rejected', type: 'bool' }, { name: 'proposedAt', type: 'uint256' }] },
-  { name: 'hasApproved', type: 'function', stateMutability: 'view', inputs: [{ name: 'proposalId', type: 'uint256' }, { name: 'approver', type: 'address' }], outputs: [{ type: 'bool' }] },
-  { name: 'approvedCharities', type: 'function', stateMutability: 'view', inputs: [{ name: 'index', type: 'uint256' }], outputs: [{ type: 'address' }] },
-  { name: '_nextProposalId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
-] as const;
 
 // SanctumVault not deployed on Base Sepolia testnet yet
 // Contract addresses will be populated after mainnet deployment
@@ -46,7 +32,7 @@ export default function SanctumPage() {
   // Read vault balance (only if deployed)
   const { data: _vaultBalance } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
-    abi: SANCTUM_VAULT_ABI,
+    abi: SanctumVaultABI,
     functionName: 'getBalance',
     args: [VFIDE_TOKEN_ADDRESS],
     query: { enabled: IS_SANCTUM_DEPLOYED },
@@ -55,7 +41,7 @@ export default function SanctumPage() {
   // Read charity count (only if deployed)
   const { data: _charityCount } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
-    abi: SANCTUM_VAULT_ABI,
+    abi: SanctumVaultABI,
     functionName: 'getCharityCount',
     query: { enabled: IS_SANCTUM_DEPLOYED },
   });
@@ -63,7 +49,7 @@ export default function SanctumPage() {
   // Read next proposal ID (to know how many exist)
   const { data: _nextProposalId } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
-    abi: SANCTUM_VAULT_ABI,
+    abi: SanctumVaultABI,
     functionName: '_nextProposalId',
     query: { enabled: IS_SANCTUM_DEPLOYED },
   });
@@ -74,7 +60,7 @@ export default function SanctumPage() {
     if (!donateAmount || safeParseFloat(donateAmount, 0) <= 0) return;
     writeContract({
       address: SANCTUM_VAULT_ADDRESS,
-      abi: SANCTUM_VAULT_ABI,
+      abi: SanctumVaultABI,
       functionName: 'deposit',
       args: [VFIDE_TOKEN_ADDRESS, parseUnits(donateAmount, 18), donateNote || 'Direct donation'],
     });
@@ -83,7 +69,7 @@ export default function SanctumPage() {
   const _handleApproveDisbursement = (proposalId: number) => {
     writeContract({
       address: SANCTUM_VAULT_ADDRESS,
-      abi: SANCTUM_VAULT_ABI,
+      abi: SanctumVaultABI,
       functionName: 'approveDisbursement',
       args: [BigInt(proposalId)],
     });
@@ -92,7 +78,7 @@ export default function SanctumPage() {
   const _handleExecuteDisbursement = (proposalId: number) => {
     writeContract({
       address: SANCTUM_VAULT_ADDRESS,
-      abi: SANCTUM_VAULT_ABI,
+      abi: SanctumVaultABI,
       functionName: 'executeDisbursement',
       args: [BigInt(proposalId)],
     });

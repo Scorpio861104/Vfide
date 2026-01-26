@@ -1,6 +1,7 @@
 "use client";
 
 import { Footer } from "@/components/layout/Footer";
+import { DAOABI } from "@/lib/abis";
 import { useState, useEffect, useMemo } from "react";
 import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
@@ -8,20 +9,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
 import { useCopyWithId } from "@/lib/hooks/useCopyToClipboard";
-
-// DAO Contract ABI
-const DAO_ABI = [
-  { name: 'propose', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'ptype', type: 'uint8' }, { name: 'target', type: 'address' }, { name: 'value', type: 'uint256' }, { name: 'data', type: 'bytes' }, { name: 'description', type: 'string' }], outputs: [{ type: 'uint256' }] },
-  { name: 'vote', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }, { name: 'support', type: 'bool' }], outputs: [] },
-  { name: 'finalize', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
-  { name: 'withdrawProposal', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
-  { name: 'getActiveProposals', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256[]' }] },
-  { name: 'getProposalDetails', type: 'function', stateMutability: 'view', inputs: [{ name: 'id', type: 'uint256' }], outputs: [{ name: 'ptype', type: 'uint8' }, { name: 'proposer', type: 'address' }, { name: 'target', type: 'address' }, { name: 'value', type: 'uint256' }, { name: 'data', type: 'bytes' }, { name: 'description', type: 'string' }, { name: 'forVotes', type: 'uint256' }, { name: 'againstVotes', type: 'uint256' }, { name: 'createdAt', type: 'uint256' }, { name: 'endsAt', type: 'uint256' }, { name: 'finalized', type: 'bool' }, { name: 'passed', type: 'bool' }] },
-  { name: 'hasVoted', type: 'function', stateMutability: 'view', inputs: [{ name: 'id', type: 'uint256' }, { name: 'voter', type: 'address' }], outputs: [{ type: 'bool' }] },
-  { name: 'getVotingPower', type: 'function', stateMutability: 'view', inputs: [{ name: 'voter', type: 'address' }], outputs: [{ name: 'basePower', type: 'uint256' }, { name: 'multiplier', type: 'uint256' }, { name: 'effectivePower', type: 'uint256' }, { name: 'fatiguePenalty', type: 'uint256' }] },
-  { name: 'isEligible', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'bool' }] },
-  { name: 'getVoterStats', type: 'function', stateMutability: 'view', inputs: [{ name: 'voter', type: 'address' }], outputs: [{ name: 'totalVotes', type: 'uint256' }, { name: 'forVotes', type: 'uint256' }, { name: 'againstVotes', type: 'uint256' }, { name: 'lastVoteTime', type: 'uint256' }] },
-] as const;
 
 // Contract address from environment
 const DAO_ADDRESS = (process.env.NEXT_PUBLIC_DAO_ADDRESS || '0xB75b08C5e42da4242e218C25B6A6B05d7BeF0728') as `0x${string}`;
@@ -102,14 +89,14 @@ export default function GovernancePage() {
   // Read active proposals (used in UI - keep for feature)
   useReadContract({
     address: DAO_ADDRESS,
-    abi: DAO_ABI,
+    abi: DAOABI,
     functionName: 'getActiveProposals',
   });
 
   // Read voting power (used in UI - keep for feature)
   useReadContract({
     address: DAO_ADDRESS,
-    abi: DAO_ABI,
+    abi: DAOABI,
     functionName: 'getVotingPower',
     args: address ? [address] : undefined,
   });
@@ -117,7 +104,7 @@ export default function GovernancePage() {
   // Read voter stats (used in UI - keep for feature)
   useReadContract({
     address: DAO_ADDRESS,
-    abi: DAO_ABI,
+    abi: DAOABI,
     functionName: 'getVoterStats',
     args: address ? [address] : undefined,
   });
@@ -125,7 +112,7 @@ export default function GovernancePage() {
   // Read eligibility (used in UI - keep for feature)
   useReadContract({
     address: DAO_ADDRESS,
-    abi: DAO_ABI,
+    abi: DAOABI,
     functionName: 'isEligible',
     args: address ? [address] : undefined,
   });
@@ -134,7 +121,7 @@ export default function GovernancePage() {
   const handleVote = (proposalId: number, support: boolean) => {
     writeContract({
       address: DAO_ADDRESS,
-      abi: DAO_ABI,
+      abi: DAOABI,
       functionName: 'vote',
       args: [BigInt(proposalId), support],
     });
@@ -145,7 +132,7 @@ export default function GovernancePage() {
   const handleFinalize = (proposalId: number) => {
     writeContract({
       address: DAO_ADDRESS,
-      abi: DAO_ABI,
+      abi: DAOABI,
       functionName: 'finalize',
       args: [BigInt(proposalId)],
     });
@@ -156,7 +143,7 @@ export default function GovernancePage() {
   const handlePropose = (ptype: number, target: string, value: bigint, data: string, description: string) => {
     writeContract({
       address: DAO_ADDRESS,
-      abi: DAO_ABI,
+      abi: DAOABI,
       functionName: 'propose',
       args: [ptype, target as `0x${string}`, value, data as `0x${string}`, description],
     });
@@ -2022,7 +2009,7 @@ function CreateProposalTab() {
     try {
       await writeContractAsync({
         address: DAO_ADDRESS,
-        abi: DAO_ABI,
+        abi: DAOABI,
         functionName: 'propose',
         args: [ptype, target, value, '0x' as `0x${string}`, `${sanitizedTitle}\n\n${sanitizedDescription}`],
       });

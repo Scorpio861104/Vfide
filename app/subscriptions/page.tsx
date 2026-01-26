@@ -1,22 +1,10 @@
 "use client";
 
 import { Footer } from "@/components/layout/Footer";
+import { SubscriptionManagerABI } from "@/lib/abis";
 import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-
-// SubscriptionManager ABI
-const SUBSCRIPTION_MANAGER_ABI = [
-  { name: 'createSubscription', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'merchant', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'interval', type: 'uint256' }, { name: 'maxPayments', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
-  { name: 'cancelSubscription', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'subId', type: 'uint256' }], outputs: [] },
-  { name: 'pauseSubscription', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'subId', type: 'uint256' }], outputs: [] },
-  { name: 'resumeSubscription', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'subId', type: 'uint256' }], outputs: [] },
-  { name: 'processPayment', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'subId', type: 'uint256' }], outputs: [] },
-  { name: 'getSubscription', type: 'function', stateMutability: 'view', inputs: [{ name: 'subId', type: 'uint256' }], outputs: [{ name: 'sub', type: 'tuple', components: [{ name: 'subscriber', type: 'address' }, { name: 'merchant', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'interval', type: 'uint256' }, { name: 'lastPayment', type: 'uint256' }, { name: 'paymentsRemaining', type: 'uint256' }, { name: 'totalPaid', type: 'uint256' }, { name: 'active', type: 'bool' }, { name: 'paused', type: 'bool' }] }] },
-  { name: 'getUserSubscriptions', type: 'function', stateMutability: 'view', inputs: [{ name: 'user', type: 'address' }], outputs: [{ type: 'uint256[]' }] },
-  { name: 'getNextPaymentInfo', type: 'function', stateMutability: 'view', inputs: [{ name: 'subId', type: 'uint256' }], outputs: [{ name: 'nextPaymentTime', type: 'uint256' }, { name: 'amount', type: 'uint256' }, { name: 'canProcess', type: 'bool' }] },
-  { name: 'canProcess', type: 'function', stateMutability: 'view', inputs: [{ name: 'subId', type: 'uint256' }], outputs: [{ name: 'processable', type: 'bool' }, { name: 'reason', type: 'string' }] },
-] as const;
 
 // Contract addresses (SubscriptionManager not deployed yet)
 const SUBSCRIPTION_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
@@ -46,7 +34,7 @@ export default function SubscriptionsPage() {
   // Read user subscriptions
   const { data: _userSubIds } = useReadContract({
     address: SUBSCRIPTION_MANAGER_ADDRESS,
-    abi: SUBSCRIPTION_MANAGER_ABI,
+    abi: SubscriptionManagerABI,
     functionName: 'getUserSubscriptions',
     args: address ? [address] : undefined,
     query: { enabled: IS_SUBSCRIPTION_DEPLOYED && !!address },
@@ -60,7 +48,7 @@ export default function SubscriptionsPage() {
     }
     writeContract({
       address: SUBSCRIPTION_MANAGER_ADDRESS,
-      abi: SUBSCRIPTION_MANAGER_ABI,
+      abi: SubscriptionManagerABI,
       functionName: 'pauseSubscription',
       args: [BigInt(id)],
     });
@@ -73,7 +61,7 @@ export default function SubscriptionsPage() {
     }
     writeContract({
       address: SUBSCRIPTION_MANAGER_ADDRESS,
-      abi: SUBSCRIPTION_MANAGER_ABI,
+      abi: SubscriptionManagerABI,
       functionName: 'resumeSubscription',
       args: [BigInt(id)],
     });
@@ -86,7 +74,7 @@ export default function SubscriptionsPage() {
     }
     writeContract({
       address: SUBSCRIPTION_MANAGER_ADDRESS,
-      abi: SUBSCRIPTION_MANAGER_ABI,
+      abi: SubscriptionManagerABI,
       functionName: 'cancelSubscription',
       args: [BigInt(id)],
     });

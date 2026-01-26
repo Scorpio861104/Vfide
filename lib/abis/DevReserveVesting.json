@@ -1,0 +1,77 @@
+[
+  {
+    "name": "vested",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [{ "type": "uint256" }]
+  },
+  {
+    "name": "claimable",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [{ "type": "uint256" }]
+  },
+  {
+    "name": "claimed",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [{ "type": "uint256" }]
+  },
+  {
+    "name": "claim",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "name": "getVestingStatus",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      { "name": "totalAllocation", "type": "uint256" },
+      { "name": "vestedAmount", "type": "uint256" },
+      { "name": "claimedAmount", "type": "uint256" },
+      { "name": "claimableNow", "type": "uint256" },
+      { "name": "currentMilestone", "type": "uint8" },
+      { "name": "nextMilestoneTime", "type": "uint64" },
+      { "name": "vestingComplete", "type": "bool" }
+    ]
+  },
+  {
+    "name": "getVestingSchedule",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "milestones",
+        "type": "tuple[]",
+        "components": [
+          { "name": "month", "type": "uint8" },
+          { "name": "percentage", "type": "uint8" },
+          { "name": "unlockTime", "type": "uint64" },
+          { "name": "unlocked", "type": "bool" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "claimsPaused",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [{ "type": "bool" }]
+  },
+  {
+    "name": "beneficiary",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [{ "type": "address" }]
+  }
+]

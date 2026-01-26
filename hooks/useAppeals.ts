@@ -3,30 +3,7 @@
 import { useMemo } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
-
-const SEER_APPEALS_ABI = [
-  {
-    name: 'appeals',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'subject', type: 'address' }],
-    outputs: [
-      { type: 'address' }, // requester
-      { type: 'string' },  // reason
-      { type: 'uint64' },  // timestamp
-      { type: 'bool' },    // resolved
-      { type: 'bool' },    // approved
-      { type: 'string' },  // resolution
-    ],
-  },
-  {
-    name: 'fileAppeal',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [{ name: 'reason', type: 'string' }],
-    outputs: [],
-  },
-] as const
+import { SeerABI } from '@/lib/abis'
 
 type AppealStatus = {
   hasAppeal: boolean
@@ -40,7 +17,7 @@ type AppealStatus = {
 export function useAppealStatus(address?: `0x${string}`) {
   const { data, isLoading, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_APPEALS_ABI,
+    abi: SeerABI,
     functionName: 'appeals',
     args: address ? [address] : undefined,
     query: { enabled: Boolean(address) },
@@ -75,7 +52,7 @@ export function useFileAppeal() {
     if (!address || !reason) return
     writeContract({
       address: CONTRACT_ADDRESSES.Seer,
-      abi: SEER_APPEALS_ABI,
+      abi: SeerABI,
       functionName: 'fileAppeal',
       args: [reason],
     })

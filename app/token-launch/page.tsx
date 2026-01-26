@@ -1,6 +1,7 @@
 "use client";
 
 import { Footer } from "@/components/layout/Footer";
+import { VFIDEPresaleABI, ERC20ABI } from "@/lib/abis";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useGasPrice } from "wagmi";
@@ -8,133 +9,6 @@ import { parseUnits, isAddress, formatEther } from "viem";
 import { Loader2, CheckCircle, Wallet, Fuel, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { safeParseFloat } from "@/lib/validation";
-
-// VFIDEPresale ABI
-const PRESALE_ABI = [
-  {
-    name: 'buyWithStable',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'stablecoin', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-      { name: 'tier', type: 'uint8' },
-      { name: 'lockPeriod', type: 'uint256' }
-    ],
-    outputs: []
-  },
-  {
-    name: 'buyWithStableReferral',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'stablecoin', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-      { name: 'tier', type: 'uint8' },
-      { name: 'lockPeriod', type: 'uint256' },
-      { name: 'referrer', type: 'address' }
-    ],
-    outputs: []
-  },
-  {
-    name: 'buyTokens',
-    type: 'function',
-    stateMutability: 'payable',
-    inputs: [{ name: 'lockPeriod', type: 'uint256' }],
-    outputs: []
-  },
-  {
-    name: 'buyTokensWithReferral',
-    type: 'function',
-    stateMutability: 'payable',
-    inputs: [
-      { name: 'lockPeriod', type: 'uint256' },
-      { name: 'referrer', type: 'address' }
-    ],
-    outputs: []
-  },
-  {
-    name: 'getTierRemaining',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'tier', type: 'uint8' }],
-    outputs: [{ type: 'uint256' }]
-  },
-  {
-    name: 'getTierPrice',
-    type: 'function',
-    stateMutability: 'pure',
-    inputs: [{ name: 'tier', type: 'uint8' }],
-    outputs: [{ type: 'uint256' }]
-  },
-  {
-    name: 'isTierAvailable',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'tier', type: 'uint8' }],
-    outputs: [{ type: 'bool' }]
-  },
-  {
-    name: 'calculateTokensFromUsdTier',
-    type: 'function',
-    stateMutability: 'pure',
-    inputs: [
-      { name: 'usdAmount', type: 'uint256' },
-      { name: 'tier', type: 'uint8' }
-    ],
-    outputs: [{ type: 'uint256' }]
-  },
-  {
-    name: 'getUserInfo',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'user', type: 'address' }],
-    outputs: [
-      { name: 'totalPurchased', type: 'uint256' },
-      { name: 'totalClaimed', type: 'uint256' },
-      { name: 'referralBonus', type: 'uint256' },
-      { name: 'purchaseCount', type: 'uint256' }
-    ]
-  },
-  {
-    name: 'claimAll',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [],
-    outputs: []
-  },
-  {
-    name: 'claimReferralBonus',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [],
-    outputs: []
-  }
-] as const;
-
-// ERC20 approve ABI
-const ERC20_ABI = [
-  {
-    name: 'approve',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'spender', type: 'address' },
-      { name: 'amount', type: 'uint256' }
-    ],
-    outputs: [{ type: 'bool' }]
-  },
-  {
-    name: 'allowance',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [
-      { name: 'owner', type: 'address' },
-      { name: 'spender', type: 'address' }
-    ],
-    outputs: [{ type: 'uint256' }]
-  }
-] as const;
 
 // Contract addresses from environment - Base Sepolia deployment
 const PRESALE_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '0x89aefb047B6CB2bB302FE2734DDa452985eF1658') as `0x${string}`;
@@ -172,21 +46,21 @@ export default function TokenLaunchPage() {
   // Read tier availability
   const { data: _foundingRemaining } = useReadContract({
     address: PRESALE_ADDRESS,
-    abi: PRESALE_ABI,
+    abi: VFIDEPresaleABI,
     functionName: 'getTierRemaining',
     args: [0],
   });
 
   const { data: _oathRemaining } = useReadContract({
     address: PRESALE_ADDRESS,
-    abi: PRESALE_ABI,
+    abi: VFIDEPresaleABI,
     functionName: 'getTierRemaining',
     args: [1],
   });
 
   const { data: _publicRemaining } = useReadContract({
     address: PRESALE_ADDRESS,
-    abi: PRESALE_ABI,
+    abi: VFIDEPresaleABI,
     functionName: 'getTierRemaining',
     args: [2],
   });
@@ -194,7 +68,7 @@ export default function TokenLaunchPage() {
   // Read user info
   const { data: _userInfo } = useReadContract({
     address: PRESALE_ADDRESS,
-    abi: PRESALE_ABI,
+    abi: VFIDEPresaleABI,
     functionName: 'getUserInfo',
     args: address ? [address] : undefined,
   });
@@ -203,7 +77,7 @@ export default function TokenLaunchPage() {
   // This will be enabled when USDC/USDT are deployed on mainnet
   const { data: allowance } = useReadContract({
     address: PRESALE_ADDRESS, // Placeholder - won't be used since stablecoins disabled
-    abi: ERC20_ABI,
+    abi: ERC20ABI,
     functionName: 'allowance',
     args: address ? [address, PRESALE_ADDRESS] : undefined,
     query: {
@@ -218,7 +92,7 @@ export default function TokenLaunchPage() {
     const amountWithBuffer = parseUnits((usdAmount * 1.01).toFixed(6), 6); // 1% buffer for rounding
     writeApprove({
       address: PRESALE_ADDRESS, // Will be replaced with actual stablecoin address
-      abi: ERC20_ABI,
+      abi: ERC20ABI,
       functionName: 'approve',
       args: [PRESALE_ADDRESS, amountWithBuffer],
     });
@@ -248,7 +122,7 @@ export default function TokenLaunchPage() {
       if (hasReferrer) {
         writeContract({
           address: PRESALE_ADDRESS,
-          abi: PRESALE_ABI,
+          abi: VFIDEPresaleABI,
           functionName: 'buyTokensWithReferral',
           args: [lockPeriod, referralCode as `0x${string}`],
           value: parseUnits('0.01', 18), // Placeholder - needs oracle
@@ -256,7 +130,7 @@ export default function TokenLaunchPage() {
       } else {
         writeContract({
           address: PRESALE_ADDRESS,
-          abi: PRESALE_ABI,
+          abi: VFIDEPresaleABI,
           functionName: 'buyTokens',
           args: [lockPeriod],
           value: parseUnits('0.01', 18), // Placeholder - needs oracle
@@ -269,14 +143,14 @@ export default function TokenLaunchPage() {
       if (hasReferrer) {
         writeContract({
           address: PRESALE_ADDRESS,
-          abi: PRESALE_ABI,
+          abi: VFIDEPresaleABI,
           functionName: 'buyWithStableReferral',
           args: [stablecoinPlaceholder, stableAmount, tier, lockPeriod, referralCode as `0x${string}`],
         });
       } else {
         writeContract({
           address: PRESALE_ADDRESS,
-          abi: PRESALE_ABI,
+          abi: VFIDEPresaleABI,
           functionName: 'buyWithStable',
           args: [stablecoinPlaceholder, stableAmount, tier, lockPeriod],
         });
@@ -368,8 +242,9 @@ export default function TokenLaunchPage() {
     return numAmount * tiers[selectedTier].price;
   };
 
-  const needsApproval = paymentMethod !== 'eth' && allowance !== undefined && 
-    calculateTotal() > 0 && allowance < parseUnits(calculateTotal().toFixed(6), 6);
+  const allowanceBigInt = allowance as bigint | undefined;
+  const needsApproval = paymentMethod !== 'eth' && allowanceBigInt !== undefined && 
+    calculateTotal() > 0 && allowanceBigInt < parseUnits(calculateTotal().toFixed(6), 6);
 
   return (
     <>

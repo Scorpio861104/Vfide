@@ -1,0 +1,6 @@
+[
+  { "name": "claimSalary", "type": "function", "stateMutability": "nonpayable", "inputs": [], "outputs": [] },
+  { "name": "getClaimable", "type": "function", "stateMutability": "view", "inputs": [{ "name": "member", "type": "address" }], "outputs": [{ "type": "uint256" }] },
+  { "name": "salaryPerMonth", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "uint256" }] },
+  { "name": "lastClaim", "type": "function", "stateMutability": "view", "inputs": [{ "name": "member", "type": "address" }], "outputs": [{ "type": "uint256" }] }
+]

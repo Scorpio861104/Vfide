@@ -1,0 +1,6 @@
+[
+  { "name": "claimRewards", "type": "function", "stateMutability": "nonpayable", "inputs": [], "outputs": [] },
+  { "name": "points", "type": "function", "stateMutability": "view", "inputs": [{ "name": "user", "type": "address" }], "outputs": [{ "type": "uint256" }] },
+  { "name": "claimed", "type": "function", "stateMutability": "view", "inputs": [{ "name": "user", "type": "address" }], "outputs": [{ "type": "uint256" }] },
+  { "name": "rewardPerPoint", "type": "function", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "uint256" }] }
+]
