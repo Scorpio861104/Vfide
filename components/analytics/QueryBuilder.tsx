@@ -105,7 +105,7 @@ export function QueryBuilder({
             }
             return false;
           case 'in':
-            return Array.isArray(filter.value) && filter.value.includes(fieldValue);
+            return Array.isArray(filter.value) && (filter.value as Array<string | number | boolean>).includes(fieldValue as string | number | boolean);
           default:
             return true;
         }
