@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate file extension
+    // Validate file extension first (before sanitization)
     const lowerFilename = filename.toLowerCase();
     const hasValidExtension = ALLOWED_EXTENSIONS.some(ext => lowerFilename.endsWith(ext));
     if (!hasValidExtension) {
@@ -65,14 +65,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Sanitize filename to prevent path traversal
-    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
-    if (sanitizedFilename.includes('..') || sanitizedFilename.startsWith('/')) {
+    // Check for path traversal before sanitization
+    if (filename.includes('..') || filename.startsWith('/') || filename.includes('\\')) {
       return NextResponse.json(
-        { error: 'Invalid filename' },
+        { error: 'Invalid filename - path traversal detected' },
         { status: 400 }
       );
     }
+
+    // Sanitize filename to prevent path traversal
+    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
 
     const result = await query(
       `INSERT INTO attachments (user_id, filename, file_type, file_size, url, uploaded_at)

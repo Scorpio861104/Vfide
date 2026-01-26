@@ -25,6 +25,22 @@ export function Leaderboard() {
   const [category, setCategory] = useState<LeaderboardCategory>('xp');
   const [timeRange, _setTimeRange] = useState<'all' | 'week' | 'month'>('all');
 
+  // Handle keyboard navigation for tabs
+  const handleTabKeyDown = (e: React.KeyboardEvent, targetCategory: LeaderboardCategory) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setCategory(targetCategory);
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const categories: LeaderboardCategory[] = ['xp', 'level', 'achievements', 'friends'];
+      const currentIndex = categories.indexOf(category);
+      const newIndex = e.key === 'ArrowRight' 
+        ? (currentIndex + 1) % categories.length
+        : (currentIndex - 1 + categories.length) % categories.length;
+      setCategory(categories[newIndex]);
+    }
+  };
+
   // Load leaderboard data once
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -117,7 +133,7 @@ export function Leaderboard() {
         <div className="flex flex-wrap gap-2" role="tablist" aria-label="Leaderboard categories">
           <button
             onClick={() => setCategory('xp')}
-            onKeyDown={(e) => e.key === 'Enter' && setCategory('xp')}
+            onKeyDown={(e) => handleTabKeyDown(e, 'xp')}
             role="tab"
             aria-selected={category === 'xp'}
             aria-label="Sort by XP"
@@ -133,7 +149,7 @@ export function Leaderboard() {
           </button>
           <button
             onClick={() => setCategory('level')}
-            onKeyDown={(e) => e.key === 'Enter' && setCategory('level')}
+            onKeyDown={(e) => handleTabKeyDown(e, 'level')}
             role="tab"
             aria-selected={category === 'level'}
             aria-label="Sort by level"
@@ -149,6 +165,11 @@ export function Leaderboard() {
           </button>
           <button
             onClick={() => setCategory('achievements')}
+            onKeyDown={(e) => handleTabKeyDown(e, 'achievements')}
+            role="tab"
+            aria-selected={category === 'achievements'}
+            aria-label="Sort by achievements"
+            tabIndex={category === 'achievements' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'achievements'
                 ? 'bg-cyan-400 text-zinc-950'
@@ -160,6 +181,11 @@ export function Leaderboard() {
           </button>
           <button
             onClick={() => setCategory('friends')}
+            onKeyDown={(e) => handleTabKeyDown(e, 'friends')}
+            role="tab"
+            aria-selected={category === 'friends'}
+            aria-label="Sort by friends"
+            tabIndex={category === 'friends' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'friends'
                 ? 'bg-cyan-400 text-zinc-950'
