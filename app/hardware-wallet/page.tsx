@@ -14,13 +14,10 @@ import {
   ArrowLeft,
   Fingerprint,
   Lock,
-  Smartphone,
-  Monitor,
   RefreshCw,
   ExternalLink,
   HelpCircle,
   Zap,
-  Key,
   Settings,
   FileCheck,
   Download,
@@ -91,15 +88,15 @@ const SETUP_STEPS = [
 export default function HardwareWalletPage() {
   const { address, isConnected, connector } = useAccount();
   const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
+  const { disconnect: _disconnect } = useDisconnect();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedWallet, setSelectedWallet] = useState<WalletBrand | null>(null);
   const [connectionType, setConnectionType] = useState<'usb' | 'bluetooth'>('usb');
   const [firmwareVerified, setFirmwareVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [deviceConnected, setDeviceConnected] = useState(false);
-  const [setupComplete, setSetupComplete] = useState(false);
+  const [_deviceConnected, setDeviceConnected] = useState(false);
+  const [_setupComplete, setSetupComplete] = useState(false);
   
   // Preferences
   const [autoLock, setAutoLock] = useState(true);
@@ -108,8 +105,8 @@ export default function HardwareWalletPage() {
 
   // Check if hardware wallet is already connected
   useEffect(() => {
-    if (isConnected && connector?.name) {
-      const connectorName = connector.name.toLowerCase();
+    if (isConnected && connector) {
+      const connectorName = (connector.name || '').toLowerCase();
       if (connectorName.includes('ledger')) {
         setSelectedWallet('ledger');
         setDeviceConnected(true);
@@ -146,7 +143,10 @@ export default function HardwareWalletPage() {
     
     if (hwConnectors.length > 0) {
       try {
-        await connect({ connector: hwConnectors[0] });
+        const connector = hwConnectors[0];
+        if (connector) {
+          await connect({ connector });
+        }
         setDeviceConnected(true);
         setCurrentStep(3);
       } catch (error) {

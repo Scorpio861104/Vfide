@@ -3,7 +3,7 @@ import { verifyMessage } from 'viem';
 import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, authSchema } from '@/lib/auth/validation';
-import { setAuthCookie, getAuthCookie, clearAuthCookies } from '@/lib/auth/cookieAuth';
+import { setAuthCookie, getAuthCookie } from '@/lib/auth/cookieAuth';
 
 /**
  * POST /api/auth
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify JWT token
-    const payload = verifyToken(token);
+    const payload = await verifyToken(token);
 
     if (!payload) {
       return NextResponse.json(

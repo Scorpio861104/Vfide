@@ -381,14 +381,19 @@ export function checkAlertThresholds(metrics: DashboardMetrics): Array<{
   current: number;
   severity: 'warning' | 'critical';
 }> {
-  const alerts = [];
+  const alerts: Array<{
+    metric: string;
+    threshold: number;
+    current: number;
+    severity: 'warning' | 'critical';
+  }> = [];
 
   if (metrics.errorRate > ALERT_THRESHOLDS.errorRate) {
     alerts.push({
       metric: 'Error Rate',
       threshold: ALERT_THRESHOLDS.errorRate,
       current: metrics.errorRate,
-      severity: metrics.errorRate > ALERT_THRESHOLDS.errorRate * 2 ? 'critical' : 'warning',
+      severity: (metrics.errorRate > ALERT_THRESHOLDS.errorRate * 2 ? 'critical' : 'warning') as 'warning' | 'critical',
     });
   }
 
@@ -397,7 +402,7 @@ export function checkAlertThresholds(metrics: DashboardMetrics): Array<{
       metric: 'Response Time',
       threshold: ALERT_THRESHOLDS.responseTime,
       current: metrics.avgResponseTime,
-      severity: metrics.avgResponseTime > ALERT_THRESHOLDS.responseTime * 2 ? 'critical' : 'warning',
+      severity: (metrics.avgResponseTime > ALERT_THRESHOLDS.responseTime * 2 ? 'critical' : 'warning') as 'warning' | 'critical',
     });
   }
 

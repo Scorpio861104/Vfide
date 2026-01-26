@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   // Require admin access
-  const authResult = requireAdmin(request);
+  const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }
@@ -195,7 +195,7 @@ export async function DELETE(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   // Require admin access
-  const authResult = requireAdmin(request);
+  const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }

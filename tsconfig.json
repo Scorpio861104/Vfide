@@ -51,6 +51,8 @@
     "**/*.stories.tsx",
     "**/*.stories.mdx",
     "config/**",
+    "contracts/**",
+    "hardhat.config.ts",
     "playwright.config.ts",
     "playwright/**",
     "vitest.config.ts",

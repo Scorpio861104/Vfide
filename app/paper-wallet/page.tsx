@@ -64,7 +64,7 @@ const generateMnemonic = (): string => {
   const words: string[] = [];
   for (let i = 0; i < 24; i++) {
     const randomIndex = Math.floor(Math.random() * WORDLIST.length);
-    words.push(WORDLIST[randomIndex]);
+    words.push(WORDLIST[randomIndex] || '');
   }
   return words.join(' ');
 };
@@ -87,7 +87,7 @@ const QRCodeDisplay = ({ data, size = 200, label }: { data: string; size?: numbe
   const cellSize = size / gridSize;
   
   // Generate deterministic pattern from data
-  const pattern = [];
+  const pattern: boolean[] = [];
   for (let i = 0; i < gridSize * gridSize; i++) {
     const charCode = data.charCodeAt(i % data.length);
     pattern.push((charCode + i) % 3 === 0);
@@ -180,7 +180,7 @@ export default function PaperWalletPage() {
       // Pick 3 random words for verification
       const words = mnemonic.split(' ');
       const indices = [4, 12, 20]; // Word positions to verify
-      setVerificationWords(indices.map(i => words[i]));
+      setVerificationWords(indices.map(i => words[i] || ''));
       
       setIsGenerating(false);
       setStep('display');
@@ -213,9 +213,10 @@ export default function PaperWalletPage() {
     
     const words = wallet.mnemonic.split(' ');
     const indices = [4, 12, 20];
-    const correct = indices.every((idx, i) => 
-      userVerification[i].toLowerCase().trim() === words[idx].toLowerCase()
-    );
+    const correct = indices.every((idx, i) => {
+      const word = words[idx];
+      return word && userVerification[i]?.toLowerCase().trim() === word.toLowerCase();
+    });
     
     if (correct) {
       setStep('verify');
@@ -236,7 +237,7 @@ export default function PaperWalletPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-zinc-900 to-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
       <style jsx global>{`
         @media print {
           body * {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient, http, parseEther, formatEther, isAddress } from 'viem';
+import { createPublicClient, http, parseEther, formatEther } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
@@ -36,7 +36,7 @@ interface FeeCalculation {
   };
 }
 
-function calculateTotalAmount(
+function _calculateTotalAmount(
   amount: string,
   burnFeeBps: number,
   networkFeeInEth: string,

@@ -24,14 +24,18 @@ function getRelativeLuminance(color: string): number {
   const rgb = hexToRgb(color);
   if (!rgb) return 0;
   
-  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map(val => {
+  const r = rgb.r;
+  const g = rgb.g;
+  const b = rgb.b;
+  
+  const [rNorm, gNorm, bNorm] = [r, g, b].map(val => {
     const normalized = val / 255;
     return normalized <= 0.03928
       ? normalized / 12.92
       : Math.pow((normalized + 0.055) / 1.055, 2.4);
   });
   
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return 0.2126 * (rNorm || 0) + 0.7152 * (gNorm || 0) + 0.0722 * (bNorm || 0);
 }
 
 /**
@@ -39,7 +43,7 @@ function getRelativeLuminance(color: string): number {
  */
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
+  return result && result[1] && result[2] && result[3] ? {
     r: parseInt(result[1], 16),
     g: parseInt(result[2], 16),
     b: parseInt(result[3], 16)

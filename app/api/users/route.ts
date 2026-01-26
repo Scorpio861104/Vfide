@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Use standardized pagination parsing
-    const { page, limit } = parsePaginationParams(request);
+    const { page = 1, limit = 10 } = parsePaginationParams(request);
     const offset = (page - 1) * limit;
     const fields = parseFieldsParam(request);
     
@@ -75,11 +75,11 @@ export async function GET(request: NextRequest) {
     
     // Apply field filtering if requested
     const filteredUsers = fields 
-      ? result.rows.map(user => filterFields(user as Record<string, unknown>, fields))
+      ? result.rows.map(user => filterFields(user as unknown as Record<string, unknown>, fields))
       : result.rows;
     
     // Create standardized paginated response
-    const paginatedData = createPaginatedResponse(filteredUsers, total, page, limit);
+    const paginatedData = createPaginatedResponse(filteredUsers as any, total, page, limit);
     
     // Track API call for monitoring
     trackApiCallSimple('/api/users', 'GET', 200, Date.now() - startTime);

@@ -15,6 +15,13 @@ const REQUIRED_ENV_VARS = {
  * Throws error if critical configuration is missing
  */
 export function validateEnvironment(): void {
+  // Skip validation during build phase
+  // During build, pages are statically generated and env vars will be set in production
+  if (typeof window === 'undefined' && process.env.NEXT_PHASE === 'phase-production-build') {
+    console.log('⏭️  Skipping environment validation during build phase');
+    return;
+  }
+
   const errors: string[] = [];
 
   // Check required environment variables
@@ -54,15 +61,16 @@ export function validateEnvironment(): void {
     console.error('❌ Environment validation failed:');
     errors.forEach(error => console.error(`  - ${error}`));
     
-    if (process.env.NODE_ENV === 'production') {
-      // In production, crash the app
+    // Only crash in production runtime, not during build
+    if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PHASE) {
+      // In production runtime, crash the app
       throw new Error(
         'Environment validation failed. Please check your environment variables. ' +
         'See console output for details.'
       );
     } else {
-      // In development, just warn
-      console.warn('⚠️  The application will continue in development mode, but these issues should be fixed.');
+      // In development or build phase, just warn
+      console.warn('⚠️  The application will continue, but these issues should be fixed for production.');
     }
   } else {
     console.log('✅ Environment validation passed');

@@ -95,8 +95,7 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
   // Memory measurement
   useEffect(() => {
     const measureMemory = () => {
-      // @ts-expect-error - memory is a non-standard API
-      const memoryInfo = performance?.memory;
+      const memoryInfo = (performance as any)?.memory;
       if (memoryInfo) {
         setMetrics((prev) => ({
           ...prev,
@@ -120,8 +119,7 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
   // Network info
   useEffect(() => {
     const updateNetworkInfo = () => {
-      // @ts-expect-error - connection is a non-standard API
-      const connection = navigator?.connection;
+      const connection = (navigator as any)?.connection;
       if (connection) {
         setMetrics((prev) => ({
           ...prev,
@@ -136,12 +134,10 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     };
 
     updateNetworkInfo();
-    // @ts-expect-error - connection is a non-standard API
-    navigator?.connection?.addEventListener('change', updateNetworkInfo);
+    (navigator as any)?.connection?.addEventListener('change', updateNetworkInfo);
 
     return () => {
-      // @ts-expect-error - connection is a non-standard API
-      navigator?.connection?.removeEventListener('change', updateNetworkInfo);
+      (navigator as any)?.connection?.removeEventListener('change', updateNetworkInfo);
     };
   }, []);
 
@@ -191,10 +187,9 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     let clsValue = 0;
     const clsObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        // @ts-expect-error - hadRecentInput is available on layout-shift entries
-        if (!entry.hadRecentInput) {
-          // @ts-expect-error - value is available on layout-shift entries
-          clsValue += entry.value;
+        const layoutShiftEntry = entry as any;
+        if (!layoutShiftEntry.hadRecentInput) {
+          clsValue += layoutShiftEntry.value;
           setMetrics((prev) => ({ ...prev, cls: Math.round(clsValue * 1000) / 1000 }));
         }
       }
@@ -209,8 +204,8 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     // FID Observer
     const fidObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        // @ts-expect-error - processingStart is available on first-input entries
-        const fid = entry.processingStart - entry.startTime;
+        const firstInputEntry = entry as any;
+        const fid = firstInputEntry.processingStart - entry.startTime;
         setMetrics((prev) => ({ ...prev, fid: Math.round(fid) }));
       }
     });

@@ -30,6 +30,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import Link from 'next/link';
 import { MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
 import { responsiveGrids } from '@/lib/mobile';
 
@@ -445,9 +446,9 @@ export default function EnhancedDashboardAnalytics() {
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             Transaction History
           </h3>
-          <a href="/explorer" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+          <Link href="/explorer" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
             View all
-          </a>
+          </Link>
         </div>
 
         {/* Filters */}

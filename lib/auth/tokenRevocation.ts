@@ -5,7 +5,6 @@
  * Implements a secure token blacklist to handle compromised tokens
  */
 
-import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 
 // Initialize Redis client (will use environment variables)

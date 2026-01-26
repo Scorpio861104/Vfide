@@ -1,4 +1,5 @@
 // Mock for uncrypto module
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const crypto = require('crypto');
 
 module.exports = {

@@ -24,7 +24,6 @@
  * @version 4.0.0
  */
 
-import { keccak256, toBytes } from 'viem';
 import React from 'react';
 
 // ============================================================================
@@ -219,7 +218,7 @@ export async function generateDilithiumKeyPair(): Promise<{
   privateKey: Uint8Array;
 }> {
   const dilithium = await getDilithium();
-  const keyPair = await dilithium.newKeyPair();
+  const keyPair = await (dilithium as any).newKeyPair();
   return {
     publicKey: keyPair.getPublicKey(),
     privateKey: keyPair.getSecretKey()
@@ -234,7 +233,7 @@ export async function dilithiumSign(
   privateKey: Uint8Array
 ): Promise<Uint8Array> {
   const dilithium = await getDilithium();
-  return dilithium.sign(message, privateKey);
+  return (dilithium as any).sign(message, privateKey);
 }
 
 /**
@@ -247,7 +246,7 @@ export async function dilithiumVerify(
 ): Promise<boolean> {
   const dilithium = await getDilithium();
   try {
-    return dilithium.verify(message, signature, publicKey);
+    return (dilithium as any).verify(message, signature, publicKey);
   } catch {
     return false;
   }
@@ -297,13 +296,26 @@ async function exportPrivateKeyPkcs8(key: CryptoKey): Promise<Uint8Array> {
 }
 
 /**
+ * Convert Uint8Array to ArrayBuffer for Web Crypto API
+ */
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  if (bytes.buffer instanceof ArrayBuffer) {
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  }
+  // Fallback: copy to new ArrayBuffer
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+}
+
+/**
  * Import raw public key for ECDH
  */
 async function importPublicKeyECDH(rawKey: Uint8Array): Promise<CryptoKey> {
   const subtle = getSubtleCrypto();
   return subtle.importKey(
     'raw',
-    rawKey.buffer,
+    toArrayBuffer(rawKey),
     { name: 'ECDH', namedCurve: 'P-256' },
     true,
     []
@@ -317,7 +329,7 @@ async function importPrivateKeyECDH(pkcs8Key: Uint8Array): Promise<CryptoKey> {
   const subtle = getSubtleCrypto();
   return subtle.importKey(
     'pkcs8',
-    pkcs8Key.buffer,
+    toArrayBuffer(pkcs8Key),
     { name: 'ECDH', namedCurve: 'P-256' },
     true,
     ['deriveKey', 'deriveBits']
@@ -347,7 +359,7 @@ async function deriveAESKey(sharedSecret: Uint8Array): Promise<CryptoKey> {
   const subtle = getSubtleCrypto();
   const keyMaterial = await subtle.importKey(
     'raw',
-    sharedSecret,
+    toArrayBuffer(sharedSecret),
     'HKDF',
     false,
     ['deriveKey']
@@ -418,7 +430,7 @@ export async function deriveHybridKeyPair(
     `VFIDE_PQ_SEED_V4:${walletAddress.toLowerCase()}:${signature}`
   );
   const seedHash = await subtle.digest('SHA-512', seedInput);
-  const seed = new Uint8Array(seedHash);
+  const _seed = new Uint8Array(seedHash);
   
   // For deterministic key generation, we use the seed to generate keys
   // In a production system, you might want to use a proper KDF
@@ -508,7 +520,7 @@ export async function hybridEncrypt(
   const iv = getRandomBytes(12);
   const messageBytes = new TextEncoder().encode(message);
   const ciphertext = await subtle.encrypt(
-    { name: 'AES-GCM', iv: iv.buffer },
+    { name: 'AES-GCM', iv: toArrayBuffer(iv) },
     aesKey,
     messageBytes
   );
@@ -568,9 +580,9 @@ export async function hybridDecrypt(
   const ciphertext = hexToBytes(payload.ciphertext);
   
   const decrypted = await subtle.decrypt(
-    { name: 'AES-GCM', iv: iv.buffer },
+    { name: 'AES-GCM', iv: toArrayBuffer(iv) },
     aesKey,
-    ciphertext.buffer
+    toArrayBuffer(ciphertext)
   );
   
   return {
@@ -604,7 +616,7 @@ export async function hybridSign(
   // 1. Sign with classical ECDSA
   const ecdsaPrivateKey = await subtle.importKey(
     'pkcs8',
-    keyPair.signPrivateKey.buffer,
+    toArrayBuffer(keyPair.signPrivateKey),
     { name: 'ECDSA', namedCurve: 'P-256' },
     false,
     ['sign']
@@ -613,7 +625,7 @@ export async function hybridSign(
   const ecdsaSignature = await subtle.sign(
     { name: 'ECDSA', hash: 'SHA-256' },
     ecdsaPrivateKey,
-    messageHash.buffer
+    toArrayBuffer(messageHash)
   );
   
   // 2. Sign with post-quantum Dilithium
@@ -646,7 +658,7 @@ export async function hybridVerify(
   try {
     const ecdsaPublicKey = await subtle.importKey(
       'raw',
-      hexToBytes(publicKeys.sign).buffer,
+      toArrayBuffer(hexToBytes(publicKeys.sign)),
       { name: 'ECDSA', namedCurve: 'P-256' },
       false,
       ['verify']
@@ -655,8 +667,8 @@ export async function hybridVerify(
     ecdsaValid = await subtle.verify(
       { name: 'ECDSA', hash: 'SHA-256' },
       ecdsaPublicKey,
-      hexToBytes(signedMessage.ecdsaSignature).buffer,
-      messageHash.buffer
+      toArrayBuffer(hexToBytes(signedMessage.ecdsaSignature)),
+      toArrayBuffer(messageHash)
     );
   } catch {
     ecdsaValid = false;

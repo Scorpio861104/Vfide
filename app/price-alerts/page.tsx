@@ -11,19 +11,12 @@ import {
   TrendingDown,
   Plus,
   Trash2,
-  Edit2,
-  Check,
   X,
-  AlertTriangle,
-  DollarSign,
   Percent,
-  Clock,
-  ChevronDown,
   Volume2,
   VolumeX,
   Smartphone,
   Mail,
-  Settings,
   BarChart3,
   Activity,
   Zap,
@@ -82,7 +75,7 @@ export default function PriceAlertsPage() {
   const { address } = useAccount();
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [_editingId, _setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'triggered'>('all');
   
   // New alert form state
@@ -94,7 +87,7 @@ export default function PriceAlertsPage() {
   
   // Settings
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [browserNotifications, setBrowserNotifications] = useState(false);
+  const [_browserNotifications, setBrowserNotifications] = useState(false);
 
   // Load alerts from localStorage
   useEffect(() => {

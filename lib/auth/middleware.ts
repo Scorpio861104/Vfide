@@ -114,8 +114,8 @@ export function isAdmin(user: JWTPayload): boolean {
 /**
  * Require admin role
  */
-export function requireAdmin(request: NextRequest): { user: JWTPayload } | NextResponse {
-  const authResult = requireAuth(request);
+export async function requireAdmin(request: NextRequest): Promise<{ user: JWTPayload } | NextResponse> {
+  const authResult = await requireAuth(request);
 
   if (authResult instanceof NextResponse) {
     return authResult;
@@ -134,7 +134,7 @@ export function requireAdmin(request: NextRequest): { user: JWTPayload } | NextR
 /**
  * Optional authentication - returns user if authenticated, null otherwise
  */
-export function optionalAuth(request: NextRequest): JWTPayload | null {
-  const result = verifyAuth(request);
+export async function optionalAuth(request: NextRequest): Promise<JWTPayload | null> {
+  const result = await verifyAuth(request);
   return result.user;
 }
