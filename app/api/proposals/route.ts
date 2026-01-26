@@ -28,14 +28,32 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const limitParam = searchParams.get('limit');
+    const offsetParam = searchParams.get('offset');
     const proposerId = searchParams.get('proposerId');
 
+    // Parse and validate limit with upper bound
+    const MAX_PROPOSALS_LIMIT = 100;
+    const limit = limitParam 
+      ? Math.min(Math.max(1, parseInt(limitParam, 10)), MAX_PROPOSALS_LIMIT)
+      : 50;
+    
+    // Parse and validate offset
+    const offset = offsetParam ? Math.max(0, parseInt(offsetParam, 10)) : 0;
+
     // Validate parsed numbers
-    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+    if (isNaN(limit) || isNaN(offset)) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
+        { status: 400 }
+      );
+    }
+
+    // Validate status if provided
+    const VALID_STATUSES = ['active', 'pending', 'passed', 'rejected', 'executed'];
+    if (status && !VALID_STATUSES.includes(status)) {
+      return NextResponse.json(
+        { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` },
         { status: 400 }
       );
     }

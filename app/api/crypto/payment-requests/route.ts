@@ -76,10 +76,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Validate amount is positive
+    // Validate amount is positive and within reasonable bounds
     const numAmount = parseFloat(amount);
+    const MAX_PAYMENT_AMOUNT = 1000000; // 1 million units max
+    
     if (isNaN(numAmount) || numAmount <= 0) {
       return NextResponse.json({ error: 'Amount must be positive' }, { status: 400 });
+    }
+    
+    if (numAmount > MAX_PAYMENT_AMOUNT) {
+      return NextResponse.json(
+        { error: `Amount exceeds maximum limit of ${MAX_PAYMENT_AMOUNT}` },
+        { status: 400 }
+      );
+    }
+
+    // Validate token if provided
+    const ALLOWED_TOKENS = ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'];
+    const tokenValue = token || 'ETH';
+    
+    if (!ALLOWED_TOKENS.includes(tokenValue.toUpperCase())) {
+      return NextResponse.json(
+        { error: `Invalid token. Allowed tokens: ${ALLOWED_TOKENS.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Validate memo length if provided
+    if (memo && typeof memo === 'string' && memo.length > 500) {
+      return NextResponse.json(
+        { error: 'Memo must be 500 characters or less' },
+        { status: 400 }
+      );
     }
 
     // Verify authenticated user matches fromUserId
