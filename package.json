@@ -65,7 +65,10 @@
     "chromatic": "chromatic --exit-zero-on-changes",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish"
+    "changeset:publish": "changeset publish",
+    "test:ui": "vitest --ui",
+    "test:vitest": "vitest",
+    "test:vitest:watch": "vitest --watch"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -158,6 +161,10 @@
     "codecov": "^3.8.3",
     "@changesets/cli": "^2.27.12",
     "slither-analyzer": "^0.1.0",
+    "vitest": "^2.1.8",
+    "@vitest/ui": "^2.1.8",
+    "@testing-library/react-devtools": "^4.3.0",
+    "msw": "^2.7.0",
     "storybook": "^8.6.15",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",

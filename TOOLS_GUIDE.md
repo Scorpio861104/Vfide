@@ -586,3 +586,53 @@ npm run test:e2e:ui
 
 See [LIVE_TESTING_GUIDE.md](./LIVE_TESTING_GUIDE.md) for detailed workflows, examples, and best practices.
 
+
+---
+
+## Advanced Live Testing Tools (NEW)
+
+Four additional powerful tools for interactive testing have been added:
+
+### 1. Vitest UI - Modern Test Runner
+```bash
+npm run test:ui          # Browser-based test UI
+npm run test:vitest      # Run tests once
+npm run test:vitest:watch # Watch mode
+```
+
+**Features:**
+- Beautiful browser UI with real-time feedback
+- 2-5x faster than Jest
+- Coverage visualization
+- Debug in browser
+
+### 2. Testing Playground - Query Builder
+```typescript
+// In tests
+screen.logTestingPlaygroundURL();
+// Click URL to open interactive query builder
+```
+
+**Features:**
+- Find best accessibility queries
+- Interactive DOM exploration
+- Learn testing-library best practices
+
+### 3. MSW (Mock Service Worker) - API Mocking
+```bash
+# One-time setup
+npx msw init public/ --save
+```
+
+**Features:**
+- Network-level API interception
+- Same mocks for dev and tests
+- Files: `mocks/handlers.ts`, `mocks/browser.ts`, `mocks/server.ts`
+
+### 4. React DevTools Profiler - Performance
+- Install browser extension
+- F12 → Profiler tab
+- Record and analyze component performance
+
+**Complete documentation:** [LIVE_TESTING_TOOLS_SETUP.md](./LIVE_TESTING_TOOLS_SETUP.md)
+
