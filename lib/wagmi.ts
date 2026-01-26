@@ -109,8 +109,10 @@ const mainnetChains = [
 ] as const
 
 // Create storage that works with SSR and handles errors gracefully
+// CRITICAL: We use safeStorage directly because it already handles SSR internally
+// by checking typeof window !== 'undefined' in each method call
 const wagmiStorage = createStorage({
-  storage: typeof window !== 'undefined' ? safeStorage : noopStorage,
+  storage: safeStorage,
   key: 'vfide-wallet', // Custom key prefix for our app
 })
 

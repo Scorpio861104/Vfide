@@ -203,9 +203,11 @@ export function truncateAddress(address: string, startChars = 6, endChars = 4): 
 /**
  * Safe localStorage wrapper that handles errors
  * M-1 Fix: Prevents crashes in private browsing mode
+ * SSR-safe: Returns null/false when window is undefined
  */
 export const safeLocalStorage = {
   getItem: (key: string): string | null => {
+    if (typeof window === 'undefined') return null;
     try {
       return localStorage.getItem(key)
     } catch {
@@ -213,6 +215,7 @@ export const safeLocalStorage = {
     }
   },
   setItem: (key: string, value: string): boolean => {
+    if (typeof window === 'undefined') return false;
     try {
       localStorage.setItem(key, value)
       return true
@@ -221,6 +224,7 @@ export const safeLocalStorage = {
     }
   },
   removeItem: (key: string): boolean => {
+    if (typeof window === 'undefined') return false;
     try {
       localStorage.removeItem(key)
       return true
