@@ -40,7 +40,7 @@ const loadLogs = (): SecurityLogEntry[] => {
     if (!stored) return [];
 
     const parsed = JSON.parse(stored);
-    return parsed.map((log: any) => ({
+    return parsed.map((log: { id: string; type: string; action: string; timestamp: string; details?: Record<string, unknown> }) => ({
       ...log,
       timestamp: new Date(log.timestamp)
     }));

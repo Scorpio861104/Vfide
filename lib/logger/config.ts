@@ -50,10 +50,10 @@ export const REDACTED_FIELDS = [
 /**
  * Redact sensitive fields from an object
  */
-export function redactSensitiveData(data: any): any {
+export function redactSensitiveData(data: unknown): unknown {
   if (!data || typeof data !== 'object') return data;
   
-  const redacted = { ...data };
+  const redacted = { ...data } as Record<string, unknown>;
   
   for (const field of REDACTED_FIELDS) {
     if (field in redacted) {

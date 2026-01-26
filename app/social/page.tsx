@@ -195,10 +195,10 @@ export default function SocialAnalyticsPage() {
 
               {/* Time Range Selector */}
               <div className="flex gap-2 bg-zinc-900 border border-zinc-700 rounded-lg p-2">
-                {['7d', '30d', '90d', '1y'].map((range) => (
+                {(['7d', '30d', '90d', '1y'] as const).map((range) => (
                   <button
                     key={range}
-                    onClick={() => setTimeRange(range as any)}
+                    onClick={() => setTimeRange(range)}
                     className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
                       timeRange === range
                         ? 'bg-cyan-400 text-zinc-950'

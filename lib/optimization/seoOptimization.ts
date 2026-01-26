@@ -87,7 +87,7 @@ export function generateMetadata(config: SEOConfig): Metadata {
  *   __html: JSON.stringify(generateStructuredData('organization'))
  * }} />
  */
-export function generateStructuredData(type: 'organization' | 'website' | 'breadcrumb' | 'article', data?: any) {
+export function generateStructuredData(type: 'organization' | 'website' | 'breadcrumb' | 'article', data?: Record<string, unknown>) {
   const baseUrl = 'https://vfide.io';
 
   const schemas = {

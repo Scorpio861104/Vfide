@@ -284,9 +284,9 @@ export function sanitizeInput(input: string): string {
 /**
  * Validate and parse transaction data
  */
-export function parseTransactionData(data: any): {
+export function parseTransactionData(data: unknown): {
   valid: boolean;
-  parsed?: any;
+  parsed?: Record<string, string | number>;
   errors: string[];
 } {
   const errors: string[] = [];
@@ -296,7 +296,7 @@ export function parseTransactionData(data: any): {
     return { valid: false, errors };
   }
 
-  const parsed: any = {};
+  const parsed: Record<string, string | number> = {};
 
   // Validate and parse each field
   if (data.from) {

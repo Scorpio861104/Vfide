@@ -70,7 +70,7 @@ export class CallManager {
       this.notifyStateChange({ localStream: this.localStream });
 
       return this.localStream;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get user media:', error);
       
       if (error.name === 'NotAllowedError') {
@@ -232,7 +232,7 @@ export class CallManager {
   /**
    * Signaling (in production, use WebSocket/WebRTC signaling server)
    */
-  private sendSignal(type: string, data: any): void {
+  private sendSignal(type: string, data: Record<string, unknown>): void {
     // In production, send via WebSocket to signaling server
     console.log('Send signal:', type, data);
     
@@ -418,7 +418,7 @@ export function useCall() {
 /**
  * Send call signal (in production, use WebSocket)
  */
-function sendCallSignal(recipient: string, type: string, data: any): void {
+function sendCallSignal(recipient: string, type: string, data: Record<string, unknown>): void {
   // In production, send via WebSocket/signaling server
   console.log('Send call signal to', recipient, ':', type, data);
   
@@ -476,7 +476,7 @@ export async function requestMediaPermissions(
       audio: true,
       video: type === 'video',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Permission denied:', error);
     return {
       audio: false,

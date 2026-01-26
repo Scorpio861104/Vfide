@@ -46,7 +46,7 @@ export function trackWebVitals() {
   if (typeof window === 'undefined') return;
 
   // Use web-vitals library if available
-  const reportWebVital = (metric: any) => {
+  const reportWebVital = (metric: { name: string; value: number; rating: string; id: string }) => {
     // Send to analytics
     sendMetric({
       event: `web_vital_${metric.name.toLowerCase()}`,
@@ -98,7 +98,7 @@ export async function trackApiCall<T>(
 ): Promise<T> {
   const startTime = performance.now();
   let success = false;
-  let error: any;
+  let error: unknown;
 
   try {
     const result = await fn();
@@ -142,7 +142,7 @@ export async function trackTransaction<T>(
     
     // Extract transaction hash if available
     if (result && typeof result === 'object' && 'hash' in result) {
-      txHash = (result as any).hash;
+      txHash = (result as Record<string, unknown>).hash as string;
     }
 
     return result;

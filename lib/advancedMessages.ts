@@ -238,7 +238,7 @@ export function createScheduledMessage(
  * Message search
  */
 export function searchMessages(
-  messages: any[],
+  messages: Array<Record<string, unknown>>,
   query: string,
   filters?: {
     from?: string;
@@ -246,16 +246,17 @@ export function searchMessages(
     dateTo?: number;
     hasMedia?: boolean;
   }
-): any[] {
+): Array<Record<string, unknown>> {
   let filtered = messages;
 
   // Text search
   if (query) {
     const lowerQuery = query.toLowerCase();
-    filtered = filtered.filter((msg) =>
-      msg.content?.toLowerCase().includes(lowerQuery) ||
-      msg.decryptedContent?.toLowerCase().includes(lowerQuery)
-    );
+    filtered = filtered.filter((msg) => {
+      const content = (msg.content as string | undefined)?.toLowerCase();
+      const decryptedContent = (msg.decryptedContent as string | undefined)?.toLowerCase();
+      return content?.includes(lowerQuery) || decryptedContent?.includes(lowerQuery);
+    });
   }
 
   // Filter by sender

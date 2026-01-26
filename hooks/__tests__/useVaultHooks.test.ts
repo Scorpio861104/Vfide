@@ -375,7 +375,7 @@ describe('useTransferVFIDE', () => {
     let errorThrown = false
     try {
       result.current.transfer('invalid' as `0x${string}`, '100')
-    } catch (error: any) {
+    } catch (error: unknown) {
       errorThrown = true
       expect(error.message).toBeTruthy()
     }

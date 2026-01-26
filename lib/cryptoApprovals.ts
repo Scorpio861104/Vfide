@@ -168,7 +168,7 @@ export async function requestTokenApproval(
       success: true,
       txHash,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Token approval failed:', error);
     
     // User rejected
@@ -234,7 +234,7 @@ export async function ensureTokenAllowance(
     );
 
     return approvalResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to ensure token allowance:', error);
     return {
       success: false,
@@ -319,7 +319,7 @@ export async function revokeTokenApproval(
     });
 
     return { success: true, txHash };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to revoke approval:', error);
     return {
       success: false,
@@ -400,7 +400,7 @@ export function useTokenApproval(spenderAddress: string, amount: string) {
       const result = await checkTokenAllowance(userAddress, spenderAddress, amount);
       setStatus(result);
       return result;
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message);
       return null;
     }
@@ -428,7 +428,7 @@ export function useTokenApproval(spenderAddress: string, amount: string) {
       }, 2000);
 
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message);
       return false;
     } finally {

@@ -21,16 +21,16 @@ export interface QueuedAction {
   id: string;
   type: 'message' | 'reaction' | 'profile_update' | 'group_action';
   action: string;
-  data: any;
+  data: Record<string, unknown>;
   timestamp: number;
   retryCount: number;
   status: SyncStatus;
   error?: string;
 }
 
-export interface CachedData {
+export interface CachedData<T = unknown> {
   key: string;
-  data: any;
+  data: T;
   timestamp: number;
   expiresAt?: number;
 }
@@ -135,7 +135,7 @@ async function performDBOperation<T>(
 export async function queueAction(
   type: QueuedAction['type'],
   action: string,
-  data: any
+  data: Record<string, unknown>
 ): Promise<QueuedAction> {
   const queuedAction: QueuedAction = {
     id: `queue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -234,7 +234,7 @@ export async function clearSyncedActions(): Promise<void> {
  */
 export async function cacheData(
   key: string,
-  data: any,
+  data: unknown,
   ttl?: number
 ): Promise<void> {
   const cached: CachedData = {
@@ -527,7 +527,7 @@ export function useSyncQueue() {
     async (
       type: QueuedAction['type'],
       action: string,
-      data: any
+      data: Record<string, unknown>
     ) => {
       try {
         await queueAction(type, action, data);

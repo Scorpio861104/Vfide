@@ -159,10 +159,10 @@ export function filterFields<T extends Record<string, any>>(
     return data;
   }
 
-  const filtered: any = {};
+  const filtered: Partial<T> = {};
   fields.forEach(field => {
     if (field in data) {
-      filtered[field] = data[field];
+      (filtered as Record<string, unknown>)[field] = data[field as keyof T];
     }
   });
 
@@ -183,16 +183,16 @@ export function parseFieldsParam(request: NextRequest): string[] | undefined {
  * Optimize response size by removing null/undefined values
  * Reduces payload size
  */
-export function removeEmptyValues<T extends Record<string, any>>(obj: T): Partial<T> {
-  const cleaned: any = {};
+export function removeEmptyValues<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const cleaned: Partial<T> = {};
   
   Object.keys(obj).forEach(key => {
     const value = obj[key];
     if (value !== null && value !== undefined) {
       if (typeof value === 'object' && !Array.isArray(value)) {
-        cleaned[key] = removeEmptyValues(value);
+        (cleaned as Record<string, unknown>)[key] = removeEmptyValues(value as Record<string, unknown>);
       } else {
-        cleaned[key] = value;
+        (cleaned as Record<string, unknown>)[key] = value;
       }
     }
   });
@@ -223,7 +223,7 @@ export function createOptimizedResponse<T>(
   // Process data
   let processedData = data;
   if (removeEmpty) {
-    processedData = removeEmptyValues(data as any) as T;
+    processedData = removeEmptyValues(data as Record<string, unknown>) as T;
   }
 
   const jsonString = JSON.stringify(processedData);
@@ -283,13 +283,13 @@ export interface BatchRequest {
   id: string;
   path: string;
   method?: string;
-  body?: any;
+  body?: Record<string, unknown>;
 }
 
 export interface BatchResponse {
   id: string;
   status: number;
-  data?: any;
+  data?: Record<string, unknown>;
   error?: string;
 }
 

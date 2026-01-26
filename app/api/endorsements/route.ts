@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       JOIN users endorsed ON e.endorsed_id = endorsed.id
       WHERE 1=1
     `;
-    const countParams: any[] = [];
+    const countParams: (string | number)[] = [];
     let countParamCount = 1;
 
     if (endorsedAddress) {
@@ -163,7 +163,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { fromAddress: endorserAddress, toAddress: endorsedAddress, message } = validation.data;
+    const { fromAddress: endorserAddress, toAddress: endorsedAddress, message } = validation.data as {
+      fromAddress: string;
+      toAddress: string;
+      message: string;
+    };
     const proposalId = null; // Optional field
 
     // Verify the endorser is the authenticated user

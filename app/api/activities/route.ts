@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       JOIN users u ON a.user_id = u.id
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
     let paramCount = 1;
 
     if (userAddress) {
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     // Get total count
     let countQuery = 'SELECT COUNT(*) as count FROM activities a JOIN users u ON a.user_id = u.id WHERE 1=1';
-    const countParams: any[] = [];
+    const countParams: (string | number)[] = [];
     let countParamCount = 1;
 
     if (userAddress) {

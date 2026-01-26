@@ -264,14 +264,22 @@ export const CSRFProtection = {
   },
 };
 
+interface SecurityViolation {
+  type: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+  url: string;
+  reported?: boolean;
+}
+
 /**
  * Security monitoring
  */
 export class SecurityMonitor {
-  private static violations: any[] = [];
+  private static violations: SecurityViolation[] = [];
   private static maxViolations = 100;
   
-  static recordViolation(type: string, details: any) {
+  static recordViolation(type: string, details: Record<string, unknown>) {
     this.violations.push({
       type,
       details,
@@ -298,7 +306,7 @@ export class SecurityMonitor {
     this.violations = [];
   }
   
-  private static async reportToBackend(violation: any) {
+  private static async reportToBackend(violation: SecurityViolation) {
     try {
       await fetch('/api/security/violations', {
         method: 'POST',

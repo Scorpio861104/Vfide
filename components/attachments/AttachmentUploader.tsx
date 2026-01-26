@@ -225,7 +225,7 @@ export function AttachmentUploader({ messageId, userId, onUploaded }: Attachment
 // ============================================================================
 
 interface AttachmentCardProps {
-  attachment: any;
+  attachment: Attachment | File;
   onRemove: () => void;
 }
 

@@ -94,11 +94,11 @@ export async function GET(request: NextRequest) {
     
     // Apply field filtering if requested
     const filteredUsers = fields 
-      ? result.rows.map(user => filterFields(user as unknown as Record<string, unknown>, fields))
+      ? result.rows.map((user: Record<string, unknown>) => filterFields(user, fields))
       : result.rows;
     
     // Create standardized paginated response
-    const paginatedData = createPaginatedResponse(filteredUsers as any, total, page, limit);
+    const paginatedData = createPaginatedResponse(filteredUsers as Array<Record<string, unknown>>, total, page, limit);
     
     // Track API call for monitoring
     trackApiCallSimple('/api/users', 'GET', 200, Date.now() - startTime);

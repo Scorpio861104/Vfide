@@ -770,7 +770,7 @@ export default function UserProfile() {
     }
   }, [errors]);
 
-  const handlePrivacyChange = useCallback((field: keyof PrivacySettings, value: any) => {
+  const handlePrivacyChange = useCallback((field: keyof PrivacySettings, value: boolean | string) => {
     setPrivacySettings((prev) => ({ ...prev, [field]: value }));
   }, []);
 

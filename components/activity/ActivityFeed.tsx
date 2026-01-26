@@ -35,7 +35,7 @@ interface Activity {
     proposalId?: string;
     badgeName?: string;
     status?: string;
-    [key: string]: any;
+    [key: string]: string | undefined;
   };
   icon?: string;
 }
