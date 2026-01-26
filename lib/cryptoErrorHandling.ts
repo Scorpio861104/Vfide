@@ -75,9 +75,9 @@ export function parseCryptoError(error: unknown): CryptoError {
   // Network errors (retryable)
   if (
     err.code === 'NETWORK_ERROR' ||
-    error.message?.includes('network') ||
-    error.message?.includes('timeout') ||
-    error.message?.includes('connection')
+    err.message?.includes('network') ||
+    err.message?.includes('timeout') ||
+    err.message?.includes('connection')
   ) {
     return new CryptoError(
       'Network error - please try again',
@@ -89,8 +89,8 @@ export function parseCryptoError(error: unknown): CryptoError {
 
   // Gas estimation errors
   if (
-    error.message?.includes('gas') ||
-    error.message?.includes('intrinsic gas too low')
+    err.message?.includes('gas') ||
+    err.message?.includes('intrinsic gas too low')
   ) {
     return new CryptoError(
       'Gas estimation failed - transaction may fail',

@@ -91,7 +91,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       const todayErrors = errorLogs.filter(
-        (e: Event) => e.timestamp >= todayStart.getTime()
+        (e: { timestamp: number }) => e.timestamp >= todayStart.getTime()
       );
 
       const metrics: PagePerformance = {

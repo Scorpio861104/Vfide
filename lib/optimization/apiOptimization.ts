@@ -159,10 +159,10 @@ export function filterFields<T extends Record<string, any>>(
     return data;
   }
 
-  const filtered: Partial<T> = {};
+  const filtered = {} as Partial<T>;
   fields.forEach(field => {
     if (field in data) {
-      (filtered as Record<string, unknown>)[field] = data[field as keyof T];
+      filtered[field as keyof T] = data[field as keyof T];
     }
   });
 
