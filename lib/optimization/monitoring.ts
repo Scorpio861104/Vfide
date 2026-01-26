@@ -141,11 +141,8 @@ export async function trackTransaction<T>(
     success = true;
     
     // Extract transaction hash if available
-    if (result && typeof result === 'object' && 'hash' in result) {
-      const resultObj = result as Record<string, unknown>;
-      if (typeof resultObj.hash === 'string') {
-        txHash = resultObj.hash;
-      }
+    if (result && typeof result === 'object' && 'hash' in result && typeof (result as Record<string, unknown>).hash === 'string') {
+      txHash = (result as Record<string, unknown>).hash as string;
     }
 
     return result;

@@ -184,20 +184,20 @@ export function parseFieldsParam(request: NextRequest): string[] | undefined {
  * Reduces payload size
  */
 export function removeEmptyValues<T extends Record<string, unknown>>(obj: T): Partial<T> {
-  const cleaned: Partial<T> = {};
+  const cleaned = {} as Record<string, unknown>;
   
   Object.keys(obj).forEach(key => {
     const value = obj[key];
     if (value !== null && value !== undefined) {
       if (typeof value === 'object' && !Array.isArray(value)) {
-        (cleaned as Record<string, unknown>)[key] = removeEmptyValues(value as Record<string, unknown>);
+        cleaned[key] = removeEmptyValues(value as Record<string, unknown>);
       } else {
-        (cleaned as Record<string, unknown>)[key] = value;
+        cleaned[key] = value;
       }
     }
   });
 
-  return cleaned;
+  return cleaned as Partial<T>;
 }
 
 /**
