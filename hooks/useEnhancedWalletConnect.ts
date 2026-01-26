@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useCallback, useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';

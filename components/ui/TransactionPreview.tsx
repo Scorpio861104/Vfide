@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useGasPrice, useChainId } from 'wagmi';
 import { formatEther } from 'viem';

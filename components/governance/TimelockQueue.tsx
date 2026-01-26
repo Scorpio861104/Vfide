@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"; 

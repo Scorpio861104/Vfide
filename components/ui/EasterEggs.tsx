@@ -3,7 +3,7 @@
  * Hidden surprises that make VFIDE memorable
  */
 
-"use client";
+'use client';
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";

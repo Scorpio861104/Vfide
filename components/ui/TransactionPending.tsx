@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ExternalLink, CheckCircle2, XCircle } from 'lucide-react';

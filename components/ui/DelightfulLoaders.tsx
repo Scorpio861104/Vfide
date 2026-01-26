@@ -3,7 +3,7 @@
  * Loading animations with personality, not just spinners
  */
 
-"use client";
+'use client';
 
 import { motion } from "framer-motion";
 

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Footer } from "@/components/layout/Footer";
 import { VFIDEPresaleABI, ERC20ABI } from "@/lib/abis";

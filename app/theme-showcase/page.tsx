@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Theme Showcase Page
