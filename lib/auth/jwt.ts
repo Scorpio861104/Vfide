@@ -4,14 +4,7 @@
  */
 
 import jwt from 'jsonwebtoken';
-import { validateEnvironment } from '../startup-validation';
 import { isTokenRevoked, hashToken } from './tokenRevocation';
-
-// Validate environment on module load
-if (typeof window === 'undefined') {
-  // Only run validation on server-side
-  validateEnvironment();
-}
 
 // JWT Configuration
 // No fallback secret - fail fast if not set
@@ -26,7 +19,15 @@ function getJWTSecret(): string {
   return secret;
 }
 
-const JWT_SECRET = getJWTSecret();
+// Lazy-load JWT secret to avoid build-time errors
+let _jwtSecret: string | null = null;
+function getSecret(): string {
+  if (!_jwtSecret) {
+    _jwtSecret = getJWTSecret();
+  }
+  return _jwtSecret;
+}
+
 const JWT_EXPIRES_IN = '24h';
 const JWT_ISSUER = 'vfide';
 const JWT_AUDIENCE = 'vfide-app';
@@ -55,7 +56,7 @@ export function generateToken(address: string, chainId?: number): TokenResponse 
     chainId: chainId || 8453, // Default to Base
   };
 
-  const token = jwt.sign(payload, JWT_SECRET, {
+  const token = jwt.sign(payload, getSecret(), {
     expiresIn: JWT_EXPIRES_IN,
     issuer: JWT_ISSUER,
     audience: JWT_AUDIENCE,
@@ -74,7 +75,7 @@ export function generateToken(address: string, chainId?: number): TokenResponse 
  */
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET, {
+    const decoded = jwt.verify(token, getSecret(), {
       issuer: JWT_ISSUER,
       audience: JWT_AUDIENCE,
     }) as JWTPayload;
