@@ -190,12 +190,34 @@ export function useEnhancedWalletConnect() {
   // Copy address to clipboard
   const copyAddress = useCallback(async (addressToCopy: string) => {
     try {
+      // Try modern clipboard API first
       await navigator.clipboard.writeText(addressToCopy);
       showToast('Address copied to clipboard', 'success', 2000);
       return true;
-    } catch (_err) {
-      showToast('Failed to copy address', 'error', 2000);
-      return false;
+    } catch (err) {
+      // Fallback for non-HTTPS contexts or if clipboard API fails
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = addressToCopy;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        textArea.remove();
+        
+        if (successful) {
+          showToast('Address copied to clipboard', 'success', 2000);
+          return true;
+        } else {
+          throw new Error('Copy command failed');
+        }
+      } catch {
+        showToast('Failed to copy address. Please copy manually.', 'error', 3000);
+        return false;
+      }
     }
   }, [showToast]);
 

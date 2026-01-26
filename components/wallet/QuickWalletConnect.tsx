@@ -123,10 +123,37 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
 
   // Copy address
   const handleCopy = async () => {
-    if (address) {
+    if (!address) return;
+    
+    try {
+      // Try modern clipboard API first
       await navigator.clipboard.writeText(address);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      // Fallback for non-HTTPS contexts or if clipboard API fails
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = address;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        textArea.remove();
+        
+        if (successful) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          throw new Error('Copy command failed');
+        }
+      } catch {
+        // Silent fail for copy - user can still manually copy
+        console.warn('Failed to copy address');
+      }
     }
   };
 
