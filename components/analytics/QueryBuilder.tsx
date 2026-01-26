@@ -99,8 +99,11 @@ export function QueryBuilder({
           case 'lessThan':
             return Number(fieldValue) < Number(filter.value);
           case 'between':
-            const [min, max] = filter.value;
-            return Number(fieldValue) >= Number(min) && Number(fieldValue) <= Number(max);
+            if (Array.isArray(filter.value) && filter.value.length === 2) {
+              const [min, max] = filter.value as [number, number];
+              return Number(fieldValue) >= Number(min) && Number(fieldValue) <= Number(max);
+            }
+            return false;
           case 'in':
             return Array.isArray(filter.value) && filter.value.includes(fieldValue);
           default:
