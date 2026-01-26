@@ -6,7 +6,7 @@ declare module 'react-hook-form' {
 
   export type FieldValues = Record<string, unknown>;
 
-  export type Path<T extends FieldValues> = string;
+  export type Path<_T extends FieldValues> = string;
 
   export type UseFormRegister<T extends FieldValues> = (
     name: Path<T>

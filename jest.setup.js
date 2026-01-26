@@ -693,7 +693,7 @@ if (typeof window !== 'undefined') {
       selectedAddress: '0x1234567890123456789012345678901234567890',
       chainId: '0x1',
       networkVersion: '1',
-      request: jest.fn(async ({ method, params }) => {
+      request: jest.fn(async ({ method, params: _params }) => {
         switch (method) {
           case 'eth_requestAccounts':
           case 'eth_accounts':
@@ -724,9 +724,9 @@ if (typeof window !== 'undefined') {
             return null;
         }
       }),
-      on: jest.fn((event, callback) => {}),
-      removeListener: jest.fn((event, callback) => {}),
-      removeAllListeners: jest.fn((event) => {}),
+      on: jest.fn((_event, _callback) => {}),
+      removeListener: jest.fn((_event, _callback) => {}),
+      removeAllListeners: jest.fn((_event) => {}),
       enable: jest.fn(async () => ['0x1234567890123456789012345678901234567890']),
       sendAsync: jest.fn((request, callback) => {
         callback(null, { result: null });
@@ -897,6 +897,7 @@ jest.mock('@/components/profile/AvatarUpload', () => ({
 
 // Mock NextResponse to work with our polyfills
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { NextResponse: OriginalNextResponse } = require('next/server');
   
   // Override NextResponse.json to store body in a way our polyfill can read
@@ -907,6 +908,6 @@ try {
     response._body = JSON.stringify(data);
     return response;
   };
-} catch (e) {
+} catch (_e) {
   // Next.js not available yet, that's okay
 }

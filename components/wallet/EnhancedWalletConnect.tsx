@@ -25,7 +25,6 @@ import {
   PREFERRED_CHAIN,
   PREFERRED_CHAIN_NAME,
   WALLET_RECOMMENDATIONS,
-  type WalletRecommendation,
 } from '@/lib/wallet/walletUXEnhancements';
 
 interface EnhancedWalletConnectProps {
@@ -93,7 +92,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
   }, [isConnected, chainId, prefs.autoSwitchToBase, switchChainFn]);
 
   // Get wallet status
-  const walletStatus = getWalletStatus(isConnected, chainId);
+  const _walletStatus = getWalletStatus(isConnected, chainId);
   const onboardingSteps = getWalletOnboardingSteps(isConnected, chainId === PREFERRED_CHAIN.id);
 
   // Get recommended wallet
@@ -436,10 +435,10 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-semibold text-white mb-2">What's {PREFERRED_CHAIN_NAME}?</h4>
+                  <h4 className="text-sm font-semibold text-white mb-2">What&apos;s {PREFERRED_CHAIN_NAME}?</h4>
                   <p className="text-sm text-zinc-400">
                     {PREFERRED_CHAIN_NAME} is a fast, low-cost blockchain network that VFIDE uses. After connecting
-                    your wallet, you'll be asked to switch to {PREFERRED_CHAIN_NAME} - it only takes a few seconds!
+                    your wallet, you&apos;ll be asked to switch to {PREFERRED_CHAIN_NAME} - it only takes a few seconds!
                   </p>
                 </div>
 
@@ -448,7 +447,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
                     onClick={handleCloseGuide}
                     className="w-full px-4 py-3 bg-cyan-500 text-white font-medium rounded-lg hover:bg-cyan-600 transition-colors"
                   >
-                    Got it, let's connect!
+                    Got it, let&apos;s connect!
                   </button>
                 </div>
               </div>

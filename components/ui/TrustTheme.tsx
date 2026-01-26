@@ -261,7 +261,7 @@ export function TrustProgressBar({
   // Find next milestone
   const nextMilestone = milestones.find(m => m > score) || 100;
   const prevMilestone = milestones.filter(m => m <= score).pop() || 0;
-  const progressInLevel = ((score - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
+  const _progressInLevel = ((score - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
 
   return (
     <div className={`space-y-2 ${className}`}>

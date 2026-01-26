@@ -24,7 +24,6 @@
  * @version 4.0.0
  */
 
-import { keccak256, toBytes } from 'viem';
 import React from 'react';
 
 // ============================================================================
@@ -431,7 +430,7 @@ export async function deriveHybridKeyPair(
     `VFIDE_PQ_SEED_V4:${walletAddress.toLowerCase()}:${signature}`
   );
   const seedHash = await subtle.digest('SHA-512', seedInput);
-  const seed = new Uint8Array(seedHash);
+  const _seed = new Uint8Array(seedHash);
   
   // For deterministic key generation, we use the seed to generate keys
   // In a production system, you might want to use a proper KDF

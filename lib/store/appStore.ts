@@ -6,7 +6,6 @@
  */
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 
 // Types
 export interface VaultState {
@@ -81,7 +80,7 @@ const defaultLoading = {
 };
 
 // Create the store - simplified without persistence to avoid dependency issues
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>((set, _get) => ({
   // Initial state
   vault: null,
   rewards: null,

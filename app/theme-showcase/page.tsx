@@ -8,7 +8,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
-  HexagonPattern, 
   FloatingHexagon, 
   HexagonShield,
   TrustRing,

@@ -118,7 +118,7 @@ export function usePerformanceMark(label: string) {
       performance.clearMeasures(markName);
       
       return duration;
-    } catch (error) {
+    } catch (_error) {
       return 0;
     }
   };

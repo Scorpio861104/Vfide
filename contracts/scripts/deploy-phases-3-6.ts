@@ -97,6 +97,7 @@ async function main() {
   console.log(JSON.stringify(addresses, null, 2));
 
   // Save to file
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fs = require("fs");
   const network = await ethers.provider.getNetwork();
   fs.writeFileSync(

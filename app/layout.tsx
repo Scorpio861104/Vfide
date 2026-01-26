@@ -25,7 +25,7 @@ import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
 
 // Use CSS variables for fonts - will load from Google Fonts via CSS
 // This avoids build-time network requests while still using Google Fonts in production
-const fontVariables = "--font-body --font-display";
+const _fontVariables = "--font-body --font-display";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://vfide.io"),

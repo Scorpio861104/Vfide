@@ -38,7 +38,7 @@ export function HexagonPattern({
   
   const size = densityMap[density];
   const hexColor = colorMap[color].replace("VAR", String(opacity));
-  const hexColorHover = colorMap[color].replace("VAR", String(opacity * 2));
+  const _hexColorHover = colorMap[color].replace("VAR", String(opacity * 2));
 
   // SVG hexagon pattern
   const patternSvg = `

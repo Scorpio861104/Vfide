@@ -3,7 +3,6 @@
 // Rewards Management System (Howey-compliant - no staking)
 import { Footer } from '@/components/layout/Footer'
 import { safeParseFloat } from '@/lib/validation'
-import { toast } from '@/lib/toast'
 import { motion } from 'framer-motion'
 import {
     CheckCircle2,
@@ -21,7 +20,7 @@ import {
     Zap
 } from 'lucide-react'
 import { useState } from 'react'
-import { formatUnits, parseUnits } from 'viem'
+import { formatUnits } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 
 // Contract ABIs

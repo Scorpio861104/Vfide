@@ -22,7 +22,7 @@ import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 export default function InviteFriendsPage() {
   const { address } = useAccount()
   const { copied, copy } = useCopyToClipboard()
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
+  const [_selectedMethod, setSelectedMethod] = useState<string | null>(null)
 
   // Generate referral link
   const referralCode = address ? `${address.slice(0, 8)}` : 'connect-wallet'

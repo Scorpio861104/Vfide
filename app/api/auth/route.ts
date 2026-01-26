@@ -3,7 +3,7 @@ import { verifyMessage } from 'viem';
 import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, authSchema } from '@/lib/auth/validation';
-import { setAuthCookie, getAuthCookie, clearAuthCookies } from '@/lib/auth/cookieAuth';
+import { setAuthCookie, getAuthCookie } from '@/lib/auth/cookieAuth';
 
 /**
  * POST /api/auth
