@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     
     // Apply field filtering if requested
     const filteredUsers = fields 
-      ? result.rows.map((user: Record<string, unknown>) => filterFields(user, fields))
+      ? result.rows.map((user) => filterFields(user as unknown as Record<string, unknown>, fields))
       : result.rows;
     
     // Create standardized paginated response
