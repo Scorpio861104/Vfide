@@ -92,8 +92,8 @@ export async function GET(request: NextRequest) {
       console.error('Failed to fetch ETH price:', ethPriceResponse.status);
       // Use fallback price if fetch fails
       const ethPrice = 2000; // Fallback price
-      let vfidePrice = 0.10;
-      let vfidePriceInEth = vfidePrice / ethPrice;
+      const vfidePrice = 0.10;
+      const vfidePriceInEth = vfidePrice / ethPrice;
       
       return NextResponse.json({ 
         price: vfidePriceInEth, 
