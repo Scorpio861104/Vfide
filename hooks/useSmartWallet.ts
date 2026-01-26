@@ -7,7 +7,7 @@
  * and exposes its capabilities like gasless transactions, batching, etc.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAccount, usePublicClient } from 'wagmi';
 import { type Address } from 'viem';
 
