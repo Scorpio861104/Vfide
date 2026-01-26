@@ -69,18 +69,27 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
       <div className="relative">
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/30 transition-all"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          disabled={isPending}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          whileHover={{ scale: isPending ? 1 : 1.02 }}
+          whileTap={{ scale: isPending ? 1 : 0.98 }}
         >
-          <span className="text-lg">{currentChain.icon}</span>
-          <span className="text-sm font-medium text-gray-200">{currentChain.name}</span>
-          <motion.div
-            animate={{ rotate: isOpen ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ChevronDown className="w-4 h-4 text-gray-400" />
-          </motion.div>
+          {isPending ? (
+            <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+          ) : (
+            <span className="text-lg">{currentChain.icon}</span>
+          )}
+          <span className="text-sm font-medium text-gray-200">
+            {isPending ? 'Switching...' : currentChain.name}
+          </span>
+          {!isPending && (
+            <motion.div
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </motion.div>
+          )}
         </motion.button>
 
         <AnimatePresence>
