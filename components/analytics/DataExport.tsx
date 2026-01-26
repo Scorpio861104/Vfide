@@ -36,7 +36,10 @@ export function DataExport<T = Record<string, unknown>>({
   const convertToCSV = (data: T[]): string => {
     if (data.length === 0) return '';
 
-    const headers = Object.keys(data[0]);
+    const firstRow = data[0];
+    if (!firstRow) return '';
+    
+    const headers = Object.keys(firstRow as object);
     const csvRows = [];
 
     if (options.includeHeaders) {
@@ -45,7 +48,7 @@ export function DataExport<T = Record<string, unknown>>({
 
     for (const row of data) {
       const values = headers.map(header => {
-        const value = row[header];
+        const value = (row as Record<string, unknown>)[header];
         const escaped = ('' + value).replace(/"/g, '\\"');
         return `"${escaped}"`;
       });
