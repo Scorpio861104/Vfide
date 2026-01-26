@@ -67,6 +67,19 @@ export function SimpleWalletConnect() {
   // Phase 3: Network latency monitoring - moved outside render prop
   const [latencyData, setLatencyData] = useState<LatencyData | null>(chainId ? getCachedLatency(chainId) : null);
 
+  // Get RPC URL for a chain
+  const getRpcUrl = useCallback((id: number): string => {
+    const rpcUrls: Record<number, string> = {
+      8453: 'https://mainnet.base.org',
+      84532: 'https://sepolia.base.org',
+      137: 'https://polygon-rpc.com',
+      80002: 'https://rpc-amoy.polygon.technology',
+      324: 'https://mainnet.era.zksync.io',
+      300: 'https://sepolia.era.zksync.dev',
+    };
+    return rpcUrls[id] || `https://rpc.chain${id}.example.com`;
+  }, []);
+
   // Track latency when connected
   useEffect(() => {
     if (chainId && isConnected) {
@@ -78,15 +91,14 @@ export function SimpleWalletConnect() {
 
       // Defer latency measurement to avoid blocking connection flow
       const deferredMeasure = setTimeout(async () => {
-        // Use a default RPC URL based on chain ID
-        const rpcUrl = `https://rpc.chain${chainId}.example.com`;
+        const rpcUrl = getRpcUrl(chainId);
         const data = await measureLatency(rpcUrl, chainId);
         setLatencyData(data);
       }, 2000);
 
       // Less frequent polling after initial measurement
       const interval = setInterval(async () => {
-        const rpcUrl = `https://rpc.chain${chainId}.example.com`;
+        const rpcUrl = getRpcUrl(chainId);
         const data = await measureLatency(rpcUrl, chainId);
         setLatencyData(data);
       }, POLLING_INTERVALS.LATENCY);
@@ -97,7 +109,7 @@ export function SimpleWalletConnect() {
       };
     }
     return undefined;
-  }, [chainId, isConnected]);
+  }, [chainId, isConnected, getRpcUrl]);
 
   // Phase 3: Track connection in history
   useEffect(() => {
