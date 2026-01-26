@@ -27,7 +27,9 @@ export async function POST(request: NextRequest) {
     if (token) {
       const tokenHash = await hashToken(token);
       try {
-        await revokeToken(tokenHash, 'logout', 60 * 60 * 24); // 24h TTL
+        // expiresAt is Unix timestamp 24h from now, reason is 'logout'
+        const expiresAt = Math.floor(Date.now() / 1000) + (60 * 60 * 24);
+        await revokeToken(tokenHash, expiresAt, 'logout');
       } catch (error) {
         // Log but don't fail - token might already be expired
         console.warn('[Logout] Token revocation warning:', error);
