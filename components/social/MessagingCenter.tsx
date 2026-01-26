@@ -51,51 +51,70 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationId = address && friend ? getConversationId(address, friend.address) : '';
 
-  // Load conversation messages
+  // Load conversation messages with AbortController for proper cleanup
   useEffect(() => {
     if (!address || !conversationId) return;
     
+    const abortController = new AbortController();
+    let isActive = true;
+    
     const loadMessages = async () => {
-      const stored = localStorage.getItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`);
-      if (stored) {
-        try {
-          const msgs: Message[] = JSON.parse(stored);
-          
-          // Decrypt messages for display
-          setEncryptionStatus('decrypting');
-          const decryptedMsgs = await Promise.all(
-            msgs.map(async (msg) => {
-              try {
-                if (msg.decryptedContent) return msg;
-                
-                // Simple verification function (in production, use proper signature verification)
-                const verify = async (_message: string, _signature: string) => true;
-                
-                const { message: decrypted, verified } = await decryptMessage(
-                  msg.encryptedContent,
-                  msg.from,
-                  verify
-                );
-                
-                return {
-                  ...msg,
-                  decryptedContent: decrypted,
-                  verified,
-                };
-              } catch (e) {
-                console.error('Failed to decrypt message:', e);
-                return {
-                  ...msg,
-                  decryptedContent: '[Decryption failed]',
-                  verified: false,
-                };
+      try {
+        const stored = localStorage.getItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`);
+        if (!stored) return;
+        
+        const msgs: Message[] = JSON.parse(stored);
+        
+        // Check if component is still mounted
+        if (!isActive || abortController.signal.aborted) return;
+        
+        // Decrypt messages for display
+        setEncryptionStatus('decrypting');
+        const decryptedMsgs = await Promise.all(
+          msgs.map(async (msg) => {
+            try {
+              if (msg.decryptedContent) return msg;
+              
+              // Check abort signal during async operations
+              if (abortController.signal.aborted) {
+                throw new Error('Operation aborted');
               }
-            })
-          );
-          
+              
+              // Simple verification function (in production, use proper signature verification)
+              const verify = async (_message: string, _signature: string) => true;
+              
+              const { message: decrypted, verified } = await decryptMessage(
+                msg.encryptedContent,
+                msg.from,
+                verify
+              );
+              
+              return {
+                ...msg,
+                decryptedContent: decrypted,
+                verified,
+              };
+            } catch (e) {
+              // Don't log errors if aborted
+              if (!abortController.signal.aborted) {
+                console.error('Failed to decrypt message:', e);
+              }
+              return {
+                ...msg,
+                decryptedContent: '[Decryption failed]',
+                verified: false,
+              };
+            }
+          })
+        );
+        
+        // Only update state if component is still mounted
+        if (isActive && !abortController.signal.aborted) {
           setMessages(decryptedMsgs);
           setEncryptionStatus('idle');
-        } catch (e) {
+        }
+      } catch (e) {
+        if (isActive && !abortController.signal.aborted) {
           console.error('Failed to load messages:', e);
           setEncryptionStatus('error');
         }
@@ -103,6 +122,12 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
     };
     
     loadMessages();
+    
+    // Cleanup function
+    return () => {
+      isActive = false;
+      abortController.abort();
+    };
   }, [address, conversationId]);
 
   // Auto-scroll to bottom

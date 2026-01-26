@@ -42,12 +42,40 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
       });
   }, [address, isOpen]);
 
-  // Copy address
+  // Copy address with fallback
   const handleCopy = async () => {
     if (!address) return;
-    await navigator.clipboard.writeText(address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    
+    try {
+      // Try modern clipboard API first
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (_err) {
+      // Fallback for non-HTTPS contexts or if clipboard API fails
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = address;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        textArea.remove();
+        
+        if (successful) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          throw new Error('Copy command failed');
+        }
+      } catch {
+        // Silent fail - user can still manually copy
+        logger.debug('Failed to copy address', { address });
+      }
+    }
   };
 
   // Download QR code

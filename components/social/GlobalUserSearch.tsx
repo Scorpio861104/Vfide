@@ -44,25 +44,27 @@ export function GlobalUserSearch() {
     <div className="space-y-4">
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" aria-hidden="true" />
         <input
           type="text"
           placeholder="Search users by @username..."
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
+          aria-label="Search users by username or address"
+          aria-describedby="search-results-count"
           className="w-full pl-12 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
         />
       </div>
 
       {/* Results */}
       {searching ? (
-        <div className="p-8 text-center">
-          <div className="w-12 h-12 border-4 border-cyan-400/30 border-t-[#00F0FF] rounded-full animate-spin mx-auto mb-3" />
+        <div className="p-8 text-center" role="status" aria-live="polite">
+          <div className="w-12 h-12 border-4 border-cyan-400/30 border-t-[#00F0FF] rounded-full animate-spin mx-auto mb-3" aria-hidden="true" />
           <p className="text-zinc-500">Searching...</p>
         </div>
       ) : searchResults.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-sm text-zinc-500">
+          <p id="search-results-count" className="text-sm text-zinc-500" role="status" aria-live="polite">
             Found {searchResults.length} user{searchResults.length !== 1 ? 's' : ''}
           </p>
           {searchResults.map((user) => (
