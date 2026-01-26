@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   // Authentication
-  const authResult = requireAuth(request);
+  const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
   if (!authResult.user?.address) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
