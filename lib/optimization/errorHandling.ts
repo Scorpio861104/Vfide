@@ -183,7 +183,7 @@ export async function retryWithBackoff<T>(
     ...config,
   };
 
-  let lastError: any;
+  let lastError: unknown;
   let currentDelay = delayMs;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {

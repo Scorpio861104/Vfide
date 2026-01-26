@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Footer } from "@/components/layout/Footer";
 import { CouncilElectionABI, CouncilSalaryABI } from "@/lib/abis";

@@ -33,10 +33,16 @@ class WalletIconCache {
       return url;
     }
 
-    // Check if icon is in cache and still valid
+    // Check if icon is in cache and still valid (not expired)
     const cached = this.cache.get(url);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      return cached.data;
+    if (cached) {
+      const age = Date.now() - cached.timestamp;
+      // Return cached data only if not expired
+      if (age < this.CACHE_DURATION) {
+        return cached.data;
+      }
+      // Remove expired entry
+      this.cache.delete(url);
     }
 
     // Try to fetch and cache the icon

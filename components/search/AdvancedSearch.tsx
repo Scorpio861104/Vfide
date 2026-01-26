@@ -526,7 +526,7 @@ export default function AdvancedSearch({
     });
   }, []);
 
-  const handleFilterChange = useCallback((key: keyof SearchFilter, value: any) => {
+  const handleFilterChange = useCallback((key: keyof SearchFilter, value: SearchFilter[keyof SearchFilter]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   }, []);
 

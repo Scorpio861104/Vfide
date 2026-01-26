@@ -88,7 +88,7 @@ class ErrorMonitor {
     // Handle console errors in development
     if (!this.isProduction) {
       const originalError = console.error;
-      console.error = (...args: any[]) => {
+      console.error = (...args: unknown[]) => {
         this.captureError(new Error(args.join(' ')), {
           componentName: 'console',
           actionName: 'console-error',
@@ -356,11 +356,11 @@ export function useErrorMonitor() {
 /**
  * Wrapper for async functions with error tracking
  */
-export function withErrorTracking<T extends (...args: any[]) => Promise<any>>(
+export function withErrorTracking<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   context?: ErrorContext
 ): T {
-  return (async (...args: any[]) => {
+  return (async (...args: unknown[]) => {
     try {
       return await fn(...args);
     } catch (error) {

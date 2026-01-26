@@ -7,7 +7,7 @@ import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 interface FilterCondition {
   field: string;
   operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'between' | 'in';
-  value: any;
+  value: string | number | boolean | [number, number] | Array<string | number | boolean>;
 }
 
 interface AggregationConfig {
@@ -18,8 +18,8 @@ interface AggregationConfig {
 
 interface QueryBuilderProps {
   fields: Array<{ name: string; type: 'string' | 'number' | 'date' | 'boolean' }>;
-  data: any[];
-  onQuery?: (results: any[]) => void;
+  data: Record<string, unknown>[];
+  onQuery?: (results: Record<string, unknown>[]) => void;
   className?: string;
 }
 
@@ -111,7 +111,7 @@ export function QueryBuilder({
 
     // Apply grouping and aggregations
     if (groupBy.length > 0 || aggregations.length > 0) {
-      const grouped = new Map<string, any[]>();
+      const grouped = new Map<string, Record<string, unknown>[]>();
 
       results.forEach(row => {
         const key = groupBy.map(field => row[field]).join('|');
@@ -122,7 +122,7 @@ export function QueryBuilder({
       });
 
       results = Array.from(grouped.entries()).map(([key, rows]) => {
-        const result: any = {};
+        const result: Record<string, unknown> = {};
 
         // Add group by fields
         groupBy.forEach((field, index) => {
@@ -455,7 +455,7 @@ export function QueryBuilder({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.03 }}
                   >
-                    {Object.values(row).map((value: any, cellIndex) => (
+                    {Object.values(row).map((value, cellIndex) => (
                       <td key={cellIndex} className="py-2 px-3 text-gray-600 dark:text-gray-400">
                         {String(value)}
                       </td>

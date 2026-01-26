@@ -95,7 +95,7 @@ const loadConfig = (): BiometricConfig => {
     const parsed = JSON.parse(stored);
     return {
       ...parsed,
-      credentials: parsed.credentials.map((c: any) => ({
+      credentials: parsed.credentials.map((c: { id: string; createdAt: string; lastUsed: string | null; name: string }) => ({
         ...c,
         createdAt: new Date(c.createdAt),
         lastUsed: c.lastUsed ? new Date(c.lastUsed) : null

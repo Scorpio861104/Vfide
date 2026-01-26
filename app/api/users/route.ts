@@ -55,6 +55,25 @@ export async function GET(request: NextRequest) {
     const params: (string | number)[] = [];
 
     if (search) {
+      // Validate search parameter length
+      if (search.length > 100) {
+        return NextResponse.json(
+          { error: 'Search query too long' },
+          { status: 400 }
+        );
+      }
+      
+      // Validate search - allow alphanumeric, underscore, space, or valid Ethereum address
+      const isValidTextSearch = /^[a-zA-Z0-9_\s]+$/.test(search);
+      const isValidEthAddress = /^0x[a-fA-F0-9]{40}$/i.test(search); // Case-insensitive for checksummed addresses
+      
+      if (!isValidTextSearch && !isValidEthAddress) {
+        return NextResponse.json(
+          { error: 'Invalid search query format' },
+          { status: 400 }
+        );
+      }
+      
       queryText += ` WHERE username ILIKE $1 OR display_name ILIKE $1 OR wallet_address ILIKE $1`;
       params.push(`%${search}%`);
       queryText += ` ORDER BY proof_score DESC LIMIT $2 OFFSET $3`;
@@ -75,11 +94,11 @@ export async function GET(request: NextRequest) {
     
     // Apply field filtering if requested
     const filteredUsers = fields 
-      ? result.rows.map(user => filterFields(user as unknown as Record<string, unknown>, fields))
+      ? result.rows.map((user: Record<string, unknown>) => filterFields(user, fields))
       : result.rows;
     
     // Create standardized paginated response
-    const paginatedData = createPaginatedResponse(filteredUsers as any, total, page, limit);
+    const paginatedData = createPaginatedResponse(filteredUsers as Array<Record<string, unknown>>, total, page, limit);
     
     // Track API call for monitoring
     trackApiCallSimple('/api/users', 'GET', 200, Date.now() - startTime);

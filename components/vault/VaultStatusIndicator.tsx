@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { useAccount } from 'wagmi';

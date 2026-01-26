@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";

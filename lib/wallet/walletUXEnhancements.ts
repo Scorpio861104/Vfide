@@ -290,7 +290,8 @@ export function getWalletOnboardingSteps(
 export async function autoSwitchToBaseIfNeeded(
   isConnected: boolean,
   currentChainId: number | undefined,
-  switchChain: (params: { chainId: number }) => Promise<void>
+  switchChain: (params: { chainId: number }) => Promise<void>,
+  onError?: (error: Error) => void
 ): Promise<boolean> {
   const prefs = getWalletPreferences();
   
@@ -308,7 +309,14 @@ export async function autoSwitchToBaseIfNeeded(
     await switchChain({ chainId: PREFERRED_CHAIN.id });
     return true;
   } catch (error) {
-    console.warn('Auto-switch to Base failed:', error);
+    const err = error instanceof Error ? error : new Error('Unknown error during chain switch');
+    console.warn('Auto-switch to Base failed:', err);
+    
+    // Call error callback if provided
+    if (onError) {
+      onError(err);
+    }
+    
     return false;
   }
 }

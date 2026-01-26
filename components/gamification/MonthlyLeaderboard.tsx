@@ -32,7 +32,7 @@ interface UserPosition {
   tier: string;
   prizeAmount: string;
   prizeClaimed: boolean;
-  stats: any;
+  stats: Record<string, number | string>;
 }
 
 export default function MonthlyLeaderboard() {

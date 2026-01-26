@@ -87,6 +87,22 @@ export async function GET(request: NextRequest) {
       { next: { revalidate: forceRefresh ? 0 : 60 } } // Cache for 60 seconds unless forced
     );
     
+    // Check if fetch was successful
+    if (!ethPriceResponse.ok) {
+      console.error('Failed to fetch ETH price:', ethPriceResponse.status);
+      // Use fallback price if fetch fails
+      const ethPrice = 2000; // Fallback price
+      let vfidePrice = 0.10;
+      let vfidePriceInEth = vfidePrice / ethPrice;
+      
+      return NextResponse.json({ 
+        price: vfidePriceInEth, 
+        priceUsd: vfidePrice, 
+        ethPrice,
+        source: 'fallback'
+      });
+    }
+    
     const ethPriceData = await ethPriceResponse.json();
     const ethPrice = ethPriceData.ethereum?.usd || 2000;
 

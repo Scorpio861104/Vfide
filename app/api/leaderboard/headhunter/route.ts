@@ -138,7 +138,33 @@ export async function GET(request: NextRequest) {
       }),
     });
 
+    // Check if fetch was successful
+    if (!response.ok) {
+      console.error('Failed to fetch from subgraph:', response.status);
+      // Return mock data or empty leaderboard on fetch failure
+      return NextResponse.json({
+        success: true,
+        data: [],
+        year: yearNum,
+        quarter: quarterNum,
+        source: 'fallback',
+      });
+    }
+
     const result = await response.json();
+    
+    // Validate response structure
+    if (!result.data) {
+      console.error('Invalid subgraph response structure');
+      return NextResponse.json({
+        success: true,
+        data: [],
+        year: yearNum,
+        quarter: quarterNum,
+        source: 'fallback',
+      });
+    }
+    
     const stats = result.data?.headhunterStats || [];
     
     // Calculate total points for reward distribution

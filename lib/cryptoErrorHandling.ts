@@ -6,7 +6,7 @@ export class CryptoError extends Error {
   constructor(
     message: string,
     public code: string,
-    public originalError?: any,
+    public originalError?: unknown,
     public retryable: boolean = false
   ) {
     super(message);
@@ -45,9 +45,11 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
 /**
  * Parse MetaMask/Web3 errors into friendly messages
  */
-export function parseCryptoError(error: any): CryptoError {
+export function parseCryptoError(error: unknown): CryptoError {
+  const err = error as { code?: string | number; message?: string };
+  
   // User rejected transaction
-  if (error.code === 4001 || error.code === 'ACTION_REJECTED') {
+  if (err.code === 4001 || err.code === 'ACTION_REJECTED') {
     return new CryptoError(
       'Transaction was rejected',
       ErrorCodes.USER_REJECTED,
@@ -58,9 +60,9 @@ export function parseCryptoError(error: any): CryptoError {
 
   // Insufficient funds
   if (
-    error.code === -32000 ||
-    error.message?.includes('insufficient funds') ||
-    error.message?.includes('insufficient balance')
+    err.code === -32000 ||
+    err.message?.includes('insufficient funds') ||
+    err.message?.includes('insufficient balance')
   ) {
     return new CryptoError(
       'Insufficient funds for transaction',
@@ -72,10 +74,10 @@ export function parseCryptoError(error: any): CryptoError {
 
   // Network errors (retryable)
   if (
-    error.code === 'NETWORK_ERROR' ||
-    error.message?.includes('network') ||
-    error.message?.includes('timeout') ||
-    error.message?.includes('connection')
+    err.code === 'NETWORK_ERROR' ||
+    err.message?.includes('network') ||
+    err.message?.includes('timeout') ||
+    err.message?.includes('connection')
   ) {
     return new CryptoError(
       'Network error - please try again',
@@ -87,8 +89,8 @@ export function parseCryptoError(error: any): CryptoError {
 
   // Gas estimation errors
   if (
-    error.message?.includes('gas') ||
-    error.message?.includes('intrinsic gas too low')
+    err.message?.includes('gas') ||
+    err.message?.includes('intrinsic gas too low')
   ) {
     return new CryptoError(
       'Gas estimation failed - transaction may fail',
@@ -100,8 +102,8 @@ export function parseCryptoError(error: any): CryptoError {
 
   // Contract execution reverted
   if (
-    error.message?.includes('revert') ||
-    error.message?.includes('execution reverted')
+    err.message?.includes('revert') ||
+    err.message?.includes('execution reverted')
   ) {
     return new CryptoError(
       'Transaction would fail - contract error',
@@ -112,7 +114,7 @@ export function parseCryptoError(error: any): CryptoError {
   }
 
   // Rate limit
-  if (error.message?.includes('rate limit') || error.message?.includes('too many requests')) {
+  if (err.message?.includes('rate limit') || err.message?.includes('too many requests')) {
     return new CryptoError(
       'Rate limit exceeded - please wait and try again',
       ErrorCodes.RATE_LIMIT,
@@ -122,7 +124,7 @@ export function parseCryptoError(error: any): CryptoError {
   }
 
   // Wallet not connected
-  if (error.message?.includes('wallet') || error.message?.includes('not connected')) {
+  if (err.message?.includes('wallet') || err.message?.includes('not connected')) {
     return new CryptoError(
       'Wallet not connected',
       ErrorCodes.WALLET_NOT_CONNECTED,
@@ -133,7 +135,7 @@ export function parseCryptoError(error: any): CryptoError {
 
   // Generic error
   return new CryptoError(
-    error.message || 'An unknown error occurred',
+    err.message || 'An unknown error occurred',
     ErrorCodes.UNKNOWN,
     error,
     true
@@ -154,7 +156,7 @@ export async function withRetry<T>(
   for (let attempt = 1; attempt <= retryConfig.maxAttempts; attempt++) {
     try {
       return await fn();
-    } catch (error: any) {
+    } catch (error: unknown) {
       lastError = parseCryptoError(error);
 
       // Don't retry if error is not retryable
@@ -229,7 +231,7 @@ export async function safeExecute<T>(
     const data = await withRetry(executeWithTimeout, options.retry, options.onRetry);
 
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     const cryptoError = error instanceof CryptoError ? error : parseCryptoError(error);
 
     if (options.onError) {
@@ -243,7 +245,7 @@ export async function safeExecute<T>(
 /**
  * Check if error is user rejection
  */
-export function isUserRejection(error: any): boolean {
+export function isUserRejection(error: unknown): boolean {
   const cryptoError = error instanceof CryptoError ? error : parseCryptoError(error);
   return cryptoError.code === ErrorCodes.USER_REJECTED;
 }
@@ -251,7 +253,7 @@ export function isUserRejection(error: any): boolean {
 /**
  * Check if error is retryable
  */
-export function isRetryable(error: any): boolean {
+export function isRetryable(error: unknown): boolean {
   const cryptoError = error instanceof CryptoError ? error : parseCryptoError(error);
   return cryptoError.retryable;
 }
@@ -259,7 +261,7 @@ export function isRetryable(error: any): boolean {
 /**
  * Format error for user display
  */
-export function formatErrorForUser(error: any): string {
+export function formatErrorForUser(error: unknown): string {
   const cryptoError = error instanceof CryptoError ? error : parseCryptoError(error);
 
   const messages: Record<string, string> = {
@@ -284,7 +286,7 @@ export function useCryptoError() {
   const [error, setError] = React.useState<CryptoError | null>(null);
   const [isRetrying, setIsRetrying] = React.useState(false);
 
-  const handleError = React.useCallback((err: any) => {
+  const handleError = React.useCallback((err: unknown) => {
     const cryptoError = err instanceof CryptoError ? err : parseCryptoError(err);
     setError(cryptoError);
   }, []);
@@ -303,7 +305,7 @@ export function useCryptoError() {
           console.log(`Retry attempt ${attempt}:`, retryError.message);
         });
         return result;
-      } catch (err: any) {
+      } catch (err: unknown) {
         handleError(err);
         return null;
       } finally {

@@ -4,7 +4,7 @@
  * Low trust = cooler tones (blues), High trust = warmer accents (greens/golds)
  */
 
-"use client";
+'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 

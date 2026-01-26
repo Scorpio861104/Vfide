@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useChainId } from 'wagmi';
 import { QrCode, Copy, Check, Download, Share2, X } from 'lucide-react';
@@ -28,21 +28,69 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
   const chainId = useChainId();
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const copiedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generate QR code using canvas
   useEffect(() => {
     if (!address || !isOpen) return;
 
     // Simple QR code generation using a canvas-based approach
-    generateQRCode(address).then(setQrDataUrl);
+    generateQRCode(address)
+      .then(setQrDataUrl)
+      .catch((error) => {
+        console.error('Failed to generate QR code:', error);
+        setQrDataUrl(''); // Reset on error
+      });
   }, [address, isOpen]);
 
-  // Copy address
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Copy address with fallback
   const handleCopy = async () => {
     if (!address) return;
-    await navigator.clipboard.writeText(address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    
+    // Clear existing timeout
+    if (copiedTimeoutRef.current) {
+      clearTimeout(copiedTimeoutRef.current);
+    }
+    
+    try {
+      // Try modern clipboard API first
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch (_err) {
+      // Fallback for non-HTTPS contexts or if clipboard API fails
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = address;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        textArea.remove();
+        
+        if (successful) {
+          setCopied(true);
+          copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
+        } else {
+          throw new Error('Copy command failed');
+        }
+      } catch {
+        // Silent fail - user can still manually copy
+        logger.debug('Failed to copy address', { address });
+      }
+    }
   };
 
   // Download QR code

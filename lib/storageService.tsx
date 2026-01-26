@@ -56,7 +56,7 @@ export class StorageService {
     }
 
     try {
-      let data: any = value;
+      let data: T | T[] = value;
 
       // Apply max items limit if specified and value is array
       if (options?.maxItems && Array.isArray(value)) {
@@ -199,7 +199,7 @@ export class StorageService {
   /**
    * Batch set multiple keys
    */
-  static setBatch(items: Array<{ key: StorageKey; value: any; options?: StorageServiceOptions }>): boolean {
+  static setBatch(items: Array<{ key: StorageKey; value: unknown; options?: StorageServiceOptions }>): boolean {
     try {
       items.forEach(({ key, value, options }) => {
         this.set(key, value, options);

@@ -95,8 +95,17 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
   // Memory measurement
   useEffect(() => {
     const measureMemory = () => {
-      const memoryInfo = (performance as any)?.memory;
-      if (memoryInfo) {
+      // Type-safe check for memory API (Chrome only)
+      interface PerformanceMemory {
+        usedJSHeapSize: number;
+        totalJSHeapSize: number;
+        jsHeapSizeLimit: number;
+      }
+      
+      const perfWithMemory = performance as Performance & { memory?: PerformanceMemory };
+      const memoryInfo = perfWithMemory?.memory;
+      
+      if (memoryInfo && typeof memoryInfo.usedJSHeapSize === 'number') {
         setMetrics((prev) => ({
           ...prev,
           memory: {

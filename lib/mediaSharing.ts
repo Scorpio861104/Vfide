@@ -323,7 +323,7 @@ export function useMediaUpload() {
       });
 
       return attachment;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Mark as failed
       setUploads((prev) => {
         const next = new Map(prev);

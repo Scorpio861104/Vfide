@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -86,8 +86,12 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
 
   // Auto-switch to Base after connection
   useEffect(() => {
-    if (isConnected && chainId !== PREFERRED_CHAIN.id && prefs.autoSwitchToBase && switchChainFn) {
-      autoSwitchToBaseIfNeeded(isConnected, chainId, switchChainFn);
+    if (isConnected && switchChainFn && chainId !== PREFERRED_CHAIN.id && prefs.autoSwitchToBase) {
+      autoSwitchToBaseIfNeeded(isConnected, chainId, switchChainFn, (error) => {
+        // Show error toast if auto-switch fails
+        const friendlyError = getUserFriendlyError(error);
+        setUserError(friendlyError);
+      });
     }
   }, [isConnected, chainId, prefs.autoSwitchToBase, switchChainFn]);
 

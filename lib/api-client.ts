@@ -5,11 +5,39 @@
  * Handles authentication, error handling, and type-safe requests
  */
 
+interface Message {
+  id: string;
+  conversationId: string;
+  from: string;
+  to: string;
+  encryptedContent: string;
+  timestamp: number;
+  read: boolean;
+  signature?: string;
+  reactions?: Record<string, unknown>;
+}
+
+interface User {
+  address: string;
+  username?: string;
+  avatar?: string;
+  bio?: string;
+  createdAt: number;
+}
+
+interface GamificationProgress {
+  address: string;
+  xp: number;
+  level: number;
+  achievements: string[];
+  badges: string[];
+}
+
 export class APIError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public response?: any
+    public response?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'APIError';
@@ -126,7 +154,7 @@ export class APIClient {
 
   async getMessages(conversationId: string, limit = 50, offset = 0) {
     return this.request<{
-      messages: any[];
+      messages: Message[];
       total: number;
       limit: number;
       offset: number;
@@ -140,28 +168,28 @@ export class APIClient {
     encryptedContent: string;
     signature?: string;
   }) {
-    return this.request<{ success: boolean; message: any }>('/messages', {
+    return this.request<{ success: boolean; message: Message }>('/messages', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async markMessageRead(messageId: string, conversationId: string) {
-    return this.request<{ success: boolean; message: any }>('/messages', {
+    return this.request<{ success: boolean; message: Message }>('/messages', {
       method: 'PATCH',
       body: JSON.stringify({ messageId, conversationId, read: true }),
     });
   }
 
   async editMessage(messageId: string, conversationId: string, newEncryptedContent: string) {
-    return this.request<{ success: boolean; message: any }>('/messages/edit', {
+    return this.request<{ success: boolean; message: Message }>('/messages/edit', {
       method: 'PATCH',
       body: JSON.stringify({ messageId, conversationId, encryptedContent: newEncryptedContent }),
     });
   }
 
   async deleteMessage(messageId: string, conversationId: string) {
-    return this.request<{ success: boolean; message: any }>('/messages/delete', {
+    return this.request<{ success: boolean; message: Message }>('/messages/delete', {
       method: 'DELETE',
       body: JSON.stringify({ messageId, conversationId }),
     });
@@ -173,7 +201,7 @@ export class APIClient {
     reaction: { type?: 'emoji' | 'custom_image'; emoji?: string; imageUrl?: string; imageName?: string }, 
     userAddress: string
   ) {
-    return this.request<{ success: boolean; message: any }>('/messages/reaction', {
+    return this.request<{ success: boolean; message: Message }>('/messages/reaction', {
       method: 'POST',
       body: JSON.stringify({ 
         messageId, 
@@ -190,11 +218,11 @@ export class APIClient {
   // ============ Users ============
 
   async getUser(address: string) {
-    return this.request<{ user: any }>(`/users/${address}`);
+    return this.request<{ user: User }>(`/users/${address}`);
   }
 
-  async updateUser(address: string, data: any) {
-    return this.request<{ success: boolean; user: any }>(`/users/${address}`, {
+  async updateUser(address: string, data: Partial<User>) {
+    return this.request<{ success: boolean; user: User }>(`/users/${address}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -233,7 +261,7 @@ export class APIClient {
   }
 
   async sendFriendRequest(from: string, to: string) {
-    return this.request<{ success: boolean; request: any }>('/friends', {
+    return this.request<{ success: boolean; request: { id: string; from: string; to: string; status: string } }>('/friends', {
       method: 'POST',
       body: JSON.stringify({ from, to }),
     });
@@ -260,14 +288,14 @@ export class APIClient {
   // ============ Gamification ============
 
   async getGamificationProgress(address: string) {
-    return this.request<any>(`/gamification?address=${address}`);
+    return this.request<GamificationProgress>(`/gamification?address=${address}`);
   }
 
   async awardXP(address: string, amount: number, reason: string) {
     return this.request<{
       success: boolean;
       levelUp: boolean;
-      progress: any;
+      progress: GamificationProgress;
       reason: string;
     }>('/gamification/xp', {
       method: 'POST',
@@ -277,7 +305,7 @@ export class APIClient {
 
   async getLeaderboard(category = 'xp', limit = 50) {
     return this.request<{
-      leaderboard: any[];
+      leaderboard: Array<{ address: string; score: number; rank: number }>;
       total: number;
       cached: boolean;
     }>(`/gamification/leaderboard?category=${category}&limit=${limit}`);

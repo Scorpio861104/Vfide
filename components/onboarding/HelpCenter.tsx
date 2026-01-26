@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Book, ChevronRight, Droplets, Globe, HelpCircle, Shield, Star, Store, Vote, Wallet, X } from "lucide-react";

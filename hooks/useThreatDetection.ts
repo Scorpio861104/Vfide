@@ -47,7 +47,7 @@ const loadThreats = (): ThreatAlert[] => {
     if (!stored) return [];
 
     const parsed = JSON.parse(stored);
-    return parsed.map((threat: any) => ({
+    return parsed.map((threat: { id: string; level: string; type: string; detected: string; details: Record<string, unknown>; resolved: boolean }) => ({
       ...threat,
       detected: new Date(threat.detected)
     }));

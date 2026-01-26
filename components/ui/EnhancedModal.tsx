@@ -3,7 +3,7 @@
  * Beautiful modal dialogs with premium animations
  */
 
-"use client";
+'use client';
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";

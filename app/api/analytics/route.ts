@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+// Constants for validation
+const MAX_ANALYTICS_LIMIT = 1000;
+const DEFAULT_ANALYTICS_LIMIT = 100;
+const VALID_EVENT_TYPES = [
+  'page_view',
+  'wallet_connect',
+  'transaction',
+  'quest_complete',
+  'achievement_unlock',
+  'social_interaction',
+  'error',
+  'performance'
+];
+
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -11,31 +25,49 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const eventType = searchParams.get('eventType');
     const userId = searchParams.get('userId');
-    const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const limitParam = searchParams.get('limit');
+    
+    // Parse and validate limit with proper bounds
+    const limit = limitParam 
+      ? Math.min(Math.max(1, parseInt(limitParam, 10)), MAX_ANALYTICS_LIMIT)
+      : DEFAULT_ANALYTICS_LIMIT;
 
     // Validate parsed number
-    if (isNaN(limit) || limit < 0) {
+    if (isNaN(limit)) {
       return NextResponse.json(
         { error: 'Invalid limit parameter' },
         { status: 400 }
       );
     }
 
-    let sql = `SELECT * FROM analytics_events WHERE 1=1`;
+    // Validate event type if provided
+    if (eventType && !VALID_EVENT_TYPES.includes(eventType)) {
+      return NextResponse.json(
+        { error: `Invalid event type. Must be one of: ${VALID_EVENT_TYPES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Build query with proper parameterization
+    const conditions: string[] = [];
     const params: (string | number)[] = [];
 
     if (eventType) {
       params.push(eventType);
-      sql += ` AND event_type = $${params.length}`;
+      conditions.push(`event_type = $${params.length}`);
     }
 
     if (userId) {
       params.push(userId);
-      sql += ` AND user_id = $${params.length}`;
+      conditions.push(`user_id = $${params.length}`);
     }
 
+    // Add limit parameter
     params.push(limit);
-    sql += ` ORDER BY timestamp DESC LIMIT $${params.length}`;
+    
+    // Construct safe SQL query
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const sql = `SELECT * FROM analytics_events ${whereClause} ORDER BY timestamp DESC LIMIT $${params.length}`;
 
     const result = await query(sql, params);
 

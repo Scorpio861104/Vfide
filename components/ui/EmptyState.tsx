@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { ReactNode } from 'react';
 import { Inbox, Search, FileQuestion } from 'lucide-react';

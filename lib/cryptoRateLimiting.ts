@@ -264,10 +264,10 @@ export function getRateLimitStats(actionType: keyof typeof REWARD_COOLDOWNS): {
  * Middleware for API rate limiting
  */
 export function withRateLimit(
-  handler: (req: Request, context: any) => Promise<Response>,
+  handler: (req: Request, context: Record<string, unknown>) => Promise<Response>,
   actionType: keyof typeof REWARD_COOLDOWNS
 ) {
-  return async (req: Request, context: any): Promise<Response> => {
+  return async (req: Request, context: Record<string, unknown>): Promise<Response> => {
     try {
       // Extract user ID from request (you'll need to implement authentication)
       const userId = context.params?.userId || 'anonymous';

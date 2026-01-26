@@ -37,7 +37,7 @@ import VaultRegistryABI from './VaultRegistry.json'
 import ERC20ABI from './ERC20.json'
 
 // Runtime validation: Ensure ABIs are valid arrays
-function validateABI(abi: unknown, name: string): any[] {
+function validateABI(abi: unknown, name: string): unknown[] {
   if (!Array.isArray(abi)) {
     throw new Error(`Invalid ABI for ${name}: Expected array, got ${typeof abi}`);
   }

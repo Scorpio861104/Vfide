@@ -271,7 +271,7 @@ export function useWebVitals() {
 /**
  * Performance optimization utilities
  */
-export function useOptimizeRendering(callback: () => void, deps: any[] = []) {
+export function useOptimizeRendering(callback: () => void, deps: React.DependencyList = []) {
   React.useEffect(() => {
     // Use requestAnimationFrame for smoother rendering
     const rafId = requestAnimationFrame(callback)
@@ -306,7 +306,7 @@ export function useLazyImage(ref: React.RefObject<HTMLImageElement>) {
 /**
  * Debounce function for performance-critical operations
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -321,7 +321,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function for continuous operations
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -339,7 +339,7 @@ export function throttle<T extends (...args: any[]) => any>(
 /**
  * Memoization utility for expensive computations
  */
-export function memoize<T extends (...args: any[]) => any>(func: T): T {
+export function memoize<T extends (...args: unknown[]) => unknown>(func: T): T {
   const cache = new Map();
 
   return ((...args: Parameters<T>) => {
@@ -434,13 +434,13 @@ export const ResourceHints = {
  */
 export function measurePerformance(label: string) {
   return function decorator(
-    target: any,
+    target: Record<string, unknown>,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const start = performance.now();
       try {
         const result = await originalMethod.apply(this, args);

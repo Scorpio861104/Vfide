@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 // Network-agnostic components - removed testnet-specific UI
 // App works identically on all networks based on wallet connection

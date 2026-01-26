@@ -7,7 +7,7 @@
  * and exposes its capabilities like gasless transactions, batching, etc.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAccount, usePublicClient } from 'wagmi';
 import { type Address } from 'viem';
 
@@ -202,7 +202,7 @@ export function useSmartWallet(): UseSmartWalletResult {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const detectWallet = async () => {
+  const detectWallet = useCallback(async () => {
     if (!address || !publicClient) {
       setWalletType('unknown');
       setImplementation(null);
@@ -223,11 +223,11 @@ export function useSmartWallet(): UseSmartWalletResult {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [address, publicClient]);
 
   useEffect(() => {
     detectWallet();
-  }, [address, chainId, publicClient]);
+  }, [detectWallet]);
 
   const capabilities = useMemo(
     () => getCapabilitiesForType(walletType, chainId),

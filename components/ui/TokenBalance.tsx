@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useAccount, useReadContract, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';

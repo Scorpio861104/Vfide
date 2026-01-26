@@ -3,7 +3,7 @@
  * Beautiful ambient backgrounds with particles and gradients
  */
 
-"use client";
+'use client';
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";

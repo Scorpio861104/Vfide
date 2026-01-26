@@ -103,6 +103,17 @@ export function useNotificationHub(): UseNotificationHubResult {
     }
   }, [preferences]);
 
+  // Track active timeouts for cleanup
+  const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
+
+  // Cleanup all timeouts on unmount
+  useEffect(() => {
+    return () => {
+      activeTimeouts.current.forEach(clearTimeout);
+      activeTimeouts.current.clear();
+    };
+  }, []);
+
   // Add notification
   const addNotification = useCallback(
     (notificationData: Omit<Notification, 'id' | 'timestamp' | 'status'>) => {
@@ -127,7 +138,7 @@ export function useNotificationHub(): UseNotificationHubResult {
         });
 
         // Simulate delivery
-        setTimeout(() => {
+        const deliveryTimeoutId = setTimeout(() => {
           setNotifications((prev) =>
             prev.map((n) =>
               n.id === newNotification.id
@@ -144,7 +155,13 @@ export function useNotificationHub(): UseNotificationHubResult {
                 : n
             )
           );
+          
+          // Remove from active timeouts after completion
+          activeTimeouts.current.delete(deliveryTimeoutId);
         }, 1000);
+        
+        // Track timeout for cleanup
+        activeTimeouts.current.add(deliveryTimeoutId);
 
         // Fire browser notification if supported
         if (typeof window !== 'undefined' && 'Notification' in window) {

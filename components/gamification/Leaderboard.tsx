@@ -25,6 +25,22 @@ export function Leaderboard() {
   const [category, setCategory] = useState<LeaderboardCategory>('xp');
   const [timeRange, _setTimeRange] = useState<'all' | 'week' | 'month'>('all');
 
+  // Handle keyboard navigation for tabs
+  const handleTabKeyDown = (e: React.KeyboardEvent, targetCategory: LeaderboardCategory) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setCategory(targetCategory);
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const categories: LeaderboardCategory[] = ['xp', 'level', 'achievements', 'friends'];
+      const currentIndex = categories.indexOf(category);
+      const newIndex = e.key === 'ArrowRight' 
+        ? (currentIndex + 1) % categories.length
+        : (currentIndex - 1 + categories.length) % categories.length;
+      setCategory(categories[newIndex]);
+    }
+  };
+
   // Load leaderboard data once
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -114,9 +130,14 @@ export function Leaderboard() {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Leaderboard categories">
           <button
             onClick={() => setCategory('xp')}
+            onKeyDown={(e) => handleTabKeyDown(e, 'xp')}
+            role="tab"
+            aria-selected={category === 'xp'}
+            aria-label="Sort by XP"
+            tabIndex={category === 'xp' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'xp'
                 ? 'bg-cyan-400 text-zinc-950'
@@ -128,6 +149,11 @@ export function Leaderboard() {
           </button>
           <button
             onClick={() => setCategory('level')}
+            onKeyDown={(e) => handleTabKeyDown(e, 'level')}
+            role="tab"
+            aria-selected={category === 'level'}
+            aria-label="Sort by level"
+            tabIndex={category === 'level' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'level'
                 ? 'bg-cyan-400 text-zinc-950'
@@ -139,6 +165,11 @@ export function Leaderboard() {
           </button>
           <button
             onClick={() => setCategory('achievements')}
+            onKeyDown={(e) => handleTabKeyDown(e, 'achievements')}
+            role="tab"
+            aria-selected={category === 'achievements'}
+            aria-label="Sort by achievements"
+            tabIndex={category === 'achievements' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'achievements'
                 ? 'bg-cyan-400 text-zinc-950'
@@ -150,6 +181,11 @@ export function Leaderboard() {
           </button>
           <button
             onClick={() => setCategory('friends')}
+            onKeyDown={(e) => handleTabKeyDown(e, 'friends')}
+            role="tab"
+            aria-selected={category === 'friends'}
+            aria-label="Sort by friends"
+            tabIndex={category === 'friends' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'friends'
                 ? 'bg-cyan-400 text-zinc-950'
@@ -202,9 +238,10 @@ export function Leaderboard() {
             <p className="text-xs text-zinc-500 mt-2">Be the first to earn XP and climb the ranks!</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#2A2A2F]">
+          <div className="divide-y divide-[#2A2A2F]" role="list" aria-label="Leaderboard rankings">
             {leaderboard.slice(0, 50).map((entry, index) => {
               const isCurrentUser = address && entry.address.toLowerCase() === address.toLowerCase();
+              const rankLabel = `Rank ${entry.rank} - ${entry.alias || `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`}`;
               
               return (
                 <motion.div
@@ -212,6 +249,8 @@ export function Leaderboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
+                  role="listitem"
+                  aria-label={rankLabel}
                   className={`flex items-center gap-4 p-4 hover:bg-zinc-900 transition-colors ${
                     isCurrentUser ? 'bg-cyan-400/5' : ''
                   }`}

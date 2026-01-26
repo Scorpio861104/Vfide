@@ -219,7 +219,7 @@ export async function migrateToHttpOnlyCookies(
  * Helper to create authenticated API response with updated cookie
  */
 export function createAuthenticatedResponse(
-  data: any,
+  data: Record<string, unknown>,
   token?: string,
   refreshToken?: string
 ): NextResponse {

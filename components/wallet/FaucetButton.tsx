@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard';
 import { FAUCET_URLS } from '@/lib/testnet';

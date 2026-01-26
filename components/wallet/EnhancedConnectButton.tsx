@@ -11,7 +11,7 @@
  * - Disconnect confirmation
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect, useChainId, useSwitchChain } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { WalletCapabilities } from './WalletCapabilities';
 import { useSmartWallet, useWalletTypeLabel } from '@/hooks/useSmartWallet';
+import { useToast } from '@/components/ui/toast';
 
 // ==================== TYPES ====================
 
@@ -71,9 +72,32 @@ const TESTNET_CHAINS = SUPPORTED_CHAINS.filter(c => c.isTestnet);
 function useNetworkStatus() {
   const chainId = useChainId();
   const { switchChain, isPending: isSwitching, error: switchError } = useSwitchChain();
+  const { showToast } = useToast();
   
   const currentChain = SUPPORTED_CHAINS.find(c => c.id === chainId);
   const isSupported = !!currentChain;
+  
+  // Show error toast when chain switch fails
+  useEffect(() => {
+    if (switchError) {
+      showToast(
+        `Failed to switch network: ${switchError.message}`,
+        'error',
+        4000
+      );
+    }
+  }, [switchError, showToast]);
+  
+  // Validate chain ID before switching
+  const validateAndSwitchChain = (targetChainId: number) => {
+    const supportedIds = [8453, 137, 324, 84532, 80002, 300];
+    if (!supportedIds.includes(targetChainId)) {
+      console.warn(`Unsupported chain ID: ${targetChainId}`);
+      showToast('Unsupported network', 'error', 3000);
+      return;
+    }
+    switchChain({ chainId: targetChainId as 8453 | 137 | 324 | 84532 | 80002 | 300 });
+  };
   
   return {
     chainId,
@@ -81,7 +105,7 @@ function useNetworkStatus() {
     isSupported,
     isSwitching,
     switchError,
-    switchChain: (targetChainId: number) => switchChain({ chainId: targetChainId as 8453 | 137 | 324 | 84532 | 80002 | 300 }),
+    switchChain: validateAndSwitchChain,
   };
 }
 

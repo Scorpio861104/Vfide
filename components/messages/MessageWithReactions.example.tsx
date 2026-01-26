@@ -13,12 +13,22 @@ import { apiClient } from '@/lib/api-client';
 import { VFIDE_CUSTOM_REACTIONS } from '@/lib/customReactions';
 import { Smile } from 'lucide-react';
 
+interface ReactionUser {
+  address: string;
+  timestamp: number;
+}
+
+interface ReactionData {
+  users: ReactionUser[];
+  count: number;
+}
+
 interface Message {
   id: string;
   content: string;
   sender: string;
   timestamp: Date;
-  reactions?: Record<string, any>;
+  reactions?: Record<string, ReactionData>;
   conversationId: string;
 }
 
@@ -68,7 +78,7 @@ export function MessageWithReactions({ message }: { message: Message }) {
       const reactionKey = reaction.type === 'emoji' ? reaction.emoji! : reaction.imageUrl!;
       const existingReaction = reactions[reactionKey];
       const userHasReacted = existingReaction?.users?.some(
-        (u: any) => u.address.toLowerCase() === address.toLowerCase()
+        (u) => u.address.toLowerCase() === address.toLowerCase()
       );
 
       if (userHasReacted) {
