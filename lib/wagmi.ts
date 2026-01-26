@@ -62,7 +62,8 @@ const safeStorage = {
 // WalletConnect Project ID (optional for local/dev/test runs).
 // When missing, we fully disable the WalletConnect connector to keep env-less
 // builds/tests deterministic and avoid remote registry/config fetches.
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+// Support both naming conventions for backwards compatibility
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID
 const hasWalletConnect = typeof projectId === 'string' && projectId.length > 0
 
 // App metadata for wallet connections
