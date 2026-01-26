@@ -971,9 +971,8 @@ export function UltimateWalletConnect({
           authenticationStatus,
           mounted,
         }) => {
-          const ready = mounted && authenticationStatus !== 'loading';
-          const connected = ready && account && chain && 
-            (!authenticationStatus || authenticationStatus === 'authenticated');
+          const ready = mounted;
+          const connected = ready && account && chain;
           const isLoading = authenticationStatus === 'loading';
 
           // Keyboard shortcut for quick connect

@@ -192,16 +192,16 @@ export function SimpleWalletConnect() {
         mounted,
       }) => {
         // Wait for mount to avoid hydration mismatch
-        const ready = mounted && authenticationStatus !== 'loading';
+        const ready = mounted;
         
         // Check all connection requirements
+        // Simplified: only check account and chain, authenticationStatus is optional
         const connected =
           ready &&
           account != null &&
-          chain != null &&
-          (!authenticationStatus || authenticationStatus === 'authenticated');
+          chain != null;
 
-        // Show loading state
+        // Show loading state only when explicitly loading
         const isLoading = authenticationStatus === 'loading';
 
         return (
