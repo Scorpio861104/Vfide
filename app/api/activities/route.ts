@@ -3,6 +3,10 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+// Constants
+const MAX_ACTIVITIES_LIMIT = 100;
+const DEFAULT_ACTIVITIES_LIMIT = 50;
+
 interface Activity {
   id: number;
   user_id: number;
@@ -29,13 +33,13 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
     const activityType = searchParams.get('type');
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const limit = parseInt(searchParams.get('limit') || DEFAULT_ACTIVITIES_LIMIT.toString(), 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Validate parsed numbers - check for positive values and reasonable limits
-    if (isNaN(limit) || isNaN(offset) || limit <= 0 || offset < 0 || limit > 100) {
+    if (isNaN(limit) || isNaN(offset) || limit <= 0 || offset < 0 || limit > MAX_ACTIVITIES_LIMIT) {
       return NextResponse.json(
-        { error: 'Invalid limit or offset parameter. Limit must be 1-100, offset must be >= 0' },
+        { error: `Invalid limit or offset parameter. Limit must be 1-${MAX_ACTIVITIES_LIMIT}, offset must be >= 0` },
         { status: 400 }
       );
     }

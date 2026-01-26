@@ -34,7 +34,12 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
     if (!address || !isOpen) return;
 
     // Simple QR code generation using a canvas-based approach
-    generateQRCode(address).then(setQrDataUrl);
+    generateQRCode(address)
+      .then(setQrDataUrl)
+      .catch((error) => {
+        console.error('Failed to generate QR code:', error);
+        setQrDataUrl(''); // Reset on error
+      });
   }, [address, isOpen]);
 
   // Copy address

@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     const params: (string | number)[] = [];
 
     if (search) {
-      // Validate search parameter length and pattern
+      // Validate search parameter length
       if (search.length > 100) {
         return NextResponse.json(
           { error: 'Search query too long' },
@@ -63,9 +63,11 @@ export async function GET(request: NextRequest) {
         );
       }
       
-      // Basic validation - alphanumeric, underscore, and space only for safety
-      if (!/^[a-zA-Z0-9_\s]+$/.test(search) && !/^0x[a-fA-F0-9]{40}$/.test(search)) {
-        // Allow either normal text OR valid Ethereum address format
+      // Validate search - allow alphanumeric, underscore, space, or valid Ethereum address
+      const isValidTextSearch = /^[a-zA-Z0-9_\s]+$/.test(search);
+      const isValidEthAddress = /^0x[a-fA-F0-9]{40}$/i.test(search); // Case-insensitive for checksummed addresses
+      
+      if (!isValidTextSearch && !isValidEthAddress) {
         return NextResponse.json(
           { error: 'Invalid search query format' },
           { status: 400 }
