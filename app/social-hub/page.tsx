@@ -410,11 +410,11 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
       {/* Media */}
       {post.media && post.media.length > 0 && (
         <div className={`grid ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-0.5`}>
-          {post.media.map((m) => (
+          {post.media.map((m, index) => (
             <img
               key={m.url}
               src={m.url}
-              alt=""
+              alt={`Post image ${index + 1}`}
               className="w-full h-64 object-cover"
             />
           ))}
