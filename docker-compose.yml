@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vfide-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: vfide_user
+      POSTGRES_PASSWORD: vfide_password
+      POSTGRES_DB: vfide_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vfide_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # WebSocket server (optional - if needed for local development)
+  websocket:
+    build:
+      context: ./websocket-server
+      dockerfile: Dockerfile
+    container_name: vfide-websocket
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://vfide_user:vfide_password@postgres:5432/vfide_db
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: vfide-network
