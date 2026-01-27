@@ -291,9 +291,10 @@ export function searchMessages(
 
   // Filter by media
   if (filters?.hasMedia !== undefined) {
-    filtered = filtered.filter((msg) =>
-      filters.hasMedia ? msg.attachments?.length > 0 : !msg.attachments || msg.attachments.length === 0
-    );
+    filtered = filtered.filter((msg) => {
+      const attachments = Array.isArray(msg.attachments) ? msg.attachments : [];
+      return filters.hasMedia ? attachments.length > 0 : attachments.length === 0;
+    });
   }
 
   return filtered;
