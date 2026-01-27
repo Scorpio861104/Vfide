@@ -35,7 +35,9 @@ interface Message {
 export function MessageWithReactions({ message }: { message: Message }) {
   const { address } = useAccount();
   const [showPicker, setShowPicker] = useState(false);
-  const [reactions, setReactions] = useState(message.reactions || {});
+  const [reactions, setReactions] = useState<Record<string, ReactionData>>(
+    message.reactions ?? {}
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddReaction = async (reaction: {
@@ -56,7 +58,8 @@ export function MessageWithReactions({ message }: { message: Message }) {
       );
       // Update reactions from the message in the response
       if (result.success && result.message) {
-        setReactions(result.message.reactions || {});
+        const nextReactions = result.message.reactions ?? {};
+        setReactions(nextReactions as Record<string, ReactionData>);
       }
     } catch (error) {
       console.error('Failed to add reaction:', error);
