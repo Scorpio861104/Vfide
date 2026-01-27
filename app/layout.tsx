@@ -23,6 +23,9 @@ import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegist
 import { ZustandHydration } from "@/components/core/ZustandHydration";
 import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
 import { MockServiceWorker } from "@/components/dev/MockServiceWorker";
+// Navigation components
+import { GlobalNav } from "@/components/layout/GlobalNav";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
 // Use CSS variables for fonts - will load from Google Fonts via CSS
 // This avoids build-time network requests while still using Google Fonts in production
@@ -111,18 +114,24 @@ export default function RootLayout({
                   <ZustandHydration />
                   <WebVitalsTracker />
                   <EnhancedNetworkBanner />
-                <NetworkSwitchOverlay />
-                <TestnetNotification />
-                {/* Network detection handled by wallet connection */}
-                <AchievementToastContainer />
-                {children}
-                <CommandBar />
-                <PieMenu />
-                <OnboardingManager />
-                <HelpCenter />
-              </ToastProvider>
-            </Web3Provider>
-          </AccessibilityProvider>
+                  <NetworkSwitchOverlay />
+                  <TestnetNotification />
+                  {/* Network detection handled by wallet connection */}
+                  <AchievementToastContainer />
+                  {/* Global Navigation */}
+                  <GlobalNav />
+                  {/* Main Content */}
+                  {children}
+                  {/* Mobile Bottom Navigation */}
+                  <MobileBottomNav />
+                  {/* Command Bar & Pie Menu */}
+                  <CommandBar />
+                  <PieMenu />
+                  <OnboardingManager />
+                  <HelpCenter />
+                </ToastProvider>
+              </Web3Provider>
+            </AccessibilityProvider>
           </ErrorBoundary>
         )}
       </body>
