@@ -87,6 +87,13 @@ interface BulkPaymentJob {
   totalAmount: number;
 }
 
+type NewPaymentRequest = {
+  amount: string;
+  currency: string;
+  email: string;
+  description: string;
+};
+
 // ==================== MOCK DATA ====================
 
 function generateMockPaymentRequests(): PaymentRequest[] {
@@ -221,7 +228,12 @@ export default function MerchantPortal() {
   const [bulkJobs, setBulkJobs] = useState(generateMockBulkJobs());
 
   // Form states
-  const [newRequest, setNewRequest] = useState({ amount: '', currency: 'USDC', email: '', description: '' });
+  const [newRequest, setNewRequest] = useState<NewPaymentRequest>({
+    amount: '',
+    currency: 'USDC',
+    email: '',
+    description: '',
+  });
   const [newApiKeyName, setNewApiKeyName] = useState('');
   const [uploadingFile, setUploadingFile] = useState(false);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
@@ -436,8 +448,8 @@ function PaymentRequestsSection({
   onCreateRequest,
 }: {
   requests: PaymentRequest[];
-  newRequest: Partial<PaymentRequest>;
-  setNewRequest: (request: Partial<PaymentRequest>) => void;
+  newRequest: NewPaymentRequest;
+  setNewRequest: (request: NewPaymentRequest) => void;
   onCreateRequest: () => void;
 }) {
   return (
