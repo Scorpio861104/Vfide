@@ -643,16 +643,3 @@ export function useRewards(userId: string) {
 
   return { rewards, totalUnclaimed, loading, refresh, claim };
 }
-
-// Extend Window interface for TypeScript
-declare global {
-  interface Window {
-    ethereum?: {
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      on?: (event: string, handler: (...args: unknown[]) => void) => void;
-      removeListener?: (event: string, handler: (...args: unknown[]) => void) => void;
-      isMetaMask?: boolean;
-      selectedAddress?: string;
-    };
-  }
-}

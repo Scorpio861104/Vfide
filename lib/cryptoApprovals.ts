@@ -171,8 +171,17 @@ export async function requestTokenApproval(
   } catch (error: unknown) {
     console.error('Token approval failed:', error);
     
+    // Type guard for errors with code and message
+    const isErrorWithCode = (err: unknown): err is { code: number; message?: string } => {
+      return typeof err === 'object' && err !== null && 'code' in err;
+    };
+    
+    const isErrorWithMessage = (err: unknown): err is { message: string } => {
+      return typeof err === 'object' && err !== null && 'message' in err;
+    };
+    
     // User rejected
-    if (error.code === 4001) {
+    if (isErrorWithCode(error) && error.code === 4001) {
       return {
         success: false,
         error: 'Approval rejected by user',
@@ -181,7 +190,7 @@ export async function requestTokenApproval(
 
     return {
       success: false,
-      error: error.message || 'Token approval failed',
+      error: isErrorWithMessage(error) ? error.message : 'Token approval failed',
     };
   }
 }
@@ -236,9 +245,14 @@ export async function ensureTokenAllowance(
     return approvalResult;
   } catch (error: unknown) {
     console.error('Failed to ensure token allowance:', error);
+    
+    const isErrorWithMessage = (err: unknown): err is { message: string } => {
+      return typeof err === 'object' && err !== null && 'message' in err;
+    };
+    
     return {
       success: false,
-      error: error.message || 'Failed to ensure token allowance',
+      error: isErrorWithMessage(error) ? error.message : 'Failed to ensure token allowance',
     };
   }
 }
@@ -321,9 +335,14 @@ export async function revokeTokenApproval(
     return { success: true, txHash };
   } catch (error: unknown) {
     console.error('Failed to revoke approval:', error);
+    
+    const isErrorWithMessage = (err: unknown): err is { message: string } => {
+      return typeof err === 'object' && err !== null && 'message' in err;
+    };
+    
     return {
       success: false,
-      error: error.message || 'Failed to revoke approval',
+      error: isErrorWithMessage(error) ? error.message : 'Failed to revoke approval',
     };
   }
 }
@@ -401,7 +420,8 @@ export function useTokenApproval(spenderAddress: string, amount: string) {
       setStatus(result);
       return result;
     } catch (err: unknown) {
-      setError(err.message);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMessage);
       return null;
     }
   }, [spenderAddress, amount]);
@@ -429,7 +449,8 @@ export function useTokenApproval(spenderAddress: string, amount: string) {
 
       return true;
     } catch (err: unknown) {
-      setError(err.message);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMessage);
       return false;
     } finally {
       setIsApproving(false);

@@ -294,7 +294,12 @@ export class SecurityMonitor {
     
     // Report to backend in production
     if (process.env.NODE_ENV === 'production') {
-      this.reportToBackend({ type, details });
+      this.reportToBackend({ 
+        type, 
+        details,
+        timestamp: Date.now(),
+        url: window.location.href,
+      });
     }
   }
   

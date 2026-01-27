@@ -253,7 +253,7 @@ export async function cacheData(
  * Get cached data
  */
 export async function getCachedData<T>(key: string): Promise<T | null> {
-  const cached = await performDBOperation<CachedData>(
+  const cached = await performDBOperation<CachedData<T>>(
     STORES.CACHE,
     'readonly',
     (store) => store.get(key)
