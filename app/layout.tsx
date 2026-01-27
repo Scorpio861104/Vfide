@@ -3,6 +3,7 @@ import "./globals.css";
 import { Web3Provider } from "@/components/wallet/Web3Provider";
 import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
 import { HelpCenter } from "@/components/onboarding/HelpCenter";
+import { SetupWizard } from "@/components/onboarding/SetupWizard";
 import { ToastProvider } from "@/components/ui/toast";
 // Network-agnostic: Works on testnet and mainnet identically
 import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
@@ -129,6 +130,8 @@ export default function RootLayout({
                   <PieMenu />
                   <OnboardingManager />
                   <HelpCenter />
+                  {/* Setup Wizard for first-time users */}
+                  <SetupWizard />
                 </ToastProvider>
               </Web3Provider>
             </AccessibilityProvider>

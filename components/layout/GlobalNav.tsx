@@ -110,6 +110,7 @@ const moreLinks = [
   {
     category: "System",
     items: [
+      { href: "/setup", label: "Setup Guide", accent: true },
       { href: "/sanctum", label: "Sanctum" },
       { href: "/security-center", label: "Security" },
       { href: "/admin", label: "Admin" },

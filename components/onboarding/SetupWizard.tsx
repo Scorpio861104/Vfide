@@ -54,7 +54,12 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
     const seen = localStorage.getItem('vfide-setup-complete')
     setHasSeenWizard(!!seen)
     
-    // Don't auto-show wizard - let user open it manually if needed
+    // Auto-show wizard for first-time users who haven't completed setup
+    if (!seen && !isConnected) {
+      // Show after a brief delay so the page loads first
+      const timer = setTimeout(() => setIsOpen(true), 1500)
+      return () => clearTimeout(timer)
+    }
   }, [isConnected])
 
   // Auto-advance steps based on state
