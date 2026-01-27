@@ -111,7 +111,7 @@ export async function trackApiCall<T>(
     const duration = performance.now() - startTime;
     
     const errorMessage = error instanceof Error ? error.message : undefined;
-    const statusCode = error && typeof error === 'object' && 'statusCode' in error 
+    const statusCode = error && typeof error === 'object' && 'statusCode' in error && typeof (error as { statusCode: unknown }).statusCode === 'number'
       ? (error as { statusCode: number }).statusCode 
       : undefined;
 

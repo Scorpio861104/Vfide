@@ -329,7 +329,9 @@ export function parseTransactionData(data: unknown): {
   if (txData.amount) {
     const amountValidation = validateAmount(
       txData.amount as string | number, 
-      (txData.currency as 'ETH' | 'VFIDE') || 'ETH'
+      typeof txData.currency === 'string' && validateCurrency(txData.currency) 
+        ? (txData.currency as 'ETH' | 'VFIDE')
+        : 'ETH'
     );
     if (amountValidation.valid) {
       parsed.amount = amountValidation.parsed!.toString();
@@ -350,8 +352,8 @@ export function parseTransactionData(data: unknown): {
     errors.push('Currency is required');
   }
 
-  if (txData.memo) {
-    const memoValidation = validateMemo(txData.memo as string);
+  if (txData.memo && typeof txData.memo === 'string') {
+    const memoValidation = validateMemo(txData.memo);
     if (memoValidation.valid && memoValidation.sanitized) {
       parsed.memo = memoValidation.sanitized;
     } else if (!memoValidation.valid) {

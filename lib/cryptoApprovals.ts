@@ -5,6 +5,11 @@
 
 import { validateEthereumAddress, ValidationError } from './cryptoValidation';
 
+// Type guards for error handling
+const isErrorWithMessage = (err: unknown): err is { message: string } => {
+  return typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string';
+};
+
 /**
  * VFIDE Token Contract Address
  * Read from environment variable or fallback to placeholder
@@ -171,13 +176,9 @@ export async function requestTokenApproval(
   } catch (error: unknown) {
     console.error('Token approval failed:', error);
     
-    // Type guard for errors with code and message
+    // Type guard for errors with code
     const isErrorWithCode = (err: unknown): err is { code: number; message?: string } => {
-      return typeof err === 'object' && err !== null && 'code' in err;
-    };
-    
-    const isErrorWithMessage = (err: unknown): err is { message: string } => {
-      return typeof err === 'object' && err !== null && 'message' in err;
+      return typeof err === 'object' && err !== null && 'code' in err && typeof (err as { code: unknown }).code === 'number';
     };
     
     // User rejected
@@ -245,10 +246,6 @@ export async function ensureTokenAllowance(
     return approvalResult;
   } catch (error: unknown) {
     console.error('Failed to ensure token allowance:', error);
-    
-    const isErrorWithMessage = (err: unknown): err is { message: string } => {
-      return typeof err === 'object' && err !== null && 'message' in err;
-    };
     
     return {
       success: false,
@@ -335,10 +332,6 @@ export async function revokeTokenApproval(
     return { success: true, txHash };
   } catch (error: unknown) {
     console.error('Failed to revoke approval:', error);
-    
-    const isErrorWithMessage = (err: unknown): err is { message: string } => {
-      return typeof err === 'object' && err !== null && 'message' in err;
-    };
     
     return {
       success: false,
