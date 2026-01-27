@@ -13,14 +13,16 @@ import {
   Lock, Gift, Banknote, Vote, Calculator, ChevronRight,
   Sliders, Sparkles, Zap
 } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import { useAccount, useChainId } from 'wagmi';
-import { BadgeGallery } from "@/components/badge/BadgeGallery";
-import { BadgeProgress } from "@/components/badge/BadgeProgress";
 import { useUserBadges, useVaultBalance, useProofScore, useVfidePrice } from "@/lib/vfide-hooks";
 import { getExplorerUrlForChainId } from '@/lib/chains';
 import Link from "next/link";
 import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+
+// Lazy load heavy components
+const BadgeGallery = lazy(() => import("@/components/badge/BadgeGallery").then(m => ({ default: m.BadgeGallery })));
+const BadgeProgress = lazy(() => import("@/components/badge/BadgeProgress").then(m => ({ default: m.BadgeProgress })));
 
 type TabType = 'overview' | 'fee-simulator' | 'score-simulator' | 'badges';
 
@@ -688,9 +690,13 @@ function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
             </div>
           ) : (
             <>
-              <BadgeGallery address={address} />
+              <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+                <BadgeGallery address={address} />
+              </Suspense>
               <div className="mt-6">
-                <BadgeProgress address={address} />
+                <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+                  <BadgeProgress address={address} />
+                </Suspense>
               </div>
             </>
           )}
