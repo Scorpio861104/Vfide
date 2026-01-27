@@ -5,6 +5,7 @@ import { safeBigIntToNumber, safeParseInt } from '@/lib/validation';
 import { useEffect, useState } from 'react';
 import { formatEther } from 'viem';
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useToast } from '@/components/ui/toast';
 
 // Transaction history type
 type AdminTransaction = {
@@ -812,11 +813,11 @@ export default function AdminPanel() {
 
     // Validation
     if (params.maxTotalBps > 1000) {
-      alert('Max total BPS cannot exceed 1000 (10%)');
+      toastError('Max total BPS cannot exceed 1000 (10%)');
       return;
     }
     if (params.baseBurnBps + params.baseSanctumBps + params.baseEcosystemBps > params.maxTotalBps) {
-      alert('Base fees exceed max total BPS');
+      toastError('Base fees exceed max total BPS');
       return;
     }
 

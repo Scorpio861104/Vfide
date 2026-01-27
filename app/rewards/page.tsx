@@ -23,6 +23,7 @@ import {
 import { useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { useToast } from '@/components/ui/toast'
 
 // Contract addresses from environment (these contracts not deployed to testnet yet)
 // LIQUIDITY_INCENTIVES_ADDRESS removed for Howey compliance
@@ -38,6 +39,7 @@ type TabId = 'overview' | 'duty' | 'promotional' | 'referral'
 export default function RewardsPage() {
   const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
+  const { warning } = useToast()
   const [claimingId, _setClaimingId] = useState<string | null>(null)
 
   // Contract write hooks
@@ -712,7 +714,7 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
             onClick={() => {
               const _qrData = `https://vfide.app/join?ref=${referralStats.code}`;
               // Open QR code modal or generate inline
-              alert('QR Code feature coming soon!');
+              warning('QR Code feature coming soon!');
             }}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 hover:border-violet-400 transition-colors"
           >

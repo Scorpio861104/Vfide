@@ -104,7 +104,7 @@ export default function EscrowPage() {
     // Validate merchant address
     const validation = validateAddress(createForm.merchant);
     if (!validation.valid) {
-      alert(`Invalid merchant address: ${validation.error}`);
+      toast.error(`Invalid merchant address: ${validation.error}`);
       return;
     }
     

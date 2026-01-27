@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
 import { useCopyWithId } from "@/lib/hooks/useCopyToClipboard";
+import { useToast } from "@/components/ui/toast";
 
 // Contract address from environment
 const DAO_ADDRESS = (process.env.NEXT_PUBLIC_DAO_ADDRESS || '0xB75b08C5e42da4242e218C25B6A6B05d7BeF0728') as `0x${string}`;
@@ -70,6 +71,7 @@ export default function GovernancePage() {
   const { address } = useAccount();
   const { score } = useProofScore();
   const { proposalCount } = useDAOProposals();
+  const { success, error: toastError } = useToast();
 
   // Contract write hooks
   const { writeContract, data: hash } = useWriteContract();
@@ -2013,13 +2015,13 @@ function CreateProposalTab() {
         functionName: 'propose',
         args: [ptype, target, value, '0x' as `0x${string}`, `${sanitizedTitle}\n\n${sanitizedDescription}`],
       });
-      alert('Proposal submitted! It will appear in Active Proposals after confirmation.');
+      success('Proposal submitted! It will appear in Active Proposals after confirmation.');
       // Reset form
       setFormData({ title: '', description: '', targetContract: '', calldata: '', treasuryAmount: '', treasuryRecipient: '' });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       if (!message.includes('rejected') && !message.includes('denied')) {
-        alert('Failed to submit proposal: ' + message.slice(0, 100));
+        toastError('Failed to submit proposal: ' + message.slice(0, 100));
       }
     } finally {
       setIsSubmitting(false);
@@ -2274,9 +2276,9 @@ function CouncilTab() {
       //   functionName: 'register',
       // });
       await new Promise(r => setTimeout(r, 1500)); // Placeholder for contract call
-      alert('Registration submitted! You are now a council candidate.');
+      success('Registration submitted! You are now a council candidate.');
     } catch (err) {
-      alert('Registration failed. Please try again.');
+      toastError('Registration failed. Please try again.');
     }
     setIsRegistering(false);
   };
