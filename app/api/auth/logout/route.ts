@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { clearAuthCookies } from '@/lib/auth/cookieAuth';
 import { revokeToken, hashToken } from '@/lib/auth/tokenRevocation';
 import { extractToken } from '@/lib/auth/jwt';
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
         await revokeToken(tokenHash, expiresAt, 'logout');
       } catch (error) {
         // Log but don't fail - token might already be expired
-        console.warn('[Logout] Token revocation warning:', error);
+        log.warn('[Logout] Token revocation warning:', error);
       }
     }
 
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('[Logout API] Error:', error);
+    log.error('[Logout API] Error:', error);
     return NextResponse.json(
       { error: 'Logout failed' },
       { status: 500 }

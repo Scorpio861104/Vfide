@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/logging';
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

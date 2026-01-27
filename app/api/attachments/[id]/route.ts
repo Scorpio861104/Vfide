@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { log } from '@/lib/logging';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ attachment: result.rows[0] });
   } catch (error) {
-    console.error('[Attachments GET] Error:', error);
+    log.error('[Attachments GET] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch attachment';
     return NextResponse.json(
       { error: errorMessage },
@@ -64,7 +65,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     return NextResponse.json({ success: true, attachment: result.rows[0] });
   } catch (error) {
-    console.error('[Attachments DELETE] Error:', error);
+    log.error('[Attachments DELETE] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to delete attachment';
     return NextResponse.json(
       { error: errorMessage },

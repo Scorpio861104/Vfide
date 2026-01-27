@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching daily quests:', error);
+    log.error('Error fetching daily quests:', error);
     return NextResponse.json(
       { error: 'Failed to fetch daily quests' },
       { status: 500 }

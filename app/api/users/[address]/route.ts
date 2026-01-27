@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { getAvatarUrl } from '@/lib/constants';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -88,7 +89,7 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error('[User GET API] Error:', error);
+    log.error('[User GET API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
     return NextResponse.json(
       { error: errorMessage },
@@ -148,7 +149,7 @@ export async function PUT(
       user: result.rows[0],
     });
   } catch (error) {
-    console.error('[User PUT API] Error:', error);
+    log.error('[User PUT API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to update user';
     return NextResponse.json(
       { error: errorMessage },
@@ -236,7 +237,7 @@ export async function POST(
       avatarUrl: result.rows[0].avatar_url,
     });
   } catch (error) {
-    console.error('[Avatar Upload API] Error:', error);
+    log.error('[Avatar Upload API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';
     return NextResponse.json(
       { error: errorMessage },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error claiming quest reward:', error);
+    log.error('Error claiming quest reward:', error);
     return NextResponse.json(
       { error: 'Failed to claim reward' },
       { status: 500 }

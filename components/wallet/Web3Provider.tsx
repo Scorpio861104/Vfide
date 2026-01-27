@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/logging';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
 import { config } from '@/lib/wagmi';

@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * Join Group via Invite API Route
  * 
  * Handles joining a group using an invite code.
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
     if (client) {
       await client.query('ROLLBACK');
     }
-    console.error('[Join Group API] Error:', error);
+    log.error('[Join Group API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to join group' },
       { status: 500 }

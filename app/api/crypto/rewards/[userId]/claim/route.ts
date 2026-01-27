@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { log } from '@/lib/logging';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         try {
           // TODO: Implement actual on-chain verification when reward contracts are deployed
           // For now, we log the verification attempt for audit purposes
-          console.log(`[Reward Claim] Would verify reward ${reward.id} from contract ${reward.source_contract}`);
+          log.debug(`[Reward Claim] Would verify reward ${reward.id} from contract ${reward.source_contract}`);
           
           // Example verification (would call actual contract):
           // const isEligible = await client.readContract({
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           //   );
           // }
         } catch (error) {
-          console.error(`[Reward Claim] On-chain verification failed for reward ${reward.id}:`, error);
+          log.error(`[Reward Claim] On-chain verification failed for reward ${reward.id}:`, error);
           // In production, you might want to fail the entire claim if verification fails
           // For now, we continue but log the error
         }
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       rewards: result.rows
     });
   } catch (error) {
-    console.error('[Rewards Claim] Error:', error);
+    log.error('[Rewards Claim] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to claim rewards';
     return NextResponse.json(
       { error: errorMessage },

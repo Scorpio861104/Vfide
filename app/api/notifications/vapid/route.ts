@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * VAPID API
  * 
  * Endpoint to get VAPID public key for push subscriptions.

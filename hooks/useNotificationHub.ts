@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * useNotificationHub Hook
  * Centralized notification management with preferences and delivery
  */
@@ -81,7 +82,7 @@ export function useNotificationHub(): UseNotificationHubResult {
         setPreferences(parsed);
       }
     } catch (e) {
-      console.error('Failed to load notifications:', e);
+      log.error('Failed to load notifications:', e);
     }
   }, []);
 
@@ -90,7 +91,7 @@ export function useNotificationHub(): UseNotificationHubResult {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
     } catch (e) {
-      console.error('Failed to save notifications:', e);
+      log.error('Failed to save notifications:', e);
     }
   }, [notifications]);
 
@@ -99,7 +100,7 @@ export function useNotificationHub(): UseNotificationHubResult {
     try {
       localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(preferences));
     } catch (e) {
-      console.error('Failed to save preferences:', e);
+      log.error('Failed to save preferences:', e);
     }
   }, [preferences]);
 

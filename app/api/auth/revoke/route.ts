@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { requireAuth } from '@/lib/auth/middleware';
 import { revokeToken, revokeUserTokens, hashToken } from '@/lib/auth/tokenRevocation';
 import { extractToken } from '@/lib/auth/jwt';
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('[Token Revocation API] Error:', error);
+    log.error('[Token Revocation API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to revoke token' },
       { status: 500 }

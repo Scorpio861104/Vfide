@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/logging';
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -152,7 +153,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
         }
       } catch {
         // Silent fail for copy - user can still manually copy
-        console.warn('Failed to copy address');
+        log.warn('Failed to copy address');
       }
     }
   };

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/logging';
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,7 +39,7 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
     generateQRCode(address)
       .then(setQrDataUrl)
       .catch((error) => {
-        console.error('Failed to generate QR code:', error);
+        log.error('Failed to generate QR code:', error);
         setQrDataUrl(''); // Reset on error
       });
   }, [address, isOpen]);

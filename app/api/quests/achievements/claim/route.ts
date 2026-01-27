@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error claiming achievement:', error);
+    log.error('Error claiming achievement:', error);
     return NextResponse.json(
       { error: 'Failed to claim achievement' },
       { status: 500 }

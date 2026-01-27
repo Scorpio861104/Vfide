@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('[Activities GET API] Error:', error);
+    log.error('[Activities GET API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch activities' },
       { status: 500 }
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
       activity: result.rows[0],
     }, { status: 201 });
   } catch (error) {
-    console.error('[Activities POST API] Error:', error);
+    log.error('[Activities POST API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to create activity' },
       { status: 500 }

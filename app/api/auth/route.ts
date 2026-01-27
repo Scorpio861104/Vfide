@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { verifyMessage } from 'viem';
 import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('[Auth API] Error:', error);
+    log.error('[Auth API] Error:', error);
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 500 }
@@ -146,7 +147,7 @@ export async function GET(request: NextRequest) {
       expiresAt: payload.exp,
     });
   } catch (error) {
-    console.error('[Auth Verify API] Error:', error);
+    log.error('[Auth Verify API] Error:', error);
     return NextResponse.json(
       { error: 'Token verification failed' },
       { status: 401 }

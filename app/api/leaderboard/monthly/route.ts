@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
@@ -174,7 +175,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching monthly leaderboard:', error);
+    log.error('Error fetching monthly leaderboard:', error);
     return NextResponse.json(
       { error: 'Failed to fetch monthly leaderboard' },
       { status: 500 }
@@ -276,7 +277,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating monthly leaderboard:', error);
+    log.error('Error updating monthly leaderboard:', error);
     return NextResponse.json(
       { error: 'Failed to update monthly leaderboard' },
       { status: 500 }

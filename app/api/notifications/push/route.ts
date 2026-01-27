@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { validateBody, pushSubscriptionSchema, pushUnsubscribeSchema } from '@/lib/auth/validation';
 import { requireAuth } from '@/lib/auth/middleware';
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, subscription: result.rows[0] });
   } catch (error) {
-    console.error('[Push Subscribe] Error:', error);
+    log.error('[Push Subscribe] Error:', error);
     return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 });
   }
 }
@@ -87,7 +88,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Push Unsubscribe] Error:', error);
+    log.error('[Push Unsubscribe] Error:', error);
     return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 });
   }
 }

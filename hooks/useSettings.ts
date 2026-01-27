@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { log } from '@/lib/logging';
 import {
   defaultSettings,
   safeParseSettings,
@@ -48,7 +49,7 @@ const loadFromStorage = (): SettingsState => {
 
     return defaultSettings;
   } catch (error) {
-    console.warn('Failed to load settings, using defaults', error);
+    log.warn('Failed to load settings, using defaults', error);
     return defaultSettings;
   }
 };

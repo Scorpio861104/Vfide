@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**

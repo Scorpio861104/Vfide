@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * CSP Report API Route
  * 
  * Receives and logs Content Security Policy violation reports.
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Log in development
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[CSP Violation]', {
+      log.warn('[CSP Violation]', {
         directive: violation['violated-directive'],
         blocked: violation['blocked-uri'],
         source: violation['source-file'],
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error('Error processing CSP report:', error);
+    log.error('Error processing CSP report:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching achievements:', error);
+    log.error('Error fetching achievements:', error);
     return NextResponse.json(
       { error: 'Failed to fetch achievements' },
       { status: 500 }
@@ -196,7 +197,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating achievement progress:', error);
+    log.error('Error updating achievement progress:', error);
     return NextResponse.json(
       { error: 'Failed to update achievement progress' },
       { status: 500 }

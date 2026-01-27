@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching weekly challenges:', error);
+    log.error('Error fetching weekly challenges:', error);
     return NextResponse.json(
       { error: 'Failed to fetch weekly challenges' },
       { status: 500 }

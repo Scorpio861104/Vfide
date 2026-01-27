@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { log } from '@/lib/logging';
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ balances: result.rows });
   } catch (error) {
-    console.error('[Balance API] Error:', error);
+    log.error('[Balance API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch balances';
     return NextResponse.json(
       { error: errorMessage },

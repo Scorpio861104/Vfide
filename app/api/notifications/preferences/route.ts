@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ preferences: result.rows[0] });
   } catch (error) {
-    console.error('[Notification Preferences GET] Error:', error);
+    log.error('[Notification Preferences GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch preferences' }, { status: 500 });
   }
 }
@@ -56,7 +57,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true, preferences: result.rows[0] });
   } catch (error) {
-    console.error('[Notification Preferences PUT] Error:', error);
+    log.error('[Notification Preferences PUT] Error:', error);
     return NextResponse.json({ error: 'Failed to update preferences' }, { status: 500 });
   }
 }

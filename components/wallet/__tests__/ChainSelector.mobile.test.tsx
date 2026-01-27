@@ -1,4 +1,5 @@
 import { renderAtViewport, VIEWPORTS } from '@/__tests__/mobile-responsive.test'
+import { log } from '@/lib/logging';
 import { render } from '@testing-library/react'
 import { ChainSelector } from '../ChainSelector'
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    log.error('Error fetching notifications:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notifications' },
       { status: 500 }
@@ -130,7 +131,7 @@ export async function PATCH(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error marking notifications as shown:', error);
+    log.error('Error marking notifications as shown:', error);
     return NextResponse.json(
       { error: 'Failed to mark notifications as shown' },
       { status: 500 }

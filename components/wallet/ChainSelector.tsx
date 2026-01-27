@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logging';
 
 import { CHAINS, type SupportedChain, getChainList, getChainNetwork, isChainReady } from '@/lib/chains'
 import { useEffect, useState } from 'react'

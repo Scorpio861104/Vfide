@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logging';
 
 import { useState, useEffect } from 'react'
 
@@ -51,7 +52,7 @@ async function fetchEthPrice(): Promise<number> {
   } catch (error) {
     // Log only in development
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[useEthPrice] Failed to fetch ETH price, using default:', error)
+      log.warn('[useEthPrice] Failed to fetch ETH price, using default:', error)
     }
     
     // Return cached price if available, otherwise default

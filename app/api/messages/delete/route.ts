@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -71,7 +72,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: true, data: result.rows[0] });
     }
   } catch (error) {
-    console.error('[Message Delete] Error:', error);
+    log.error('[Message Delete] Error:', error);
     return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 });
   }
 }

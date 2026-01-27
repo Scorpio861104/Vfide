@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
       count: result.rows.length,
     });
   } catch (error) {
-    console.error('[Friends GET API] Error:', error);
+    log.error('[Friends GET API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch friends' },
       { status: 500 }
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('[Friends POST API] Error:', error);
+    log.error('[Friends POST API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to send friend request' },
       { status: 500 }
@@ -319,7 +320,7 @@ export async function PATCH(request: NextRequest) {
     }
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('[Friends PATCH API] Error:', error);
+    log.error('[Friends PATCH API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to update friend request' },
       { status: 500 }
@@ -406,7 +407,7 @@ export async function DELETE(request: NextRequest) {
       deleted: result.rowCount || 0,
     });
   } catch (error) {
-    console.error('[Friends DELETE API] Error:', error);
+    log.error('[Friends DELETE API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to remove friend' },
       { status: 500 }

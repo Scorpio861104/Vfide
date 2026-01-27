@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { log } from '@/lib/logging';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ request: result.rows[0] });
   } catch (error) {
-    console.error('[Payment Request GET] Error:', error);
+    log.error('[Payment Request GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch request' }, { status: 500 });
   }
 }
@@ -75,7 +76,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ request: result.rows[0] });
   } catch (error) {
-    console.error('[Payment Request PUT] Error:', error);
+    log.error('[Payment Request PUT] Error:', error);
     return NextResponse.json({ error: 'Failed to update request' }, { status: 500 });
   }
 }
@@ -113,7 +114,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json({ success: true, request: result.rows[0] });
   } catch (error) {
-    console.error('[Payment Request PATCH] Error:', error);
+    log.error('[Payment Request PATCH] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to update request';
     return NextResponse.json(
       { error: errorMessage },

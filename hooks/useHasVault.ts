@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/logging';
 
 import { useAccount, useReadContract } from 'wagmi';
 import { useMemo } from 'react';
@@ -35,7 +36,7 @@ export function useHasVault() {
 
   // Log errors for debugging
   if (isError && error) {
-    console.error('Error checking vault status:', error);
+    log.error('Error checking vault status:', error);
   }
 
   return {

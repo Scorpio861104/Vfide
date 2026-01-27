@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * usePagePerformance Hook
  * Track individual page load times and Core Web Vitals
  */
@@ -45,7 +46,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
         setApiMetrics(JSON.parse(apiStored));
       }
     } catch (e) {
-      console.error('Failed to load performance metrics:', e);
+      log.error('Failed to load performance metrics:', e);
     }
   }, []);
 
@@ -110,7 +111,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(metrics));
       } catch (e) {
-        console.error('Failed to save page metrics:', e);
+        log.error('Failed to save page metrics:', e);
       }
     } catch (err) {
       setError(
@@ -158,7 +159,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
           try {
             localStorage.setItem(API_STORAGE_KEY, JSON.stringify(updated));
           } catch (e) {
-            console.error('Failed to save API metrics:', e);
+            log.error('Failed to save API metrics:', e);
           }
 
           return updated;
@@ -180,7 +181,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
           try {
             localStorage.setItem(API_STORAGE_KEY, JSON.stringify(updated));
           } catch (e) {
-            console.error('Failed to save API metrics:', e);
+            log.error('Failed to save API metrics:', e);
           }
 
           return updated;

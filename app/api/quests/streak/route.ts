@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching streak:', error);
+    log.error('Error fetching streak:', error);
     return NextResponse.json(
       { error: 'Failed to fetch streak' },
       { status: 500 }
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating streak:', error);
+    log.error('Error updating streak:', error);
     return NextResponse.json(
       { error: 'Failed to update streak' },
       { status: 500 }

@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * CSRF Token API Endpoint
  * GET /api/csrf - Returns a CSRF token for the client to use in subsequent requests
  */
@@ -31,7 +32,7 @@ export async function GET() {
     
     return response;
   } catch (error) {
-    console.error('[CSRF API] Error generating token:', error);
+    log.error('[CSRF API] Error generating token:', error);
     return NextResponse.json(
       {
         error: 'Failed to generate CSRF token',

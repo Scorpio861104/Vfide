@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -118,7 +119,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('[Proposals GET API] Error:', error);
+    log.error('[Proposals GET API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch proposals' },
       { status: 500 }
@@ -204,7 +205,7 @@ export async function POST(request: NextRequest) {
       proposal: result.rows[0],
     }, { status: 201 });
   } catch (error) {
-    console.error('[Proposals POST API] Error:', error);
+    log.error('[Proposals POST API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to create proposal' },
       { status: 500 }
@@ -247,7 +248,7 @@ export async function GET_BY_ID(
       proposal: result.rows[0],
     });
   } catch (error) {
-    console.error('[Proposal GET BY ID API] Error:', error);
+    log.error('[Proposal GET BY ID API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch proposal' },
       { status: 500 }

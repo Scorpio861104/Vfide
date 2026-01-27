@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { log } from '@/lib/logging';
 import {
   SecurityLogEntry,
   SecurityEventType,
@@ -45,7 +46,7 @@ const loadLogs = (): SecurityLogEntry[] => {
       timestamp: new Date(log.timestamp)
     }));
   } catch (error) {
-    console.error('Failed to load security logs', error);
+    log.error('Failed to load security logs', error);
     return [];
   }
 };

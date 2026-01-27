@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * Transaction Notifications with Confetti 🎉
  * Beautiful feedback for every blockchain action
  */

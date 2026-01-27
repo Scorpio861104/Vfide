@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -425,7 +426,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Export API] Error:', error);
+    log.error('[Export API] Error:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Failed to export transactions';
     return NextResponse.json({ error: errorMessage }, { status: 500 });

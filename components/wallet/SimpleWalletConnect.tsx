@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/logging';
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';

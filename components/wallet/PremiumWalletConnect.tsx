@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/logging';
 
 /**
  * Premium Wallet Connect Component

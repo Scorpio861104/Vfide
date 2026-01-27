@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -99,7 +100,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, message: updateResult.rows[0] });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('[Message Edit] Error:', error);
+    log.error('[Message Edit] Error:', error);
     return NextResponse.json({ error: 'Failed to edit message' }, { status: 500 });
   } finally {
     client.release();

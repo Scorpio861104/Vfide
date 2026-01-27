@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * Message Reaction API Route
  * 
  * Handles adding/removing reactions to messages.
@@ -185,7 +186,7 @@ export async function POST(request: NextRequest) {
       reactions,
     });
   } catch (error) {
-    console.error('Error updating reaction:', error);
+    log.error('Error updating reaction:', error);
     return NextResponse.json(
       { error: 'Failed to update reaction' },
       { status: 500 }
@@ -241,7 +242,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Reaction removed',
     });
   } catch (error) {
-    console.error('Error removing reaction:', error);
+    log.error('Error removing reaction:', error);
     return NextResponse.json(
       { error: 'Failed to remove reaction' },
       { status: 500 }

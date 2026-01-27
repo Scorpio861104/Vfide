@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logging';
 
 import { CURRENT_CHAIN_ID } from '@/lib/testnet'
 import { IS_TESTNET, getSupportedChainFromId as _getSupportedChainFromId } from '@/lib/chains'

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/logging';
 
 /**
  * Ultimate Wallet Connect - World-Class Wallet Experience

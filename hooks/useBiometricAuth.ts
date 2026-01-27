@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { log } from '@/lib/logging';
 import {
   BiometricConfig,
   BiometricCredential,
@@ -102,7 +103,7 @@ const loadConfig = (): BiometricConfig => {
       }))
     };
   } catch (error) {
-    console.error('Failed to load biometric config', error);
+    log.error('Failed to load biometric config', error);
     return {
       enabled: false,
       credentials: [],
@@ -151,7 +152,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
     type: BiometricType = 'passkey'
   ): Promise<BiometricCredential | null> => {
     if (!config.platformSupport.webauthn) {
-      console.error('WebAuthn not supported');
+      log.error('WebAuthn not supported');
       return null;
     }
 
@@ -211,7 +212,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
 
       return newCredential;
     } catch (error) {
-      console.error('Failed to enroll biometric', error);
+      log.error('Failed to enroll biometric', error);
       return null;
     }
   }, [config.platformSupport, config.credentials, userId, updateConfig]);
@@ -231,7 +232,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
 
       return true;
     } catch (error) {
-      console.error('Failed to remove biometric', error);
+      log.error('Failed to remove biometric', error);
       return false;
     }
   }, [config.credentials, updateConfig]);
@@ -271,7 +272,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
       // In production, verify signature on backend
       return true;
     } catch (error) {
-      console.error('Biometric verification failed', error);
+      log.error('Biometric verification failed', error);
       return false;
     }
   }, [config.platformSupport, config.credentials, updateConfig]);

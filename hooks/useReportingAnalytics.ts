@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * useReportingAnalytics Hook
  * Comprehensive analytics and reporting state management
  */
@@ -57,7 +58,7 @@ export function useReportingAnalytics() {
           ...parsed,
         }));
       } catch (e) {
-        console.error('Failed to load analytics state:', e);
+        log.error('Failed to load analytics state:', e);
       }
     }
   }, []);
@@ -243,7 +244,7 @@ export function useReportingAnalytics() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       // In a real app, this would call an API
-      console.log('Executing query:', query);
+      log.debug('Executing query:', query);
 
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 500));

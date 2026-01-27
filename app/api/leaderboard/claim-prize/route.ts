@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error claiming monthly prize:', error);
+    log.error('Error claiming monthly prize:', error);
     return NextResponse.json(
       { error: 'Failed to claim monthly prize' },
       { status: 500 }

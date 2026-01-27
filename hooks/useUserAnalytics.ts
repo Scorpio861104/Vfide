@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * useUserAnalytics Hook
  * Track user behavior, sessions, and engagement metrics
  */
@@ -57,7 +58,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
         setEvents(Array.isArray(parsed) ? parsed : []);
       }
     } catch (e) {
-      console.error('Failed to load analytics events:', e);
+      log.error('Failed to load analytics events:', e);
     }
   }, []);
 
@@ -66,7 +67,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
     } catch (e) {
-      console.error('Failed to save analytics events:', e);
+      log.error('Failed to save analytics events:', e);
     }
   }, [events]);
 

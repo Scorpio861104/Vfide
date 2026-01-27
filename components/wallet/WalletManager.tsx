@@ -1,4 +1,5 @@
 /**
+import { log } from '@/lib/logging';
  * Advanced Wallet Manager Component
  * Multi-wallet support, chain switching, balance tracking, and connection management
  * 

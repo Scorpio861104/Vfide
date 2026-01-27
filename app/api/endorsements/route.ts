@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('[Endorsements GET API] Error:', error);
+    log.error('[Endorsements GET API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch endorsements' },
       { status: 500 }
@@ -255,7 +256,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('[Endorsements POST API] Error:', error);
+    log.error('[Endorsements POST API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to create endorsement' },
       { status: 500 }
@@ -335,7 +336,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Endorsement deleted',
     });
   } catch (error) {
-    console.error('[Endorsements DELETE API] Error:', error);
+    log.error('[Endorsements DELETE API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to delete endorsement' },
       { status: 500 }

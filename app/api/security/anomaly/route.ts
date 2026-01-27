@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getAnomalyStats, recordActivity, getClientIP, getUserAgent } from '@/lib/security/anomalyDetection';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       stats,
     });
   } catch (error) {
-    console.error('[Anomaly API] Error:', error);
+    log.error('[Anomaly API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch anomaly statistics' },
       { status: 500 }

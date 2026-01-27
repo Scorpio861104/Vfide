@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
       xpProgress,
     });
   } catch (error) {
-    console.error('[Gamification GET] Error:', error);
+    log.error('[Gamification GET] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch gamification data' },
       { status: 500 }
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
       ...userData,
     });
   } catch (error) {
-    console.error('[Gamification POST] Error:', error);
+    log.error('[Gamification POST] Error:', error);
     return NextResponse.json(
       { error: 'Failed to award XP' },
       { status: 500 }

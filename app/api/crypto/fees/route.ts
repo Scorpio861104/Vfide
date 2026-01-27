@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { createPublicClient, http, parseEther, formatEther } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
       timestamp: Date.now(),
     });
   } catch (error) {
-    console.error('[Fee API] Error:', error);
+    log.error('[Fee API] Error:', error);
     return NextResponse.json({
       success: true,
       fees: {

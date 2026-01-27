@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ metrics: result.rows });
   } catch (error) {
-    console.error('[Performance Metrics] Error:', error);
+    log.error('[Performance Metrics] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch metrics' }, { status: 500 });
   }
 }
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, metric: result.rows[0] });
   } catch (error) {
-    console.error('[Performance Metrics POST] Error:', error);
+    log.error('[Performance Metrics POST] Error:', error);
     return NextResponse.json({ error: 'Failed to log metric' }, { status: 500 });
   }
 }

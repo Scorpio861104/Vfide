@@ -1,4 +1,5 @@
 // User API - REAL Database Implementation
+import { log } from '@/lib/logging';
 // NO MOCKS - All data from PostgreSQL
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
     return addCacheHeaders(response, { maxAge: 30, sMaxAge: 60, staleWhileRevalidate: 120 });
   } catch (error: unknown) {
     trackApiCallSimple('/api/users', 'GET', 500, Date.now() - startTime);
-    console.error('Error fetching users:', error);
+    log.error('Error fetching users:', error);
     return NextResponse.json(
       { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user });
   } catch (error: unknown) {
-    console.error('Error creating/updating user:', error);
+    log.error('Error creating/updating user:', error);
     return NextResponse.json(
       { error: 'Failed to create/update user', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

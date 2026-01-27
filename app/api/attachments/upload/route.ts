@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, attachment: result.rows[0] });
   } catch (error) {
-    console.error('[Attachments Upload] Error:', error);
+    log.error('[Attachments Upload] Error:', error);
     return NextResponse.json({ error: 'Failed to upload attachment' }, { status: 500 });
   }
 }

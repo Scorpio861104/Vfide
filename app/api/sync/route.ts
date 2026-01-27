@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ syncState: result.rows[0] || null });
   } catch (error) {
-    console.error('[Sync GET] Error:', error);
+    log.error('[Sync GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch sync state' }, { status: 500 });
   }
 }
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, syncState: result.rows[0] });
   } catch (error) {
-    console.error('[Sync POST] Error:', error);
+    log.error('[Sync POST] Error:', error);
     return NextResponse.json({ error: 'Failed to update sync state' }, { status: 500 });
   }
 }

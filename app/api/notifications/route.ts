@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('[Notifications GET API] Error:', error);
+    log.error('[Notifications GET API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch notifications';
     return NextResponse.json(
       { error: errorMessage },
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
       notification: result.rows[0],
     }, { status: 201 });
   } catch (error) {
-    console.error('[Notifications POST API] Error:', error);
+    log.error('[Notifications POST API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to create notification';
     return NextResponse.json(
       { error: errorMessage },
@@ -286,7 +287,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('[Notifications PATCH API] Error:', error);
+    log.error('[Notifications PATCH API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to update notifications';
     return NextResponse.json(
       { error: errorMessage },
@@ -392,7 +393,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('[Notifications DELETE API] Error:', error);
+    log.error('[Notifications DELETE API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to delete notifications';
     return NextResponse.json(
       { error: errorMessage },

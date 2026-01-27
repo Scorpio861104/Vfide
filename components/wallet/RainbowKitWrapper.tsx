@@ -1,4 +1,5 @@
 'use client'
+import { log } from '@/lib/logging';
 
 import '@rainbow-me/rainbowkit/styles.css'
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'

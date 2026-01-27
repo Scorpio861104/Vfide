@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/logging';
 
 /**
  * Gasless Transaction UI Component

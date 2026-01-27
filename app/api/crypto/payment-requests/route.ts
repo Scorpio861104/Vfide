@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@/lib/logging';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ requests: result.rows });
   } catch (error) {
-    console.error('[Payment Requests GET] Error:', error);
+    log.error('[Payment Requests GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
   }
 }
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, request: result.rows[0] });
   } catch (error) {
-    console.error('[Payment Requests POST] Error:', error);
+    log.error('[Payment Requests POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create request' }, { status: 500 });
   }
 }
