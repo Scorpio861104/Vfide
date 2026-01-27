@@ -37,7 +37,8 @@ export function Leaderboard() {
       const newIndex = e.key === 'ArrowRight' 
         ? (currentIndex + 1) % categories.length
         : (currentIndex - 1 + categories.length) % categories.length;
-      setCategory(categories[newIndex]);
+      const nextCategory = categories[newIndex] ?? category;
+      setCategory(nextCategory);
     }
   };
 
