@@ -112,7 +112,6 @@ Interactive tool for finding the best queries to select elements in your tests.
 #### In Tests
 ```typescript
 import { screen } from '@testing-library/react';
-import '@testing-library/react-devtools';
 
 test('example', () => {
   render(<YourComponent />);

@@ -314,9 +314,7 @@ npx vitest --ui
 **Purpose:** Build testing-library queries interactively
 
 **Installation:**
-```bash
-npm install -D @testing-library/react-devtools
-```
+✅ Already installed (via `@testing-library/react`)
 
 **Usage:**
 ```typescript

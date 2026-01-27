@@ -16,7 +16,7 @@ This guide covers all the additional tools added to enhance the VFIDE project's 
 
 **Purpose:** Generate random test inputs to discover edge cases and verify invariants hold for all possible inputs.
 
-**Installation:** ✅ Installed (`fast-check@^3.24.2`)
+**Installation:** ✅ Installed (`fast-check@^4.5.3`)
 
 **Usage:**
 ```bash
@@ -227,6 +227,10 @@ npm run contract:mythril
 
 # Or directly
 myth analyze contracts/VFIDETokenV2.sol
+
+# If Mythril isn't installed locally, the npm script falls back to Docker
+# (requires Docker):
+# docker run --rm -v $(pwd):/repo mythril/myth analyze /repo/contracts/VFIDETokenV2.sol
 
 # Deep analysis (slower but more thorough)
 myth analyze contracts/VFIDETokenV2.sol --execution-timeout 300

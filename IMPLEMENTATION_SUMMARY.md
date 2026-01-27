@@ -15,7 +15,7 @@ User requested implementation of **all 12 additional development tools** to enha
 #### Testing & Quality (4 tools)
 
 1. **fast-check** ✅
-   - Dependency: `fast-check@^3.24.2`
+   - Dependency: `fast-check@^4.5.3`
    - Script: `npm run test:fuzz`
    - Sample test: `__tests__/fuzz/price-calculation.fuzz.test.ts`
    - Status: Ready to use immediately
