@@ -20,6 +20,37 @@ export interface UserProfile {
   updatedAt?: string;
 }
 
+type ApiUser = {
+  address: string;
+  username?: string;
+  avatar?: string;
+  bio?: string;
+  email?: string;
+  location?: string;
+  website?: string;
+  proofScore?: number;
+  createdAt?: number | string;
+  updatedAt?: number | string;
+};
+
+const normalizeUserProfile = (user: ApiUser): UserProfile => {
+  const toIso = (value?: number | string) =>
+    typeof value === 'number' ? new Date(value).toISOString() : value;
+
+  return {
+    address: user.address,
+    alias: user.username,
+    bio: user.bio,
+    email: user.email,
+    location: user.location,
+    website: user.website,
+    avatar: user.avatar,
+    proofScore: user.proofScore,
+    createdAt: toIso(user.createdAt),
+    updatedAt: toIso(user.updatedAt),
+  };
+};
+
 /**
  * Hook for API authentication
  */
@@ -159,7 +190,7 @@ export function useUserProfile(address?: string) {
 
     try {
       const response = await apiClient.getUser(address);
-      setProfile(response.user as UserProfile);
+      setProfile(normalizeUserProfile(response.user));
     } catch (err) {
       const error = err as APIError;
       if (error.statusCode === 404) {
@@ -181,7 +212,7 @@ export function useUserProfile(address?: string) {
 
     try {
       const response = await apiClient.updateUser(address, data);
-      setProfile(response.user as UserProfile);
+      setProfile(normalizeUserProfile(response.user));
       return response.user;
     } catch (err) {
       const error = err as APIError;
