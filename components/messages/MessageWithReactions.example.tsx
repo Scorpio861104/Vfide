@@ -23,6 +23,18 @@ interface ReactionData {
   count: number;
 }
 
+type ReactionDisplayReaction = {
+  type: 'emoji' | 'custom_image';
+  emoji?: string;
+  imageUrl?: string;
+  imageName?: string;
+  users: Array<{
+    address: string;
+    username: string;
+    avatar: string;
+  }>;
+};
+
 interface Message {
   id: string;
   content: string;
@@ -39,6 +51,32 @@ export function MessageWithReactions({ message }: { message: Message }) {
     message.reactions ?? {}
   );
   const [isLoading, setIsLoading] = useState(false);
+
+  const displayReactions = (() => {
+    const byUrl = new Map(VFIDE_CUSTOM_REACTIONS.map((r) => [r.url, r]));
+    const byId = new Map(VFIDE_CUSTOM_REACTIONS.map((r) => [r.id, r]));
+
+    return Object.fromEntries(
+      Object.entries(reactions).map(([key, data]) => {
+        const custom = byUrl.get(key) ?? byId.get(key);
+        const isCustom = Boolean(custom) || key.startsWith('http') || key.startsWith('/');
+
+        const mapped: ReactionDisplayReaction = {
+          type: isCustom ? 'custom_image' : 'emoji',
+          emoji: isCustom ? undefined : key,
+          imageUrl: isCustom ? custom?.url ?? key : undefined,
+          imageName: custom?.name,
+          users: data.users.map((user) => ({
+            address: user.address,
+            username: '',
+            avatar: '',
+          })),
+        };
+
+        return [key, mapped];
+      })
+    );
+  })();
 
   const handleAddReaction = async (reaction: {
     type: 'emoji' | 'custom_image';
@@ -129,7 +167,7 @@ export function MessageWithReactions({ message }: { message: Message }) {
 
       {/* Reactions Display */}
       <ReactionDisplay
-        reactions={reactions}
+        reactions={displayReactions}
         currentUserAddress={address}
         onToggle={handleToggleReaction}
       />
