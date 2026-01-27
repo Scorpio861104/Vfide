@@ -249,6 +249,16 @@ export function searchMessages(
 ): Array<Record<string, unknown>> {
   let filtered = messages;
 
+  const getMessageTimestamp = (msg: Record<string, unknown>) => {
+    const raw = msg.timestamp;
+    if (typeof raw === 'number') return raw;
+    if (typeof raw === 'string') {
+      const parsed = Date.parse(raw);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    }
+    return undefined;
+  };
+
   // Text search
   if (query) {
     const lowerQuery = query.toLowerCase();
@@ -266,11 +276,17 @@ export function searchMessages(
 
   // Filter by date range
   if (filters?.dateFrom) {
-    filtered = filtered.filter((msg) => msg.timestamp >= filters.dateFrom!);
+    filtered = filtered.filter((msg) => {
+      const timestamp = getMessageTimestamp(msg);
+      return typeof timestamp === 'number' && timestamp >= filters.dateFrom!;
+    });
   }
 
   if (filters?.dateTo) {
-    filtered = filtered.filter((msg) => msg.timestamp <= filters.dateTo!);
+    filtered = filtered.filter((msg) => {
+      const timestamp = getMessageTimestamp(msg);
+      return typeof timestamp === 'number' && timestamp <= filters.dateTo!;
+    });
   }
 
   // Filter by media
