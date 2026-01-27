@@ -40,8 +40,8 @@ jest.mock('@/lib/vfide-hooks', () => ({
     isElite: false,
     isLoading: false,
   }),
-  useUserBadges: () => ({
-    badgeIds: ['1', '2', '3'],
+  useBadgeNFTs: () => ({
+    tokenIds: [1n, 2n, 3n],
     isLoading: false,
   }),
   useScoreBreakdown: () => ({
@@ -126,7 +126,7 @@ describe('ProofScoreVisualizer - Loading State', () => {
         tier: 'Bronze',
         isLoading: true,
       }),
-      useUserBadges: () => ({ badgeIds: [], isLoading: true }),
+      useBadgeNFTs: () => ({ tokenIds: [], isLoading: true }),
       useScoreBreakdown: () => ({ breakdown: {} }),
     }))
     

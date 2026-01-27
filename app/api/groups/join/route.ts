@@ -25,9 +25,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const client = await getClient();
-  
+  let client: Awaited<ReturnType<typeof getClient>> | null = null;
+
   try {
+    client = await getClient();
     const body = await request.json();
     const { code, userId } = body;
 
@@ -134,13 +135,17 @@ export async function POST(request: NextRequest) {
       message: 'Successfully joined the group',
     });
   } catch (error) {
-    await client.query('ROLLBACK');
+    if (client) {
+      await client.query('ROLLBACK');
+    }
     console.error('[Join Group API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to join group' },
       { status: 500 }
     );
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
   }
 }

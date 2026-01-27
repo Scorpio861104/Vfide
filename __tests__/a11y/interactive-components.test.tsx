@@ -705,7 +705,7 @@ describe('Interactive Components Accessibility Tests', () => {
             Select option
           </button>
           <span id="dropdown-label">Choose color</span>
-          <ul role="listbox" hidden>
+          <ul role="listbox" hidden aria-labelledby="dropdown-label">
             <li role="option">Red</li>
             <li role="option">Blue</li>
             <li role="option">Green</li>

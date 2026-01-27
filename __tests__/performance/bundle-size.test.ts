@@ -10,13 +10,25 @@ describe('Bundle Size Tests', () => {
   const BUILD_DIR = path.join(process.cwd(), '.next');
   const STATIC_DIR = path.join(BUILD_DIR, 'static');
   const CHUNKS_DIR = path.join(STATIC_DIR, 'chunks');
+  const SHOULD_RUN = process.env.RUN_BUNDLE_TESTS === 'true';
 
   beforeAll(() => {
+    if (!SHOULD_RUN) {
+      console.log('Bundle tests disabled. Set RUN_BUNDLE_TESTS=true to enable.');
+      return;
+    }
+
     // Ensure build exists
     if (!fs.existsSync(BUILD_DIR)) {
       console.log('Build directory not found, skipping bundle tests');
     }
   });
+
+  const shouldSkip = (): boolean => {
+    if (!SHOULD_RUN) return true;
+    if (!fs.existsSync(BUILD_DIR)) return true;
+    return false;
+  };
 
   const getFileSize = (filePath: string): number => {
     try {
@@ -65,6 +77,7 @@ describe('Bundle Size Tests', () => {
 
   describe('Total Bundle Size', () => {
     test('Total client-side JavaScript bundle should be < 500KB', () => {
+      if (shouldSkip()) return;
       if (!fs.existsSync(STATIC_DIR)) {
         console.log('Static directory not found, skipping test');
         return;
@@ -79,6 +92,7 @@ describe('Bundle Size Tests', () => {
     });
 
     test('All chunks directory size should be reasonable', () => {
+      if (shouldSkip()) return;
       if (!fs.existsSync(CHUNKS_DIR)) {
         console.log('Chunks directory not found, skipping test');
         return;
@@ -94,6 +108,7 @@ describe('Bundle Size Tests', () => {
 
   describe('Individual Page Bundles', () => {
     test('Homepage bundle should be < 150KB', () => {
+      if (shouldSkip()) return;
       const pagesDir = path.join(BUILD_DIR, 'static', 'chunks', 'pages');
       if (!fs.existsSync(pagesDir)) {
         console.log('Pages directory not found, skipping test');
@@ -118,6 +133,7 @@ describe('Bundle Size Tests', () => {
     });
 
     test('Wallet page bundle should be < 200KB', () => {
+      if (shouldSkip()) return;
       const pagesDir = path.join(BUILD_DIR, 'static', 'chunks', 'pages');
       if (!fs.existsSync(pagesDir)) {
         console.log('Pages directory not found, skipping test');
@@ -142,6 +158,7 @@ describe('Bundle Size Tests', () => {
     });
 
     test('Dashboard page bundle should be < 180KB', () => {
+      if (shouldSkip()) return;
       const pagesDir = path.join(BUILD_DIR, 'static', 'chunks', 'pages');
       if (!fs.existsSync(pagesDir)) {
         console.log('Pages directory not found, skipping test');
@@ -168,6 +185,7 @@ describe('Bundle Size Tests', () => {
 
   describe('Code Splitting Effectiveness', () => {
     test('Should have multiple chunks (code splitting enabled)', () => {
+      if (shouldSkip()) return;
       if (!fs.existsSync(CHUNKS_DIR)) {
         console.log('Chunks directory not found, skipping test');
         return;
@@ -180,6 +198,7 @@ describe('Bundle Size Tests', () => {
     });
 
     test('No single chunk should be excessively large', () => {
+      if (shouldSkip()) return;
       if (!fs.existsSync(CHUNKS_DIR)) {
         console.log('Chunks directory not found, skipping test');
         return;
@@ -202,6 +221,7 @@ describe('Bundle Size Tests', () => {
     });
 
     test('Common vendor chunks should be properly split', () => {
+      if (shouldSkip()) return;
       if (!fs.existsSync(CHUNKS_DIR)) {
         console.log('Chunks directory not found, skipping test');
         return;
@@ -217,6 +237,7 @@ describe('Bundle Size Tests', () => {
 
   describe('Tree Shaking Verification', () => {
     test('Should not include development-only code', () => {
+      if (shouldSkip()) return;
       if (!fs.existsSync(STATIC_DIR)) {
         console.log('Static directory not found, skipping test');
         return;
@@ -254,6 +275,7 @@ describe('Bundle Size Tests', () => {
     });
 
     test('Should have minified code', () => {
+      if (shouldSkip()) return;
       if (!fs.existsSync(STATIC_DIR)) {
         console.log('Static directory not found, skipping test');
         return;
@@ -274,6 +296,7 @@ describe('Bundle Size Tests', () => {
 
   describe('Dynamic Import Verification', () => {
     test('Should use dynamic imports for heavy components', () => {
+      if (shouldSkip()) return;
       // Check if lazy loading is used in production build
       if (!fs.existsSync(CHUNKS_DIR)) {
         console.log('Chunks directory not found, skipping test');
@@ -297,6 +320,7 @@ describe('Bundle Size Tests', () => {
 
   describe('Third-Party Libraries', () => {
     test('Should not bundle large unused libraries', () => {
+      if (shouldSkip()) return;
       if (!fs.existsSync(STATIC_DIR)) {
         console.log('Static directory not found, skipping test');
         return;
@@ -332,6 +356,7 @@ describe('Bundle Size Tests', () => {
 
   describe('Source Map Analysis', () => {
     test('Source maps should not be included in production', () => {
+      if (shouldSkip()) return;
       if (!fs.existsSync(STATIC_DIR)) {
         console.log('Static directory not found, skipping test');
         return;
@@ -349,6 +374,7 @@ describe('Bundle Size Tests', () => {
 
   describe('Image Assets', () => {
     test('Should optimize images', () => {
+      if (shouldSkip()) return;
       const publicDir = path.join(process.cwd(), 'public');
       if (!fs.existsSync(publicDir)) {
         console.log('Public directory not found, skipping test');

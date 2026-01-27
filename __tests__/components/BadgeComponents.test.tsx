@@ -14,7 +14,7 @@ jest.mock('@/lib/badge-registry', () => ({
 // Mock hooks
 jest.mock('@/lib/vfide-hooks', () => ({
   useUserBadges: jest.fn(() => ({ badgeIds: [], isLoading: false })),
-  useBadgeNFTs: jest.fn(() => ({ count: 0 })),
+  useBadgeNFTs: jest.fn(() => ({ tokenIds: [], isLoading: false })),
 }));
 
 // Mock Tabs components
@@ -137,7 +137,7 @@ describe('BadgeDisplay', () => {
 describe('BadgeGallery', () => {
   const mockBadges = [
     {
-      id: '0x001' as `0x${string}`,
+      id: '0x1' as `0x${string}`,
       name: 'Badge 1',
       description: 'First badge',
       icon: '🎯',
@@ -147,7 +147,7 @@ describe('BadgeGallery', () => {
       criteria: { type: 'transactions', value: 1 },
     },
     {
-      id: '0x002' as `0x${string}`,
+      id: '0x2' as `0x${string}`,
       name: 'Badge 2',
       description: 'Second badge',
       icon: '🏆',
@@ -164,30 +164,21 @@ describe('BadgeGallery', () => {
 
   describe('Loading State', () => {
     it('should show loading spinner when loading', () => {
-      jest.mocked(hooks.useUserBadges).mockReturnValue({
-        badgeIds: [],
+      jest.mocked(hooks.useBadgeNFTs).mockReturnValue({
+        tokenIds: [],
         isLoading: true,
-        isError: false,
-        refetch: jest.fn(),
       } as any);
       
       const { container } = render(<BadgeGallery />);
       
-      expect(container.querySelector('.animate-spin')).toBeInTheDocument();
+      expect(container.querySelector('.border-t-yellow-500')).toBeInTheDocument();
     });
   });
 
   describe('Empty State', () => {
     it('should show empty message when no badges earned', () => {
-      jest.mocked(hooks.useUserBadges).mockReturnValue({
-        badgeIds: [],
-        isLoading: false,
-        isError: false,
-        refetch: jest.fn(),
-      } as any);
       jest.mocked(hooks.useBadgeNFTs).mockReturnValue({
-        count: 0,
-        nfts: [],
+        tokenIds: [],
         isLoading: false,
       } as any);
       
@@ -207,8 +198,7 @@ describe('BadgeGallery', () => {
         refetch: jest.fn(),
       } as any);
       jest.mocked(hooks.useBadgeNFTs).mockReturnValue({
-        count: 1,
-        nfts: [],
+        tokenIds: [1, 2],
         isLoading: false,
       } as any);
       jest.mocked(badgeRegistry.getAllBadges).mockReturnValue(mockBadges);
@@ -226,7 +216,7 @@ describe('BadgeGallery', () => {
     it('should show NFT count', () => {
       render(<BadgeGallery />);
       
-      expect(screen.getByText('1 minted as NFTs')).toBeInTheDocument();
+      expect(screen.getByText('2 minted as NFTs')).toBeInTheDocument();
     });
 
     it('should calculate total points', () => {
@@ -252,8 +242,7 @@ describe('BadgeGallery', () => {
         refetch: jest.fn(),
       } as any);
       jest.mocked(hooks.useBadgeNFTs).mockReturnValue({
-        count: 0,
-        nfts: [],
+        tokenIds: [1],
         isLoading: false,
       } as any);
       jest.mocked(badgeRegistry.getAllBadges).mockReturnValue(mockBadges);
@@ -283,13 +272,14 @@ describe('BadgeGallery', () => {
     it('should show collected count', () => {
       render(<BadgeGallery showAll />);
       
-      expect(screen.getByText('1 / 2 collected')).toBeInTheDocument();
+      expect(screen.getByText('1 / 2')).toBeInTheDocument();
+      expect(screen.getByText(/collected/i)).toBeInTheDocument();
     });
 
     it('should show All tab with count', () => {
       render(<BadgeGallery showAll />);
       
-      expect(screen.getByText('All (2)')).toBeInTheDocument();
+      expect(screen.getByText(/All \(2\)/)).toBeInTheDocument();
     });
   });
 
@@ -303,14 +293,12 @@ describe('BadgeGallery', () => {
         refetch: jest.fn(),
       } as any);
       jest.mocked(hooks.useBadgeNFTs).mockReturnValue({
-        count: 0,
-        nfts: [],
+        tokenIds: [],
         isLoading: false,
       } as any);
       
       render(<BadgeGallery address={address} />);
       
-      expect(hooks.useUserBadges).toHaveBeenCalledWith(address);
       expect(hooks.useBadgeNFTs).toHaveBeenCalledWith(address);
     });
   });

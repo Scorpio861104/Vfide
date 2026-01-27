@@ -21,6 +21,7 @@ jest.mock('wagmi', () => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
   }),
+  useWatchContractEvent: () => undefined, // This line is already present
 }))
 
 // Mock QR code

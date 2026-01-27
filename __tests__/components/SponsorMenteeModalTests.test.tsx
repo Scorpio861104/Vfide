@@ -103,7 +103,7 @@ describe('SponsorMenteeModal', () => {
     render(<SponsorMenteeModal isOpen={true} onClose={mockOnClose} />)
     
     const input = screen.getByPlaceholderText('0x...')
-    expect(input).toHaveClass('focus:border-[#00FF88]')
+    expect(input).toHaveClass('focus:border-emerald-400')
   })
 
   it('shows modal header', () => {

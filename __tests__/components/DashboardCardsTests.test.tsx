@@ -19,6 +19,7 @@ jest.mock('framer-motion', () => ({
 
 // Mock next/link
 jest.mock('next/link', () => ({
+  __esModule: true,
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
     <a href={href} {...props}>{children}</a>
   ),
@@ -94,9 +95,7 @@ describe('DashboardCards - StatCard Component', () => {
     render(<StatCard {...defaultProps} href="/vault" subValue="Click here" />)
     
     expect(screen.getByText('Click here')).toBeInTheDocument()
-    // The ChevronRight should be visible as an SVG
-    const svgs = document.querySelectorAll('svg')
-    expect(svgs.length).toBeGreaterThan(0)
+    expect(screen.getByTestId('icon-ChevronRight')).toBeInTheDocument()
   })
 
   it('applies custom color to icon container', () => {

@@ -198,6 +198,29 @@ export class BadgeTimeTravel {
   }
 }
 
+describe('time travel helpers', () => {
+  it('advances time correctly', () => {
+    const start = Date.now();
+    MockDate.install(start);
+    MockDate.travel(TIME.DAY);
+    expect(MockDate.getCurrentTime()).toBe(start + TIME.DAY * 1000);
+    MockDate.uninstall();
+  });
+});
+
+/**
+ * Time travel helpers tests
+ */
+describe('time travel helpers', () => {
+  it('calculates time remaining', () => {
+    const awardTime = 0;
+    const duration = 10;
+    const currentTime = 5 * 1000;
+
+    expect(BadgeTimeTravel.getTimeRemaining(awardTime, duration, currentTime)).toBe(5000);
+  });
+});
+
 /**
  * Time travel helpers for streak tracking
  */
@@ -447,3 +470,9 @@ export const TEST_PERIODS = {
   STREAK_7_DAYS: 7 * TIME.DAY,
   STREAK_30_DAYS: 30 * TIME.DAY,
 } as const;
+
+describe('time-travel helpers', () => {
+  it('formats duration in seconds', () => {
+    expect(formatDuration(30)).toBe('30s');
+  });
+});

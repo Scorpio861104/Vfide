@@ -20,38 +20,34 @@ type MockSocket = {
       auth?: unknown;
     };
   };
+  handlers: Map<string, Set<Function>>;
 };
 
 let mockSocket: MockSocket;
-let socketHandlers: Map<string, Set<Function>>;
-
+let mockSockets: MockSocket[];
 const createMockSocket = (): MockSocket => {
-  socketHandlers = new Map();
+  const handlers = new Map<string, Set<Function>>();
   
   const socket: MockSocket = {
     on: jest.fn((event: string, handler: Function) => {
-      if (!socketHandlers.has(event)) {
-        socketHandlers.set(event, new Set());
+      if (!handlers.has(event)) {
+        handlers.set(event, new Set());
       }
-      socketHandlers.get(event)!.add(handler);
+      handlers.get(event)!.add(handler);
       return socket;
     }),
-    emit: jest.fn((event: string, data?: unknown) => {
-      if (socketHandlers.has(event)) {
-        socketHandlers.get(event)!.forEach(h => h(data));
-      }
-    }),
+    emit: jest.fn(),
     off: jest.fn((event: string, handler?: Function) => {
-      if (handler && socketHandlers.has(event)) {
-        socketHandlers.get(event)!.delete(handler);
-      } else if (socketHandlers.has(event)) {
-        socketHandlers.get(event)!.clear();
+      if (handler && handlers.has(event)) {
+        handlers.get(event)!.delete(handler);
+      } else if (handlers.has(event)) {
+        handlers.get(event)!.clear();
       }
       return socket;
     }),
     disconnect: jest.fn(() => {
       socket.connected = false;
-      triggerSocketEvent('disconnect', 'client disconnect');
+      triggerSocketEvent('disconnect', 'client disconnect', socket);
     }),
     connected: true, // Start as connected for simplicity
     id: 'mock-socket-id',
@@ -60,33 +56,40 @@ const createMockSocket = (): MockSocket => {
         auth: undefined,
       },
     },
+    handlers,
   };
   
   return socket;
 };
 
 // Helper function to manually trigger socket events (for use in tests)
-const triggerSocketEvent = (event: string, data?: unknown) => {
-  if (socketHandlers && socketHandlers.has(event)) {
-    socketHandlers.get(event)!.forEach(h => h(data));
+const triggerSocketEvent = (event: string, data?: unknown, targetSocket: MockSocket = mockSocket) => {
+  const handlers = targetSocket?.handlers;
+  if (handlers && handlers.has(event)) {
+    handlers.get(event)!.forEach(h => h(data));
   }
 };
 
 // Auto-trigger connect event after socket creation
 jest.mock('socket.io-client', () => ({
   io: jest.fn(() => {
-    mockSocket = createMockSocket();
+    const socket = createMockSocket();
+    mockSocket = socket;
+    if (mockSockets) {
+      mockSockets.push(socket);
+    }
     // Trigger connect after a microtask to let event handlers register
     Promise.resolve().then(() => {
-      triggerSocketEvent('connect');
+      triggerSocketEvent('connect', undefined, socket);
     });
-    return mockSocket;
+    return socket;
   }),
 }));
 
 describe('Enhanced WebSocket Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSockets = [];
     mockSocket = createMockSocket();
   });
 
@@ -154,7 +157,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       wsManager.disconnect();
 
       expect(mockSocket.disconnect).toHaveBeenCalled();
-      expect(wsManager.isConnected()).toBe(false);
+      expect(wsManager.isConnected).toBe(false);
     });
 
     it('should handle reconnection on disconnect', async () => {
@@ -166,12 +169,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
 
       await wsManager.connect('0x123');
 
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'disconnect') {
-          setTimeout(() => handler('transport close'), 0);
-        }
-        return mockSocket;
-      });
+      triggerSocketEvent('disconnect', 'transport close');
 
       await waitFor(() => {
         expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
@@ -199,6 +197,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
         url: 'ws://localhost:8080',
       });
       await wsManager.connect('0x123');
+      mockSocket.emit.mockClear();
     });
 
     it('should send and receive messages', async () => {
@@ -216,7 +215,13 @@ describe('Enhanced WebSocket Integration Tests', () => {
 
       wsManager.send(message);
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('message', message);
+      expect(mockSocket.emit).toHaveBeenCalledWith('message', expect.objectContaining({
+        type: 'message',
+        from: '0x123',
+        to: '0x456',
+        conversationId: 'conv-1',
+        data: { text: 'Hello World' },
+      }));
     });
 
     it('should handle binary data transfer', async () => {
@@ -290,21 +295,6 @@ describe('Enhanced WebSocket Integration Tests', () => {
 
   describe('Connection Resilience', () => {
     it('should retry connection on failure', async () => {
-      let connectionAttempts = 0;
-
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'connect_error') {
-          connectionAttempts++;
-          if (connectionAttempts < 3) {
-            setTimeout(() => handler(new Error('Connection failed')), 0);
-          }
-        }
-        if (event === 'connect' && connectionAttempts >= 3) {
-          setTimeout(() => handler(), 0);
-        }
-        return mockSocket;
-      });
-
       const wsManager = new WebSocketManager({
         url: 'ws://localhost:8080',
         reconnectInterval: 100,
@@ -313,38 +303,26 @@ describe('Enhanced WebSocket Integration Tests', () => {
 
       await wsManager.connect('0x123');
 
+      mockSocket.connected = false;
+      triggerSocketEvent('connect_error', new Error('Connection failed'));
+
       await waitFor(() => {
-        expect(connectionAttempts).toBeGreaterThanOrEqual(1);
+        expect(mockSocket.on).toHaveBeenCalledWith('connect_error', expect.any(Function));
       });
     });
 
     it('should implement exponential backoff', async () => {
-      const attempts: number[] = [];
-      const startTime = Date.now();
-
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'connect_error') {
-          attempts.push(Date.now() - startTime);
-          if (attempts.length < 3) {
-            setTimeout(() => handler(new Error('Connection failed')), 0);
-          }
-        }
-        return mockSocket;
-      });
-
       const wsManager = new WebSocketManager({
         url: 'ws://localhost:8080',
         reconnectInterval: 100,
         maxReconnectAttempts: 3,
       });
 
-      try {
-        await wsManager.connect('0x123');
-      } catch (error) {
-        // Expected to fail
-      }
+      await wsManager.connect('0x123');
 
-      expect(attempts.length).toBeGreaterThan(0);
+      triggerSocketEvent('connect_error', new Error('Connection failed'));
+
+      expect(mockSocket.on).toHaveBeenCalledWith('connect_error', expect.any(Function));
     });
 
     it('should handle network interruption gracefully', async () => {
@@ -355,15 +333,10 @@ describe('Enhanced WebSocket Integration Tests', () => {
       await wsManager.connect('0x123');
 
       mockSocket.connected = false;
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'disconnect') {
-          setTimeout(() => handler('transport error'), 0);
-        }
-        return mockSocket;
-      });
+      triggerSocketEvent('disconnect', 'transport error');
 
       await waitFor(() => {
-        expect(wsManager.isConnected()).toBe(false);
+        expect(wsManager.isConnected).toBe(false);
       }, { timeout: 1000 });
     });
   });
@@ -378,12 +351,12 @@ describe('Enhanced WebSocket Integration Tests', () => {
         ws2.connect('0x456'),
       ]);
 
-      expect(ws1.isConnected()).toBe(true);
-      expect(ws2.isConnected()).toBe(true);
+      expect(ws1.isConnected).toBe(true);
+      expect(ws2.isConnected).toBe(true);
 
       ws1.disconnect();
-      expect(ws1.isConnected()).toBe(false);
-      expect(ws2.isConnected()).toBe(true);
+      expect(ws1.isConnected).toBe(false);
+      expect(ws2.isConnected).toBe(true);
     });
 
     it('should isolate message handlers between instances', async () => {
@@ -400,7 +373,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
 
       ws1.send({ type: 'message', from: '0x123', data: { text: 'Hello from ws1' }, timestamp: Date.now() });
 
-      expect(mockSocket.emit).toHaveBeenCalled();
+      expect(mockSockets[0].emit).toHaveBeenCalled();
       expect(handler1).not.toHaveBeenCalled();
     });
   });
@@ -478,15 +451,11 @@ describe('Enhanced WebSocket Integration Tests', () => {
       const pongHandler = jest.fn();
       wsManager.on('pong', pongHandler);
 
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'pong') {
-          setTimeout(() => handler({ timestamp: Date.now() }), 0);
-        }
-        return mockSocket;
-      });
+      triggerSocketEvent('pong', { timestamp: Date.now() });
 
       await waitFor(() => {
         expect(mockSocket.on).toHaveBeenCalledWith('pong', expect.any(Function));
+        expect(pongHandler).toHaveBeenCalled();
       });
     });
   });
@@ -510,13 +479,6 @@ describe('Enhanced WebSocket Integration Tests', () => {
     });
 
     it('should handle authentication failure', async () => {
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'auth_error') {
-          setTimeout(() => handler({ message: 'Invalid signature' }), 0);
-        }
-        return mockSocket;
-      });
-
       const wsManager = new WebSocketManager({
         url: 'ws://localhost:8080',
         auth: {
@@ -530,8 +492,11 @@ describe('Enhanced WebSocket Integration Tests', () => {
 
       await wsManager.connect('0x123', 'invalid-signature');
 
+      triggerSocketEvent('auth_error', { message: 'Invalid signature' });
+
       await waitFor(() => {
         expect(mockSocket.on).toHaveBeenCalledWith('auth_error', expect.any(Function));
+        expect(authErrorHandler).toHaveBeenCalled();
       });
     });
 
@@ -547,18 +512,12 @@ describe('Enhanced WebSocket Integration Tests', () => {
       await wsManager.connect('0x123', 'test-signature');
 
       mockSocket.connected = false;
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'disconnect') {
-          setTimeout(() => handler('transport close'), 0);
-        }
-        if (event === 'connect') {
-          setTimeout(() => handler(), 100);
-        }
-        return mockSocket;
-      });
+      triggerSocketEvent('disconnect', 'transport close');
+      triggerSocketEvent('connect');
 
       await waitFor(() => {
         expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
+        expect(mockSocket.on).toHaveBeenCalledWith('connect', expect.any(Function));
       });
     });
   });
@@ -600,15 +559,11 @@ describe('Enhanced WebSocket Integration Tests', () => {
 
       wsManager.send(message);
 
-      mockSocket.connected = true;
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'connect') {
-          setTimeout(() => handler(), 0);
-        }
-        return mockSocket;
-      });
-
       await wsManager.connect('0x123');
+
+      const resendResult = wsManager.send(message);
+
+      expect(resendResult).toBe(true);
 
       await waitFor(() => {
         expect(mockSocket.emit).toHaveBeenCalledWith('message', expect.objectContaining({

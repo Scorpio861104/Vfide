@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { POST } from '@/app/api/groups/join/route';
 
 jest.mock('@/lib/db', () => ({
-  query: jest.fn(),
   getClient: jest.fn(),
 }));
 
@@ -14,16 +13,10 @@ jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
 }));
 
-jest.mock('@/lib/auth/validation', () => ({
-  validateBody: jest.fn(),
-  joinGroupSchema: {},
-}));
-
 describe('/api/groups/join', () => {
-  const { query } = require('@/lib/db');
+  const { getClient } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
-  const { validateBody } = require('@/lib/auth/validation');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -33,19 +26,13 @@ describe('/api/groups/join', () => {
     it('should join group successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
-      validateBody.mockResolvedValue({
-        success: true,
-        data: {
-          code: 'ABC123',
-          userId: 1,
-        },
-      });
-
-      query
+      const query = jest.fn()
         .mockResolvedValueOnce({ rows: [{ id: 1 }] })
         .mockResolvedValueOnce({ rows: [{ id: 1, group_id: 1, is_active: true, max_uses: null, current_uses: 0 }] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [{ id: 1 }] });
+
+      getClient.mockResolvedValue({ query, release: jest.fn() });
 
       const request = new NextRequest('http://localhost:3000/api/groups/join', {
         method: 'POST',
@@ -69,6 +56,7 @@ describe('/api/groups/join', () => {
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);
+      getClient.mockResolvedValue({ query: jest.fn(), release: jest.fn() });
 
       const request = new NextRequest('http://localhost:3000/api/groups/join', {
         method: 'POST',
@@ -82,18 +70,12 @@ describe('/api/groups/join', () => {
     it('should return 400 when already a member', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
-      validateBody.mockResolvedValue({
-        success: true,
-        data: {
-          code: 'ABC123',
-          userId: 1,
-        },
-      });
-
-      query
+      const query = jest.fn()
         .mockResolvedValueOnce({ rows: [{ id: 1 }] })
         .mockResolvedValueOnce({ rows: [{ id: 1, group_id: 1, is_active: true }] })
         .mockResolvedValueOnce({ rows: [{ id: 1 }] });
+
+      getClient.mockResolvedValue({ query, release: jest.fn() });
 
       const request = new NextRequest('http://localhost:3000/api/groups/join', {
         method: 'POST',

@@ -53,14 +53,16 @@ interface AnimatedToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
+  ariaLabel?: string;
 }
 
-function AnimatedToggle({ checked, onChange, disabled }: AnimatedToggleProps) {
+function AnimatedToggle({ checked, onChange, disabled, ariaLabel }: AnimatedToggleProps) {
   return (
     <motion.button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={ariaLabel}
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative w-12 h-6 rounded-full transition-colors ${
@@ -118,7 +120,7 @@ function ToggleRow({ label, description, checked, onChange, icon }: ToggleRowPro
         {description && <div className="text-xs text-gray-500 mt-0.5">{description}</div>}
       </div>
     </div>
-    <AnimatedToggle checked={checked} onChange={onChange} />
+    <AnimatedToggle checked={checked} onChange={onChange} ariaLabel={label} />
   </motion.div>
   );
 }

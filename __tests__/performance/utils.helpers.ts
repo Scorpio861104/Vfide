@@ -215,6 +215,15 @@ export async function runMultipleMeasurements<T>(
 }
 
 /**
+ * Performance Utils Helpers Tests
+ */
+describe('performance utils helpers', () => {
+  it('calculates averages', () => {
+    expect(average([1, 2, 3])).toBe(2);
+  });
+});
+
+/**
  * Monitor memory usage during execution
  */
 export async function monitorMemoryUsage<T>(

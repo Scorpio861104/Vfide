@@ -11,11 +11,19 @@ import { MobileDrawer } from '../../components/mobile/MobileDrawer';
 
 describe('MobileDrawer Component', () => {
   const mockItems = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/portfolio', label: 'Portfolio' },
-    { href: '/governance', label: 'Governance' },
-    { href: '/merchants', label: 'Merchants' },
+    { href: '#dashboard', label: 'Dashboard' },
+    { href: '#portfolio', label: 'Portfolio' },
+    { href: '#governance', label: 'Governance' },
+    { href: '#merchants', label: 'Merchants' },
   ];
+
+  beforeEach(() => {
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 375,
+    });
+  });
 
   it('renders hamburger button on mobile', () => {
     // Set mobile viewport
@@ -47,7 +55,7 @@ describe('MobileDrawer Component', () => {
     render(
       <MobileDrawer>
         <nav>
-          <a href="/dashboard">Dashboard</a>
+          <a href="#dashboard">Dashboard</a>
         </nav>
       </MobileDrawer>
     );
@@ -56,13 +64,12 @@ describe('MobileDrawer Component', () => {
 
     // Click to open
     await user.click(hamburger);
-    const drawer = screen.getByRole('navigation');
-    expect(drawer).toHaveClass('translate-x-0');
+    expect(screen.getByRole('navigation')).toBeInTheDocument();
 
     // Click to close
     await user.click(hamburger);
     await waitFor(() => {
-      expect(drawer).toHaveClass('-translate-x-full');
+      expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
     });
   });
 
@@ -72,7 +79,7 @@ describe('MobileDrawer Component', () => {
     render(
       <MobileDrawer>
         <nav>
-          <a href="/dashboard">Dashboard</a>
+          <a href="#dashboard">Dashboard</a>
         </nav>
       </MobileDrawer>
     );
@@ -84,7 +91,7 @@ describe('MobileDrawer Component', () => {
     await user.click(backdrop);
 
     await waitFor(() => {
-      expect(backdrop).toHaveClass('opacity-0');
+      expect(screen.queryByRole('presentation')).not.toBeInTheDocument();
     });
   });
 
@@ -94,7 +101,7 @@ describe('MobileDrawer Component', () => {
     render(
       <MobileDrawer>
         <nav>
-          <a href="/dashboard">Dashboard</a>
+          <a href="#dashboard">Dashboard</a>
         </nav>
       </MobileDrawer>
     );
@@ -102,14 +109,13 @@ describe('MobileDrawer Component', () => {
     const hamburger = screen.getByRole('button', { name: /menu/i });
     await user.click(hamburger);
 
-    const drawer = screen.getByRole('navigation');
-    expect(drawer).toBeInTheDocument();
+    expect(screen.getByRole('navigation')).toBeInTheDocument();
 
     // Press Escape
     await user.keyboard('{Escape}');
 
     await waitFor(() => {
-      expect(drawer).toHaveClass('-translate-x-full');
+      expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
     });
   });
 
@@ -119,7 +125,7 @@ describe('MobileDrawer Component', () => {
     render(
       <MobileDrawer>
         <nav>
-          <a href="/dashboard">Dashboard</a>
+          <a href="#dashboard">Dashboard</a>
         </nav>
       </MobileDrawer>
     );
@@ -153,8 +159,8 @@ describe('MobileDrawer Component', () => {
     expect(hamburger).toHaveAttribute('aria-label');
     expect(hamburger).toHaveAttribute('aria-expanded');
 
-    const navigation = screen.getByRole('navigation');
-    expect(navigation).toHaveAttribute('aria-hidden');
+    const navigation = screen.queryByRole('navigation');
+    expect(navigation).not.toBeInTheDocument();
   });
 
   it('hides on desktop viewport', () => {
@@ -167,7 +173,7 @@ describe('MobileDrawer Component', () => {
     const { container } = render(
       <MobileDrawer>
         <nav>
-          <a href="/dashboard">Dashboard</a>
+          <a href="#dashboard">Dashboard</a>
         </nav>
       </MobileDrawer>
     );
@@ -227,8 +233,7 @@ describe('MobileDrawer Component', () => {
     await user.click(dashboardLink);
 
     await waitFor(() => {
-      const drawer = screen.getByRole('navigation');
-      expect(drawer).toHaveClass('-translate-x-full');
+      expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
     });
   });
 
@@ -238,7 +243,7 @@ describe('MobileDrawer Component', () => {
     render(
       <MobileDrawer>
         <nav>
-          <a href="/dashboard">Dashboard</a>
+          <a href="#dashboard">Dashboard</a>
         </nav>
       </MobileDrawer>
     );
@@ -248,8 +253,10 @@ describe('MobileDrawer Component', () => {
 
     const drawer = screen.getByRole('navigation');
 
-    // Check animation classes
-    expect(drawer).toHaveClass('transition-transform', 'duration-300');
+    // Drawer container is rendered when open
+    const drawerContainer = drawer.closest('aside');
+    expect(drawerContainer).toBeInTheDocument();
+    expect(drawerContainer).toHaveClass('fixed');
   });
 
   it('touches the minimum touch target size (44px)', () => {

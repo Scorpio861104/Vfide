@@ -12,6 +12,19 @@ jest.mock('@rainbow-me/rainbowkit/styles.css', () => ({}))
 
 jest.mock('wagmi', () => ({
   WagmiProvider: ({ children }: any) => <div data-testid="wagmi">{children}</div>,
+  useAccount: jest.fn(() => ({
+    address: null,
+    isConnected: false,
+    connector: null,
+    chain: null,
+  })),
+  useReconnect: jest.fn(() => ({
+    reconnect: jest.fn(),
+    connectors: [],
+  })),
+  useDisconnect: jest.fn(() => ({
+    disconnect: jest.fn(),
+  })),
 }))
 
 jest.mock('@tanstack/react-query', () => ({

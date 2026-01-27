@@ -249,14 +249,13 @@ describe('BecomeMentorCard', () => {
         canEndorse: true,
       } as any);
       jest.mocked(hooks.useMentorInfo).mockReturnValue({
-        canBecomeMentor: true,
+        canBecomeMentor: false,
         mentorEligibleAt: Math.floor(Date.now() / 1000) + (10 * 24 * 60 * 60),
       } as any);
       
       render(<BecomeMentorCard />);
       
-      // May show "days remaining" or just number
-      expect(screen.getByText(/remaining/)).toBeInTheDocument();
+      expect(screen.getByText(/complete cooldown/i)).toBeInTheDocument();
     });
   });
 

@@ -19,11 +19,11 @@ describe('ActivityFeed - Component Rendering', () => {
 
   test('renders all statistics cards', () => {
     render(<ActivityFeed />);
-    expect(screen.getByText('Total Activities')).toBeInTheDocument();
-    const todayElements = screen.getAllByText('Today');
-    expect(todayElements.length).toBeGreaterThan(0);
-    expect(screen.getByText('This Week')).toBeInTheDocument();
-    expect(screen.getByText('Transactions')).toBeInTheDocument();
+    const statsGrid = screen.getByTestId('activity-stats-grid');
+    expect(within(statsGrid).getByText('Total Activities')).toBeInTheDocument();
+    expect(within(statsGrid).getByText('Today', { selector: 'p' })).toBeInTheDocument();
+    expect(within(statsGrid).getByText('This Week', { selector: 'p' })).toBeInTheDocument();
+    expect(within(statsGrid).getByText('Transactions')).toBeInTheDocument();
   });
 
   test('renders filters section', () => {
@@ -80,8 +80,8 @@ describe('ActivityFeed - Activity Display', () => {
 
   test('shows activity metadata when present', () => {
     render(<ActivityFeed />);
-    expect(screen.getByText(/amount:/i)).toBeInTheDocument();
-    expect(screen.getByText(/status:/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/amount:/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/status:/i).length).toBeGreaterThan(0);
   });
 
   test('displays activity user information', () => {
@@ -93,8 +93,8 @@ describe('ActivityFeed - Activity Display', () => {
   test('renders timeline indicators for activities', () => {
     render(<ActivityFeed />);
     // Check for emoji icons which are part of timeline
-    expect(screen.getByText('💰')).toBeInTheDocument();
-    expect(screen.getByText('🗳️')).toBeInTheDocument();
+    expect(screen.getAllByText('💰').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('🗳️').length).toBeGreaterThan(0);
   });
 });
 
@@ -318,7 +318,8 @@ describe('ActivityFeed - Export', () => {
 describe('ActivityFeed - Statistics', () => {
   test('displays total activities count', () => {
     render(<ActivityFeed />);
-    const totalCard = screen.getByText('Total Activities').closest('div');
+    const statsGrid = screen.getByTestId('activity-stats-grid');
+    const totalCard = within(statsGrid).getByText('Total Activities').closest('div');
     expect(totalCard).toBeInTheDocument();
     
     const count = within(totalCard!).getByText(/^\d+$/);
@@ -327,7 +328,8 @@ describe('ActivityFeed - Statistics', () => {
 
   test('displays today activities count', () => {
     render(<ActivityFeed />);
-    const todayCard = screen.getByText('Today').closest('div');
+    const statsGrid = screen.getByTestId('activity-stats-grid');
+    const todayCard = within(statsGrid).getByText('Today', { selector: 'p' }).closest('div');
     expect(todayCard).toBeInTheDocument();
     
     const count = within(todayCard!).getByText(/^\d+$/);
@@ -336,7 +338,8 @@ describe('ActivityFeed - Statistics', () => {
 
   test('displays this week activities count', () => {
     render(<ActivityFeed />);
-    const weekCard = screen.getByText('This Week').closest('div');
+    const statsGrid = screen.getByTestId('activity-stats-grid');
+    const weekCard = within(statsGrid).getByText('This Week', { selector: 'p' }).closest('div');
     expect(weekCard).toBeInTheDocument();
     
     const count = within(weekCard!).getByText(/^\d+$/);
@@ -345,7 +348,8 @@ describe('ActivityFeed - Statistics', () => {
 
   test('displays transactions count', () => {
     render(<ActivityFeed />);
-    const transactionsCard = screen.getByText('Transactions').closest('div');
+    const statsGrid = screen.getByTestId('activity-stats-grid');
+    const transactionsCard = within(statsGrid).getByText('Transactions').closest('div');
     expect(transactionsCard).toBeInTheDocument();
     
     const count = within(transactionsCard!).getByText(/^\d+$/);
@@ -354,10 +358,11 @@ describe('ActivityFeed - Statistics', () => {
 
   test('stat cards have correct icons', () => {
     render(<ActivityFeed />);
-    expect(screen.getByText('📊')).toBeInTheDocument();
-    expect(screen.getByText('📅')).toBeInTheDocument();
-    expect(screen.getByText('📈')).toBeInTheDocument();
-    expect(screen.getByText('💰')).toBeInTheDocument();
+    const statsGrid = screen.getByTestId('activity-stats-grid');
+    expect(within(statsGrid).getAllByText('📊').length).toBeGreaterThan(0);
+    expect(within(statsGrid).getAllByText('📅').length).toBeGreaterThan(0);
+    expect(within(statsGrid).getAllByText('📈').length).toBeGreaterThan(0);
+    expect(within(statsGrid).getAllByText('💰').length).toBeGreaterThan(0);
   });
 
   test('displays activity breakdown by type', () => {
@@ -433,15 +438,14 @@ describe('ActivityFeed - Mobile Responsiveness', () => {
 
   test('statistics use responsive grid', () => {
     render(<ActivityFeed />);
-    const statsContainer = screen.getByText('Total Activities').closest('div')?.parentElement;
-    expect(statsContainer?.className).toContain('grid');
+    const statsContainer = screen.getByTestId('activity-stats-grid');
+    expect(statsContainer.className).toContain('grid');
   });
 
   test('filters use responsive grid', () => {
     render(<ActivityFeed />);
-    const searchInput = screen.getByPlaceholderText(/Search activities/i);
-    const filtersContainer = searchInput.closest('div')?.parentElement;
-    expect(filtersContainer?.className).toContain('grid');
+    const filtersContainer = screen.getByTestId('activity-filters-grid');
+    expect(filtersContainer.className).toContain('grid');
   });
 
   test('filter actions wrap on small screens', () => {
@@ -497,8 +501,15 @@ describe('ActivityFeed - Data Validation', () => {
 
   test('activity type badges use correct colors', () => {
     render(<ActivityFeed />);
-    const badges = screen.getAllByText(/Transaction|Governance|Merchant|Badge|Escrow|Wallet/);
-    
+    const badgeTextMatcher = /^(Transaction|Governance|Merchant|Badge|Escrow|Wallet)$/;
+    const timeline = screen.getByTestId('activity-timeline');
+    const breakdown = screen.getByTestId('activity-breakdown-grid');
+    const badges = [
+      ...within(timeline).queryAllByText(badgeTextMatcher),
+      ...within(breakdown).queryAllByText(badgeTextMatcher),
+    ].filter((badge) => badge.className.includes('rounded-full'));
+
+    expect(badges.length).toBeGreaterThan(0);
     badges.forEach((badge) => {
       // Each badge should have color classes
       expect(badge.className).toMatch(/bg-|text-/);

@@ -11,6 +11,7 @@ jest.mock('wagmi', () => ({
   useGasPrice: jest.fn(() => ({
     data: BigInt(1000000000), // 1 gwei
   })),
+  useChainId: jest.fn(() => 84532),
 }))
 
 describe('TransactionPreview', () => {
@@ -87,9 +88,8 @@ describe('TransactionPreview', () => {
   it('shows Fuel icon', () => {
     render(<TransactionPreview action="Transfer" />)
     
-    // Lucide Fuel icon renders as SVG
-    const svg = document.querySelector('svg')
-    expect(svg).toBeInTheDocument()
+    const icon = document.querySelector('[data-testid="icon-Fuel"]')
+    expect(icon).toBeInTheDocument()
   })
 
   it('shows green indicator dot', () => {

@@ -33,6 +33,7 @@ describe('/api/crypto/price', () => {
     it('should return price data with tokenomics pricing', async () => {
       withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
 
@@ -64,6 +65,7 @@ describe('/api/crypto/price', () => {
 
       withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
 
@@ -111,6 +113,7 @@ describe('/api/crypto/price', () => {
     it('should support force refresh parameter', async () => {
       withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
         json: async () => ({ ethereum: { usd: 2500 } }),
       });
 
@@ -125,6 +128,7 @@ describe('/api/crypto/price', () => {
     it('should calculate market cap correctly', async () => {
       withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
 
@@ -141,6 +145,7 @@ describe('/api/crypto/price', () => {
     it('should include timestamp in response', async () => {
       withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
 
@@ -164,6 +169,7 @@ describe('/api/crypto/price', () => {
 
       withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
         json: async () => ({ ethereum: { usd: 2000 } }),
       });
 
@@ -178,6 +184,7 @@ describe('/api/crypto/price', () => {
     it('should use default ETH price when CoinGecko returns no data', async () => {
       withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
         json: async () => ({}),
       });
 

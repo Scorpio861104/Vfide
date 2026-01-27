@@ -29,6 +29,7 @@ jest.mock('lucide-react', () => ({
 
 // Mock next/link
 jest.mock('next/link', () => ({
+  __esModule: true,
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
@@ -270,7 +271,7 @@ describe('Loading Page', () => {
     const { container } = render(<LoadingPage />)
 
     const mainDiv = container.firstChild
-    expect(mainDiv).toHaveClass('bg-[#1A1A1D]')
+    expect(mainDiv).toHaveClass('bg-zinc-900')
   })
 
   it('should center content', async () => {

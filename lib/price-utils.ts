@@ -21,6 +21,38 @@ export const PRESALE_PRICES = {
 export const DEFAULT_VFIDE_PRICE = 0.05;
 
 /**
+ * Format a numeric price for display.
+ * Defaults to USD with 2 decimal places.
+ */
+export function formatPrice(value: number, currency: string = 'USD'): string {
+  const safeValue = Number.isFinite(value) ? value : 0;
+
+  if (currency === 'USD') {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(safeValue);
+  }
+
+  return `${safeValue.toFixed(2)} ${currency}`.trim();
+}
+
+/**
+ * Parse a formatted price string back to a number.
+ */
+export function parsePrice(value: string | number): number {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  const normalized = value.replace(/[^0-9.-]/g, '');
+  const parsed = parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/**
  * Convert VFIDE amount to USD string
  */
 export function vfideToUsd(amount: number | string, pricePerToken: number = DEFAULT_VFIDE_PRICE): string {

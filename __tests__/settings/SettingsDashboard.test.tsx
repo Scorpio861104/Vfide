@@ -63,7 +63,7 @@ describe('SettingsDashboard', () => {
 
     it('allows changing density', () => {
       render(<SettingsDashboard />);
-      const density = screen.getByLabelText('Density');
+      const density = screen.getByLabelText('Display Density');
       fireEvent.change(density, { target: { value: 'compact' } });
       expect(density).toHaveValue('compact');
     });
@@ -77,7 +77,7 @@ describe('SettingsDashboard', () => {
       render(<SettingsDashboard />);
       const dark = screen.getByLabelText('Theme Dark');
       click(dark);
-      expect(dark.closest('label')).toHaveClass('border-blue-600');
+      expect(dark.closest('label')).toHaveClass('border-yellow-500');
     });
   });
 
@@ -263,7 +263,7 @@ describe('SettingsDashboard', () => {
     it('imports valid settings', async () => {
       render(<SettingsDashboard />);
       const textarea = screen.getByLabelText('Import settings JSON');
-      const importBtn = screen.getByText('Import');
+      const importBtn = screen.getByRole('button', { name: /Import Settings/i });
 
       const payload = {
         version: 1,
@@ -282,7 +282,7 @@ describe('SettingsDashboard', () => {
     it('shows error on invalid import', async () => {
       render(<SettingsDashboard />);
       const textarea = screen.getByLabelText('Import settings JSON');
-      const importBtn = screen.getByText('Import');
+      const importBtn = screen.getByRole('button', { name: /Import Settings/i });
 
       fireEvent.change(textarea, { target: { value: '{ invalid json' } });
       click(importBtn);
@@ -294,7 +294,7 @@ describe('SettingsDashboard', () => {
 
     it('renders import textarea placeholder', () => {
       render(<SettingsDashboard />);
-      expect(screen.getByPlaceholderText('Paste JSON here')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/Paste JSON here/i)).toBeInTheDocument();
     });
 
     it('renders export helper text', () => {
@@ -330,7 +330,7 @@ describe('SettingsDashboard', () => {
       click(screen.getByText('Save changes'));
 
       await waitFor(() => {
-        expect(screen.getByText('Settings saved')).toBeInTheDocument();
+        expect(screen.getByText(/Settings saved/i)).toBeInTheDocument();
       });
     });
 
@@ -396,7 +396,7 @@ describe('SettingsDashboard', () => {
       const onImport = jest.fn();
       render(<SettingsDashboard onImport={onImport} />);
       const textarea = screen.getByLabelText('Import settings JSON');
-      const importBtn = screen.getByText('Import');
+      const importBtn = screen.getByRole('button', { name: /Import Settings/i });
       const payload = { version: 1, state: defaultSettings, savedAt: new Date().toISOString() };
       fireEvent.change(textarea, { target: { value: JSON.stringify(payload) } });
       click(importBtn);
@@ -455,7 +455,7 @@ describe('SettingsDashboard', () => {
       render(<SettingsDashboard />);
       const input = screen.getByLabelText('Session timeout in minutes');
       fireEvent.change(input, { target: { value: '999' } });
-      expect(input).toHaveValue(999);
+      expect(input).toHaveValue(480);
     });
 
     it('maintains dirty state across multiple changes', () => {
@@ -474,7 +474,7 @@ describe('SettingsDashboard', () => {
       click(toggle);
       click(screen.getByText('Save changes'));
       await waitFor(() => {
-        expect(screen.getByText(/Last saved:/)).toBeInTheDocument();
+        expect(screen.getByText(/Saved|Synced/i)).toBeInTheDocument();
       });
     });
 
@@ -498,7 +498,7 @@ describe('SettingsDashboard', () => {
       click(toggle);
       click(screen.getByText('Save changes'));
       await waitFor(() => {
-        expect(screen.getByText('Settings saved')).toBeInTheDocument();
+        expect(screen.getByText('Settings saved successfully')).toBeInTheDocument();
       });
     });
 
@@ -517,7 +517,7 @@ describe('SettingsDashboard', () => {
 
     it('shows last saved label even before save', () => {
       render(<SettingsDashboard />);
-      expect(screen.getByText(/Last saved/)).toBeInTheDocument();
+      expect(screen.getByText('Not saved')).toBeInTheDocument();
     });
 
     it('keeps session timeout numeric after multiple edits', () => {
@@ -551,7 +551,7 @@ describe('SettingsDashboard', () => {
     it('import clears error on success', async () => {
       render(<SettingsDashboard />);
       const textarea = screen.getByLabelText('Import settings JSON');
-      const importBtn = screen.getByText('Import');
+      const importBtn = screen.getByRole('button', { name: /Import Settings/i });
       fireEvent.change(textarea, { target: { value: '{ bad json' } });
       click(importBtn);
       await waitFor(() => {
@@ -599,7 +599,7 @@ describe('SettingsDashboard', () => {
 
     it('does not crash when import text is empty', () => {
       render(<SettingsDashboard />);
-      click(screen.getByText('Import'));
+      click(screen.getByRole('button', { name: /Import Settings/i }));
       expect(screen.getByText('Import settings')).toBeInTheDocument();
     });
   });
@@ -622,7 +622,7 @@ describe('SettingsDashboard', () => {
 
     it('all selects are reachable by label', () => {
       render(<SettingsDashboard />);
-      const labels = ['Profile visibility', 'Density', 'Language', 'Timezone', 'Date format', 'Week starts on'];
+      const labels = ['Profile visibility', 'Display Density', 'Language', 'Timezone', 'Date format', 'Week starts on'];
       labels.forEach((label) => {
         expect(screen.getByLabelText(label)).toBeInTheDocument();
       });
@@ -635,7 +635,7 @@ describe('SettingsDashboard', () => {
 
     it('buttons have readable text', () => {
       render(<SettingsDashboard />);
-      const buttons = ['Save changes', 'Reset to defaults', 'Export', 'Import'];
+      const buttons = ['Save changes', 'Reset to defaults', 'Export', 'Import Settings'];
       buttons.forEach((text) => {
         expect(screen.getByText(text)).toBeInTheDocument();
       });
@@ -653,7 +653,7 @@ describe('SettingsDashboard', () => {
     it('alert role is used for errors', async () => {
       render(<SettingsDashboard />);
       fireEvent.change(screen.getByLabelText('Import settings JSON'), { target: { value: '{ bad' } });
-      click(screen.getByText('Import'));
+      click(screen.getByRole('button', { name: /Import Settings/i }));
       await waitFor(() => {
         expect(screen.getByRole('alert')).toBeInTheDocument();
       });

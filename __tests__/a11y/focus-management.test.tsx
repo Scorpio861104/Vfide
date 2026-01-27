@@ -180,8 +180,11 @@ describe('Focus Management Tests', () => {
         </div>
       );
 
-      const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(2); // Only visible buttons
+      const buttons = screen.getAllByRole('button', { hidden: true });
+      const visibleButtons = buttons.filter(
+        (button) => window.getComputedStyle(button).display !== 'none'
+      );
+      expect(visibleButtons).toHaveLength(2); // Only visible buttons
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();

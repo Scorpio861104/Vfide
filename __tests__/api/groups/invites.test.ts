@@ -53,12 +53,16 @@ describe('/api/groups/invites', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
-      query.mockResolvedValueOnce({ rows: [{ role: 'admin' }] });
-      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
-      query.mockResolvedValueOnce({
-        rows: [{ id: 1, code: 'ABC123', status: 'pending' }],
-      });
+        // user lookup
+        query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+        // member role lookup
+        query.mockResolvedValueOnce({ rows: [{ role: 'admin' }] });
+        // generateInviteCode check (must be empty to avoid recursion)
+        query.mockResolvedValueOnce({ rows: [] });
+        // insert invite
+        query.mockResolvedValueOnce({
+          rows: [{ id: 1, code: 'ABC123', status: 'pending' }],
+        });
 
       const request = new NextRequest('http://localhost:3000/api/groups/invites', {
         method: 'POST',

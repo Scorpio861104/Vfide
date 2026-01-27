@@ -16,7 +16,7 @@ export interface BadgeGalleryProps {
 }
 
 export function BadgeGallery({ address, showAll = false, compact = false }: BadgeGalleryProps) {
-  const { tokenIds, isLoading: loadingBadges } = useBadgeNFTs(address)
+  const { tokenIds = [], isLoading: loadingBadges } = useBadgeNFTs(address)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null)
   const [_newlyEarned, _setNewlyEarned] = useState<Set<string>>(new Set())

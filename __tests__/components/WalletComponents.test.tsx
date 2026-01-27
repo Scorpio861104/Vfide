@@ -45,7 +45,11 @@ jest.mock('framer-motion', () => ({
     button: ({ children, className, onClick, disabled, ...props }: any) => (
       <button className={className} onClick={onClick} disabled={disabled} {...props}>{children}</button>
     ),
+    span: ({ children, className, ...props }: any) => (
+      <span className={className} {...props}>{children}</span>
+    ),
   },
+  AnimatePresence: ({ children }: any) => children,
 }));
 
 import { ChainSelector } from '@/components/wallet/ChainSelector';
@@ -163,10 +167,7 @@ describe('ChainSelector', () => {
       render(<ChainSelector compact />);
       
       const button = screen.getByRole('button');
-      fireEvent.click(button);
-      
-      const zksyncButton = screen.getByText('zkSync').closest('button');
-      expect(zksyncButton).toBeDisabled();
+      expect(button).toBeDisabled();
     });
   });
 

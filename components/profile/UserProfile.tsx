@@ -186,7 +186,7 @@ const generateMockRecentActivities = (): RecentActivity[] => [
 
 const generateMockPrivacySettings = (): PrivacySettings => ({
   profileVisibility: 'public',
-  showEmail: false,
+  showEmail: true,
   showActivities: true,
   showBadges: true,
   showStats: true,
@@ -264,6 +264,10 @@ const validateUrl = (url: string): boolean => {
   } catch {
     return false;
   }
+};
+
+const formatRarityLabel = (rarity: Badge['rarity']): string => {
+  return `${rarity.charAt(0).toUpperCase()}${rarity.slice(1)}`;
 };
 
 // ==================== SUB-COMPONENTS ====================
@@ -418,7 +422,7 @@ function BadgeCarousel({ badges }: { badges: Badge[] }) {
                     badge.rarity === 'rare' ? 'bg-blue-500/20 text-blue-400' :
                     'bg-gray-500/20 text-gray-400'
                   }`}>
-                    {badge.rarity}
+                    {formatRarityLabel(badge.rarity)}
                   </span>
                 </div>
               </motion.div>
@@ -618,7 +622,7 @@ function BadgeCard({ badge }: BadgeCardProps) {
         <h3 className="font-bold text-white text-lg mb-1">{badge.name}</h3>
         <p className="text-sm text-zinc-400 mb-3">{badge.description}</p>
         <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${rarityTextColors[badge.rarity]} bg-black/20`}>
-          {badge.rarity}
+          {formatRarityLabel(badge.rarity)}
         </span>
         <p className="text-xs text-zinc-500 mt-2">
           Earned {formatTimeAgo(badge.earnedDate)}
@@ -845,10 +849,11 @@ export default function UserProfile() {
             {isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">
+                  <label htmlFor="profile-username" className="block text-sm font-medium text-zinc-400 mb-1">
                     Username *
                   </label>
                   <MobileInput
+                    id="profile-username"
                     type="text"
                     value={editedProfile.username}
                     onChange={(e) => handleProfileChange('username', e.target.value)}
@@ -856,10 +861,11 @@ export default function UserProfile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">
+                  <label htmlFor="profile-display-name" className="block text-sm font-medium text-zinc-400 mb-1">
                     Display Name *
                   </label>
                   <MobileInput
+                    id="profile-display-name"
                     type="text"
                     value={editedProfile.displayName}
                     onChange={(e) => handleProfileChange('displayName', e.target.value)}
@@ -867,10 +873,11 @@ export default function UserProfile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">
+                  <label htmlFor="profile-email" className="block text-sm font-medium text-zinc-400 mb-1">
                     Email *
                   </label>
                   <MobileInput
+                    id="profile-email"
                     type="email"
                     value={editedProfile.email}
                     onChange={(e) => handleProfileChange('email', e.target.value)}
@@ -942,6 +949,11 @@ export default function UserProfile() {
                       <MapPin className="w-4 h-4" /> {profile.location}
                     </span>
                   )}
+                  {privacySettings.showEmail && profile.email && (
+                    <span className="flex items-center gap-1.5">
+                      <span aria-hidden>📧</span> {profile.email}
+                    </span>
+                  )}
                 </div>
               </>
             )}
@@ -977,8 +989,9 @@ export default function UserProfile() {
           <h2 className="text-xl font-semibold text-white mb-4">Additional Information</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Bio</label>
+              <label htmlFor="profile-bio" className="block text-sm font-medium text-zinc-400 mb-1">Bio</label>
               <textarea
+                id="profile-bio"
                 value={editedProfile.bio}
                 onChange={(e) => handleProfileChange('bio', e.target.value)}
                 rows={4}
@@ -987,8 +1000,9 @@ export default function UserProfile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Location</label>
+              <label htmlFor="profile-location" className="block text-sm font-medium text-zinc-400 mb-1">Location</label>
               <MobileInput
+                id="profile-location"
                 type="text"
                 value={editedProfile.location || ''}
                 onChange={(e) => handleProfileChange('location', e.target.value)}
@@ -996,8 +1010,9 @@ export default function UserProfile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Website</label>
+              <label htmlFor="profile-website" className="block text-sm font-medium text-zinc-400 mb-1">Website</label>
               <MobileInput
+                id="profile-website"
                 type="url"
                 value={editedProfile.website || ''}
                 onChange={(e) => handleProfileChange('website', e.target.value)}
@@ -1006,8 +1021,9 @@ export default function UserProfile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Twitter</label>
+              <label htmlFor="profile-twitter" className="block text-sm font-medium text-zinc-400 mb-1">Twitter</label>
               <MobileInput
+                id="profile-twitter"
                 type="text"
                 value={editedProfile.twitter || ''}
                 onChange={(e) => handleProfileChange('twitter', e.target.value)}
@@ -1015,8 +1031,9 @@ export default function UserProfile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">GitHub</label>
+              <label htmlFor="profile-github" className="block text-sm font-medium text-zinc-400 mb-1">GitHub</label>
               <MobileInput
+                id="profile-github"
                 type="text"
                 value={editedProfile.github || ''}
                 onChange={(e) => handleProfileChange('github', e.target.value)}
@@ -1407,7 +1424,13 @@ export default function UserProfile() {
             ].map((tab) => (
               <motion.button
                 key={tab.id}
-                onClick={() => { setActiveTab(tab.id); playSound('click'); }}
+                onClick={() => {
+                  if (isEditing) {
+                    handleCancelEdit();
+                  }
+                  setActiveTab(tab.id);
+                  playSound('click');
+                }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className={`relative px-4 py-3 font-medium transition-colors ${
@@ -1420,7 +1443,7 @@ export default function UserProfile() {
                   {tab.icon} {tab.label}
                   {tab.count !== null && (
                     <span className="text-xs bg-zinc-800 px-2 py-0.5 rounded-full">
-                      {tab.count}
+                      ({tab.count})
                     </span>
                   )}
                 </span>

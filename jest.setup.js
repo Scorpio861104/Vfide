@@ -11,6 +11,71 @@ import { TextEncoder, TextDecoder } from 'util'
 global.TextEncoder = TextEncoder
 global.TextDecoder = TextDecoder
 
+// Mock canvas getContext for jest-axe and other DOM tests
+if (typeof HTMLCanvasElement !== 'undefined') {
+  HTMLCanvasElement.prototype.getContext = () => ({
+    fillRect: jest.fn(),
+    clearRect: jest.fn(),
+    getImageData: jest.fn(() => ({ data: new Uint8ClampedArray(4) })),
+    putImageData: jest.fn(),
+    createImageData: jest.fn(() => []),
+    setTransform: jest.fn(),
+    drawImage: jest.fn(),
+    save: jest.fn(),
+    fillText: jest.fn(),
+    restore: jest.fn(),
+    beginPath: jest.fn(),
+    moveTo: jest.fn(),
+    lineTo: jest.fn(),
+    closePath: jest.fn(),
+    stroke: jest.fn(),
+    translate: jest.fn(),
+    scale: jest.fn(),
+    rotate: jest.fn(),
+    arc: jest.fn(),
+    fill: jest.fn(),
+    measureText: jest.fn(() => ({ width: 0 })),
+    transform: jest.fn(),
+    rect: jest.fn(),
+    clip: jest.fn(),
+  })
+}
+
+// Mock getComputedStyle for jest-axe color contrast checks
+if (typeof window !== 'undefined') {
+  window.getComputedStyle = (element) => {
+    const style = element && element.style ? element.style : {};
+    const display = style.display || 'block';
+    const visibility = style.visibility || 'visible';
+    const opacity = style.opacity || '1';
+    const width = style.width || '';
+    const height = style.height || '';
+    const transform = style.transform || '';
+
+    return {
+      getPropertyValue: (property) => {
+        if (property === 'width') return width;
+        if (property === 'height') return height;
+        if (property === 'transform') return transform;
+        if (property === 'color') return 'rgb(0, 0, 0)';
+        if (property === 'background-color') return 'rgb(255, 255, 255)';
+        if (property === 'opacity') return opacity;
+        if (property === 'display') return display;
+        if (property === 'visibility') return visibility;
+        return '';
+      },
+      color: 'rgb(0, 0, 0)',
+      backgroundColor: 'rgb(255, 255, 255)',
+      opacity,
+      display,
+      visibility,
+      width,
+      height,
+      transform,
+    };
+  };
+}
+
 
 // Polyfill Request, Response, and Headers for Next.js API route tests
 // Create minimal but functional Web API polyfills
@@ -263,6 +328,7 @@ jest.mock('wagmi', () => ({
     reconnect: jest.fn(),
     isPending: false,
   })),
+  useWatchContractEvent: jest.fn(() => undefined),
 
   // Balance & Token
   useBalance: jest.fn(() => ({
@@ -601,35 +667,78 @@ jest.mock('@rainbow-me/rainbowkit', () => ({
 }))
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }) => <button {...props}>{children}</button>,
-    span: ({ children, ...props }) => <span {...props}>{children}</span>,
-    p: ({ children, ...props }) => <p {...props}>{children}</p>,
-    h1: ({ children, ...props }) => <h1 {...props}>{children}</h1>,
-    h2: ({ children, ...props }) => <h2 {...props}>{children}</h2>,
-    h3: ({ children, ...props }) => <h3 {...props}>{children}</h3>,
-    ul: ({ children, ...props }) => <ul {...props}>{children}</ul>,
-    li: ({ children, ...props }) => <li {...props}>{children}</li>,
-    a: ({ children, ...props }) => <a {...props}>{children}</a>,
-    img: (props) => <img alt="" {...props} />,
-    svg: ({ children, ...props }) => <svg {...props}>{children}</svg>,
-    path: (props) => <path {...props} />,
-    section: ({ children, ...props }) => <section {...props}>{children}</section>,
-    article: ({ children, ...props }) => <article {...props}>{children}</article>,
-    nav: ({ children, ...props }) => <nav {...props}>{children}</nav>,
-    header: ({ children, ...props }) => <header {...props}>{children}</header>,
-    footer: ({ children, ...props }) => <footer {...props}>{children}</footer>,
-    form: ({ children, ...props }) => <form {...props}>{children}</form>,
-    input: (props) => <input {...props} />,
-    textarea: (props) => <textarea {...props} />,
-    label: ({ children, ...props }) => <label {...props}>{children}</label>,
-  },
+jest.mock('framer-motion', () => {
+  const resolveMotionChildren = (children) => {
+    const resolveChild = (child) => {
+      if (child && typeof child === 'object' && typeof child.get === 'function') {
+        return child.get();
+      }
+      return child;
+    };
+
+    if (Array.isArray(children)) {
+      return children.map(resolveChild);
+    }
+
+    return resolveChild(children);
+  };
+
+  return {
+    motion: {
+      div: ({ children, ...props }) => <div {...props}>{resolveMotionChildren(children)}</div>,
+      button: ({ children, ...props }) => <button {...props}>{resolveMotionChildren(children)}</button>,
+      span: ({ children, ...props }) => <span {...props}>{resolveMotionChildren(children)}</span>,
+      p: ({ children, ...props }) => <p {...props}>{resolveMotionChildren(children)}</p>,
+      h1: ({ children, ...props }) => <h1 {...props}>{resolveMotionChildren(children)}</h1>,
+      h2: ({ children, ...props }) => <h2 {...props}>{resolveMotionChildren(children)}</h2>,
+      h3: ({ children, ...props }) => <h3 {...props}>{resolveMotionChildren(children)}</h3>,
+      ul: ({ children, ...props }) => <ul {...props}>{resolveMotionChildren(children)}</ul>,
+      li: ({ children, ...props }) => <li {...props}>{resolveMotionChildren(children)}</li>,
+      a: ({ children, ...props }) => <a {...props}>{resolveMotionChildren(children)}</a>,
+      img: (props) => <img alt="" {...props} />,
+      svg: ({ children, ...props }) => <svg {...props}>{resolveMotionChildren(children)}</svg>,
+      path: (props) => <path {...props} />,
+      table: ({ children, ...props }) => <table {...props}>{resolveMotionChildren(children)}</table>,
+      thead: ({ children, ...props }) => <thead {...props}>{resolveMotionChildren(children)}</thead>,
+      tbody: ({ children, ...props }) => <tbody {...props}>{resolveMotionChildren(children)}</tbody>,
+      tr: ({ children, ...props }) => <tr {...props}>{resolveMotionChildren(children)}</tr>,
+      th: ({ children, ...props }) => <th {...props}>{resolveMotionChildren(children)}</th>,
+      td: ({ children, ...props }) => <td {...props}>{resolveMotionChildren(children)}</td>,
+      section: ({ children, ...props }) => <section {...props}>{resolveMotionChildren(children)}</section>,
+      article: ({ children, ...props }) => <article {...props}>{resolveMotionChildren(children)}</article>,
+      aside: ({ children, ...props }) => <aside {...props}>{resolveMotionChildren(children)}</aside>,
+      nav: ({ children, ...props }) => <nav {...props}>{resolveMotionChildren(children)}</nav>,
+      header: ({ children, ...props }) => <header {...props}>{resolveMotionChildren(children)}</header>,
+      footer: ({ children, ...props }) => <footer {...props}>{resolveMotionChildren(children)}</footer>,
+      form: ({ children, ...props }) => <form {...props}>{resolveMotionChildren(children)}</form>,
+      input: (props) => <input {...props} />,
+      textarea: (props) => <textarea {...props} />,
+      label: ({ children, ...props }) => <label {...props}>{resolveMotionChildren(children)}</label>,
+    },
   AnimatePresence: ({ children }) => children,
-  useMotionValue: jest.fn(() => ({ get: () => 0, set: jest.fn(), onChange: jest.fn() })),
-  useTransform: jest.fn(() => ({ get: () => 0 })),
-  useSpring: jest.fn(() => ({ get: () => 0, set: jest.fn() })),
+  useMotionValue: jest.fn(() => ({
+    get: () => 0,
+    set: jest.fn(),
+    on: jest.fn(() => jest.fn()),
+    onChange: jest.fn(),
+  })),
+  useTransform: jest.fn((value, input, output) => {
+    const computed = typeof input === 'function'
+      ? input(0)
+      : typeof output === 'function'
+        ? output(0)
+        : 0;
+    return {
+      get: () => computed,
+      on: jest.fn(() => jest.fn()),
+      onChange: jest.fn(),
+    };
+  }),
+  useSpring: jest.fn(() => ({
+    get: () => 0,
+    set: jest.fn(),
+    on: jest.fn(() => jest.fn()),
+  })),
   useAnimation: jest.fn(() => ({ start: jest.fn(), stop: jest.fn() })),
   useInView: jest.fn(() => true),
   useScroll: jest.fn(() => ({ scrollY: { get: () => 0 }, scrollYProgress: { get: () => 0 } })),
@@ -644,7 +753,8 @@ jest.mock('framer-motion', () => ({
   m: {
     div: ({ children, ...props }) => <div {...props}>{children}</div>,
   },
-}))
+  };
+})
 
 // Mock @/lib/testnet
 jest.mock('@/lib/testnet', () => ({
@@ -792,6 +902,7 @@ jest.mock('@tanstack/react-query', () => ({
 // Mock useTransactionSounds hook
 jest.mock('@/hooks/useTransactionSounds', () => ({
   useTransactionSounds: () => ({
+    play: jest.fn(),
     playSuccess: jest.fn(),
     playError: jest.fn(),
     playClick: jest.fn(),

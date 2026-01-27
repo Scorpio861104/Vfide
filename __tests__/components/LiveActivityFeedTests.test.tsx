@@ -60,15 +60,16 @@ const mockActivities: ActivityItem[] = [
   },
 ]
 
+const mockUseActivityFeed = jest.fn(() => ({ activities: mockActivities }))
+
 jest.mock('@/lib/vfide-hooks', () => ({
-  useActivityFeed: jest.fn(() => ({
-    activities: mockActivities,
-  })),
+  useActivityFeed: (...args: unknown[]) => mockUseActivityFeed(...args),
 }))
 
 describe('LiveActivityFeed', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseActivityFeed.mockReturnValue({ activities: mockActivities })
   })
 
   it('renders the component', () => {
@@ -86,7 +87,7 @@ describe('LiveActivityFeed', () => {
   it('renders live indicator dot', () => {
     render(<LiveActivityFeed />)
     
-    const dot = document.querySelector('.bg-\\[\\#00FF88\\]')
+    const dot = document.querySelector('.bg-emerald-400')
     expect(dot).toBeInTheDocument()
   })
 
@@ -183,15 +184,7 @@ describe('LiveActivityFeed', () => {
 
 describe('LiveActivityFeed - Empty State', () => {
   it('handles empty activities array', async () => {
-    // Reset modules to apply new mock
-    jest.resetModules()
-    
-    // Re-mock with empty activities
-    jest.doMock('@/lib/vfide-hooks', () => ({
-      useActivityFeed: () => ({ activities: [] }),
-    }))
-
-    const { LiveActivityFeed } = await import('@/components/trust/LiveActivityFeed')
+    mockUseActivityFeed.mockReturnValue({ activities: [] })
     render(<LiveActivityFeed />)
     
     expect(screen.getByText('0 recent')).toBeInTheDocument()

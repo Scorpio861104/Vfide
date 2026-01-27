@@ -67,6 +67,8 @@ jest.mock('wagmi/chains', () => ({
   base: { id: 8453, name: 'Base' },
 }))
 
+import { NetworkSwitchOverlay } from '@/components/wallet/NetworkSwitchOverlay'
+
 describe('NetworkSwitchOverlay', () => {
   beforeEach(() => {
     // Reset mock state
@@ -75,7 +77,6 @@ describe('NetworkSwitchOverlay', () => {
     mockSwitchChainPending = false
     mockSwitchChainError = false
     mockSwitchChainSuccess = false
-    jest.resetModules()
   })
 
   afterEach(() => {
@@ -85,8 +86,6 @@ describe('NetworkSwitchOverlay', () => {
   it('renders overlay when on wrong network and connected', async () => {
     mockIsConnected = true
     mockChainId = 1 // Wrong network (not Base Sepolia 84532)
-    
-    const { NetworkSwitchOverlay } = await import('@/components/wallet/NetworkSwitchOverlay')
     render(<NetworkSwitchOverlay />)
     
     // Should show something related to network switching
@@ -97,8 +96,6 @@ describe('NetworkSwitchOverlay', () => {
   it('does not render when not connected', async () => {
     mockIsConnected = false
     mockChainId = 1
-    
-    const { NetworkSwitchOverlay } = await import('@/components/wallet/NetworkSwitchOverlay')
     const { container } = render(<NetworkSwitchOverlay />)
     
     // When not connected, overlay should not show
@@ -108,8 +105,6 @@ describe('NetworkSwitchOverlay', () => {
   it('does not render when on correct network', async () => {
     mockIsConnected = true
     mockChainId = 84532 // Correct network (Base Sepolia)
-    
-    const { NetworkSwitchOverlay } = await import('@/components/wallet/NetworkSwitchOverlay')
     const { container } = render(<NetworkSwitchOverlay />)
     
     expect(container.firstChild).toBeNull()
@@ -119,8 +114,6 @@ describe('NetworkSwitchOverlay', () => {
     mockIsConnected = true
     mockChainId = 1
     mockSwitchChainPending = true
-    
-    const { NetworkSwitchOverlay } = await import('@/components/wallet/NetworkSwitchOverlay')
     render(<NetworkSwitchOverlay />)
     
     // Component should still work in pending state
@@ -131,8 +124,6 @@ describe('NetworkSwitchOverlay', () => {
     mockIsConnected = true
     mockChainId = 1
     mockSwitchChainError = true
-    
-    const { NetworkSwitchOverlay } = await import('@/components/wallet/NetworkSwitchOverlay')
     render(<NetworkSwitchOverlay />)
     
     // Component should still work in error state
@@ -143,8 +134,6 @@ describe('NetworkSwitchOverlay', () => {
     mockIsConnected = true
     mockChainId = 1
     mockSwitchChainSuccess = true
-    
-    const { NetworkSwitchOverlay } = await import('@/components/wallet/NetworkSwitchOverlay')
     render(<NetworkSwitchOverlay />)
     
     // Component should handle success animation

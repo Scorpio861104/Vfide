@@ -60,6 +60,8 @@ export class WebSocketManager {
   private socket: Socket | null = null;
   private config: WSConfig;
   private messageHandlers: Map<string, Set<(data: unknown) => void>> = new Map();
+  private socketListeners: Set<string> = new Set();
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private isConnecting = false;
   private isClosed = false;
 
@@ -104,6 +106,11 @@ export class WebSocketManager {
           reconnectionDelay: this.config.reconnectInterval,
         });
 
+        this.socketListeners.clear();
+        this.messageHandlers.forEach((_handlers, event) => {
+          this.registerSocketEvent(event);
+        });
+
         this.socket.on('connect', () => {
           console.log('[Socket.IO] Connected:', this.socket?.id);
           this.isConnecting = false;
@@ -121,6 +128,7 @@ export class WebSocketManager {
 
         this.socket.on('disconnect', (reason) => {
           console.log('[Socket.IO] Disconnected:', reason);
+          this.clearHeartbeat();
           this.emit('disconnect', { from: userAddress, data: { reason }, timestamp: Date.now(), type: 'disconnect' });
         });
 
@@ -140,6 +148,8 @@ export class WebSocketManager {
    */
   disconnect() {
     this.isClosed = true;
+    this.clearHeartbeat();
+    this.socketListeners.clear();
     
     if (this.socket) {
       this.socket.disconnect();
@@ -179,25 +189,13 @@ export class WebSocketManager {
    * Subscribe to Socket.IO event
    */
   on(event: string, handler: (data: unknown) => void) {
-    if (!this.socket) {
-      console.warn('[Socket.IO] Not initialized');
-      return () => {};
-    }
-
     if (!this.messageHandlers.has(event)) {
       this.messageHandlers.set(event, new Set());
-      
-      // Register Socket.IO listener
-      this.socket.on(event, (data: unknown) => {
-        const handlers = this.messageHandlers.get(event);
-        if (handlers) {
-          handlers.forEach(h => h(data));
-        }
-      });
     }
     
     // Safe: We just ensured this event exists in the map above
     this.messageHandlers.get(event)!.add(handler);
+    this.registerSocketEvent(event);
 
     // Return unsubscribe function with proper cleanup
     return () => {
@@ -207,6 +205,7 @@ export class WebSocketManager {
         // If no handlers left, remove the event listener and clean up the map
         if (handlers.size === 0) {
           this.socket?.off(event);
+          this.socketListeners.delete(event);
           this.messageHandlers.delete(event);
         }
       }
@@ -219,11 +218,40 @@ export class WebSocketManager {
   private setupHeartbeat() {
     if (!this.socket) return;
 
+    this.clearHeartbeat();
+
+    if (this.config.heartbeatInterval && this.config.heartbeatInterval > 0) {
+      this.heartbeatTimer = setInterval(() => {
+        if (this.socket?.connected) {
+          this.socket.emit('ping', { timestamp: Date.now() });
+        }
+      }, this.config.heartbeatInterval);
+    }
+
     // Listen for server heartbeat pings
     this.socket.on('heartbeat:ping', (data) => {
       // Respond with pong
       this.socket?.emit('heartbeat:pong', data);
     });
+  }
+
+  private registerSocketEvent(event: string) {
+    if (!this.socket || this.socketListeners.has(event)) return;
+
+    this.socketListeners.add(event);
+    this.socket.on(event, (data: unknown) => {
+      const handlers = this.messageHandlers.get(event);
+      if (handlers) {
+        handlers.forEach(h => h(data));
+      }
+    });
+  }
+
+  private clearHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
   }
 
   /**
@@ -259,6 +287,14 @@ export class WebSocketManager {
    */
   subscribeToNotifications() {
     this.emit('notifications:subscribe', {});
+  }
+
+  joinRoom(room: string) {
+    this.emit('join', room);
+  }
+
+  leaveRoom(room: string) {
+    this.emit('leave', room);
   }
 }
 

@@ -42,6 +42,7 @@ jest.mock('next/navigation', () => ({
 
 // Mock Next.js Link
 jest.mock('next/link', () => ({
+  __esModule: true,
   default: ({ children, href, onClick }: any) => (
     <a href={href} onClick={onClick}>{children}</a>
   ),

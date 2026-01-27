@@ -76,6 +76,10 @@ export function useTransactionSounds() {
 
   // Initialize audio context on first user interaction
   const initAudioContext = useCallback(() => {
+    if (typeof window === 'undefined' || !(window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)) {
+      return null;
+    }
+
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     }
@@ -94,6 +98,7 @@ export function useTransactionSounds() {
 
     try {
       const ctx = initAudioContext();
+      if (!ctx) return;
       const frequencies = TONE_FREQUENCIES[type];
       const duration = TONE_DURATIONS[type] / 1000; // Convert to seconds
       const noteLength = duration / frequencies.length;

@@ -20,6 +20,7 @@ jest.mock('@/hooks/useVaultHub', () => ({
 
 // Mock next/link
 jest.mock('next/link', () => ({
+  __esModule: true,
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
     <a href={href} {...props}>{children}</a>
   ),
@@ -125,7 +126,7 @@ describe('VaultStatusIndicator', () => {
 
       render(<VaultStatusIndicator />)
 
-      const greenDot = document.querySelector('.bg-\\[\\#50C878\\]')
+      const greenDot = document.querySelector('.bg-emerald-500')
       expect(greenDot).toBeInTheDocument()
     })
 

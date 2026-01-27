@@ -52,6 +52,11 @@ describe('FaucetButton', () => {
         writeText: jest.fn().mockResolvedValue(undefined),
       },
     })
+
+    Object.defineProperty(window, 'isSecureContext', {
+      value: true,
+      configurable: true,
+    })
   })
 
   describe('Visibility', () => {
@@ -142,7 +147,7 @@ describe('FaucetButton', () => {
       render(<FaucetButton />)
 
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('animate-pulse')
+      expect(button).toHaveClass('bg-amber-500/20')
     })
   })
 

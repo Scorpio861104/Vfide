@@ -493,7 +493,7 @@ export default function ActivityFeed() {
         </div>
 
         {/* Statistics */}
-        <div className={`${responsiveGrids.auto} gap-4 mb-6`}>
+        <div data-testid="activity-stats-grid" className={`grid ${responsiveGrids.auto} gap-4 mb-6`}>
           <StatCard label="Total Activities" value={stats.total} icon="📊" color="blue" />
           <StatCard label="Today" value={stats.today} icon="📅" color="green" />
           <StatCard label="This Week" value={stats.thisWeek} icon="📈" color="purple" />
@@ -511,13 +511,17 @@ export default function ActivityFeed() {
             Filters
           </h2>
 
-          <div className={`${responsiveGrids.auto} gap-4 mb-4`}>
+          <div data-testid="activity-filters-grid" className={`grid ${responsiveGrids.auto} gap-4 mb-4`}>
             {/* Search */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="activity-search"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Search
               </label>
               <MobileInput
+                id="activity-search"
                 type="text"
                 value={filter.search}
                 onChange={(e) => handleFilterChange({ search: e.target.value })}
@@ -527,10 +531,14 @@ export default function ActivityFeed() {
 
             {/* Type Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="activity-type"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Activity Type
               </label>
               <select
+                id="activity-type"
                 value={filter.type}
                 onChange={(e) =>
                   handleFilterChange({ type: e.target.value as ActivityFilter['type'] })
@@ -549,10 +557,14 @@ export default function ActivityFeed() {
 
             {/* Date Range Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="activity-date-range"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Date Range
               </label>
               <select
+                id="activity-date-range"
                 value={filter.dateRange}
                 onChange={(e) =>
                   handleFilterChange({ dateRange: e.target.value as ActivityFilter['dateRange'] })
@@ -588,7 +600,10 @@ export default function ActivityFeed() {
         </div>
 
         {/* Activity Timeline */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div
+          data-testid="activity-timeline"
+          className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+        >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Activity Timeline
@@ -653,7 +668,7 @@ export default function ActivityFeed() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Activity Breakdown
           </h2>
-          <div className={`${responsiveGrids.auto} gap-4`}>
+          <div data-testid="activity-breakdown-grid" className={`${responsiveGrids.auto} gap-4`}>
             {Object.entries(stats.byType).map(([type, count]) => (
               <div
                 key={type}

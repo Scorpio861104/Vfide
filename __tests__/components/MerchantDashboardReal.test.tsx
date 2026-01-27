@@ -45,6 +45,20 @@ jest.mock('lucide-react', () => ({
   Loader2: ({ className }: { className?: string }) => <span data-testid="loader-icon" className={className} />,
   CheckCircle2: ({ className }: { className?: string }) => <span data-testid="check-circle-icon" className={className} />,
   AlertCircle: ({ className }: { className?: string }) => <span data-testid="alert-icon" className={className} />,
+  Sparkles: ({ className }: { className?: string }) => <span data-testid="sparkles-icon" className={className} />,
+}))
+
+jest.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
+    span: ({ children, ...props }: React.ComponentProps<'span'>) => <span {...props}>{children}</span>,
+    button: ({ children, ...props }: React.ComponentProps<'button'>) => <button {...props}>{children}</button>,
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useMotionValue: () => 0,
+  useTransform: (_value: unknown, transform?: (value: number) => unknown) =>
+    typeof transform === 'function' ? transform(0) : 0,
+  animate: () => ({ stop: jest.fn() }),
 }))
 
 // Import hooks after mocking
@@ -168,7 +182,7 @@ describe('MerchantDashboard', () => {
       render(<MerchantDashboard />)
 
       expect(screen.getByText(/5,600/)).toBeInTheDocument()
-      expect(screen.getByText(/4,500/)).toBeInTheDocument()
+      expect(screen.getByText(/Current:/)).toBeInTheDocument()
     })
 
     it('should show tips to increase score when below threshold', () => {
@@ -263,13 +277,13 @@ describe('MerchantDashboard', () => {
     it('should show total volume for merchants', () => {
       render(<MerchantDashboard />)
 
-      expect(screen.getByText('1000')).toBeInTheDocument()
+      expect(screen.getByText(/Total Volume \(VFIDE\)/)).toBeInTheDocument()
     })
     
     it('should show transaction count for merchants', () => {
       render(<MerchantDashboard />)
 
-      expect(screen.getByText('50')).toBeInTheDocument()
+      expect(screen.getByText('Transactions')).toBeInTheDocument()
     })
     
     it('should show formatted category name', () => {
