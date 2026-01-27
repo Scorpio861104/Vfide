@@ -10,6 +10,7 @@ import { useAnnounce } from '@/lib/accessibility';
 import {
   Attachment,
   AttachmentType,
+  getAttachmentType,
   formatFileSize,
   MAX_FILES_PER_MESSAGE,
   useFileDrop,
@@ -231,6 +232,10 @@ interface AttachmentCardProps {
 }
 
 function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
+  const attachmentType = isAttachment(attachment)
+    ? attachment.type
+    : getAttachmentType(attachment.type);
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -239,7 +244,7 @@ function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
       className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center gap-3 hover:border-zinc-700 transition-colors"
     >
       <div className="w-10 h-10 bg-linear-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
-        {renderIconForType(attachment.type, "w-5 h-5 text-blue-400")}
+        {renderIconForType(attachmentType, "w-5 h-5 text-blue-400")}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -258,6 +263,10 @@ function AttachmentCard({ attachment, onRemove }: AttachmentCardProps) {
       </div>
     </motion.div>
   );
+}
+
+function isAttachment(value: Attachment | File): value is Attachment {
+  return 'uploadedAt' in value && 'url' in value;
 }
 
 function renderIconForType(type: AttachmentType, className: string) {
