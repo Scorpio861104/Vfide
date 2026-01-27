@@ -72,13 +72,16 @@ export class CallManager {
       return this.localStream;
     } catch (error: unknown) {
       console.error('Failed to get user media:', error);
-      
-      if (error.name === 'NotAllowedError') {
+
+      const errorName =
+        error instanceof DOMException || error instanceof Error ? error.name : undefined;
+
+      if (errorName === 'NotAllowedError') {
         throw new Error('Camera/microphone permission denied');
-      } else if (error.name === 'NotFoundError') {
+      } else if (errorName === 'NotFoundError') {
         throw new Error('No camera/microphone found');
       }
-      
+
       throw new Error('Failed to access camera/microphone');
     }
   }
