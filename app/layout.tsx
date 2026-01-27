@@ -17,8 +17,6 @@ import { PerformanceProvider } from "@/components/performance/PerformanceProvide
 import { ErrorMonitoringProvider, DevErrorConsole } from "@/components/monitoring/ErrorMonitoringProvider";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { AchievementToastContainer } from "@/components/gamification/AchievementToast";
-import { PieMenu } from "@/components/navigation/PieMenu";
-import CommandBar from "@/components/CommandBar";
 // Core integrations from PR #56
 import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegistration";
 import { ZustandHydration } from "@/components/core/ZustandHydration";
@@ -28,6 +26,15 @@ import { MockServiceWorker } from "@/components/dev/MockServiceWorker";
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ContractValidationBanner } from "@/components/layout/ContractValidationBanner";
+import dynamic from 'next/dynamic';
+
+// Lazy load heavy overlay components
+const PieMenu = dynamic(() => import("@/components/navigation/PieMenu").then(m => ({ default: m.PieMenu })), {
+  ssr: false
+});
+const CommandBar = dynamic(() => import("@/components/CommandBar"), {
+  ssr: false
+});
 
 // Use CSS variables for fonts - will load from Google Fonts via CSS
 // This avoids build-time network requests while still using Google Fonts in production
