@@ -27,6 +27,7 @@ import { MockServiceWorker } from "@/components/dev/MockServiceWorker";
 // Navigation components
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { ContractValidationBanner } from "@/components/layout/ContractValidationBanner";
 
 // Use CSS variables for fonts - will load from Google Fonts via CSS
 // This avoids build-time network requests while still using Google Fonts in production
@@ -121,6 +122,8 @@ export default function RootLayout({
                   <AchievementToastContainer />
                   {/* Global Navigation */}
                   <GlobalNav />
+                  {/* Contract Validation Warning */}
+                  <ContractValidationBanner />
                   {/* Main Content */}
                   {children}
                   {/* Mobile Bottom Navigation */}

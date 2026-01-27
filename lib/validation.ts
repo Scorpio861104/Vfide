@@ -380,3 +380,92 @@ export function safeTimestampToDate(
 
   return date;
 }
+
+// ==================== CONTRACT VALIDATION ====================
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
+interface ContractValidationResult {
+  isValid: boolean;
+  missingContracts: string[];
+  totalContracts: number;
+  configuredContracts: number;
+}
+
+/**
+ * Validate contract addresses configuration
+ * @param contracts - Object containing contract addresses
+ * @returns Validation result with details
+ */
+export function validateContractAddresses(
+  contracts: Record<string, string>
+): ContractValidationResult {
+  const missingContracts: string[] = [];
+  let totalContracts = 0;
+  let configuredContracts = 0;
+
+  for (const [name, address] of Object.entries(contracts)) {
+    totalContracts++;
+    
+    if (!address || address === ZERO_ADDRESS) {
+      missingContracts.push(name);
+    } else {
+      configuredContracts++;
+    }
+  }
+
+  const isValid = missingContracts.length === 0;
+
+  return {
+    isValid,
+    missingContracts,
+    totalContracts,
+    configuredContracts,
+  };
+}
+
+/**
+ * Get user-friendly error message for missing contracts
+ * @param missingCount - Number of missing contracts
+ * @param totalCount - Total number of contracts
+ * @returns User-friendly error message
+ */
+export function getContractErrorMessage(
+  missingCount: number,
+  totalCount: number
+): string {
+  if (missingCount === 0) {
+    return '';
+  }
+
+  if (missingCount === totalCount) {
+    return 'Smart contracts are not configured. Please set up your environment variables.';
+  }
+
+  return `${missingCount} of ${totalCount} smart contracts are not configured. Some features may not work.`;
+}
+
+/**
+ * Check if a specific contract address is valid
+ * @param address - Contract address to validate
+ * @returns True if valid, false otherwise
+ */
+export function isValidContractAddress(address: string | undefined): boolean {
+  if (!address) return false;
+  if (address === ZERO_ADDRESS) return false;
+  if (!address.startsWith('0x')) return false;
+  if (address.length !== 42) return false;
+  return true;
+}
+
+/**
+ * Format contract name for display (converts PascalCase to Title Case)
+ * @param contractName - Contract name in PascalCase
+ * @returns Formatted contract name
+ */
+export function formatContractName(contractName: string): string {
+  return contractName
+    .replace(/([A-Z])/g, ' $1')
+    .trim()
+    .replace(/^./, (str) => str.toUpperCase());
+}
