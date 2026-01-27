@@ -80,17 +80,19 @@ const nextConfig: NextConfig = {
               // Default: only same origin
               "default-src 'self'",
               // Scripts: self and specific trusted domains
-              // Removed 'unsafe-inline' and 'unsafe-eval' for better security
-              // If you need inline scripts, use nonce-based CSP in middleware
-              "script-src 'self' https://vercel.live",
-              // Styles: self - removed 'unsafe-inline'
-              // For Tailwind, styles are now in external CSS files
-              // If you need inline styles, use nonce-based CSP in middleware
-              "style-src 'self'",
+              // Note: 'unsafe-inline' and 'unsafe-eval' required for Next.js development
+              // In production, consider implementing nonce-based CSP via middleware
+              process.env.NODE_ENV === 'development' 
+                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live"
+                : "script-src 'self' https://vercel.live",
+              // Styles: self and inline styles
+              // Note: 'unsafe-inline' required for Tailwind CSS and Next.js
+              // In production, consider nonce-based CSP for better security
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               // Images: self, data URIs, HTTPS for user avatars (restrict to specific domains in production)
               "img-src 'self' data: https:",
-              // Fonts: self and data URIs
-              "font-src 'self' data:",
+              // Fonts: self, data URIs, and Google Fonts
+              "font-src 'self' data: https://fonts.gstatic.com",
               // Connect: self and WebSocket (for real-time features)
               "connect-src 'self' wss: ws: https:",
               // Frame: self (for embedded content)
