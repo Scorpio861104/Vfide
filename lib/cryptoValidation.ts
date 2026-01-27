@@ -296,12 +296,19 @@ export function parseTransactionData(data: unknown): {
     return { valid: false, errors };
   }
 
+  // Type guard for transaction data
+  if (typeof data !== 'object') {
+    errors.push('Transaction data must be an object');
+    return { valid: false, errors };
+  }
+
+  const txData = data as Record<string, unknown>;
   const parsed: Record<string, string | number> = {};
 
   // Validate and parse each field
-  if (data.from) {
-    if (validateEthereumAddress(data.from)) {
-      parsed.from = data.from.toLowerCase();
+  if (txData.from) {
+    if (typeof txData.from === 'string' && validateEthereumAddress(txData.from)) {
+      parsed.from = txData.from.toLowerCase();
     } else {
       errors.push('Invalid sender address');
     }
@@ -309,9 +316,9 @@ export function parseTransactionData(data: unknown): {
     errors.push('Sender address is required');
   }
 
-  if (data.to) {
-    if (validateEthereumAddress(data.to)) {
-      parsed.to = data.to.toLowerCase();
+  if (txData.to) {
+    if (typeof txData.to === 'string' && validateEthereumAddress(txData.to)) {
+      parsed.to = txData.to.toLowerCase();
     } else {
       errors.push('Invalid recipient address');
     }
@@ -319,8 +326,13 @@ export function parseTransactionData(data: unknown): {
     errors.push('Recipient address is required');
   }
 
-  if (data.amount) {
-    const amountValidation = validateAmount(data.amount, data.currency);
+  if (txData.amount) {
+    const amountValidation = validateAmount(
+      txData.amount as string | number, 
+      typeof txData.currency === 'string' && validateCurrency(txData.currency) 
+        ? (txData.currency as 'ETH' | 'VFIDE')
+        : 'ETH'
+    );
     if (amountValidation.valid) {
       parsed.amount = amountValidation.parsed!.toString();
     } else {
@@ -330,9 +342,9 @@ export function parseTransactionData(data: unknown): {
     errors.push('Amount is required');
   }
 
-  if (data.currency) {
-    if (validateCurrency(data.currency)) {
-      parsed.currency = data.currency;
+  if (txData.currency) {
+    if (typeof txData.currency === 'string' && validateCurrency(txData.currency)) {
+      parsed.currency = txData.currency;
     } else {
       errors.push('Invalid currency');
     }
@@ -340,11 +352,11 @@ export function parseTransactionData(data: unknown): {
     errors.push('Currency is required');
   }
 
-  if (data.memo) {
-    const memoValidation = validateMemo(data.memo);
-    if (memoValidation.valid) {
+  if (txData.memo && typeof txData.memo === 'string') {
+    const memoValidation = validateMemo(txData.memo);
+    if (memoValidation.valid && memoValidation.sanitized) {
       parsed.memo = memoValidation.sanitized;
-    } else {
+    } else if (!memoValidation.valid) {
       errors.push(memoValidation.error!);
     }
   }

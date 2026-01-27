@@ -270,7 +270,8 @@ export function withRateLimit(
   return async (req: Request, context: Record<string, unknown>): Promise<Response> => {
     try {
       // Extract user ID from request (you'll need to implement authentication)
-      const userId = context.params?.userId || 'anonymous';
+      const params = context.params as { userId?: string } | undefined;
+      const userId = params?.userId || 'anonymous';
 
       // Check rate limit
       const rateLimitResult = checkRateLimit(userId, actionType);

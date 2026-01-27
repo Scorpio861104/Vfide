@@ -325,13 +325,14 @@ export function useMediaUpload() {
       return attachment;
     } catch (error: unknown) {
       // Mark as failed
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
       setUploads((prev) => {
         const next = new Map(prev);
         next.set(uploadId, {
           file,
           progress: 0,
           status: 'failed',
-          error: error.message,
+          error: errorMessage,
         });
         return next;
       });

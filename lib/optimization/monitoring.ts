@@ -46,7 +46,7 @@ export function trackWebVitals() {
   if (typeof window === 'undefined') return;
 
   // Use web-vitals library if available
-  const reportWebVital = (metric: { name: string; value: number; rating: string; id: string }) => {
+  const reportWebVital = (metric: { name: string; value: number; rating: string; id: string; delta?: number }) => {
     // Send to analytics
     sendMetric({
       event: `web_vital_${metric.name.toLowerCase()}`,
@@ -109,6 +109,11 @@ export async function trackApiCall<T>(
     throw e;
   } finally {
     const duration = performance.now() - startTime;
+    
+    const errorMessage = error instanceof Error ? error.message : undefined;
+    const statusCode = error && typeof error === 'object' && 'statusCode' in error && typeof (error as { statusCode: unknown }).statusCode === 'number'
+      ? (error as { statusCode: number }).statusCode 
+      : undefined;
 
     sendMetric({
       event: 'api_call',
@@ -116,8 +121,8 @@ export async function trackApiCall<T>(
       properties: {
         endpoint,
         success,
-        error: error?.message,
-        statusCode: error?.statusCode,
+        error: errorMessage,
+        statusCode,
       },
       timestamp: Date.now(),
     });

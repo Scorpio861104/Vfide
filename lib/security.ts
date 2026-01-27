@@ -280,12 +280,14 @@ export class SecurityMonitor {
   private static maxViolations = 100;
   
   static recordViolation(type: string, details: Record<string, unknown>) {
-    this.violations.push({
+    const violation: SecurityViolation = {
       type,
       details,
       timestamp: Date.now(),
       url: window.location.href,
-    });
+    };
+    
+    this.violations.push(violation);
     
     // Keep only recent violations
     if (this.violations.length > this.maxViolations) {
@@ -294,7 +296,7 @@ export class SecurityMonitor {
     
     // Report to backend in production
     if (process.env.NODE_ENV === 'production') {
-      this.reportToBackend({ type, details });
+      this.reportToBackend(violation);
     }
   }
   

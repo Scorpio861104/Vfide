@@ -41,7 +41,7 @@ export const handlers = [
   }),
 
   http.post('/api/crypto/payment-requests', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
       id: Math.floor(Math.random() * 1000),
       ...body,
