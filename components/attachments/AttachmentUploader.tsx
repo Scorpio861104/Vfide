@@ -8,12 +8,13 @@
 
 import { useAnnounce } from '@/lib/accessibility';
 import {
-    AttachmentType,
-    formatFileSize,
-    MAX_FILES_PER_MESSAGE,
-    useFileDrop,
-    useFileUpload,
-    validateFile
+  Attachment,
+  AttachmentType,
+  formatFileSize,
+  MAX_FILES_PER_MESSAGE,
+  useFileDrop,
+  useFileUpload,
+  validateFile
 } from '@/lib/attachments';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
