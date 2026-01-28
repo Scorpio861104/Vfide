@@ -45,12 +45,19 @@ export async function GET(request: NextRequest) {
 function checkEnvironmentVariables(): boolean {
   const required = [
     'NEXT_PUBLIC_CHAIN_ID',
-    'NEXT_PUBLIC_CONTRACT_ADDRESS',
+    'NEXT_PUBLIC_CONTRACT_ADDRESS', // Added to .env.local.example - use 0x0 for dev
     'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID'
   ];
 
-  return required.every(key => {
+  const missing = required.filter(key => {
     const value = process.env[key];
-    return value !== undefined && value !== '';
+    return value === undefined || value === '';
   });
+
+  if (missing.length > 0) {
+    console.warn('⚠️ Missing environment variables:', missing);
+    console.warn('💡 For local dev, see REALITY_CHECK.md or copy .env.local.example');
+  }
+
+  return missing.length === 0;
 }
