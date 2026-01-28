@@ -121,7 +121,7 @@ export default function CommandBar() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all hover:scale-105 z-50"
+        className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all hover:scale-105 z-50"
         aria-label="Open command bar"
       >
         <CommandIcon />

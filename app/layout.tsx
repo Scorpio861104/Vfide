@@ -17,7 +17,6 @@ import { ErrorMonitoringProvider, DevErrorConsole } from "@/components/monitorin
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { AchievementToastContainer } from "@/components/gamification/AchievementToast";
 import { PieMenu } from "@/components/navigation/PieMenu";
-import CommandBar from "@/components/CommandBar";
 // Core integrations from PR #56
 import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegistration";
 import { ZustandHydration } from "@/components/core/ZustandHydration";
@@ -116,7 +115,6 @@ export default function RootLayout({
                 {/* Network detection handled by wallet connection */}
                 <AchievementToastContainer />
                 {children}
-                <CommandBar />
                 <PieMenu />
                 <OnboardingManager />
                 <HelpCenter />
