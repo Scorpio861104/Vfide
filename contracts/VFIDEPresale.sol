@@ -634,7 +634,6 @@ contract VFIDEPresale is ReentrancyGuard {
      * @param tier Price tier (0=Founding, 1=Oath, 2=Public)
      * @param lockPeriod Lock period chosen
      * @param extraBonus Extra bonus tokens (e.g., referee bonus)
-     * @param usdAmount USD amount paid (6 decimals) - for tracking
      */
     function _processPurchase(
         address buyer, 
@@ -642,7 +641,7 @@ contract VFIDEPresale is ReentrancyGuard {
         uint8 tier,
         uint256 lockPeriod,
         uint256 extraBonus,
-        uint256 usdAmount
+        uint256 /*usdAmount*/
     ) internal {
         require(tokensDeposited, "Tokens not deposited");
         require(block.timestamp >= saleStartTime, "Not started");

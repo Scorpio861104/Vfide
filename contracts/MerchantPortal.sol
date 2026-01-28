@@ -684,16 +684,12 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /**
      * @notice Online payment - MUST use escrow for buyer protection
      * @dev Reverts - online payments require escrow via VFIDECommerce
-     * @param merchant The merchant
-     * @param token Payment token
-     * @param amount Payment amount
-     * @param orderId Order reference
      */
     function payOnline(
-        address merchant,
-        address token,
-        uint256 amount,
-        string calldata orderId
+        address /*merchant*/,
+        address /*token*/,
+        uint256 /*amount*/,
+        string calldata /*orderId*/
     ) external pure returns (uint256) {
         // Prevent direct online payments - must use escrow
         revert MERCH_EscrowRequired();

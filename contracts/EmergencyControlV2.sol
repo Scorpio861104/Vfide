@@ -292,7 +292,10 @@ contract EmergencyControlV2 is VFIDEAccessControl {
     /**
      * @notice Get pause configuration for a contract
      * @param _contract Contract address
-     * @return Pause configuration details
+        * @return globalPause Whether global pause is enabled
+        * @return pauseExpiry Pause expiration timestamp
+        * @return pausedAt Timestamp when pause was set
+        * @return pauseReason Reason for pause
      */
     function getPauseConfig(address _contract) 
         external 

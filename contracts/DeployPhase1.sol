@@ -76,7 +76,7 @@ contract Phase1Deployer {
         addresses.circuitBreaker = address(circuitBreaker);
 
         // 5. Deploy WithdrawalQueue
-        WithdrawalQueue withdrawalQueue = new WithdrawalQueue(_admin, 1000000 * 10**18); // 1M tokens
+        WithdrawalQueueStub withdrawalQueue = new WithdrawalQueueStub(_admin, 1000000 * 10**18); // 1M tokens
         addresses.withdrawalQueue = address(withdrawalQueue);
 
         // 6. Deploy VFIDETokenV2

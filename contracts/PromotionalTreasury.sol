@@ -328,7 +328,7 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     /**
      * @notice Track merchant visit for exploration rewards
      */
-    function recordMerchantVisit(address user, address merchant) external onlyRole(ADMIN_ROLE) {
+    function recordMerchantVisit(address user, address /*merchant*/) external onlyRole(ADMIN_ROLE) {
         uniqueMerchantsVisited[user]++;
     }
     
@@ -370,7 +370,7 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     /**
      * @notice Internal reward distribution
      */
-    function _distributeReward(address user, uint256 amount, string memory category) internal {
+    function _distributeReward(address user, uint256 amount, string memory /*category*/) internal {
         require(amount > 0, "Invalid amount");
         require(totalDistributed + amount <= TOTAL_PROMOTIONAL_ALLOCATION, "Total budget exceeded");
         

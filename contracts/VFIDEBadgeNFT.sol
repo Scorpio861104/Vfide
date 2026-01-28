@@ -89,7 +89,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
     constructor(
         address _seer,
         string memory _baseURI
-    ) ERC721("VFIDE Badge", "VBADGE") Ownable(msg.sender) {
+    ) ERC721("VFIDE Badge", "VBADGE") Ownable() {
         seer = Seer(_seer);
         _baseTokenURI = _baseURI;
         _nextTokenId = 1; // Start at 1 (0 = unminted)
@@ -186,19 +186,17 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
     /**
      * @notice Override transfer to prevent it (soulbound)
      */
-    function _update(
+    function _beforeTokenTransfer(
+        address from,
         address to,
-        uint256 tokenId,
-        address auth
-    ) internal virtual override(ERC721, ERC721Enumerable) returns (address) {
-        address from = _ownerOf(tokenId);
-        
-        // Allow minting (from == address(0)) and burning (to == address(0))
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal override(ERC721, ERC721Enumerable) {
         if (from != address(0) && to != address(0)) {
             revert TokenIsSoulbound();
         }
-        
-        return super._update(to, tokenId, auth);
+
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
     
     // ============ METADATA ============
@@ -214,7 +212,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        _requireOwned(tokenId);
+        _requireMinted(tokenId);
         
         bytes32 badge = tokenBadge[tokenId];
         
@@ -267,7 +265,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
         uint256 mintTime,
         uint256 number
     ) {
-        _requireOwned(tokenId);
+        _requireMinted(tokenId);
         
         badge = tokenBadge[tokenId];
         name = BadgeRegistry.getName(badge);
@@ -387,11 +385,8 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
     
     // ============ OVERRIDES ============
     
-    function _increaseBalance(address account, uint128 value)
-        internal
-        override(ERC721, ERC721Enumerable)
-    {
-        super._increaseBalance(account, value);
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
     }
     
     function supportsInterface(bytes4 interfaceId)

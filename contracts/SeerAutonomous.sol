@@ -615,8 +615,6 @@ contract SeerAutonomous {
     ) internal {
         // Only escalate, never downgrade automatically
         if (level <= restrictionLevel[subject]) return;
-        RestrictionLevel oldLevel = restrictionLevel[subject];
-
         // Severe restrictions go through a challenge window first
         if (level >= RestrictionLevel.Suspended) {
             PendingChallenge storage ch = pendingChallenge[subject];

@@ -607,6 +607,8 @@ contract OwnerControlPanel {
         vaultOnly = vfideToken.vaultOnly();
         policyLocked = vfideToken.policyLocked();
         circuitBreaker = vfideToken.circuitBreaker();
+        devReserveBalance = 0;
+        treasuryBalance = 0;
         
         // Get balances if addresses are set
         if (address(presale) != address(0)) {

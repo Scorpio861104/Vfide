@@ -279,15 +279,20 @@ contract CircuitBreaker is VFIDEAccessControl {
 
     /**
      * @notice Get trigger history
-     * @return Array of trigger events
+     * @return history Array of trigger events
      */
-    function getTriggerHistory() external view returns (TriggerEvent[] memory) {
+    function getTriggerHistory() external view returns (TriggerEvent[] memory history) {
         return triggerHistory;
     }
 
     /**
      * @notice Get current monitoring status
-     * @return Various monitoring metrics
+        * @return tvl Total value locked
+        * @return dailyVolume Daily volume
+        * @return volumePercent Daily volume percent of TVL
+        * @return currentPrice Last observed price
+        * @return blacklistCount Blacklist count in 24h window
+        * @return isTriggered Whether circuit breaker is triggered
      */
     function getMonitoringStatus() 
         external 
@@ -311,7 +316,7 @@ contract CircuitBreaker is VFIDEAccessControl {
 
     /**
      * @notice Check if any threshold is close to triggering
-     * @return Array of warning messages
+        * @return warnings Array of warning messages
      */
     function checkWarnings() external view returns (string[] memory warnings) {
         uint256 warningCount = 0;
@@ -369,8 +374,10 @@ contract CircuitBreaker is VFIDEAccessControl {
             (bool success, ) = emergencyController.call{gas: 100000}(
                 abi.encodeWithSignature("emergencyPause()")
             );
-            // Don't revert if emergency controller call fails
-            // Circuit breaker should still trigger
+            if (!success) {
+                // Don't revert if emergency controller call fails
+                // Circuit breaker should still trigger
+            }
         }
 
         emit CircuitBreakerTriggered(_reason, _metricValue, block.timestamp, msg.sender);

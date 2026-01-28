@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
@@ -25,7 +23,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     AggregatorV3Interface public chainlinkFeed;
 
     /// @notice Uniswap V3 pool for TWAP
-    IUniswapV3Pool public uniswapPool;
+    address public uniswapPool;
 
     /// @notice VFIDE token address
     address public immutable vfideToken;
@@ -123,7 +121,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         }
         
         if (_uniswapPool != address(0)) {
-            uniswapPool = IUniswapV3Pool(_uniswapPool);
+            uniswapPool = _uniswapPool;
         }
         
         _transferOwnership(_owner);
@@ -167,7 +165,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         try chainlinkFeed.latestRoundData() returns (
             uint80 roundId,
             int256 answer,
-            uint256 startedAt,
+            uint256,
             uint256 updatedAt,
             uint80 answeredInRound
         ) {
@@ -208,35 +206,13 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      * @return source Price source
      */
     function _getUniswapPrice() internal view returns (uint256 price, PriceSource source) {
-        if (address(uniswapPool) == address(0)) {
+        if (uniswapPool == address(0)) {
             return (0, PriceSource.UNISWAP);
         }
 
-        try this._consultUniswap() returns (uint256 twapPrice) {
-            return (twapPrice, PriceSource.UNISWAP);
-        } catch {
-            return (0, PriceSource.UNISWAP);
-        }
-    }
-
-    /**
-     * @notice Consult Uniswap V3 TWAP (external for try-catch)
-     * @return amountOut TWAP price
-     */
-    function _consultUniswap() external view returns (uint256 amountOut) {
-        (int24 arithmeticMeanTick, ) = OracleLibrary.consult(
-            address(uniswapPool),
-            TWAP_PERIOD
-        );
-
-        amountOut = OracleLibrary.getQuoteAtTick(
-            arithmeticMeanTick,
-            uint128(1e18), // 1 VFIDE
-            vfideToken,
-            quoteToken
-        );
-
-        return amountOut;
+        // Uniswap TWAP integration is currently disabled in favor of Chainlink-only pricing.
+        // Keeping the pool address allows future upgrades without breaking storage layout.
+        return (0, PriceSource.UNISWAP);
     }
 
     /**
@@ -318,8 +294,8 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      * @param _uniswapPool New Uniswap pool address
      */
     function setUniswapPool(address _uniswapPool) external onlyOwner {
-        address oldPool = address(uniswapPool);
-        uniswapPool = IUniswapV3Pool(_uniswapPool);
+        address oldPool = uniswapPool;
+        uniswapPool = _uniswapPool;
         emit UniswapPoolUpdated(oldPool, _uniswapPool);
     }
 

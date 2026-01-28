@@ -2,9 +2,8 @@
 pragma solidity 0.8.30;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 /**
  * @title VaultRecoveryClaim
@@ -54,7 +53,6 @@ interface IVaultRegistry {
 
 contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
-    using MessageHashUtils for bytes32;
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONSTANTS
@@ -203,7 +201,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     constructor(
         address _vaultHub,
         address _vaultRegistry
-    ) Ownable(msg.sender) {
+    ) Ownable() {
         if (_vaultHub == address(0)) revert ZeroAddress();
         vaultHub = IVaultInfrastructure(_vaultHub);
         vaultRegistry = IVaultRegistry(_vaultRegistry);

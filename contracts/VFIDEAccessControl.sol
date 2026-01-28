@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 /**
  * @title VFIDEAccessControl
  * @notice Enhanced access control system for VFIDE ecosystem with granular role-based permissions
  * @dev Implements OpenZeppelin AccessControl with custom roles for security and operational separation
  */
-contract VFIDEAccessControl is AccessControl {
+contract VFIDEAccessControl is AccessControlEnumerable {
     bytes32 public constant EMERGENCY_PAUSER_ROLE = keccak256("EMERGENCY_PAUSER_ROLE");
     bytes32 public constant CONFIG_MANAGER_ROLE = keccak256("CONFIG_MANAGER_ROLE");
     bytes32 public constant BLACKLIST_MANAGER_ROLE = keccak256("BLACKLIST_MANAGER_ROLE");
@@ -16,7 +16,6 @@ contract VFIDEAccessControl is AccessControl {
 
     event RoleGrantedWithReason(bytes32 indexed role, address indexed account, address indexed grantor, string reason);
     event RoleRevokedWithReason(bytes32 indexed role, address indexed account, address indexed revoker, string reason);
-    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
 
     /**
      * @notice Constructor sets up initial admin and all roles
@@ -95,15 +94,6 @@ contract VFIDEAccessControl is AccessControl {
             }
         }
         return true;
-    }
-
-    /**
-     * @notice Get all role members for a specific role
-     * @param role The role to query
-     * @return count Number of members with the role
-     */
-    function getRoleMemberCount(bytes32 role) external view returns (uint256 count) {
-        return super.getRoleMemberCount(role);
     }
 
     /**

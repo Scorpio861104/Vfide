@@ -355,10 +355,9 @@ contract BadgeManager {
     /**
      * @notice Record a referral
      * @param referrer The referrer address
-     * @param referred The referred user address
      * @param qualified Whether referred user reached 600+ score
      */
-    function recordReferral(address referrer, address referred, bool qualified) external onlyOperator {
+    function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator {
         UserStats storage stats = userStats[referrer];
         stats.referralsMade++;
         if (qualified) {

@@ -9,7 +9,7 @@ import "./VFIDEReentrancyGuard.sol";
  * @notice Queue-based withdrawal system with delays and daily caps
  * @dev Implements 7-day delay for large withdrawals with governance override
  */
-contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
+abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
     uint256 public constant WITHDRAWAL_DELAY = 7 days;
     uint256 public constant DAILY_WITHDRAWAL_CAP_PERCENT = 10; // 10% of vault
 
@@ -219,7 +219,13 @@ contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
     /**
      * @notice Get withdrawal request details
      * @param _queueIndex Queue index
-     * @return Withdrawal request details
+        * @return user Requesting user
+        * @return amount Requested amount
+        * @return requestTime Request timestamp
+        * @return executionTime Scheduled execution time
+        * @return executed Whether request executed
+        * @return cancelled Whether request cancelled
+        * @return reason Cancellation reason
      */
     function getWithdrawalRequest(uint256 _queueIndex) 
         external 
@@ -298,18 +304,13 @@ contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
         return dailyCap - withdrawn;
     }
 
-    error MustOverrideExecuteWithdrawal();
-    error MustOverrideGetUserBalance();
-
     /**
      * @notice Internal function to execute withdrawal (to be overridden)
      * @param _user User address
      * @param _amount Amount to withdraw
      * @dev MUST be overridden in implementing contract with actual withdrawal logic
      */
-    function _executeWithdrawal(address _user, uint256 _amount) internal virtual {
-        revert MustOverrideExecuteWithdrawal();
-    }
+    function _executeWithdrawal(address _user, uint256 _amount) internal virtual;
 
     /**
      * @notice Internal function to get user balance (to be overridden)
@@ -317,9 +318,7 @@ contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
      * @return balance User's balance
      * @dev MUST be overridden in implementing contract with actual balance logic
      */
-    function _getUserBalance(address _user) internal view virtual returns (uint256) {
-        revert MustOverrideGetUserBalance();
-    }
+    function _getUserBalance(address _user) internal view virtual returns (uint256);
 
     /**
      * @notice Get queue length
@@ -327,5 +326,34 @@ contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
      */
     function queueLength() external view returns (uint256) {
         return withdrawalQueue.length;
+    }
+}
+
+/**
+ * @title WithdrawalQueueStub
+ * @notice Minimal concrete implementation for deployment/testing
+ * @dev Replace with a vault-integrated implementation in production
+ */
+contract WithdrawalQueueStub is WithdrawalQueue {
+    mapping(address => uint256) private balances;
+
+    constructor(address _admin, uint256 _minimumDelayAmount)
+        WithdrawalQueue(_admin, _minimumDelayAmount)
+    {}
+
+    function setUserBalance(address user, uint256 balance)
+        external
+        onlyRole(CONFIG_MANAGER_ROLE)
+    {
+        balances[user] = balance;
+    }
+
+    function _executeWithdrawal(address user, uint256 amount) internal override {
+        require(balances[user] >= amount, "WithdrawalQueue: insufficient balance");
+        balances[user] -= amount;
+    }
+
+    function _getUserBalance(address user) internal view override returns (uint256) {
+        return balances[user];
     }
 }

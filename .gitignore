@@ -2,6 +2,7 @@
 
 # Dependencies
 /node_modules
+/contracts/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -21,6 +22,10 @@ test-results.json
 
 # Production build
 /build
+
+# Hardhat artifacts
+/artifacts
+/typechain-types
 
 # Misc
 .DS_Store

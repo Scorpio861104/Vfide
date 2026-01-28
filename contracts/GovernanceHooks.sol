@@ -95,7 +95,7 @@ contract GovernanceHooks {
      * @notice Called before proposal execution - checks Seer flags
      * @dev Reverts if proposal is blocked by SeerGuardian
      */
-    function onProposalQueued(uint256 id, address target, uint256 value) external onlyDAO {
+    function onProposalQueued(uint256 id, address /*target*/, uint256 /*value*/) external onlyDAO {
         _log("gh_queued");
         
         // Check if Seer has flagged this proposal
@@ -111,7 +111,7 @@ contract GovernanceHooks {
      * @notice Called when a vote is cast
      * @dev Checks voter restrictions and rewards participation
      */
-    function onVoteCast(uint256 id, address voter, bool support) external onlyDAO {
+    function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external onlyDAO {
         _log("gh_vote");
         
         // Check if voter is restricted by SeerGuardian
@@ -128,7 +128,7 @@ contract GovernanceHooks {
         }
     }
     
-    function onFinalized(uint256 id, bool passed) external onlyDAO {
+    function onFinalized(uint256 /*id*/, bool passed) external onlyDAO {
         _log(passed ? "gh_passed" : "gh_failed");
     }
     

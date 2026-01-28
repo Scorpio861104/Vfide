@@ -99,7 +99,7 @@ contract VFIDEEnterpriseGateway {
 
         // Determine payer: Vault or EOA
         address payer = msg.sender;
-        address vault = vaultHub.vaultOf(msg.sender);
+        vaultHub.vaultOf(msg.sender);
         
         // If user has a vault, we expect them to pay via vault (or approve from vault)
         // For simplicity in this gateway, we pull from msg.sender (EOA) or Vault if msg.sender is Vault

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.30;
 
 import {OApp, Origin, MessagingFee} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
 import {OAppOptionsType3} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OAppOptionsType3.sol";
@@ -210,15 +210,13 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _origin Message origin info
      * @param _guid Message GUID
      * @param payload Message payload
-     * @param _executor Executor address
-     * @param _extraData Extra data
      */
     function _lzReceive(
         Origin calldata _origin,
         bytes32 _guid,
         bytes calldata payload,
-        address _executor,
-        bytes calldata _extraData
+        address /*_executor*/,
+        bytes calldata /*_extraData*/
     ) internal override {
         // Verify trusted remote
         bytes32 remote = trustedRemotes[_origin.srcEid];

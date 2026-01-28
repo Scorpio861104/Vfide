@@ -232,7 +232,7 @@ contract CommerceEscrow {
         token.safeTransfer(e.buyerVault, e.amount);
     }
 
-    function dispute(uint256 id, string calldata reason) external {
+    function dispute(uint256 id, string calldata /*reason*/) external {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != e.merchantOwner) revert COM_NotAllowed();

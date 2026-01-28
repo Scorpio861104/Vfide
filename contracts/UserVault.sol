@@ -634,7 +634,7 @@ contract UserVault is ReentrancyGuard {
         }
     }
 
-    function _logTx(address to, uint256 amount, string memory action) internal {
+    function _logTx(address /*to*/, uint256 amount, string memory action) internal {
         if (address(ledger) != address(0)) {
             try ledger.logEvent(address(this), action, amount, "") {} catch {}
         }

@@ -378,7 +378,6 @@ contract ProofScoreBurnRouter is Ownable {
      * Called by VFIDEToken during transfers
      * 
      * @param from Sender address
-     * @param to Recipient address  
      * @param amount Transfer amount
      * @return burnAmount Amount to burn (Deflationary)
      * @return sanctumAmount Amount to Sanctum fund (Charity)
@@ -389,7 +388,7 @@ contract ProofScoreBurnRouter is Ownable {
      */
     function computeFees(
         address from,
-        address to,
+        address /*to*/,
         uint256 amount
     ) external view returns (
         uint256 burnAmount,
