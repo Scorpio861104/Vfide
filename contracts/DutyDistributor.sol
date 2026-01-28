@@ -17,9 +17,13 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     event DutyPointsEarned(address indexed user, uint256 points, string reason);
     event RewardsClaimed(address indexed user, uint256 amount);
     event EpochClosed(uint256 epochId, uint256 totalPoints);
+    event HoweySafeModeUpdated(bool enabled);
 
     IEcosystemVault public ecosystemVault;
     address public dao;
+
+    // Howey-safe mode disables reward accrual and payout
+    bool public howeySafeMode = true;
 
     // Duty Points Tracking
     mapping(address => uint256) public userPoints;
@@ -50,8 +54,14 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     }
 
     function setParams(uint256 _pointsPerVote, uint256 _rewardPerPoint) external onlyOwner {
+        if (howeySafeMode) revert("DD: howey safe");
         pointsPerVote = _pointsPerVote;
         rewardPerPoint = _rewardPerPoint;
+    }
+
+    function setHoweySafeMode(bool enabled) external onlyOwner {
+        howeySafeMode = enabled;
+        emit HoweySafeModeUpdated(enabled);
     }
 
     // -------------------------------------------------------
@@ -59,6 +69,7 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     // -------------------------------------------------------
 
     function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external override onlyDAO {
+        if (howeySafeMode) return;
         // L-3 FIX: Check points cap before adding
         if (userPoints[voter] + pointsPerVote <= maxPointsPerUser) {
             userPoints[voter] += pointsPerVote;
@@ -81,6 +92,7 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     // -------------------------------------------------------
 
     function claimRewards() external {
+        require(!howeySafeMode, "DD: howey safe");
         uint256 points = userPoints[msg.sender];
         require(points > 0, "no points");
 
