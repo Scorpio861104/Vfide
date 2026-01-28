@@ -79,22 +79,19 @@ const nextConfig: NextConfig = {
             value: [
               // Default: only same origin
               "default-src 'self'",
-              // Scripts: self and specific trusted domains
-              // Removed 'unsafe-inline' and 'unsafe-eval' for better security
-              // If you need inline scripts, use nonce-based CSP in middleware
-              "script-src 'self' https://vercel.live",
-              // Styles: self - removed 'unsafe-inline'
-              // For Tailwind, styles are now in external CSS files
-              // If you need inline styles, use nonce-based CSP in middleware
-              "style-src 'self'",
-              // Images: self, data URIs, HTTPS for user avatars (restrict to specific domains in production)
-              "img-src 'self' data: https:",
-              // Fonts: self and data URIs
-              "font-src 'self' data:",
-              // Connect: self and WebSocket (for real-time features)
-              "connect-src 'self' wss: ws: https:",
-              // Frame: self (for embedded content)
-              "frame-src 'self'",
+              // Scripts: self, trusted domains, and unsafe-inline for Next.js hydration
+              // In production, consider migrating to nonce-based CSP
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org",
+              // Styles: self and unsafe-inline for Tailwind/Radix UI
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              // Images: self, data URIs, HTTPS, and blob for avatars/NFTs
+              "img-src 'self' data: https: blob:",
+              // Fonts: self, data URIs, and Google Fonts
+              "font-src 'self' data: https://fonts.gstatic.com",
+              // Connect: self, WebSocket, and blockchain RPC endpoints
+              "connect-src 'self' wss: ws: https: https://*.walletconnect.com https://*.walletconnect.org https://*.base.org https://*.polygon.technology https://*.zksync.io",
+              // Frame: self and wallet connect
+              "frame-src 'self' https://*.walletconnect.com",
               // Media: self and blob (for potential voice/video features)
               "media-src 'self' blob:",
               // Object: none (block plugins)
