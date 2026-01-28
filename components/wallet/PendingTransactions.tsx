@@ -59,8 +59,14 @@ export function usePendingTransactions() {
       if (stored) {
         setTransactions(JSON.parse(stored));
       }
-    } catch {
-      // Ignore storage errors
+    } catch (error) {
+      log.warn('Failed to load transaction history from storage', error);
+      // Import toast if not already imported
+      import('@/components/ui/toast').then(({ toast }) => {
+        toast.warning?.('Unable to load transaction history', {
+          description: 'Your past transactions could not be loaded from storage'
+        });
+      });
     }
   }, [address]);
 
@@ -70,8 +76,13 @@ export function usePendingTransactions() {
     
     try {
       localStorage.setItem(`${STORAGE_KEY}-${address}`, JSON.stringify(transactions));
-    } catch {
-      // Ignore storage errors
+    } catch (error) {
+      log.error('Failed to save transaction history to storage', error);
+      import('@/components/ui/toast').then(({ toast }) => {
+        toast.warning?.('Unable to save transaction history', {
+          description: 'Your transactions may not persist after page reload'
+        });
+      });
     }
   }, [transactions, address]);
 

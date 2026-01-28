@@ -107,6 +107,7 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
     if (!address) return;
     
     setIsLoading(true);
+    let hasErrors = false;
     
     const results = await Promise.all(
       CHAINS.map(async (chain) => {
@@ -122,6 +123,10 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
             }),
           });
           
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
           const data = await response.json();
           const balanceWei = parseInt(data.result || '0', 16);
           const balanceEth = balanceWei / 1e18;
@@ -133,7 +138,9 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
             balance: formatBalance(balanceEth),
             balanceUSD: formatUSD(balanceUSD),
           };
-        } catch (_err) {
+        } catch (error) {
+          hasErrors = true;
+          log.warn(`Failed to fetch balance for ${chain.name}`, error);
           return {
             ...chain,
             balance: '—',
@@ -146,7 +153,20 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
     setBalances(results);
     setLastUpdated(new Date());
     setIsLoading(false);
-    playSuccess();
+    
+    if (hasErrors) {
+      import('@/components/ui/toast').then(({ toast }) => {
+        toast.warning?.('Some balances unavailable', {
+          description: 'Could not fetch balances from all networks. Click refresh to try again.',
+          action: {
+            label: 'Retry',
+            onClick: () => fetchBalances()
+          }
+        });
+      });
+    } else {
+      playSuccess();
+    }
   };
 
   // Fetch on mount and when address changes

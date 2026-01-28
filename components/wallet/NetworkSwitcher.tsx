@@ -68,9 +68,13 @@ export function NetworkSwitcher() {
           animate={{ opacity: 1, y: 0 }}
           className="absolute -top-12 left-0 right-0 flex items-center justify-center"
         >
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 text-xs rounded-lg border border-orange-500/30">
-            <AlertTriangle size={14} />
-            <span>Wrong network</span>
+          <div 
+            className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 text-xs rounded-lg border border-orange-500/30"
+            role="alert"
+            aria-live="polite"
+          >
+            <AlertTriangle size={14} aria-hidden="true" />
+            <span>Wrong network - please switch</span>
           </div>
         </motion.div>
       )}
@@ -80,6 +84,10 @@ export function NetworkSwitcher() {
         onClick={() => setIsOpen(!isOpen)}
         disabled={isPending}
         whileHover={{ scale: 1.02 }}
+        aria-label={`Network switcher. Current network: ${currentNetwork?.name || 'Unknown'}. Click to switch networks.`}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        aria-describedby={isWrongNetwork ? 'wrong-network-warning' : undefined}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
           isOpen
             ? 'bg-zinc-800 border-cyan-500/50'
@@ -92,6 +100,7 @@ export function NetworkSwitcher() {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            aria-hidden="true"
           >
             <Zap size={16} className="text-cyan-400" />
           </motion.div>
@@ -99,20 +108,33 @@ export function NetworkSwitcher() {
           <div
             className="w-4 h-4 rounded-full"
             style={{ backgroundColor: currentNetwork?.color || '#666' }}
+            aria-hidden="true"
           />
         )}
         
         <span className="text-sm text-white">
-          {isPending ? 'Switching...' : currentNetwork?.name || 'Unknown'}
+          {isPending ? 'Switching networks...' : currentNetwork?.name || 'Unknown Network'}
         </span>
         
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
+          aria-hidden="true"
         >
           <ChevronDown size={14} className="text-zinc-500" />
         </motion.div>
       </motion.button>
+
+      {/* Aria-live region for network status updates */}
+      <div 
+        className="sr-only" 
+        role="status" 
+        aria-live="polite" 
+        aria-atomic="true"
+      >
+        {isPending && 'Switching networks, please wait'}
+        {!isPending && currentNetwork && `Connected to ${currentNetwork.name}`}
+      </div>
 
       {/* Dropdown */}
       <AnimatePresence>
@@ -123,6 +145,13 @@ export function NetworkSwitcher() {
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full mt-2 w-48 bg-zinc-900 rounded-xl border border-zinc-700 shadow-xl overflow-hidden z-50"
+            role="menu"
+            aria-label="Network selection menu"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsOpen(false);
+              }
+            }}
           >
             <div className="p-2">
               {NETWORKS.map((network) => {
@@ -132,6 +161,9 @@ export function NetworkSwitcher() {
                   <button
                     key={network.id}
                     onClick={() => handleSwitch(network.id)}
+                    role="menuitem"
+                    aria-label={`Switch to ${network.name}${network.testnet ? ' testnet' : ''}`}
+                    aria-current={isActive ? 'true' : undefined}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                       isActive
                         ? 'bg-cyan-500/10 text-cyan-400'
@@ -141,9 +173,10 @@ export function NetworkSwitcher() {
                     <div
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: network.color }}
+                      aria-hidden="true"
                     />
                     <span className="flex-1 text-left text-sm">{network.name}</span>
-                    {isActive && <Check size={16} className="text-cyan-400" />}
+                    {isActive && <Check size={16} className="text-cyan-400" aria-label="Currently selected" />}
                   </button>
                 );
               })}
