@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "../bridge/VFIDEBridge.sol";
-import "../bridge/BridgeSecurityModule.sol";
-import "../bridge/VFIDEPriceOracle.sol";
+import "./VFIDEBridge.sol";
+import "./BridgeSecurityModule.sol";
+import "./VFIDEPriceOracle.sol";
 
 // ============================================
 // HOWEY COMPLIANCE NOTICE:

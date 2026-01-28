@@ -7,12 +7,12 @@ pragma solidity ^0.8.19;
  * @dev Deploy all security contracts in correct order with proper configuration
  */
 
-import "../security/VFIDEAccessControl.sol";
-import "../security/AdminMultiSig.sol";
-import "../security/EmergencyControlV2.sol";
-import "../security/CircuitBreaker.sol";
-import "../security/WithdrawalQueue.sol";
-import "../VFIDETokenV2.sol";
+import "./VFIDEAccessControl.sol";
+import "./AdminMultiSig.sol";
+import "./EmergencyControlV2.sol";
+import "./CircuitBreaker.sol";
+import "./WithdrawalQueue.sol";
+import "./VFIDETokenV2.sol";
 
 /**
  * @title Phase1Deployer

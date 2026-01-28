@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "./security/VFIDEAccessControl.sol";
-import "./security/VFIDEReentrancyGuard.sol";
+import "./VFIDEAccessControl.sol";
+import "./VFIDEReentrancyGuard.sol";
 
 /**
  * @title VFIDETokenV2
