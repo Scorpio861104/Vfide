@@ -245,9 +245,11 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
           onClick={handleQuickConnect}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          aria-label="Connect wallet (Keyboard shortcut: Command or Control + Shift + W)"
+          aria-keyshortcuts="Meta+Shift+W Control+Shift+W"
           className={`flex items-center gap-2 ${sizeClasses[size]} bg-linear-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-cyan-500/25 transition-shadow`}
         >
-          <Zap size={iconSizes[size]} />
+          <Zap size={iconSizes[size]} aria-hidden="true" />
           <span>Connect</span>
         </motion.button>
       </div>
@@ -284,9 +286,12 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
           onClick={() => switchChain({ chainId: expectedChain.id })}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
+          aria-label={`Wrong network detected. Click to switch to ${expectedChain.name}`}
+          aria-describedby="wrong-network-warning"
           className="absolute -top-12 right-0 flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 text-xs rounded-lg border border-orange-500/30 hover:bg-orange-500/30 transition-colors"
+          role="alert"
         >
-          <span>Switch to {expectedChain.name}</span>
+          <span id="wrong-network-warning">Switch to {expectedChain.name}</span>
         </motion.button>
       )}
 
@@ -294,6 +299,10 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.01 }}
+        aria-label={`Wallet menu. Address: ${address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected'}. Balance: ${balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : 'Loading'}. ${pendingCount > 0 ? `${pendingCount} pending transactions` : ''}`}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        aria-keyshortcuts="Meta+Shift+W Control+Shift+W"
         className={`flex items-center gap-3 px-4 py-2.5 bg-zinc-800/80 rounded-xl border transition-colors ${
           isOpen ? 'border-cyan-500/50' : 'border-zinc-700 hover:border-zinc-600'
         }`}
