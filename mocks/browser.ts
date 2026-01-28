@@ -8,9 +8,5 @@ import { handlers } from './handlers';
 
 export const worker = setupWorker(...handlers);
 
-// Start the worker only in development
-if (process.env.NODE_ENV === 'development') {
-  worker.start({
-    onUnhandledRequest: 'bypass', // Don't warn about unhandled requests
-  });
-}
+// Don't auto-start here - let the MockServiceWorker component control it
+// This prevents double initialization which causes infinite loading
