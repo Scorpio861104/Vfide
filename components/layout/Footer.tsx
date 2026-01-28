@@ -1,7 +1,19 @@
 import Link from "next/link";
 import { Github, Twitter, MessageCircle, ExternalLink } from "lucide-react";
 
-const footerLinks = {
+type FooterLink = {
+  href: string;
+  label: string;
+  external?: boolean;
+  soon?: boolean;
+};
+
+const footerLinks: {
+  product: FooterLink[];
+  community: FooterLink[];
+  resources: FooterLink[];
+  legal: FooterLink[];
+} = {
   product: [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/merchant", label: "Merchant Portal" },
