@@ -18,6 +18,31 @@ import {
 
 // ==================== TYPES ====================
 
+// Type for Network Information API
+interface NetworkInformation {
+  downlink?: number;
+  effectiveType?: string;
+  rtt?: number;
+  saveData?: boolean;
+  addEventListener?(type: string, listener: () => void): void;
+  removeEventListener?(type: string, listener: () => void): void;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
+// Type for Layout Shift Entry (CLS)
+interface LayoutShiftEntry extends PerformanceEntry {
+  hadRecentInput?: boolean;
+  value?: number;
+}
+
+// Type for First Input Entry (FID)
+interface FirstInputEntry extends PerformanceEntry {
+  processingStart?: number;
+}
+
 interface PerformanceMetrics {
   fps: number;
   memory: {
@@ -128,7 +153,8 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
   // Network info
   useEffect(() => {
     const updateNetworkInfo = () => {
-      const connection = (navigator as any)?.connection;
+      const nav = navigator as NavigatorWithConnection;
+      const connection = nav.connection;
       if (connection) {
         setMetrics((prev) => ({
           ...prev,
@@ -143,10 +169,11 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     };
 
     updateNetworkInfo();
-    (navigator as any)?.connection?.addEventListener('change', updateNetworkInfo);
+    const nav = navigator as NavigatorWithConnection;
+    nav.connection?.addEventListener?.('change', updateNetworkInfo);
 
     return () => {
-      (navigator as any)?.connection?.removeEventListener('change', updateNetworkInfo);
+      nav.connection?.removeEventListener?.('change', updateNetworkInfo);
     };
   }, []);
 
@@ -196,9 +223,9 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     let clsValue = 0;
     const clsObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const layoutShiftEntry = entry as any;
+        const layoutShiftEntry = entry as LayoutShiftEntry;
         if (!layoutShiftEntry.hadRecentInput) {
-          clsValue += layoutShiftEntry.value;
+          clsValue += layoutShiftEntry.value || 0;
           setMetrics((prev) => ({ ...prev, cls: Math.round(clsValue * 1000) / 1000 }));
         }
       }
@@ -213,8 +240,8 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     // FID Observer
     const fidObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const firstInputEntry = entry as any;
-        const fid = firstInputEntry.processingStart - entry.startTime;
+        const firstInputEntry = entry as FirstInputEntry;
+        const fid = (firstInputEntry.processingStart || 0) - entry.startTime;
         setMetrics((prev) => ({ ...prev, fid: Math.round(fid) }));
       }
     });

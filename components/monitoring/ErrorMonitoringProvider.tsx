@@ -6,9 +6,18 @@
 
 'use client';
 
-import { errorMonitor } from '@/lib/errorMonitoring';
+import { errorMonitor, ErrorReport } from '@/lib/errorMonitoring';
 import React, { useEffect } from 'react';
 import { useAccount } from 'wagmi';
+
+// Add type for statistics
+interface ErrorStatistics {
+  total: number;
+  byType: Record<string, number>;
+  bySeverity: Record<string, number>;
+  byFingerprint: Record<string, number>;
+  recentErrors: ErrorReport[];
+}
 
 export function ErrorMonitoringProvider() {
   const { address } = useAccount();
@@ -44,9 +53,9 @@ export function ErrorMonitoringProvider() {
  * Shows errors in development mode
  */
 export function DevErrorConsole() {
-  const [errors, setErrors] = React.useState<any[]>([]);
+  const [errors, setErrors] = React.useState<ErrorReport[]>([]);
   const [isOpen, setIsOpen] = React.useState(false);
-  const [stats, setStats] = React.useState<any>(null);
+  const [stats, setStats] = React.useState<ErrorStatistics | null>(null);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return;
