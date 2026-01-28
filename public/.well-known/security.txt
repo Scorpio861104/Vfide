@@ -1,0 +1,23 @@
+Contact: mailto:security@vfide.io
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://vfide.io/.well-known/security.txt
+Policy: https://vfide.io/security-policy
+Acknowledgments: https://vfide.io/security-acknowledgments
+
+# Security Policy
+# 
+# If you discover a security vulnerability, please report it to security@vfide.io
+# 
+# Please include:
+# - Vulnerability type
+# - Steps to reproduce
+# - Potential impact
+# - Your contact information
+#
+# We will respond within 48 hours and work with you to address the issue.
+#
+# Please do not disclose the vulnerability publicly until we have had a chance
+# to address it.
+#
+# We appreciate your help in keeping VFIDE secure!
