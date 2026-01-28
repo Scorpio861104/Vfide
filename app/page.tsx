@@ -1,13 +1,15 @@
 'use client';
 
-import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
+import { motion, useScroll, useTransform, LazyMotion, domAnimation, m } from "framer-motion";
+import { useRef, useEffect, useState, lazy, Suspense } from "react";
 import { 
   Shield, Zap, Users, TrendingDown, Lock, Sparkles,
   ArrowRight, ChevronRight, Play, CheckCircle2, Star
 } from "lucide-react";
+
+// Lazy load Footer for better initial load performance
+const Footer = lazy(() => import("@/components/layout/Footer").then(mod => ({ default: mod.Footer })));
 
 // Animated counter hook
 function useAnimatedCounter(end: number, duration: number = 2000, start: number = 0) {
@@ -280,7 +282,7 @@ export default function Home() {
   const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
 
   return (
-    <>
+    <LazyMotion features={domAnimation} strict>
       {/* Hero Section */}
       <section 
         ref={heroRef}
@@ -658,7 +660,9 @@ export default function Home() {
         </div>
       </section>
 
-      <Footer />
-    </>
+      <Suspense fallback={<div className="min-h-[400px] bg-zinc-950" />}>
+        <Footer />
+      </Suspense>
+    </LazyMotion>
   );
 }
