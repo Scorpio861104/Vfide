@@ -18,10 +18,16 @@ import "./SharedInterfaces.sol";
  */
 contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
+
+    interface IERC20Metadata {
+        function decimals() external view returns (uint8);
+    }
     
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     
     VFIDEToken public immutable vfideToken;
+    IERC20 public rewardToken;
+    uint8 public rewardTokenDecimals = 18;
 
     // Howey-safe mode disables promotional token distributions
     bool public howeySafeMode = true;
@@ -111,6 +117,7 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     event PromotionalBudgetDepleted(string category);
     event BudgetReplenished(string category, uint256 amount);
     event HoweySafeModeUpdated(bool enabled);
+    event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
 
     error PT_HoweySafeMode();
     
@@ -119,6 +126,8 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
         require(_admin != address(0), "Invalid admin address");
         
         vfideToken = VFIDEToken(_vfideToken);
+        rewardToken = IERC20(_vfideToken);
+        rewardTokenDecimals = _readTokenDecimals(_vfideToken);
         
         // Initialize budgets
         educationBudgetRemaining = 300_000 * 10**18;
@@ -131,9 +140,18 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
         _grantRole(ADMIN_ROLE, _admin);
     }
 
+    function setRewardToken(address token) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(token != address(0), "Invalid token address");
+        address oldToken = address(rewardToken);
+        rewardToken = IERC20(token);
+        rewardTokenDecimals = _readTokenDecimals(token);
+        emit RewardTokenUpdated(oldToken, token);
+    }
+
     function setHoweySafeMode(bool enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        howeySafeMode = enabled;
-        emit HoweySafeModeUpdated(enabled);
+        require(enabled, "PT: howey safe only");
+        howeySafeMode = true;
+        emit HoweySafeModeUpdated(true);
     }
 
     function _requireHoweyDisabled() internal view {
@@ -391,7 +409,25 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
         require(totalDistributed + amount <= TOTAL_PROMOTIONAL_ALLOCATION, "Total budget exceeded");
         
         totalDistributed += amount;
-        IERC20(address(vfideToken)).safeTransfer(user, amount);
+        rewardToken.safeTransfer(user, _scaleRewardAmount(amount));
+    }
+
+    function _scaleRewardAmount(uint256 amount) internal view returns (uint256) {
+        if (rewardTokenDecimals == 18) {
+            return amount;
+        }
+        if (rewardTokenDecimals > 18) {
+            return amount * (10 ** (rewardTokenDecimals - 18));
+        }
+        return amount / (10 ** (18 - rewardTokenDecimals));
+    }
+
+    function _readTokenDecimals(address token) internal view returns (uint8) {
+        try IERC20Metadata(token).decimals() returns (uint8 dec) {
+            return dec;
+        } catch {
+            return 18;
+        }
     }
     
     /**

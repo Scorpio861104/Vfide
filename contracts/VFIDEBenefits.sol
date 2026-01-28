@@ -10,7 +10,7 @@ import "./SharedInterfaces.sol";
  * Philosophy:
  * - Free incentives only - no circular cashback funded by fees
  * - ProofScore is free reputation that costs nothing to award
- * - High-trust merchants get VFIDE bonus (from ecosystem pool, not buyers)
+ * - High-trust merchants get reward token bonus (from ecosystem pool, not buyers)
  * - Merchants get 100% of payments (0% platform fee)
  * 
  * Commerce flow:

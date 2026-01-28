@@ -32,6 +32,7 @@ contract CouncilManager is ReentrancyGuard {
     event PaymentDistributed(uint256 opsAmount, uint256 councilAmount, uint256 timestamp);
     event MemberGracePeriod(address indexed member, uint256 daysBelow, uint16 currentScore);
     event MemberAutoRemoved(address indexed member, uint256 daysBelow, uint16 finalScore);
+    event HoweySafeModeUpdated(bool enabled);
 
     // --- Core Modules ---
     address public dao;
@@ -56,6 +57,9 @@ contract CouncilManager is ReentrancyGuard {
     uint256 public constant COUNCIL_PERCENTAGE = 40; // 40% to council
     uint256 public lastPaymentTime;
     uint256 public paymentInterval = 30 days; // Monthly payments
+
+    // Howey-safe mode disables council payment distribution
+    bool public howeySafeMode = true;
 
     modifier onlyDAO() {
         _checkDAO();
@@ -120,6 +124,11 @@ contract CouncilManager is ReentrancyGuard {
         if (keeper == address(0)) revert CM_Zero();
         isKeeper[keeper] = authorized;
         emit KeeperSet(keeper, authorized);
+    }
+
+    function setHoweySafeMode(bool enabled) external onlyDAO {
+        howeySafeMode = enabled;
+        emit HoweySafeModeUpdated(enabled);
     }
 
     function setPaymentInterval(uint256 _interval) external onlyDAO {
@@ -254,7 +263,7 @@ contract CouncilManager is ReentrancyGuard {
         // We just mark the allocation (vault handles actual payments)
         
         // Priority 2: Transfer council payment (if sufficient funds)
-        if (councilAmount > 0) {
+        if (!howeySafeMode && councilAmount > 0) {
             // Transfer from EcosystemVault to CouncilSalary contract
             // Requires EcosystemVault to have transfer approval or we call payExpense
             
@@ -293,7 +302,7 @@ contract CouncilManager is ReentrancyGuard {
         uint256 opsAmount = (vaultBalance * OPS_PERCENTAGE) / 100;
         uint256 councilAmount = vaultBalance - opsAmount;
 
-        if (councilAmount > 0) {
+        if (!howeySafeMode && councilAmount > 0) {
             (bool success, ) = ecosystemVault.call(
                 abi.encodeWithSignature(
                     "payExpense(string,uint256)",

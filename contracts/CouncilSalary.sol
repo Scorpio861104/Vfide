@@ -18,6 +18,7 @@ contract CouncilSalary {
     event SalaryPaid(uint256 indexed cycleId, uint256 totalDistributed);
     event MemberRemoved(address indexed member, address indexed by);
     event VoteCast(address indexed voter, address indexed target, bool support);
+    event HoweySafeModeUpdated(bool enabled);
 
     ICouncilElection public election;
     ISeer public seer;
@@ -26,6 +27,9 @@ contract CouncilSalary {
     uint256 public lastPayTime;
     uint256 public payInterval = 120 days; // 4 months
     uint16 public minScoreToPay = 7000; // Must maintain high trust (70% on 0-10000 scale)
+
+    // Howey-safe mode disables salary distribution
+    bool public howeySafeMode = true;
 
     // Removal Voting
     // H-3 Fix: Track votes per term to prevent cross-term vote accumulation
@@ -54,6 +58,12 @@ contract CouncilSalary {
         lastPayTime = block.timestamp;
         isKeeper[_dao] = true; // DAO is always a keeper
     }
+
+    function setHoweySafeMode(bool enabled) external {
+        require(msg.sender == dao, "not dao");
+        howeySafeMode = enabled;
+        emit HoweySafeModeUpdated(enabled);
+    }
     
     // C-1 FIX: Add keeper management
     function setKeeper(address keeper, bool authorized) external {
@@ -81,6 +91,7 @@ contract CouncilSalary {
      * This prevents MEV manipulation and timing attacks
      */
     function distributeSalary() external {
+        require(!howeySafeMode, "CS: howey safe");
         // C-1 FIX: Only DAO or authorized keepers can distribute
         require(msg.sender == dao || isKeeper[msg.sender], "CS: not authorized");
         require(block.timestamp >= lastPayTime + payInterval, "too early");

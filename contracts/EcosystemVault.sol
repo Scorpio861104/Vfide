@@ -56,6 +56,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event MerchantRewardClaimed(address indexed merchant, uint256 period, uint256 reward, uint8 rank);
     event SeerUpdated(address indexed oldSeer, address indexed newSeer);
     event PendingReferralRegistered(address indexed referred, address indexed referrer, bool isMerchant);
+    event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTANTS
@@ -116,6 +117,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     //                              STATE
     // ═══════════════════════════════════════════════════════════════════════
     IERC20 public vfide;
+    IERC20 public rewardToken;
     ISeer public seer;
     ICouncilManager public councilManager;
     
@@ -186,6 +188,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     constructor(address _vfide, address _seer, address _operationsWallet) {
         if (_vfide == address(0)) revert ECO_Zero();
         vfide = IERC20(_vfide);
+        rewardToken = IERC20(_vfide);
         seer = ISeer(_seer);
         operationsWallet = _operationsWallet; // Can be address(0), must be set before withdrawals
         yearStartTime = block.timestamp;
@@ -207,6 +210,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         address oldSeer = address(seer);
         seer = ISeer(_seer);
         emit SeerUpdated(oldSeer, _seer);
+    }
+
+    function setRewardToken(address token) external onlyOwner {
+        if (token == address(0)) revert ECO_Zero();
+        address oldToken = address(rewardToken);
+        rewardToken = IERC20(token);
+        emit RewardTokenUpdated(oldToken, token);
     }
 
     function setCouncilManager(address _councilManager) external onlyOwner {
@@ -260,7 +270,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     function allocateIncoming() public {
-        uint256 balance = vfide.balanceOf(address(this));
+        uint256 balance = rewardToken.balanceOf(address(this));
         uint256 allocated = councilPool + merchantPool + headhunterPool + operationsPool;
         uint256 unallocated = balance > allocated ? balance - allocated : 0;
         
@@ -300,7 +310,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         operationsPool = 0;
         lastOperationsWithdrawal = block.timestamp;
         
-        vfide.safeTransfer(operationsWallet, amount);
+        rewardToken.safeTransfer(operationsWallet, amount);
         
         emit OperationsWithdrawal(operationsWallet, amount);
     }
@@ -349,7 +359,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         
         for (uint8 i = 0; i < memberCount; i++) {
             if (members[i] != address(0)) {
-                vfide.safeTransfer(members[i], perMember);
+                rewardToken.safeTransfer(members[i], perMember);
             }
         }
         
@@ -425,7 +435,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         
         merchantPeriodClaimed[period][msg.sender] = true;
         totalMerchantBonusesPaid[msg.sender] += reward;
-        vfide.safeTransfer(msg.sender, reward);
+        rewardToken.safeTransfer(msg.sender, reward);
         
         emit MerchantBonusPaid(msg.sender, reward, periodMerchantTier[period][msg.sender]);
     }
@@ -632,7 +642,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 reward = (pool * HEADHUNTER_RANK_SHARE_BPS[rank - 1]) / MAX_BPS;
         
         quarterClaimed[year][quarter][msg.sender] = true;
-        vfide.safeTransfer(msg.sender, reward);
+        rewardToken.safeTransfer(msg.sender, reward);
         
         emit HeadhunterRewardClaimed(msg.sender, year, quarter, reward, rank);
     }
@@ -666,15 +676,15 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     function payExpense(address recipient, uint256 amount, string calldata reason) external onlyManager {
-        if (vfide.balanceOf(address(this)) < amount) revert ECO_InsufficientFunds();
-        vfide.safeTransfer(recipient, amount);
+        if (rewardToken.balanceOf(address(this)) < amount) revert ECO_InsufficientFunds();
+        rewardToken.safeTransfer(recipient, amount);
         emit PaymentMade(recipient, amount, reason);
     }
 
     function burnFunds(uint256 amount) external onlyManager {
-        if (vfide.balanceOf(address(this)) < amount) revert ECO_InsufficientFunds();
+        if (rewardToken.balanceOf(address(this)) < amount) revert ECO_InsufficientFunds();
         address dead = 0x000000000000000000000000000000000000dEaD;
-        vfide.safeTransfer(dead, amount);
+        rewardToken.safeTransfer(dead, amount);
         emit FundsBurned(amount);
     }
 
@@ -727,7 +737,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         require(block.timestamp >= req.requestedAt + WITHDRAW_TIMELOCK, "timelock not passed");
         
         req.executed = true;
-        vfide.safeTransfer(req.to, req.amount);
+        rewardToken.safeTransfer(req.to, req.amount);
         emit WithdrawExecuted(id, req.to, req.amount);
     }
 
@@ -744,7 +754,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         council = councilPool;
         merchant = merchantPool;
         headhunter = headhunterPool;
-        total = vfide.balanceOf(address(this));
+        total = rewardToken.balanceOf(address(this));
     }
 
     function getMerchantStats(address merchant) external view returns (
@@ -900,7 +910,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 merchantPoolBalance,
         uint256 headhunterPoolBalance
     ) {
-        currentBalance = IERC20(vfide).balanceOf(address(this));
+        currentBalance = rewardToken.balanceOf(address(this));
         totalIn = councilPool + merchantPool + headhunterPool + totalCouncilPaid + totalMerchantBonusPaid + totalHeadhunterPaid;
         totalOut = totalCouncilPaid + totalMerchantBonusPaid + totalHeadhunterPaid + totalBurned + totalExpensesPaid;
         councilPoolBalance = councilPool;

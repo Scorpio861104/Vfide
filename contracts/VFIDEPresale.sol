@@ -255,8 +255,9 @@ contract VFIDEPresale is ReentrancyGuard {
     }
 
     function setHoweySafeMode(bool enabled) external onlyDAO {
-        howeySafeMode = enabled;
-        emit HoweySafeModeUpdated(enabled);
+        require(enabled, "PS: howey safe only");
+        howeySafeMode = true;
+        emit HoweySafeModeUpdated(true);
     }
     
     // ══════════════════════════════════════════════════════════════════════════
