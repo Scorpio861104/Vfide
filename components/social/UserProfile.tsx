@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -267,7 +268,12 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
         className="relative h-48 md:h-64 bg-linear-to-r from-cyan-400/20 via-violet-400/20 to-rose-500/20"
       >
         {user.coverImage && (
-          <img src={user.coverImage} alt="cover" className="w-full h-full object-cover" />
+          <Image 
+            src={user.coverImage} 
+            alt="Profile cover image" 
+            fill
+            className="object-cover" 
+          />
         )}
         <div className="absolute inset-0 bg-linear-to-t from-zinc-950 to-transparent" />
       </motion.div>

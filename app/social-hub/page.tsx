@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Rss,
   Camera,
@@ -246,7 +247,13 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
       `}>
         <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center text-2xl overflow-hidden">
           {story.preview ? (
-            <img src={story.preview} alt={`${story.author.username}'s story preview`} className="w-full h-full object-cover" />
+            <Image 
+              src={story.preview} 
+              alt={`${story.author.username}'s story preview`} 
+              width={56}
+              height={56}
+              className="w-full h-full object-cover" 
+            />
           ) : isYou ? (
             <Plus className="w-6 h-6 text-cyan-400" />
           ) : (
@@ -411,10 +418,12 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
       {post.media && post.media.length > 0 && (
         <div className={`grid ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-0.5`}>
           {post.media.map((m, index) => (
-            <img
+            <Image
               key={m.url}
               src={m.url}
               alt={`Post image ${index + 1}`}
+              width={800}
+              height={256}
               className="w-full h-64 object-cover"
             />
           ))}

@@ -8,6 +8,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Camera, X, Check, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useAccount } from 'wagmi';
@@ -186,10 +187,11 @@ export function AvatarUpload({
         <div className={`${sizeClasses[size]} relative`}>
           {preview || currentAvatar ? (
             <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-cyan-400/20">
-              <img
-                src={preview || currentAvatar}
+              <Image
+                src={preview || currentAvatar || ''}
                 alt="Avatar preview"
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
               {preview && !isUploading && (
                 <motion.button
@@ -384,7 +386,12 @@ export function AvatarUploadCompact({
 
       <div className="relative w-20 h-20 rounded-full overflow-hidden cursor-pointer">
         {currentAvatar ? (
-          <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
+          <Image 
+            src={currentAvatar} 
+            alt="Avatar" 
+            fill
+            className="object-cover" 
+          />
         ) : (
           <div className="w-full h-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
             <ImageIcon className="w-8 h-8 text-white/50" />

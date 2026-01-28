@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { X, Camera, Type, Image as ImageIcon } from 'lucide-react';
 import { createTextStory, createMediaStory, STORY_BACKGROUNDS, Story } from '@/lib/storiesSystem';
@@ -203,7 +204,12 @@ export function StoryCreator({
                   {mediaFile?.type.startsWith('video/') ? (
                     <video src={mediaPreview} className="w-full h-full object-cover" controls />
                   ) : (
-                    <img src={mediaPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <Image 
+                      src={mediaPreview} 
+                      alt="Story preview" 
+                      fill
+                      className="object-cover" 
+                    />
                   )}
                   <button
                     onClick={() => {

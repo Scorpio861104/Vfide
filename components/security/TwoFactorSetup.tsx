@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
 import { TOTPSetup, TwoFactorMethod } from '@/config/security-advanced';
 
@@ -200,7 +201,13 @@ export function TwoFactorSetup({
                 Scan this QR code with your authenticator app:
               </p>
               <div className="bg-white p-4 rounded-lg inline-block">
-                <img src={totpSetup.qrCode} alt="QR Code" className="w-48 h-48" />
+                <Image 
+                  src={totpSetup.qrCode} 
+                  alt="QR Code for 2FA setup" 
+                  width={192}
+                  height={192}
+                  className="w-48 h-48" 
+                />
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 Or enter this key manually: <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">{totpSetup.secret}</code>
