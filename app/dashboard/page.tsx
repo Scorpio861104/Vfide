@@ -3,6 +3,7 @@
 import { Footer } from "@/components/layout/Footer";
 import { QuickWalletConnect } from "@/components/wallet/QuickWalletConnect";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { ProofScoreRing } from "@/components/ui/ProofScoreRing";
 import { PageWrapper } from "@/components/ui/PageLayout";
 import { motion, AnimatePresence } from "framer-motion";
@@ -166,6 +167,12 @@ export default function DashboardPage() {
   if (!isConnected) {
     return (
       <>
+        <SEOHead
+          title="Dashboard"
+          description="Manage your VFIDE vault, view your ProofScore, and track your transactions."
+          keywords="dashboard, vault, ProofScore, crypto wallet"
+          canonicalUrl="https://vfide.io/dashboard"
+        />
         <main className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-150 h-150 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />

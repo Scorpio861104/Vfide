@@ -1,7 +1,19 @@
 import Link from "next/link";
 import { Github, Twitter, MessageCircle, ExternalLink } from "lucide-react";
 
-const footerLinks = {
+type FooterLink = {
+  href: string;
+  label: string;
+  external?: boolean;
+  soon?: boolean;
+};
+
+const footerLinks: {
+  product: FooterLink[];
+  community: FooterLink[];
+  resources: FooterLink[];
+  legal: FooterLink[];
+} = {
   product: [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/merchant", label: "Merchant Portal" },
@@ -12,7 +24,7 @@ const footerLinks = {
     { href: "/governance", label: "Governance" },
     { href: "/token-launch", label: "Token Launch" },
     { href: "https://github.com/Scorpio861104/Vfide", label: "GitHub", external: true },
-    { href: "#", label: "Discord", soon: true },
+    { href: "https://discord.gg/vfide", label: "Discord", external: true },
   ],
   resources: [
     { href: "/docs", label: "Documentation" },
@@ -27,8 +39,8 @@ const footerLinks = {
 
 const socialLinks = [
   { href: "https://github.com/Scorpio861104/Vfide", icon: Github, label: "GitHub" },
-  { href: "#", icon: Twitter, label: "Twitter" },
-  { href: "#", icon: MessageCircle, label: "Discord" },
+  { href: "https://twitter.com/VFIDEProtocol", icon: Twitter, label: "Twitter" },
+  { href: "https://discord.gg/vfide", icon: MessageCircle, label: "Discord" },
 ];
 
 export function Footer() {
