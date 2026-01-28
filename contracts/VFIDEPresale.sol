@@ -6,21 +6,12 @@ import "./SharedInterfaces.sol";
 using SafeERC20 for IERC20;
 
 /**
- * VFIDEPresale - Fair Launch Presale with Bonus Token Model & Dynamic Listing
+ * VFIDEPresale - Fair Launch Presale with Tiered Pricing
  * 
- * PRICING MODEL: $0.07 base price, earn bonus tokens for locking
- * - Base Price: $0.07 per VFIDE (fixed USD price)
+ * PRICING MODEL: Fixed USD price tiers
  * - PAYMENT: Stablecoins preferred (USDC, USDT, DAI) - exact USD pricing
  * - ETH also accepted with configurable conversion rate
- * - 180-day lock: +30% bonus tokens (1.3x total), 10% immediate unlock
- * - 90-day lock: +15% bonus tokens (1.15x total), 20% immediate unlock
- * - No lock: 0% bonus (1x base), 100% immediate unlock
- * 
- * REFERRAL PROGRAM:
- * - Referrer bonus: +3% of base tokens (to existing buyer who referred)
- * - Referee bonus: +2% of base tokens (to new buyer using referral)
- * - Referrer must have made at least one purchase to be valid
- * - Both bonuses come from the 15M bonus pool
+ * - Optional lock periods for release scheduling
  * 
  * SUPPLY BREAKDOWN:
  * - VFIDEToken allocates: 50M VFIDE to presale contract at genesis
@@ -32,17 +23,9 @@ using SafeERC20 for IERC20;
  * 
  * DYNAMIC LISTING PRICE:
  * - Listing price scales with presale results
- * - 25% presale ($612K) → $0.10 listing (all tiers profit)
- * - 50% presale ($1.225M) → $0.10 listing (all tiers profit)
- * - 75% presale ($1.838M) → $0.125 listing (bigger profits)
- * - 100% presale ($2.45M) → $0.14 listing (maximum profits)
  * 
- * EXAMPLES ($1,000 USDC investment with 180-day lock + referral):
- * - Base: 14,285 VFIDE
- * - Lock bonus (30%): +4,286 VFIDE
- * - Referee bonus (2%): +286 VFIDE
- * - Total: 18,857 VFIDE (1,886 now, 16,971 in 6mo)
- * - Referrer earns: 429 VFIDE (3% of base)
+ * HOWEY SAFE MODE:
+ * - When enabled, lock bonuses and referral bonuses are disabled
  */
 
 // IStablecoinRegistry already defined in SharedInterfaces.sol
@@ -75,6 +58,7 @@ error PS_InvalidTier();
 error PS_TierDisabled();
 error PS_TierSoldOut();
 error PS_TierLockRequired();
+error PS_HoweySafeMode();
 
 contract VFIDEPresale is ReentrancyGuard {
     // Events
@@ -95,11 +79,15 @@ contract VFIDEPresale is ReentrancyGuard {
     event TierEnabled(uint8 tier, bool enabled);
     event PurchaseCancelled(address indexed buyer, uint256 indexed index, uint256 tokensReturned);
     event SubscriptionCancelled(uint256 indexed index); // Kept for backwards compatibility
+    event HoweySafeModeUpdated(bool enabled);
 
     // Immutable config
     address public immutable DAO;
     address public immutable TREASURY;
     IERC20 public immutable vfideToken;
+
+    // Howey-safe mode disables bonus and referral incentives
+    bool public howeySafeMode = true;
     
     // Supply constants
     uint256 public constant BASE_SUPPLY = 35_000_000 * 1e18;    // 35M base tokens
@@ -233,6 +221,11 @@ contract VFIDEPresale is ReentrancyGuard {
         _;
     }
 
+    modifier whenHoweySafeDisabled() {
+        if (howeySafeMode) revert PS_HoweySafeMode();
+        _;
+    }
+
     function _checkNotPaused() internal view {
         if (paused) revert PS_Paused();
     }
@@ -259,6 +252,11 @@ contract VFIDEPresale is ReentrancyGuard {
         
         saleStartTime = _startTime;
         saleEndTime = _startTime + SALE_DURATION;
+    }
+
+    function setHoweySafeMode(bool enabled) external onlyDAO {
+        howeySafeMode = enabled;
+        emit HoweySafeModeUpdated(enabled);
     }
     
     // ══════════════════════════════════════════════════════════════════════════
@@ -511,7 +509,7 @@ contract VFIDEPresale is ReentrancyGuard {
      * @param lockPeriod Lock duration: 0, 90 days, or 180 days
      * @param referrer Address of the referrer
      */
-    function buyWithStableReferral(address stablecoin, uint256 amount, uint8 tier, uint256 lockPeriod, address referrer) external nonReentrant whenNotPaused {
+    function buyWithStableReferral(address stablecoin, uint256 amount, uint8 tier, uint256 lockPeriod, address referrer) external nonReentrant whenNotPaused whenHoweySafeDisabled {
         require(tokensDeposited, "PS: tokens not yet deposited");
         require(address(stablecoinRegistry) != address(0), "PS: no registry");
         if (!stablecoinRegistry.isWhitelisted(stablecoin)) revert PS_InvalidStablecoin();
@@ -682,6 +680,11 @@ contract VFIDEPresale is ReentrancyGuard {
                 revert PS_InvalidLockPeriod();
             }
         }
+
+        if (howeySafeMode) {
+            bonusPercentage = 0;
+            extraBonus = 0;
+        }
         
         // Calculate bonus tokens
         uint256 lockBonus = (baseTokens * bonusPercentage) / 100;
@@ -736,7 +739,7 @@ contract VFIDEPresale is ReentrancyGuard {
      * @param referrer Address of the referrer (must have already purchased)
      * @dev Stablecoins preferred - use buyWithStableReferral instead
      */
-    function buyTokensWithReferral(uint256 lockPeriod, address referrer) external payable nonReentrant whenNotPaused {
+    function buyTokensWithReferral(uint256 lockPeriod, address referrer) external payable nonReentrant whenNotPaused whenHoweySafeDisabled {
         if (!ethAccepted) revert PS_ETHNotAccepted();
         if (!isTierAvailable(2)) revert PS_TierDisabled(); // ETH uses tier 2 (public)
         require(msg.value >= MIN_PURCHASE_ETH, "Below minimum");
@@ -794,6 +797,7 @@ contract VFIDEPresale is ReentrancyGuard {
      * @dev Referrers can claim their 3% bonus on all referred purchases
      */
     function claimReferralBonus() external nonReentrant {
+        if (howeySafeMode) revert PS_HoweySafeMode();
         require(finalized, "Presale not finalized");
         
         uint256 claimable = referralBonusEarned[msg.sender] - referralBonusClaimed[msg.sender];

@@ -22,6 +22,9 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     
     VFIDEToken public immutable vfideToken;
+
+    // Howey-safe mode disables promotional token distributions
+    bool public howeySafeMode = true;
     
     // Fixed allocation: 2,000,000 VFIDE for ALL promotions
     uint256 public constant TOTAL_PROMOTIONAL_ALLOCATION = 2_000_000 * 10**18;
@@ -107,6 +110,9 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     event PioneerBadgeAwarded(address indexed user, uint256 pioneerNumber, uint256 bonus);
     event PromotionalBudgetDepleted(string category);
     event BudgetReplenished(string category, uint256 amount);
+    event HoweySafeModeUpdated(bool enabled);
+
+    error PT_HoweySafeMode();
     
     constructor(address _vfideToken, address _admin) {
         require(_vfideToken != address(0), "Invalid token address");
@@ -123,6 +129,15 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
         
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(ADMIN_ROLE, _admin);
+    }
+
+    function setHoweySafeMode(bool enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        howeySafeMode = enabled;
+        emit HoweySafeModeUpdated(enabled);
+    }
+
+    function _requireHoweyDisabled() internal view {
+        if (howeySafeMode) revert PT_HoweySafeMode();
     }
     
     /**
@@ -371,6 +386,7 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
      * @notice Internal reward distribution
      */
     function _distributeReward(address user, uint256 amount, string memory /*category*/) internal {
+        _requireHoweyDisabled();
         require(amount > 0, "Invalid amount");
         require(totalDistributed + amount <= TOTAL_PROMOTIONAL_ALLOCATION, "Total budget exceeded");
         

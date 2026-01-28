@@ -7,7 +7,7 @@ import "./SharedInterfaces.sol";
  * MainstreamPayments.sol - Infrastructure for Mainstream Crypto Payment Adoption
  * ===============================================================================
  * 
- * LEGAL ARCHITECTURE: These contracts are designed to be USA-legal WITHOUT KYC:
+ * LEGAL ARCHITECTURE: These contracts are designed to operate WITHOUT on-chain identity checks:
  * 
  * - NO CUSTODY: VFIDE never holds user funds during fiat conversion
  * - NO EXCHANGE: VFIDE never swaps tokens - users interact directly with DEXs
@@ -158,7 +158,7 @@ contract FiatRampRegistry {
         userRampHistory[user].push(recordId);
         providers[msg.sender].txCount++;
         
-        // Reward trust score (user completed KYC with licensed provider)
+        // Reward trust score for completed ramp activity (no on-chain identity tracking)
         _rewardRampUser(user);
         
         emit RampTransactionRecorded(user, msg.sender, externalTxHash, isOnRamp);

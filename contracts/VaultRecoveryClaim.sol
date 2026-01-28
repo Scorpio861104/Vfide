@@ -112,7 +112,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // claimId => guardian => approved (true) or rejected (false)
     mapping(uint256 => mapping(address => bool)) public guardianApproval;
     
-    // Trusted identity verifiers (oracles, KYC providers)
+    // Trusted identity verifiers (oracles)
     mapping(address => bool) public trustedVerifier;
     
     // ═══════════════════════════════════════════════════════════════════════════════
