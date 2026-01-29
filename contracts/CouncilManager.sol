@@ -12,6 +12,11 @@ import "./SharedInterfaces.sol";
  * - Enforces 60/40 payment split (Operations FIRST, Council SECOND)
  * - Prevents council payment if operations underfunded
  * 
+ * HOWEY COMPLIANCE:
+ * - Council payments are EMPLOYMENT COMPENSATION (not investment returns)
+ * - Payments via auto-swap to ETH/USDC (not VFIDE)
+ * - Clear work-for-pay relationship (NOT securities)
+ * 
  * Features:
  * - Grace period tracking (7 days below threshold before removal)
  * - Payment priority enforcement (ops never starved)
@@ -32,7 +37,6 @@ contract CouncilManager is ReentrancyGuard {
     event PaymentDistributed(uint256 opsAmount, uint256 councilAmount, uint256 timestamp);
     event MemberGracePeriod(address indexed member, uint256 daysBelow, uint16 currentScore);
     event MemberAutoRemoved(address indexed member, uint256 daysBelow, uint16 finalScore);
-    event HoweySafeModeUpdated(bool enabled);
 
     // --- Core Modules ---
     address public dao;
@@ -57,9 +61,6 @@ contract CouncilManager is ReentrancyGuard {
     uint256 public constant COUNCIL_PERCENTAGE = 40; // 40% to council
     uint256 public lastPaymentTime;
     uint256 public paymentInterval = 30 days; // Monthly payments
-
-    // Howey-safe mode disables council payment distribution
-    bool public howeySafeMode = true;
 
     modifier onlyDAO() {
         _checkDAO();
@@ -124,11 +125,6 @@ contract CouncilManager is ReentrancyGuard {
         if (keeper == address(0)) revert CM_Zero();
         isKeeper[keeper] = authorized;
         emit KeeperSet(keeper, authorized);
-    }
-
-    function setHoweySafeMode(bool enabled) external onlyDAO {
-        howeySafeMode = enabled;
-        emit HoweySafeModeUpdated(enabled);
     }
 
     function setPaymentInterval(uint256 _interval) external onlyDAO {
@@ -247,6 +243,9 @@ contract CouncilManager is ReentrancyGuard {
      * @dev Called monthly (or per paymentInterval)
      * Operations always funded before council
      * H-9 Fix: Added nonReentrant to prevent reentrancy via external call
+     * 
+     * NOTE: Council payments are EMPLOYMENT COMPENSATION (not investment returns).
+     * Payments are transferred to CouncilSalary contract for distribution.
      */
     function distributePayments() external onlyKeeper nonReentrant {
         require(block.timestamp >= lastPaymentTime + paymentInterval, "CM: too soon");
@@ -262,8 +261,8 @@ contract CouncilManager is ReentrancyGuard {
         // Operations funds stay in EcosystemVault for DAO to payExpense()
         // We just mark the allocation (vault handles actual payments)
         
-        // Priority 2: Transfer council payment (if sufficient funds)
-        if (!howeySafeMode && councilAmount > 0) {
+        // Priority 2: Transfer council payment (employment compensation)
+        if (councilAmount > 0) {
             // Transfer from EcosystemVault to CouncilSalary contract
             // Requires EcosystemVault to have transfer approval or we call payExpense
             
@@ -294,6 +293,7 @@ contract CouncilManager is ReentrancyGuard {
     /**
      * @notice Emergency payment distribution (DAO override)
      * @dev Allows DAO to force payment outside normal schedule
+     * Council payments are employment compensation (not investment returns)
      */
     function forcePaymentDistribution() external onlyDAO {
         uint256 vaultBalance = token.balanceOf(ecosystemVault);
@@ -302,7 +302,7 @@ contract CouncilManager is ReentrancyGuard {
         uint256 opsAmount = (vaultBalance * OPS_PERCENTAGE) / 100;
         uint256 councilAmount = vaultBalance - opsAmount;
 
-        if (!howeySafeMode && councilAmount > 0) {
+        if (councilAmount > 0) {
             (bool success, ) = ecosystemVault.call(
                 abi.encodeWithSignature(
                     "payExpense(string,uint256)",

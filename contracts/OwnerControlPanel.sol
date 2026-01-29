@@ -45,6 +45,22 @@ interface IUserVault {
     function guardianCount() external view returns (uint8);
 }
 
+// Interfaces for contracts with Howey-safe mode
+interface IHoweySafeContract {
+    function setHoweySafeMode(bool enabled) external;
+    function howeySafeMode() external view returns (bool);
+}
+
+interface IEcosystemVault {
+    function configureAutoSwap(address _router, address _stablecoin, bool _enabled, uint16 _maxSlippageBps) external;
+    function setManager(address manager, bool active) external;
+    function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external;
+    function autoSwapEnabled() external view returns (bool);
+    function swapRouter() external view returns (address);
+    function preferredStablecoin() external view returns (address);
+    function maxSlippageBps() external view returns (uint16);
+}
+
 contract OwnerControlPanel {
     using SafeERC20 for IERC20;
     
@@ -56,10 +72,21 @@ contract OwnerControlPanel {
     IProofScoreBurnRouter public burnRouter;
     ISeer public seer;
     
+    // New contract references for enhanced configuration
+    IEcosystemVault public ecosystemVault;
+    IHoweySafeContract public dutyDistributor;
+    IHoweySafeContract public councilSalary;
+    IHoweySafeContract public councilManager;
+    IHoweySafeContract public promotionalTreasury;
+    IHoweySafeContract public liquidityIncentives;
+    
     event ContractsUpdated(address token, address presale, address vaultHub, address burnRouter, address seer);
+    event EcosystemContractsUpdated(address ecosystemVault, address dutyDistributor, address councilSalary, address councilManager, address promotionalTreasury, address liquidityIncentives);
     event EmergencyAction(string action, address target);
     event FeePolicyUpdated(uint16 minBps, uint16 maxBps);
     event AntiWhaleUpdated(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown);
+    event HoweySafeModeUpdated(string contract_name, bool enabled);
+    event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
     
     error OCP_NotOwner();
     error OCP_Zero();
@@ -103,6 +130,27 @@ contract OwnerControlPanel {
         if (_burnRouter != address(0)) burnRouter = IProofScoreBurnRouter(_burnRouter);
         if (_seer != address(0)) seer = ISeer(_seer);
         emit ContractsUpdated(_token, _presale, _vaultHub, _burnRouter, _seer);
+    }
+    
+    /**
+     * @notice Update ecosystem contract references
+     * @dev Call this after deploying ecosystem contracts
+     */
+    function setEcosystemContracts(
+        address _ecosystemVault,
+        address _dutyDistributor,
+        address _councilSalary,
+        address _councilManager,
+        address _promotionalTreasury,
+        address _liquidityIncentives
+    ) external onlyOwner {
+        if (_ecosystemVault != address(0)) ecosystemVault = IEcosystemVault(_ecosystemVault);
+        if (_dutyDistributor != address(0)) dutyDistributor = IHoweySafeContract(_dutyDistributor);
+        if (_councilSalary != address(0)) councilSalary = IHoweySafeContract(_councilSalary);
+        if (_councilManager != address(0)) councilManager = IHoweySafeContract(_councilManager);
+        if (_promotionalTreasury != address(0)) promotionalTreasury = IHoweySafeContract(_promotionalTreasury);
+        if (_liquidityIncentives != address(0)) liquidityIncentives = IHoweySafeContract(_liquidityIncentives);
+        emit EcosystemContractsUpdated(_ecosystemVault, _dutyDistributor, _councilSalary, _councilManager, _promotionalTreasury, _liquidityIncentives);
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -712,6 +760,277 @@ contract OwnerControlPanel {
             status = "Presale issue detected";
         } else {
             status = "Vault issue detected";
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                          HOWEY-SAFE MODE MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @notice Enable/disable Howey-safe mode on all ecosystem contracts
+     * @dev One-click toggle for all contracts with howeySafeMode
+     * @param enabled True to enable (default safe state), false to disable
+     */
+    function howey_setAllSafeMode(bool enabled) external onlyOwner {
+        if (address(dutyDistributor) != address(0)) {
+            dutyDistributor.setHoweySafeMode(enabled);
+            emit HoweySafeModeUpdated("DutyDistributor", enabled);
+        }
+        if (address(councilSalary) != address(0)) {
+            councilSalary.setHoweySafeMode(enabled);
+            emit HoweySafeModeUpdated("CouncilSalary", enabled);
+        }
+        if (address(councilManager) != address(0)) {
+            councilManager.setHoweySafeMode(enabled);
+            emit HoweySafeModeUpdated("CouncilManager", enabled);
+        }
+        if (address(promotionalTreasury) != address(0)) {
+            promotionalTreasury.setHoweySafeMode(enabled);
+            emit HoweySafeModeUpdated("PromotionalTreasury", enabled);
+        }
+        if (address(liquidityIncentives) != address(0)) {
+            liquidityIncentives.setHoweySafeMode(enabled);
+            emit HoweySafeModeUpdated("LiquidityIncentives", enabled);
+        }
+        // Note: VFIDEPresale is not included as it has different semantics
+    }
+    
+    /**
+     * @notice Set Howey-safe mode on individual contracts
+     */
+    function howey_setDutyDistributor(bool enabled) external onlyOwner {
+        dutyDistributor.setHoweySafeMode(enabled);
+        emit HoweySafeModeUpdated("DutyDistributor", enabled);
+    }
+    
+    function howey_setCouncilSalary(bool enabled) external onlyOwner {
+        councilSalary.setHoweySafeMode(enabled);
+        emit HoweySafeModeUpdated("CouncilSalary", enabled);
+    }
+    
+    function howey_setCouncilManager(bool enabled) external onlyOwner {
+        councilManager.setHoweySafeMode(enabled);
+        emit HoweySafeModeUpdated("CouncilManager", enabled);
+    }
+    
+    function howey_setPromotionalTreasury(bool enabled) external onlyOwner {
+        promotionalTreasury.setHoweySafeMode(enabled);
+        emit HoweySafeModeUpdated("PromotionalTreasury", enabled);
+    }
+    
+    function howey_setLiquidityIncentives(bool enabled) external onlyOwner {
+        liquidityIncentives.setHoweySafeMode(enabled);
+        emit HoweySafeModeUpdated("LiquidityIncentives", enabled);
+    }
+    
+    /**
+     * @notice Get Howey-safe mode status for all contracts
+     * @return Status of each contract (true = safe mode enabled)
+     */
+    function howey_getStatus() external view returns (
+        bool dutyDistributorSafe,
+        bool councilSalarySafe,
+        bool councilManagerSafe,
+        bool promotionalTreasurySafe,
+        bool liquidityIncentivesSafe
+    ) {
+        dutyDistributorSafe = address(dutyDistributor) != address(0) ? dutyDistributor.howeySafeMode() : false;
+        councilSalarySafe = address(councilSalary) != address(0) ? councilSalary.howeySafeMode() : false;
+        councilManagerSafe = address(councilManager) != address(0) ? councilManager.howeySafeMode() : false;
+        promotionalTreasurySafe = address(promotionalTreasury) != address(0) ? promotionalTreasury.howeySafeMode() : false;
+        liquidityIncentivesSafe = address(liquidityIncentives) != address(0) ? liquidityIncentives.howeySafeMode() : false;
+    }
+    
+    /**
+     * @notice Check if all contracts are in safe mode (recommended for production)
+     * @return allSafe True if all contracts have howeySafeMode enabled
+     */
+    function howey_areAllSafe() external view returns (bool allSafe) {
+        allSafe = true;
+        if (address(dutyDistributor) != address(0) && !dutyDistributor.howeySafeMode()) allSafe = false;
+        if (address(councilSalary) != address(0) && !councilSalary.howeySafeMode()) allSafe = false;
+        if (address(councilManager) != address(0) && !councilManager.howeySafeMode()) allSafe = false;
+        if (address(promotionalTreasury) != address(0) && !promotionalTreasury.howeySafeMode()) allSafe = false;
+        if (address(liquidityIncentives) != address(0) && !liquidityIncentives.howeySafeMode()) allSafe = false;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                          AUTO-SWAP CONFIGURATION
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @notice Configure automatic VFIDE to stablecoin conversion for rewards
+     * @dev Simplifies EcosystemVault.configureAutoSwap() call
+     * @param router DEX router address (Uniswap V2 compatible)
+     * @param stablecoin Preferred stablecoin (USDC, USDT, DAI, etc.)
+     * @param enabled Enable automatic conversion
+     * @param maxSlippageBps Maximum slippage tolerance (100 = 1%, max 500 = 5%)
+     */
+    function autoSwap_configure(
+        address router,
+        address stablecoin,
+        bool enabled,
+        uint16 maxSlippageBps
+    ) external onlyOwner {
+        ecosystemVault.configureAutoSwap(router, stablecoin, enabled, maxSlippageBps);
+        emit AutoSwapConfigured(router, stablecoin, enabled, maxSlippageBps);
+    }
+    
+    /**
+     * @notice Quick enable/disable auto-swap (keeps existing config)
+     * @param enabled True to enable, false to disable
+     */
+    function autoSwap_setEnabled(bool enabled) external onlyOwner {
+        // Get current config
+        address router = ecosystemVault.swapRouter();
+        address stablecoin = ecosystemVault.preferredStablecoin();
+        uint16 slippage = ecosystemVault.maxSlippageBps();
+        
+        // Reconfigure with new enabled status
+        ecosystemVault.configureAutoSwap(router, stablecoin, enabled, slippage);
+        emit AutoSwapConfigured(router, stablecoin, enabled, slippage);
+    }
+    
+    /**
+     * @notice Get current auto-swap configuration
+     */
+    function autoSwap_getConfig() external view returns (
+        address router,
+        address stablecoin,
+        bool enabled,
+        uint16 maxSlippageBps
+    ) {
+        return (
+            ecosystemVault.swapRouter(),
+            ecosystemVault.preferredStablecoin(),
+            ecosystemVault.autoSwapEnabled(),
+            ecosystemVault.maxSlippageBps()
+        );
+    }
+    
+    /**
+     * @notice Quick setup for common stablecoin (USDC)
+     * @param router DEX router address
+     * @param usdc USDC token address
+     */
+    function autoSwap_quickSetupUSDC(address router, address usdc) external onlyOwner {
+        ecosystemVault.configureAutoSwap(router, usdc, true, 100); // 1% slippage
+        emit AutoSwapConfigured(router, usdc, true, 100);
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                          ECOSYSTEM VAULT MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @notice Set manager permissions for EcosystemVault
+     * @param manager Address to grant/revoke manager role
+     * @param active True to grant, false to revoke
+     */
+    function ecosystem_setManager(address manager, bool active) external onlyOwner {
+        ecosystemVault.setManager(manager, active);
+    }
+    
+    /**
+     * @notice Set allocation percentages for ecosystem pools
+     * @param councilBps Council allocation (basis points, e.g., 2500 = 25%)
+     * @param merchantBps Merchant allocation (basis points)
+     * @param headhunterBps Headhunter allocation (basis points)
+     * @dev Total must equal 10000 (100%)
+     */
+    function ecosystem_setAllocations(
+        uint16 councilBps,
+        uint16 merchantBps,
+        uint16 headhunterBps
+    ) external onlyOwner {
+        ecosystemVault.setAllocations(councilBps, merchantBps, headhunterBps);
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    //                          ONE-CLICK PRODUCTION SETUP
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @notice Production setup with recommended safe defaults
+     * @dev Enables all Howey-safe modes and disables auto-swap (safest configuration)
+     */
+    function production_setupSafeDefaults() external onlyOwner {
+        // Enable Howey-safe mode on all contracts
+        if (address(dutyDistributor) != address(0)) dutyDistributor.setHoweySafeMode(true);
+        if (address(councilSalary) != address(0)) councilSalary.setHoweySafeMode(true);
+        if (address(councilManager) != address(0)) councilManager.setHoweySafeMode(true);
+        if (address(promotionalTreasury) != address(0)) promotionalTreasury.setHoweySafeMode(true);
+        if (address(liquidityIncentives) != address(0)) liquidityIncentives.setHoweySafeMode(true);
+        
+        // Disable auto-swap (start conservatively)
+        if (address(ecosystemVault) != address(0)) {
+            address router = ecosystemVault.swapRouter();
+            address stablecoin = ecosystemVault.preferredStablecoin();
+            uint16 slippage = ecosystemVault.maxSlippageBps();
+            ecosystemVault.configureAutoSwap(router, stablecoin, false, slippage);
+        }
+        
+        emit EmergencyAction("production_safe_defaults_set", address(this));
+    }
+    
+    /**
+     * @notice Production setup with auto-swap enabled
+     * @dev Sets Howey-safe mode + enables auto-swap for stablecoin payments
+     * @param dexRouter DEX router address for swaps
+     * @param usdc USDC token address (or other preferred stablecoin)
+     */
+    function production_setupWithAutoSwap(address dexRouter, address usdc) external onlyOwner {
+        // Enable Howey-safe mode on all contracts
+        if (address(dutyDistributor) != address(0)) dutyDistributor.setHoweySafeMode(true);
+        if (address(councilSalary) != address(0)) councilSalary.setHoweySafeMode(true);
+        if (address(councilManager) != address(0)) councilManager.setHoweySafeMode(true);
+        if (address(promotionalTreasury) != address(0)) promotionalTreasury.setHoweySafeMode(true);
+        if (address(liquidityIncentives) != address(0)) liquidityIncentives.setHoweySafeMode(true);
+        
+        // Enable auto-swap with conservative 1% slippage
+        if (address(ecosystemVault) != address(0)) {
+            ecosystemVault.configureAutoSwap(dexRouter, usdc, true, 100);
+        }
+        
+        emit EmergencyAction("production_with_autoswap_set", address(this));
+    }
+    
+    /**
+     * @notice Get comprehensive system status
+     * @return Detailed status of all major configuration settings
+     */
+    function system_getStatus() external view returns (
+        bool allHoweySafe,
+        bool autoSwapEnabled,
+        bool tokenCircuitBreaker,
+        bool tokenVaultOnly,
+        bool tokenPolicyLocked,
+        string memory healthStatus
+    ) {
+        // Check Howey-safe mode status
+        allHoweySafe = true;
+        if (address(dutyDistributor) != address(0) && !dutyDistributor.howeySafeMode()) allHoweySafe = false;
+        if (address(councilSalary) != address(0) && !councilSalary.howeySafeMode()) allHoweySafe = false;
+        if (address(councilManager) != address(0) && !councilManager.howeySafeMode()) allHoweySafe = false;
+        if (address(promotionalTreasury) != address(0) && !promotionalTreasury.howeySafeMode()) allHoweySafe = false;
+        if (address(liquidityIncentives) != address(0) && !liquidityIncentives.howeySafeMode()) allHoweySafe = false;
+        
+        // Check auto-swap status
+        autoSwapEnabled = address(ecosystemVault) != address(0) ? ecosystemVault.autoSwapEnabled() : false;
+        
+        // Check token settings
+        tokenCircuitBreaker = vfideToken.isCircuitBreakerActive();
+        tokenVaultOnly = vfideToken.vaultOnly();
+        tokenPolicyLocked = vfideToken.policyLocked();
+        
+        // Determine health status
+        if (allHoweySafe && !tokenCircuitBreaker) {
+            healthStatus = "Production Ready - All Systems Safe";
+        } else if (!allHoweySafe) {
+            healthStatus = "Warning - Howey-safe mode disabled";
+        } else {
+            healthStatus = "Circuit Breaker Active";
         }
     }
     
