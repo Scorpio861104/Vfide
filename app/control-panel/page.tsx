@@ -12,6 +12,7 @@ import { EmergencyPanel } from './components/EmergencyPanel';
 import { ProductionSetupPanel } from './components/ProductionSetupPanel';
 import { TransactionHistory } from './components/TransactionHistory';
 import { ConnectWalletPrompt } from './components/ConnectWalletPrompt';
+import { OwnerGuard } from './components/SecurityComponents';
 
 export default function ControlPanelPage() {
   const { address, isConnected } = useAccount();
@@ -75,15 +76,17 @@ export default function ControlPanelPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          {activeTab === 'overview' && <SystemStatusPanel />}
-          {activeTab === 'howey' && <HoweySafeModePanel />}
-          {activeTab === 'autoswap' && <AutoSwapPanel />}
-          {activeTab === 'token' && <TokenManagementPanel />}
-          {activeTab === 'fees' && <FeeManagementPanel />}
-          {activeTab === 'ecosystem' && <EcosystemPanel />}
-          {activeTab === 'emergency' && <EmergencyPanel />}
-          {activeTab === 'setup' && <ProductionSetupPanel />}
-          {activeTab === 'history' && <TransactionHistory />}
+          <OwnerGuard>
+            {activeTab === 'overview' && <SystemStatusPanel />}
+            {activeTab === 'howey' && <HoweySafeModePanel />}
+            {activeTab === 'autoswap' && <AutoSwapPanel />}
+            {activeTab === 'token' && <TokenManagementPanel />}
+            {activeTab === 'fees' && <FeeManagementPanel />}
+            {activeTab === 'ecosystem' && <EcosystemPanel />}
+            {activeTab === 'emergency' && <EmergencyPanel />}
+            {activeTab === 'setup' && <ProductionSetupPanel />}
+            {activeTab === 'history' && <TransactionHistory />}
+          </OwnerGuard>
         </div>
       </div>
 
