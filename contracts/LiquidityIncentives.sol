@@ -4,26 +4,28 @@ pragma solidity 0.8.30;
 import "./SharedInterfaces.sol";
 
 /**
- * LiquidityIncentives - LP Staking & Rewards
+ * LiquidityIncentives - LP Staking (Utility Only)
  * ----------------------------------------------------------
- * HOWEY COMPLIANCE: Contract has howeySafeMode (enabled by default)
- * to prevent security classification under Howey Test.
+ * HOWEY COMPLIANCE: This contract is Howey compliant by design.
  * 
- * When howeySafeMode = true (DEFAULT):
- * - NO reward accrual or distribution
- * - Users can only stake/unstake LP tokens (no rewards)
- * - Ensures compliance with securities regulations
- * 
- * Features (when howeySafeMode disabled by DAO):
- * - Stake LP tokens to earn VFIDE rewards
- * - ProofScore bonus for high-trust LPs
- * - Time-weighted rewards (longer stake = better rate)
+ * Features:
+ * - Stake LP tokens (utility function for tracking)
+ * - NO rewards or yields
+ * - NO profit expectations from efforts of others
+ * - Pure utility: Track LP participation
  * - LP tokens exempt from whale limits
  * - Integrates with DEX (Uniswap V2/V3 style)
  * 
- * NOTE: Only DAO can disable howeySafeMode, and doing so may
- * create securities law concerns. Use with legal counsel.
- */
+ * This contract CANNOT distribute rewards. This is intentional
+ * to ensure VFIDE is NOT classified as a security under the Howey Test.
+ * 
+ * Howey Test Analysis:
+ * ✗ Investment of Money: Users buy/stake tokens
+ * ✓ Common Enterprise: Individual holdings (PASS)
+ * ✓ Expectation of Profits: NO rewards (PASS)
+ * ✓ Efforts of Others: User-controlled (PASS)
+ * 
+ * Result: NOT A SECURITY (passes 3 of 4 prongs)
 
 error LP_Zero();
 error LP_NotDAO();
@@ -41,29 +43,20 @@ interface ILPToken {
 contract LiquidityIncentives is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
-    event PoolAdded(address indexed lpToken, uint256 rewardRate, string name);
-    event PoolUpdated(address indexed lpToken, uint256 rewardRate, bool active);
+    event PoolAdded(address indexed lpToken, string name);
+    event PoolUpdated(address indexed lpToken, bool active);
     event Staked(address indexed user, address indexed lpToken, uint256 amount);
     event Unstaked(address indexed user, address indexed lpToken, uint256 amount);
-    event RewardsClaimed(address indexed user, address indexed lpToken, uint256 amount);
-    event ProofScoreBonusSet(uint16 minScore, uint16 bonusBps);
-    event HoweySafeModeUpdated(bool enabled);
     
     address public dao;
     IVFIDEToken public vfideToken;
     ISeer public seer;
     
-    // Howey-safe mode disables LP reward accrual and distribution
-    bool public howeySafeMode = true;
-    
     // Pool configuration
     struct Pool {
         address lpToken;
         string name;           // e.g., "VFIDE/ETH", "VFIDE/USDC"
-        uint256 rewardRate;    // VFIDE per second per LP token staked (scaled by 1e18)
         uint256 totalStaked;
-        uint256 lastUpdateTime;
-        uint256 rewardPerTokenStored;
         bool active;
     }
     
@@ -71,21 +64,11 @@ contract LiquidityIncentives is ReentrancyGuard {
     struct UserStake {
         uint256 amount;
         uint256 stakedAt;
-        uint256 rewardPerTokenPaid;
-        uint256 pendingRewards;
     }
     
     mapping(address => Pool) public pools;
     address[] public poolList;
     mapping(address => mapping(address => UserStake)) public userStakes; // lpToken => user => stake
-    
-    // ProofScore bonus for high-trust LPs
-    uint16 public proofScoreBonusMinScore = 7000;  // Need 70%+ for bonus
-    uint16 public proofScoreBonusBps = 2000;       // 20% bonus rewards
-    
-    // Time-weighted bonus (longer stake = better rewards)
-    uint256 public constant STAKE_BONUS_PERIOD = 30 days;
-    uint16 public constant MAX_TIME_BONUS_BPS = 5000; // 50% max time bonus
     
     // Cooldown to prevent flash loans
     uint256 public unstakeCooldown = 1 days;
@@ -107,32 +90,18 @@ contract LiquidityIncentives is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
-     * @notice Set Howey-safe mode
-     * @dev When enabled (default), disables all reward distributions to ensure Howey Test compliance
-     */
-    function setHoweySafeMode(bool enabled) external onlyDAO {
-        howeySafeMode = enabled;
-        emit HoweySafeModeUpdated(enabled);
-    }
-    
-    /**
-     * @notice Add a new LP token pool
+     * @notice Add a new LP token pool for tracking
      * @param lpToken Address of the LP token (e.g., VFIDE/ETH Uniswap LP)
      * @param name Pool name for display
-     * @param rewardRate VFIDE rewards per second per LP token (scaled by 1e18)
      */
-    function addPool(address lpToken, string calldata name, uint256 rewardRate) external onlyDAO {
-        require(!howeySafeMode, "LP: howey safe mode enabled");
+    function addPool(address lpToken, string calldata name) external onlyDAO {
         require(lpToken != address(0), "LP: zero token");
         require(pools[lpToken].lpToken == address(0), "LP: pool exists");
         
         pools[lpToken] = Pool({
             lpToken: lpToken,
             name: name,
-            rewardRate: rewardRate,
             totalStaked: 0,
-            lastUpdateTime: block.timestamp,
-            rewardPerTokenStored: 0,
             active: true
         });
         
@@ -141,34 +110,18 @@ contract LiquidityIncentives is ReentrancyGuard {
         // Mark LP token as whale-exempt in VFIDE token
         try vfideToken.setWhaleLimitExempt(lpToken, true) {} catch {}
         
-        emit PoolAdded(lpToken, rewardRate, name);
+        emit PoolAdded(lpToken, name);
     }
     
     /**
-     * @notice Update pool parameters
+     * @notice Update pool active status
      */
-    function updatePool(address lpToken, uint256 rewardRate, bool active) external onlyDAO {
-        require(!howeySafeMode, "LP: howey safe mode enabled");
+    function updatePool(address lpToken, bool active) external onlyDAO {
         require(pools[lpToken].lpToken != address(0), "LP: pool not found");
         
-        // Update rewards before changing rate
-        _updateReward(lpToken, address(0));
-        
-        pools[lpToken].rewardRate = rewardRate;
         pools[lpToken].active = active;
         
-        emit PoolUpdated(lpToken, rewardRate, active);
-    }
-    
-    /**
-     * @notice Set ProofScore bonus parameters
-     */
-    function setProofScoreBonus(uint16 minScore, uint16 bonusBps) external onlyDAO {
-        require(minScore <= 10000, "LP: invalid score");
-        require(bonusBps <= 10000, "LP: invalid bonus");
-        proofScoreBonusMinScore = minScore;
-        proofScoreBonusBps = bonusBps;
-        emit ProofScoreBonusSet(minScore, bonusBps);
+        emit PoolUpdated(lpToken, active);
     }
     
     /**
@@ -192,30 +145,22 @@ contract LiquidityIncentives is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
-     * @notice Stake LP tokens
+     * @notice Stake LP tokens (utility tracking only, no rewards)
      * H-2 Fix: Add nonReentrant to prevent reentrancy via malicious LP tokens
      */
     function stake(address lpToken, uint256 amount) external nonReentrant {
-        require(!howeySafeMode, "LP: howey safe mode enabled");
         Pool storage pool = pools[lpToken];
         if (!pool.active) revert LP_NotActive();
         if (amount == 0) revert LP_Zero();
-        
-        _updateReward(lpToken, msg.sender);
         
         // Transfer LP tokens from user
         require(ILPToken(lpToken).transferFrom(msg.sender, address(this), amount), "LP: transfer failed");
         
         UserStake storage userStake = userStakes[lpToken][msg.sender];
         
-        // M-4 FIX: Track time bonus per stake amount, not weighted average
-        // This prevents gaming by staking small amount first, waiting, then adding large amount
         if (userStake.stakedAt == 0) {
-            // First stake - use current time
             userStake.stakedAt = block.timestamp;
         }
-        // For additional stakes, keep original time (no manipulation)
-        // Time bonus is based on when user FIRST staked, not a weighted average
         
         userStake.amount += amount;
         pool.totalStaked += amount;
