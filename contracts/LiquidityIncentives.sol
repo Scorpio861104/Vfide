@@ -6,15 +6,23 @@ import "./SharedInterfaces.sol";
 /**
  * LiquidityIncentives - LP Staking & Rewards
  * ----------------------------------------------------------
- * Incentivizes liquidity provision by rewarding LP token stakers
- * with VFIDE tokens from the ecosystem fund.
+ * HOWEY COMPLIANCE: Contract has howeySafeMode (enabled by default)
+ * to prevent security classification under Howey Test.
  * 
- * Features:
+ * When howeySafeMode = true (DEFAULT):
+ * - NO reward accrual or distribution
+ * - Users can only stake/unstake LP tokens (no rewards)
+ * - Ensures compliance with securities regulations
+ * 
+ * Features (when howeySafeMode disabled by DAO):
  * - Stake LP tokens to earn VFIDE rewards
  * - ProofScore bonus for high-trust LPs
  * - Time-weighted rewards (longer stake = better rate)
  * - LP tokens exempt from whale limits
  * - Integrates with DEX (Uniswap V2/V3 style)
+ * 
+ * NOTE: Only DAO can disable howeySafeMode, and doing so may
+ * create securities law concerns. Use with legal counsel.
  */
 
 error LP_Zero();
@@ -39,10 +47,14 @@ contract LiquidityIncentives is ReentrancyGuard {
     event Unstaked(address indexed user, address indexed lpToken, uint256 amount);
     event RewardsClaimed(address indexed user, address indexed lpToken, uint256 amount);
     event ProofScoreBonusSet(uint16 minScore, uint16 bonusBps);
+    event HoweySafeModeUpdated(bool enabled);
     
     address public dao;
     IVFIDEToken public vfideToken;
     ISeer public seer;
+    
+    // Howey-safe mode disables LP reward accrual and distribution
+    bool public howeySafeMode = true;
     
     // Pool configuration
     struct Pool {
@@ -95,12 +107,22 @@ contract LiquidityIncentives is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
+     * @notice Set Howey-safe mode
+     * @dev When enabled (default), disables all reward distributions to ensure Howey Test compliance
+     */
+    function setHoweySafeMode(bool enabled) external onlyDAO {
+        howeySafeMode = enabled;
+        emit HoweySafeModeUpdated(enabled);
+    }
+    
+    /**
      * @notice Add a new LP token pool
      * @param lpToken Address of the LP token (e.g., VFIDE/ETH Uniswap LP)
      * @param name Pool name for display
      * @param rewardRate VFIDE rewards per second per LP token (scaled by 1e18)
      */
     function addPool(address lpToken, string calldata name, uint256 rewardRate) external onlyDAO {
+        require(!howeySafeMode, "LP: howey safe mode enabled");
         require(lpToken != address(0), "LP: zero token");
         require(pools[lpToken].lpToken == address(0), "LP: pool exists");
         
@@ -126,6 +148,7 @@ contract LiquidityIncentives is ReentrancyGuard {
      * @notice Update pool parameters
      */
     function updatePool(address lpToken, uint256 rewardRate, bool active) external onlyDAO {
+        require(!howeySafeMode, "LP: howey safe mode enabled");
         require(pools[lpToken].lpToken != address(0), "LP: pool not found");
         
         // Update rewards before changing rate
@@ -173,6 +196,7 @@ contract LiquidityIncentives is ReentrancyGuard {
      * H-2 Fix: Add nonReentrant to prevent reentrancy via malicious LP tokens
      */
     function stake(address lpToken, uint256 amount) external nonReentrant {
+        require(!howeySafeMode, "LP: howey safe mode enabled");
         Pool storage pool = pools[lpToken];
         if (!pool.active) revert LP_NotActive();
         if (amount == 0) revert LP_Zero();
@@ -229,6 +253,7 @@ contract LiquidityIncentives is ReentrancyGuard {
      * H-2 Fix: Add nonReentrant to prevent reentrancy
      */
     function claimRewards(address lpToken) external nonReentrant {
+        require(!howeySafeMode, "LP: howey safe mode enabled");
         _updateReward(lpToken, msg.sender);
         
         UserStake storage userStake = userStakes[lpToken][msg.sender];
@@ -256,6 +281,7 @@ contract LiquidityIncentives is ReentrancyGuard {
      * @dev Only works for pools where one side is VFIDE
      */
     function compound(address lpToken) external {
+        require(!howeySafeMode, "LP: howey safe mode enabled");
         _updateReward(lpToken, msg.sender);
         
         UserStake storage userStake = userStakes[lpToken][msg.sender];
@@ -360,6 +386,9 @@ contract LiquidityIncentives is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     function _updateReward(address lpToken, address user) internal {
+        // In Howey-safe mode, don't accumulate rewards
+        if (howeySafeMode) return;
+        
         Pool storage pool = pools[lpToken];
         
         pool.rewardPerTokenStored = _rewardPerToken(lpToken);
