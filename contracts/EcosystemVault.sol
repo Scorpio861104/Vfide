@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import { IERC20, ISeer, ICouncilManager, ISwapRouter, SafeERC20 } from "./SharedInterfaces.sol";
 
 /**
  * EcosystemVault — Growth Incentive Treasury (Percentage-Based)
@@ -175,6 +175,19 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(address => bool) public referralCredited;           // referred => already credited
 
     // ═══════════════════════════════════════════════════════════════════════
+    //                   AUTO-SWAP TO STABLECOIN (for Rewards)
+    // ═══════════════════════════════════════════════════════════════════════
+    // DEX router for VFIDE → Stablecoin swaps when paying rewards
+    address public swapRouter;
+    address public preferredStablecoin;  // e.g., USDC
+    bool public autoSwapEnabled;         // Enable/disable auto-swap
+    uint16 public maxSlippageBps = 100;  // 1% max slippage (default)
+    
+    event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
+    event RewardPaidInStable(address indexed recipient, uint256 vfideAmount, uint256 stableAmount, string reason);
+    event SwapFailed(address indexed recipient, uint256 vfideAmount, string reason);
+
+    // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════
     modifier onlyManager() {
@@ -263,6 +276,27 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function setOperationsCooldown(uint256 _cooldown) external onlyOwner {
         require(_cooldown <= 90 days, "ECO: cooldown too long");
         operationsWithdrawalCooldown = _cooldown;
+    }
+    
+    /**
+     * @notice Configure automatic VFIDE to stablecoin conversion for reward payments
+     * @param _router DEX router address (Uniswap V2 compatible)
+     * @param _stablecoin Preferred stablecoin address (USDC, USDT, DAI, etc.)
+     * @param _enabled Whether to enable automatic conversion
+     * @param _maxSlippageBps Maximum slippage tolerance in basis points (100 = 1%)
+     */
+    function configureAutoSwap(
+        address _router,
+        address _stablecoin,
+        bool _enabled,
+        uint16 _maxSlippageBps
+    ) external onlyOwner {
+        require(_maxSlippageBps <= 500, "ECO: slippage too high"); // Max 5%
+        swapRouter = _router;
+        preferredStablecoin = _stablecoin;
+        autoSwapEnabled = _enabled;
+        maxSlippageBps = _maxSlippageBps;
+        emit AutoSwapConfigured(_router, _stablecoin, _enabled, _maxSlippageBps);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -675,10 +709,77 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     //                         LEGACY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
     
+    /**
+     * @notice Pay expense from ecosystem vault
+     * @dev If autoSwapEnabled, automatically converts VFIDE to stablecoin before payment
+     * @param recipient Address to receive payment
+     * @param amount Amount of VFIDE to pay (will be converted if autoSwap enabled)
+     * @param reason Description of the payment
+     */
     function payExpense(address recipient, uint256 amount, string calldata reason) external onlyManager {
         if (rewardToken.balanceOf(address(this)) < amount) revert ECO_InsufficientFunds();
+        
+        // If auto-swap is enabled and configured, convert VFIDE to stablecoin
+        if (autoSwapEnabled && swapRouter != address(0) && preferredStablecoin != address(0)) {
+            uint256 stableReceived = _swapToStable(amount);
+            if (stableReceived > 0) {
+                // Successfully swapped, transfer stablecoin to recipient
+                IERC20(preferredStablecoin).safeTransfer(recipient, stableReceived);
+                emit RewardPaidInStable(recipient, amount, stableReceived, reason);
+                return;
+            } else {
+                // Swap failed, emit event and fallback to VFIDE payment
+                emit SwapFailed(recipient, amount, reason);
+            }
+        }
+        
+        // Default: pay in VFIDE (no swap or swap failed)
         rewardToken.safeTransfer(recipient, amount);
         emit PaymentMade(recipient, amount, reason);
+    }
+    
+    /**
+     * @notice Internal: Swap VFIDE to preferred stablecoin via DEX
+     * @dev Uses Uniswap V2-compatible router interface
+     * @param vfideAmount Amount of VFIDE to swap
+     * @return stableAmount Amount of stablecoin received (0 if swap fails)
+     */
+    function _swapToStable(uint256 vfideAmount) internal returns (uint256) {
+        if (vfideAmount == 0) return 0;
+        
+        // Approve router to spend VFIDE
+        rewardToken.approve(swapRouter, vfideAmount);
+        
+        // Calculate minimum output with slippage protection
+        address[] memory path = new address[](2);
+        path[0] = address(rewardToken);  // VFIDE
+        path[1] = preferredStablecoin;   // e.g., USDC
+        
+        try ISwapRouter(swapRouter).getAmountsOut(vfideAmount, path) returns (uint256[] memory amountsOut) {
+            uint256 expectedOut = amountsOut[amountsOut.length - 1];
+            uint256 minAmountOut = expectedOut * (10000 - maxSlippageBps) / 10000;
+            
+            // Perform swap with slippage protection
+            try ISwapRouter(swapRouter).swapExactTokensForTokens(
+                vfideAmount,
+                minAmountOut,
+                path,
+                address(this),
+                block.timestamp + 300 // 5 min deadline
+            ) returns (uint256[] memory amounts) {
+                // Revoke leftover approval for security
+                rewardToken.approve(swapRouter, 0);
+                return amounts[amounts.length - 1];
+            } catch {
+                // Swap failed, revoke approval
+                rewardToken.approve(swapRouter, 0);
+                return 0;
+            }
+        } catch {
+            // getAmountsOut failed (no liquidity?), revoke approval
+            rewardToken.approve(swapRouter, 0);
+            return 0;
+        }
     }
 
     function burnFunds(uint256 amount) external onlyManager {
