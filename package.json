@@ -120,7 +120,7 @@
     "@commitlint/cli": "^20.3.1",
     "@commitlint/config-conventional": "^20.3.1",
     "@layerzerolabs/lz-evm-oapp-v2": "^3.0.156",
-    "@layerzerolabs/lz-evm-protocol-v2": "^3.0.156",
+    "@layerzerolabs/lz-evm-protocol-v2": "^3.0.158",
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.1.5",
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
