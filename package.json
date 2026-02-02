@@ -135,7 +135,7 @@
     "@percy/cli": "^1.31.8",
     "@playwright/test": "^1.58.0",
     "@size-limit/preset-app": "^12.0.0",
-    "@storybook/addon-a11y": "^8.6.15",
+    "@storybook/addon-a11y": "^10.2.3",
     "@storybook/addon-essentials": "^8.6.15",
     "@storybook/addon-interactions": "^8.6.15",
     "@storybook/addon-links": "^8.6.15",
