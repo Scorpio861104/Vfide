@@ -184,7 +184,7 @@
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "solidity-coverage": "^0.8.17",
-    "storybook": "^8.6.15",
+    "storybook": "^10.2.4",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
