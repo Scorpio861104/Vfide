@@ -235,6 +235,13 @@ export default function StoriesPage() {
               <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
                 Share moments that disappear in 24 hours. See what the community is up to!
               </p>
+              <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mt-4">
+                <span>Capture</span>
+                <span className="text-cyan-400">→</span>
+                <span>Share</span>
+                <span className="text-cyan-400">→</span>
+                <span>Inspire</span>
+              </div>
             </div>
           </motion.section>
 
@@ -244,7 +251,7 @@ export default function StoriesPage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-12"
             >
-              <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto">
+              <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto ring-effect">
                 <div className="text-6xl mb-4">📸</div>
                 <h2 className="text-xl font-bold text-zinc-100 mb-4">Connect Your Wallet</h2>
                 <p className="text-zinc-400 mb-6">
@@ -259,7 +266,7 @@ export default function StoriesPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 mb-8"
+                className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 mb-8 ring-effect"
               >
                 <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-[#3A3A4F] scrollbar-track-transparent">
                   {/* Add Story Button */}
@@ -269,7 +276,7 @@ export default function StoriesPage() {
                     className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                     onClick={() => setShowCreator(true)}
                   >
-                    <div className="w-20 h-20 rounded-full bg-linear-to-br from-cyan-400/20 to-violet-400/20 border-2 border-dashed border-cyan-400 flex items-center justify-center hover:bg-cyan-400/10 transition-colors">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400/20 to-violet-400/20 border-2 border-dashed border-cyan-400 flex items-center justify-center hover:bg-cyan-400/10 transition-colors ring-effect">
                       <Plus className="w-8 h-8 text-cyan-400" />
                     </div>
                     <p className="text-cyan-400 text-sm font-medium">Add Story</p>
@@ -311,7 +318,7 @@ export default function StoriesPage() {
                 transition={{ delay: 0.2 }}
                 className="grid md:grid-cols-3 gap-6"
               >
-                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 text-center hover:border-cyan-400/50 transition-colors">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 text-center hover:border-cyan-400/50 transition-colors ring-effect">
                   <div className="text-4xl mb-4">✍️</div>
                   <h3 className="text-lg font-bold text-zinc-100 mb-2">Text Stories</h3>
                   <p className="text-zinc-400 text-sm">
@@ -319,7 +326,7 @@ export default function StoriesPage() {
                   </p>
                 </div>
 
-                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 text-center hover:border-cyan-400/50 transition-colors">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 text-center hover:border-cyan-400/50 transition-colors ring-effect">
                   <div className="text-4xl mb-4">📸</div>
                   <h3 className="text-lg font-bold text-zinc-100 mb-2">Photo & Video</h3>
                   <p className="text-zinc-400 text-sm">
@@ -327,7 +334,7 @@ export default function StoriesPage() {
                   </p>
                 </div>
 
-                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 text-center hover:border-cyan-400/50 transition-colors">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 text-center hover:border-cyan-400/50 transition-colors ring-effect">
                   <div className="text-4xl mb-4">⏰</div>
                   <h3 className="text-lg font-bold text-zinc-100 mb-2">24 Hour Limit</h3>
                   <p className="text-zinc-400 text-sm">
