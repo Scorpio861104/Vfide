@@ -68,7 +68,10 @@ export default function AchievementsPage() {
                     <Zap className="w-3 h-3 md:w-4 md:h-4 text-cyan-400" />
                     Track your progress and unlock rewards
                   </p>
-                  <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mt-3">
+                  <div
+                    className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mt-3"
+                    aria-label="Achievement progression: Play, then Progress, then Reward"
+                  >
                     <span>Play</span>
                     <span className="text-amber-400">→</span>
                     <span>Progress</span>
