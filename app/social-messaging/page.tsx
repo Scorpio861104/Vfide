@@ -129,7 +129,7 @@ export default function SocialPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-linear-to-br from-zinc-900 to-zinc-950 border border-zinc-700 rounded-2xl p-8 md:p-12 text-center"
+                className="bg-linear-to-br from-zinc-900 to-zinc-950 border border-zinc-700 rounded-2xl p-8 md:p-12 text-center ring-effect"
               >
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
                   <MessageCircle className="w-10 h-10 text-zinc-950" />
@@ -143,23 +143,23 @@ export default function SocialPage() {
                 </p>
                 
                 {/* Features Grid */}
-                <div className="grid md:grid-cols-3 gap-4 mb-8 max-w-3xl mx-auto">
-                  <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
-                    <MessageCircle className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-zinc-100">Encrypted Messaging</p>
-                    <p className="text-xs text-zinc-500 mt-1">End-to-end encryption</p>
+                  <div className="grid md:grid-cols-3 gap-4 mb-8 max-w-3xl mx-auto">
+                    <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800 ring-effect">
+                      <MessageCircle className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-zinc-100">Encrypted Messaging</p>
+                      <p className="text-xs text-zinc-500 mt-1">End-to-end encryption</p>
+                    </div>
+                    <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800 ring-effect">
+                      <Users className="w-6 h-6 text-violet-400 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-zinc-100">Groups & Friends</p>
+                      <p className="text-xs text-zinc-500 mt-1">Build your network</p>
+                    </div>
+                    <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800 ring-effect">
+                      <Award className="w-6 h-6 text-amber-400 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-zinc-100">Endorsements</p>
+                      <p className="text-xs text-zinc-500 mt-1">Build reputation</p>
+                    </div>
                   </div>
-                  <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
-                    <Users className="w-6 h-6 text-violet-400 mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-zinc-100">Groups & Friends</p>
-                    <p className="text-xs text-zinc-500 mt-1">Build your network</p>
-                  </div>
-                  <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
-                    <Award className="w-6 h-6 text-amber-400 mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-zinc-100">Endorsements</p>
-                    <p className="text-xs text-zinc-500 mt-1">Build reputation</p>
-                  </div>
-                </div>
 
                 <div className="flex justify-center">
                   <ConnectButton />
@@ -187,6 +187,13 @@ export default function SocialPage() {
                   <span className="hidden sm:inline">Connect with friends through end-to-end encrypted messaging</span>
                   <span className="sm:hidden">Encrypted messaging</span>
                 </p>
+                <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.3em] text-zinc-500 mt-3">
+                  <span>Connect</span>
+                  <span className="text-cyan-400">→</span>
+                  <span>Message</span>
+                  <span className="text-cyan-400">→</span>
+                  <span>Trust</span>
+                </div>
               </div>
 
               {/* Connection Status, Gamification & Notifications */}
