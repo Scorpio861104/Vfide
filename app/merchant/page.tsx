@@ -183,6 +183,18 @@ export default function MerchantPage() {
               Accept VFIDE payments with <span className="text-emerald-400 font-semibold">0% protocol fees</span> • 
               Direct or Escrow modes • Optional <span className="text-blue-400 font-semibold">STABLE-PAY</span> auto-conversion
             </p>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.3em] text-gray-500 mt-6"
+            >
+              <span>Collect</span>
+              <ArrowRight className="w-4 h-4 text-cyan-400" />
+              <span>Convert</span>
+              <ArrowRight className="w-4 h-4 text-cyan-400" />
+              <span>Grow</span>
+            </motion.div>
 
             {/* Trust badges */}
             <div className="flex flex-wrap justify-center gap-4 mt-8">
@@ -195,6 +207,7 @@ export default function MerchantPage() {
                   key={badge.text}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ y: -2, scale: 1.02 }}
                   transition={{ delay: 0.5 + i * 0.1 }}
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300"
                 >
@@ -283,10 +296,10 @@ export default function MerchantPage() {
           </motion.section>
 
           {/* Comparison Table */}
-          <motion.section 
-            variants={containerVariants}
-            className="mb-16 p-8 rounded-3xl bg-white/2 border border-white/10 backdrop-blur-xl"
-          >
+            <motion.section 
+              variants={containerVariants}
+              className="mb-16 p-8 rounded-3xl bg-white/2 border border-white/10 backdrop-blur-xl ring-effect"
+            >
             <motion.div variants={itemVariants} className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
                 <span className="bg-clip-text text-transparent bg-linear-to-r from-emerald-400 to-cyan-400">
@@ -327,10 +340,10 @@ export default function MerchantPage() {
           </motion.section>
 
           {/* Getting Started */}
-          <motion.section
-            variants={containerVariants}
-            className="p-8 rounded-3xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl"
-          >
+            <motion.section
+              variants={containerVariants}
+              className="p-8 rounded-3xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl ring-effect"
+            >
             <motion.div variants={itemVariants} className="flex items-center gap-3 mb-8">
               <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
                 <Sparkles className="w-5 h-5 text-white" />
