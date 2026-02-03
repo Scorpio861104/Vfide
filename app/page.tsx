@@ -374,7 +374,7 @@ export default function Home() {
                 </TrustBadge>
                 <TrustBadge>
                   <Sparkles className="w-4 h-4 text-cyan-400" />
-                  2.8K Testnet Vaults
+                  2.8K Vaults (Testnet)
                 </TrustBadge>
               </motion.div>
             </div>
