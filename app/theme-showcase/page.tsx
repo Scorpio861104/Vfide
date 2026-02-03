@@ -53,7 +53,10 @@ export default function ThemeShowcasePage() {
           <p className="text-zinc-400 text-lg mb-8">
             A unique color system that sets VFIDE apart
           </p>
-          <div className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.2em] text-zinc-500 mb-8">
+          <div
+            className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.2em] text-zinc-500 mb-8"
+            aria-label="Theme progression: Signal, then Trust, then Delight"
+          >
             <span>Signal</span>
             <span className="text-emerald-400">→</span>
             <span>Trust</span>
