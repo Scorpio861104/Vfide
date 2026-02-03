@@ -44,7 +44,7 @@ function GlassCard({ children, className = "", hover = true }: {
     <motion.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${hover ? 'ring-effect' : ''} ${className}`}
     >
       {children}
     </motion.div>
@@ -127,7 +127,7 @@ function QuickAction({
         whileTap={{ scale: 0.98 }}
         className={`p-4 rounded-2xl font-semibold transition-all flex flex-col items-center gap-3 text-center ${isPrimary 
           ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25' 
-          : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20'}`}
+          : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20'} ring-effect`}
       >
         <div className={`p-3 rounded-xl ${isPrimary ? 'bg-white/20' : 'bg-gradient-to-br from-white/10 to-white/5'}`}>
           <Icon size={24} />
@@ -228,6 +228,9 @@ export default function DashboardPage() {
                     <Sparkles className="text-amber-400" size={28} />
                   </motion.span>
                 </h1>
+                <p className="text-white/60 max-w-2xl text-sm sm:text-base mb-4">
+                  Your VFIDE command center for vaults, ProofScore, and rewards—built to move at the speed of trust.
+                </p>
                 <div className="flex items-center gap-3 flex-wrap">
                   <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 max-w-full">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
@@ -348,14 +351,15 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
       <motion.div variants={itemVariants}>
-        <GlassCard className="p-6" hover={false}>
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Zap className="text-amber-400" size={24} />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-            <QuickAction icon={ArrowUpRight} label="Send" href="/pay" variant="primary" />
-            <QuickAction icon={Shield} label="Vault" href="/vault" />
+          <GlassCard className="p-6" hover={false}>
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Zap className="text-amber-400" size={24} />
+              Quick Actions
+            </h2>
+            <p className="text-white/50 text-sm mb-5">Jump straight into your most-used flows.</p>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+              <QuickAction icon={ArrowUpRight} label="Send" href="/pay" variant="primary" />
+              <QuickAction icon={Shield} label="Vault" href="/vault" />
             <QuickAction icon={Lock} label="Escrow" href="/escrow" />
             <QuickAction icon={Banknote} label="Payroll" href="/payroll" />
             <QuickAction icon={Vote} label="Governance" href="/governance" />
