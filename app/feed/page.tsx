@@ -37,7 +37,7 @@ export default function FeedPage() {
                 See what the community is sharing and celebrating
               </p>
               <div
-                className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mb-4"
+                className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-wider text-zinc-500 mb-4"
                 aria-label="Feed workflow: Discover, then Connect, then Celebrate"
               >
                 <span>Discover</span>
