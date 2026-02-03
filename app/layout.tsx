@@ -23,9 +23,7 @@ import { ZustandHydration } from "@/components/core/ZustandHydration";
 import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
 import { MockServiceWorker } from "@/components/dev/MockServiceWorker";
 
-// Use CSS variables for fonts - will load from Google Fonts via CSS
-// This avoids build-time network requests while still using Google Fonts in production
-const _fontVariables = "--font-body --font-display";
+// Fonts are self-hosted via @fontsource in globals.css
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://vfide.io"),
