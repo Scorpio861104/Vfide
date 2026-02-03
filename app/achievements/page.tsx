@@ -24,9 +24,9 @@ export default function AchievementsPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-linear-to-br from-zinc-900 to-zinc-950 border border-zinc-700 rounded-2xl p-8 md:p-12 text-center"
+                className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-700 rounded-2xl p-8 md:p-12 text-center ring-effect"
               >
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
                   <Trophy className="w-10 h-10 text-zinc-950" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">
@@ -68,6 +68,13 @@ export default function AchievementsPage() {
                     <Zap className="w-3 h-3 md:w-4 md:h-4 text-cyan-400" />
                     Track your progress and unlock rewards
                   </p>
+                  <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.3em] text-zinc-500 mt-3">
+                    <span>Play</span>
+                    <span className="text-amber-400">→</span>
+                    <span>Progress</span>
+                    <span className="text-amber-400">→</span>
+                    <span>Reward</span>
+                  </div>
                 </div>
               </div>
             </motion.section>
@@ -78,7 +85,7 @@ export default function AchievementsPage() {
                 onClick={() => setActiveTab('achievements')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                   activeTab === 'achievements'
-                    ? 'bg-linear-to-r from-cyan-400 to-violet-400 text-zinc-950'
+                    ? 'bg-gradient-to-r from-cyan-400 to-violet-400 text-zinc-950'
                     : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
                 }`}
               >
@@ -89,7 +96,7 @@ export default function AchievementsPage() {
                 onClick={() => setActiveTab('stats')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                   activeTab === 'stats'
-                    ? 'bg-linear-to-r from-cyan-400 to-violet-400 text-zinc-950'
+                    ? 'bg-gradient-to-r from-cyan-400 to-violet-400 text-zinc-950'
                     : 'bg-zinc-900 text-zinc-400 hover:text-zinc-100'
                 }`}
               >
@@ -172,7 +179,7 @@ export default function AchievementsPage() {
                         </div>
                         <div className="h-3 bg-zinc-950 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-linear-to-r from-cyan-400 to-violet-400"
+                            className="h-full bg-gradient-to-r from-cyan-400 to-violet-400"
                             style={{ width: `${progress.xpToNextLevel > 0 ? ((progress.xp / (progress.xp + progress.xpToNextLevel)) * 100) : 100}%` }}
                           />
                         </div>
@@ -188,7 +195,7 @@ export default function AchievementsPage() {
                         </div>
                         <div className="h-3 bg-zinc-950 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-linear-to-r from-amber-400 to-orange-500"
+                            className="h-full bg-gradient-to-r from-amber-400 to-orange-500"
                             style={{ width: `${(progress.achievements.length / Object.keys(ACHIEVEMENTS).length) * 100}%` }}
                           />
                         </div>
