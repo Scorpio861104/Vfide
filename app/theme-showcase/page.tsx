@@ -53,6 +53,13 @@ export default function ThemeShowcasePage() {
           <p className="text-zinc-400 text-lg mb-8">
             A unique color system that sets VFIDE apart
           </p>
+          <div className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.2em] text-zinc-500 mb-8">
+            <span>Signal</span>
+            <span className="text-emerald-400">→</span>
+            <span>Trust</span>
+            <span className="text-emerald-400">→</span>
+            <span>Delight</span>
+          </div>
           
           {/* Gradient swatches */}
           <div className="flex justify-center gap-4 flex-wrap">
@@ -154,19 +161,19 @@ export default function ThemeShowcasePage() {
       <Section>
         <h2 className="text-2xl font-bold mb-8 text-center">Delightful Loading States</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="flex flex-col items-center gap-4 p-6 bg-zinc-900 rounded-xl">
+          <div className="flex flex-col items-center gap-4 p-6 bg-zinc-900 rounded-xl ring-effect">
             <ShieldLoader size={50} text="" />
             <span className="text-zinc-400 text-sm">Shield Loader</span>
           </div>
-          <div className="flex flex-col items-center gap-4 p-6 bg-zinc-900 rounded-xl">
+          <div className="flex flex-col items-center gap-4 p-6 bg-zinc-900 rounded-xl ring-effect">
             <HexagonSpinner size={50} />
             <span className="text-zinc-400 text-sm">Hexagon Spinner</span>
           </div>
-          <div className="flex flex-col items-center gap-4 p-6 bg-zinc-900 rounded-xl">
+          <div className="flex flex-col items-center gap-4 p-6 bg-zinc-900 rounded-xl ring-effect">
             <TrustRingLoader size={50} />
             <span className="text-zinc-400 text-sm">Trust Ring Loader</span>
           </div>
-          <div className="flex flex-col items-center gap-4 p-6 bg-zinc-900 rounded-xl">
+          <div className="flex flex-col items-center gap-4 p-6 bg-zinc-900 rounded-xl ring-effect">
             <PulseDotsLoader size={10} />
             <span className="text-zinc-400 text-sm">Pulse Dots</span>
           </div>
