@@ -268,9 +268,13 @@ function Step({ number, title, description, time, index }: StepProps) {
 // Trust indicators
 function TrustBadge({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-400">
+    <motion.div
+      whileHover={{ y: -2, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-400 transition-colors"
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -283,6 +287,8 @@ export default function Home() {
   
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.96]);
+  const heroGlow = useTransform(scrollYProgress, [0, 0.5], [1, 0.7]);
   const orbY = useTransform(scrollYProgress, [0, 1], [0, -80]);
   const orbOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.6]);
 
@@ -294,14 +300,16 @@ export default function Home() {
         className="relative min-h-screen flex items-center justify-center overflow-hidden bg-zinc-950 pt-20"
       >
         <motion.div style={{ y: orbY, opacity: orbOpacity }} className="absolute inset-0">
-          <FloatingOrbs />
+          <motion.div style={{ opacity: heroGlow }}>
+            <FloatingOrbs />
+          </motion.div>
         </motion.div>
         
         {/* Grid pattern */}
         <div className="absolute inset-0 grid-pattern opacity-50" />
         
         <motion.div 
-          style={{ opacity: heroOpacity, y: heroY }}
+          style={{ opacity: heroOpacity, y: heroY, scale: heroScale }}
           className="relative z-10 container mx-auto px-3 sm:px-4"
         >
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
@@ -328,37 +336,54 @@ export default function Home() {
                 <span className="gradient-text">Zero Fees.</span>
               </motion.h1>
               
-              <motion.p
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
-              >
-                The first payment protocol where merchants pay <strong className="text-zinc-50">zero processing fees</strong>. 
-                Token transfers have behavioral fees (0.25-5%) that reward trust. Own your funds.
-              </motion.p>
+                <motion.p
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="text-xl text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
+                >
+                  The first payment protocol where merchants pay <strong className="text-zinc-50">zero processing fees</strong>. 
+                  Token transfers have behavioral fees (0.25-5%) that reward trust. Own your funds and build a ProofScore that unlocks lower fees.
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.25 }}
+                  className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs uppercase tracking-[0.3em] text-zinc-500 mb-8"
+                >
+                  <span>Pay</span>
+                  <ChevronRight className="w-4 h-4 text-cyan-400" />
+                  <span>Build Trust</span>
+                  <ChevronRight className="w-4 h-4 text-cyan-400" />
+                  <span>Unlock Rewards</span>
+                </motion.div>
               
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10"
-              >
-                <Link 
-                  href="/token-launch"
-                  className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10"
                 >
-                  Get Started
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link 
-                  href="/live-demo"
-                  className="group inline-flex items-center justify-center gap-2 btn-secondary ring-effect text-lg"
-                >
-                  <Play className="w-5 h-5" />
-                  Watch Demo
-                </Link>
-              </motion.div>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                    <Link 
+                      href="/token-launch"
+                      className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
+                    >
+                      Get Started
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                    <Link 
+                      href="/live-demo"
+                      className="group inline-flex items-center justify-center gap-2 btn-secondary ring-effect text-lg"
+                    >
+                      <Play className="w-5 h-5" />
+                      Watch Demo
+                    </Link>
+                  </motion.div>
+                </motion.div>
               
               {/* Trust indicators */}
               <motion.div
@@ -379,6 +404,18 @@ export default function Home() {
                   <Sparkles className="w-4 h-4 text-cyan-400" />
                   {TESTNET_VAULT_LABEL}
                 </TrustBadge>
+                <TrustBadge>
+                  <Zap className="w-4 h-4 text-cyan-400" />
+                  Instant Settlement
+                </TrustBadge>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="mt-6 text-xs uppercase tracking-[0.2em] text-zinc-600"
+              >
+                Built for Base • Polygon • zkSync
               </motion.div>
             </div>
             
@@ -387,6 +424,7 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
+              whileHover={{ y: -6 }}
               className="lg:block"
             >
               <HeroVisualization />
