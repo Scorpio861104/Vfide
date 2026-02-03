@@ -22,22 +22,10 @@ import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegist
 import { ZustandHydration } from "@/components/core/ZustandHydration";
 import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
 import { MockServiceWorker } from "@/components/dev/MockServiceWorker";
-import { Inter, Space_Grotesk } from "next/font/google";
 
 // Use CSS variables for fonts - will load from Google Fonts via CSS
 // This avoids build-time network requests while still using Google Fonts in production
 const _fontVariables = "--font-body --font-display";
-const bodyFont = Inter({
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const displayFont = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  variable: "--font-display",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://vfide.io"),
@@ -94,8 +82,8 @@ export default function RootLayout({
   const isE2E = process.env.E2E === '1'
 
   return (
-    <html lang="en" className={displayFont.variable}>
-      <body className={`${bodyFont.className} antialiased bg-zinc-900`}>
+    <html lang="en">
+      <body className="font-sans antialiased bg-zinc-900">
         {isE2E ? (
           children
         ) : (
