@@ -36,6 +36,13 @@ export default function FeedPage() {
               <p className="text-zinc-400 text-lg max-w-2xl mx-auto mb-4">
                 See what the community is sharing and celebrating
               </p>
+              <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mb-4">
+                <span>Discover</span>
+                <span className="text-cyan-400">→</span>
+                <span>Connect</span>
+                <span className="text-cyan-400">→</span>
+                <span>Celebrate</span>
+              </div>
               <Link 
                 href="/social-hub" 
                 className="inline-flex items-center gap-2 text-cyan-400 hover:underline"
@@ -51,7 +58,7 @@ export default function FeedPage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-12"
             >
-              <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto">
+              <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto ring-effect">
                 <div className="text-6xl mb-4">🔗</div>
                 <h2 className="text-xl font-bold text-zinc-100 mb-4">
                   Connect Your Wallet
