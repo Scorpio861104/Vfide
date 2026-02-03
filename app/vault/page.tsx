@@ -49,7 +49,7 @@ function GlassCard({ children, className = "", hover = true, gradient }: {
     <motion.div
       whileHover={hover ? { scale: 1.01, y: -2 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${hover ? 'ring-effect' : ''} ${className}`}
     >
       {children}
     </motion.div>
@@ -123,6 +123,11 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
                     ? `Locked for ${remainingHours}h ${remainingMinutes}m`
                     : 'Suspect compromise? Lock immediately.'}
                 </p>
+                {!isQuarantined && (
+                  <p className="text-white/40 text-xs mt-2">
+                    Guardian recovery stays available while assets are locked.
+                  </p>
+                )}
               </div>
             </div>
             
@@ -540,11 +545,12 @@ function VaultContent() {
                           <div className="text-3xl font-bold text-white mb-1">
                             {safeParseFloat(vaultBalance, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
                           </div>
-                          <div className="text-white/40 text-sm">≈ ${safeParseFloat(usdValue, 0).toLocaleString()} USD</div>
-                        </>
-                      )}
-                    </GlassCard>
-                  </motion.div>
+                    <div className="text-white/40 text-sm">≈ ${safeParseFloat(usdValue, 0).toLocaleString()} USD</div>
+                    <div className="text-xs text-white/40 mt-2">Updated in real time • ProofScore aware fees</div>
+                  </>
+                )}
+              </GlassCard>
+            </motion.div>
                   
                   <motion.div variants={itemVariants}>
                     <GlassCard className="p-6">
@@ -573,6 +579,7 @@ function VaultContent() {
                       <div className="text-white/40 text-sm">
                         {guardianCount && guardianCount >= 3 ? 'Recovery enabled' : 'Add guardians for recovery'}
                       </div>
+                      <div className="text-xs text-white/40 mt-2">3+ guardians unlock recovery mode</div>
                     </GlassCard>
                   </motion.div>
                 </motion.div>
@@ -587,6 +594,7 @@ function VaultContent() {
                     <Zap className="text-amber-400" size={24} />
                     Quick Actions
                   </h2>
+                  <p className="text-white/50 text-sm mb-5">Move funds or rebalance instantly from your vault.</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <motion.button 
