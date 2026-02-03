@@ -36,7 +36,10 @@ export default function FeedPage() {
               <p className="text-zinc-400 text-lg max-w-2xl mx-auto mb-4">
                 See what the community is sharing and celebrating
               </p>
-              <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mb-4">
+              <div
+                className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mb-4"
+                aria-label="Feed workflow: Discover, then Connect, then Celebrate"
+              >
                 <span>Discover</span>
                 <span className="text-cyan-400">→</span>
                 <span>Connect</span>
