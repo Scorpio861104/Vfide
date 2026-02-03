@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { motion, useScroll, useTransform, LazyMotion, domAnimation, m } from "framer-motion";
+import { motion, useScroll, useTransform, LazyMotion, domAnimation } from "framer-motion";
 import { useRef, useEffect, useState, lazy, Suspense } from "react";
 import { 
   Shield, Zap, Users, TrendingDown, Lock, Sparkles,

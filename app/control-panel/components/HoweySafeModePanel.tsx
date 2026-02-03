@@ -8,9 +8,7 @@ export function HoweySafeModePanel() {
   const [loading, setLoading] = useState(false);
   const { writeContractAsync } = useWriteContract();
 
-  const { data: howeyStat
-
-us } = useReadContract({
+  const { data: howeyStatus } = useReadContract({
     address: OWNER_CONTROL_PANEL_ADDRESS,
     abi: OWNER_CONTROL_PANEL_ABI,
     functionName: 'howey_getStatus',

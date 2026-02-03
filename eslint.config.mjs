@@ -48,6 +48,7 @@ const eslintConfig = defineConfig([
         "caughtErrorsIgnorePattern": "^_",
         "ignoreRestSiblings": true,
       }],
+      "@next/next/no-page-custom-font": "off",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/purity": "off",
       "react-hooks/immutability": "off",

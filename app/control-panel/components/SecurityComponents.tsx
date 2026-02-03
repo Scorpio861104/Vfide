@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
-import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
+import { OWNER_CONTROL_PANEL_ADDRESS } from '../config/contracts';
 
 /**
  * Hook to verify if connected wallet is the owner

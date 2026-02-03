@@ -152,7 +152,7 @@ export function SimpleWalletConnect() {
       setCopied(true);
       showToast('Address copied to clipboard', 'success', 2000);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch (_err) {
       // Fallback for non-HTTPS contexts or if clipboard API fails
       try {
         const textArea = document.createElement('textarea');

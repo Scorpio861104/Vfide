@@ -10,14 +10,10 @@ export function SystemStatusPanel() {
     functionName: 'system_getStatus',
   });
 
-  const statusColors = {
+  const _statusColors = {
     'Production Ready - All Systems Safe': 'bg-green-500',
     'Warning - Howey-safe mode disabled': 'bg-yellow-500',
     'Circuit Breaker Active': 'bg-red-500',
-  };
-
-  const getStatusColor = (status: string) => {
-    return statusColors[status as keyof typeof statusColors] || 'bg-gray-500';
   };
 
   return (
@@ -122,8 +118,18 @@ export function SystemStatusPanel() {
   );
 }
 
-function StatusCard({ title, value, icon, status, fullWidth = false }: any) {
-  const statusColors = {
+type StatusCardStatus = 'success' | 'warning' | 'error' | 'info' | 'default';
+
+type StatusCardProps = {
+  title: string;
+  value: string;
+  icon: string;
+  status: StatusCardStatus;
+  fullWidth?: boolean;
+};
+
+function StatusCard({ title, value, icon, status, fullWidth = false }: StatusCardProps) {
+  const statusColors: Record<StatusCardStatus, string> = {
     success: 'border-green-500/50 bg-green-500/10',
     warning: 'border-yellow-500/50 bg-yellow-500/10',
     error: 'border-red-500/50 bg-red-500/10',
@@ -142,7 +148,13 @@ function StatusCard({ title, value, icon, status, fullWidth = false }: any) {
   );
 }
 
-function QuickActionButton({ icon, title, description }: any) {
+type QuickActionButtonProps = {
+  icon: string;
+  title: string;
+  description: string;
+};
+
+function QuickActionButton({ icon, title, description }: QuickActionButtonProps) {
   return (
     <button className="w-full p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-left">
       <div className="flex items-center gap-3">
@@ -156,8 +168,16 @@ function QuickActionButton({ icon, title, description }: any) {
   );
 }
 
-function ActivityItem({ action, time, status }: any) {
-  const statusColors = {
+type ActivityStatus = 'success' | 'warning' | 'error';
+
+type ActivityItemProps = {
+  action: string;
+  time: string;
+  status: ActivityStatus;
+};
+
+function ActivityItem({ action, time, status }: ActivityItemProps) {
+  const statusColors: Record<ActivityStatus, string> = {
     success: 'bg-green-500',
     warning: 'bg-yellow-500',
     error: 'bg-red-500',

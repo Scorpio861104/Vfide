@@ -24,7 +24,7 @@ const footerLinks: {
     { href: "/governance", label: "Governance" },
     { href: "/token-launch", label: "Token Launch" },
     { href: "https://github.com/Scorpio861104/Vfide", label: "GitHub", external: true },
-    { href: "https://discord.gg/vfide", label: "Discord", external: true },
+    { href: "https://discord.gg/vfide", label: "Discord", external: true, soon: true },
   ],
   resources: [
     { href: "/docs", label: "Documentation" },
@@ -112,12 +112,7 @@ export function Footer() {
             <ul className="space-y-3">
               {footerLinks.community.map((link) => (
                 <li key={link.label}>
-                  {link.soon ? (
-                    <span className="text-zinc-600 text-sm flex items-center gap-1">
-                      {link.label}
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-500">Soon</span>
-                    </span>
-                  ) : link.external ? (
+                  {link.external ? (
                     <a 
                       href={link.href}
                       target="_blank"
@@ -126,6 +121,9 @@ export function Footer() {
                     >
                       {link.label}
                       <ExternalLink className="w-3 h-3" />
+                      {link.soon && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-500">Soon</span>
+                      )}
                     </a>
                   ) : (
                     <Link 

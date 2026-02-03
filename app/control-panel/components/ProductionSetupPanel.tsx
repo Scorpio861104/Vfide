@@ -62,7 +62,7 @@ export function ProductionSetupPanel() {
   };
 
   const txStatus = isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
-  const isConfigured = systemStatus && systemStatus[0]; // Check if Howey-safe mode is enabled
+  const _isConfigured = systemStatus && systemStatus[0]; // Check if Howey-safe mode is enabled
 
   return (
     <div className="space-y-6">
