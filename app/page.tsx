@@ -11,6 +11,8 @@ import {
 // Lazy load Footer for better initial load performance
 const Footer = lazy(() => import("@/components/layout/Footer").then(mod => ({ default: mod.Footer })));
 
+const TESTNET_VAULT_COUNT = "2.8K";
+
 // Animated counter hook
 function useAnimatedCounter(end: number, duration: number = 2000, start: number = 0) {
   const [count, setCount] = useState(start);
@@ -374,7 +376,7 @@ export default function Home() {
                 </TrustBadge>
                 <TrustBadge>
                   <Sparkles className="w-4 h-4 text-cyan-400" />
-                  2.8K Vaults (Testnet)
+                  {TESTNET_VAULT_COUNT} Vaults (Testnet)
                 </TrustBadge>
               </motion.div>
             </div>
