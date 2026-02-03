@@ -31,6 +31,7 @@ const eslintConfig = defineConfig([
     "**/*.stories.mdx",
     "e2e/**",
     "playwright/**",
+    "public/mockServiceWorker.js",
     
     // Temporarily exclude extremely large files that cause ESLint to hang
     // TODO: Refactor these files into smaller components
