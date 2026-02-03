@@ -246,7 +246,10 @@ export default function LeaderboardPage() {
                 <p className="text-lg sm:text-xl text-zinc-400 font-(family-name:--font-body)">
                   Top contributors in the VFIDE ecosystem
                 </p>
-                <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mt-4">
+                <div
+                  className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mt-4"
+                  aria-label="Leaderboard progression: Compete, then Climb, then Lead"
+                >
                   <span>Compete</span>
                   <span className="text-amber-400">→</span>
                   <span>Climb</span>
