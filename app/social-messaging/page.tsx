@@ -131,7 +131,7 @@ export default function SocialPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-700 rounded-2xl p-8 md:p-12 text-center ring-effect"
               >
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
                   <MessageCircle className="w-10 h-10 text-zinc-950" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">
