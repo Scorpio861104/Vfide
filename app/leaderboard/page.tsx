@@ -286,7 +286,7 @@ export default function LeaderboardPage() {
           </section>
 
         {/* Timeframe Filter */}
-          <section className="py-4 bg-zinc-900/90 border-b border-zinc-700 sticky top-20 z-40 backdrop-blur">
+          <section className="py-4 bg-zinc-900/90 border-b border-zinc-700 sticky top-20 z-40 backdrop-blur-sm">
             <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
