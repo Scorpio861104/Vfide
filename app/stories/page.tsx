@@ -235,7 +235,10 @@ export default function StoriesPage() {
               <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
                 Share moments that disappear in 24 hours. See what the community is up to!
               </p>
-              <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mt-4">
+              <div
+                className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-500 mt-4"
+                aria-label="Story workflow: Capture, then Share, then Inspire"
+              >
                 <span>Capture</span>
                 <span className="text-cyan-400">→</span>
                 <span>Share</span>
