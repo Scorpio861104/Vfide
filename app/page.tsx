@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { motion, useScroll, useTransform, LazyMotion, domAnimation } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useEffect, useState, lazy, Suspense } from "react";
 import { 
   Shield, Zap, Users, TrendingDown, Lock, Sparkles,
@@ -282,7 +282,7 @@ export default function Home() {
   const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <>
       {/* Hero Section */}
       <section 
         ref={heroRef}
@@ -663,6 +663,6 @@ export default function Home() {
       <Suspense fallback={<div className="min-h-[400px] bg-zinc-950" />}>
         <Footer />
       </Suspense>
-    </LazyMotion>
+    </>
   );
 }
