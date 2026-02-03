@@ -280,6 +280,8 @@ export default function Home() {
   
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
+  const orbY = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const orbOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.6]);
 
   return (
     <>
@@ -288,7 +290,9 @@ export default function Home() {
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center overflow-hidden bg-zinc-950 pt-20"
       >
-        <FloatingOrbs />
+        <motion.div style={{ y: orbY, opacity: orbOpacity }} className="absolute inset-0">
+          <FloatingOrbs />
+        </motion.div>
         
         {/* Grid pattern */}
         <div className="absolute inset-0 grid-pattern opacity-50" />
@@ -339,14 +343,14 @@ export default function Home() {
               >
                 <Link 
                   href="/token-launch"
-                  className="group inline-flex items-center justify-center gap-2 btn-primary text-lg"
+                  className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
                 >
                   Get Started
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link 
                   href="/live-demo"
-                  className="group inline-flex items-center justify-center gap-2 btn-secondary text-lg"
+                  className="group inline-flex items-center justify-center gap-2 btn-secondary ring-effect text-lg"
                 >
                   <Play className="w-5 h-5" />
                   Watch Demo
@@ -367,6 +371,10 @@ export default function Home() {
                 <TrustBadge>
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   Audited &amp; Open Source
+                </TrustBadge>
+                <TrustBadge>
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  2.8K Testnet Vaults
                 </TrustBadge>
               </motion.div>
             </div>
@@ -512,6 +520,9 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
+            <span className="text-xs sm:text-sm text-cyan-400 uppercase tracking-widest">
+              3-step launch
+            </span>
             <h2 className="text-4xl md:text-5xl font-display font-bold text-zinc-50 mb-4">
               Get Started in Seconds
             </h2>
@@ -552,7 +563,7 @@ export default function Home() {
           >
             <Link 
               href="/merchant"
-              className="group inline-flex items-center justify-center gap-2 btn-primary text-lg"
+              className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
             >
               Start Accepting Payments
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -634,14 +645,14 @@ export default function Home() {
           >
             <Link 
               href="/token-launch"
-              className="group inline-flex items-center justify-center gap-2 btn-primary text-lg"
+              className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
             >
               Launch App
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link 
               href="/docs"
-              className="group inline-flex items-center justify-center gap-2 btn-secondary text-lg"
+              className="group inline-flex items-center justify-center gap-2 btn-secondary ring-effect text-lg"
             >
               Read Documentation
             </Link>
