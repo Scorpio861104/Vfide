@@ -646,7 +646,6 @@ export function PieMenu() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<AudioContext | null>(null);
-  const audioToneRef = useRef<{ oscillator: OscillatorNode; gain: GainNode } | null>(null);
   
   // Close menu on outside click
   useEffect(() => {
@@ -663,6 +662,15 @@ export function PieMenu() {
     
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.close();
+        audioRef.current = null;
+      }
+    };
+  }, []);
   
   // Close on route change
   useEffect(() => {
@@ -705,17 +713,9 @@ export function PieMenu() {
       const RELEASE_TIME = 0.18;
       const TONE_DURATION = 0.2;
 
-      if (!audioToneRef.current) {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.type = 'sine';
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start();
-        audioToneRef.current = { oscillator, gain };
-      }
-
-      const { oscillator, gain } = audioToneRef.current;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'sine';
       oscillator.frequency.setValueAtTime(frequency, context.currentTime);
       gain.gain.setValueAtTime(INITIAL_GAIN, context.currentTime);
       gain.gain.exponentialRampToValueAtTime(PEAK_GAIN, context.currentTime + ATTACK_TIME);
@@ -723,10 +723,10 @@ export function PieMenu() {
         INITIAL_GAIN,
         context.currentTime + RELEASE_TIME,
       );
-
-      window.setTimeout(() => {
-        gain.gain.setValueAtTime(INITIAL_GAIN, context.currentTime);
-      }, TONE_DURATION * 1000);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + TONE_DURATION);
     } catch {
       // Ignore audio errors for unsupported contexts.
     }
