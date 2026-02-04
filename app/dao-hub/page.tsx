@@ -195,12 +195,21 @@ export default function DaoHubPage() {
     status: isActiveMember ? "active" : "locked",
     proofScore: score,
   };
-  const maxMissedVotes = 2;
-  const missedVotes = isActiveMember ? 1 : 0;
-  const attendanceLabel = isActiveMember ? `${missedVotes} / ${maxMissedVotes}` : "—";
-  const remainingVotes = Math.max(0, maxMissedVotes - missedVotes);
+  const MAX_MISSED_VOTES = 2;
+  const missedVotes: number | null = null;
+  const hasAttendanceData = isActiveMember && missedVotes !== null;
+  const attendanceLabel = isActiveMember
+    ? hasAttendanceData
+      ? `${missedVotes} / ${MAX_MISSED_VOTES}`
+      : "On-chain"
+    : "—";
+  const remainingVotes = hasAttendanceData
+    ? Math.max(0, MAX_MISSED_VOTES - missedVotes)
+    : 0;
   const attendanceBufferLabel = isActiveMember
-    ? `${remainingVotes} vote${remainingVotes === 1 ? "" : "s"} left`
+    ? hasAttendanceData
+      ? `${remainingVotes} vote${remainingVotes === 1 ? "" : "s"} left`
+      : "On-chain"
     : "—";
 
   const accessStatusMap = {
