@@ -18,6 +18,7 @@ import {
 import { useAccount, useReadContract } from "wagmi";
 import { CouncilElectionABI } from "@/lib/abis";
 import { CONTRACT_ADDRESSES } from "@/lib/contracts";
+import { useProofScore } from "@/lib/vfide-hooks";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -112,6 +113,7 @@ export default function DaoHubPage() {
   const { address, isConnected } = useAccount();
   const councilAddress = CONTRACT_ADDRESSES.CouncilElection;
   const isCouncilDeployed = councilAddress !== ZERO_ADDRESS;
+  const { score } = useProofScore(address);
 
   const { data: isCouncilMember } = useReadContract({
     address: councilAddress,
@@ -151,7 +153,7 @@ export default function DaoHubPage() {
     term: termLabel,
     nextEligible: cooldownEndsDate ? cooldownEndsDate.toLocaleDateString() : isCouncilDeployed ? "On-chain" : "—",
     status: isActiveMember ? "active" : "locked",
-    proofScore: 8420,
+    proofScore: score,
   };
 
   const accessStatusLabel =
@@ -162,6 +164,11 @@ export default function DaoHubPage() {
         : accessMode === "disconnected"
           ? "Wallet Required"
           : "Access Locked";
+
+  const termExpiryLabel =
+    cooldownEndsDate && isActiveMember
+      ? `${Math.max(0, Math.ceil((cooldownEndsDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}d`
+      : "—";
 
   return (
     <>
@@ -268,7 +275,7 @@ export default function DaoHubPage() {
                     <div className="font-semibold text-emerald-100">Term Expiry</div>
                     <div className="text-xs text-zinc-400">Auto-locking + offboarding</div>
                   </div>
-                  <span className="text-emerald-200 font-semibold">58d</span>
+                  <span className="text-emerald-200 font-semibold">{termExpiryLabel}</span>
                 </div>
               </div>
             </div>
