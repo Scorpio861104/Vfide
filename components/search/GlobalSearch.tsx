@@ -320,7 +320,7 @@ export function GlobalSearch() {
         title: `Send to ${shortenAddress(searchQuery)}`,
         subtitle: 'Quick send payment',
         icon: <Send className="w-5 h-5" />,
-        action: () => router.push(`/pay?to=${searchQuery}`),
+        action: () => router.push(`/pay?merchant=${searchQuery}`),
         category: 'commands',
       });
     }

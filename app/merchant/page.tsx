@@ -181,7 +181,7 @@ export default function MerchantPage() {
 
             <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
               Accept VFIDE payments with <span className="text-emerald-400 font-semibold">0% protocol fees</span> • 
-              Direct or Escrow modes • Optional <span className="text-blue-400 font-semibold">STABLE-PAY</span> auto-conversion
+              QR scans default to instant settlement, escrow optional • <span className="text-blue-400 font-semibold">STABLE-PAY</span> auto-conversion
             </p>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -277,7 +277,7 @@ export default function MerchantPage() {
               <FeatureCard
                 icon={Zap}
                 title="Flexible Settlement"
-                description="Direct payments settle instantly. Escrow mode holds funds until release."
+                description="Instant settlement for trusted/QR flows. Escrow stays available for buyer protection."
                 color="blue"
               />
               <FeatureCard

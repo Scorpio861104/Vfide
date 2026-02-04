@@ -77,7 +77,7 @@ describe('PaymentQR', () => {
   it('shows description text', () => {
     render(<PaymentQR />)
     
-    expect(screen.getByText(/Customers scan to pay instantly/i)).toBeInTheDocument()
+    expect(screen.getByText(/QR scans default to instant settlement/i)).toBeInTheDocument()
   })
 
   it('shows VFIDE amount display when amount entered', () => {

@@ -263,7 +263,7 @@ export function MerchantDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { icon: DollarSign, color: 'blue', title: 'No Processor Fees', desc: 'No payment processing fees. Burn fees (0.25-5%) + Base gas apply.' },
-            { icon: Zap, color: 'green', title: 'Fast Settlement', desc: 'Direct payments settle instantly. Escrow mode holds funds until release condition met.' },
+            { icon: Zap, color: 'green', title: 'Fast Settlement', desc: 'QR and trusted payments settle instantly. Escrow stays available for buyer protection.' },
             { icon: Shield, color: 'purple', title: 'STABLE-PAY (Optional)', desc: 'Auto-convert to stablecoins via DEX. ~0.3% DEX swap fee + gas apply.' }
           ].map((benefit, index) => (
             <motion.div 

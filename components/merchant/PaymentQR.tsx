@@ -34,7 +34,14 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
 
   // Create a payment deep link (could be customized for mobile wallets)
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.com'
-  const paymentUrl = `${baseUrl}/pay?to=${address}${amount ? `&amount=${amount}` : ''}${orderId ? `&orderId=${encodeURIComponent(orderId)}` : ''}`
+  const paymentParams = new URLSearchParams({
+    merchant: address ?? '',
+    source: 'qr',
+    settlement: 'instant',
+  })
+  if (amount) paymentParams.set('amount', amount)
+  if (orderId) paymentParams.set('orderId', orderId)
+  const paymentUrl = `${baseUrl}/pay?${paymentParams.toString()}`
 
   // USD estimate (using $0.07 presale price as reference)
   const REFERENCE_PRICE = 0.07
@@ -122,7 +129,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           <QrCode className="w-8 h-8 text-cyan-400" />
           <div>
             <h2 className="text-xl font-bold text-zinc-100">Payment QR Code</h2>
-            <p className="text-zinc-400 text-sm">Customers scan to pay instantly</p>
+            <p className="text-zinc-400 text-sm">QR scans default to instant settlement</p>
           </div>
         </div>
       </div>
@@ -159,8 +166,9 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           )}
           
           {/* Merchant Name */}
-          <div className="text-center text-zinc-100 font-bold mb-4">
-            {merchantInfo.businessName}
+          <div className="text-center text-zinc-100 font-bold mb-4 flex flex-col items-center gap-1">
+            <span>{merchantInfo.businessName}</span>
+            <span className="text-xs text-zinc-500">Instant settlement via QR scan</span>
           </div>
           
           {/* Order ID */}
