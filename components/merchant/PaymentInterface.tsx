@@ -44,7 +44,7 @@ export function PaymentInterface() {
           orderId
         )
       } else {
-        payMerchant(
+        await payMerchant(
           merchantAddress as `0x${string}`,
           CONTRACT_ADDRESSES.VFIDEToken,
           amount,
@@ -73,7 +73,7 @@ export function PaymentInterface() {
           <CreditCard className="w-10 h-10 text-blue-400" />
           <div>
             <h2 className="text-2xl font-bold">Pay Merchant</h2>
-            <p className="text-gray-400">Escrow for online orders • Instant for trusted in-person or QR</p>
+            <p className="text-gray-400">Escrow for online orders. Instant for trusted in-person or QR code payments.</p>
           </div>
         </div>
       </div>
