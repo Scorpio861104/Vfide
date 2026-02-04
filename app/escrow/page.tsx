@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { safeParseInt as _safeParseInt, validateAddress } from '@/lib/validation'
 import { toast } from '@/lib/toast'
@@ -136,6 +137,7 @@ export default function EscrowPage() {
     try {
       await raiseDispute(BigInt(id));
       toast.success('Dispute raised successfully');
+      toast.info(`DAO hub notified for ESC-${id.toString()}. Arbitration queued.`);
     } catch (err) {
       console.error('Failed to raise dispute:', err);
       toast.error('Failed to raise dispute. Please try again.');
@@ -525,9 +527,17 @@ export default function EscrowPage() {
                           )}
                       
                           {escrow.state === 3 && (
-                            <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-xl">
-                              <Scale className="w-5 h-5 text-red-400" />
-                              <span className="text-red-300 text-sm">Awaiting Arbiter Decision</span>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+                              <div className="flex items-center gap-2">
+                                <Scale className="w-5 h-5 text-red-400" />
+                                <span className="text-red-300 text-sm">DAO Hub Notified • Arbitration Pending</span>
+                              </div>
+                              <Link
+                                href="/governance"
+                                className="text-xs font-semibold text-red-200/90 hover:text-red-100 transition-colors"
+                              >
+                                View DAO case →
+                              </Link>
                             </div>
                           )}
                       
@@ -587,7 +597,7 @@ export default function EscrowPage() {
               {
                 step: '4',
                 title: 'Or Dispute',
-                description: 'If issues arise, DAO arbiter resolves the dispute fairly',
+                description: 'Disputes auto-notify the DAO hub for arbitration and final resolution',
                 icon: <Scale className="w-6 h-6" />,
                 gradient: 'from-amber-500/20 to-orange-500/10',
                 border: 'border-amber-500/20',
