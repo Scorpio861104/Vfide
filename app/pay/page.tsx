@@ -45,6 +45,7 @@ function PayContent() {
   const { priceUsd, isLoading: priceLoading } = useVfidePrice();
   const { writeContractAsync } = useWriteContract();
 
+  // 3% burn fee (avg) applied to checkout totals for network fee estimates.
   const PAYMENT_FEE_MULTIPLIER = 1.03;
   const amountNum = safeParseFloat(amount, 0);
   const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
@@ -246,7 +247,7 @@ function PayContent() {
             {/* Pay Button */}
             <motion.button 
               onClick={handlePayment}
-              disabled={isProcessing}
+              disabled={isProcessing || !merchant}
               whileHover={{ scale: isProcessing ? 1 : 1.02 }}
               whileTap={{ scale: isProcessing ? 1 : 0.98 }}
               className="w-full px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
