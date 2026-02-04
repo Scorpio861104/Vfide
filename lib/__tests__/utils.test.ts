@@ -343,7 +343,7 @@ describe('buttonVariant', () => {
   it('returns primary variant classes', () => {
     const { buttonVariant } = require('../utils')
     const result = buttonVariant('primary', 'md')
-    expect(result).toContain('bg-linear-to-r')
+    expect(result).toContain('bg-gradient-to-r')
     expect(result).toContain('from-cyan-500')
   })
 
