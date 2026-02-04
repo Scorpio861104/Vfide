@@ -43,11 +43,11 @@ export default function TreasuryPage() {
   ];
 
   const colorMap: Record<string, { active: string; hover: string }> = {
-    cyan: { active: 'bg-linear-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25', hover: 'hover:bg-cyan-500/10 hover:text-cyan-400' },
-    pink: { active: 'bg-linear-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25', hover: 'hover:bg-pink-500/10 hover:text-pink-400' },
-    purple: { active: 'bg-linear-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25', hover: 'hover:bg-purple-500/10 hover:text-purple-400' },
-    emerald: { active: 'bg-linear-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25', hover: 'hover:bg-emerald-500/10 hover:text-emerald-400' },
-    amber: { active: 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25', hover: 'hover:bg-amber-500/10 hover:text-amber-400' },
+    cyan: { active: 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25', hover: 'hover:bg-cyan-500/10 hover:text-cyan-400' },
+    pink: { active: 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25', hover: 'hover:bg-pink-500/10 hover:text-pink-400' },
+    purple: { active: 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25', hover: 'hover:bg-purple-500/10 hover:text-purple-400' },
+    emerald: { active: 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25', hover: 'hover:bg-emerald-500/10 hover:text-emerald-400' },
+    amber: { active: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25', hover: 'hover:bg-amber-500/10 hover:text-amber-400' },
   };
 
   return (
@@ -55,7 +55,7 @@ export default function TreasuryPage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-zinc-950 via-[#0f0f18] to-zinc-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-[#0f0f18] to-zinc-950" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(16,185,129,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(124,58,237,0.08),transparent_50%)]" />
@@ -74,19 +74,26 @@ export default function TreasuryPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-linear-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-sm text-emerald-300 mb-4"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 text-sm text-emerald-300 mb-4 ring-effect"
             >
               <Coins className="w-4 h-4" />
               Protocol Finances
             </motion.div>
             <h1 className="text-4xl md:text-5xl font-black mb-4">
-              <span className="bg-clip-text text-transparent bg-linear-to-r from-emerald-400 via-cyan-400 to-purple-400">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400">
                 Treasury Dashboard
               </span>
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               View protocol treasury allocations, charity distributions, and ecosystem funding
             </p>
+            <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-wider text-zinc-500 mt-4">
+              <span>Fund</span>
+              <span className="text-emerald-400">→</span>
+              <span>Grow</span>
+              <span className="text-emerald-400">→</span>
+              <span>Sustain</span>
+            </div>
           </motion.div>
 
           {/* Tab Navigation */}
@@ -144,7 +151,7 @@ function GlassCard({ children, className = "", gradient }: {
     <motion.div
       whileHover={{ scale: 1.01, y: -2 }}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${gradient || 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient || 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ring-effect ${className}`}
     >
       {children}
     </motion.div>
@@ -180,10 +187,10 @@ function OverviewTab() {
             key={idx} 
             variants={itemVariants}
             whileHover={{ scale: 1.02, y: -4 }}
-            className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 group`}
+            className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 group ring-effect`}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-2 rounded-xl bg-linear-to-br ${stat.gradient}`}>
+              <div className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
                 <stat.icon className={`w-5 h-5 ${stat.text}`} />
               </div>
               <span className="text-xs text-emerald-400 flex items-center gap-1">
@@ -200,23 +207,23 @@ function OverviewTab() {
       {/* Allocation Chart */}
       <GlassCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-linear-to-br from-purple-500/20 to-purple-500/5">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5">
             <PieChart className="w-5 h-5 text-purple-400" />
           </div>
           Fee Distribution Breakdown
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-linear-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-2xl">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-2xl ring-effect">
             <div className="text-4xl font-bold text-orange-400 mb-2">40%</div>
             <div className="text-white font-bold">Burn</div>
             <div className="text-xs text-gray-500">Deflationary mechanism</div>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-linear-to-br from-pink-500/10 to-rose-500/5 border border-pink-500/20 rounded-2xl">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-pink-500/10 to-rose-500/5 border border-pink-500/20 rounded-2xl ring-effect">
             <div className="text-4xl font-bold text-pink-400 mb-2">10%</div>
             <div className="text-white font-bold">Sanctum</div>
             <div className="text-xs text-gray-400">Charity fund</div>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-linear-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-2xl">
+          <motion.div whileHover={{ scale: 1.02 }} className="text-center p-6 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-2xl ring-effect">
             <div className="text-4xl font-bold text-cyan-400 mb-2">50%</div>
             <div className="text-white font-bold">Ecosystem</div>
             <div className="text-xs text-gray-400">Council, staking, incentives</div>
@@ -273,7 +280,7 @@ function SanctumTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Sanctum Overview */}
-      <div className="bg-linear-to-br from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-xl p-4 sm:p-6 md:p-8 ring-effect">
         <div className="flex items-center gap-4 mb-6">
           <Heart className="w-12 h-12 text-pink-400" />
           <div>
@@ -370,7 +377,7 @@ function EcosystemTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Ecosystem Overview */}
-      <div className="bg-linear-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8 ring-effect">
         <div className="flex items-center gap-4 mb-6">
           <Users className="w-12 h-12 text-cyan-400" />
           <div>
@@ -409,7 +416,7 @@ function EcosystemTab({ isConnected }: { isConnected: boolean }) {
               </div>
               <div className="w-full h-2 bg-zinc-700 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-linear-to-r from-cyan-500 to-blue-500" 
+                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500" 
                   style={{ width: `${alloc.percentage}%` }}
                 />
               </div>
@@ -455,7 +462,7 @@ function RevenueTab() {
   return (
     <div className="space-y-8">
       {/* Revenue Splitter Overview */}
-      <div className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-4 sm:p-6 md:p-8 ring-effect">
         <div className="flex items-center gap-4 mb-6">
           <TrendingUp className="w-12 h-12 text-yellow-400" />
           <div>
@@ -531,7 +538,7 @@ function VestingTab() {
   return (
     <div className="space-y-8">
       {/* Vesting Overview */}
-      <div className="bg-linear-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-xl p-4 sm:p-6 md:p-8 ring-effect">
         <div className="flex items-center gap-4 mb-6">
           <Clock className="w-12 h-12 text-purple-400" />
           <div>
@@ -598,7 +605,7 @@ function VestingTab() {
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
         <h3 className="text-xl font-bold text-zinc-100 mb-4">Vesting Progress</h3>
         <div className="w-full h-6 bg-zinc-900 rounded-full overflow-hidden">
-          <div className="h-full bg-linear-to-r from-purple-500 to-indigo-500" style={{ width: '16.67%' }} />
+          <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500" style={{ width: '16.67%' }} />
         </div>
         <div className="flex justify-between text-sm text-zinc-400 mt-2">
           <span>16.67% Vested</span>
