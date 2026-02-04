@@ -24,6 +24,7 @@ const moreItems = [
   { href: '/crypto', label: 'Wallet', emoji: '💳', category: 'Core' },
   { href: '/pay', label: 'Pay', emoji: '💸', category: 'Core' },
   { href: '/pos', label: 'POS', emoji: '🛒', category: 'Core' },
+  { href: '/flashlight', label: 'Flashlight', emoji: '🔦', category: 'Finance' },
   { href: '/feed', label: 'Feed', emoji: '📰', category: 'Core' },
   { href: '/stories', label: 'Stories', emoji: '📸', category: 'Core' },
   { href: '/social-messaging', label: 'Messages', emoji: '💬', category: 'Core' },

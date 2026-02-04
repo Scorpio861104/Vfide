@@ -31,7 +31,8 @@ import {
   PiggyBank,
   Bell,
   ChevronRight,
-  Crown
+  Crown,
+  Flashlight
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -86,6 +87,7 @@ const PAGES = [
   { title: 'Rewards', path: '/rewards', keywords: ['rewards', 'claim', 'earnings'], icon: Trophy },
   { title: 'Payroll', path: '/payroll', keywords: ['payroll', 'salary', 'payments', 'streaming'], icon: CreditCard },
   { title: 'Treasury', path: '/treasury', keywords: ['treasury', 'funds', 'reserve'], icon: PiggyBank },
+  { title: 'Flashlight', path: '/flashlight', keywords: ['flashlight', 'p2p', 'credit', 'loan'], icon: Flashlight },
   { title: 'Settings', path: '/settings', keywords: ['settings', 'preferences', 'config', 'options'], icon: Settings },
 ];
 

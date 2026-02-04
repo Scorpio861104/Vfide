@@ -83,7 +83,7 @@ function LegalDisclaimersTab() {
           <p><strong>2. NO PROFIT GUARANTEE:</strong> No promise, guarantee, or representation of profits, returns, or value appreciation. Token value may go to ZERO.</p>
           <p><strong>3. UTILITY ONLY:</strong> Tokens purchased solely for utility use (governance, payments, protocol participation), not investment or speculation.</p>
           <p><strong>4. ACTIVE PARTICIPATION REQUIRED:</strong> Benefits require your active participation in protocol governance, payments, or operations. NOT passive income.</p>
-          <p><strong>5. NO PASSIVE INCOME:</strong> VFIDE does NOT provide dividends, interest, or any form of passive income from team efforts.</p>
+          <p><strong>5. NO PASSIVE INCOME:</strong> VFIDE does NOT provide dividends, interest, or any form of passive income from team efforts. Peer-to-peer credit lanes are user-negotiated and not a VFIDE yield product.</p>
           <p><strong>6. TOTAL LOSS RISK:</strong> Cryptocurrency involves EXTREME RISK. You may lose your ENTIRE purchase amount. Only purchase what you can afford to lose.</p>
           <p><strong>7. YOUR TAX RESPONSIBILITY:</strong> You are solely responsible for all tax obligations. No tax advice provided.</p>
           <p><strong>8. NOT FINANCIAL ADVICE:</strong> Nothing provided by VFIDE constitutes financial, investment, legal, or tax advice. Consult qualified professionals.</p>

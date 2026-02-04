@@ -36,7 +36,7 @@ const accessRules = [
   },
   {
     title: "DAO-only Messaging",
-    detail: "Encrypted messaging stays private to active members for deliberations and arbitration notes.",
+    detail: "Encrypted messaging stays private to active members for deliberations, arbitration notes, and P2P credit disputes.",
     icon: <MessageCircle className="w-4 h-4" />,
   },
   {
@@ -46,7 +46,7 @@ const accessRules = [
   },
   {
     title: "90% Member Removal Vote",
-    detail: "DAO members can vote peers out with a 90% supermajority. Successful removals immediately lock access and payments.",
+    detail: "DAO members can vote peers out with a 90% supermajority. Successful removals immediately lock access, payouts, and DAO payment approvals.",
     icon: <Gavel className="w-4 h-4" />,
   },
 ];

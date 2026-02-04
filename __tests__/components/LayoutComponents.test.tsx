@@ -71,6 +71,7 @@ jest.mock('lucide-react', () => ({
   ExternalLink: () => <span data-testid="external-link-icon">↗</span>,
   MoreHorizontal: () => <span data-testid="more-icon">⋯</span>,
   User: () => <span data-testid="user-icon">👤</span>,
+  Flashlight: () => <span data-testid="flashlight-icon">🔦</span>,
 }));
 
 // Mock MetallicIcons
@@ -109,6 +110,8 @@ describe('GlobalNav', () => {
     expect(screen.getByText('Messages')).toBeInTheDocument();
     expect(screen.getByText('Merchant')).toBeInTheDocument();
     expect(screen.getByText('Governance')).toBeInTheDocument();
+    expect(screen.getByText('DAO Hub')).toBeInTheDocument();
+    expect(screen.getByText('Flashlight')).toBeInTheDocument();
   });
 
   it('should render wallet connect button', () => {
@@ -198,6 +201,7 @@ describe('Footer', () => {
     expect(screen.getByText('Merchant Portal')).toBeInTheDocument();
     expect(screen.getByText('Vault Manager')).toBeInTheDocument();
     expect(screen.getByText('Payments')).toBeInTheDocument();
+    expect(screen.getByText('Flashlight')).toBeInTheDocument();
   });
 
   it('should render community links', () => {
