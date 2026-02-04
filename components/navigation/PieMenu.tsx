@@ -362,14 +362,22 @@ function CompactTile({
       {/* Particle trails */}
       {isHovered && (
         <div className="absolute inset-0 pointer-events-none">
-          {[0, 1, 2].map((trail) => (
+          {Array.from({ length: PARTICLE_TRAIL.count }).map((_, trail) => (
             <motion.span
               key={`trail-${item.id}-${trail}`}
               className="absolute top-1/2 w-1 h-1 rounded-full"
               style={{ background: item.color, boxShadow: `0 0 8px ${item.color}` }}
-              initial={{ opacity: 0, x: '-10%', y: `${-6 + trail * 6}px` }}
+              initial={{
+                opacity: 0,
+                x: '-10%',
+                y: `${-PARTICLE_TRAIL.spacing + trail * PARTICLE_TRAIL.spacing}px`,
+              }}
               animate={{ opacity: [0, 0.9, 0], x: ['-10%', '120%'] }}
-              transition={{ duration: 0.9, repeat: Infinity, delay: trail * 0.2 }}
+              transition={{
+                duration: PARTICLE_TRAIL.duration,
+                repeat: Infinity,
+                delay: trail * PARTICLE_TRAIL.delayStep,
+              }}
             />
           ))}
         </div>
@@ -703,7 +711,7 @@ export function PieMenu() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, activeCategory]);
 
-  const playClickTone = useCallback((frequency = 520) => {
+  const playClickTone = useCallback((frequency = AUDIO_FREQUENCIES.default) => {
     if (typeof window === 'undefined') return;
     try {
       if (!audioRef.current) {
@@ -741,9 +749,9 @@ export function PieMenu() {
   const handleItemClick = useCallback((item: NavItem) => {
     if (item.children && item.children.length > 0) {
       setActiveCategory(item);
-      playClickTone(480);
+      playClickTone(AUDIO_FREQUENCIES.categoryOpen);
     } else if (item.href) {
-      playClickTone(560);
+      playClickTone(AUDIO_FREQUENCIES.navigation);
       router.push(item.href);
       setIsOpen(false);
       setActiveCategory(null);
@@ -751,12 +759,12 @@ export function PieMenu() {
   }, [router, playClickTone]);
 
   const handleBack = useCallback(() => {
-    playClickTone(420);
+    playClickTone(AUDIO_FREQUENCIES.back);
     setActiveCategory(null);
   }, [playClickTone]);
 
   const toggleMenu = useCallback(() => {
-    playClickTone(isOpen ? 360 : 520);
+    playClickTone(isOpen ? AUDIO_FREQUENCIES.toggleClose : AUDIO_FREQUENCIES.toggleOpen);
     setIsOpen(prev => !prev);
     if (isOpen) {
       setActiveCategory(null);
@@ -990,3 +998,18 @@ export function PieMenu() {
 }
 
 export default PieMenu;
+const AUDIO_FREQUENCIES = {
+  default: 520,
+  categoryOpen: 480,
+  navigation: 560,
+  back: 420,
+  toggleOpen: 520,
+  toggleClose: 360,
+};
+
+const PARTICLE_TRAIL = {
+  count: 3,
+  spacing: 6,
+  duration: 0.9,
+  delayStep: 0.2,
+};
