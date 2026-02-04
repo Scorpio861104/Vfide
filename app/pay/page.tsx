@@ -27,6 +27,23 @@ function PayContent() {
 
   const amountNum = safeParseFloat(amount, 0);
   const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
+  const settlementTone = settlement === "instant"
+    ? {
+        badge: "Instant settlement",
+        banner: "QR scan: instant settlement (no escrow)",
+        summary: "QR scan checkouts settle immediately. Escrow stays available for higher-risk orders.",
+        method: "Instant settlement",
+        noticeTitle: "Instant Settlement",
+        noticeText: "QR scan payments settle immediately with trusted merchants and payers.",
+      }
+    : {
+        badge: "Escrow protected",
+        banner: "Escrow-protected checkout for buyer protection",
+        summary: "Escrow holds funds until delivery confirmation. Trusted merchants can switch to instant settlement.",
+        method: "Escrow protected",
+        noticeTitle: "Escrow Protection",
+        noticeText: "Funds are held in escrow until delivery confirmed for extra buyer protection.",
+      };
 
   const handlePayment = async () => {
     if (!isConnected || !address) {
@@ -109,21 +126,19 @@ function PayContent() {
       {/* Payment Form */}
       <section className="py-12 relative z-10">
         <div className="container mx-auto px-4 max-w-2xl">
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
-            >
-              <div className={`mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${
-                settlement === "instant"
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                  : "bg-amber-500/10 border-amber-500/30 text-amber-300"
-              }`}>
-                <Shield className="w-4 h-4" />
-                {settlement === "instant"
-                  ? "QR scan: instant settlement (no escrow)"
-                  : "Escrow-protected checkout for buyer protection"}
-              </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
+          >
+            <div className={`mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${
+              settlement === "instant"
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+            }`}>
+              <Shield className="w-4 h-4" />
+              {settlementTone.banner}
+            </div>
             {/* Merchant Info */}
             <div className="mb-8 pb-8 border-b border-white/10">
               <div className="text-gray-400 text-sm mb-2">Paying to</div>
@@ -137,13 +152,11 @@ function PayContent() {
                     ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-300"
                     : "bg-amber-500/20 border border-amber-500/30 text-amber-300"
                 }`}>
-                  {settlement === "instant" ? "Instant settlement" : "Escrow protected"}
+                  {settlementTone.badge}
                 </div>
               </div>
               <div className="mt-3 text-xs text-gray-400">
-                {settlement === "instant"
-                  ? "QR scan checkouts settle immediately. Escrow stays available for higher-risk orders."
-                  : "Escrow holds funds until delivery confirmation. Trusted merchants can switch to instant settlement."}
+                {settlementTone.summary}
               </div>
             </div>
 
@@ -166,7 +179,7 @@ function PayContent() {
               
               <div className="space-y-3">
                 {[
-                  { id: 'vfide' as const, label: 'VFIDE Token', desc: `0.25-5% burn fee (ProofScore-based) • ${settlement === 'instant' ? 'Instant settlement' : 'Escrow protected'}` },
+                  { id: 'vfide' as const, label: 'VFIDE Token', desc: `0.25-5% burn fee (ProofScore-based) • ${settlementTone.method}` },
                   { id: 'usdc' as const, label: 'USDC', desc: 'Stablecoin • Auto-converted to VFIDE' },
                   { id: 'usdt' as const, label: 'USDT', desc: 'Stablecoin • Auto-converted to VFIDE' },
                 ].map((method) => (
@@ -253,12 +266,10 @@ function PayContent() {
                   <div className={`font-bold mb-1 ${
                     settlement === "instant" ? "text-emerald-400" : "text-amber-300"
                   }`}>
-                    {settlement === "instant" ? "Instant Settlement" : "Escrow Protection"}
+                    {settlementTone.noticeTitle}
                   </div>
                   <div className="text-gray-400 text-sm">
-                    {settlement === "instant"
-                      ? "QR scan payments settle immediately with trusted merchants and payers."
-                      : "Funds are held in escrow until delivery confirmed for extra buyer protection."}
+                    {settlementTone.noticeText}
                   </div>
                 </div>
               </div>
