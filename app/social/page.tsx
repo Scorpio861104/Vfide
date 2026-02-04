@@ -185,6 +185,13 @@ export default function SocialAnalyticsPage() {
                 <p className="text-zinc-400 text-lg mb-2">
                   Analyze your influence, engagement, and community growth in real-time
                 </p>
+                <div className="flex flex-wrap gap-2 text-xs uppercase tracking-wider text-zinc-500 mb-3">
+                  <span>Measure</span>
+                  <span className="text-cyan-400">→</span>
+                  <span>Optimize</span>
+                  <span className="text-cyan-400">→</span>
+                  <span>Lead</span>
+                </div>
                 <Link 
                   href="/social-hub" 
                   className="inline-flex items-center gap-2 text-cyan-400 hover:underline text-sm"
@@ -194,7 +201,7 @@ export default function SocialAnalyticsPage() {
               </div>
 
               {/* Time Range Selector */}
-              <div className="flex gap-2 bg-zinc-900 border border-zinc-700 rounded-lg p-2">
+              <div className="flex gap-2 bg-zinc-900 border border-zinc-700 rounded-lg p-2 ring-effect">
                 {(['7d', '30d', '90d', '1y'] as const).map((range) => (
                   <button
                     key={range}
@@ -230,7 +237,7 @@ export default function SocialAnalyticsPage() {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
                   onClick={() => setSelectedMetric(metric.label)}
-                  className={`bg-linear-to-br ${metric.color} border border-zinc-700 rounded-lg p-6 cursor-pointer transition-all hover:border-cyan-400/50 group ${
+                  className={`bg-gradient-to-br ${metric.color} border border-zinc-700 rounded-lg p-6 cursor-pointer transition-all hover:border-cyan-400/50 group ring-effect ${
                     selectedMetric === metric.label ? 'ring-2 ring-cyan-400' : ''
                   }`}
                 >
@@ -273,7 +280,7 @@ export default function SocialAnalyticsPage() {
           >
             <h2 className="text-2xl font-bold text-zinc-100 mb-6">Influence Score</h2>
 
-            <div className={`bg-linear-to-br ${getTierColor(mockInfluenceScore.tier)} border-2 rounded-lg p-8`}>
+            <div className={`bg-gradient-to-br ${getTierColor(mockInfluenceScore.tier)} border-2 rounded-lg p-8 ring-effect`}>
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Score Display */}
                 <motion.div
@@ -372,7 +379,7 @@ export default function SocialAnalyticsPage() {
                     whileInView={{ height: `${(data.likes / 600) * 100}%` }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.05, duration: 0.8 }}
-                    className="flex-1 bg-linear-to-t from-cyan-400 to-violet-400 rounded-t-lg opacity-80 hover:opacity-100 transition-opacity group cursor-pointer"
+                    className="flex-1 bg-gradient-to-t from-cyan-400 to-violet-400 rounded-t-lg opacity-80 hover:opacity-100 transition-opacity group cursor-pointer"
                   >
                     <div className="h-full flex items-start justify-center pt-2">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white font-bold">
