@@ -62,6 +62,13 @@ export default function SocialPaymentsDashboard() {
           <p className="text-zinc-400">
             Seamlessly integrated cryptocurrency and social interactions
           </p>
+          <div className="flex flex-wrap gap-2 text-xs uppercase tracking-wider text-zinc-500 mt-3">
+            <span>Tip</span>
+            <span className="text-purple-400">→</span>
+            <span>Earn</span>
+            <span className="text-purple-400">→</span>
+            <span>Grow</span>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}
@@ -70,7 +77,7 @@ export default function SocialPaymentsDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl"
+            className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl ring-effect"
           >
             <div className="flex items-center justify-between mb-4">
               <ArrowDownLeft className="w-8 h-8 text-green-400" />
@@ -86,7 +93,7 @@ export default function SocialPaymentsDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="p-6 bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl"
+            className="p-6 bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl ring-effect"
           >
             <div className="flex items-center justify-between mb-4">
               <ArrowUpRight className="w-8 h-8 text-purple-400" />
@@ -102,7 +109,7 @@ export default function SocialPaymentsDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl"
+            className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl ring-effect"
           >
             <div className="flex items-center justify-between mb-4">
               <Lock className="w-8 h-8 text-blue-400" />
@@ -121,7 +128,7 @@ export default function SocialPaymentsDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="p-6 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl"
+            className="p-6 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl ring-effect"
           >
             <div className="flex items-center justify-between mb-4">
               <Award className="w-8 h-8 text-yellow-400" />
@@ -139,7 +146,7 @@ export default function SocialPaymentsDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mb-8 p-6 bg-zinc-900 border border-zinc-800 rounded-xl"
+          className="mb-8 p-6 bg-zinc-900 border border-zinc-800 rounded-xl ring-effect"
         >
           <h3 className="font-bold text-zinc-100 mb-4 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-400" />
@@ -167,26 +174,26 @@ export default function SocialPaymentsDashboard() {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-zinc-800">
-          {[
-            { id: 'feed' as const, label: 'Social Feed', icon: MessageCircle },
-            { id: 'activity' as const, label: 'All Activity', icon: TrendingUp },
-            { id: 'earnings' as const, label: 'Earnings', icon: DollarSign },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
-                activeTab === tab.id
-                  ? 'text-purple-400 border-purple-500'
-                  : 'text-zinc-500 border-transparent hover:text-zinc-400'
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
+          <div className="flex gap-2 mb-6 border-b border-zinc-800">
+            {[
+              { id: 'feed' as const, label: 'Social Feed', icon: MessageCircle },
+              { id: 'activity' as const, label: 'All Activity', icon: TrendingUp },
+              { id: 'earnings' as const, label: 'Earnings', icon: DollarSign },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
+                  activeTab === tab.id
+                    ? 'text-purple-400 border-purple-500'
+                    : 'text-zinc-500 border-transparent hover:text-zinc-400'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
         {/* Content */}
         <motion.div
