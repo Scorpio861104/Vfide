@@ -83,9 +83,9 @@ export default function EscrowPage() {
     disputedEscrows,
     createEscrow,
     releaseEscrow,
-    refundEscrow: _refundEscrow,
+    refundEscrow,
     raiseDispute,
-    claimTimeout: _claimTimeout,
+    claimTimeout,
     formatEscrowAmount,
     getTimeRemaining,
     refresh
@@ -95,8 +95,7 @@ export default function EscrowPage() {
   const [createForm, setCreateForm] = useState({
     merchant: '',
     amount: '',
-    orderId: '',
-    timeout: '7' // days
+    orderId: ''
   })
 
   // Contract action handlers using the hook
@@ -115,7 +114,7 @@ export default function EscrowPage() {
         createForm.orderId
       );
       setShowCreateModal(false);
-      setCreateForm({ merchant: '', amount: '', orderId: '', timeout: '7' });
+      setCreateForm({ merchant: '', amount: '', orderId: '' });
       toast.success('Escrow created successfully');
     } catch (err) {
       console.error('Failed to create escrow:', err);
@@ -140,6 +139,26 @@ export default function EscrowPage() {
     } catch (err) {
       console.error('Failed to raise dispute:', err);
       toast.error('Failed to raise dispute. Please try again.');
+    }
+  };
+
+  const handleRefund = async (id: number) => {
+    try {
+      await refundEscrow(BigInt(id));
+      toast.success('Refund issued successfully');
+    } catch (err) {
+      console.error('Failed to refund escrow:', err);
+      toast.error('Failed to refund escrow. Please try again.');
+    }
+  };
+
+  const handleClaimTimeout = async (id: number) => {
+    try {
+      await claimTimeout(BigInt(id));
+      toast.success('Timeout claim submitted successfully');
+    } catch (err) {
+      console.error('Failed to claim timeout:', err);
+      toast.error('Failed to claim timeout. Please try again.');
     }
   };
 
@@ -169,10 +188,6 @@ export default function EscrowPage() {
   const formatTimeRemaining = (releaseTime: bigint): string => {
     return getTimeRemaining(releaseTime)
   }
-
-  // Suppress unused variable warnings
-  void address
-  void escrowError
 
   return (
     <>
@@ -220,6 +235,21 @@ export default function EscrowPage() {
               </p>
             </motion.div>
           
+            {escrowError && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200 max-w-3xl mx-auto"
+                role="alert"
+              >
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p className="font-semibold">Escrow service unavailable</p>
+                  <p className="text-red-200/80">We couldn&apos;t load your escrows. Check your wallet connection and try again.</p>
+                </div>
+              </motion.div>
+            )}
+
             {/* Stats */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -350,15 +380,21 @@ export default function EscrowPage() {
                   exit={{ opacity: 0 }}
                   className="space-y-4"
                 >
-                  {filteredEscrows.map((escrow, idx) => (
-                    <motion.div
-                      key={escrow.id.toString()}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      whileHover={{ scale: 1.005, y: -2 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
-                    >
+                  {filteredEscrows.map((escrow, idx) => {
+                    const normalizedAddress = address?.toLowerCase()
+                    const isBuyer = normalizedAddress && escrow.buyer.toLowerCase() === normalizedAddress
+                    const isMerchant = normalizedAddress && escrow.merchant.toLowerCase() === normalizedAddress
+                    const isTimeoutReady = Number(escrow.releaseTime) * 1000 <= Date.now()
+
+                    return (
+                      <motion.div
+                        key={escrow.id.toString()}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ scale: 1.005, y: -2 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
+                      >
                       <div className="p-6">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                           {/* Left: Order Info */}
@@ -414,35 +450,77 @@ export default function EscrowPage() {
                       
                           {/* Right: Actions */}
                           {escrow.state === 0 && (
-                            <div className="flex gap-3 lg:flex-col">
-                              <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => handleRelease(Number(escrow.id))}
-                                disabled={escrowLoading}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50"
-                              >
-                                {escrowLoading ? (
-                                  <RefreshCw className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <CheckCircle2 className="w-4 h-4" />
-                                )}
-                                Release Funds
-                              </motion.button>
-                              <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => handleDispute(Number(escrow.id))}
-                                disabled={escrowLoading}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-red-400 rounded-xl font-medium border border-red-500/30 hover:bg-red-500/10 transition-all disabled:opacity-50"
-                              >
-                                {escrowLoading ? (
-                                  <RefreshCw className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <AlertTriangle className="w-4 h-4" />
-                                )}
-                                Raise Dispute
-                              </motion.button>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:flex lg:flex-col lg:items-stretch">
+                              {isBuyer && (
+                                <>
+                                  <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleRelease(Number(escrow.id))}
+                                    disabled={escrowLoading}
+                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50"
+                                  >
+                                    {escrowLoading ? (
+                                      <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <CheckCircle2 className="w-4 h-4" />
+                                    )}
+                                    Release Funds
+                                  </motion.button>
+                                  <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleDispute(Number(escrow.id))}
+                                    disabled={escrowLoading}
+                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-red-400 rounded-xl font-medium border border-red-500/30 hover:bg-red-500/10 transition-all disabled:opacity-50"
+                                  >
+                                    {escrowLoading ? (
+                                      <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <AlertTriangle className="w-4 h-4" />
+                                    )}
+                                    Raise Dispute
+                                  </motion.button>
+                                </>
+                              )}
+                              {isMerchant && (
+                                <>
+                                  <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleRefund(Number(escrow.id))}
+                                    disabled={escrowLoading}
+                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-blue-300 rounded-xl font-medium border border-blue-500/30 hover:bg-blue-500/10 transition-all disabled:opacity-50"
+                                  >
+                                    {escrowLoading ? (
+                                      <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <FileCheck className="w-4 h-4" />
+                                    )}
+                                    Refund Buyer
+                                  </motion.button>
+                                  <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleClaimTimeout(Number(escrow.id))}
+                                    disabled={escrowLoading || !isTimeoutReady}
+                                    title={isTimeoutReady ? 'Claim after the release window' : `Available in ${formatTimeRemaining(escrow.releaseTime)}`}
+                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all disabled:opacity-50"
+                                  >
+                                    {escrowLoading ? (
+                                      <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Timer className="w-4 h-4" />
+                                    )}
+                                    Claim Timeout
+                                  </motion.button>
+                                </>
+                              )}
+                              {!isBuyer && !isMerchant && (
+                                <div className="text-xs text-gray-400">
+                                  Connect with the buyer or merchant wallet to manage this escrow.
+                                </div>
+                              )}
                             </div>
                           )}
                       
@@ -463,8 +541,9 @@ export default function EscrowPage() {
                           )}
                         </div>
                       </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    )
+                  })}
                 </motion.div>
               )}
             </AnimatePresence>
