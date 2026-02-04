@@ -461,7 +461,7 @@ interface TriggerButtonProps {
 }
 
 function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) {
-  const ActiveIcon = activeCategory?.icon;
+  const activeIcon = activeCategory?.icon;
 
   return (
     <motion.button
@@ -574,7 +574,7 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
       )}
 
       {/* Orbiting active icon */}
-      {isOpen && ActiveIcon && (
+      {isOpen && activeIcon && (
         <motion.div
           className="absolute inset-0 pointer-events-none"
           initial={{ scale: 0.8, opacity: 0 }}
@@ -589,7 +589,10 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
               transform: 'translateY(-50%)',
             }}
           >
-            <ActiveIcon size={12} style={{ color: activeCategory?.color || '#6366f1' }} />
+            {React.createElement(activeIcon, {
+              size: 12,
+              style: { color: activeCategory?.color || '#6366f1' },
+            })}
           </div>
         </motion.div>
       )}
@@ -643,6 +646,7 @@ export function PieMenu() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const audioToneRef = useRef<{ oscillator: OscillatorNode; gain: GainNode } | null>(null);
   
   // Close menu on outside click
   useEffect(() => {
@@ -695,17 +699,34 @@ export function PieMenu() {
       if (context.state === 'suspended') {
         context.resume();
       }
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = frequency;
-      gain.gain.setValueAtTime(0.0001, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.04, context.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.18);
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start();
-      oscillator.stop(context.currentTime + 0.2);
+      const INITIAL_GAIN = 0.0001;
+      const PEAK_GAIN = 0.04;
+      const ATTACK_TIME = 0.02;
+      const RELEASE_TIME = 0.18;
+      const TONE_DURATION = 0.2;
+
+      if (!audioToneRef.current) {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start();
+        audioToneRef.current = { oscillator, gain };
+      }
+
+      const { oscillator, gain } = audioToneRef.current;
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+      gain.gain.setValueAtTime(INITIAL_GAIN, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(PEAK_GAIN, context.currentTime + ATTACK_TIME);
+      gain.gain.exponentialRampToValueAtTime(
+        INITIAL_GAIN,
+        context.currentTime + RELEASE_TIME,
+      );
+
+      window.setTimeout(() => {
+        gain.gain.setValueAtTime(INITIAL_GAIN, context.currentTime);
+      }, TONE_DURATION * 1000);
     } catch {
       // Ignore audio errors for unsupported contexts.
     }
