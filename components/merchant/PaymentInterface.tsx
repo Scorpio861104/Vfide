@@ -37,7 +37,7 @@ export function PaymentInterface() {
     if (!merchantAddress || !amount || !orderId) return
     
     try {
-      if (settlementMode === 'escrow') {
+      if (isEscrowMode) {
         await createEscrow(
           merchantAddress as `0x${string}`,
           amount,
@@ -54,7 +54,7 @@ export function PaymentInterface() {
       
     } catch (err) {
       // Errors are surfaced via hook state; this prevents unhandled rejections.
-      const context = settlementMode === 'escrow' ? 'Escrow creation failed' : 'Instant payment failed'
+      const context = isEscrowMode ? 'Escrow creation failed' : 'Instant payment failed'
       console.error(context, err)
     }
   }
@@ -62,7 +62,7 @@ export function PaymentInterface() {
   const isValidMerchant = isAddress(merchantAddress) && merchantInfo.isMerchant && !merchantInfo.isSuspended
   const isEscrowMode = settlementMode === 'escrow'
   const canUseInstant = trustScore.highTrust
-  const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (settlementMode === 'escrow' || canUseInstant)
+  const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (isEscrowMode || canUseInstant)
   const combinedError = error || escrowError
 
   return (
@@ -112,11 +112,11 @@ export function PaymentInterface() {
                 type="button"
                 onClick={() => setSettlementMode('escrow')}
                 className={`rounded-lg border px-4 py-3 text-left transition-colors ${
-                  settlementMode === 'escrow'
-                    ? 'border-amber-500/60 bg-amber-500/10 text-amber-200'
-                    : 'border-gray-700 text-gray-400 hover:border-amber-500/40 hover:text-amber-200'
+                isEscrowMode
+                  ? 'border-amber-500/60 bg-amber-500/10 text-amber-200'
+                  : 'border-gray-700 text-gray-400 hover:border-amber-500/40 hover:text-amber-200'
                 }`}
-                aria-pressed={settlementMode === 'escrow'}
+                aria-pressed={isEscrowMode}
               >
                 <div className="font-semibold">Escrow Protection</div>
                 <div className="text-xs text-gray-400">Best for online orders and new merchant relationships.</div>
@@ -125,11 +125,11 @@ export function PaymentInterface() {
                 type="button"
                 onClick={() => setSettlementMode('instant')}
                 className={`rounded-lg border px-4 py-3 text-left transition-colors ${
-                  settlementMode === 'instant'
-                    ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200'
-                    : 'border-gray-700 text-gray-400 hover:border-emerald-500/40 hover:text-emerald-200'
+                !isEscrowMode
+                  ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200'
+                  : 'border-gray-700 text-gray-400 hover:border-emerald-500/40 hover:text-emerald-200'
                 }`}
-                aria-pressed={settlementMode === 'instant'}
+                aria-pressed={!isEscrowMode}
                 disabled={!canUseInstant}
               >
                 <div className="font-semibold">Instant Settlement</div>
