@@ -45,7 +45,7 @@ function PayContent() {
   const { priceUsd, isLoading: priceLoading } = useVfidePrice();
   const { writeContractAsync } = useWriteContract();
 
-  // 3% fee estimate for checkout totals; actual ProofScore burn fee ranges 0.25-5%.
+  // 3% fee estimate for checkout totals; chosen as a midpoint for the 0.25-5% ProofScore burn range.
   const PAYMENT_FEE_MULTIPLIER = 1.03;
   const amountNum = safeParseFloat(amount, 0);
   const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
@@ -149,7 +149,7 @@ function PayContent() {
             {/* Merchant Info */}
             <div className="mb-8 pb-8 border-b border-white/10">
               <div className="text-gray-400 text-sm mb-2">Paying to</div>
-              <div className="text-2xl font-bold text-white font-mono" role={!merchant ? "alert" : undefined} aria-live={!merchant ? "polite" : undefined}>
+              <div className="text-2xl font-bold text-white font-mono" role={!merchant ? "alert" : undefined}>
                 {merchant || "Missing merchant address"}
               </div>
               <div className="flex flex-wrap items-center gap-2 mt-2">
