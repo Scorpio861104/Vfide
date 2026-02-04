@@ -43,15 +43,16 @@ export function PaymentInterface() {
           amount,
           orderId
         )
-        return
+      } else {
+        payMerchant(
+          merchantAddress as `0x${string}`,
+          CONTRACT_ADDRESSES.VFIDEToken,
+          amount,
+          orderId
+        )
       }
       
-      payMerchant(
-        merchantAddress as `0x${string}`,
-        CONTRACT_ADDRESSES.VFIDEToken,
-        amount,
-        orderId
-      )
+      
     } catch (err) {
       // Errors are surfaced via hook state; this prevents unhandled rejections.
       const context = settlementMode === 'escrow' ? 'Escrow creation failed' : 'Instant payment failed'
@@ -133,12 +134,12 @@ export function PaymentInterface() {
                 disabled={!canUseInstant}
               >
                 <div className="font-semibold">Instant Settlement</div>
-                <div className="text-xs text-gray-400">For in-person or QR, requires high trust.</div>
+                <div className="text-xs text-gray-400">For in-person or QR code payments, requires high trust.</div>
               </button>
             </div>
             {!canUseInstant && (
               <p className="text-xs text-amber-300 mt-2">
-                Instant settlement unlocks for high-trust payers. Escrow protects both parties on first-time orders.
+                Instant settlement unlocks for high-trust payers. Escrow protects both parties for first-time buyers.
               </p>
             )}
           </div>
