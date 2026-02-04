@@ -7,6 +7,7 @@ import {
   Bell,
   CheckCircle,
   Crown,
+  DollarSign,
   FileCheck,
   Gavel,
   MessageCircle,
@@ -106,6 +107,30 @@ const messageQueue = [
     from: "Governance Bot",
     time: "2h ago",
     preview: "DAO-72 voting closes in 23 hours. Quorum at 68%.",
+  },
+];
+
+const paymentQueue = [
+  {
+    id: "PAYOUT-88",
+    status: "Council Review",
+    amount: "42,800 VFIDE",
+    approvals: "3 of 5",
+    summary: "Merchant arbitration refund batch for closed disputes.",
+  },
+  {
+    id: "PAYOUT-86",
+    status: "Queued",
+    amount: "18,250 VFIDE",
+    approvals: "Pending",
+    summary: "Treasury grant milestone for infrastructure partners.",
+  },
+  {
+    id: "PAYOUT-84",
+    status: "Scheduled",
+    amount: "9,600 VFIDE",
+    approvals: "5 of 5",
+    summary: "DAO member compensation auto-release at term close.",
   },
 ];
 
@@ -304,7 +329,7 @@ export default function DaoHubPage() {
           </div>
 
           {accessMode === "active" && (
-            <div className="grid lg:grid-cols-3 gap-6">
+            <div className="grid lg:grid-cols-2 xl:grid-cols-4 gap-6">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Scale className="w-5 h-5 text-red-300" />
@@ -354,6 +379,23 @@ export default function DaoHubPage() {
                   <MessageCircle className="w-5 h-5 text-emerald-300" />
                   <h2 className="text-lg font-bold text-white">DAO Messages</h2>
                 </div>
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100 mb-4">
+                  <div className="font-semibold">Encrypted DAO-only Channel</div>
+                  <p className="mt-1 text-xs text-zinc-400">
+                    Messages are visible only to active DAO members. Term-expired accounts are locked out automatically.
+                  </p>
+                  <textarea
+                    placeholder="Share arbitration notes or proposal updates…"
+                    className="mt-3 w-full rounded-lg border border-emerald-500/20 bg-zinc-950/70 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                    rows={3}
+                  />
+                  <button
+                    type="button"
+                    className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-4 py-2 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/30"
+                  >
+                    Send to DAO Channel
+                  </button>
+                </div>
                 <div className="space-y-4 text-sm">
                   {messageQueue.map((message) => (
                     <div key={message.topic} className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
@@ -363,6 +405,28 @@ export default function DaoHubPage() {
                       </div>
                       <div className="mt-1 text-xs text-zinc-400">From: {message.from}</div>
                       <p className="mt-2 text-zinc-100">{message.preview}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <DollarSign className="w-5 h-5 text-amber-300" />
+                  <h2 className="text-lg font-bold text-white">DAO Payment Queue</h2>
+                </div>
+                <div className="space-y-4 text-sm">
+                  {paymentQueue.map((payment) => (
+                    <div key={payment.id} className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+                      <div className="flex items-center justify-between text-amber-100 font-semibold">
+                        <span>{payment.id}</span>
+                        <span className="text-xs">{payment.approvals}</span>
+                      </div>
+                      <p className="mt-2 text-zinc-100">{payment.summary}</p>
+                      <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+                        <span>Status: {payment.status}</span>
+                        <span>{payment.amount}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
