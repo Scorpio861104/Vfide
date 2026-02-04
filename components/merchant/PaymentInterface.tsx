@@ -46,7 +46,7 @@ export function PaymentInterface() {
         return
       }
       
-      await payMerchant(
+      payMerchant(
         merchantAddress as `0x${string}`,
         CONTRACT_ADDRESSES.VFIDEToken,
         amount,
@@ -60,7 +60,7 @@ export function PaymentInterface() {
   }
 
   const isValidMerchant = isAddress(merchantAddress) && merchantInfo.isMerchant && !merchantInfo.isSuspended
-  const requiresEscrow = settlementMode === 'escrow'
+  const isEscrowMode = settlementMode === 'escrow'
   const canUseInstant = trustScore.highTrust
   const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (settlementMode === 'escrow' || canUseInstant)
   const combinedError = error || escrowError
@@ -138,7 +138,7 @@ export function PaymentInterface() {
             </div>
             {!canUseInstant && (
               <p className="text-xs text-amber-300 mt-2">
-                Instant settlement unlocks for high-trust payers. Escrow stays available for fairness.
+                Instant settlement unlocks for high-trust payers. Escrow protects both parties on first-time orders.
               </p>
             )}
           </div>
@@ -232,7 +232,7 @@ export function PaymentInterface() {
               ? 'Processing...'
               : !trustScore.eligible
                 ? 'Vault Locked or Missing'
-                : requiresEscrow
+                : isEscrowMode
                   ? `Create Escrow for ${amount || '0'} VFIDE`
                   : `Pay ${amount || '0'} VFIDE Instantly`}
           </button>
@@ -266,7 +266,7 @@ export function PaymentInterface() {
             >
               <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-2" />
               <div className="text-green-400 font-bold text-lg">
-                {requiresEscrow ? 'Escrow Created!' : 'Payment Successful!'}
+                {isEscrowMode ? 'Escrow Created!' : 'Payment Successful!'}
               </div>
               <div className="text-sm text-gray-400 mt-1">Order ID: {orderId}</div>
             </motion.div>
