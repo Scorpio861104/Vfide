@@ -646,11 +646,12 @@ export function PieMenu() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<AudioContext | null>(null);
-  const audioConfigRef = useRef({
+  const audioEnvelopeRef = useRef({
     initialGain: 0.0001,
     peakGain: 0.04,
     attackTime: 0.02,
     releaseTime: 0.18,
+    finalRampTime: 0.01,
   });
   
   // Close menu on outside click
@@ -725,7 +726,8 @@ export function PieMenu() {
         peakGain: PEAK_GAIN,
         attackTime: ATTACK_TIME,
         releaseTime: RELEASE_TIME,
-      } = audioConfigRef.current;
+        finalRampTime: FINAL_RAMP_TIME,
+      } = audioEnvelopeRef.current;
 
       const oscillator = context.createOscillator();
       const gain = context.createGain();
@@ -734,12 +736,13 @@ export function PieMenu() {
       gain.gain.setValueAtTime(INITIAL_GAIN, context.currentTime);
       gain.gain.exponentialRampToValueAtTime(PEAK_GAIN, context.currentTime + ATTACK_TIME);
       const releaseTime = context.currentTime + ATTACK_TIME + RELEASE_TIME;
+      const finalRamp = releaseTime + FINAL_RAMP_TIME;
       gain.gain.exponentialRampToValueAtTime(INITIAL_GAIN, releaseTime);
-      gain.gain.linearRampToValueAtTime(0, releaseTime + 0.01);
+      gain.gain.linearRampToValueAtTime(0, finalRamp);
       oscillator.connect(gain);
       gain.connect(context.destination);
       oscillator.start();
-      const totalEnvelope = ATTACK_TIME + RELEASE_TIME + 0.01;
+      const totalEnvelope = ATTACK_TIME + RELEASE_TIME + FINAL_RAMP_TIME;
       oscillator.stop(context.currentTime + totalEnvelope);
     } catch (error) {
       // Ignore audio errors for unsupported contexts.
