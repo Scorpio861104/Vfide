@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   Home,
   LayoutDashboard,
+  Cpu,
   Shield,
   Wallet,
   MessageCircle,
@@ -50,6 +51,7 @@ import {
   BarChart3,
   ClipboardList,
   TestTube,
+  FlaskConical,
   Compass,
   Scale,
   Rocket,
@@ -67,6 +69,8 @@ import {
   FileSearch,
   Monitor,
   ShieldAlert,
+  HardDrive,
+  Tag,
 } from 'lucide-react';
 
 // ============================================================================
@@ -174,8 +178,8 @@ const navigationItems: NavItem[] = [
       { id: 'headhunter', label: 'Referrals', href: '/headhunter', icon: Search, color: '#EC4899' },
       { id: 'endorsements', label: 'Endorsements', href: '/endorsements', icon: Medal, color: '#EC4899' },
       { id: 'badges', label: 'Badges', href: '/badges', icon: Star, color: '#EC4899' },
-      { id: 'benefits', label: 'Benefits', href: '/benefits', icon: Gift, color: '#EC4899' },
-      { id: 'rewards-hub', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
+      { id: 'benefits', label: 'Benefits', href: '/benefits', icon: Tag, color: '#EC4899' },
+      { id: 'rewards', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
       { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },
       { id: 'invite-code', label: 'Invite Code', href: '/invite/[code]', icon: Link2, color: '#EC4899', badge: 'LINK' },
     ],
@@ -205,11 +209,11 @@ const navigationItems: NavItem[] = [
       { id: 'explorer', label: 'Explorer', href: '/explorer', icon: Compass, color: '#64748B' },
       { id: 'explorer-detail', label: 'Transaction Details', href: '/explorer/[id]', icon: FileSearch, color: '#64748B' },
       { id: 'paper-wallet', label: 'Paper Wallet', href: '/paper-wallet', icon: FileText, color: '#64748B' },
-      { id: 'hardware-wallet', label: 'Hardware Wallet', href: '/hardware-wallet', icon: KeyRound, color: '#64748B' },
+      { id: 'hardware-wallet', label: 'Hardware Wallet', href: '/hardware-wallet', icon: HardDrive, color: '#64748B' },
       { id: 'enterprise', label: 'Enterprise', href: '/enterprise', icon: Landmark, color: '#64748B' },
       { id: 'token-launch', label: 'Token Launch', href: '/token-launch', icon: Rocket, color: '#64748B' },
       { id: 'live-demo', label: 'Live Demo', href: '/live-demo', icon: Video, color: '#64748B' },
-      { id: 'crypto-social-demo', label: 'Social Demo', href: '/demo/crypto-social', icon: TestTube, color: '#64748B' },
+      { id: 'crypto-social-demo', label: 'Social Demo', href: '/demo/crypto-social', icon: FlaskConical, color: '#64748B' },
     ],
   },
   {
@@ -231,7 +235,7 @@ const navigationItems: NavItem[] = [
       { id: 'theme-showcase', label: 'Theme Showcase', href: '/theme-showcase', icon: Layers, color: '#94A3B8' },
       { id: 'admin', label: 'Admin', href: '/admin', icon: ShieldAlert, color: '#94A3B8' },
       { id: 'control-panel', label: 'Control Panel', href: '/control-panel', icon: Monitor, color: '#94A3B8' },
-      { id: 'sanctum', label: 'Sanctum', href: '/sanctum', icon: ShieldCheck, color: '#94A3B8' },
+      { id: 'sanctum', label: 'Sanctum', href: '/sanctum', icon: Cpu, color: '#94A3B8' },
     ],
   },
 ];
