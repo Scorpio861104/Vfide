@@ -48,6 +48,7 @@ function PayContent() {
   const PAYMENT_FEE_MULTIPLIER = 1.03;
   const amountNum = safeParseFloat(amount, 0);
   const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
+  const totalDue = (amountNum * PAYMENT_FEE_MULTIPLIER).toFixed(2);
   const settlementTone = settlementMessaging(settlement);
 
   const handlePayment = async () => {
@@ -166,7 +167,7 @@ function PayContent() {
                 {settlementTone.summary}
               </div>
               {!merchant && (
-                <div className="mt-3 text-xs text-amber-300">
+                <div className="mt-3 text-xs text-amber-300" role="alert" aria-live="polite">
                   Missing merchant address. Scan a valid QR code or reopen the payment link.
                 </div>
               )}
@@ -238,7 +239,7 @@ function PayContent() {
               <div className="border-t border-white/10 my-3" />
               <div className="flex justify-between items-center">
                 <span className="text-white font-bold">Total</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-xl">${(safeParseFloat(amount, 0) * PAYMENT_FEE_MULTIPLIER).toFixed(2)}</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-xl">${totalDue}</span>
               </div>
             </div>
 
@@ -256,7 +257,7 @@ function PayContent() {
                   Processing...
                 </>
               ) : (
-                merchant ? `Pay $${(safeParseFloat(amount, 0) * PAYMENT_FEE_MULTIPLIER).toFixed(2)}` : "Merchant required"
+                merchant ? `Pay $${totalDue}` : "Merchant required"
               )}
             </motion.button>
 

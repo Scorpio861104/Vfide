@@ -34,17 +34,18 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
 
   // Create a payment deep link (could be customized for mobile wallets)
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.com'
-  const buildPaymentUrl = (merchantAddress: string) => {
-    const paymentParams = new URLSearchParams({
-      merchant: merchantAddress,
-      source: 'qr',
-      settlement: 'instant',
-    })
-    if (amount !== '') paymentParams.set('amount', amount)
-    if (orderId !== '') paymentParams.set('orderId', orderId)
-    return `${baseUrl}/pay?${paymentParams.toString()}`
-  }
-  const paymentUrl = address ? buildPaymentUrl(address) : ''
+  const paymentUrl = address
+    ? (() => {
+        const paymentParams = new URLSearchParams({
+          merchant: address,
+          source: 'qr',
+          settlement: 'instant',
+        })
+        if (amount !== '') paymentParams.set('amount', amount)
+        if (orderId !== '') paymentParams.set('orderId', orderId)
+        return `${baseUrl}/pay?${paymentParams.toString()}`
+      })()
+    : ''
 
   // USD estimate (using $0.07 presale price as reference)
   const REFERENCE_PRICE = 0.07
