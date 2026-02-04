@@ -80,7 +80,7 @@ const moreItems = [
   { href: '/benefits', label: 'Benefits', emoji: '🎁', category: 'System' },
   { href: '/enterprise', label: 'Enterprise', emoji: '🏢', category: 'System' },
   { href: '/performance', label: 'Performance', emoji: '📡', category: 'System' },
-  { href: '/vesting', label: 'Vesting', emoji: '⏳', category: 'System' },
+  { href: '/vesting', label: 'Vesting', emoji: '📅', category: 'System' },
   { href: '/paper-wallet', label: 'Paper Wallet', emoji: '📝', category: 'System' },
   { href: '/hardware-wallet', label: 'Hardware Wallet', emoji: '🔌', category: 'System' },
   { href: '/invite', label: 'Invite', emoji: '✉️', category: 'System' },
