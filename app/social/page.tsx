@@ -237,8 +237,8 @@ export default function SocialAnalyticsPage() {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
                   onClick={() => setSelectedMetric(metric.label)}
-                  className={`bg-gradient-to-br ${metric.color} border border-zinc-700 rounded-lg p-6 cursor-pointer transition-all hover:border-cyan-400/50 group ring-effect ${
-                    selectedMetric === metric.label ? 'ring-2 ring-cyan-400' : ''
+                  className={`bg-gradient-to-br ${metric.color} border border-zinc-700 rounded-lg p-6 cursor-pointer transition-all hover:border-cyan-400/50 group ${
+                    selectedMetric === metric.label ? 'ring-2 ring-cyan-400 ring-effect' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between mb-4">
