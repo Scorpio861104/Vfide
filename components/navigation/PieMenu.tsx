@@ -63,6 +63,10 @@ import {
   Info,
   Video,
   LifeBuoy,
+  Link2,
+  FileSearch,
+  Monitor,
+  ShieldAlert,
 } from 'lucide-react';
 
 // ============================================================================
@@ -173,7 +177,7 @@ const navigationItems: NavItem[] = [
       { id: 'benefits', label: 'Benefits', href: '/benefits', icon: Gift, color: '#EC4899' },
       { id: 'rewards-hub', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
       { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },
-      { id: 'invite-code', label: 'Invite Code', href: '/invite/[code]', icon: UserPlus, color: '#EC4899', badge: 'LINK' },
+      { id: 'invite-code', label: 'Invite Code', href: '/invite/[code]', icon: Link2, color: '#EC4899', badge: 'LINK' },
     ],
   },
   {
@@ -199,7 +203,7 @@ const navigationItems: NavItem[] = [
       { id: 'developer-main', label: 'Dev Hub', href: '/developer', icon: Code, color: '#64748B' },
       { id: 'testnet', label: 'Testnet', href: '/testnet', icon: TestTube, color: '#64748B' },
       { id: 'explorer', label: 'Explorer', href: '/explorer', icon: Compass, color: '#64748B' },
-      { id: 'explorer-detail', label: 'Transaction Details', href: '/explorer/[id]', icon: Compass, color: '#64748B' },
+      { id: 'explorer-detail', label: 'Transaction Details', href: '/explorer/[id]', icon: FileSearch, color: '#64748B' },
       { id: 'paper-wallet', label: 'Paper Wallet', href: '/paper-wallet', icon: FileText, color: '#64748B' },
       { id: 'hardware-wallet', label: 'Hardware Wallet', href: '/hardware-wallet', icon: KeyRound, color: '#64748B' },
       { id: 'enterprise', label: 'Enterprise', href: '/enterprise', icon: Landmark, color: '#64748B' },
@@ -225,8 +229,8 @@ const navigationItems: NavItem[] = [
       { id: 'theme', label: 'Theme', href: '/theme', icon: Palette, color: '#94A3B8' },
       { id: 'theme-manager', label: 'Theme Manager', href: '/theme-manager', icon: Sliders, color: '#94A3B8' },
       { id: 'theme-showcase', label: 'Theme Showcase', href: '/theme-showcase', icon: Layers, color: '#94A3B8' },
-      { id: 'admin', label: 'Admin', href: '/admin', icon: Settings, color: '#94A3B8' },
-      { id: 'control-panel', label: 'Control Panel', href: '/control-panel', icon: Settings, color: '#94A3B8' },
+      { id: 'admin', label: 'Admin', href: '/admin', icon: ShieldAlert, color: '#94A3B8' },
+      { id: 'control-panel', label: 'Control Panel', href: '/control-panel', icon: Monitor, color: '#94A3B8' },
       { id: 'sanctum', label: 'Sanctum', href: '/sanctum', icon: ShieldCheck, color: '#94A3B8' },
     ],
   },
