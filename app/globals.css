@@ -96,8 +96,7 @@
     box-sizing: border-box;
   }
 
-  .flex > *,
-  .grid > * {
+  .min-w-0-children > * {
     min-width: 0;
   }
 
