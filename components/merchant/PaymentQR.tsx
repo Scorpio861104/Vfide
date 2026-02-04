@@ -40,8 +40,8 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
       source: 'qr',
       settlement: 'instant',
     })
-    if (amount) paymentParams.set('amount', amount)
-    if (orderId) paymentParams.set('orderId', orderId)
+    if (amount !== '') paymentParams.set('amount', amount)
+    if (orderId !== '') paymentParams.set('orderId', orderId)
     return `${baseUrl}/pay?${paymentParams.toString()}`
   }
   const paymentUrl = address ? buildPaymentUrl(address) : ''

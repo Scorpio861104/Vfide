@@ -33,7 +33,7 @@ const settlementMessaging = (settlement: string) =>
 
 function PayContent() {
   const searchParams = useSearchParams();
-  const merchant = searchParams.get("merchant") || searchParams.get("to") || "MERCHANT_ADDRESS_REQUIRED";
+  const merchant = searchParams.get("merchant") || searchParams.get("to") || "";
   const amount = searchParams.get("amount") || "100";
   const paymentSource = searchParams.get("source") || "checkout";
   const settlement = searchParams.get("settlement") || (paymentSource === "qr" ? "instant" : "escrow");
