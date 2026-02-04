@@ -226,7 +226,7 @@ export function SuggestionsTab() {
             />
             <button
               onClick={() => setShowSubmitForm(!showSubmitForm)}
-              className="px-4 py-2 bg-linear-to-r from-emerald-500 to-cyan-400 text-zinc-900 rounded-lg font-bold hover:opacity-90 transition-all"
+              className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-cyan-400 text-zinc-900 rounded-lg font-bold hover:opacity-90 transition-all"
             >
               {showSubmitForm ? "✕ Cancel" : "+ Submit Idea"}
             </button>
@@ -389,7 +389,7 @@ export function SuggestionsTab() {
                     {suggestion.status === "new" && score > 0 && (
                       <div className="w-full h-1 bg-zinc-700 rounded-full mb-3 overflow-hidden">
                         <div
-                          className="h-full bg-linear-to-r from-emerald-500 to-cyan-400 transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-500"
                           style={{ width: `${progressToPromotion}%` }}
                         />
                       </div>

@@ -352,7 +352,7 @@ export function CreatorDashboard() {
 
       {/* Claim Earnings */}
       <motion.div 
-        className="bg-linear-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl border border-purple-200 dark:border-purple-800 p-6"
+        className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl border border-purple-200 dark:border-purple-800 p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
@@ -365,7 +365,7 @@ export function CreatorDashboard() {
             </p>
           </div>
           <motion.button 
-            className="px-6 py-3 bg-linear-to-r from-purple-500 to-blue-500 rounded-lg text-white font-medium flex items-center gap-2"
+            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg text-white font-medium flex items-center gap-2"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             animate={{ boxShadow: ['0 0 0px rgba(139, 92, 246, 0)', '0 0 20px rgba(139, 92, 246, 0.5)', '0 0 0px rgba(139, 92, 246, 0)'] }}

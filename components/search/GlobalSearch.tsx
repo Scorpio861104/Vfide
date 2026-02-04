@@ -626,7 +626,7 @@ export function GlobalSearch() {
                 {/* No Query Prompt */}
                 {!query && recentSearches.length === 0 && (
                   <div className="p-8 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-linear-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
                       <Command className="w-8 h-8 text-cyan-400" />
                     </div>
                     <p className="text-sm text-zinc-100 mb-1">Quick Search</p>

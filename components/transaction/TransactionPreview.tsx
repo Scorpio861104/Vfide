@@ -381,7 +381,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
       className="bg-gray-900 rounded-xl shadow-2xl border border-gray-800 max-w-md w-full overflow-hidden"
     >
       {/* Header */}
-      <div className="bg-linear-to-r from-blue-600/20 to-purple-600/20 p-4 border-b border-gray-800">
+      <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-4 border-b border-gray-800">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-500/20 rounded-lg">
             <Wallet className="w-6 h-6 text-blue-400" />
@@ -445,7 +445,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
 
         {/* Value */}
         {transaction.value && transaction.value > BigInt(0) && (
-          <div className="p-4 bg-linear-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+          <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
             <p className="text-xs text-gray-400 mb-1">Amount</p>
             <p className="text-2xl font-bold text-gray-100">
               {parseFloat(formatEther(transaction.value)).toFixed(6)} ETH

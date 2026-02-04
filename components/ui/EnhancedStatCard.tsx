@@ -70,7 +70,7 @@ export function EnhancedStatCard({
       className={`
         group relative p-6 rounded-2xl border backdrop-blur-xl
         transition-all duration-300 hover:scale-[1.02] cursor-pointer
-        ${variant === "gradient" ? `bg-linear-to-br ${colors.bg}` : "bg-zinc-900/80"}
+        ${variant === "gradient" ? `bg-gradient-to-br ${colors.bg}` : "bg-zinc-900/80"}
         ${variant === "glow" ? `${colors.border} ${colors.glow}` : "border-zinc-800"}
         hover:border-[${color === "cyan" ? "#00F0FF" : color === "green" ? "#10b981" : color === "purple" ? "#a78bfa" : "#eab308"}]/50
       `}
@@ -79,7 +79,7 @@ export function EnhancedStatCard({
       whileHover={{ y: -4 }}
     >
       {/* Background gradient glow */}
-      <div className={`absolute inset-0 rounded-2xl bg-linear-to-br ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl`} />
+      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl`} />
       
       {/* Content */}
       <div className="relative z-10">
@@ -127,7 +127,7 @@ export function EnhancedStatCard({
 
       {/* Shine effect */}
       <motion.div
-        className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent pointer-events-none rounded-2xl"
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none rounded-2xl"
         initial={{ x: "-100%" }}
         whileHover={{ x: "100%" }}
         transition={{ duration: 0.6, ease: "easeInOut" }}

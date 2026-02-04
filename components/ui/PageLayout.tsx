@@ -29,11 +29,11 @@ export function PageWrapper({
   const springY = useSpring(backgroundY, { stiffness: 50, damping: 30 })
 
   const backgrounds: Record<string, string> = {
-    default: 'bg-linear-to-b from-zinc-900 via-[#0D0D0F] to-zinc-900',
-    cosmic: 'bg-linear-to-br from-[#0D0221] via-[#1A1A1D] to-[#0A0A12]',
-    aurora: 'bg-linear-to-br from-zinc-900 via-[#0D1520] to-[#0A1515]',
-    matrix: 'bg-linear-to-b from-[#0A1A0A] via-[#0D0D0F] to-[#0A120A]',
-    gradient: 'bg-linear-to-br from-[#1A1525] via-[#1A1A1D] to-[#15201A]',
+    default: 'bg-gradient-to-b from-zinc-900 via-[#0D0D0F] to-zinc-900',
+    cosmic: 'bg-gradient-to-br from-[#0D0221] via-[#1A1A1D] to-[#0A0A12]',
+    aurora: 'bg-gradient-to-br from-zinc-900 via-[#0D1520] to-[#0A1515]',
+    matrix: 'bg-gradient-to-b from-[#0A1A0A] via-[#0D0D0F] to-[#0A120A]',
+    gradient: 'bg-gradient-to-br from-[#1A1525] via-[#1A1A1D] to-[#15201A]',
   }
 
   return (
@@ -128,7 +128,7 @@ export function PageHeader({
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className={`w-20 h-20 bg-linear-to-br ${iconGradient} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-cyan-400/20`}
+              className={`w-20 h-20 bg-gradient-to-br ${iconGradient} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-cyan-400/20`}
             >
               {icon}
             </motion.div>
@@ -279,7 +279,7 @@ export function GlassCard({
       className={`
         relative rounded-2xl backdrop-blur-xl 
         ${gradient 
-          ? 'bg-linear-to-br from-white/10 via-white/5 to-transparent' 
+          ? 'bg-gradient-to-br from-white/10 via-white/5 to-transparent' 
           : 'bg-white/5'
         }
         border border-white/10
@@ -334,7 +334,7 @@ export function TabNavigation({
             className={`
               flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300
               ${activeTab === tab.id 
-                ? 'bg-linear-to-r from-cyan-400 to-cyan-600 text-black shadow-lg shadow-cyan-400/20' 
+                ? 'bg-gradient-to-r from-cyan-400 to-cyan-600 text-black shadow-lg shadow-cyan-400/20' 
                 : 'glass text-zinc-400 hover:text-zinc-100 hover:bg-white/10'
               }
             `}
@@ -378,7 +378,7 @@ export function TabNavigation({
               {activeTab === tab.id && (
                 <motion.div
                   layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-cyan-400 to-emerald-500"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-emerald-500"
                 />
               )}
             </button>
@@ -403,7 +403,7 @@ export function TabNavigation({
           {activeTab === tab.id && (
             <motion.div
               layoutId="activeTabPill"
-              className="absolute inset-0 bg-linear-to-r from-cyan-400 to-emerald-500 rounded-lg"
+              className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-emerald-500 rounded-lg"
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
             />
           )}

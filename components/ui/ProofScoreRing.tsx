@@ -193,7 +193,7 @@ export function ProofScoreCard({ score, feeRate, className = "" }: ProofScoreCar
         </div>
         <div className="relative h-2 bg-zinc-900 rounded-full overflow-hidden">
           <div 
-            className="absolute inset-y-0 left-0 bg-linear-to-r from-[#EF4444] via-[#FFD700] to-[#22C55E] rounded-full"
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#EF4444] via-[#FFD700] to-[#22C55E] rounded-full"
             style={{ width: `${(score / 10000) * 100}%` }}
           />
           <motion.div

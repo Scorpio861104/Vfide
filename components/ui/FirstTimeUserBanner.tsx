@@ -49,9 +49,9 @@ export function FirstTimeUserBanner({
           exit={{ opacity: 0, y: -20 }}
           className="relative mb-6"
         >
-          <div className="bg-linear-to-r from-cyan-400/10 to-violet-400/10 border border-cyan-400/30 rounded-xl p-4 md:p-5">
+          <div className="bg-gradient-to-r from-cyan-400/10 to-violet-400/10 border border-cyan-400/30 rounded-xl p-4 md:p-5">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-zinc-950" />
               </div>
               

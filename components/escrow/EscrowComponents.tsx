@@ -70,7 +70,7 @@ export function EscrowCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.002, y: -2 }}
-      className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors"
     >
       <div className="p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -133,7 +133,7 @@ export function EscrowCard({
                     whileTap={{ scale: 0.98 }}
                     onClick={onRelease}
                     disabled={loading}
-                    className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-linear-to-r from-emerald-500 to-green-500 text-white rounded-xl text-sm font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50 whitespace-nowrap"
+                    className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl text-sm font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50 whitespace-nowrap"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span className="hidden sm:inline">Release Funds</span>
@@ -234,9 +234,9 @@ export function EscrowStats({
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.02, y: -2 }}
           transition={{ delay: idx * 0.1 }}
-          className={`bg-linear-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-3 sm:p-4`}
+          className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-3 sm:p-4`}
         >
-          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-2 sm:mb-3`}>
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-2 sm:mb-3`}>
             <div className={stat.text}>{stat.icon}</div>
           </div>
           <p className="text-lg sm:text-2xl font-bold text-white">{stat.value}</p>
@@ -262,7 +262,7 @@ export function EmptyState({
       animate={{ opacity: 1, y: 0 }}
       className="text-center py-12 sm:py-16"
     >
-      <div className="p-4 rounded-2xl bg-linear-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
+      <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
         {icon}
       </div>
       <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">{title}</h3>

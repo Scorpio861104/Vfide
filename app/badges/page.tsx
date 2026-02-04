@@ -242,7 +242,7 @@ export default function BadgesPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
                     activeTab === tab.id
-                      ? 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
                       : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -362,7 +362,7 @@ export default function BadgesPage() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleMintBadge(badge.name)}
                             disabled={mintingBadge === badge.name}
-                            className="w-full py-3 bg-linear-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25"
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25"
                           >
                             {mintingBadge === badge.name ? (
                               <Loader2 className="animate-spin" size={18} />

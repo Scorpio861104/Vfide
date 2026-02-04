@@ -211,7 +211,7 @@ export function SubscriptionManager({
             {/* Popular badge for annual */}
             {tier.duration === 365 && (
               <motion.div
-                className="absolute -top-1 -right-8 bg-linear-to-r from-purple-500 to-blue-500 text-white text-xs font-bold px-10 py-1 rotate-45"
+                className="absolute -top-1 -right-8 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold px-10 py-1 rotate-45"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
@@ -223,7 +223,7 @@ export function SubscriptionManager({
             {/* Shimmer effect on selected */}
             {selectedTier?.duration === tier.duration && (
               <motion.div
-                className="absolute inset-0 bg-linear-to-r from-transparent via-purple-500/10 to-transparent"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/10 to-transparent"
                 animate={{ x: ['-100%', '200%'] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
               />
@@ -280,7 +280,7 @@ export function SubscriptionManager({
                 playNotification();
               }}
               disabled={isProcessing || isConfirming}
-              className="w-full py-3 bg-linear-to-r from-purple-500 to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-lg text-white font-medium relative z-10"
+              className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-lg text-white font-medium relative z-10"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

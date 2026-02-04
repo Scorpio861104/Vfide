@@ -50,7 +50,7 @@ export default function GuardiansPage() {
               </div>
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-                  Guardian <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400">Dashboard</span>
+                  Guardian <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Dashboard</span>
                 </h1>
                 <p className="text-xl text-gray-400">
                   Manage vault recoveries you&apos;re responsible for
@@ -82,7 +82,7 @@ export default function GuardiansPage() {
                   whileTap={{ scale: 0.98 }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${
                     activeTab === tab.id
-                      ? `bg-linear-to-r ${colorMap[tab.id].gradient} text-white shadow-lg ${colorMap[tab.id].shadow}`
+                      ? `bg-gradient-to-r ${colorMap[tab.id].gradient} text-white shadow-lg ${colorMap[tab.id].shadow}`
                       : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -134,7 +134,7 @@ function OverviewTab() {
     >
       {/* What is a Guardian */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/30 p-8">
-        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 mb-6 flex items-center gap-3">
+        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-6 flex items-center gap-3">
           <Shield className="w-7 h-7 text-cyan-400" />
           What is a Guardian?
         </h2>
@@ -414,7 +414,7 @@ function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-linear-to-r from-red-500/10 to-red-500/5 border border-red-500/30 rounded-2xl p-4"
+        className="bg-gradient-to-r from-red-500/10 to-red-500/5 border border-red-500/30 rounded-2xl p-4"
       >
         <p className="text-red-400 font-bold text-center">
           ⚠️ {pendingRecoveries.length} recovery request(s) need your attention
@@ -457,7 +457,7 @@ function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 px-6 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
             >
               ✓ Approve Recovery
             </motion.button>
@@ -563,7 +563,7 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
           >
             {showAddForm ? 'Cancel' : '+ Add Guardian'}
           </motion.button>
@@ -616,7 +616,7 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 disabled={!isValidAddress}
-                className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add Guardian
               </motion.button>
@@ -812,7 +812,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 bg-linear-to-r from-yellow-500 to-amber-500 text-black rounded-xl font-bold shadow-lg shadow-yellow-500/25"
+                className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-500 text-black rounded-xl font-bold shadow-lg shadow-yellow-500/25"
               >
                 Set Next of Kin
               </motion.button>
@@ -839,7 +839,7 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full py-3 bg-linear-to-r from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/25"
+            className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/25"
           >
             Deny Inheritance Request (I&apos;m Alive!)
           </motion.button>
@@ -975,7 +975,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
+              className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
             >
               Finalize Recovery
             </motion.button>
@@ -1001,7 +1001,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowRequestForm(!showRequestForm)}
-              className="px-4 py-2 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+              className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
             >
               {showRequestForm ? 'Cancel' : 'Start Recovery'}
             </motion.button>
@@ -1038,7 +1038,7 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
                 >
                   Request Recovery
                 </motion.button>

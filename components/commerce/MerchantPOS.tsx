@@ -288,7 +288,7 @@ export function MerchantPOS() {
   }
   
   return (
-    <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-zinc-900 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] to-zinc-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -306,7 +306,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('pos')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'pos'
-                ? 'bg-linear-to-r from-cyan-400 to-blue-500 text-white'
+                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
                 : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
@@ -316,7 +316,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('products')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'products'
-                ? 'bg-linear-to-r from-cyan-400 to-blue-500 text-white'
+                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
                 : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
@@ -326,7 +326,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('sales')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'sales'
-                ? 'bg-linear-to-r from-cyan-400 to-blue-500 text-white'
+                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
                 : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
@@ -497,7 +497,7 @@ export function MerchantPOS() {
                   {/* Generate QR Button */}
                   <button
                     onClick={() => setShowQRPayment(true)}
-                    className="w-full bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform"
+                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform"
                   >
                     Generate QR Payment
                   </button>
@@ -514,7 +514,7 @@ export function MerchantPOS() {
               <h2 className="text-2xl font-bold text-zinc-100">Manage Products</h2>
               <button
                 onClick={() => setShowAddProduct(true)}
-                className="bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
+                className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
               >
                 + Add Product
               </button>
@@ -687,7 +687,7 @@ export function MerchantPOS() {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={handleAddProduct}
-                    className="flex-1 bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="flex-1 bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     Add Product
                   </button>
@@ -872,7 +872,7 @@ export function MerchantPOS() {
                         completeSale()
                       }
                     }}
-                    className="bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     {customerEmail ? 'Send Receipt' : 'Continue'}
                   </button>

@@ -157,7 +157,7 @@ function MemberCard({ member, currentUserId, canManage, canRemove, onEdit, onRem
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1">
           {/* Avatar */}
-          <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-sm">
               {member.userId.slice(0, 2).toUpperCase()}
             </span>

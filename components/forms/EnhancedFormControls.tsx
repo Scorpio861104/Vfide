@@ -504,7 +504,7 @@ export function MultiStepForm({
         <div className="relative">
           <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-linear-to-r from-cyan-500 to-purple-500"
+              className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}

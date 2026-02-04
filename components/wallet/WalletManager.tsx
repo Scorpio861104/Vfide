@@ -550,7 +550,7 @@ interface StatCardProps {
 function StatCard({ label, value, icon, color }: StatCardProps) {
   return (
     <motion.div 
-      className={`rounded-lg p-4 md:p-6 bg-linear-to-br ${color} text-white shadow-lg`}
+      className={`rounded-lg p-4 md:p-6 bg-gradient-to-br ${color} text-white shadow-lg`}
       whileHover={{ scale: 1.03, y: -2 }}
       transition={{ type: 'spring', stiffness: 400 }}
     >

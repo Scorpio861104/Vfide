@@ -268,15 +268,15 @@ export default function TokenLaunchPage() {
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full mb-4"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full mb-4"
               >
                 <Sparkles className="w-4 h-4 text-cyan-400" />
                 <span className="text-cyan-400 text-sm font-medium">Token Presale Live</span>
               </motion.div>
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">
-                Join VFIDE <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400">Governance</span>
+                Join VFIDE <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Governance</span>
               </h1>
-              <p className="text-xl md:text-2xl text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 font-medium mb-6">
+              <p className="text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-medium mb-6">
                 Participate in DAO Governance • No Processor Fees* • Protocol Development
               </p>
               <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
@@ -293,7 +293,7 @@ export default function TokenLaunchPage() {
               >
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <div className="text-3xl">🎁</div>
-                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400">Referral Rewards Active</h3>
+                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Referral Rewards Active</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
                   <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
@@ -359,7 +359,7 @@ export default function TokenLaunchPage() {
                 >
                   {/* Most Popular badge shown on oath tier */}
                   {key === 'oath' && (
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-1 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-b-xl text-sm font-bold shadow-lg shadow-cyan-500/25">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-b-xl text-sm font-bold shadow-lg shadow-cyan-500/25">
                       MOST POPULAR
                     </div>
                   )}
@@ -405,7 +405,7 @@ export default function TokenLaunchPage() {
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-linear-to-r from-cyan-500 to-blue-500 text-white text-center py-2 rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+                      className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-center py-2 rounded-xl font-bold shadow-lg shadow-cyan-500/25"
                     >
                       SELECTED
                     </motion.div>
@@ -496,7 +496,7 @@ export default function TokenLaunchPage() {
                           whileTap={{ scale: 0.98 }}
                           className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${
                             amount === String(preset)
-                              ? 'bg-linear-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25'
+                              ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25'
                               : 'bg-white/5 text-gray-400 hover:text-white border border-white/10 hover:bg-white/10'
                           }`}
                         >
@@ -566,11 +566,11 @@ export default function TokenLaunchPage() {
                         <div className="border-t border-white/10 pt-4 mt-4">
                           <div className="flex justify-between text-lg">
                             <span className="text-white font-bold">Total Cost:</span>
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 font-bold">${calculateTotal().toFixed(2)}</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold">${calculateTotal().toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between mt-2">
                             <span className="text-white font-bold">Total VFIDE:</span>
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 font-bold">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold">
                               {referralCode 
                                 ? (parseFloat(amount) * 1.02).toLocaleString()
                                 : parseFloat(amount).toLocaleString()
@@ -715,7 +715,7 @@ export default function TokenLaunchPage() {
                       <motion.button 
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="px-8 py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/25 transition-all"
+                        className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/25 transition-all"
                       >
                         Connect Wallet
                       </motion.button>
@@ -743,7 +743,7 @@ export default function TokenLaunchPage() {
                           whileTap={{ scale: allAcknowledged ? 0.98 : 1 }}
                           className={`w-full px-12 py-6 rounded-xl font-bold text-xl transition-all mb-4 ${
                             allAcknowledged
-                              ? 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
+                              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
                               : 'bg-white/10 text-gray-500 cursor-not-allowed'
                           }`}
                         >
@@ -788,7 +788,7 @@ export default function TokenLaunchPage() {
                         whileTap={{ scale: allAcknowledged && !needsApproval ? 0.98 : 1 }}
                         className={`w-full px-12 py-6 rounded-xl font-bold text-xl transition-all ${
                           allAcknowledged && !needsApproval
-                            ? 'bg-linear-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40'
+                            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40'
                             : 'bg-white/10 text-gray-500 cursor-not-allowed'
                         }`}
                       >
@@ -813,7 +813,7 @@ export default function TokenLaunchPage() {
                           className="mt-6 space-y-2"
                         >
                           <p className="text-lg text-white">
-                            Total Cost: <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 font-bold text-2xl">${calculateTotal().toFixed(2)}</span>
+                            Total Cost: <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-2xl">${calculateTotal().toFixed(2)}</span>
                           </p>
                           <p className="text-sm text-gray-400">
                             Paying with {paymentMethod.toUpperCase()}

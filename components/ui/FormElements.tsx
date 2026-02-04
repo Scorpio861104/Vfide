@@ -69,14 +69,14 @@ export function Modal({
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className={`
                 w-full ${sizes[size]} max-h-[85vh] overflow-y-auto
-                bg-linear-to-b from-zinc-800 to-zinc-900
+                bg-gradient-to-b from-zinc-800 to-zinc-900
                 border border-white/10 rounded-3xl shadow-2xl
                 pointer-events-auto
               `}
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="sticky top-0 flex items-start justify-between p-6 pb-0 bg-linear-to-b from-zinc-800 to-transparent z-10">
+                <div className="sticky top-0 flex items-start justify-between p-6 pb-0 bg-gradient-to-b from-zinc-800 to-transparent z-10">
                   <div>
                     {title && (
                       <h2 className="text-2xl font-bold text-zinc-100">{title}</h2>
@@ -142,11 +142,11 @@ export function Button({
   type = 'button'
 }: ButtonProps) {
   const variants = {
-    primary: 'bg-linear-to-r from-cyan-400 to-cyan-600 text-black hover:shadow-lg hover:shadow-cyan-400/25',
+    primary: 'bg-gradient-to-r from-cyan-400 to-cyan-600 text-black hover:shadow-lg hover:shadow-cyan-400/25',
     secondary: 'bg-white/10 text-zinc-100 hover:bg-white/20 border border-white/10',
     ghost: 'bg-transparent text-zinc-400 hover:text-zinc-100 hover:bg-white/5',
-    danger: 'bg-linear-to-r from-red-500 to-[#CC3333] text-white hover:shadow-lg hover:shadow-red-500/25',
-    success: 'bg-linear-to-r from-emerald-500 to-[#3DA55D] text-black hover:shadow-lg hover:shadow-emerald-500/25',
+    danger: 'bg-gradient-to-r from-red-500 to-[#CC3333] text-white hover:shadow-lg hover:shadow-red-500/25',
+    success: 'bg-gradient-to-r from-emerald-500 to-[#3DA55D] text-black hover:shadow-lg hover:shadow-emerald-500/25',
   }
 
   const sizes = {
@@ -347,7 +347,7 @@ export function Badge({
     warning: 'bg-amber-400/20 text-amber-400',
     danger: 'bg-red-500/20 text-red-500',
     info: 'bg-cyan-400/20 text-cyan-400',
-    premium: 'bg-linear-to-r from-amber-400/20 to-orange-500/20 text-amber-400',
+    premium: 'bg-gradient-to-r from-amber-400/20 to-orange-500/20 text-amber-400',
   }
 
   const sizes = {
@@ -537,14 +537,14 @@ export function Divider({ label, className = '' }: DividerProps) {
   if (label) {
     return (
       <div className={`flex items-center gap-4 ${className}`}>
-        <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         <span className="text-sm text-zinc-500 font-medium">{label}</span>
-        <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       </div>
     )
   }
 
   return (
-    <div className={`h-px bg-linear-to-r from-transparent via-white/20 to-transparent ${className}`} />
+    <div className={`h-px bg-gradient-to-r from-transparent via-white/20 to-transparent ${className}`} />
   )
 }

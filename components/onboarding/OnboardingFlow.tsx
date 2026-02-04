@@ -307,7 +307,7 @@ function RewardModal({ reward, onClose }: RewardModalProps) {
         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50"
       >
         <div className={`
-          bg-linear-to-br ${colors[reward.type]} 
+          bg-gradient-to-br ${colors[reward.type]} 
           bg-zinc-900 border rounded-2xl p-8 text-center
           shadow-2xl max-w-sm w-full
         `}>
@@ -366,7 +366,7 @@ function OnboardingChecklist() {
     >
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-linear-to-r from-cyan-500/10 to-purple-500/10 p-4 border-b border-zinc-800">
+        <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 p-4 border-b border-zinc-800">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-cyan-400" />
@@ -386,7 +386,7 @@ function OnboardingChecklist() {
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                className="h-full bg-linear-to-r from-cyan-500 to-purple-500"
+                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
               />
             </div>
             <span className="text-sm font-medium text-cyan-400">{progress}%</span>
@@ -470,7 +470,7 @@ export function OnboardingTrigger() {
       onClick={() => setShowChecklist(!showChecklist)}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className="fixed bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-2 bg-linear-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-full shadow-lg hover:shadow-cyan-500/25 transition-shadow"
+      className="fixed bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-full shadow-lg hover:shadow-cyan-500/25 transition-shadow"
     >
       <Sparkles className="w-4 h-4" />
       <span className="text-sm">{progress}% Complete</span>

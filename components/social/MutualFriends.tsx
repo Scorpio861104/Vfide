@@ -92,7 +92,7 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
               key={friend.address}
               className="flex items-center gap-2 p-2 bg-zinc-900 rounded-lg"
             >
-              <div className="w-8 h-8 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold text-zinc-100">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold text-zinc-100">
                 {(friend.alias || friend.address).slice(0, 2).toUpperCase()}
               </div>
               <UserDisplay address={friend.address} />
@@ -105,7 +105,7 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
             {mutualFriends.slice(0, 5).map((friend, index) => (
               <div
                 key={friend.address}
-                className="w-8 h-8 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold text-zinc-100 border-2 border-zinc-950"
+                className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold text-zinc-100 border-2 border-zinc-950"
                 style={{ zIndex: 5 - index }}
                 title={friend.alias || formatAddress(friend.address)}
               >

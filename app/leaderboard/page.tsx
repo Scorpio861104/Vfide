@@ -152,7 +152,7 @@ function _LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: num
       whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
       className={`
         border-b border-white/5 last:border-0
-        ${entry.rank <= 3 ? 'bg-linear-to-r from-amber-400/5 to-transparent' : ''}
+        ${entry.rank <= 3 ? 'bg-gradient-to-r from-amber-400/5 to-transparent' : ''}
       `}
     >
       <div className="md:hidden flex items-center justify-between px-4 py-4">
@@ -360,7 +360,7 @@ export default function LeaderboardPage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-linear-to-br from-amber-400/20 to-orange-500/20 border-2 border-amber-400 rounded-xl p-4 md:p-6 text-center -mt-2 md:-mt-4"
+                  className="bg-gradient-to-br from-amber-400/20 to-orange-500/20 border-2 border-amber-400 rounded-xl p-4 md:p-6 text-center -mt-2 md:-mt-4"
                 >
                   <Crown className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 text-amber-400" />
                   <div className="text-3xl md:text-4xl font-bold text-amber-400 mb-1">1st</div>

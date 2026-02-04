@@ -80,7 +80,7 @@ export function MentorDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-6 rounded-xl bg-linear-to-br from-emerald-400/10 to-cyan-400/10 border border-emerald-400/30 backdrop-blur-xl"
+        className="p-6 rounded-xl bg-gradient-to-br from-emerald-400/10 to-cyan-400/10 border border-emerald-400/30 backdrop-blur-xl"
       >
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -119,7 +119,7 @@ export function MentorDashboard() {
               initial={{ width: 0 }}
               animate={{ width: `${completionRate}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
-              className="h-full bg-linear-to-r from-emerald-400 to-cyan-400"
+              className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400"
               style={{
                 boxShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
               }}
@@ -135,7 +135,7 @@ export function MentorDashboard() {
           whileTap={menteeSlotsAvailable > 0 ? { scale: 0.98 } : {}}
           className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
             menteeSlotsAvailable > 0
-              ? 'bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 hover:shadow-lg hover:shadow-emerald-400/50'
+              ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 hover:shadow-lg hover:shadow-emerald-400/50'
               : 'bg-zinc-100/10 text-zinc-100/30 cursor-not-allowed'
           }`}
         >

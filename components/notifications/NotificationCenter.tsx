@@ -405,7 +405,7 @@ function NotificationItem({
         <motion.div
           animate={{ opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="absolute inset-0 bg-linear-to-r from-yellow-500/5 to-transparent pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-transparent pointer-events-none"
         />
       )}
 
@@ -485,7 +485,7 @@ function NotificationItem({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onAction?.(notification.actionUrl!)}
-          className="mt-4 w-full bg-linear-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+          className="mt-4 w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
         >
           {notification.actionLabel}
           <ChevronRight className="w-4 h-4" />
@@ -509,7 +509,7 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.03, y: -2 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className={`rounded-xl p-4 md:p-5 bg-linear-to-br ${color} text-white shadow-lg relative overflow-hidden`}
+      className={`rounded-xl p-4 md:p-5 bg-gradient-to-br ${color} text-white shadow-lg relative overflow-hidden`}
     >
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">

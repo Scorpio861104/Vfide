@@ -129,7 +129,7 @@ export default function SetupPage() {
             <p className="text-zinc-300 mb-4">Connected to Base Sepolia with {ethBalance.toFixed(4)} ETH</p>
             <Link 
               href="/token-launch"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg"
             >
               Start Using VFIDE <ArrowRight size={18} />
             </Link>

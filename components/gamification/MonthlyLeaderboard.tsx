@@ -152,7 +152,7 @@ export default function MonthlyLeaderboard() {
 
       {/* Header with Prize Pool */}
       <motion.div 
-        className="bg-linear-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-6 border border-yellow-500/30"
+        className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-6 border border-yellow-500/30"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -243,14 +243,14 @@ export default function MonthlyLeaderboard() {
       {/* User's Position Card */}
       {userPosition && (
         <motion.div 
-          className={`bg-linear-to-r ${getTierColor(userPosition.tier)} rounded-xl p-6 border-2 border-white/20 relative overflow-hidden`}
+          className={`bg-gradient-to-r ${getTierColor(userPosition.tier)} rounded-xl p-6 border-2 border-white/20 relative overflow-hidden`}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'spring', stiffness: 200 }}
         >
           {/* Spotlight effect */}
           <motion.div
-            className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
             initial={{ x: '-100%' }}
             animate={{ x: '200%' }}
             transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}

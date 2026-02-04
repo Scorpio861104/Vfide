@@ -33,7 +33,7 @@ export function EnhancedButton({
   
   const variantStyles = {
     primary: `
-      bg-linear-to-br from-cyan-400 to-blue-500 
+      bg-gradient-to-br from-cyan-400 to-blue-500 
       text-zinc-950 
       hover:shadow-[0_0_30px_rgba(0,240,255,0.4)] 
       hover:scale-[1.02]
@@ -48,7 +48,7 @@ export function EnhancedButton({
       hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]
     `,
     accent: `
-      bg-linear-to-r from-fuchsia-500 via-cyan-400 to-blue-500
+      bg-gradient-to-r from-fuchsia-500 via-cyan-400 to-blue-500
       text-white
       hover:shadow-[0_0_40px_rgba(255,0,245,0.5)]
       hover:scale-[1.02]
@@ -72,7 +72,7 @@ export function EnhancedButton({
       hover:border-cyan-400
     `,
     gradient: `
-      bg-linear-to-r from-fuchsia-500 via-[#FF0080] to-fuchsia-500
+      bg-gradient-to-r from-fuchsia-500 via-[#FF0080] to-fuchsia-500
       bg-[length:200%_100%]
       text-white
       hover:bg-[position:100%_0]
@@ -104,7 +104,7 @@ export function EnhancedButton({
     >
       {/* Shine effect overlay */}
       <motion.div
-        className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent"
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
         initial={{ x: "-100%" }}
         whileHover={{ x: "100%" }}
         transition={{ duration: 0.6, ease: "easeInOut" }}

@@ -190,7 +190,7 @@ export default function CryptoSocialDemo() {
                 </PremiumContentGate>
 
                 {/* Benefits Section */}
-                <div className="mt-8 bg-linear-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6 max-w-3xl">
+                <div className="mt-8 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6 max-w-3xl">
                   <h3 className="text-lg font-semibold mb-3">Benefits of Premium Content</h3>
                   <ul className="space-y-2 text-gray-700 dark:text-gray-300">
                     <li className="flex items-center gap-2">

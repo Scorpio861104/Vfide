@@ -282,7 +282,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
           </div>
           <button
             onClick={() => setShowNewThread(!showNewThread)}
-            className="px-6 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-6 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all"
           >
             {showNewThread ? "✕ Cancel" : "+ New Discussion"}
           </button>

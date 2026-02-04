@@ -33,7 +33,7 @@ export function FeeSavingsCalculator() {
       
       {/* Amount Input */}
       <div className="relative">
-        <div className="absolute inset-0 bg-linear-to-r from-cyan-400 to-blue-500 rounded-xl blur-xl opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-xl blur-xl opacity-20" />
         <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 border border-cyan-400/30">
           <label className="block text-[10px] sm:text-xs md:text-sm text-zinc-100/70 mb-1 sm:mb-2">
             Payment Amount (USD)
@@ -167,7 +167,7 @@ export function FeeSavingsCalculator() {
         animate={{ opacity: 1, scale: 1 }}
         className="relative"
       >
-        <div className="absolute inset-0 bg-linear-to-r from-emerald-400 to-cyan-400 rounded-xl blur-xl opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-xl blur-xl opacity-30" />
         <div className="relative bg-zinc-950/90 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 lg:p-8 border-2 border-emerald-400/50 text-center space-y-1 sm:space-y-2">
           <div>
             <p className="text-[10px] sm:text-xs md:text-sm text-zinc-100/60 uppercase tracking-wider">

@@ -146,7 +146,7 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
                     isQuarantined 
                       ? 'bg-white/10 text-white/40 cursor-not-allowed'
                       : canPanic 
-                        ? 'bg-linear-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25'
+                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25'
                         : 'bg-white/10 text-white/40 cursor-not-allowed'
                   }`}
                 >
@@ -450,7 +450,7 @@ function VaultContent() {
                         }
                       }}
                       disabled={isCreatingVault}
-                      className="px-8 py-4 bg-linear-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
+                      className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
                     >
                       {isCreatingVault ? "Creating..." : "Create Vault"}
                     </motion.button>
@@ -601,7 +601,7 @@ function VaultContent() {
                       onClick={() => setShowDepositModal(true)}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
-                      className="p-5 bg-linear-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
+                      className="p-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
                     >
                       <ArrowDownToLine size={20} />
                       Deposit Funds
@@ -691,7 +691,7 @@ function VaultContent() {
                         whileTap={{ scale: 0.98 }}
                         onClick={handleSetNextOfKin}
                         disabled={isWritePending || !newNextOfKinAddress}
-                        className="w-full py-3 bg-linear-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         <Heart size={18} />
                         {isWritePending ? "Processing..." : hasNextOfKin ? "Update Next of Kin" : "Set Next of Kin"}
@@ -767,7 +767,7 @@ function VaultContent() {
                         whileTap={{ scale: 0.98 }}
                         onClick={handleAddGuardian}
                         disabled={isWritePending || !newGuardianAddress}
-                        className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         <UserPlus size={18} />
                         {isWritePending ? "Processing..." : "Add Guardian"}
@@ -853,7 +853,7 @@ function VaultContent() {
                   whileTap={{ scale: isDepositing ? 1 : 0.98 }}
                   onClick={handleDeposit}
                   disabled={isDepositing || !depositAmount || parseFloat(depositAmount) <= 0}
-                  className="w-full py-4 bg-linear-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isDepositing ? (
                     <>
@@ -960,7 +960,7 @@ function VaultContent() {
                   whileTap={{ scale: isWithdrawing ? 1 : 0.98 }}
                   onClick={handleWithdraw}
                   disabled={isWithdrawing || !withdrawAmount || !withdrawRecipient || parseFloat(withdrawAmount) <= 0}
-                  className="w-full py-4 bg-linear-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isWithdrawing ? (
                     <>

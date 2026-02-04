@@ -253,14 +253,14 @@ export default function DashboardPage() {
                     </a>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-linear-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
                     <span className="text-cyan-400 font-bold text-sm flex items-center gap-2">
                       <Zap size={14} />
                       ProofScore {proofscore}
                     </span>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-linear-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
                     <span className="text-emerald-400 font-bold text-sm">{currentFeeRate.toFixed(2)}% fee</span>
                   </motion.div>
                 </div>
@@ -303,7 +303,7 @@ export default function DashboardPage() {
                   whileTap={{ scale: 0.98 }}
                   className={`px-5 py-3 rounded-xl font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
                     activeTab === tab.id
-                      ? 'bg-linear-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                       : 'bg-transparent text-white/60 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -406,7 +406,7 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
                     <span className="text-white font-medium">{item.value.toLocaleString()} / {item.max.toLocaleString()}</span>
                   </div>
                   <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${(item.value / item.max) * 100}%` }} transition={{ duration: 1, delay: index * 0.1 }} className={`h-full rounded-full bg-linear-to-r ${
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${(item.value / item.max) * 100}%` }} transition={{ duration: 1, delay: index * 0.1 }} className={`h-full rounded-full bg-gradient-to-r ${
                       item.color === 'cyan' ? 'from-cyan-500 to-cyan-400' :
                       item.color === 'emerald' ? 'from-emerald-500 to-emerald-400' :
                       item.color === 'amber' ? 'from-amber-500 to-amber-400' :

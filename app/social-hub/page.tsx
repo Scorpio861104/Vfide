@@ -242,7 +242,7 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
     >
       <div className={`
         relative p-0.5 rounded-full
-        ${story.viewed ? 'bg-zinc-700' : 'bg-linear-to-tr from-rose-500 via-[#FF6B9D] to-cyan-400'}
+        ${story.viewed ? 'bg-zinc-700' : 'bg-gradient-to-tr from-rose-500 via-[#FF6B9D] to-cyan-400'}
         ${story.isLive ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-[#0A0A0F]' : ''}
       `}>
         <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center text-2xl overflow-hidden">
@@ -285,7 +285,7 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
       className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect"
     >
       <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
           ✨
         </div>
         <div className="flex-1">
@@ -327,7 +327,7 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
                   <button
                     onClick={handleSubmit}
                     disabled={!content.trim() || content.length > 280}
-                    className="px-4 py-2 bg-linear-to-r from-cyan-400 to-violet-400 text-zinc-950 font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 bg-gradient-to-r from-cyan-400 to-violet-400 text-zinc-950 font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     Post
@@ -354,7 +354,7 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xl">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xl">
             {post.author.avatar}
           </div>
           <div>
@@ -527,7 +527,7 @@ function TrendingSidebar() {
         <div className="space-y-4">
           {mockSuggested.map((user) => (
             <div key={user.address} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
                 {user.avatar}
               </div>
               <div className="flex-1 min-w-0">
@@ -549,7 +549,7 @@ function TrendingSidebar() {
       </div>
 
       {/* Stats Card */}
-        <div className="bg-linear-to-br from-zinc-900 to-zinc-800 border border-zinc-700 rounded-2xl p-4 ring-effect">
+        <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 rounded-2xl p-4 ring-effect">
           <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
             <Award className="w-5 h-5 text-amber-400" />
             Your Stats

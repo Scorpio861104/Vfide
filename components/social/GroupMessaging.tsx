@@ -491,7 +491,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
                     }}
                     className="w-4 h-4"
                   />
-                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold">
                     {(friend.alias || friend.address).slice(0, 2).toUpperCase()}
                   </div>
                   <span className="text-zinc-100">

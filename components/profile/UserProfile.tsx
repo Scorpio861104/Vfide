@@ -401,7 +401,7 @@ function BadgeCarousel({ badges }: { badges: Badge[] }) {
                 className="absolute left-1/2 -translate-x-1/2 w-40"
                 style={{ perspective: 1000 }}
               >
-                <div className={`bg-linear-to-br ${
+                <div className={`bg-gradient-to-br ${
                   badge.rarity === 'legendary' ? 'from-yellow-500/20 to-orange-500/20 border-yellow-500/50' :
                   badge.rarity === 'epic' ? 'from-purple-500/20 to-pink-500/20 border-purple-500/50' :
                   badge.rarity === 'rare' ? 'from-blue-500/20 to-cyan-500/20 border-blue-500/50' :
@@ -485,7 +485,7 @@ function ShareProfileModal({ profile, onClose }: { profile: UserProfile; onClose
 
         {/* QR Code Placeholder */}
         <div className="bg-white rounded-xl p-4 mb-6">
-          <div className="w-full aspect-square bg-linear-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
+          <div className="w-full aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
             <div className="text-center">
               <QrCode className="w-16 h-16 text-gray-400 mx-auto mb-2" />
               <p className="text-xs text-gray-500">QR Code for {profile.username}</p>
@@ -560,7 +560,7 @@ function StatCard({ label, value, icon, color = 'blue', animated = true }: StatC
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02, y: -2 }}
-      className={`bg-linear-to-br ${colorClasses[color] || colorClasses.blue} border rounded-xl p-4 transition-all`}
+      className={`bg-gradient-to-br ${colorClasses[color] || colorClasses.blue} border rounded-xl p-4 transition-all`}
     >
       <div className="flex items-center gap-3">
         <motion.div
@@ -609,7 +609,7 @@ function BadgeCard({ badge }: BadgeCardProps) {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.03, y: -5 }}
-      className={`bg-linear-to-br ${rarityStyles[badge.rarity]} border rounded-xl p-5 shadow-lg cursor-pointer transition-all`}
+      className={`bg-gradient-to-br ${rarityStyles[badge.rarity]} border rounded-xl p-5 shadow-lg cursor-pointer transition-all`}
     >
       <div className="text-center">
         <motion.div 
@@ -666,7 +666,7 @@ function ActivityItem({ activity, index = 0 }: ActivityItemProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
       whileHover={{ x: 5 }}
-      className={`flex items-center gap-3 p-4 bg-linear-to-r ${getActivityColor(activity.type)} rounded-xl transition-all cursor-pointer`}
+      className={`flex items-center gap-3 p-4 bg-gradient-to-r ${getActivityColor(activity.type)} rounded-xl transition-all cursor-pointer`}
     >
       <motion.div 
         className="text-2xl"
@@ -806,7 +806,7 @@ export default function UserProfile() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-linear-to-br from-zinc-900 to-zinc-900 rounded-2xl p-6 border border-zinc-800 relative overflow-hidden"
+        className="bg-gradient-to-br from-zinc-900 to-zinc-900 rounded-2xl p-6 border border-zinc-800 relative overflow-hidden"
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -829,7 +829,7 @@ export default function UserProfile() {
                 className="relative group"
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="w-32 h-32 rounded-2xl bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center text-6xl shadow-lg shadow-yellow-500/20">
+                <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-6xl shadow-lg shadow-yellow-500/20">
                   {profile.avatar ? (
                     typeof profile.avatar === 'string' && profile.avatar.startsWith('http') ? (
                       <img src={profile.avatar} alt="Avatar" className="w-full h-full rounded-2xl object-cover" />
@@ -1450,7 +1450,7 @@ export default function UserProfile() {
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="profileTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-amber-400 to-orange-500"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-orange-500"
                   />
                 )}
               </motion.button>

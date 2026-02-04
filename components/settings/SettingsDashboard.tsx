@@ -67,7 +67,7 @@ function AnimatedToggle({ checked, onChange, disabled, ariaLabel }: AnimatedTogg
       onClick={() => onChange(!checked)}
       className={`relative w-12 h-6 rounded-full transition-colors ${
         checked 
-          ? 'bg-linear-to-r from-yellow-500 to-amber-500' 
+          ? 'bg-gradient-to-r from-yellow-500 to-amber-500' 
           : 'bg-zinc-700'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       whileTap={{ scale: 0.95 }}
@@ -187,7 +187,7 @@ function Section({ title, subtitle, icon, iconColor, children, delay = 0 }: Sect
       className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden"
     >
       <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${iconColor} flex items-center justify-center text-white shadow-lg`}>
+        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${iconColor} flex items-center justify-center text-white shadow-lg`}>
           {icon}
         </div>
         <div>
@@ -415,7 +415,7 @@ export function SettingsDashboard({
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900 via-[#0F0F12] to-zinc-900 border border-zinc-800 p-6"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 via-[#0F0F12] to-zinc-900 border border-zinc-800 p-6"
       >
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -428,7 +428,7 @@ export function SettingsDashboard({
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-start gap-4">
             <motion.div
-              className="w-14 h-14 rounded-2xl bg-linear-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/20"
+              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/20"
               whileHover={{ scale: 1.05, rotate: 5 }}
             >
               <Settings className="w-7 h-7 text-white" />
@@ -449,7 +449,7 @@ export function SettingsDashboard({
               disabled={!isDirty || status === 'saving'}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="px-5 py-2.5 bg-linear-to-r from-yellow-500 to-amber-500 text-black font-semibold rounded-xl hover:from-yellow-400 hover:to-amber-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-yellow-500/20"
+              className="px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-semibold rounded-xl hover:from-yellow-400 hover:to-amber-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-yellow-500/20"
             >
               {status === 'saving' ? (
                 <>
@@ -543,7 +543,7 @@ export function SettingsDashboard({
                   whileTap={{ scale: 0.98 }}
                   className={`relative p-4 rounded-xl cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-linear-to-br from-yellow-500/20 to-amber-500/10 border-2 border-yellow-500'
+                      ? 'bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border-2 border-yellow-500'
                       : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'
                   }`}
                 >
@@ -883,7 +883,7 @@ export function SettingsDashboard({
               disabled={!importText.trim()}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="mt-3 w-full px-4 py-2.5 bg-linear-to-r from-yellow-500 to-amber-500 text-black font-semibold rounded-xl hover:from-yellow-400 hover:to-amber-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/20"
+              className="mt-3 w-full px-4 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-semibold rounded-xl hover:from-yellow-400 hover:to-amber-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/20"
             >
               <Upload className="w-4 h-4" />
               Import Settings

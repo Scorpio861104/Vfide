@@ -109,7 +109,7 @@ export function PremiumContentGate({
   return (
     <div className={`relative ${className}`}>
       {/* Locked Overlay */}
-      <div className="absolute inset-0 bg-linear-to-b from-zinc-900/60 via-[#1A1A1F]/80 to-zinc-900/95 backdrop-blur-md rounded-xl border-2 border-purple-500/20 flex items-center justify-center z-10">
+      <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/60 via-[#1A1A1F]/80 to-zinc-900/95 backdrop-blur-md rounded-xl border-2 border-purple-500/20 flex items-center justify-center z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -120,7 +120,7 @@ export function PremiumContentGate({
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200 }}
-            className="w-20 h-20 mx-auto mb-6 bg-linear-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20"
+            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20"
           >
             <Lock className="w-10 h-10 text-white" />
           </motion.div>
@@ -173,7 +173,7 @@ export function PremiumContentGate({
           <button
             onClick={handlePurchase}
             disabled={!isConnected || isPurchasing}
-            className="w-full py-4 bg-linear-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-bold text-white text-lg flex items-center justify-center gap-3 transition-all transform active:scale-95"
+            className="w-full py-4 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-bold text-white text-lg flex items-center justify-center gap-3 transition-all transform active:scale-95"
           >
             {isPurchasing ? (
               <>
@@ -209,7 +209,7 @@ export function PremiumContentGate({
  */
 export function PremiumBadge({ price, currency, className = '' }: { price: string; currency: 'ETH' | 'VFIDE'; className?: string }) {
   return (
-    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 bg-linear-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full ${className}`}>
+    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full ${className}`}>
       <Lock className="w-3 h-3 text-purple-400" />
       <span className="text-xs font-bold text-purple-400">
         {price} {currency}

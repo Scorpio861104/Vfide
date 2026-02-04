@@ -378,7 +378,7 @@ export function SimpleWalletConnect() {
                     className={`px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-bold rounded-lg transition-all font-[family-name:var(--font-body)] touch-manipulation focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F0F12] ${
                       isInCooldown
                         ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                        : 'bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 hover:shadow-lg hover:shadow-cyan-400/50 cursor-pointer focus:ring-cyan-400'
+                        : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 hover:shadow-lg hover:shadow-cyan-400/50 cursor-pointer focus:ring-cyan-400'
                     }`}
                   >
                     <AnimatePresence mode="wait">
@@ -496,7 +496,7 @@ export function SimpleWalletConnect() {
                     type="button"
                     aria-label="Open account menu"
                     title={sessionDurationFormatted ? `Connected for ${sessionDurationFormatted}` : 'Open account menu'}
-                    className="relative px-3 sm:px-4 py-2 text-sm bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
+                    className="relative px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 transition-all font-[family-name:var(--font-body)] cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0F0F12] group"
                   >
                     <span className="hidden sm:flex items-center gap-2">
                       {/* Phase 3: Show ENS name if available */}

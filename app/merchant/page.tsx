@@ -174,7 +174,7 @@ export default function MerchantPage() {
             </motion.div>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-6">
-              <span className="bg-clip-text text-transparent bg-linear-to-r from-purple-400 via-blue-400 to-cyan-400">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400">
                 Merchant Portal
               </span>
             </h1>
@@ -258,7 +258,7 @@ export default function MerchantPage() {
           <motion.section variants={containerVariants} className="mb-16">
             <motion.div variants={itemVariants} className="text-center mb-10">
               <h2 className="text-3xl font-bold mb-4">
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-purple-400 to-blue-400">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
                   Why Choose VFIDE?
                 </span>
               </h2>
@@ -302,7 +302,7 @@ export default function MerchantPage() {
             >
             <motion.div variants={itemVariants} className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-emerald-400 to-cyan-400">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
                   vs Traditional Processors
                 </span>
               </h2>
@@ -315,7 +315,7 @@ export default function MerchantPage() {
                   <tr className="border-b border-white/10">
                     <th className="text-left py-4 px-2 sm:px-4 text-gray-400 font-medium text-sm">Feature</th>
                     <th className="text-center py-4 px-2 sm:px-4">
-                      <span className="px-2 sm:px-3 py-1 rounded-full bg-linear-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-bold border border-emerald-500/30 text-xs sm:text-sm">
+                      <span className="px-2 sm:px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-bold border border-emerald-500/30 text-xs sm:text-sm">
                         VFIDE
                       </span>
                     </th>

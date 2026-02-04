@@ -486,7 +486,7 @@ export default function Home() {
 
       {/* Why VFIDE Section */}
       <section className="py-24 bg-zinc-950 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
         
         <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
           <motion.div
@@ -552,7 +552,7 @@ export default function Home() {
 
       {/* How It Works Section */}
       <section className="py-24 bg-zinc-950 relative">
-        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
         
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.div
@@ -618,7 +618,7 @@ export default function Home() {
 
       {/* Testimonial / Social Proof */}
       <section className="py-24 bg-zinc-950 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
         
         <div className="container mx-auto px-3 sm:px-4 max-w-4xl text-center">
           <motion.div

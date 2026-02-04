@@ -190,7 +190,7 @@ export function HelpCenter() {
       {/* Floating Help Button - positioned above mobile nav */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 md:bottom-6 right-6 z-40 w-14 h-14 bg-linear-to-r from-cyan-400 to-blue-500 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-24 md:bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         initial={{ scale: 0 }}
@@ -222,7 +222,7 @@ export function HelpCenter() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25 }}
-              className="fixed right-0 top-0 bottom-0 w-full sm:w-[90vw] md:w-125 bg-linear-to-br from-zinc-800 to-zinc-900 border-l-2 border-cyan-400 shadow-2xl z-91 overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 w-full sm:w-[90vw] md:w-125 bg-gradient-to-br from-zinc-800 to-zinc-900 border-l-2 border-cyan-400 shadow-2xl z-91 overflow-y-auto"
             >
               {/* Header */}
               <div className="sticky top-0 bg-zinc-900 border-b border-zinc-700 p-6 flex items-center justify-between">

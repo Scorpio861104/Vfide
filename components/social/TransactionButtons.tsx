@@ -50,7 +50,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
               {type === 'send' ? <Send className="w-6 h-6 text-zinc-950" /> : <DollarSign className="w-6 h-6 text-zinc-950" />}
             </div>
             <div>

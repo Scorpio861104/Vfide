@@ -145,7 +145,7 @@ export default function CrossChainTransfer() {
       </div>
 
       {/* Unified Balance View */}
-      <div className="bg-linear-to-br from-primary/10 to-primary/5 rounded-2xl p-4 border border-primary/20">
+      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-4 border border-primary/20">
         <h3 className="text-sm font-medium text-muted-foreground mb-3">Total Balances</h3>
         <div className="flex flex-wrap gap-3">
           {balances.slice(0, 5).map((balance) => (

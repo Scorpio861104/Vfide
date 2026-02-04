@@ -273,7 +273,7 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -553,7 +553,7 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-linear-to-r from-zinc-900 to-zinc-800 border border-zinc-700 rounded-lg p-6 hover:border-pink-400/50 transition-colors"
+                  className="bg-gradient-to-r from-zinc-900 to-zinc-800 border border-zinc-700 rounded-lg p-6 hover:border-pink-400/50 transition-colors"
                 >
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center text-3xl shrink-0">

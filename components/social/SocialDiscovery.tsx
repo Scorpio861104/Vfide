@@ -284,7 +284,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -428,7 +428,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="bg-linear-to-br from-zinc-900 via-[#2A2A3E] to-zinc-900 border border-pink-400/30 rounded-lg p-6 hover:border-pink-400 transition-colors group cursor-pointer"
+                className="bg-gradient-to-br from-zinc-900 via-[#2A2A3E] to-zinc-900 border border-pink-400/30 rounded-lg p-6 hover:border-pink-400 transition-colors group cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-5xl">{user.avatar}</div>
@@ -570,7 +570,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                     <motion.div
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className="text-xs font-bold bg-linear-to-r from-cyan-400 to-violet-400 text-transparent bg-clip-text shrink-0"
+                      className="text-xs font-bold bg-gradient-to-r from-cyan-400 to-violet-400 text-transparent bg-clip-text shrink-0"
                     >
                       {user.matchScore}%
                     </motion.div>

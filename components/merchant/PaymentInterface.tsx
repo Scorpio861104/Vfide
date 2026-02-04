@@ -46,7 +46,7 @@ export function PaymentInterface() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-linear-to-br from-blue-900/20 to-purple-900/20 border-2 border-blue-500/30 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border-2 border-blue-500/30 rounded-xl p-6">
         <div className="flex items-center gap-3">
           <CreditCard className="w-10 h-10 text-blue-400" />
           <div>
@@ -166,7 +166,7 @@ export function PaymentInterface() {
           <button
             onClick={handlePayment}
             disabled={isPaying || !isValidMerchant || !amount || !orderId || !trustScore.eligible}
-            className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-4 rounded-lg transition-all text-lg"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-4 rounded-lg transition-all text-lg"
           >
             {isPaying ? 'Processing...' : !trustScore.eligible ? 'Vault Locked or Missing' : `Pay ${amount || '0'} VFIDE`}
           </button>

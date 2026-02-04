@@ -102,7 +102,7 @@ function WalletTypeCard({ type, label }: { type: string; label: string }) {
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       className={`
-        bg-linear-to-br ${getTypeStyles()}
+        bg-gradient-to-br ${getTypeStyles()}
         text-white rounded-xl p-4 shadow-lg
       `}
     >

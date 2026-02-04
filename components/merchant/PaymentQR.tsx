@@ -117,7 +117,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-linear-to-br from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
           <QrCode className="w-8 h-8 text-cyan-400" />
           <div>

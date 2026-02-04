@@ -166,7 +166,7 @@ export function MobileBottomNav() {
                 {isActive && (
                   <motion.div
                     layoutId="bottomNavIndicator"
-                    className="absolute top-0 w-10 h-1 bg-linear-to-r from-cyan-400 to-blue-500 rounded-full"
+                    className="absolute top-0 w-10 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -194,7 +194,7 @@ export function MobileBottomNav() {
             {showMore && (
               <motion.div
                 layoutId="bottomNavIndicator"
-                className="absolute top-0 w-10 h-1 bg-linear-to-r from-cyan-400 to-blue-500 rounded-full"
+                className="absolute top-0 w-10 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}

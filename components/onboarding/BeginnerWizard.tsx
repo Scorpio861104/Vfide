@@ -193,7 +193,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
 
           <button
             onClick={nextStep}
-            className="px-6 py-2 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 transition-all"
+            className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 transition-all"
           >
             {currentStep === steps.length - 1 ? "Start Using VFIDE!" : "Next →"}
           </button>

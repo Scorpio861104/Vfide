@@ -67,7 +67,7 @@ export function StoryRing({
               {latestStory?.content?.slice(0, 15)}...
             </div>
           ) : (
-            <div className="w-full h-full bg-linear-to-br from-cyan-400/20 to-violet-400/20 flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-cyan-400/20 to-violet-400/20 flex items-center justify-center">
               <span className="text-2xl">{userAvatar || '👤'}</span>
             </div>
           )}

@@ -258,7 +258,7 @@ describe('GlassCard', () => {
   it('applies gradient when enabled', () => {
     const { container } = render(<GlassCard gradient>Content</GlassCard>)
     
-    expect(container.firstChild).toHaveClass('bg-linear-to-br')
+    expect(container.firstChild).toHaveClass('bg-gradient-to-br')
   })
 
   it('handles click events', () => {

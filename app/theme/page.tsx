@@ -123,7 +123,7 @@ export default function ThemeManagementPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mt-6 p-6 bg-linear-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg"
+              className="mt-6 p-6 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg"
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>

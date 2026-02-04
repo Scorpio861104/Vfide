@@ -95,13 +95,13 @@ export default function VestingPage() {
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-purple-500/20 to-violet-500/20 border border-purple-500/30 rounded-full mb-4"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-violet-500/20 border border-purple-500/30 rounded-full mb-4"
             >
               <Sparkles className="w-4 h-4 text-purple-400" />
               <span className="text-purple-400 text-sm font-medium">Developer Reserve</span>
             </motion.div>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">
-              Token <span className="text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-violet-400">Vesting</span>
+              Token <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-violet-400">Vesting</span>
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Developer reserve tokens vest over 48 months with milestone-based unlocks.
@@ -133,7 +133,7 @@ export default function VestingPage() {
                   <div className={`p-2 rounded-xl ${stat.bgColor} inline-block mb-2 group-hover:scale-110 transition-transform`}>
                     <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
                   </div>
-                  <div className={`text-2xl font-bold ${stat.highlight ? 'text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400' : 'text-white'}`}>
+                  <div className={`text-2xl font-bold ${stat.highlight ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400' : 'text-white'}`}>
                     {stat.value}
                   </div>
                   <div className="text-xs text-gray-400">{stat.label}</div>
@@ -161,7 +161,7 @@ export default function VestingPage() {
                 whileTap={{ scale: 0.98 }}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
                   activeTab === tab.id
-                    ? `bg-linear-to-r ${colorMap[tab.id].gradient} text-white shadow-lg ${colorMap[tab.id].shadow}`
+                    ? `bg-gradient-to-r ${colorMap[tab.id].gradient} text-white shadow-lg ${colorMap[tab.id].shadow}`
                     : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
                 }`}
               >
@@ -220,7 +220,7 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
               initial={{ width: 0 }}
               animate={{ width: `${vestedPercent}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className="h-full bg-linear-to-r from-purple-500 to-cyan-400 rounded-full"
+              className="h-full bg-gradient-to-r from-purple-500 to-cyan-400 rounded-full"
             />
           </div>
         </div>
@@ -322,7 +322,7 @@ function ScheduleTab({ schedule }: { schedule?: readonly Milestone[] }) {
                   className="hover:bg-white/5 transition-colors"
                 >
                   <td className="px-4 py-3 text-white font-bold">Month {milestone.month}</td>
-                  <td className="px-4 py-3 text-right text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 font-bold">{milestone.percentage}%</td>
+                  <td className="px-4 py-3 text-right text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold">{milestone.percentage}%</td>
                   <td className="px-4 py-3 text-gray-400">
                     {Number(milestone.unlockTime) > 0 
                       ? new Date(Number(milestone.unlockTime) * 1000).toLocaleDateString()
@@ -440,7 +440,7 @@ function ClaimTab({
         {/* Claimable Amount */}
         <div className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20 rounded-2xl p-6 mb-6 text-center">
           <div className="text-sm text-gray-400 mb-2">Available to Claim</div>
-          <div className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-purple-400">
+          <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
             {Number(claimableAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </div>
           <div className="text-gray-400">VFIDE</div>
@@ -478,7 +478,7 @@ function ClaimTab({
           disabled={!hasClaimable || isPending || isConfirming || claimsPaused}
           whileHover={{ scale: hasClaimable && !isPending && !isConfirming && !claimsPaused ? 1.02 : 1 }}
           whileTap={{ scale: hasClaimable && !isPending && !isConfirming && !claimsPaused ? 0.98 : 1 }}
-          className="w-full py-4 bg-linear-to-r from-purple-500 to-violet-500 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-xl shadow-lg shadow-purple-500/25 disabled:shadow-none transition-all flex items-center justify-center gap-2"
+          className="w-full py-4 bg-gradient-to-r from-purple-500 to-violet-500 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-xl shadow-lg shadow-purple-500/25 disabled:shadow-none transition-all flex items-center justify-center gap-2"
         >
           {isPending || isConfirming ? (
             <>

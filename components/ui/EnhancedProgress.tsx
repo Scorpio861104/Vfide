@@ -20,25 +20,25 @@ const colorStyles = {
   cyan: {
     bg: "bg-cyan-400/20",
     fill: "bg-cyan-400",
-    gradient: "bg-linear-to-r from-cyan-400 to-blue-500",
+    gradient: "bg-gradient-to-r from-cyan-400 to-blue-500",
     glow: "shadow-[0_0_20px_rgba(0,240,255,0.5)]",
   },
   green: {
     bg: "bg-emerald-500/20",
     fill: "bg-emerald-500",
-    gradient: "bg-linear-to-r from-emerald-500 to-green-500",
+    gradient: "bg-gradient-to-r from-emerald-500 to-green-500",
     glow: "shadow-[0_0_20px_rgba(16,185,129,0.5)]",
   },
   purple: {
     bg: "bg-purple-500/20",
     fill: "bg-purple-500",
-    gradient: "bg-linear-to-r from-purple-500 to-indigo-500",
+    gradient: "bg-gradient-to-r from-purple-500 to-indigo-500",
     glow: "shadow-[0_0_20px_rgba(167,139,250,0.5)]",
   },
   gold: {
     bg: "bg-yellow-500/20",
     fill: "bg-yellow-500",
-    gradient: "bg-linear-to-r from-yellow-500 to-amber-500",
+    gradient: "bg-gradient-to-r from-yellow-500 to-amber-500",
     glow: "shadow-[0_0_20px_rgba(234,179,8,0.5)]",
   },
 };
@@ -101,7 +101,7 @@ export function EnhancedProgressBar({
           {/* Shine effect */}
           {animated && (
             <motion.div
-              className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent"
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
               initial={{ x: "-100%" }}
               animate={{ x: "200%" }}
               transition={{

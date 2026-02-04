@@ -208,7 +208,7 @@ export function AvatarUpload({
               )}
             </div>
           ) : (
-            <div className="w-full h-full rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
               <ImageIcon className="w-12 h-12 text-white/50" />
             </div>
           )}
@@ -232,7 +232,7 @@ export function AvatarUpload({
                   initial={{ width: 0 }}
                   animate={{ width: `${uploadProgress}%` }}
                   transition={{ duration: 0.3 }}
-                  className="h-full bg-linear-to-r from-cyan-400 to-blue-500"
+                  className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
                 />
               </div>
             </motion.div>
@@ -386,7 +386,7 @@ export function AvatarUploadCompact({
         {currentAvatar ? (
           <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
             <ImageIcon className="w-8 h-8 text-white/50" />
           </div>
         )}

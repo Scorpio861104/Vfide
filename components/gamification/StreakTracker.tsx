@@ -41,7 +41,7 @@ function AnimatedNumber({ value, className }: { value: number; className?: strin
 function FireParticle({ delay }: { delay: number }) {
   return (
     <motion.div
-      className="absolute w-2 h-2 rounded-full bg-linear-to-t from-orange-500 to-yellow-300"
+      className="absolute w-2 h-2 rounded-full bg-gradient-to-t from-orange-500 to-yellow-300"
       initial={{ y: 0, x: 0, opacity: 0.8, scale: 1 }}
       animate={{
         y: [-5, -25],
@@ -109,7 +109,7 @@ export default function StreakTracker() {
       animate={{ opacity: 1, y: 0 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="relative bg-linear-to-br from-orange-500/10 to-orange-500/10 border border-orange-500/30 rounded-xl p-6 overflow-hidden"
+      className="relative bg-gradient-to-br from-orange-500/10 to-orange-500/10 border border-orange-500/30 rounded-xl p-6 overflow-hidden"
     >
       {/* Animated background glow */}
       <motion.div
@@ -118,7 +118,7 @@ export default function StreakTracker() {
           scale: [1, 1.1, 1],
         }}
         transition={{ duration: 2, repeat: Infinity }}
-        className="absolute -top-20 -right-20 w-40 h-40 bg-linear-to-br from-orange-500/30 to-yellow-500/20 rounded-full blur-3xl pointer-events-none"
+        className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-orange-500/30 to-yellow-500/20 rounded-full blur-3xl pointer-events-none"
       />
 
       {/* Header */}
@@ -130,7 +130,7 @@ export default function StreakTracker() {
               rotate: [0, -5, 5, 0]
             } : {}}
             transition={{ duration: 0.5, repeat: isHovered ? Infinity : 0 }}
-            className="relative w-14 h-14 bg-linear-to-br from-orange-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30"
+            className="relative w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30"
           >
             <motion.div
               animate={{ 
@@ -164,7 +164,7 @@ export default function StreakTracker() {
             key={streak.currentStreak}
             initial={{ scale: 1.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-orange-500"
+            className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-500"
           >
             <AnimatedNumber value={streak.currentStreak} />
           </motion.div>
@@ -215,13 +215,13 @@ export default function StreakTracker() {
             initial={{ width: 0 }}
             animate={{ width: `${progressToMilestone}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="h-full bg-linear-to-r from-orange-500 to-orange-500 rounded-full relative"
+            className="h-full bg-gradient-to-r from-orange-500 to-orange-500 rounded-full relative"
           >
             {/* Animated glow on progress bar */}
             <motion.div
               animate={{ x: ['-100%', '200%'] }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent"
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
             />
           </motion.div>
         </div>
