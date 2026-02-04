@@ -136,34 +136,38 @@ export default function DaoHubPage() {
   const cooldownEnds = eligibilityData ? eligibilityData[2] : BigInt(0);
   const cooldownEndsDate = cooldownEnds > 0n ? new Date(Number(cooldownEnds) * 1000) : null;
   const isActiveMember = Boolean(isCouncilMember);
-  const accessMode = !isConnected
-    ? "disconnected"
-    : !isCouncilDeployed
-      ? "preview"
-      : isActiveMember
-        ? "active"
-        : "locked";
+  const accessMode = (() => {
+    if (!isConnected) return "disconnected";
+    if (!isCouncilDeployed) return "preview";
+    if (isActiveMember) return "active";
+    return "locked";
+  })();
 
   const currentTermNumber = isActiveMember ? Math.max(1, termsServed || 1) : termsServed;
   const termLabel = currentTermNumber > 0 ? `Term ${currentTermNumber}` : "—";
+
+  const nextEligibleLabel = cooldownEndsDate
+    ? cooldownEndsDate.toLocaleDateString()
+    : isCouncilDeployed
+      ? "On-chain"
+      : "—";
 
   const currentMember = {
     name: isActiveMember ? "Active DAO Member" : "DAO Member",
     address: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "—",
     term: termLabel,
-    nextEligible: cooldownEndsDate ? cooldownEndsDate.toLocaleDateString() : isCouncilDeployed ? "On-chain" : "—",
+    nextEligible: nextEligibleLabel,
     status: isActiveMember ? "active" : "locked",
     proofScore: score,
   };
 
-  const accessStatusLabel =
-    accessMode === "active"
-      ? "Access Active"
-      : accessMode === "preview"
-        ? "Preview Mode"
-        : accessMode === "disconnected"
-          ? "Wallet Required"
-          : "Access Locked";
+  const accessStatusMap = {
+    active: "Access Active",
+    preview: "Preview Mode",
+    disconnected: "Wallet Required",
+    locked: "Access Locked",
+  } as const;
+  const accessStatusLabel = accessStatusMap[accessMode];
 
   const termExpiryLabel =
     cooldownEndsDate && isActiveMember
