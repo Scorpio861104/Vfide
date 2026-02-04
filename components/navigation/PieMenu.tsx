@@ -55,6 +55,11 @@ import {
   Rocket,
   Star,
   UserPlus,
+  Sparkles,
+  Palette,
+  Globe,
+  Layers,
+  Sliders,
 } from 'lucide-react';
 
 // ============================================================================
@@ -100,6 +105,7 @@ const navigationItems: NavItem[] = [
       { id: 'wallet', label: 'Wallet', href: '/crypto', icon: Wallet, color: '#8B5CF6' },
       { id: 'guardians', label: 'Guardians', href: '/guardians', icon: ShieldCheck, color: '#8B5CF6' },
       { id: 'vault-recover', label: 'Recovery', href: '/vault/recover', icon: KeyRound, color: '#8B5CF6' },
+      { id: 'vault-settings', label: 'Settings', href: '/vault/settings', icon: Settings, color: '#8B5CF6' },
       { id: 'multisig', label: 'Multi-Sig', href: '/multisig', icon: Users, color: '#8B5CF6' },
       { id: 'time-locks', label: 'Time Locks', href: '/time-locks', icon: Clock, color: '#8B5CF6' },
       { id: 'vesting', label: 'Vesting', href: '/vesting', icon: Gift, color: '#8B5CF6' },
@@ -113,6 +119,7 @@ const navigationItems: NavItem[] = [
     children: [
       { id: 'merchant-main', label: 'Merchant Hub', href: '/merchant', icon: Store, color: '#10B981' },
       { id: 'pos', label: 'POS Terminal', href: '/pos', icon: CreditCard, color: '#10B981' },
+      { id: 'buy', label: 'Buy Tokens', href: '/buy', icon: Globe, color: '#10B981' },
       { id: 'escrow', label: 'Escrow', href: '/escrow', icon: Lock, color: '#10B981' },
       { id: 'payroll', label: 'Payroll', href: '/payroll', icon: Banknote, color: '#10B981' },
       { id: 'streaming', label: 'Streaming', href: '/streaming', icon: Zap, color: '#10B981', badge: 'NEW' },
@@ -133,6 +140,7 @@ const navigationItems: NavItem[] = [
       { id: 'stories', label: 'Stories', href: '/stories', icon: Camera, color: '#F59E0B' },
       { id: 'messages', label: 'Messages', href: '/social-messaging', icon: Mail, color: '#F59E0B' },
       { id: 'social-pay', label: 'Social Pay', href: '/social-payments', icon: Banknote, color: '#F59E0B' },
+      { id: 'social-analytics', label: 'Analytics', href: '/social', icon: TrendingUp, color: '#F59E0B' },
     ],
   },
   {
@@ -159,7 +167,10 @@ const navigationItems: NavItem[] = [
       { id: 'headhunter', label: 'Referrals', href: '/headhunter', icon: Search, color: '#EC4899' },
       { id: 'endorsements', label: 'Endorsements', href: '/endorsements', icon: Medal, color: '#EC4899' },
       { id: 'badges', label: 'Badges', href: '/badges', icon: Star, color: '#EC4899' },
+      { id: 'benefits', label: 'Benefits', href: '/benefits', icon: Gift, color: '#EC4899' },
+      { id: 'rewards-hub', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
       { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },
+      { id: 'invite-code', label: 'Invite Code', href: '/invite/[code]', icon: UserPlus, color: '#EC4899' },
     ],
   },
   {
@@ -173,6 +184,7 @@ const navigationItems: NavItem[] = [
       { id: 'budgets', label: 'Budgets', href: '/budgets', icon: PiggyBank, color: '#14B8A6' },
       { id: 'performance', label: 'Performance', href: '/performance', icon: BarChart3, color: '#14B8A6' },
       { id: 'reporting', label: 'Reports', href: '/reporting', icon: ClipboardList, color: '#14B8A6' },
+      { id: 'price-alerts', label: 'Price Alerts', href: '/price-alerts', icon: Bell, color: '#14B8A6' },
     ],
   },
   {
@@ -184,7 +196,13 @@ const navigationItems: NavItem[] = [
       { id: 'developer-main', label: 'Dev Hub', href: '/developer', icon: Code, color: '#64748B' },
       { id: 'testnet', label: 'Testnet', href: '/testnet', icon: TestTube, color: '#64748B' },
       { id: 'explorer', label: 'Explorer', href: '/explorer', icon: Compass, color: '#64748B' },
+      { id: 'explorer-detail', label: 'Explorer Detail', href: '/explorer/[id]', icon: Compass, color: '#64748B' },
+      { id: 'paper-wallet', label: 'Paper Wallet', href: '/paper-wallet', icon: FileText, color: '#64748B' },
+      { id: 'hardware-wallet', label: 'Hardware Wallet', href: '/hardware-wallet', icon: KeyRound, color: '#64748B' },
+      { id: 'enterprise', label: 'Enterprise', href: '/enterprise', icon: Landmark, color: '#64748B' },
       { id: 'token-launch', label: 'Token Launch', href: '/token-launch', icon: Rocket, color: '#64748B' },
+      { id: 'live-demo', label: 'Live Demo', href: '/live-demo', icon: Rocket, color: '#64748B' },
+      { id: 'crypto-social-demo', label: 'Social Demo', href: '/demo/crypto-social', icon: TestTube, color: '#64748B' },
     ],
   },
   {
@@ -199,6 +217,14 @@ const navigationItems: NavItem[] = [
       { id: 'settings', label: 'Settings', href: '/setup', icon: Settings, color: '#94A3B8' },
       { id: 'help', label: 'Help & Docs', href: '/docs', icon: HelpCircle, color: '#94A3B8' },
       { id: 'legal', label: 'Legal', href: '/legal', icon: Scale, color: '#94A3B8' },
+      { id: 'about', label: 'About', href: '/about', icon: HelpCircle, color: '#94A3B8' },
+      { id: 'support', label: 'Support', href: '/support', icon: HelpCircle, color: '#94A3B8' },
+      { id: 'theme', label: 'Theme', href: '/theme', icon: Palette, color: '#94A3B8' },
+      { id: 'theme-manager', label: 'Theme Manager', href: '/theme-manager', icon: Sliders, color: '#94A3B8' },
+      { id: 'theme-showcase', label: 'Theme Showcase', href: '/theme-showcase', icon: Layers, color: '#94A3B8' },
+      { id: 'admin', label: 'Admin', href: '/admin', icon: Settings, color: '#94A3B8' },
+      { id: 'control-panel', label: 'Control Panel', href: '/control-panel', icon: Settings, color: '#94A3B8' },
+      { id: 'sanctum', label: 'Sanctum', href: '/sanctum', icon: ShieldCheck, color: '#94A3B8' },
     ],
   },
 ];
