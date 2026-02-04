@@ -45,6 +45,12 @@ jest.mock('@/lib/vfide-hooks', () => ({
   useVaultBalance: () => ({
     balance: '1000',
   }),
+  useEscrow: () => ({
+    createEscrow: jest.fn(),
+    loading: false,
+    error: null,
+    isSuccess: false,
+  }),
 }))
 
 // Mock contracts
@@ -71,6 +77,7 @@ describe('PaymentInterface', () => {
     // Check for the icon or some UI element
     const svgs = document.querySelectorAll('svg')
     expect(svgs.length).toBeGreaterThan(0)
+    expect(screen.getByText(/Escrow for online orders/i)).toBeInTheDocument()
   })
 
   it('displays trust score when connected', () => {

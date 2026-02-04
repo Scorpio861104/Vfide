@@ -12,6 +12,7 @@ import {
   useIsMerchant,
   useProofScore,
   useVaultBalance,
+  useEscrow,
 } from '@/lib/vfide-hooks'
 import { useAccount } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
@@ -25,15 +26,26 @@ export function PaymentInterface() {
   const [orderId, setOrderId] = useState('')
   
   const { payMerchant, isPaying, isSuccess, error } = usePayMerchant()
+  const { createEscrow, loading: isEscrowLoading, error: escrowError, isSuccess: escrowSuccess } = useEscrow()
   const merchantInfo = useIsMerchant(merchantAddress as `0x${string}` | undefined)
   const trustScore = useCustomerTrustScore(address)
   const { score } = useProofScore(address)
   const { balance: vaultBalance } = useVaultBalance()
+  const [settlementMode, setSettlementMode] = useState<'instant' | 'escrow'>('escrow')
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!merchantAddress || !amount || !orderId) return
     
-    payMerchant(
+    if (settlementMode === 'escrow') {
+      await createEscrow(
+        merchantAddress as `0x${string}`,
+        amount,
+        orderId
+      )
+      return
+    }
+    
+    await payMerchant(
       merchantAddress as `0x${string}`,
       CONTRACT_ADDRESSES.VFIDEToken,
       amount,
@@ -42,6 +54,10 @@ export function PaymentInterface() {
   }
 
   const isValidMerchant = isAddress(merchantAddress) && merchantInfo.isMerchant && !merchantInfo.isSuspended
+  const requiresEscrow = settlementMode === 'escrow'
+  const canUseInstant = trustScore.highTrust
+  const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (!requiresEscrow ? canUseInstant : true)
+  const combinedError = error || escrowError
 
   return (
     <div className="space-y-6">
@@ -51,7 +67,7 @@ export function PaymentInterface() {
           <CreditCard className="w-10 h-10 text-blue-400" />
           <div>
             <h2 className="text-2xl font-bold">Pay Merchant</h2>
-            <p className="text-gray-400">Direct payment (instant settlement)</p>
+            <p className="text-gray-400">Escrow for online orders • Instant for trusted in-person or QR</p>
           </div>
         </div>
       </div>
@@ -82,6 +98,44 @@ export function PaymentInterface() {
       {/* Payment Form */}
       <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-6">
         <div className="space-y-4" role="form" aria-label="Payment form">
+          {/* Settlement Mode */}
+          <div>
+            <label className="text-sm text-gray-400 mb-2 block">Settlement Mode</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSettlementMode('escrow')}
+                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                  settlementMode === 'escrow'
+                    ? 'border-amber-500/60 bg-amber-500/10 text-amber-200'
+                    : 'border-gray-700 text-gray-400 hover:border-amber-500/40 hover:text-amber-200'
+                }`}
+                aria-pressed={settlementMode === 'escrow'}
+              >
+                <div className="font-semibold">Escrow Protection</div>
+                <div className="text-xs text-gray-400">Best for online orders and first-time buyers.</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSettlementMode('instant')}
+                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                  settlementMode === 'instant'
+                    ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200'
+                    : 'border-gray-700 text-gray-400 hover:border-emerald-500/40 hover:text-emerald-200'
+                }`}
+                aria-pressed={settlementMode === 'instant'}
+                disabled={!canUseInstant}
+              >
+                <div className="font-semibold">Instant Settlement</div>
+                <div className="text-xs text-gray-400">For in-person or QR, requires high trust.</div>
+              </button>
+            </div>
+            {!canUseInstant && (
+              <p className="text-xs text-amber-300 mt-2">
+                Instant settlement unlocks for high-trust payers. Escrow stays available for fairness.
+              </p>
+            )}
+          </div>
           {/* Merchant Address */}
           <div>
             <label htmlFor="merchant-address" className="text-sm text-gray-400 mb-2 block">Merchant Address</label>
@@ -165,14 +219,20 @@ export function PaymentInterface() {
           {/* Pay Button */}
           <button
             onClick={handlePayment}
-            disabled={isPaying || !isValidMerchant || !amount || !orderId || !trustScore.eligible}
+            disabled={isPaying || isEscrowLoading || !canSubmit}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-4 rounded-lg transition-all text-lg"
           >
-            {isPaying ? 'Processing...' : !trustScore.eligible ? 'Vault Locked or Missing' : `Pay ${amount || '0'} VFIDE`}
+            {(isPaying || isEscrowLoading)
+              ? 'Processing...'
+              : !trustScore.eligible
+                ? 'Vault Locked or Missing'
+                : requiresEscrow
+                  ? `Create Escrow for ${amount || '0'} VFIDE`
+                  : `Pay ${amount || '0'} VFIDE Instantly`}
           </button>
 
           {/* Error Display */}
-          {error && (
+          {combinedError && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -184,14 +244,14 @@ export function PaymentInterface() {
                 <div>
                   <div className="text-red-400 font-bold">Payment Failed</div>
                   <div className="text-sm text-gray-400 mt-1">
-                    {error || 'An error occurred during payment'}
+                    {combinedError || 'An error occurred during payment'}
                   </div>
                 </div>
               </div>
             </motion.div>
           )}
 
-          {isSuccess && (
+          {(isSuccess || escrowSuccess) && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -199,7 +259,9 @@ export function PaymentInterface() {
               role="status"
             >
               <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-2" />
-              <div className="text-green-400 font-bold text-lg">Payment Successful!</div>
+              <div className="text-green-400 font-bold text-lg">
+                {requiresEscrow ? 'Escrow Created!' : 'Payment Successful!'}
+              </div>
               <div className="text-sm text-gray-400 mt-1">Order ID: {orderId}</div>
             </motion.div>
           )}
