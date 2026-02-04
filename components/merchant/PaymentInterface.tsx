@@ -79,7 +79,7 @@ export function PaymentInterface() {
           <CreditCard className="w-10 h-10 text-blue-400" />
           <div>
             <h2 className="text-2xl font-bold">Pay Merchant</h2>
-            <p className="text-gray-400">Escrow for online orders. Instant for trusted in-person or QR code payments.</p>
+            <p className="text-gray-400">Escrow for online orders—instant for trusted in-person or QR code payments.</p>
           </div>
         </div>
       </div>
@@ -145,12 +145,12 @@ export function PaymentInterface() {
                 disabled={!canUseInstant}
               >
                 <div className="font-semibold">Instant Settlement</div>
-                <div className="text-xs text-gray-400">For in-person or QR code payments, requires a high trust score.</div>
+                <div className="text-xs text-gray-400">High trust score required for in-person or QR code payments.</div>
               </button>
             </div>
             {!canUseInstant && (
               <p className="text-xs text-amber-300 mt-2">
-                High-trust customers can use instant settlement. Escrow protects both parties for all transactions.
+                High-trust customers can use instant settlement; escrow protects both parties for all transactions.
               </p>
             )}
           </div>
