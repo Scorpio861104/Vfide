@@ -132,6 +132,11 @@
     height: auto;
   }
 
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+  }
+
   .table-responsive table {
     width: 100%;
     max-width: 100%;
