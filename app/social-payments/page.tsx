@@ -174,26 +174,26 @@ export default function SocialPaymentsDashboard() {
         </motion.div>
 
         {/* Tabs */}
-          <div className="flex gap-2 mb-6 border-b border-zinc-800">
-            {[
-              { id: 'feed' as const, label: 'Social Feed', icon: MessageCircle },
-              { id: 'activity' as const, label: 'All Activity', icon: TrendingUp },
-              { id: 'earnings' as const, label: 'Earnings', icon: DollarSign },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
-                  activeTab === tab.id
-                    ? 'text-purple-400 border-purple-500'
-                    : 'text-zinc-500 border-transparent hover:text-zinc-400'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+        <div className="flex gap-2 mb-6 border-b border-zinc-800">
+          {[
+            { id: 'feed' as const, label: 'Social Feed', icon: MessageCircle },
+            { id: 'activity' as const, label: 'All Activity', icon: TrendingUp },
+            { id: 'earnings' as const, label: 'Earnings', icon: DollarSign },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
+                activeTab === tab.id
+                  ? 'text-purple-400 border-purple-500'
+                  : 'text-zinc-500 border-transparent hover:text-zinc-400'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
         {/* Content */}
         <motion.div
