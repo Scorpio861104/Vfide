@@ -44,6 +44,11 @@ const accessRules = [
     detail: "The Seer can remove members for misconduct before the 12-month term ends. Missing more than 2 votes locks DAO access and payments.",
     icon: <AlertTriangle className="w-4 h-4" />,
   },
+  {
+    title: "90% Member Removal Vote",
+    detail: "DAO members can vote peers out with a 90% supermajority. Successful removals immediately lock access and payments.",
+    icon: <Gavel className="w-4 h-4" />,
+  },
 ];
 
 const disputeQueue = [
@@ -445,6 +450,11 @@ export default function DaoHubPage() {
                 icon: <Users className="w-4 h-4" />,
                 title: "Member Term Limits",
                 description: "Members rotate on fixed terms. Access revokes immediately at term end or removal.",
+              },
+              {
+                icon: <Gavel className="w-4 h-4" />,
+                title: "90% Removal Vote",
+                description: "Members can vote peers out with a 90% supermajority. Offboarded members lose DAO access instantly.",
               },
               {
                 icon: <AlertTriangle className="w-4 h-4" />,
