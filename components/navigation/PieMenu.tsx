@@ -328,6 +328,18 @@ function CompactTile({
         }}
       />
       
+      {/* Pulse glow for active items */}
+      {(isActive || isHovered) && (
+        <motion.div
+          className="absolute inset-0 rounded-xl pointer-events-none"
+          animate={{ opacity: [0.1, 0.35, 0.1], scale: [1, 1.01, 1] }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            background: `radial-gradient(circle at 30% 30%, ${item.color}25 0%, transparent 70%)`,
+          }}
+        />
+      )}
+
       {/* Scan line effect on hover */}
       {isHovered && (
         <motion.div
@@ -337,6 +349,22 @@ function CompactTile({
           className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent"
           style={{ pointerEvents: 'none' }}
         />
+      )}
+
+      {/* Particle trails */}
+      {isHovered && (
+        <div className="absolute inset-0 pointer-events-none">
+          {[0, 1, 2].map((trail) => (
+            <motion.span
+              key={`trail-${item.id}-${trail}`}
+              className="absolute top-1/2 w-1 h-1 rounded-full"
+              style={{ background: item.color, boxShadow: `0 0 8px ${item.color}` }}
+              initial={{ opacity: 0, x: '-10%', y: `${-6 + trail * 6}px` }}
+              animate={{ opacity: [0, 0.9, 0], x: ['-10%', '120%'] }}
+              transition={{ duration: 0.9, repeat: Infinity, delay: trail * 0.2 }}
+            />
+          ))}
+        </div>
       )}
       
       {/* Icon Container */}
@@ -433,6 +461,8 @@ interface TriggerButtonProps {
 }
 
 function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) {
+  const ActiveIcon = activeCategory?.icon;
+
   return (
     <motion.button
       onClick={onClick}
@@ -496,6 +526,73 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
           }}
         />
       )}
+
+      {/* Pulse glow */}
+      {isOpen && (
+        <motion.div
+          className="absolute inset-0 rounded-2xl"
+          animate={{ opacity: [0.25, 0.6, 0.25], scale: [1, 1.08, 1] }}
+          transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            background: `radial-gradient(circle at center, ${activeCategory?.color || '#6366f1'}40 0%, transparent 70%)`,
+          }}
+        />
+      )}
+
+      {/* Orbiting accent dots */}
+      {isOpen && (
+        <>
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+          >
+            <span
+              className="absolute -top-2 left-1/2 h-2 w-2 rounded-full"
+              style={{
+                background: activeCategory?.color || '#6366f1',
+                boxShadow: `0 0 10px ${activeCategory?.color || '#6366f1'}`,
+                transform: 'translateX(-50%)',
+              }}
+            />
+          </motion.div>
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            animate={{ rotate: -360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+          >
+            <span
+              className="absolute -bottom-2 left-1/2 h-1.5 w-1.5 rounded-full"
+              style={{
+                background: activeCategory?.color || '#6366f1',
+                boxShadow: `0 0 8px ${activeCategory?.color || '#6366f1'}`,
+                transform: 'translateX(-50%)',
+              }}
+            />
+          </motion.div>
+        </>
+      )}
+
+      {/* Orbiting active icon */}
+      {isOpen && ActiveIcon && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1, rotate: 360 }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+        >
+          <div
+            className="absolute -right-3 top-1/2 h-5 w-5 rounded-full flex items-center justify-center"
+            style={{
+              background: `${activeCategory?.color || '#6366f1'}30`,
+              boxShadow: `0 0 12px ${activeCategory?.color || '#6366f1'}60`,
+              transform: 'translateY(-50%)',
+            }}
+          >
+            <ActiveIcon size={12} style={{ color: activeCategory?.color || '#6366f1' }} />
+          </div>
+        </motion.div>
+      )}
       
       {/* Inner content */}
       <div className="relative z-10 flex items-center justify-center w-full h-full">
@@ -545,6 +642,7 @@ export function PieMenu() {
   const [activeCategory, setActiveCategory] = useState<NavItem | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<AudioContext | null>(null);
   
   // Close menu on outside click
   useEffect(() => {
@@ -587,26 +685,56 @@ export function PieMenu() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, activeCategory]);
 
+  const playClickTone = useCallback((frequency = 520) => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new AudioContext();
+      }
+      const context = audioRef.current;
+      if (context.state === 'suspended') {
+        context.resume();
+      }
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.04, context.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.18);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.2);
+    } catch {
+      // Ignore audio errors for unsupported contexts.
+    }
+  }, []);
+
   const handleItemClick = useCallback((item: NavItem) => {
     if (item.children && item.children.length > 0) {
       setActiveCategory(item);
+      playClickTone(480);
     } else if (item.href) {
+      playClickTone(560);
       router.push(item.href);
       setIsOpen(false);
       setActiveCategory(null);
     }
-  }, [router]);
+  }, [router, playClickTone]);
 
   const handleBack = useCallback(() => {
+    playClickTone(420);
     setActiveCategory(null);
-  }, []);
+  }, [playClickTone]);
 
   const toggleMenu = useCallback(() => {
+    playClickTone(isOpen ? 360 : 520);
     setIsOpen(prev => !prev);
     if (isOpen) {
       setActiveCategory(null);
     }
-  }, [isOpen]);
+  }, [isOpen, playClickTone]);
 
   const itemsToShow = activeCategory?.children || navigationItems;
 
