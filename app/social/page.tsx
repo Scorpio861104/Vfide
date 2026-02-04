@@ -201,7 +201,7 @@ export default function SocialAnalyticsPage() {
               </div>
 
               {/* Time Range Selector */}
-              <div className="flex gap-2 bg-zinc-900 border border-zinc-700 rounded-lg p-2 ring-effect">
+              <div className="flex gap-2 bg-zinc-900 border border-zinc-700 rounded-lg p-2">
                 {(['7d', '30d', '90d', '1y'] as const).map((range) => (
                   <button
                     key={range}
@@ -280,7 +280,7 @@ export default function SocialAnalyticsPage() {
           >
             <h2 className="text-2xl font-bold text-zinc-100 mb-6">Influence Score</h2>
 
-            <div className={`bg-gradient-to-br ${getTierColor(mockInfluenceScore.tier)} border-2 rounded-lg p-8 ring-effect`}>
+            <div className={`bg-gradient-to-br ${getTierColor(mockInfluenceScore.tier)} border-2 rounded-lg p-8`}>
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Score Display */}
                 <motion.div
