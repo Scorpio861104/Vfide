@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   usePayMerchant,
@@ -32,6 +32,7 @@ export function PaymentInterface() {
   const { score } = useProofScore(address)
   const { balance: vaultBalance } = useVaultBalance()
   const [isEscrowMode, setIsEscrowMode] = useState(true)
+  const [hasSelectedMode, setHasSelectedMode] = useState(false)
 
   const handlePayment = async () => {
     if (!merchantAddress || !amount || !orderId) return
@@ -63,6 +64,12 @@ export function PaymentInterface() {
   const canUseInstant = trustScore.highTrust
   const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (isEscrowMode || canUseInstant)
   const combinedError = error || escrowError
+
+  useEffect(() => {
+    if (!hasSelectedMode) {
+      setIsEscrowMode(!trustScore.highTrust)
+    }
+  }, [hasSelectedMode, trustScore.highTrust])
 
   return (
     <div className="space-y-6">
@@ -109,7 +116,10 @@ export function PaymentInterface() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setIsEscrowMode(true)}
+                onClick={() => {
+                  setHasSelectedMode(true)
+                  setIsEscrowMode(true)
+                }}
                 className={`rounded-lg border px-4 py-3 text-left transition-colors ${
                 isEscrowMode
                   ? 'border-amber-500/60 bg-amber-500/10 text-amber-200'
@@ -122,7 +132,10 @@ export function PaymentInterface() {
               </button>
               <button
                 type="button"
-                onClick={() => setIsEscrowMode(false)}
+                onClick={() => {
+                  setHasSelectedMode(true)
+                  setIsEscrowMode(false)
+                }}
                 className={`rounded-lg border px-4 py-3 text-left transition-colors ${
                 !isEscrowMode
                   ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200'
