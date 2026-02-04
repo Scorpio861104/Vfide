@@ -91,6 +91,14 @@ interface NavItem {
 // NAVIGATION STRUCTURE
 // ============================================================================
 
+const AUDIO_ENVELOPE = {
+  initialGain: 0.0001,
+  peakGain: 0.04,
+  attackTime: 0.02,
+  releaseTime: 0.18,
+  finalRampTime: 0.01,
+};
+
 const navigationItems: NavItem[] = [
   {
     id: 'home',
@@ -461,8 +469,6 @@ interface TriggerButtonProps {
 }
 
 function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) {
-  const activeIcon = activeCategory?.icon;
-
   return (
     <motion.button
       onClick={onClick}
@@ -574,7 +580,7 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
       )}
 
       {/* Orbiting active icon */}
-      {isOpen && activeIcon && (
+      {isOpen && activeCategory?.icon && (
         <motion.div
           className="absolute inset-0 pointer-events-none"
           initial={{ scale: 0.8, opacity: 0 }}
@@ -589,7 +595,7 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
               transform: 'translateY(-50%)',
             }}
           >
-            {React.createElement(activeIcon, {
+            {React.createElement(activeCategory.icon, {
               size: 12,
               style: { color: activeCategory?.color || '#6366f1' },
             })}
@@ -646,13 +652,6 @@ export function PieMenu() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<AudioContext | null>(null);
-  const audioEnvelopeRef = useRef({
-    initialGain: 0.0001,
-    peakGain: 0.04,
-    attackTime: 0.02,
-    releaseTime: 0.18,
-    finalRampTime: 0.01,
-  });
   
   // Close menu on outside click
   useEffect(() => {
@@ -720,7 +719,7 @@ export function PieMenu() {
         attackTime: ATTACK_TIME,
         releaseTime: RELEASE_TIME,
         finalRampTime: FINAL_RAMP_TIME,
-      } = audioEnvelopeRef.current;
+      } = AUDIO_ENVELOPE;
 
       const oscillator = context.createOscillator();
       const gain = context.createGain();
@@ -738,7 +737,7 @@ export function PieMenu() {
       const totalEnvelope = ATTACK_TIME + RELEASE_TIME + FINAL_RAMP_TIME;
       oscillator.stop(context.currentTime + totalEnvelope);
     } catch (error) {
-      // Ignore audio errors for unsupported contexts.
+      // Ignore audio errors for unsupported contexts
       if (process.env.NODE_ENV !== 'production') {
         console.warn('Pie menu audio cue failed', error);
       }
