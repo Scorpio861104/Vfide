@@ -504,7 +504,7 @@ export default function EscrowPage() {
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => handleClaimTimeout(Number(escrow.id))}
                                     disabled={escrowLoading || !isTimeoutReady}
-                                    title={isTimeoutReady ? 'Merchants can claim funds after the buyer timeout period expires' : `Available in ${formatTimeRemaining(escrow.releaseTime)}`}
+                                    title={isTimeoutReady ? 'Buyer timeout expired — merchants can claim funds now' : `Available in ${formatTimeRemaining(escrow.releaseTime)}`}
                                     className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all disabled:opacity-50"
                                   >
                                     {escrowLoading ? (
