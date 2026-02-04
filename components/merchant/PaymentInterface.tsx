@@ -34,7 +34,7 @@ export function PaymentInterface() {
   const [isEscrowMode, setIsEscrowMode] = useState(true)
   const [hasSelectedMode, setHasSelectedMode] = useState(false)
 
-  const handlePayment = async () => {
+  const handlePayment = async (): Promise<void> => {
     if (!merchantAddress || !amount || !orderId) return
     
     try {
@@ -45,7 +45,7 @@ export function PaymentInterface() {
           orderId
         )
       } else {
-        await payMerchant(
+        payMerchant(
           merchantAddress as `0x${string}`,
           CONTRACT_ADDRESSES.VFIDEToken,
           amount,
@@ -145,7 +145,7 @@ export function PaymentInterface() {
                 disabled={!canUseInstant}
               >
                 <div className="font-semibold">Instant Settlement</div>
-                <div className="text-xs text-gray-400">For in-person or QR code payments, requires high trust.</div>
+                <div className="text-xs text-gray-400">For in-person or QR code payments, requires an established trust score.</div>
               </button>
             </div>
             {!canUseInstant && (
