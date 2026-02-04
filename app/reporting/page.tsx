@@ -105,7 +105,7 @@ export default function ReportingAnalyticsPage() {
         >
           <div className="text-zinc-400">
             <p className="text-sm uppercase tracking-[0.3em] text-indigo-300/80 mb-2">
-              Executive view
+              Executive View
             </p>
             <p className="text-lg text-white font-semibold">
               Signal coverage across every dashboard
