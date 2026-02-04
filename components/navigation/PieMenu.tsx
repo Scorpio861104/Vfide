@@ -646,6 +646,13 @@ export function PieMenu() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const audioConfigRef = useRef({
+    initialGain: 0.0001,
+    peakGain: 0.04,
+    attackTime: 0.02,
+    releaseTime: 0.18,
+    toneDuration: 0.2,
+  });
   
   // Close menu on outside click
   useEffect(() => {
@@ -701,17 +708,26 @@ export function PieMenu() {
     if (typeof window === 'undefined') return;
     try {
       if (!audioRef.current) {
-        audioRef.current = new AudioContext();
+        try {
+          audioRef.current = new AudioContext();
+        } catch (audioError) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('Pie menu audio unavailable', audioError);
+          }
+          return;
+        }
       }
       const context = audioRef.current;
       if (context.state === 'suspended') {
         context.resume();
       }
-      const INITIAL_GAIN = 0.0001;
-      const PEAK_GAIN = 0.04;
-      const ATTACK_TIME = 0.02;
-      const RELEASE_TIME = 0.18;
-      const TONE_DURATION = 0.2;
+      const {
+        initialGain: INITIAL_GAIN,
+        peakGain: PEAK_GAIN,
+        attackTime: ATTACK_TIME,
+        releaseTime: RELEASE_TIME,
+        toneDuration: TONE_DURATION,
+      } = audioConfigRef.current;
 
       const oscillator = context.createOscillator();
       const gain = context.createGain();
@@ -729,6 +745,9 @@ export function PieMenu() {
       oscillator.stop(context.currentTime + TONE_DURATION);
     } catch {
       // Ignore audio errors for unsupported contexts.
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Pie menu audio cue failed');
+      }
     }
   }, []);
 
