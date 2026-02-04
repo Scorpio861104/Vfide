@@ -324,7 +324,12 @@ export default function MonthlyLeaderboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <div className="overflow-x-auto">
+        <div
+          className="table-responsive"
+          role="region"
+          aria-label="Monthly leaderboard results"
+          tabIndex={0}
+        >
           <table className="w-full">
             <thead className="bg-white/5">
               <tr>

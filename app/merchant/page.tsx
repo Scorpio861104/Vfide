@@ -309,7 +309,12 @@ export default function MerchantPage() {
               <p className="text-gray-400">See how VFIDE compares to traditional payment solutions</p>
             </motion.div>
 
-            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div
+              className="table-responsive -mx-4 px-4 sm:mx-0 sm:px-0"
+              role="region"
+              aria-label="Processor comparison table"
+              tabIndex={0}
+            >
               <table className="w-full min-w-150">
                 <thead>
                   <tr className="border-b border-white/10">

@@ -777,7 +777,12 @@ function MembersTab({ searchQuery }: { searchQuery: string }) {
             </div>
           </div>
           
-          <div className="overflow-x-auto">
+          <div
+            className="table-responsive"
+            role="region"
+            aria-label="Council members table"
+            tabIndex={0}
+          >
             <table className="w-full">
               <thead>
                 <tr className="border-b border-zinc-700">

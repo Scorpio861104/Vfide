@@ -599,7 +599,12 @@ function RevenueSection({ data }: { data: RevenueData[] }) {
       </div>
 
       {/* Detailed Revenue Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
+      <div
+        className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700 table-responsive"
+        role="region"
+        aria-label="Revenue report table"
+        tabIndex={0}
+      >
         <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4">
           Detailed Revenue Report
         </h2>

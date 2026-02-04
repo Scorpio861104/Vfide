@@ -497,7 +497,12 @@ export default function EnhancedDashboardAnalytics() {
             ))}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div
+            className="table-responsive"
+            role="region"
+            aria-label="Analytics transactions"
+            tabIndex={0}
+          >
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
