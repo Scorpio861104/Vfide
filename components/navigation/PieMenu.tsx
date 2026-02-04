@@ -651,7 +651,6 @@ export function PieMenu() {
     peakGain: 0.04,
     attackTime: 0.02,
     releaseTime: 0.18,
-    toneDuration: 0.2,
   });
   
   // Close menu on outside click
@@ -742,10 +741,10 @@ export function PieMenu() {
       oscillator.start();
       const totalEnvelope = ATTACK_TIME + RELEASE_TIME + 0.01;
       oscillator.stop(context.currentTime + totalEnvelope);
-    } catch {
+    } catch (error) {
       // Ignore audio errors for unsupported contexts.
       if (process.env.NODE_ENV !== 'production') {
-        console.warn('Pie menu audio cue failed');
+        console.warn('Pie menu audio cue failed', error);
       }
     }
   }, []);
