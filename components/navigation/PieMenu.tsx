@@ -713,30 +713,24 @@ export function PieMenu() {
       if (context.state === 'suspended') {
         context.resume();
       }
-      const {
-        initialGain: INITIAL_GAIN,
-        peakGain: PEAK_GAIN,
-        attackTime: ATTACK_TIME,
-        releaseTime: RELEASE_TIME,
-        finalRampTime: FINAL_RAMP_TIME,
-      } = AUDIO_ENVELOPE;
+      const { initialGain, peakGain, attackTime, releaseTime, finalRampTime } = AUDIO_ENVELOPE;
 
       const oscillator = context.createOscillator();
       const gain = context.createGain();
       oscillator.type = 'sine';
       oscillator.frequency.setValueAtTime(frequency, context.currentTime);
-      gain.gain.setValueAtTime(INITIAL_GAIN, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(PEAK_GAIN, context.currentTime + ATTACK_TIME);
-      const releaseStartTime = context.currentTime + ATTACK_TIME;
-      const releaseEndTime = releaseStartTime + RELEASE_TIME;
-      const finalRampEndTime = releaseEndTime + FINAL_RAMP_TIME;
-      gain.gain.exponentialRampToValueAtTime(INITIAL_GAIN, releaseEndTime);
+      gain.gain.setValueAtTime(initialGain, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(peakGain, context.currentTime + attackTime);
+      const releaseStartTime = context.currentTime + attackTime;
+      const releaseEndTime = releaseStartTime + releaseTime;
+      const finalRampEndTime = releaseEndTime + finalRampTime;
+      gain.gain.exponentialRampToValueAtTime(initialGain, releaseEndTime);
       gain.gain.linearRampToValueAtTime(0, finalRampEndTime);
       oscillator.connect(gain);
       gain.connect(context.destination);
       oscillator.start();
-      const totalEnvelope = finalRampEndTime - context.currentTime;
-      oscillator.stop(context.currentTime + totalEnvelope);
+      const envelopeDuration = finalRampEndTime - context.currentTime;
+      oscillator.stop(context.currentTime + envelopeDuration);
     } catch (error) {
       // Ignore audio errors for unsupported contexts
       if (process.env.NODE_ENV !== 'production') {
