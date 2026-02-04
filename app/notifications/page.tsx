@@ -111,7 +111,7 @@ export default function NotificationHubPage() {
           </button>
           <button
             onClick={() => handleExport('csv')}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 hover:bg-slate-700 rounded-lg border border-slate-600/60 text-white transition-colors"
           >
             <Download className="w-4 h-4" />
             CSV
