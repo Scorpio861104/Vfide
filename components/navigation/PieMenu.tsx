@@ -726,7 +726,6 @@ export function PieMenu() {
         peakGain: PEAK_GAIN,
         attackTime: ATTACK_TIME,
         releaseTime: RELEASE_TIME,
-        toneDuration: TONE_DURATION,
       } = audioConfigRef.current;
 
       const oscillator = context.createOscillator();
@@ -735,15 +734,14 @@ export function PieMenu() {
       oscillator.frequency.setValueAtTime(frequency, context.currentTime);
       gain.gain.setValueAtTime(INITIAL_GAIN, context.currentTime);
       gain.gain.exponentialRampToValueAtTime(PEAK_GAIN, context.currentTime + ATTACK_TIME);
-      gain.gain.exponentialRampToValueAtTime(
-        INITIAL_GAIN,
-        context.currentTime + ATTACK_TIME + RELEASE_TIME,
-      );
+      const releaseTime = context.currentTime + ATTACK_TIME + RELEASE_TIME;
+      gain.gain.exponentialRampToValueAtTime(INITIAL_GAIN, releaseTime);
+      gain.gain.linearRampToValueAtTime(0, releaseTime + 0.01);
       oscillator.connect(gain);
       gain.connect(context.destination);
       oscillator.start();
-      const totalEnvelope = ATTACK_TIME + RELEASE_TIME;
-      oscillator.stop(context.currentTime + Math.max(TONE_DURATION, totalEnvelope));
+      const totalEnvelope = ATTACK_TIME + RELEASE_TIME + 0.01;
+      oscillator.stop(context.currentTime + totalEnvelope);
     } catch {
       // Ignore audio errors for unsupported contexts.
       if (process.env.NODE_ENV !== 'production') {
