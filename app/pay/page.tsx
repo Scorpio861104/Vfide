@@ -145,7 +145,9 @@ function PayContent() {
             {/* Merchant Info */}
             <div className="mb-8 pb-8 border-b border-white/10">
               <div className="text-gray-400 text-sm mb-2">Paying to</div>
-              <div className="text-2xl font-bold text-white font-mono">{merchant}</div>
+              <div className="text-2xl font-bold text-white font-mono">
+                {merchant || "Missing merchant address"}
+              </div>
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <div className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-lg text-cyan-400 text-sm font-bold">
                   TRUSTED • ProofScore 845
@@ -161,6 +163,11 @@ function PayContent() {
               <div className="mt-3 text-xs text-gray-400">
                 {settlementTone.summary}
               </div>
+              {!merchant && (
+                <div className="mt-3 text-xs text-amber-300">
+                  Missing merchant address. Scan a valid QR code or reopen the payment link.
+                </div>
+              )}
             </div>
 
             {/* Amount */}
@@ -242,7 +249,7 @@ function PayContent() {
                   Processing...
                 </>
               ) : (
-                `Pay $${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}`
+                merchant ? `Pay $${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}` : "Merchant required"
               )}
             </motion.button>
 

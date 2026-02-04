@@ -143,19 +143,25 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
         {/* QR Code Display */}
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 flex flex-col items-center">
           <div className="bg-white p-4 rounded-xl mb-4">
-            <QRCodeSVG
-              id="payment-qr-code"
-              value={paymentUrl}
-              size={200}
-              level="H"
-              includeMargin={true}
-              imageSettings={{
-                src: '/favicon.ico',
-                height: 24,
-                width: 24,
-                excavate: true,
-              }}
-            />
+            {paymentUrl ? (
+              <QRCodeSVG
+                id="payment-qr-code"
+                value={paymentUrl}
+                size={200}
+                level="H"
+                includeMargin={true}
+                imageSettings={{
+                  src: '/favicon.ico',
+                  height: 24,
+                  width: 24,
+                  excavate: true,
+                }}
+              />
+            ) : (
+              <div className="w-[200px] h-[200px] flex items-center justify-center text-xs text-zinc-500 text-center">
+                Connect wallet to generate a payment QR
+              </div>
+            )}
           </div>
           
           {/* Amount Display */}
