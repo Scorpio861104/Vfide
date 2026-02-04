@@ -33,6 +33,7 @@ const navIcons: Record<string, React.ComponentType<{ className?: string; size?: 
   Messages: MetalSocialIcon,
   Merchant: MetalMerchantIcon,
   Governance: MetalGovernanceIcon,
+  "DAO Hub": MetalGovernanceIcon,
   Headhunter: MetalHeadhunterIcon,
   Endorsements: MetalShieldIcon,
   Rewards: MetalRewardsIcon,
@@ -49,6 +50,7 @@ const navLinks: Array<{ href: string; label: string; highlight?: boolean; accent
   { href: "/social-messaging", label: "Messages", highlight: true },
   { href: "/merchant", label: "Merchant" },
   { href: "/governance", label: "Governance" },
+  { href: "/dao-hub", label: "DAO Hub", highlight: true, accent: true },
 ];
 
 // Secondary navigation - organized by category
@@ -79,6 +81,7 @@ const moreLinks = [
       { href: "/endorsements", label: "Endorsements" },
       { href: "/appeals", label: "Appeals" },
       { href: "/council", label: "Council" },
+      { href: "/dao-hub", label: "DAO Hub", accent: true },
     ]
   },
   {

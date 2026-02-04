@@ -5,13 +5,13 @@ import { Group } from '@/types/groups';
 import { Friend } from '@/types/messaging';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
-  Command, 
-  MessageSquare, 
-  Search, 
-  Users, 
-  X, 
-  Clock, 
-  Mic, 
+  Command,
+  MessageSquare,
+  Search,
+  Users,
+  X,
+  Clock,
+  Mic,
   MicOff,
   Hash,
   Wallet,
@@ -30,7 +30,8 @@ import {
   CreditCard,
   PiggyBank,
   Bell,
-  ChevronRight
+  ChevronRight,
+  Crown
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -78,6 +79,7 @@ const PAGES = [
   { title: 'Messages', path: '/social-messaging', keywords: ['messages', 'chat', 'social', 'dm'], icon: MessageSquare },
   { title: 'Feed', path: '/feed', keywords: ['feed', 'activity', 'posts', 'updates'], icon: Bell },
   { title: 'Achievements', path: '/achievements', keywords: ['achievements', 'badges', 'gamification', 'rewards'], icon: Trophy },
+  { title: 'DAO Hub', path: '/dao-hub', keywords: ['dao', 'hub', 'governance', 'disputes'], icon: Crown },
   { title: 'Governance', path: '/governance', keywords: ['governance', 'dao', 'voting', 'proposals'], icon: Vote },
   { title: 'Merchant', path: '/merchant', keywords: ['merchant', 'shop', 'store', 'business', 'pos'], icon: Store },
   { title: 'Quests', path: '/quests', keywords: ['quests', 'missions', 'daily', 'challenges'], icon: Star },

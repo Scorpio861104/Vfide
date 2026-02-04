@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Command, 
-  Search, 
-  ArrowUp, 
-  ArrowDown, 
+  Command,
+  Search,
+  ArrowUp,
+  ArrowDown,
   CornerDownLeft,
   Loader2,
   Hash,
@@ -45,7 +45,8 @@ import {
   Sparkles,
   Rocket,
   CheckCircle,
-  TestTube2
+  TestTube2,
+  Crown,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
@@ -86,6 +87,7 @@ function useCommands(address?: string) {
       { id: 'pay', title: 'Send Payment', description: 'Send tokens to someone', icon: <Send className="w-4 h-4" />, category: 'navigation', keywords: ['send', 'pay', 'transfer', 'payment'], shortcut: 'G P', action: navigate('/pay') },
       { id: 'transactions', title: 'Transaction History', description: 'View all transactions', icon: <ArrowRightLeft className="w-4 h-4" />, category: 'navigation', keywords: ['transactions', 'history', 'activity'], shortcut: 'G T', action: navigate('/transactions') },
       { id: 'merchant', title: 'Merchant Portal', description: 'Manage your store', icon: <Store className="w-4 h-4" />, category: 'navigation', keywords: ['merchant', 'store', 'business', 'shop'], shortcut: 'G M', action: navigate('/merchant') },
+      { id: 'dao-hub', title: 'DAO Hub', description: 'DAO-only disputes, proposals, and messaging', icon: <Crown className="w-4 h-4" />, category: 'navigation', keywords: ['dao', 'hub', 'governance', 'disputes'], shortcut: 'G H', action: navigate('/dao-hub') },
       { id: 'governance', title: 'Governance', description: 'DAO proposals and voting', icon: <Vote className="w-4 h-4" />, category: 'navigation', keywords: ['governance', 'dao', 'vote', 'proposal'], shortcut: 'G G', action: navigate('/governance') },
       { id: 'rewards', title: 'Rewards', description: 'Earn and claim rewards', icon: <Sparkles className="w-4 h-4" />, category: 'navigation', keywords: ['rewards', 'earn', 'points', 'incentives'], action: navigate('/rewards') },
       { id: 'achievements', title: 'Achievements', description: 'View your achievements', icon: <Trophy className="w-4 h-4" />, category: 'navigation', keywords: ['achievements', 'badges', 'gamification'], action: navigate('/achievements') },

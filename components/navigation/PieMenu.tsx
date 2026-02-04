@@ -168,6 +168,7 @@ const navigationItems: NavItem[] = [
     icon: Vote,
     color: '#6366F1',
     children: [
+      { id: 'dao-hub', label: 'DAO Hub', href: '/dao-hub', icon: Crown, color: '#6366F1', badge: 'DAO' },
       { id: 'governance-main', label: 'Proposals', href: '/governance', icon: Scroll, color: '#6366F1' },
       { id: 'council', label: 'Council', href: '/council', icon: Gavel, color: '#6366F1' },
       { id: 'appeals', label: 'Appeals', href: '/appeals', icon: AlertTriangle, color: '#6366F1' },

@@ -533,10 +533,10 @@ export default function EscrowPage() {
                                 <span className="text-red-300 text-sm">DAO Hub Notified • Arbitration Pending</span>
                               </div>
                               <Link
-                                href="/governance"
+                                href="/dao-hub"
                                 className="text-xs font-semibold text-red-200/90 hover:text-red-100 transition-colors"
                               >
-                                View DAO case →
+                                Open DAO Hub →
                               </Link>
                             </div>
                           )}

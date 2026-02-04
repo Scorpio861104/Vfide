@@ -22,6 +22,7 @@ const footerLinks: {
   ],
   community: [
     { href: "/governance", label: "Governance" },
+    { href: "/dao-hub", label: "DAO Hub" },
     { href: "/token-launch", label: "Token Launch" },
     { href: "https://github.com/Scorpio861104/Vfide", label: "GitHub", external: true },
     { href: "https://discord.gg/vfide", label: "Discord", external: true, soon: true },

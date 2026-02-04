@@ -38,6 +38,7 @@ const moreItems = [
   { href: '/leaderboard', label: 'Leaderboard', emoji: '📊', category: 'Gamification' },
   { href: '/headhunter', label: 'Headhunter', emoji: '🏹', category: 'Community' },
   { href: '/endorsements', label: 'Endorsements', emoji: '⭐', category: 'Community' },
+  { href: '/dao-hub', label: 'DAO Hub', emoji: '🏛️', category: 'Community' },
   { href: '/appeals', label: 'Appeals', emoji: '⚖️', category: 'Community' },
   { href: '/council', label: 'Council', emoji: '👑', category: 'Community' },
   { href: '/payroll', label: 'Payroll', emoji: '💰', category: 'Finance' },
