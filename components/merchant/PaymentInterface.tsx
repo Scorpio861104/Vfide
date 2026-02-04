@@ -120,7 +120,7 @@ export function PaymentInterface() {
                 aria-pressed={settlementMode === 'escrow'}
               >
                 <div className="font-semibold">Escrow Protection</div>
-                <div className="text-xs text-gray-400">Best for online orders and first-time buyers.</div>
+                <div className="text-xs text-gray-400">Best for online orders and new merchant relationships.</div>
               </button>
               <button
                 type="button"
@@ -139,7 +139,7 @@ export function PaymentInterface() {
             </div>
             {!canUseInstant && (
               <p className="text-xs text-amber-300 mt-2">
-                Instant settlement unlocks for high-trust payers. Escrow protects both parties for first-time buyers.
+                Instant settlement unlocks for high-trust payers. Escrow protects both parties for all transactions.
               </p>
             )}
           </div>
