@@ -45,7 +45,7 @@ export function PaymentInterface() {
           orderId
         )
       } else {
-        payMerchant(
+        await payMerchant(
           merchantAddress as `0x${string}`,
           CONTRACT_ADDRESSES.VFIDEToken,
           amount,
@@ -145,12 +145,12 @@ export function PaymentInterface() {
                 disabled={!canUseInstant}
               >
                 <div className="font-semibold">Instant Settlement</div>
-                <div className="text-xs text-gray-400">For in-person or QR code payments, requires an established trust score.</div>
+                <div className="text-xs text-gray-400">For in-person or QR code payments, requires a high trust score.</div>
               </button>
             </div>
             {!canUseInstant && (
               <p className="text-xs text-amber-300 mt-2">
-                Instant settlement unlocks for high-trust customers. Escrow protects both parties for all transactions.
+                High-trust customers can use instant settlement. Escrow protects both parties for all transactions.
               </p>
             )}
           </div>
