@@ -360,10 +360,25 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  .btn-secondary::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--accent), var(--accent-gold));
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.3s ease;
+  }
+
   .btn-secondary:hover {
     background: rgba(0, 240, 255, 0.1);
     transform: translateY(-2px);
-    box-shadow: 0 8px 30px -4px rgba(0, 240, 255, 0.2);
+    box-shadow: 0 8px 30px -4px rgba(255, 215, 0, 0.2);
+  }
+
+  .btn-secondary:hover::after {
+    opacity: 0.45;
   }
 
   /* Glow effects */
