@@ -33,7 +33,8 @@ const settlementMessaging = (settlement: string) =>
 
 function PayContent() {
   const searchParams = useSearchParams();
-  const merchant = searchParams.get("merchant") || searchParams.get("to") || "";
+  const legacyMerchant = searchParams.get("to");
+  const merchant = searchParams.get("merchant") || legacyMerchant || "";
   const amount = searchParams.get("amount") || "100";
   const paymentSource = searchParams.get("source") || "checkout";
   const settlement = searchParams.get("settlement") || (paymentSource === "qr" ? "instant" : "escrow");
@@ -44,6 +45,7 @@ function PayContent() {
   const { priceUsd, isLoading: priceLoading } = useVfidePrice();
   const { writeContractAsync } = useWriteContract();
 
+  const PAYMENT_FEE_MULTIPLIER = 1.03;
   const amountNum = safeParseFloat(amount, 0);
   const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
   const settlementTone = settlementMessaging(settlement);
@@ -168,6 +170,11 @@ function PayContent() {
                   Missing merchant address. Scan a valid QR code or reopen the payment link.
                 </div>
               )}
+              {legacyMerchant && !searchParams.get("merchant") && (
+                <div className="mt-2 text-[11px] text-amber-200/80">
+                  Using legacy <span className="font-semibold">to</span> parameter. Update links to use <span className="font-semibold">merchant</span>.
+                </div>
+              )}
             </div>
 
             {/* Amount */}
@@ -231,7 +238,7 @@ function PayContent() {
               <div className="border-t border-white/10 my-3" />
               <div className="flex justify-between items-center">
                 <span className="text-white font-bold">Total</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-xl">${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-xl">${(safeParseFloat(amount, 0) * PAYMENT_FEE_MULTIPLIER).toFixed(2)}</span>
               </div>
             </div>
 
@@ -249,7 +256,7 @@ function PayContent() {
                   Processing...
                 </>
               ) : (
-                merchant ? `Pay $${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}` : "Merchant required"
+                merchant ? `Pay $${(safeParseFloat(amount, 0) * PAYMENT_FEE_MULTIPLIER).toFixed(2)}` : "Merchant required"
               )}
             </motion.button>
 
