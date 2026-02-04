@@ -99,8 +99,6 @@ const AUDIO_ENVELOPE = {
   finalRampTime: 0.01,
 };
 
-let sharedAudioContext: AudioContext | null = null;
-
 const navigationItems: NavItem[] = [
   {
     id: 'home',
@@ -653,7 +651,7 @@ export function PieMenu() {
   const [activeCategory, setActiveCategory] = useState<NavItem | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<AudioContext | null>(sharedAudioContext);
+  const audioRef = useRef<AudioContext | null>(null);
   
   // Close menu on outside click
   useEffect(() => {
@@ -676,7 +674,6 @@ export function PieMenu() {
       if (audioRef.current) {
         audioRef.current.close();
         audioRef.current = null;
-        sharedAudioContext = null;
       }
     };
   }, []);
@@ -710,8 +707,7 @@ export function PieMenu() {
     if (typeof window === 'undefined') return;
     try {
       if (!audioRef.current) {
-        sharedAudioContext = new AudioContext();
-        audioRef.current = sharedAudioContext;
+        audioRef.current = new AudioContext();
       }
       const context = audioRef.current;
       if (context.state === 'suspended') {
