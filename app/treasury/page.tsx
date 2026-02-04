@@ -87,7 +87,10 @@ export default function TreasuryPage() {
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               View protocol treasury allocations, charity distributions, and ecosystem funding
             </p>
-            <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-wider text-zinc-500 mt-4">
+            <div
+              className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-wider text-zinc-500 mt-4"
+              aria-label="Treasury flow: Fund, then Grow, then Sustain"
+            >
               <span>Fund</span>
               <span className="text-emerald-400">→</span>
               <span>Grow</span>
