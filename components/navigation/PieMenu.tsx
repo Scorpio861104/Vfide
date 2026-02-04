@@ -99,6 +99,8 @@ const AUDIO_ENVELOPE = {
   finalRampTime: 0.01,
 };
 
+let sharedAudioContext: AudioContext | null = null;
+
 const navigationItems: NavItem[] = [
   {
     id: 'home',
@@ -651,7 +653,7 @@ export function PieMenu() {
   const [activeCategory, setActiveCategory] = useState<NavItem | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<AudioContext | null>(null);
+  const audioRef = useRef<AudioContext | null>(sharedAudioContext);
   
   // Close menu on outside click
   useEffect(() => {
@@ -674,6 +676,7 @@ export function PieMenu() {
       if (audioRef.current) {
         audioRef.current.close();
         audioRef.current = null;
+        sharedAudioContext = null;
       }
     };
   }, []);
@@ -707,7 +710,8 @@ export function PieMenu() {
     if (typeof window === 'undefined') return;
     try {
       if (!audioRef.current) {
-        audioRef.current = new AudioContext();
+        sharedAudioContext = new AudioContext();
+        audioRef.current = sharedAudioContext;
       }
       const context = audioRef.current;
       if (context.state === 'suspended') {
@@ -729,8 +733,7 @@ export function PieMenu() {
       oscillator.connect(gain);
       gain.connect(context.destination);
       oscillator.start();
-      const envelopeDuration = finalRampEndTime - context.currentTime;
-      oscillator.stop(context.currentTime + envelopeDuration);
+      oscillator.stop(finalRampEndTime);
     } catch (error) {
       // Ignore audio errors for unsupported contexts
       if (process.env.NODE_ENV !== 'production') {
