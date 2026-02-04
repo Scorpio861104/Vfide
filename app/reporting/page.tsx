@@ -88,7 +88,7 @@ export default function ReportingAnalyticsPage() {
             onClick={toggleAutoRefresh}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               autoRefresh
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
             }`}
           >
@@ -108,7 +108,7 @@ export default function ReportingAnalyticsPage() {
               Executive view
             </p>
             <p className="text-lg text-white font-semibold">
-              Reporting & Analytics
+              Signal coverage across every dashboard
             </p>
           </div>
         </motion.div>
