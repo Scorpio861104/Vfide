@@ -39,6 +39,11 @@ const accessRules = [
     detail: "Encrypted messaging stays private to active members for deliberations and arbitration notes.",
     icon: <MessageCircle className="w-4 h-4" />,
   },
+  {
+    title: "Seer Oversight & Vote Attendance",
+    detail: "The Seer can remove members for misconduct before the 12-month term ends. Missing more than 2 votes locks DAO access and payments.",
+    icon: <AlertTriangle className="w-4 h-4" />,
+  },
 ];
 
 const disputeQueue = [
