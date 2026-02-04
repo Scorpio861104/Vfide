@@ -195,6 +195,13 @@ export default function DaoHubPage() {
     status: isActiveMember ? "active" : "locked",
     proofScore: score,
   };
+  const maxMissedVotes = 2;
+  const missedVotes = isActiveMember ? 1 : 0;
+  const attendanceLabel = isActiveMember ? `${missedVotes} / ${maxMissedVotes}` : "—";
+  const remainingVotes = Math.max(0, maxMissedVotes - missedVotes);
+  const attendanceBufferLabel = isActiveMember
+    ? `${remainingVotes} vote${remainingVotes === 1 ? "" : "s"} left`
+    : "—";
 
   const accessStatusMap = {
     active: "Access Active",
@@ -281,6 +288,14 @@ export default function DaoHubPage() {
                 <div className="flex justify-between">
                   <span className="text-zinc-500">ProofScore</span>
                   <span className="text-emerald-300 font-semibold">{currentMember.proofScore}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Votes Missed</span>
+                  <span className="text-amber-300">{attendanceLabel}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Attendance Buffer</span>
+                  <span className="text-emerald-300">{attendanceBufferLabel}</span>
                 </div>
                 <div className={`flex items-center gap-2 ${isActiveMember ? "text-emerald-300" : "text-amber-300"}`}>
                   <CheckCircle className="w-4 h-4" />
