@@ -154,7 +154,7 @@ export default function GovernancePage() {
       
       {/* Premium background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-linear-to-b from-zinc-950 via-[#0f0f18] to-zinc-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-[#0f0f18] to-zinc-950" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,240,255,0.08),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
@@ -174,19 +174,26 @@ export default function GovernancePage() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.1 }}
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-linear-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-sm text-purple-300 mb-4"
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-sm text-purple-300 mb-4 ring-effect"
                 >
                   <Sparkles className="w-4 h-4" />
                   Decentralized Governance
                 </motion.div>
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-black mb-2">
-                  <span className="bg-clip-text text-transparent bg-linear-to-r from-purple-400 via-cyan-400 to-emerald-400">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400">
                     DAO Governance
                   </span>
                 </h1>
                 <p className="text-lg md:text-xl text-gray-400">
                   Shape the future of the VFIDE ecosystem
                 </p>
+                <div className="flex flex-wrap gap-2 text-xs uppercase tracking-wider text-zinc-500 mt-3">
+                  <span>Propose</span>
+                  <span className="text-cyan-400">→</span>
+                  <span>Vote</span>
+                  <span className="text-cyan-400">→</span>
+                  <span>Build</span>
+                </div>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                 <div className="relative w-full sm:w-auto">
@@ -215,7 +222,7 @@ export default function GovernancePage() {
                   aria-label="Notifications"
                 >
                   <Bell className="w-5 h-5 text-gray-400" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-linear-to-r from-red-500 to-pink-500 rounded-full text-xs text-white flex items-center justify-center font-bold animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-xs text-white flex items-center justify-center font-bold animate-pulse">
                     3
                   </span>
                 </motion.button>
@@ -277,9 +284,9 @@ export default function GovernancePage() {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 const colorMap: Record<string, string> = {
-                  cyan: isActive ? 'bg-linear-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25' : 'hover:bg-cyan-500/10 hover:text-cyan-400',
-                  emerald: isActive ? 'bg-linear-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25' : 'hover:bg-emerald-500/10 hover:text-emerald-400',
-                  amber: isActive ? 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' : 'hover:bg-amber-500/10 hover:text-amber-400',
+                  cyan: isActive ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25' : 'hover:bg-cyan-500/10 hover:text-cyan-400',
+                  emerald: isActive ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25' : 'hover:bg-emerald-500/10 hover:text-emerald-400',
+                  amber: isActive ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' : 'hover:bg-amber-500/10 hover:text-amber-400',
                 };
                 return (
                   <motion.button
@@ -333,7 +340,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
           >
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-linear-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 group"
+              className="bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 group ring-effect"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Your Voting Power</div>
@@ -343,7 +350,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
               </div>
               {address ? (
                 <>
-                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-400 to-blue-400">{votingPower}</div>
+                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">{votingPower}</div>
                   <div className="text-gray-500 text-sm mt-1">Based on ProofScore</div>
                   <div className="mt-3 text-xs text-emerald-400 flex items-center gap-1">
                     <Sparkles className="w-3 h-3" /> Eligible to vote
@@ -356,7 +363,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-linear-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6"
+              className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6 ring-effect"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Active Proposals</div>
@@ -375,7 +382,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
+              className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6 ring-effect"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Your Participation</div>
@@ -392,7 +399,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             
             <motion.div 
               whileHover={{ scale: 1.02, y: -2 }}
-              className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
+              className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6 ring-effect"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-gray-400 text-sm">Governance Fatigue</div>
@@ -419,7 +426,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
             className="bg-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
           >
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-linear-to-br from-red-500/20 to-orange-500/20">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20">
                 <Clock className="w-5 h-5 text-red-400" />
               </div>
               Upcoming Voting Deadlines
@@ -467,7 +474,7 @@ function DeadlineCard({ id, title, hoursRemaining, voted }: { id: number; title:
   return (
     <motion.div 
       whileHover={{ scale: 1.01, x: 4 }}
-      className={`flex items-center justify-between p-4 bg-linear-to-r ${colors.bg} backdrop-blur-sm border ${colors.border} rounded-xl hover:shadow-lg ${colors.glow} transition-all`}
+      className={`flex items-center justify-between p-4 bg-gradient-to-r ${colors.bg} backdrop-blur-sm border ${colors.border} rounded-xl hover:shadow-lg ${colors.glow} transition-all ring-effect`}
     >
       <div>
         <div className="text-white font-bold">{title}</div>
@@ -538,7 +545,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
                 >
                   📊 Export CSV
                 </button>
-                <button className="px-6 py-2 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
+                <button className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform ring-effect">
                   Create Proposal
                 </button>
               </div>
@@ -1286,7 +1293,7 @@ function SuggestionsTab() {
           </div>
           <button
             onClick={() => setShowSubmitForm(!showSubmitForm)}
-            className="px-6 py-3 bg-linear-to-r from-emerald-500 to-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all ring-effect"
           >
             {showSubmitForm ? '✕ Cancel' : '+ Submit Idea'}
           </button>
@@ -1474,7 +1481,7 @@ function SuggestionsTab() {
                     {suggestion.status === 'new' && score > 0 && (
                       <div className="w-full h-1 bg-zinc-700 rounded-full mb-3 overflow-hidden">
                         <div 
-                          className="h-full bg-linear-to-r from-emerald-500 to-cyan-400 transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-500"
                           style={{ width: `${progressToPromotion}%` }}
                         />
                       </div>
@@ -1831,7 +1838,7 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
           </div>
           <button
             onClick={() => setShowNewThread(!showNewThread)}
-            className="px-6 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all"
+            className="px-6 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all ring-effect"
           >
             {showNewThread ? '✕ Cancel' : '+ New Discussion'}
           </button>
@@ -2198,7 +2205,7 @@ function CreateProposalTab() {
               className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
                 isSubmitting || !formData.title || !formData.description
                   ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
-                  : 'bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 hover:scale-[1.02]'
+                  : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 hover:scale-[1.02]'
               }`}
             >
               {isSubmitting ? '⏳ Submitting...' : '🚀 Submit Proposal'}
@@ -2285,7 +2292,7 @@ function CouncilTab() {
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
         {/* Election Status Banner */}
-        <div className="bg-linear-to-r from-amber-400/20 to-orange-500/20 border border-amber-400 rounded-xl p-6 mb-8">
+        <div className="bg-gradient-to-r from-amber-400/20 to-orange-500/20 border border-amber-400 rounded-xl p-6 mb-8 ring-effect">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-amber-400 mb-1">👑 Council Election - Term {electionStatus.currentTerm + 1}</h2>
@@ -2460,7 +2467,7 @@ function CouncilTab() {
                     className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
                       isRegistering || !candidateStatement
                         ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
-                        : 'bg-linear-to-r from-amber-400 to-orange-500 text-zinc-900 hover:scale-[1.02]'
+                        : 'bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-900 hover:scale-[1.02]'
                     }`}
                   >
                     {isRegistering ? '⏳ Registering...' : '👑 Register as Candidate'}
