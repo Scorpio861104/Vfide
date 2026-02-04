@@ -36,27 +36,32 @@ export function PaymentInterface() {
   const handlePayment = async () => {
     if (!merchantAddress || !amount || !orderId) return
     
-    if (settlementMode === 'escrow') {
-      await createEscrow(
+    try {
+      if (settlementMode === 'escrow') {
+        await createEscrow(
+          merchantAddress as `0x${string}`,
+          amount,
+          orderId
+        )
+        return
+      }
+      
+      await payMerchant(
         merchantAddress as `0x${string}`,
+        CONTRACT_ADDRESSES.VFIDEToken,
         amount,
         orderId
       )
-      return
+    } catch (err) {
+      // Errors are surfaced via hook state; this prevents unhandled rejections.
+      console.error('Payment action failed', err)
     }
-    
-    await payMerchant(
-      merchantAddress as `0x${string}`,
-      CONTRACT_ADDRESSES.VFIDEToken,
-      amount,
-      orderId
-    )
   }
 
   const isValidMerchant = isAddress(merchantAddress) && merchantInfo.isMerchant && !merchantInfo.isSuspended
   const requiresEscrow = settlementMode === 'escrow'
   const canUseInstant = trustScore.highTrust
-  const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (!requiresEscrow ? canUseInstant : true)
+  const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (requiresEscrow || canUseInstant)
   const combinedError = error || escrowError
 
   return (
