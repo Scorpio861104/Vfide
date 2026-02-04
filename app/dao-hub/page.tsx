@@ -142,11 +142,14 @@ export default function DaoHubPage() {
         ? "active"
         : "locked";
 
+  const currentTermNumber = isActiveMember ? Math.max(1, termsServed || 1) : termsServed;
+  const termLabel = currentTermNumber > 0 ? `Term ${currentTermNumber}` : "—";
+
   const currentMember = {
     name: isActiveMember ? "Active DAO Member" : "DAO Member",
     address: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "—",
-    term: `Term ${Math.max(1, termsServed + (isActiveMember ? 1 : 0))}`,
-    termEnds: cooldownEndsDate ? cooldownEndsDate.toLocaleDateString() : isCouncilDeployed ? "On-chain" : "—",
+    term: termLabel,
+    nextEligible: cooldownEndsDate ? cooldownEndsDate.toLocaleDateString() : isCouncilDeployed ? "On-chain" : "—",
     status: isActiveMember ? "active" : "locked",
     proofScore: 8420,
   };
@@ -226,15 +229,9 @@ export default function DaoHubPage() {
                   <span>{currentMember.term}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-500">Term Ends</span>
-                  <span className="text-amber-300">{currentMember.termEnds}</span>
+                  <span className="text-zinc-500">Next Eligible</span>
+                  <span className="text-amber-300">{currentMember.nextEligible}</span>
                 </div>
-                {cooldownEndsDate && (
-                  <div className="flex justify-between">
-                    <span className="text-zinc-500">Cooldown Ends</span>
-                    <span className="text-indigo-200">{cooldownEndsDate.toLocaleDateString()}</span>
-                  </div>
-                )}
                 <div className="flex justify-between">
                   <span className="text-zinc-500">ProofScore</span>
                   <span className="text-emerald-300 font-semibold">{currentMember.proofScore}</span>
