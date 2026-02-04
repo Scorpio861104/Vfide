@@ -708,14 +708,7 @@ export function PieMenu() {
     if (typeof window === 'undefined') return;
     try {
       if (!audioRef.current) {
-        try {
-          audioRef.current = new AudioContext();
-        } catch (audioError) {
-          if (process.env.NODE_ENV !== 'production') {
-            console.warn('Pie menu audio unavailable', audioError);
-          }
-          return;
-        }
+        audioRef.current = new AudioContext();
       }
       const context = audioRef.current;
       if (context.state === 'suspended') {
@@ -735,10 +728,10 @@ export function PieMenu() {
       oscillator.frequency.setValueAtTime(frequency, context.currentTime);
       gain.gain.setValueAtTime(INITIAL_GAIN, context.currentTime);
       gain.gain.exponentialRampToValueAtTime(PEAK_GAIN, context.currentTime + ATTACK_TIME);
-      const releaseTime = context.currentTime + ATTACK_TIME + RELEASE_TIME;
-      const finalRamp = releaseTime + FINAL_RAMP_TIME;
-      gain.gain.exponentialRampToValueAtTime(INITIAL_GAIN, releaseTime);
-      gain.gain.linearRampToValueAtTime(0, finalRamp);
+      const releaseStartTime = context.currentTime + ATTACK_TIME + RELEASE_TIME;
+      const finalRampEndTime = releaseStartTime + FINAL_RAMP_TIME;
+      gain.gain.exponentialRampToValueAtTime(INITIAL_GAIN, releaseStartTime);
+      gain.gain.linearRampToValueAtTime(0, finalRampEndTime);
       oscillator.connect(gain);
       gain.connect(context.destination);
       oscillator.start();
