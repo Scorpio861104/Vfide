@@ -44,7 +44,8 @@ import {
   Medal,
   Sparkles,
   Rocket,
-  CheckCircle
+  CheckCircle,
+  TestTube2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
@@ -87,14 +88,14 @@ function useCommands(address?: string) {
       { id: 'merchant', title: 'Merchant Portal', description: 'Manage your store', icon: <Store className="w-4 h-4" />, category: 'navigation', keywords: ['merchant', 'store', 'business', 'shop'], shortcut: 'G M', action: navigate('/merchant') },
       { id: 'governance', title: 'Governance', description: 'DAO proposals and voting', icon: <Vote className="w-4 h-4" />, category: 'navigation', keywords: ['governance', 'dao', 'vote', 'proposal'], shortcut: 'G G', action: navigate('/governance') },
       { id: 'rewards', title: 'Rewards', description: 'Earn and claim rewards', icon: <Sparkles className="w-4 h-4" />, category: 'navigation', keywords: ['rewards', 'earn', 'points', 'incentives'], action: navigate('/rewards') },
-      { id: 'achievements', title: 'Achievements', description: 'View your achievements', icon: <Trophy className="w-4 h-4" />, category: 'navigation', keywords: ['achievements', 'badges', 'gamification', 'rewards'], action: navigate('/achievements') },
+      { id: 'achievements', title: 'Achievements', description: 'View your achievements', icon: <Trophy className="w-4 h-4" />, category: 'navigation', keywords: ['achievements', 'badges', 'gamification'], action: navigate('/achievements') },
       { id: 'quests', title: 'Quests', description: 'Complete quests and streaks', icon: <Zap className="w-4 h-4" />, category: 'navigation', keywords: ['quests', 'missions', 'streaks'], action: navigate('/quests') },
       { id: 'leaderboard', title: 'Leaderboard', description: 'See top performers', icon: <Medal className="w-4 h-4" />, category: 'navigation', keywords: ['leaderboard', 'ranking', 'top'], action: navigate('/leaderboard') },
       { id: 'guardians', title: 'Guardians', description: 'Manage recovery guardians', icon: <Shield className="w-4 h-4" />, category: 'navigation', keywords: ['guardians', 'recovery', 'security'], action: navigate('/guardians') },
-      { id: 'social-hub', title: 'Social Hub', description: 'Community feed and connections', icon: <Users className="w-4 h-4" />, category: 'navigation', keywords: ['social', 'hub', 'community', 'feed'], action: navigate('/social-hub') },
+      { id: 'social-hub', title: 'Social Hub', description: 'Community profiles and circles', icon: <Users className="w-4 h-4" />, category: 'navigation', keywords: ['social', 'hub', 'community', 'circles'], action: navigate('/social-hub') },
       { id: 'social-messages', title: 'Messages', description: 'Direct messages and inbox', icon: <MessageSquare className="w-4 h-4" />, category: 'navigation', keywords: ['messages', 'chat', 'dm'], action: navigate('/social-messaging') },
       { id: 'stories', title: 'Stories', description: 'Community stories', icon: <Star className="w-4 h-4" />, category: 'navigation', keywords: ['stories', 'moments'], action: navigate('/stories') },
-      { id: 'feed', title: 'Feed', description: 'Community activity feed', icon: <Hash className="w-4 h-4" />, category: 'navigation', keywords: ['feed', 'activity'], action: navigate('/feed') },
+      { id: 'feed', title: 'Feed', description: 'Live activity feed', icon: <Hash className="w-4 h-4" />, category: 'navigation', keywords: ['feed', 'activity', 'live'], action: navigate('/feed') },
       { id: 'social-analytics', title: 'Social Analytics', description: 'Engagement metrics', icon: <BarChart3 className="w-4 h-4" />, category: 'navigation', keywords: ['analytics', 'social'], action: navigate('/social') },
       { id: 'social-payments', title: 'Social Payments', description: 'Social payment dashboard', icon: <CreditCard className="w-4 h-4" />, category: 'navigation', keywords: ['social', 'payments', 'tips'], action: navigate('/social-payments') },
       { id: 'treasury', title: 'Treasury', description: 'Protocol treasury overview', icon: <PiggyBank className="w-4 h-4" />, category: 'navigation', keywords: ['treasury', 'funds'], action: navigate('/treasury') },
@@ -105,7 +106,7 @@ function useCommands(address?: string) {
       { id: 'performance', title: 'Performance', description: 'Performance dashboard', icon: <Activity className="w-4 h-4" />, category: 'navigation', keywords: ['performance', 'metrics'], action: navigate('/performance') },
       { id: 'benefits', title: 'Benefits', description: 'Program benefits', icon: <CheckCircle className="w-4 h-4" />, category: 'navigation', keywords: ['benefits', 'program'], action: navigate('/benefits') },
       { id: 'vesting', title: 'Vesting', description: 'Token vesting schedule', icon: <Hourglass className="w-4 h-4" />, category: 'navigation', keywords: ['vesting', 'schedule'], action: navigate('/vesting') },
-      { id: 'demo-social', title: 'Crypto Social Demo', description: 'Social demo experience', icon: <MessageSquare className="w-4 h-4" />, category: 'navigation', keywords: ['demo', 'social', 'crypto'], action: navigate('/demo/crypto-social') },
+      { id: 'demo-social', title: 'Crypto Social Demo', description: 'Social demo experience', icon: <TestTube2 className="w-4 h-4" />, category: 'navigation', keywords: ['demo', 'social', 'crypto'], action: navigate('/demo/crypto-social') },
       { id: 'invite', title: 'Invite', description: 'Invite teammates', icon: <User className="w-4 h-4" />, category: 'navigation', keywords: ['invite', 'referral'], action: navigate('/invite') },
       { id: 'explorer', title: 'Explorer', description: 'Explore transactions', icon: <Search className="w-4 h-4" />, category: 'navigation', keywords: ['explorer', 'search'], action: navigate('/explorer') },
       { id: 'notifications', title: 'Notifications', description: 'System notifications', icon: <Bell className="w-4 h-4" />, category: 'navigation', keywords: ['notifications', 'alerts', 'updates'], action: navigate('/notifications') },
