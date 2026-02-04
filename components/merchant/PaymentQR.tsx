@@ -25,6 +25,9 @@ interface PaymentQRProps {
   defaultOrderId?: string
 }
 
+const QR_SETTLEMENT = 'instant'
+const QR_SOURCE = 'qr'
+
 export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   const { address } = useAccount()
   const merchantInfo = useIsMerchant(address)
@@ -38,8 +41,8 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
     ? (() => {
         const paymentParams = new URLSearchParams({
           merchant: address,
-          source: 'qr',
-          settlement: 'instant',
+          source: QR_SOURCE,
+          settlement: QR_SETTLEMENT,
         })
         if (amount) paymentParams.set('amount', amount)
         if (orderId) paymentParams.set('orderId', orderId)
