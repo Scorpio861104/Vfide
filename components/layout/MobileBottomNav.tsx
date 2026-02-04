@@ -45,7 +45,7 @@ const moreItems = [
   { href: '/treasury', label: 'Treasury', emoji: '🏦', category: 'Finance' },
   { href: '/reporting', label: 'Reporting', emoji: '📊', category: 'Finance' },
   { href: '/token-launch', label: 'Token Launch', emoji: '🚀', category: 'Finance' },
-  { href: '/streaming', label: 'Streaming', emoji: '🌊', category: 'Finance' },
+  { href: '/streaming', label: 'Streaming', emoji: '💸', category: 'Finance' },
   { href: '/cross-chain', label: 'Cross-Chain', emoji: '🔗', category: 'Finance' },
   { href: '/subscriptions', label: 'Subscriptions', emoji: '🗓️', category: 'Finance' },
   { href: '/buy', label: 'Buy Tokens', emoji: '🪙', category: 'Finance' },
