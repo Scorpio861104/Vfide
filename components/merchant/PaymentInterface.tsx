@@ -54,14 +54,15 @@ export function PaymentInterface() {
       )
     } catch (err) {
       // Errors are surfaced via hook state; this prevents unhandled rejections.
-      console.error('Payment action failed', err)
+      const context = settlementMode === 'escrow' ? 'Escrow creation failed' : 'Instant payment failed'
+      console.error(context, err)
     }
   }
 
   const isValidMerchant = isAddress(merchantAddress) && merchantInfo.isMerchant && !merchantInfo.isSuspended
   const requiresEscrow = settlementMode === 'escrow'
   const canUseInstant = trustScore.highTrust
-  const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (requiresEscrow || canUseInstant)
+  const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (settlementMode === 'escrow' || canUseInstant)
   const combinedError = error || escrowError
 
   return (
