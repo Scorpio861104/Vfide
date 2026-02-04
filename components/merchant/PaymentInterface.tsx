@@ -52,7 +52,6 @@ export function PaymentInterface() {
         )
       }
       
-      
     } catch (err) {
       // Errors are surfaced via hook state; this prevents unhandled rejections.
       const context = settlementMode === 'escrow' ? 'Escrow creation failed' : 'Instant payment failed'
@@ -139,7 +138,7 @@ export function PaymentInterface() {
             </div>
             {!canUseInstant && (
               <p className="text-xs text-amber-300 mt-2">
-                Instant settlement unlocks for high-trust payers. Escrow protects both parties for all transactions.
+                Instant settlement unlocks for high-trust customers. Escrow protects both parties for all transactions.
               </p>
             )}
           </div>
