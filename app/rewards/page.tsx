@@ -191,9 +191,9 @@ export default function RewardsPage() {
                     </p>
                     <div className="flex flex-wrap gap-2 text-xs uppercase tracking-wider text-zinc-500 mt-3">
                       <span>Engage</span>
-                      <span className="text-amber-400">→</span>
+                      <span className="text-amber-400" aria-hidden="true">→</span>
                       <span>Earn</span>
-                      <span className="text-amber-400">→</span>
+                      <span className="text-amber-400" aria-hidden="true">→</span>
                       <span>Unlock</span>
                     </div>
                   </div>
