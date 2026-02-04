@@ -12,22 +12,8 @@ import { CONTRACT_ADDRESSES, VFIDETokenABI } from "@/lib/contracts";
 import { Shield, Sparkles, CreditCard, Loader2 } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
 
-function PayContent() {
-  const searchParams = useSearchParams();
-  const merchant = searchParams.get("merchant") || searchParams.get("to") || "0x742d...bEb";
-  const amount = searchParams.get("amount") || "100";
-  const paymentSource = searchParams.get("source") || "checkout";
-  const settlement = searchParams.get("settlement") || (paymentSource === "qr" ? "instant" : "escrow");
-  const [selectedMethod, setSelectedMethod] = useState<'vfide' | 'usdc' | 'usdt'>('vfide');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { showToast } = useToast();
-  const { isConnected, address } = useAccount();
-  const { priceUsd, isLoading: priceLoading } = useVfidePrice();
-  const { writeContractAsync } = useWriteContract();
-
-  const amountNum = safeParseFloat(amount, 0);
-  const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
-  const settlementTone = settlement === "instant"
+const settlementMessaging = (settlement: string) =>
+  settlement === "instant"
     ? {
         badge: "Instant settlement",
         banner: "QR scan: instant settlement (no escrow)",
@@ -44,6 +30,23 @@ function PayContent() {
         noticeTitle: "Escrow Protection",
         noticeText: "Funds are held in escrow until delivery confirmed for extra buyer protection.",
       };
+
+function PayContent() {
+  const searchParams = useSearchParams();
+  const merchant = searchParams.get("merchant") || searchParams.get("to") || "MERCHANT_ADDRESS_REQUIRED";
+  const amount = searchParams.get("amount") || "100";
+  const paymentSource = searchParams.get("source") || "checkout";
+  const settlement = searchParams.get("settlement") || (paymentSource === "qr" ? "instant" : "escrow");
+  const [selectedMethod, setSelectedMethod] = useState<'vfide' | 'usdc' | 'usdt'>('vfide');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { showToast } = useToast();
+  const { isConnected, address } = useAccount();
+  const { priceUsd, isLoading: priceLoading } = useVfidePrice();
+  const { writeContractAsync } = useWriteContract();
+
+  const amountNum = safeParseFloat(amount, 0);
+  const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
+  const settlementTone = settlementMessaging(settlement);
 
   const handlePayment = async () => {
     if (!isConnected || !address) {
