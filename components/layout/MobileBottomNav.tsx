@@ -54,7 +54,7 @@ const moreItems = [
   { href: '/vault/settings', label: 'Vault Settings', emoji: '⚙️', category: 'Privacy' },
   { href: '/vault/recover', label: 'Vault Recovery', emoji: '🧩', category: 'Privacy' },
   { href: '/multisig', label: 'Multi-Sig', emoji: '✍️', category: 'Privacy' },
-  { href: '/time-locks', label: 'Time Locks', emoji: '⏳', category: 'Privacy' },
+  { href: '/time-locks', label: 'Time Locks', emoji: '⏰', category: 'Privacy' },
   { href: '/insights', label: 'Insights', emoji: '🧠', category: 'Intelligence' },
   { href: '/taxes', label: 'Tax Report', emoji: '📋', category: 'Intelligence' },
   { href: '/budgets', label: 'Budgets', emoji: '💵', category: 'Intelligence' },
