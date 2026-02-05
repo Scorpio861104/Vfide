@@ -144,6 +144,51 @@ const paymentQueue = [
   },
 ];
 
+const oversightQueue = [
+  {
+    id: "SEER-12",
+    status: "Behavior Review",
+    due: "6h",
+    summary: "Missed vote threshold flagged for a member on probation.",
+  },
+  {
+    id: "SEER-11",
+    status: "Term Audit",
+    due: "2d",
+    summary: "Term rotation audit for offboarding and access lockouts.",
+  },
+  {
+    id: "SEER-09",
+    status: "Emergency Removal",
+    due: "Queued",
+    summary: "Seer escalation for verified policy violation review.",
+  },
+];
+
+const auditLog = [
+  {
+    id: "LOG-412",
+    action: "Dispute Escalated",
+    actor: "Escrow Bot",
+    time: "8m ago",
+    summary: "ESC-1421 routed to DAO arbitration with evidence pack.",
+  },
+  {
+    id: "LOG-411",
+    action: "Vote Recorded",
+    actor: "DAO Member",
+    time: "42m ago",
+    summary: "DAO-72 quorum reached 68% with new vote submission.",
+  },
+  {
+    id: "LOG-410",
+    action: "Member Offboarded",
+    actor: "Seer",
+    time: "3h ago",
+    summary: "Term expired, access locked, and payouts paused.",
+  },
+];
+
 export default function DaoHubPage() {
   const { address, isConnected } = useAccount();
   const councilAddress = CONTRACT_ADDRESSES.CouncilElection;
@@ -461,6 +506,44 @@ export default function DaoHubPage() {
                         <span>Status: {payment.status}</span>
                         <span>{payment.amount}</span>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Shield className="w-5 h-5 text-purple-300" />
+                  <h2 className="text-lg font-bold text-white">Seer Oversight Queue</h2>
+                </div>
+                <div className="space-y-4 text-sm">
+                  {oversightQueue.map((item) => (
+                    <div key={item.id} className="rounded-xl border border-purple-500/20 bg-purple-500/10 p-4">
+                      <div className="flex items-center justify-between text-purple-100 font-semibold">
+                        <span>{item.id}</span>
+                        <span className="text-xs">{item.due}</span>
+                      </div>
+                      <div className="mt-1 text-zinc-100">{item.status}</div>
+                      <p className="mt-2 text-xs text-zinc-400">{item.summary}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <FileCheck className="w-5 h-5 text-sky-300" />
+                  <h2 className="text-lg font-bold text-white">Audit Ledger</h2>
+                </div>
+                <div className="space-y-4 text-sm">
+                  {auditLog.map((entry) => (
+                    <div key={entry.id} className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
+                      <div className="flex items-center justify-between text-sky-100 font-semibold">
+                        <span>{entry.action}</span>
+                        <span className="text-xs">{entry.time}</span>
+                      </div>
+                      <div className="mt-1 text-xs text-zinc-400">Actor: {entry.actor}</div>
+                      <p className="mt-2 text-zinc-100">{entry.summary}</p>
                     </div>
                   ))}
                 </div>
