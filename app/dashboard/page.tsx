@@ -35,6 +35,45 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
 };
 
+const ecosystemLoadout = [
+  {
+    icon: Shield,
+    label: "Vault Security",
+    description: "Self-custody vault controls",
+    href: "/vault",
+  },
+  {
+    icon: Lock,
+    label: "Escrow",
+    description: "Dispute-safe settlements",
+    href: "/escrow",
+  },
+  {
+    icon: Vote,
+    label: "DAO Hub",
+    description: "Proposals + dispute flow",
+    href: "/dao-hub",
+  },
+  {
+    icon: Sparkles,
+    label: "Flashlight P2P",
+    description: "Peer-powered credit pools",
+    href: "/flashlight",
+  },
+  {
+    icon: Banknote,
+    label: "Social Pay",
+    description: "Merchant & QR commerce",
+    href: "/merchant",
+  },
+  {
+    icon: Gift,
+    label: "Rewards",
+    description: "ProofScore boosters",
+    href: "/rewards",
+  },
+];
+
 function GlassCard({ children, className = "", hover = true }: { 
   children: React.ReactNode; 
   className?: string;
@@ -348,45 +387,6 @@ export default function DashboardPage() {
 }
 
 function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: number }) {
-  const ecosystemLoadout = [
-    {
-      icon: Shield,
-      label: "Vault Security",
-      description: "Self-custody vault controls",
-      href: "/vault",
-    },
-    {
-      icon: Lock,
-      label: "Escrow",
-      description: "Dispute-safe settlements",
-      href: "/escrow",
-    },
-    {
-      icon: Vote,
-      label: "DAO Hub",
-      description: "Proposals + dispute flow",
-      href: "/dao-hub",
-    },
-    {
-      icon: Sparkles,
-      label: "Flashlight P2P",
-      description: "Peer-powered credit pools",
-      href: "/flashlight",
-    },
-    {
-      icon: Banknote,
-      label: "Social Pay",
-      description: "Merchant & QR commerce",
-      href: "/merchant",
-    },
-    {
-      icon: Gift,
-      label: "Rewards",
-      description: "ProofScore boosters",
-      href: "/rewards",
-    },
-  ];
-
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
       <motion.div variants={itemVariants}>
