@@ -83,7 +83,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans antialiased bg-zinc-900">
         {isE2E ? (
-          <main id="main-content" className="min-h-screen" tabIndex={-1}>
+          <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
             {children}
           </main>
         ) : (
@@ -106,7 +106,7 @@ export default function RootLayout({
                   <TestnetNotification />
                   {/* Network detection handled by wallet connection */}
                   <AchievementToastContainer />
-                  <main id="main-content" className="min-h-screen" tabIndex={-1}>
+                  <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
                     {children}
                   </main>
                   <PieMenu />
