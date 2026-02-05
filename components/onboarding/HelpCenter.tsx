@@ -191,7 +191,7 @@ export function HelpCenter() {
       <motion.button
         onClick={() => setIsOpen(true)}
         aria-label="Open help center"
-        className="fixed bottom-24 md:bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         initial={{ scale: 0 }}
