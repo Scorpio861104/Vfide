@@ -476,6 +476,12 @@ export default function DaoHubPage() {
                 description: "Members rotate on fixed terms. Access revokes immediately at term end or removal.",
               },
               {
+                icon: <Scale className="w-4 h-4" />,
+                title: "Checks & Balances",
+                description:
+                  "DAO votes, Seer oversight, and user reports combine to keep the system self-regulated and self-sustaining.",
+              },
+              {
                 icon: <Gavel className="w-4 h-4" />,
                 title: "90% Removal Vote",
                 description: "Members can vote peers out with a 90% supermajority. Offboarded members lose DAO access instantly.",
