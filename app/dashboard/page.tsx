@@ -74,6 +74,34 @@ const ecosystemLoadout = [
   },
 ];
 
+const navigationCoverage = [
+  {
+    icon: Sliders,
+    label: "Global Navigation",
+    description: "Role-aware primary map",
+  },
+  {
+    icon: Sparkles,
+    label: "Command Palette",
+    description: "Type-first shortcuts",
+  },
+  {
+    icon: Zap,
+    label: "Pie Menu",
+    description: "Radial quick jumps",
+  },
+  {
+    icon: Activity,
+    label: "Mobile Dock",
+    description: "Thumb-friendly routes",
+  },
+  {
+    icon: ExternalLink,
+    label: "Global Search",
+    description: "Cross-feature lookup",
+  },
+];
+
 function GlassCard({ children, className = "", hover = true }: { 
   children: React.ReactNode; 
   className?: string;
@@ -437,6 +465,38 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
                   </div>
                 </div>
               </Link>
+            ))}
+          </div>
+        </GlassCard>
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-6" hover={false}>
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Sliders className="text-purple-300" size={22} />
+              Navigation Coverage
+            </h2>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300/80">
+              Fully built
+            </span>
+          </div>
+          <p className="text-white/50 text-sm mb-5">
+            Every navigation surface stays in sync, from desktop menus to mobile shortcuts and the command palette.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {navigationCoverage.map((item) => (
+              <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-xl bg-white/10 p-2 text-cyan-200">
+                    <item.icon size={18} />
+                  </div>
+                  <div>
+                    <div className="text-white font-semibold">{item.label}</div>
+                    <div className="text-xs text-white/50 mt-1">{item.description}</div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </GlassCard>
