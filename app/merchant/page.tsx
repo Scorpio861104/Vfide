@@ -214,7 +214,7 @@ export default function MerchantPage() {
 
             <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
               Accept VFIDE payments with <span className="text-emerald-400 font-semibold">0% protocol fees</span> • 
-              QR scans default to instant settlement, escrow optional • <span className="text-blue-400 font-semibold">STABLE-PAY</span> auto-conversion
+              Host storefronts on VFIDE or link external platforms • <span className="text-blue-400 font-semibold">STABLE-PAY</span> auto-conversion
             </p>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -359,6 +359,55 @@ export default function MerchantPage() {
                   </div>
                 </motion.div>
               ))}
+            </div>
+          </motion.section>
+          <motion.section variants={containerVariants} className="mb-16">
+            <motion.div variants={itemVariants} className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+                  Merchant Presence Options
+                </span>
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                VFIDE supports a hybrid model: run your storefront on the VFIDE network or connect existing commerce platforms with verified payouts.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -4 }}
+                className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-emerald-500/20 p-3 text-emerald-300">
+                    <Store className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-2">VFIDE-hosted storefronts</h3>
+                    <p className="text-sm text-gray-400">
+                      Launch on-chain storefronts with escrow-first defaults, ProofScore trust rails, and instant QR checkout for in-person payments.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -4 }}
+                className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-blue-500/20 p-3 text-blue-300">
+                    <ArrowRight className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-2">External platform links</h3>
+                    <p className="text-sm text-gray-400">
+                      Keep Shopify, Woo, or POS workflows—VFIDE handles escrow, settlement routing, and payout verification on top of your stack.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </motion.section>
 
