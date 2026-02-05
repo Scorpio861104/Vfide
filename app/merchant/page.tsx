@@ -86,13 +86,13 @@ const merchantExcellence = [
 const merchantDiscoveryFilters = [
   'Category',
   'Location',
+  'Price Range',
+  'Availability',
   'Fulfillment',
   'Trust Score',
   'Verified Reviews',
-  'Price Range',
   'Escrow Required',
-  'Instant Settlement',
-  'Availability'
+  'Instant Settlement'
 ];
 
 const merchantSearchModes = [
