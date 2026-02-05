@@ -83,7 +83,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans antialiased bg-zinc-900">
         {isE2E ? (
-          children
+          <main id="main-content" className="min-h-screen" tabIndex={-1}>
+            {children}
+          </main>
         ) : (
           <ErrorBoundary>
             <AccessibilityProvider>
@@ -100,17 +102,19 @@ export default function RootLayout({
                   <ZustandHydration />
                   <WebVitalsTracker />
                   <EnhancedNetworkBanner />
-                <NetworkSwitchOverlay />
-                <TestnetNotification />
-                {/* Network detection handled by wallet connection */}
-                <AchievementToastContainer />
-                {children}
-                <PieMenu />
-                <OnboardingManager />
-                <HelpCenter />
-              </ToastProvider>
-            </Web3Provider>
-          </AccessibilityProvider>
+                  <NetworkSwitchOverlay />
+                  <TestnetNotification />
+                  {/* Network detection handled by wallet connection */}
+                  <AchievementToastContainer />
+                  <main id="main-content" className="min-h-screen" tabIndex={-1}>
+                    {children}
+                  </main>
+                  <PieMenu />
+                  <OnboardingManager />
+                  <HelpCenter />
+                </ToastProvider>
+              </Web3Provider>
+            </AccessibilityProvider>
           </ErrorBoundary>
         )}
       </body>
