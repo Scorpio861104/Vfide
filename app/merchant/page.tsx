@@ -88,8 +88,18 @@ const merchantDiscoveryFilters = [
   'Location',
   'Fulfillment',
   'Trust Score',
+  'Verified Reviews',
+  'Price Range',
   'Escrow Required',
-  'Instant Settlement'
+  'Instant Settlement',
+  'Availability'
+];
+
+const merchantSearchModes = [
+  'Smart collections',
+  'Contextual search',
+  'Map + pickup',
+  'Personalized for you'
 ];
 
 const merchantDiscoverySignals = [
@@ -540,6 +550,19 @@ export default function MerchantPage() {
                         <SlidersHorizontal className="w-4 h-4" />
                         Advanced filters
                       </span>
+                    </div>
+                    <div>
+                      <div className="text-xs uppercase tracking-[0.3em] text-gray-500">Search modes</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {merchantSearchModes.map((mode) => (
+                          <span
+                            key={mode}
+                            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300"
+                          >
+                            {mode}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
