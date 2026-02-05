@@ -125,6 +125,43 @@ const merchantDiscoveryResults = [
   }
 ];
 
+const merchantRankingSignals = [
+  {
+    title: 'Trust + ProofScore (35%)',
+    description: 'Weighted by delivery verification, dispute outcomes, and Seer audits.'
+  },
+  {
+    title: 'Fulfillment reliability (25%)',
+    description: 'Tracks on-time delivery, SLA adherence, and refund accuracy.'
+  },
+  {
+    title: 'Customer satisfaction (20%)',
+    description: 'Verified reviews, repeat purchase rates, and saved-list frequency.'
+  },
+  {
+    title: 'Inventory readiness (20%)',
+    description: 'Live stock health, price stability, and escrow settlement clarity.'
+  }
+];
+
+const merchantRecommendations = [
+  {
+    category: 'Luxury Fashion',
+    merchant: 'Solstice Apparel',
+    reason: 'Top 1% ProofScore, instant QR pickup, and guaranteed sizing concierge.'
+  },
+  {
+    category: 'Consumer Electronics',
+    merchant: 'Arcstone Gadgets',
+    reason: 'Zero-dispute fulfillment with verified warranty automation.'
+  },
+  {
+    category: 'Fresh Grocery',
+    merchant: 'Greenline Market',
+    reason: 'Escrow-backed freshness audits and sub-5 minute local pickup.'
+  }
+];
+
 // Feature card component
 function FeatureCard({ 
   icon: Icon, 
@@ -548,6 +585,61 @@ export default function MerchantPage() {
                   <p className="text-sm text-gray-400">{merchant.summary}</p>
                 </motion.div>
               ))}
+            </div>
+
+            <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -3 }}
+                className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-emerald-500/20 p-3 text-emerald-300">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-2">Ranking engine signals</h3>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Rankings rebalance continuously, weighting verified trust and fulfillment performance.
+                    </p>
+                    <div className="space-y-3">
+                      {merchantRankingSignals.map((signal) => (
+                        <div key={signal.title} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                          <div className="text-sm font-semibold text-white">{signal.title}</div>
+                          <div className="text-xs text-gray-400">{signal.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -3 }}
+                className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-blue-500/20 p-3 text-blue-300">
+                    <Store className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-2">Recommended merchants</h3>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Recommendations align product intent with escrow safety, trust tier, and fulfillment speed.
+                    </p>
+                    <div className="space-y-3">
+                      {merchantRecommendations.map((rec) => (
+                        <div key={rec.category} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                          <div className="text-xs uppercase tracking-[0.05em] text-blue-300">{rec.category}</div>
+                          <div className="text-sm font-semibold text-white">{rec.merchant}</div>
+                          <div className="text-xs text-gray-400">{rec.reason}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </motion.section>
 
