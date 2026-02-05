@@ -13,8 +13,10 @@ import {
     QrCode,
     RefreshCw,
     Shield,
+    Search,
     Sparkles,
     Store,
+    SlidersHorizontal,
     Zap
 } from 'lucide-react';
 
@@ -79,6 +81,48 @@ const merchantExcellence = [
     title: 'Merchant ops console',
     description: 'Unified view of disputes, payouts, inventory tie-ins, and loyalty rewards in one workflow.',
   },
+];
+
+const merchantDiscoveryFilters = [
+  'Category',
+  'Location',
+  'Fulfillment',
+  'Trust Score',
+  'Escrow Required',
+  'Instant Settlement'
+];
+
+const merchantDiscoverySignals = [
+  {
+    title: 'ProofScore + velocity checks',
+    description: 'Rank merchants with verified reputations and consistent delivery performance.'
+  },
+  {
+    title: 'Settlement reliability',
+    description: 'Highlight merchants with escrow accuracy, low dispute rates, and fast resolution.'
+  },
+  {
+    title: 'Customer satisfaction',
+    description: 'Aggregate repeat purchase and verified review signals across the network.'
+  }
+];
+
+const merchantDiscoveryResults = [
+  {
+    name: 'Solstice Apparel',
+    category: 'Fashion • Global shipping',
+    summary: 'Escrow-first storefront with instant QR pickup and 4.9 trust rating.'
+  },
+  {
+    name: 'Arcstone Gadgets',
+    category: 'Electronics • 2-day delivery',
+    summary: 'ProofScore 9,400+, automated warranty issuance, zero-dispute track record.'
+  },
+  {
+    name: 'Greenline Market',
+    category: 'Grocery • Local pickup',
+    summary: 'Instant settlement for in-person QR checks with verified freshness guarantees.'
+  }
 ];
 
 // Feature card component
@@ -408,6 +452,102 @@ export default function MerchantPage() {
                   </div>
                 </div>
               </motion.div>
+            </div>
+          </motion.section>
+
+          <motion.section variants={containerVariants} className="mb-16">
+            <motion.div variants={itemVariants} className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400">
+                  Merchant Discovery & Search
+                </span>
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Organize every storefront with layered filters, trust signals, and escrow-aware sorting so buyers can find the right merchant in seconds.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -3 }}
+                className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-cyan-500/20 p-3 text-cyan-300">
+                    <Search className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <h3 className="text-white font-semibold mb-2">Unified merchant search</h3>
+                      <p className="text-sm text-gray-400">
+                        Search by brand, product, delivery speed, or escrow requirement. Results stay ranked by trust, fulfillment, and verified demand.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {merchantDiscoveryFilters.map((filter) => (
+                        <span
+                          key={filter}
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300"
+                        >
+                          {filter}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-300">
+                      <span className="flex items-center gap-2 text-gray-400">
+                        <Search className="w-4 h-4" />
+                        Search merchants, products, or locations
+                      </span>
+                      <span className="flex items-center gap-2 text-cyan-300">
+                        <SlidersHorizontal className="w-4 h-4" />
+                        Advanced filters
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -3 }}
+                className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-purple-500/20 p-3 text-purple-300">
+                    <Shield className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-2">Ranking signals that matter</h3>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Merchants surface based on escrow performance, ProofScore trust, verified reviews, and delivery reliability.
+                    </p>
+                    <div className="space-y-3">
+                      {merchantDiscoverySignals.map((signal) => (
+                        <div key={signal.title} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                          <div className="text-sm font-semibold text-white">{signal.title}</div>
+                          <div className="text-xs text-gray-400">{signal.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+              {merchantDiscoveryResults.map((merchant) => (
+                <motion.div
+                  key={merchant.name}
+                  variants={scaleVariants}
+                  whileHover={{ y: -4 }}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
+                >
+                  <div className="text-white font-semibold mb-1">{merchant.name}</div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-cyan-300 mb-3">{merchant.category}</div>
+                  <p className="text-sm text-gray-400">{merchant.summary}</p>
+                </motion.div>
+              ))}
             </div>
           </motion.section>
 
