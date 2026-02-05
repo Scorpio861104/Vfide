@@ -609,6 +609,9 @@ export default function MerchantPage() {
                           <div className="text-xs text-gray-400">{signal.description}</div>
                         </div>
                       ))}
+                      <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-gray-400">
+                        Only verified purchase reviews count toward rankings. Proof-of-fulfillment receipts and Seer audits remove spoofed feedback.
+                      </div>
                     </div>
                   </div>
                 </div>
