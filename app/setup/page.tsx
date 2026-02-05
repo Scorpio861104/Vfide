@@ -383,10 +383,32 @@ export default function SetupPage() {
 
         {/* Troubleshooting */}
         <div className="mt-8 p-6 bg-zinc-900 rounded-xl border border-zinc-800">
-          <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+          <h2 className="font-bold text-white mb-3">New Member Onramp</h2>
+          <p className="text-sm text-zinc-400 mb-4">
+            Once you&apos;re connected, finish your onboarding with these core steps.
+          </p>
+          <ul className="space-y-2 text-sm text-zinc-400">
+            <li>
+              <Link href="/profile" className="text-cyan-400 hover:underline">Complete your profile</Link> to unlock trust and reputation signals.
+            </li>
+            <li>
+              <Link href="/security-center" className="text-cyan-400 hover:underline">Enable guardians & recovery</Link> for account resilience.
+            </li>
+            <li>
+              <Link href="/vault" className="text-cyan-400 hover:underline">Create your first vault</Link> to secure assets and permissions.
+            </li>
+            <li>
+              <Link href="/dashboard" className="text-cyan-400 hover:underline">Open the dashboard</Link> to explore the full VFIDE system.
+            </li>
+          </ul>
+        </div>
+
+        {/* Troubleshooting */}
+        <div className="mt-8 p-6 bg-zinc-900 rounded-xl border border-zinc-800">
+          <h2 className="font-bold text-white mb-4 flex items-center gap-2">
             <AlertTriangle size={18} className="text-amber-400" />
             Troubleshooting
-          </h3>
+          </h2>
           <div className="space-y-3 text-sm text-zinc-400">
             <p><strong className="text-zinc-300">MetaMask not responding?</strong> Try refreshing the page, or disconnect and reconnect your wallet.</p>
             <p><strong className="text-zinc-300">Network button not working?</strong> Use the manual setup above - copy each field one by one into MetaMask.</p>
