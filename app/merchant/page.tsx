@@ -552,7 +552,7 @@ export default function MerchantPage() {
                       </span>
                     </div>
                     <div>
-                      <h4 className="text-xs uppercase tracking-[0.3em] text-gray-500">Search modes</h4>
+                      <h3 className="text-xs uppercase tracking-[0.3em] text-gray-500">Search modes</h3>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {merchantSearchModes.map((mode) => (
                           <span
