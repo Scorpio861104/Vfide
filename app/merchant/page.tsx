@@ -552,11 +552,12 @@ export default function MerchantPage() {
                       </span>
                     </div>
                     <div>
-                      <h3 className="text-xs uppercase tracking-[0.3em] text-gray-500">Search modes</h3>
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Search modes</p>
+                      <div className="mt-2 flex flex-wrap gap-2" role="list" aria-label="Search modes">
                         {merchantSearchModes.map((mode) => (
                           <span
                             key={mode}
+                            role="listitem"
                             className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300"
                           >
                             {mode}
