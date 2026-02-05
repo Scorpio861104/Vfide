@@ -348,6 +348,45 @@ export default function DashboardPage() {
 }
 
 function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: number }) {
+  const ecosystemLoadout = [
+    {
+      icon: Shield,
+      label: "Vault Security",
+      description: "Self-custody vault controls",
+      href: "/vault",
+    },
+    {
+      icon: Lock,
+      label: "Escrow",
+      description: "Dispute-safe settlements",
+      href: "/escrow",
+    },
+    {
+      icon: Vote,
+      label: "DAO Hub",
+      description: "Proposals + dispute flow",
+      href: "/dao-hub",
+    },
+    {
+      icon: Sparkles,
+      label: "Flashlight P2P",
+      description: "Peer-powered credit pools",
+      href: "/flashlight",
+    },
+    {
+      icon: Banknote,
+      label: "Social Pay",
+      description: "Merchant & QR commerce",
+      href: "/merchant",
+    },
+    {
+      icon: Gift,
+      label: "Rewards",
+      description: "ProofScore boosters",
+      href: "/rewards",
+    },
+  ];
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
       <motion.div variants={itemVariants}>
@@ -362,8 +401,43 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
               <QuickAction icon={Shield} label="Vault" href="/vault" />
             <QuickAction icon={Lock} label="Escrow" href="/escrow" />
             <QuickAction icon={Banknote} label="Payroll" href="/payroll" />
-            <QuickAction icon={Vote} label="Governance" href="/governance" />
-            <QuickAction icon={Gift} label="Rewards" href="/rewards" />
+              <QuickAction icon={Vote} label="Governance" href="/governance" />
+              <QuickAction icon={Gift} label="Rewards" href="/rewards" />
+          </div>
+        </GlassCard>
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-6" hover={false}>
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Sparkles className="text-cyan-300" size={22} />
+              Ecosystem Loadout
+            </h2>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/80">
+              Fully loaded
+            </span>
+          </div>
+          <p className="text-white/50 text-sm mb-5">
+            Every core system is online and ready—move between vaults, governance, escrow, and credit in a single flow.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {ecosystemLoadout.map((item) => (
+              <Link key={item.label} href={item.href}>
+                <div className="group h-full rounded-2xl border border-white/10 bg-white/5 p-4 transition-all hover:border-white/25 hover:bg-white/10">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-xl bg-white/10 p-2 text-cyan-200 group-hover:text-cyan-100 transition-colors">
+                      <item.icon size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-white font-semibold">{item.label}</div>
+                      <div className="text-xs text-white/50 mt-1">{item.description}</div>
+                    </div>
+                    <ChevronRight className="text-white/40 mt-1 transition-transform group-hover:translate-x-1" size={16} />
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         </GlassCard>
       </motion.div>
