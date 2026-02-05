@@ -784,7 +784,7 @@ export function PieMenu() {
   return (
     <nav 
       ref={menuRef}
-      className="fixed bottom-4 right-4 z-100 sm:bottom-6 sm:right-6"
+      className="fixed bottom-4 right-24 z-100 sm:bottom-6 sm:right-24"
       aria-label="Main navigation"
     >
       {/* Backdrop */}
