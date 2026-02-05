@@ -37,6 +37,10 @@ const faqs = [
     category: "Custody & Security",
     questions: [
       {
+        q: "Are documents enduring and tamper-evident?",
+        a: "Yes. Enduring documents are sealed with an immutable hash, version history, and retention policy so audit trails survive wallet changes. Governance controls retention windows, while users and guardians control access. Disputes route to the DAO hub with a Seer-reviewed audit log."
+      },
+      {
         q: "Who controls my funds? Can VFIDE freeze my account?",
         a: "YOU control 100%. Your vault is a smart contract with withdrawal functions that ONLY accept calls from YOUR wallet address. VFIDE cannot pause, freeze, or access individual user vaults - the code doesn't allow it. True non-custodial. (Note: Emergency Breaker can halt the entire protocol in existential threats, but requires DAO approval.)"
       },
@@ -515,6 +519,25 @@ export default function DocsPage() {
                           <div className="text-sm text-zinc-400">Large transfers require your explicit approval.</div>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-zinc-800 rounded-xl p-8 border border-zinc-700 mt-8">
+                  <h3 className="text-xl font-bold text-zinc-100 mb-4">Enduring Documents</h3>
+                  <p className="text-zinc-400 mb-6">
+                    Document vaults use immutable hashes, version locks, and DAO-governed retention policies so
+                    regulatory records remain durable even as wallets rotate.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-zinc-400">
+                    <div className="bg-zinc-900/60 rounded-lg border border-zinc-700 px-4 py-3">
+                      Immutable seal + timestamp for every submission.
+                    </div>
+                    <div className="bg-zinc-900/60 rounded-lg border border-zinc-700 px-4 py-3">
+                      Retention windows enforced by DAO + Seer oversight.
+                    </div>
+                    <div className="bg-zinc-900/60 rounded-lg border border-zinc-700 px-4 py-3">
+                      Access revocation and audit trails for every view.
                     </div>
                   </div>
                 </div>
