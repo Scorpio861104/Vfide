@@ -544,7 +544,7 @@ export default function MerchantPage() {
                   className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
                 >
                   <div className="text-white font-semibold mb-1">{merchant.name}</div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-cyan-300 mb-3">{merchant.category}</div>
+                  <div className="text-xs uppercase tracking-[0.05em] text-cyan-300 mb-3">{merchant.category}</div>
                   <p className="text-sm text-gray-400">{merchant.summary}</p>
                 </motion.div>
               ))}
