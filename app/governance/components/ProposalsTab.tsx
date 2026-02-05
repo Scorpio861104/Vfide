@@ -97,7 +97,7 @@ export function ProposalsTab({
                 >
                   📊 Export CSV
                 </button>
-                <button className="px-6 py-2 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
+                <button className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
                   Create Proposal
                 </button>
               </div>
@@ -171,7 +171,7 @@ export function ProposalsTab({
                       <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                         <div
                           className={`h-full transition-all ${
-                            total >= GOVERNANCE_QUORUM_VOTES ? "bg-emerald-500" : "bg-linear-to-r from-amber-400 to-orange-500"
+                            total >= GOVERNANCE_QUORUM_VOTES ? "bg-emerald-500" : "bg-gradient-to-r from-amber-400 to-orange-500"
                           }`}
                           style={{ width: `${Math.min(100, (total / GOVERNANCE_QUORUM_VOTES) * 100)}%` }}
                         />

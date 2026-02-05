@@ -32,6 +32,7 @@ import {
   Shield,
   Sparkles,
   RefreshCw,
+  ArrowRight,
 } from 'lucide-react';
 
 // ============================================================================
@@ -241,7 +242,7 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
     >
       <div className={`
         relative p-0.5 rounded-full
-        ${story.viewed ? 'bg-zinc-700' : 'bg-linear-to-tr from-rose-500 via-[#FF6B9D] to-cyan-400'}
+        ${story.viewed ? 'bg-zinc-700' : 'bg-gradient-to-tr from-rose-500 via-[#FF6B9D] to-cyan-400'}
         ${story.isLive ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-[#0A0A0F]' : ''}
       `}>
         <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center text-2xl overflow-hidden">
@@ -281,10 +282,10 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
   return (
     <motion.div
       layout
-      className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4"
+      className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect"
     >
       <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
           ✨
         </div>
         <div className="flex-1">
@@ -326,7 +327,7 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
                   <button
                     onClick={handleSubmit}
                     disabled={!content.trim() || content.length > 280}
-                    className="px-4 py-2 bg-linear-to-r from-cyan-400 to-violet-400 text-zinc-950 font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 bg-gradient-to-r from-cyan-400 to-violet-400 text-zinc-950 font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     Post
@@ -353,7 +354,7 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xl">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xl">
             {post.author.avatar}
           </div>
           <div>
@@ -467,13 +468,13 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
 
 function TrendingSidebar() {
   return (
-    <div className="space-y-6">
-      {/* Quick Links */}
-      <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4">
-        <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-cyan-400" />
-          Quick Access
-        </h3>
+      <div className="space-y-6">
+        {/* Quick Links */}
+        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect">
+          <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-cyan-400" />
+            Quick Access
+          </h3>
         <div className="space-y-2">
           <Link href="/feed" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
             <Rss className="w-5 h-5" />
@@ -495,11 +496,11 @@ function TrendingSidebar() {
       </div>
 
       {/* Trending */}
-      <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4">
-        <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-pink-400" />
-          Trending
-        </h3>
+        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect">
+          <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-pink-400" />
+            Trending
+          </h3>
         <div className="space-y-3">
           {mockTrending.map((topic, index) => (
             <div key={topic.id} className="flex items-center justify-between group cursor-pointer">
@@ -518,15 +519,15 @@ function TrendingSidebar() {
       </div>
 
       {/* Who to Follow */}
-      <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4">
-        <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-violet-400" />
-          Who to Follow
-        </h3>
+        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect">
+          <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-violet-400" />
+            Who to Follow
+          </h3>
         <div className="space-y-4">
           {mockSuggested.map((user) => (
             <div key={user.address} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
                 {user.avatar}
               </div>
               <div className="flex-1 min-w-0">
@@ -548,11 +549,11 @@ function TrendingSidebar() {
       </div>
 
       {/* Stats Card */}
-      <div className="bg-linear-to-br from-zinc-900 to-zinc-800 border border-zinc-700 rounded-2xl p-4">
-        <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
-          <Award className="w-5 h-5 text-amber-400" />
-          Your Stats
-        </h3>
+        <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 rounded-2xl p-4 ring-effect">
+          <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
+            <Award className="w-5 h-5 text-amber-400" />
+            Your Stats
+          </h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-cyan-400">1.2K</div>
@@ -710,6 +711,18 @@ export default function SocialHubPage() {
               <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
                 Connect, share, and engage with the VFIDE community
               </p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.3em] text-zinc-500 mt-4"
+              >
+                <span>Share</span>
+                <ArrowRight className="w-4 h-4 text-cyan-400" />
+                <span>Build Trust</span>
+                <ArrowRight className="w-4 h-4 text-cyan-400" />
+                <span>Earn Reach</span>
+              </motion.div>
             </motion.div>
 
             {!isConnected ? (
@@ -718,7 +731,7 @@ export default function SocialHubPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-12"
               >
-                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto ring-effect">
                   <div className="text-6xl mb-4">🔗</div>
                   <h2 className="text-xl font-bold text-zinc-50 mb-4">
                     Connect to Join the Conversation
@@ -737,7 +750,7 @@ export default function SocialHubPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4"
+                    className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect"
                   >
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                       {mockStories.map((story) => (

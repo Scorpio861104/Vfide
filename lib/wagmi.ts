@@ -21,12 +21,9 @@ import { isMobileDevice } from './mobileDetection'
 
 // Create noopStorage for SSR to avoid hydration mismatches
 // SSR-safe storage implementation - parameters required by Storage interface
-const noopStorage = {
-   
+const _noopStorage = {
   getItem: (_key: string) => null,
-   
   setItem: (_key: string, _value: string) => {},
-   
   removeItem: (_key: string) => {},
 }
 

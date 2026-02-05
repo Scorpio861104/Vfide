@@ -107,7 +107,7 @@ export default function SubscriptionsPage() {
                 <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-zinc-100">
                   Active Subscriptions
                 </h2>
-                <button className="px-6 py-2 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
+                <button className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
                   New Subscription
                 </button>
               </div>
@@ -235,7 +235,7 @@ export default function SubscriptionsPage() {
                 </div>
               </div>
               
-              <button className="mt-6 w-full px-6 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
+              <button className="mt-6 w-full px-6 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
                 Create Subscription
               </button>
             </div>

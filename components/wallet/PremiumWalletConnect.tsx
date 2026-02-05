@@ -366,7 +366,7 @@ function ConnectedWallet({
         animate={{ opacity: 1 }}
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
-        className="flex items-center gap-3 px-3 py-2 bg-linear-to-r from-zinc-800/80 to-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-cyan-500/30 transition-all group"
+        className="flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-zinc-800/80 to-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-cyan-500/30 transition-all group"
       >
         {/* Avatar */}
         <WalletAvatar 

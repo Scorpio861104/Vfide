@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { motion, useScroll, useTransform, LazyMotion, domAnimation, m } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useEffect, useState, lazy, Suspense } from "react";
 import { 
   Shield, Zap, Users, TrendingDown, Lock, Sparkles,
@@ -10,6 +10,9 @@ import {
 
 // Lazy load Footer for better initial load performance
 const Footer = lazy(() => import("@/components/layout/Footer").then(mod => ({ default: mod.Footer })));
+
+const TESTNET_VAULT_COUNT = "2.8K";
+const TESTNET_VAULT_LABEL = `${TESTNET_VAULT_COUNT} Vaults (Testnet)`;
 
 // Animated counter hook
 function useAnimatedCounter(end: number, duration: number = 2000, start: number = 0) {
@@ -265,9 +268,13 @@ function Step({ number, title, description, time, index }: StepProps) {
 // Trust indicators
 function TrustBadge({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-400">
+    <motion.div
+      whileHover={{ y: -2, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-400 transition-colors"
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -280,21 +287,29 @@ export default function Home() {
   
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.96]);
+  const heroGlow = useTransform(scrollYProgress, [0, 0.5], [1, 0.7]);
+  const orbY = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const orbOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.6]);
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <>
       {/* Hero Section */}
       <section 
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center overflow-hidden bg-zinc-950 pt-20"
       >
-        <FloatingOrbs />
+        <motion.div style={{ y: orbY, opacity: orbOpacity }} className="absolute inset-0">
+          <motion.div style={{ opacity: heroGlow }}>
+            <FloatingOrbs />
+          </motion.div>
+        </motion.div>
         
         {/* Grid pattern */}
         <div className="absolute inset-0 grid-pattern opacity-50" />
         
         <motion.div 
-          style={{ opacity: heroOpacity, y: heroY }}
+          style={{ opacity: heroOpacity, y: heroY, scale: heroScale }}
           className="relative z-10 container mx-auto px-3 sm:px-4"
         >
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
@@ -321,37 +336,54 @@ export default function Home() {
                 <span className="gradient-text">Zero Fees.</span>
               </motion.h1>
               
-              <motion.p
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
-              >
-                The first payment protocol where merchants pay <strong className="text-zinc-50">zero processing fees</strong>. 
-                Token transfers have behavioral fees (0.25-5%) that reward trust. Own your funds.
-              </motion.p>
+                <motion.p
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="text-xl text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
+                >
+                  The first payment protocol where merchants pay <strong className="text-zinc-50">zero processing fees</strong>. 
+                  Token transfers have behavioral fees (0.25-5%) that reward trust. Own your funds and build a ProofScore that unlocks lower fees.
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.25 }}
+                  className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs uppercase tracking-[0.3em] text-zinc-500 mb-8"
+                >
+                  <span>Pay</span>
+                  <ChevronRight className="w-4 h-4 text-cyan-400" />
+                  <span>Build Trust</span>
+                  <ChevronRight className="w-4 h-4 text-cyan-400" />
+                  <span>Unlock Rewards</span>
+                </motion.div>
               
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10"
-              >
-                <Link 
-                  href="/token-launch"
-                  className="group inline-flex items-center justify-center gap-2 btn-primary text-lg"
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10"
                 >
-                  Get Started
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link 
-                  href="/live-demo"
-                  className="group inline-flex items-center justify-center gap-2 btn-secondary text-lg"
-                >
-                  <Play className="w-5 h-5" />
-                  Watch Demo
-                </Link>
-              </motion.div>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                    <Link 
+                      href="/token-launch"
+                      className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
+                    >
+                      Get Started
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                    <Link 
+                      href="/live-demo"
+                      className="group inline-flex items-center justify-center gap-2 btn-secondary ring-effect text-lg"
+                    >
+                      <Play className="w-5 h-5" />
+                      Watch Demo
+                    </Link>
+                  </motion.div>
+                </motion.div>
               
               {/* Trust indicators */}
               <motion.div
@@ -368,6 +400,22 @@ export default function Home() {
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   Audited &amp; Open Source
                 </TrustBadge>
+                <TrustBadge>
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  {TESTNET_VAULT_LABEL}
+                </TrustBadge>
+                <TrustBadge>
+                  <Zap className="w-4 h-4 text-cyan-400" />
+                  Instant Settlement
+                </TrustBadge>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="mt-6 text-xs uppercase tracking-[0.2em] text-zinc-600"
+              >
+                Built for Base • Polygon • zkSync
               </motion.div>
             </div>
             
@@ -376,6 +424,7 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
+              whileHover={{ y: -6 }}
               className="lg:block"
             >
               <HeroVisualization />
@@ -437,7 +486,7 @@ export default function Home() {
 
       {/* Why VFIDE Section */}
       <section className="py-24 bg-zinc-950 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
         
         <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
           <motion.div
@@ -503,7 +552,7 @@ export default function Home() {
 
       {/* How It Works Section */}
       <section className="py-24 bg-zinc-950 relative">
-        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
         
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.div
@@ -512,6 +561,9 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
+            <span className="text-xs sm:text-sm text-cyan-400 uppercase tracking-widest">
+              3-step launch
+            </span>
             <h2 className="text-4xl md:text-5xl font-display font-bold text-zinc-50 mb-4">
               Get Started in Seconds
             </h2>
@@ -552,7 +604,7 @@ export default function Home() {
           >
             <Link 
               href="/merchant"
-              className="group inline-flex items-center justify-center gap-2 btn-primary text-lg"
+              className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
             >
               Start Accepting Payments
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -566,7 +618,7 @@ export default function Home() {
 
       {/* Testimonial / Social Proof */}
       <section className="py-24 bg-zinc-950 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
         
         <div className="container mx-auto px-3 sm:px-4 max-w-4xl text-center">
           <motion.div
@@ -634,14 +686,14 @@ export default function Home() {
           >
             <Link 
               href="/token-launch"
-              className="group inline-flex items-center justify-center gap-2 btn-primary text-lg"
+              className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
             >
               Launch App
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link 
               href="/docs"
-              className="group inline-flex items-center justify-center gap-2 btn-secondary text-lg"
+              className="group inline-flex items-center justify-center gap-2 btn-secondary ring-effect text-lg"
             >
               Read Documentation
             </Link>
@@ -663,6 +715,6 @@ export default function Home() {
       <Suspense fallback={<div className="min-h-[400px] bg-zinc-950" />}>
         <Footer />
       </Suspense>
-    </LazyMotion>
+    </>
   );
 }

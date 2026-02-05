@@ -161,11 +161,11 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
             transition={{ type: "spring", duration: 0.5 }}
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-101 w-[calc(100%-2rem)] max-w-lg sm:max-w-xl md:max-w-2xl"
           >
-            <div className="bg-linear-to-br from-zinc-800 to-zinc-900 border-2 border-cyan-400 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-cyan-400 rounded-2xl shadow-2xl overflow-hidden">
               {/* Progress Bar */}
               <div className="h-1 bg-zinc-700">
                 <motion.div
-                  className="h-full bg-linear-to-r from-cyan-400 to-blue-500"
+                  className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.3 }}
@@ -280,7 +280,7 @@ export function OnboardingTour({ onComplete, autoStart = true }: OnboardingTourP
 
                 <button
                   onClick={handleNext}
-                  className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:scale-105 transition-transform"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:scale-105 transition-transform"
                 >
                   {isLastStep ? (
                     <>

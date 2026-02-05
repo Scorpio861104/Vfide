@@ -248,8 +248,8 @@ describe('PaymentQR Pattern', () => {
     copied?: boolean
   }) {
     const paymentUrl = amount 
-      ? `vfide://pay?to=${merchantAddress}&amount=${amount}`
-      : `vfide://pay?to=${merchantAddress}`
+      ? `vfide://pay?merchant=${merchantAddress}&amount=${amount}`
+      : `vfide://pay?merchant=${merchantAddress}`
 
     return (
       <div data-testid="payment-qr">

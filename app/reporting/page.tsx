@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Calendar,
 } from 'lucide-react';
+import { PageWrapper, PageHeader } from '@/components/ui/PageLayout';
 
 export default function ReportingAnalyticsPage() {
   const {
@@ -50,63 +51,67 @@ export default function ReportingAnalyticsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <div className="border-b border-slate-800">
-        <div className="container mx-auto px-4 py-8">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-6"
+    <PageWrapper variant="gradient">
+      <PageHeader
+        icon={<BarChart3 className="w-10 h-10 text-white" />}
+        title="Reporting Command"
+        subtitle="Real-time insights, detailed reports, and intelligent analytics."
+        badge="Data Intelligence"
+        badgeColor="bg-indigo-400/20 text-indigo-200"
+      >
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={refreshReports}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 rounded-lg text-white transition-colors"
           >
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-                <BarChart3 className="w-10 h-10 text-blue-400" />
-                Reporting & Analytics
-              </h1>
-              <p className="text-slate-400">
-                Real-time insights, detailed reports, and comprehensive data analysis
-              </p>
-            </div>
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={refreshReports}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 rounded-lg text-white transition-colors"
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
+          <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 border border-slate-700 rounded-lg">
+            <Calendar className="w-4 h-4 text-slate-400" />
+            <select
+              value={selectedTimeRange}
+              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+              className="bg-transparent text-white text-sm focus:outline-none"
+            >
+              {Object.values(TimeRange).map((range) => (
+                <option key={range} value={range}>
+                  {formatDateRange(range)}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              <div className="flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-lg">
-                <Calendar className="w-4 h-4 text-slate-400" />
-                <select
-                  value={selectedTimeRange}
-                  onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-                  className="bg-transparent text-white text-sm focus:outline-none"
-                >
-                  {Object.values(TimeRange).map((range) => (
-                    <option key={range} value={range}>
-                      {formatDateRange(range)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                onClick={toggleAutoRefresh}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  autoRefresh
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
-                }`}
-              >
-                <RefreshCw className="w-4 h-4" />
-                Auto
-              </button>
-            </div>
-          </motion.div>
+          <button
+            onClick={toggleAutoRefresh}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              autoRefresh
+                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
+            }`}
+          >
+            <RefreshCw className="w-4 h-4" />
+            Auto
+          </button>
+        </div>
+      </PageHeader>
+      <div className="container mx-auto px-4 pb-24 md:pb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6"
+        >
+          <div className="text-zinc-400">
+            <p className="text-sm uppercase tracking-[0.3em] text-indigo-300/80 mb-2">
+              Executive View
+            </p>
+            <p className="text-lg text-white font-semibold">
+              Signal coverage across every dashboard
+            </p>
+          </div>
+        </motion.div>
 
           {/* Summary Stats */}
           {activeTab === 'overview' && (
@@ -145,7 +150,6 @@ export default function ReportingAnalyticsPage() {
               })}
             </motion.div>
           )}
-        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -301,6 +305,6 @@ export default function ReportingAnalyticsPage() {
           )}
         </motion.div>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

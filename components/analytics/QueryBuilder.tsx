@@ -451,7 +451,12 @@ export function QueryBuilder({
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Results Preview ({executeQuery.length} rows)
           </h4>
-          <div className="overflow-x-auto">
+          <div
+            className="table-responsive"
+            role="region"
+            aria-label="Query results"
+            tabIndex={0}
+          >
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">

@@ -35,6 +35,46 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
 };
 
+const ecosystemLoadout = [
+  {
+    icon: Shield,
+    label: "Vault Security",
+    description: "Self-custody vault controls",
+    href: "/vault",
+  },
+  {
+    icon: Lock,
+    label: "Escrow",
+    description: "Dispute-safe settlements",
+    href: "/escrow",
+  },
+  {
+    icon: Vote,
+    label: "DAO Hub",
+    description: "Proposals + dispute flow",
+    href: "/dao-hub",
+  },
+  {
+    icon: Sparkles,
+    label: "Flashlight P2P",
+    description: "Peer-powered credit pools",
+    href: "/flashlight",
+  },
+  {
+    icon: Banknote,
+    label: "Social Pay",
+    description: "Merchant & QR commerce",
+    href: "/merchant",
+  },
+  {
+    icon: Gift,
+    label: "Rewards",
+    description: "ProofScore boosters",
+    href: "/rewards",
+  },
+];
+
+
 function GlassCard({ children, className = "", hover = true }: { 
   children: React.ReactNode; 
   className?: string;
@@ -44,7 +84,7 @@ function GlassCard({ children, className = "", hover = true }: {
     <motion.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${hover ? 'ring-effect' : ''} ${className}`}
     >
       {children}
     </motion.div>
@@ -127,7 +167,7 @@ function QuickAction({
         whileTap={{ scale: 0.98 }}
         className={`p-4 rounded-2xl font-semibold transition-all flex flex-col items-center gap-3 text-center ${isPrimary 
           ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25' 
-          : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20'}`}
+          : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20'} ring-effect`}
       >
         <div className={`p-3 rounded-xl ${isPrimary ? 'bg-white/20' : 'bg-gradient-to-br from-white/10 to-white/5'}`}>
           <Icon size={24} />
@@ -228,6 +268,9 @@ export default function DashboardPage() {
                     <Sparkles className="text-amber-400" size={28} />
                   </motion.span>
                 </h1>
+                <p className="text-white/60 max-w-2xl text-sm sm:text-base mb-4">
+                  Your VFIDE command center for vaults, ProofScore, and rewards—built to move at the speed of trust.
+                </p>
                 <div className="flex items-center gap-3 flex-wrap">
                   <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 max-w-full">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
@@ -250,14 +293,14 @@ export default function DashboardPage() {
                     </a>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-linear-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
                     <span className="text-cyan-400 font-bold text-sm flex items-center gap-2">
                       <Zap size={14} />
                       ProofScore {proofscore}
                     </span>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-linear-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
+                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
                     <span className="text-emerald-400 font-bold text-sm">{currentFeeRate.toFixed(2)}% fee</span>
                   </motion.div>
                 </div>
@@ -300,7 +343,7 @@ export default function DashboardPage() {
                   whileTap={{ scale: 0.98 }}
                   className={`px-5 py-3 rounded-xl font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
                     activeTab === tab.id
-                      ? 'bg-linear-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                       : 'bg-transparent text-white/60 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -348,18 +391,54 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
       <motion.div variants={itemVariants}>
-        <GlassCard className="p-6" hover={false}>
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Zap className="text-amber-400" size={24} />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-            <QuickAction icon={ArrowUpRight} label="Send" href="/pay" variant="primary" />
-            <QuickAction icon={Shield} label="Vault" href="/vault" />
+          <GlassCard className="p-6" hover={false}>
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Zap className="text-amber-400" size={24} />
+              Quick Actions
+            </h2>
+            <p className="text-white/50 text-sm mb-5">Jump straight into your most-used flows.</p>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+              <QuickAction icon={ArrowUpRight} label="Send" href="/pay" variant="primary" />
+              <QuickAction icon={Shield} label="Vault" href="/vault" />
             <QuickAction icon={Lock} label="Escrow" href="/escrow" />
             <QuickAction icon={Banknote} label="Payroll" href="/payroll" />
-            <QuickAction icon={Vote} label="Governance" href="/governance" />
-            <QuickAction icon={Gift} label="Rewards" href="/rewards" />
+              <QuickAction icon={Vote} label="Governance" href="/governance" />
+              <QuickAction icon={Gift} label="Rewards" href="/rewards" />
+          </div>
+        </GlassCard>
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-6" hover={false}>
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Sparkles className="text-cyan-300" size={22} />
+              Ecosystem Loadout
+            </h2>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/80">
+              Fully loaded
+            </span>
+          </div>
+          <p className="text-white/50 text-sm mb-5">
+            Every core system is online and ready—move between vaults, governance, escrow, and credit in a single flow.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {ecosystemLoadout.map((item) => (
+              <Link key={item.label} href={item.href}>
+                <div className="group h-full rounded-2xl border border-white/10 bg-white/5 p-4 transition-all hover:border-white/25 hover:bg-white/10">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-xl bg-white/10 p-2 text-cyan-200 group-hover:text-cyan-100 transition-colors">
+                      <item.icon size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-white font-semibold">{item.label}</div>
+                      <div className="text-xs text-white/50 mt-1">{item.description}</div>
+                    </div>
+                    <ChevronRight className="text-white/40 mt-1 transition-transform group-hover:translate-x-1" size={16} />
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         </GlassCard>
       </motion.div>
@@ -402,7 +481,7 @@ function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: num
                     <span className="text-white font-medium">{item.value.toLocaleString()} / {item.max.toLocaleString()}</span>
                   </div>
                   <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${(item.value / item.max) * 100}%` }} transition={{ duration: 1, delay: index * 0.1 }} className={`h-full rounded-full bg-linear-to-r ${
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${(item.value / item.max) * 100}%` }} transition={{ duration: 1, delay: index * 0.1 }} className={`h-full rounded-full bg-gradient-to-r ${
                       item.color === 'cyan' ? 'from-cyan-500 to-cyan-400' :
                       item.color === 'emerald' ? 'from-emerald-500 to-emerald-400' :
                       item.color === 'amber' ? 'from-amber-500 to-amber-400' :

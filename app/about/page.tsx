@@ -10,7 +10,7 @@ export default function AboutPage() {
       
       <main className="min-h-screen bg-zinc-900 pt-20">
         {/* Hero */}
-        <section className="py-20 bg-linear-to-b from-zinc-800 to-zinc-900 border-b border-zinc-700">
+        <section className="py-20 bg-gradient-to-b from-zinc-800 to-zinc-900 border-b border-zinc-700">
           <div className="container mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -124,7 +124,7 @@ export default function AboutPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-linear-to-r from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-8 text-center"
+              className="bg-gradient-to-r from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-8 text-center"
             >
               <h2 className="text-2xl font-bold text-cyan-400 mb-4">
                 &quot;This is not a system for the rich. This is for the forgotten and the struggling.&quot;
@@ -148,7 +148,7 @@ export default function AboutPage() {
               href="https://github.com/Scorpio861104/Vfide"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block px-8 py-3 bg-linear-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform"
+              className="inline-block px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform"
             >
               View Source Code on GitHub
             </a>

@@ -557,7 +557,7 @@ describe('Enhanced Network Resilience Integration Tests', () => {
       const latencyMeasurer = {
         measure: jest.fn(async () => {
           const start = Date.now();
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise(resolve => setTimeout(resolve, 55));
           return Date.now() - start;
         }),
       };

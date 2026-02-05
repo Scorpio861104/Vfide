@@ -25,6 +25,9 @@ interface PaymentQRProps {
   defaultOrderId?: string
 }
 
+const QR_SETTLEMENT = 'instant'
+const QR_SOURCE = 'qr'
+
 export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   const { address } = useAccount()
   const merchantInfo = useIsMerchant(address)
@@ -34,13 +37,25 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
 
   // Create a payment deep link (could be customized for mobile wallets)
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.com'
-  const paymentUrl = `${baseUrl}/pay?to=${address}${amount ? `&amount=${amount}` : ''}${orderId ? `&orderId=${encodeURIComponent(orderId)}` : ''}`
+  const paymentUrl = address
+    ? (() => {
+        const paymentParams = new URLSearchParams({
+          merchant: address,
+          source: QR_SOURCE,
+          settlement: QR_SETTLEMENT,
+        })
+        if (amount) paymentParams.set('amount', amount)
+        if (orderId) paymentParams.set('orderId', orderId)
+        return `${baseUrl}/pay?${paymentParams.toString()}`
+      })()
+    : ''
 
   // USD estimate (using $0.07 presale price as reference)
   const REFERENCE_PRICE = 0.07
   const usdValue = amount ? (parseFloat(amount) * REFERENCE_PRICE).toFixed(2) : '0.00'
 
   const copyPaymentLink = () => {
+    if (!paymentUrl) return
     navigator.clipboard.writeText(paymentUrl)
     setCopied(true)
   }
@@ -79,6 +94,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   }
 
   const sharePayment = async () => {
+    if (!paymentUrl) return
     if (navigator.share) {
       try {
         await navigator.share({
@@ -117,12 +133,12 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-linear-to-br from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
           <QrCode className="w-8 h-8 text-cyan-400" />
           <div>
             <h2 className="text-xl font-bold text-zinc-100">Payment QR Code</h2>
-            <p className="text-zinc-400 text-sm">Customers scan to pay instantly</p>
+            <p className="text-zinc-400 text-sm">QR scans default to instant settlement</p>
           </div>
         </div>
       </div>
@@ -131,19 +147,25 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
         {/* QR Code Display */}
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 flex flex-col items-center">
           <div className="bg-white p-4 rounded-xl mb-4">
-            <QRCodeSVG
-              id="payment-qr-code"
-              value={paymentUrl}
-              size={200}
-              level="H"
-              includeMargin={true}
-              imageSettings={{
-                src: '/favicon.ico',
-                height: 24,
-                width: 24,
-                excavate: true,
-              }}
-            />
+            {paymentUrl ? (
+              <QRCodeSVG
+                id="payment-qr-code"
+                value={paymentUrl}
+                size={200}
+                level="H"
+                includeMargin={true}
+                imageSettings={{
+                  src: '/favicon.ico',
+                  height: 24,
+                  width: 24,
+                  excavate: true,
+                }}
+              />
+            ) : (
+              <div className="w-[200px] h-[200px] flex items-center justify-center text-xs text-zinc-500 text-center">
+                Connect wallet to generate a payment QR
+              </div>
+            )}
           </div>
           
           {/* Amount Display */}
@@ -159,8 +181,9 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           )}
           
           {/* Merchant Name */}
-          <div className="text-center text-zinc-100 font-bold mb-4">
-            {merchantInfo.businessName}
+          <div className="text-center text-zinc-100 font-bold mb-4 flex flex-col items-center gap-1">
+            <span>{merchantInfo.businessName}</span>
+            <span className="text-xs text-zinc-500">Instant settlement via QR scan</span>
           </div>
           
           {/* Order ID */}

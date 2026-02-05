@@ -84,7 +84,7 @@ export function PaymentButton({
           compact
             ? 'px-2 py-1 text-xs'
             : 'px-3 py-1.5 text-sm'
-        } bg-linear-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 text-green-400 rounded-lg transition-all`}
+        } bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 text-green-400 rounded-lg transition-all`}
         title={variant === 'tip' ? 'Send Tip' : 'Send Payment'}
       >
         <DollarSign className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
@@ -217,7 +217,7 @@ export function PaymentButton({
                     <button
                       onClick={handleSend}
                       disabled={sending || !amount}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {sending ? (
                         <>

@@ -148,7 +148,7 @@ function useWalletType(connectorName?: string): WalletType {
 
 function SkeletonLoader({ className = '' }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-linear-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-size-[200%_100%] ${className}`} />
+    <div className={`animate-pulse bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-size-[200%_100%] ${className}`} />
   );
 }
 
@@ -702,7 +702,7 @@ function ConnectedWallet({
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
         transition={HAPTIC_SPRING}
-        className="flex items-center gap-3 px-4 py-2.5 bg-linear-to-r from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-cyan-500/40 transition-all group shadow-xl"
+        className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-cyan-500/40 transition-all group shadow-xl"
         aria-expanded={isDropdownOpen}
         aria-haspopup="true"
       >
@@ -838,7 +838,7 @@ function ConnectedWallet({
               </div>
               
               {/* Balance */}
-              <div className="flex items-center justify-between mt-4 p-4 bg-linear-to-r from-cyan-500/10 to-blue-500/10 rounded-xl border border-cyan-500/20">
+              <div className="flex items-center justify-between mt-4 p-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl border border-cyan-500/20">
                 <span className="text-gray-400 text-sm">Balance</span>
                 <BalanceDisplay 
                   balance={formattedBalance}

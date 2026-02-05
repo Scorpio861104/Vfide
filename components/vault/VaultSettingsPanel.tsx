@@ -106,7 +106,7 @@ export function VaultSettingsPanel() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-linear-to-br from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-xl p-6"
+        className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-xl p-6"
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -159,7 +159,7 @@ export function VaultSettingsPanel() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-linear-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-6"
+        className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-6"
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -218,7 +218,7 @@ export function VaultSettingsPanel() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-linear-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-6"
+        className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-6"
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">

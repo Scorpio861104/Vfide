@@ -13,8 +13,10 @@ import {
     QrCode,
     RefreshCw,
     Shield,
+    Search,
     Sparkles,
     Store,
+    SlidersHorizontal,
     Zap
 } from 'lucide-react';
 
@@ -47,6 +49,128 @@ const scaleVariants = {
     transition: { type: "spring" as const, stiffness: 100, damping: 15 }
   }
 };
+
+const merchantExcellence = [
+  {
+    icon: Shield,
+    title: 'Escrow-first protection',
+    description: 'Auto-select escrow for new buyers, high-value carts, or high-risk scores. Instant settlement unlocks after trust thresholds.',
+  },
+  {
+    icon: Zap,
+    title: 'Smart settlement routing',
+    description: 'Route funds instantly for trusted QR flows or hold in escrow for delivery-proof scenarios—always visible to both parties.',
+  },
+  {
+    icon: CreditCard,
+    title: 'ProofScore guardrails',
+    description: 'Dynamic risk scoring, device reputation, and buyer history give merchants a clearer safety signal than chargebacks.',
+  },
+  {
+    icon: RefreshCw,
+    title: 'Stable settlement paths',
+    description: 'STABLE-PAY auto-converts with slippage caps, keeping margins stable without manual FX or payout delays.',
+  },
+  {
+    icon: QrCode,
+    title: 'Instant QR checkout',
+    description: 'Sub-5 second QR settlement for in-person commerce with tamper-proof receipts and offline fallbacks.',
+  },
+  {
+    icon: Store,
+    title: 'Merchant ops console',
+    description: 'Unified view of disputes, payouts, inventory tie-ins, and loyalty rewards in one workflow.',
+  },
+];
+
+const merchantDiscoveryFilters = [
+  'Category',
+  'Location',
+  'Price Range',
+  'Availability',
+  'Fulfillment',
+  'Trust Score',
+  'Verified Reviews',
+  'Escrow Required',
+  'Instant Settlement'
+];
+
+const merchantSearchModes = [
+  'Smart collections',
+  'Contextual search',
+  'Map + pickup',
+  'Personalized for you'
+];
+
+const merchantDiscoverySignals = [
+  {
+    title: 'ProofScore + velocity checks',
+    description: 'Rank merchants with verified reputations and consistent delivery performance.'
+  },
+  {
+    title: 'Settlement reliability',
+    description: 'Highlight merchants with escrow accuracy, low dispute rates, and fast resolution.'
+  },
+  {
+    title: 'Customer satisfaction',
+    description: 'Aggregate repeat purchase and verified review signals across the network.'
+  }
+];
+
+const merchantDiscoveryResults = [
+  {
+    name: 'Solstice Apparel',
+    category: 'Fashion • Global shipping',
+    summary: 'Escrow-first storefront with instant QR pickup and 4.9 trust rating.'
+  },
+  {
+    name: 'Arcstone Gadgets',
+    category: 'Electronics • 2-day delivery',
+    summary: 'ProofScore 9,400+, automated warranty issuance, zero-dispute track record.'
+  },
+  {
+    name: 'Greenline Market',
+    category: 'Grocery • Local pickup',
+    summary: 'Instant settlement for in-person QR checks with verified freshness guarantees.'
+  }
+];
+
+const merchantRankingSignals = [
+  {
+    title: 'Trust + ProofScore (35%)',
+    description: 'Weighted by delivery verification, dispute outcomes, and Seer audits.'
+  },
+  {
+    title: 'Fulfillment reliability (25%)',
+    description: 'Tracks on-time delivery, SLA adherence, and refund accuracy.'
+  },
+  {
+    title: 'Customer satisfaction (20%)',
+    description: 'Verified reviews, repeat purchase rates, and saved-list frequency.'
+  },
+  {
+    title: 'Inventory readiness (20%)',
+    description: 'Live stock health, price stability, and escrow settlement clarity.'
+  }
+];
+
+const merchantRecommendations = [
+  {
+    category: 'Luxury Fashion',
+    merchant: 'Solstice Apparel',
+    reason: 'Top 1% ProofScore, instant QR pickup, and guaranteed sizing concierge.'
+  },
+  {
+    category: 'Consumer Electronics',
+    merchant: 'Arcstone Gadgets',
+    reason: 'Zero-dispute fulfillment with verified warranty automation.'
+  },
+  {
+    category: 'Fresh Grocery',
+    merchant: 'Greenline Market',
+    reason: 'Escrow-backed freshness audits and sub-5 minute local pickup.'
+  }
+];
 
 // Feature card component
 function FeatureCard({ 
@@ -174,15 +298,27 @@ export default function MerchantPage() {
             </motion.div>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-6">
-              <span className="bg-clip-text text-transparent bg-linear-to-r from-purple-400 via-blue-400 to-cyan-400">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400">
                 Merchant Portal
               </span>
             </h1>
 
             <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
               Accept VFIDE payments with <span className="text-emerald-400 font-semibold">0% protocol fees</span> • 
-              Direct or Escrow modes • Optional <span className="text-blue-400 font-semibold">STABLE-PAY</span> auto-conversion
+              Host storefronts on VFIDE or link external platforms • <span className="text-blue-400 font-semibold">STABLE-PAY</span> auto-conversion
             </p>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.3em] text-gray-500 mt-6"
+            >
+              <span>Collect</span>
+              <ArrowRight className="w-4 h-4 text-cyan-400" />
+              <span>Convert</span>
+              <ArrowRight className="w-4 h-4 text-cyan-400" />
+              <span>Grow</span>
+            </motion.div>
 
             {/* Trust badges */}
             <div className="flex flex-wrap justify-center gap-4 mt-8">
@@ -195,6 +331,7 @@ export default function MerchantPage() {
                   key={badge.text}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ y: -2, scale: 1.02 }}
                   transition={{ delay: 0.5 + i * 0.1 }}
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300"
                 >
@@ -245,7 +382,7 @@ export default function MerchantPage() {
           <motion.section variants={containerVariants} className="mb-16">
             <motion.div variants={itemVariants} className="text-center mb-10">
               <h2 className="text-3xl font-bold mb-4">
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-purple-400 to-blue-400">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
                   Why Choose VFIDE?
                 </span>
               </h2>
@@ -264,7 +401,7 @@ export default function MerchantPage() {
               <FeatureCard
                 icon={Zap}
                 title="Flexible Settlement"
-                description="Direct payments settle instantly. Escrow mode holds funds until release."
+                description="Instant settlement for trusted/QR flows. Escrow stays available for buyer protection."
                 color="blue"
               />
               <FeatureCard
@@ -282,27 +419,282 @@ export default function MerchantPage() {
             </div>
           </motion.section>
 
+          <motion.section variants={containerVariants} className="mb-16">
+            <motion.div variants={itemVariants} className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400">
+                  Merchant Excellence Stack
+                </span>
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Built to be the safest and fastest way to accept crypto without sacrificing trust, liquidity, or customer experience.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {merchantExcellence.map((item) => (
+                <motion.div
+                  key={item.title}
+                  variants={scaleVariants}
+                  whileHover={{ y: -4 }}
+                  className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="rounded-2xl bg-white/10 p-3 text-cyan-200">
+                      <item.icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold mb-1">{item.title}</h3>
+                      <p className="text-sm text-gray-400">{item.description}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+          <motion.section variants={containerVariants} className="mb-16">
+            <motion.div variants={itemVariants} className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+                  Merchant Presence Options
+                </span>
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                VFIDE supports a hybrid model: run your storefront on the VFIDE network or connect existing commerce platforms with verified payouts.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -4 }}
+                className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-emerald-500/20 p-3 text-emerald-300">
+                    <Store className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-2">VFIDE-hosted storefronts</h3>
+                    <p className="text-sm text-gray-400">
+                      Launch on-chain storefronts with escrow-first defaults, ProofScore trust rails, and instant QR checkout for in-person payments.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -4 }}
+                className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-blue-500/20 p-3 text-blue-300">
+                    <ArrowRight className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-2">External platform links</h3>
+                    <p className="text-sm text-gray-400">
+                      Keep Shopify, Woo, or POS workflows—VFIDE handles escrow, settlement routing, and payout verification on top of your stack.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.section>
+
+          <motion.section variants={containerVariants} className="mb-16">
+            <motion.div variants={itemVariants} className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400">
+                  Merchant Discovery & Search
+                </span>
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Organize every storefront with layered filters, trust signals, and escrow-aware sorting so buyers can find the right merchant in seconds.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -3 }}
+                className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-cyan-500/20 p-3 text-cyan-300">
+                    <Search className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <h3 className="text-white font-semibold mb-2">Unified merchant search</h3>
+                      <p className="text-sm text-gray-400">
+                        Search by brand, product, delivery speed, or escrow requirement. Results stay ranked by trust, fulfillment, and verified demand.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {merchantDiscoveryFilters.map((filter) => (
+                        <span
+                          key={filter}
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300"
+                        >
+                          {filter}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-300">
+                      <span className="flex items-center gap-2 text-gray-400">
+                        <Search className="w-4 h-4" />
+                        Search merchants, products, or locations
+                      </span>
+                      <span className="flex items-center gap-2 text-cyan-300">
+                        <SlidersHorizontal className="w-4 h-4" />
+                        Advanced filters
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Search modes</p>
+                      <ul className="mt-2 flex flex-wrap gap-2" aria-label="Search modes">
+                        {merchantSearchModes.map((mode) => (
+                          <li
+                            key={mode}
+                            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300"
+                          >
+                            {mode}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -3 }}
+                className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-purple-500/20 p-3 text-purple-300">
+                    <Shield className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-2">Ranking signals that matter</h3>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Merchants surface based on escrow performance, ProofScore trust, verified reviews, and delivery reliability.
+                    </p>
+                    <div className="space-y-3">
+                      {merchantDiscoverySignals.map((signal) => (
+                        <div key={signal.title} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                          <div className="text-sm font-semibold text-white">{signal.title}</div>
+                          <div className="text-xs text-gray-400">{signal.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+              {merchantDiscoveryResults.map((merchant) => (
+                <motion.div
+                  key={merchant.name}
+                  variants={scaleVariants}
+                  whileHover={{ y: -4 }}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
+                >
+                  <div className="text-white font-semibold mb-1">{merchant.name}</div>
+                  <div className="text-xs uppercase tracking-[0.05em] text-cyan-300 mb-3">{merchant.category}</div>
+                  <p className="text-sm text-gray-400">{merchant.summary}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -3 }}
+                className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-emerald-500/20 p-3 text-emerald-300">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-2">Ranking engine signals</h3>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Rankings rebalance continuously, weighting verified trust and fulfillment performance.
+                    </p>
+                    <div className="space-y-3">
+                      {merchantRankingSignals.map((signal) => (
+                        <div key={signal.title} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                          <div className="text-sm font-semibold text-white">{signal.title}</div>
+                          <div className="text-xs text-gray-400">{signal.description}</div>
+                        </div>
+                      ))}
+                      <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-gray-400">
+                        Only verified purchase reviews count toward rankings. Proof-of-fulfillment receipts and Seer audits remove spoofed feedback.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                variants={scaleVariants}
+                whileHover={{ y: -3 }}
+                className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-transparent p-6 backdrop-blur-xl"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-blue-500/20 p-3 text-blue-300">
+                    <Store className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-2">Recommended merchants</h3>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Recommendations align product intent with escrow safety, trust tier, and fulfillment speed.
+                    </p>
+                    <div className="space-y-3">
+                      {merchantRecommendations.map((rec) => (
+                        <div key={rec.category} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                          <div className="text-xs uppercase tracking-[0.05em] text-blue-300">{rec.category}</div>
+                          <div className="text-sm font-semibold text-white">{rec.merchant}</div>
+                          <div className="text-xs text-gray-400">{rec.reason}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.section>
+
           {/* Comparison Table */}
-          <motion.section 
-            variants={containerVariants}
-            className="mb-16 p-8 rounded-3xl bg-white/2 border border-white/10 backdrop-blur-xl"
-          >
+            <motion.section 
+              variants={containerVariants}
+              className="mb-16 p-8 rounded-3xl bg-white/2 border border-white/10 backdrop-blur-xl ring-effect"
+            >
             <motion.div variants={itemVariants} className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-emerald-400 to-cyan-400">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
                   vs Traditional Processors
                 </span>
               </h2>
               <p className="text-gray-400">See how VFIDE compares to traditional payment solutions</p>
             </motion.div>
 
-            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div
+              className="table-responsive -mx-4 px-4 sm:mx-0 sm:px-0"
+              role="region"
+              aria-label="Processor comparison table"
+              tabIndex={0}
+            >
               <table className="w-full min-w-150">
                 <thead>
                   <tr className="border-b border-white/10">
                     <th className="text-left py-4 px-2 sm:px-4 text-gray-400 font-medium text-sm">Feature</th>
                     <th className="text-center py-4 px-2 sm:px-4">
-                      <span className="px-2 sm:px-3 py-1 rounded-full bg-linear-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-bold border border-emerald-500/30 text-xs sm:text-sm">
+                      <span className="px-2 sm:px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-400 font-bold border border-emerald-500/30 text-xs sm:text-sm">
                         VFIDE
                       </span>
                     </th>
@@ -327,10 +719,10 @@ export default function MerchantPage() {
           </motion.section>
 
           {/* Getting Started */}
-          <motion.section
-            variants={containerVariants}
-            className="p-8 rounded-3xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl"
-          >
+            <motion.section
+              variants={containerVariants}
+              className="p-8 rounded-3xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 backdrop-blur-xl ring-effect"
+            >
             <motion.div variants={itemVariants} className="flex items-center gap-3 mb-8">
               <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
                 <Sparkles className="w-5 h-5 text-white" />

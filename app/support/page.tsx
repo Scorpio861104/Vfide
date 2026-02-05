@@ -235,7 +235,7 @@ export default function SupportPage() {
   })).filter(c => c.questions.length > 0);
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-zinc-900 to-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
@@ -370,13 +370,13 @@ export default function SupportPage() {
               ))}
 
               {/* Still need help? */}
-              <div className="p-6 bg-linear-to-r from-jade-500/10 to-teal-500/10 border border-jade-500/30 rounded-xl text-center">
+              <div className="p-6 bg-gradient-to-r from-jade-500/10 to-teal-500/10 border border-jade-500/30 rounded-xl text-center">
                 <LifeBuoy className="text-jade-400 mx-auto mb-4" size={32} />
                 <h3 className="text-lg font-semibold text-white mb-2">Still need help?</h3>
                 <p className="text-zinc-400 mb-4">Can&apos;t find what you&apos;re looking for? Our support team is ready to assist.</p>
                 <button
                   onClick={() => setActiveTab('new')}
-                  className="px-6 py-3 bg-linear-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg"
+                  className="px-6 py-3 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg"
                 >
                   Create Support Ticket
                 </button>
@@ -634,7 +634,7 @@ export default function SupportPage() {
                 <button
                   onClick={handleCreateTicket}
                   disabled={!newSubject.trim() || !newMessage.trim()}
-                  className="w-full py-4 bg-linear-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Send size={18} />
                   Submit Ticket

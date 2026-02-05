@@ -22,7 +22,7 @@ export function cn(...inputs: ClassValue[]) {
 export function glassCard(className?: string): string {
   return cn(
     "relative overflow-hidden rounded-2xl",
-    "bg-linear-to-br from-white/[0.08] to-white/[0.02]",
+    "bg-gradient-to-br from-white/[0.08] to-white/[0.02]",
     "backdrop-blur-xl border border-white/10",
     className
   );
@@ -54,7 +54,7 @@ export function gradientCard(
   className?: string
 ): string {
   return cn(
-    "bg-linear-to-br backdrop-blur-xl border rounded-2xl p-6",
+    "bg-gradient-to-br backdrop-blur-xl border rounded-2xl p-6",
     gradient,
     border,
     className
@@ -79,7 +79,7 @@ export function iconContainer(
   return cn(
     "rounded-xl flex items-center justify-center",
     sizes[size],
-    gradient && `bg-linear-to-br ${gradient}`,
+    gradient && `bg-gradient-to-br ${gradient}`,
     border && `border ${border}`,
     className
   );
@@ -122,7 +122,7 @@ export function buttonVariant(
   className?: string
 ): string {
   const variants = {
-    primary: "bg-linear-to-r from-cyan-500 to-purple-500 text-white hover:shadow-lg hover:shadow-cyan-500/25",
+    primary: "bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:shadow-lg hover:shadow-cyan-500/25",
     secondary: "border border-white/10 text-white hover:border-white/20 hover:bg-white/5",
     danger: "bg-red-500 text-white hover:bg-red-600",
     ghost: "text-white hover:bg-white/10",

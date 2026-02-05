@@ -12,10 +12,32 @@ import { CONTRACT_ADDRESSES, VFIDETokenABI } from "@/lib/contracts";
 import { Shield, Sparkles, CreditCard, Loader2 } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
 
+const settlementMessaging = (settlement: string) =>
+  settlement === "instant"
+    ? {
+        badge: "Instant settlement",
+        banner: "QR scan: instant settlement (no escrow)",
+        summary: "QR scan checkouts settle immediately. Escrow stays available for higher-risk orders.",
+        method: "Instant settlement",
+        noticeTitle: "Instant Settlement",
+        noticeText: "QR scan payments settle immediately with trusted merchants and payers.",
+      }
+    : {
+        badge: "Escrow protected",
+        banner: "Escrow-protected checkout for buyer protection",
+        summary: "Escrow holds funds until delivery confirmation. Trusted merchants can switch to instant settlement.",
+        method: "Escrow protected",
+        noticeTitle: "Escrow Protection",
+        noticeText: "Funds are held in escrow until delivery confirmed for extra buyer protection.",
+      };
+
 function PayContent() {
   const searchParams = useSearchParams();
-  const merchant = searchParams.get("merchant") || "0x742d...bEb";
+  const legacyMerchant = searchParams.get("to");
+  const merchant = searchParams.get("merchant") || legacyMerchant || "";
   const amount = searchParams.get("amount") || "100";
+  const paymentSource = searchParams.get("source") || "checkout";
+  const settlement = searchParams.get("settlement") || (paymentSource === "qr" ? "instant" : "escrow");
   const [selectedMethod, setSelectedMethod] = useState<'vfide' | 'usdc' | 'usdt'>('vfide');
   const [isProcessing, setIsProcessing] = useState(false);
   const { showToast } = useToast();
@@ -23,8 +45,12 @@ function PayContent() {
   const { priceUsd, isLoading: priceLoading } = useVfidePrice();
   const { writeContractAsync } = useWriteContract();
 
+  // 3% fee estimate for checkout totals; chosen as a midpoint for the 0.25-5% ProofScore burn range.
+  const PAYMENT_FEE_MULTIPLIER = 1.03;
   const amountNum = safeParseFloat(amount, 0);
   const vfideAmount = priceUsd > 0 ? (amountNum / priceUsd).toFixed(2) : '0.00';
+  const totalDue = (amountNum * PAYMENT_FEE_MULTIPLIER).toFixed(2);
+  const settlementTone = settlementMessaging(settlement);
 
   const handlePayment = async () => {
     if (!isConnected || !address) {
@@ -44,7 +70,12 @@ function PayContent() {
       // Calculate VFIDE amount in wei (18 decimals)
       const vfideAmountWei = parseUnits(vfideAmount, 18);
       
-      showToast('Payment initiated - please confirm in your wallet', 'info');
+    showToast(
+      settlement === 'instant'
+        ? 'Instant settlement payment initiated - confirm in your wallet'
+        : 'Escrow-protected payment initiated - confirm in your wallet',
+      'info'
+    );
       
       // Transfer VFIDE tokens to merchant
       const hash = await writeContractAsync({
@@ -85,13 +116,13 @@ function PayContent() {
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full mb-4"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full mb-4"
           >
             <CreditCard className="w-4 h-4 text-cyan-400" />
             <span className="text-cyan-400 text-sm font-medium">Secure Checkout</span>
           </motion.div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
-            Complete <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400">Payment</span>
+            Complete <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Payment</span>
           </h1>
           <p className="text-xl text-gray-400">
             Secure checkout powered by VFIDE
@@ -107,21 +138,51 @@ function PayContent() {
             animate={{ opacity: 1, y: 0 }}
             className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
           >
+            <div className={`mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${
+              settlement === "instant"
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+            }`}>
+              <Shield className="w-4 h-4" />
+              {settlementTone.banner}
+            </div>
             {/* Merchant Info */}
             <div className="mb-8 pb-8 border-b border-white/10">
               <div className="text-gray-400 text-sm mb-2">Paying to</div>
-              <div className="text-2xl font-bold text-white font-mono">{merchant}</div>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="text-2xl font-bold text-white font-mono" role={!merchant ? "alert" : undefined}>
+                {merchant || "Missing merchant address"}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 mt-2">
                 <div className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-lg text-cyan-400 text-sm font-bold">
                   TRUSTED • ProofScore 845
                 </div>
+                <div className={`px-3 py-1 rounded-lg text-sm font-bold ${
+                  settlement === "instant"
+                    ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-300"
+                    : "bg-amber-500/20 border border-amber-500/30 text-amber-300"
+                }`}>
+                  {settlementTone.badge}
+                </div>
               </div>
+              <div className="mt-3 text-xs text-gray-400">
+                {settlementTone.summary}
+              </div>
+              {!merchant && (
+                <div className="mt-3 text-xs text-amber-300" role="alert" aria-live="polite">
+                  Missing merchant address. Scan a valid QR code or reopen the payment link.
+                </div>
+              )}
+              {legacyMerchant && !searchParams.get("merchant") && (
+                <div className="mt-2 text-[11px] text-amber-200/80">
+                  Using legacy <span className="font-semibold">to</span> parameter. Update links to use <span className="font-semibold">merchant</span>.
+                </div>
+              )}
             </div>
 
             {/* Amount */}
             <div className="mb-8">
               <div className="text-gray-400 text-sm mb-2">Amount</div>
-              <div className="text-5xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 mb-2">${amount}</div>
+              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-2">${amount}</div>
               <div className="text-gray-400">
                 {priceLoading ? (
                   <span className="animate-pulse">Calculating...</span>
@@ -137,7 +198,7 @@ function PayContent() {
               
               <div className="space-y-3">
                 {[
-                  { id: 'vfide' as const, label: 'VFIDE Token', desc: '0.25-5% burn fee (ProofScore-based) • Instant settlement' },
+                  { id: 'vfide' as const, label: 'VFIDE Token', desc: `0.25-5% burn fee (ProofScore-based) • ${settlementTone.method}` },
                   { id: 'usdc' as const, label: 'USDC', desc: 'Stablecoin • Auto-converted to VFIDE' },
                   { id: 'usdt' as const, label: 'USDT', desc: 'Stablecoin • Auto-converted to VFIDE' },
                 ].map((method) => (
@@ -179,17 +240,17 @@ function PayContent() {
               <div className="border-t border-white/10 my-3" />
               <div className="flex justify-between items-center">
                 <span className="text-white font-bold">Total</span>
-                <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 font-bold text-xl">${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-xl">${totalDue}</span>
               </div>
             </div>
 
             {/* Pay Button */}
             <motion.button 
               onClick={handlePayment}
-              disabled={isProcessing}
+              disabled={isProcessing || !merchant}
               whileHover={{ scale: isProcessing ? 1 : 1.02 }}
               whileTap={{ scale: isProcessing ? 1 : 0.98 }}
-              className="w-full px-8 py-4 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isProcessing ? (
                 <>
@@ -197,7 +258,7 @@ function PayContent() {
                   Processing...
                 </>
               ) : (
-                `Pay $${(safeParseFloat(amount, 0) * 1.03).toFixed(2)}`
+                merchant ? `Pay $${totalDue}` : "Merchant required"
               )}
             </motion.button>
 
@@ -206,16 +267,28 @@ function PayContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl"
+              className={`mt-6 p-4 rounded-xl border ${
+                settlement === "instant"
+                  ? "bg-emerald-500/10 border-emerald-500/30"
+                  : "bg-amber-500/10 border-amber-500/30"
+              }`}
             >
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/20">
-                  <Shield className="w-5 h-5 text-emerald-400" />
+                <div className={`p-2 rounded-lg ${
+                  settlement === "instant" ? "bg-emerald-500/20" : "bg-amber-500/20"
+                }`}>
+                  <Shield className={`w-5 h-5 ${
+                    settlement === "instant" ? "text-emerald-400" : "text-amber-400"
+                  }`} />
                 </div>
                 <div>
-                  <div className="text-emerald-400 font-bold mb-1">Secure Payment</div>
+                  <div className={`font-bold mb-1 ${
+                    settlement === "instant" ? "text-emerald-400" : "text-amber-300"
+                  }`}>
+                    {settlementTone.noticeTitle}
+                  </div>
                   <div className="text-gray-400 text-sm">
-                    All transactions are secured by smart contracts. Funds held in escrow until delivery confirmed.
+                    {settlementTone.noticeText}
                   </div>
                 </div>
               </div>

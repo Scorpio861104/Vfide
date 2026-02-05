@@ -5,10 +5,8 @@ import { useWriteContract, useReadContract, useWaitForTransactionReceipt } from 
 import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
 import {
   AddressInput,
-  NumberInput,
   ConfirmationModal,
   TransactionStatus,
-  DangerWarning,
 } from './SecurityComponents';
 
 export function AutoSwapPanel() {

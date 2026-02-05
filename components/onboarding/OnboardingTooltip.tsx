@@ -105,7 +105,7 @@ export function OnboardingTooltip() {
           
           <div className="text-center">
             <div className="text-6xl mb-4">👋</div>
-            <h2 className="text-3xl font-bold mb-4 bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {step.title}
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6 text-lg leading-relaxed">
@@ -121,7 +121,7 @@ export function OnboardingTooltip() {
               </button>
               <button
                 onClick={handleNext}
-                className="px-6 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 font-medium flex items-center gap-2"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 font-medium flex items-center gap-2"
               >
                 Let&apos;s Go! <ArrowRight className="h-5 w-5" />
               </button>
@@ -169,7 +169,7 @@ export function OnboardingTooltip() {
           </button>
           <button
             onClick={handleNext}
-            className="px-4 py-2 text-sm bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all flex items-center gap-1 font-medium"
+            className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all flex items-center gap-1 font-medium"
           >
             {step.nextStep ? 'Next' : 'Finish'} <ArrowRight className="h-4 w-4" />
           </button>

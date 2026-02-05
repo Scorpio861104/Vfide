@@ -5,13 +5,13 @@ import { Group } from '@/types/groups';
 import { Friend } from '@/types/messaging';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
-  Command, 
-  MessageSquare, 
-  Search, 
-  Users, 
-  X, 
-  Clock, 
-  Mic, 
+  Command,
+  MessageSquare,
+  Search,
+  Users,
+  X,
+  Clock,
+  Mic,
   MicOff,
   Hash,
   Wallet,
@@ -30,7 +30,9 @@ import {
   CreditCard,
   PiggyBank,
   Bell,
-  ChevronRight
+  ChevronRight,
+  Crown,
+  Flashlight
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -78,12 +80,14 @@ const PAGES = [
   { title: 'Messages', path: '/social-messaging', keywords: ['messages', 'chat', 'social', 'dm'], icon: MessageSquare },
   { title: 'Feed', path: '/feed', keywords: ['feed', 'activity', 'posts', 'updates'], icon: Bell },
   { title: 'Achievements', path: '/achievements', keywords: ['achievements', 'badges', 'gamification', 'rewards'], icon: Trophy },
+  { title: 'DAO Hub', path: '/dao-hub', keywords: ['dao', 'hub', 'governance', 'disputes'], icon: Crown },
   { title: 'Governance', path: '/governance', keywords: ['governance', 'dao', 'voting', 'proposals'], icon: Vote },
   { title: 'Merchant', path: '/merchant', keywords: ['merchant', 'shop', 'store', 'business', 'pos'], icon: Store },
   { title: 'Quests', path: '/quests', keywords: ['quests', 'missions', 'daily', 'challenges'], icon: Star },
   { title: 'Rewards', path: '/rewards', keywords: ['rewards', 'claim', 'earnings'], icon: Trophy },
   { title: 'Payroll', path: '/payroll', keywords: ['payroll', 'salary', 'payments', 'streaming'], icon: CreditCard },
   { title: 'Treasury', path: '/treasury', keywords: ['treasury', 'funds', 'reserve'], icon: PiggyBank },
+  { title: 'Flashlight', path: '/flashlight', keywords: ['flashlight', 'p2p', 'credit', 'loan'], icon: Flashlight },
   { title: 'Settings', path: '/settings', keywords: ['settings', 'preferences', 'config', 'options'], icon: Settings },
 ];
 
@@ -320,7 +324,7 @@ export function GlobalSearch() {
         title: `Send to ${shortenAddress(searchQuery)}`,
         subtitle: 'Quick send payment',
         icon: <Send className="w-5 h-5" />,
-        action: () => router.push(`/pay?to=${searchQuery}`),
+        action: () => router.push(`/pay?merchant=${searchQuery}`),
         category: 'commands',
       });
     }
@@ -626,7 +630,7 @@ export function GlobalSearch() {
                 {/* No Query Prompt */}
                 {!query && recentSearches.length === 0 && (
                   <div className="p-8 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-linear-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
                       <Command className="w-8 h-8 text-cyan-400" />
                     </div>
                     <p className="text-sm text-zinc-100 mb-1">Quick Search</p>

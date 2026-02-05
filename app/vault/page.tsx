@@ -49,7 +49,7 @@ function GlassCard({ children, className = "", hover = true, gradient }: {
     <motion.div
       whileHover={hover ? { scale: 1.01, y: -2 } : {}}
       transition={{ type: "spring", stiffness: 400 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient ? gradientMap[gradient] : 'from-white/8 to-white/2'} backdrop-blur-xl border border-white/10 ${hover ? 'ring-effect' : ''} ${className}`}
     >
       {children}
     </motion.div>
@@ -123,6 +123,11 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
                     ? `Locked for ${remainingHours}h ${remainingMinutes}m`
                     : 'Suspect compromise? Lock immediately.'}
                 </p>
+                {!isQuarantined && (
+                  <p className="text-white/40 text-xs mt-2">
+                    Guardian recovery stays available while assets are locked.
+                  </p>
+                )}
               </div>
             </div>
             
@@ -141,7 +146,7 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
                     isQuarantined 
                       ? 'bg-white/10 text-white/40 cursor-not-allowed'
                       : canPanic 
-                        ? 'bg-linear-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25'
+                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25'
                         : 'bg-white/10 text-white/40 cursor-not-allowed'
                   }`}
                 >
@@ -445,7 +450,7 @@ function VaultContent() {
                         }
                       }}
                       disabled={isCreatingVault}
-                      className="px-8 py-4 bg-linear-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
+                      className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
                     >
                       {isCreatingVault ? "Creating..." : "Create Vault"}
                     </motion.button>
@@ -540,11 +545,12 @@ function VaultContent() {
                           <div className="text-3xl font-bold text-white mb-1">
                             {safeParseFloat(vaultBalance, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
                           </div>
-                          <div className="text-white/40 text-sm">≈ ${safeParseFloat(usdValue, 0).toLocaleString()} USD</div>
-                        </>
-                      )}
-                    </GlassCard>
-                  </motion.div>
+                    <div className="text-white/40 text-sm">≈ ${safeParseFloat(usdValue, 0).toLocaleString()} USD</div>
+                    <div className="text-xs text-white/40 mt-2">Updated in real time • ProofScore aware fees</div>
+                  </>
+                )}
+              </GlassCard>
+            </motion.div>
                   
                   <motion.div variants={itemVariants}>
                     <GlassCard className="p-6">
@@ -573,6 +579,7 @@ function VaultContent() {
                       <div className="text-white/40 text-sm">
                         {guardianCount && guardianCount >= 3 ? 'Recovery enabled' : 'Add guardians for recovery'}
                       </div>
+                      <div className="text-xs text-white/40 mt-2">3+ guardians unlock recovery mode</div>
                     </GlassCard>
                   </motion.div>
                 </motion.div>
@@ -587,13 +594,14 @@ function VaultContent() {
                     <Zap className="text-amber-400" size={24} />
                     Quick Actions
                   </h2>
+                  <p className="text-white/50 text-sm mb-5">Move funds or rebalance instantly from your vault.</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <motion.button 
                       onClick={() => setShowDepositModal(true)}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
-                      className="p-5 bg-linear-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
+                      className="p-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
                     >
                       <ArrowDownToLine size={20} />
                       Deposit Funds
@@ -683,7 +691,7 @@ function VaultContent() {
                         whileTap={{ scale: 0.98 }}
                         onClick={handleSetNextOfKin}
                         disabled={isWritePending || !newNextOfKinAddress}
-                        className="w-full py-3 bg-linear-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         <Heart size={18} />
                         {isWritePending ? "Processing..." : hasNextOfKin ? "Update Next of Kin" : "Set Next of Kin"}
@@ -759,7 +767,7 @@ function VaultContent() {
                         whileTap={{ scale: 0.98 }}
                         onClick={handleAddGuardian}
                         disabled={isWritePending || !newGuardianAddress}
-                        className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         <UserPlus size={18} />
                         {isWritePending ? "Processing..." : "Add Guardian"}
@@ -845,7 +853,7 @@ function VaultContent() {
                   whileTap={{ scale: isDepositing ? 1 : 0.98 }}
                   onClick={handleDeposit}
                   disabled={isDepositing || !depositAmount || parseFloat(depositAmount) <= 0}
-                  className="w-full py-4 bg-linear-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isDepositing ? (
                     <>
@@ -952,7 +960,7 @@ function VaultContent() {
                   whileTap={{ scale: isWithdrawing ? 1 : 0.98 }}
                   onClick={handleWithdraw}
                   disabled={isWithdrawing || !withdrawAmount || !withdrawRecipient || parseFloat(withdrawAmount) <= 0}
-                  className="w-full py-4 bg-linear-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isWithdrawing ? (
                     <>

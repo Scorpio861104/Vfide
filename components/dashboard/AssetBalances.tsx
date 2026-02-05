@@ -48,7 +48,7 @@ export default function AssetBalances({
             <div className="flex items-center justify-between">
               {/* Asset Info */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-pink-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-pink-400 flex items-center justify-center">
                   <span className="text-sm font-bold text-white">
                     {asset.symbol.slice(0, 2)}
                   </span>

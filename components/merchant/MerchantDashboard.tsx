@@ -103,13 +103,13 @@ export function MerchantDashboard() {
 
         {/* Header */}
         <motion.div 
-          className="bg-linear-to-br from-purple-900/20 to-blue-900/20 border-2 border-purple-500/30 rounded-xl p-8"
+          className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-2 border-purple-500/30 rounded-xl p-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center gap-4 mb-4">
             <motion.div 
-              className="w-16 h-16 bg-linear-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center"
+              className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center"
               whileHover={{ scale: 1.05, rotate: 5 }}
             >
               <Store className="w-8 h-8 text-white" />
@@ -213,7 +213,7 @@ export function MerchantDashboard() {
                     playNotification()
                   }}
                   disabled={isRegistering || !businessName.trim()}
-                  className="w-full bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg"
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg"
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   initial={{ opacity: 0, y: 10 }}
@@ -263,7 +263,7 @@ export function MerchantDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { icon: DollarSign, color: 'blue', title: 'No Processor Fees', desc: 'No payment processing fees. Burn fees (0.25-5%) + Base gas apply.' },
-            { icon: Zap, color: 'green', title: 'Fast Settlement', desc: 'Direct payments settle instantly. Escrow mode holds funds until release condition met.' },
+            { icon: Zap, color: 'green', title: 'Fast Settlement', desc: 'QR and trusted payments settle instantly. Escrow stays available for buyer protection.' },
             { icon: Shield, color: 'purple', title: 'STABLE-PAY (Optional)', desc: 'Auto-convert to stablecoins via DEX. ~0.3% DEX swap fee + gas apply.' }
           ].map((benefit, index) => (
             <motion.div 
@@ -294,13 +294,13 @@ export function MerchantDashboard() {
     <div className="space-y-6">
       {/* Status Header */}
       <motion.div 
-        className="bg-linear-to-br from-green-900/20 to-emerald-900/20 border-2 border-green-500/30 rounded-xl p-6 relative overflow-hidden"
+        className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-2 border-green-500/30 rounded-xl p-6 relative overflow-hidden"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         {/* Animated background shimmer */}
         <motion.div
-          className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent"
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
           animate={{ x: ['-100%', '200%'] }}
           transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
         />

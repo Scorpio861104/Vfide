@@ -27,7 +27,7 @@ export function BecomeMentorCard() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-6 rounded-xl bg-linear-to-br from-emerald-400/10 to-cyan-400/10 border border-emerald-400/30 backdrop-blur-xl"
+      className="p-6 rounded-xl bg-gradient-to-br from-emerald-400/10 to-cyan-400/10 border border-emerald-400/30 backdrop-blur-xl"
     >
       <div className="flex items-start justify-between mb-4">
         <div>
@@ -100,7 +100,7 @@ export function BecomeMentorCard() {
         whileTap={canRegister ? { scale: 0.98 } : {}}
         className={`w-full py-3 rounded-lg font-bold transition-all ${
           canRegister
-            ? 'bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 hover:shadow-lg hover:shadow-emerald-400/50'
+            ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 hover:shadow-lg hover:shadow-emerald-400/50'
             : 'bg-zinc-100/10 text-zinc-100/30 cursor-not-allowed'
         }`}
       >

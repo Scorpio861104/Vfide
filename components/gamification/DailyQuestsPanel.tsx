@@ -141,7 +141,7 @@ function StreakCalendar({ history, onMonthChange }: { history: boolean[]; onMont
             transition={{ delay: i * 0.01 }}
             className={`aspect-square rounded-md flex items-center justify-center text-[10px] ${
               active === null ? '' :
-              active ? 'bg-linear-to-br from-orange-500 to-red-500 text-white' : 
+              active ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white' : 
               'bg-zinc-800 text-zinc-500'
             }`}
           >
@@ -261,7 +261,7 @@ export default function DailyQuestsPanel() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-linear-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6 relative overflow-hidden"
+        className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6 relative overflow-hidden"
       >
         {/* Animated Fire Particles */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -294,7 +294,7 @@ export default function DailyQuestsPanel() {
             >
               <Flame className="w-14 h-14 text-orange-500" />
               <motion.div 
-                className="absolute -top-2 -right-2 w-7 h-7 bg-linear-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg"
+                className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg"
                 animate={{ scale: [1, 1.15, 1] }}
                 transition={{ duration: 0.5, repeat: Infinity }}
               >
@@ -349,7 +349,7 @@ export default function DailyQuestsPanel() {
           </div>
           <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
             <motion.div 
-              className="bg-linear-to-r from-orange-500 to-red-500 h-3 rounded-full"
+              className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${(streak.current / streak.nextMilestone) * 100}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
@@ -384,7 +384,7 @@ export default function DailyQuestsPanel() {
                 <motion.span 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-linear-to-r from-amber-400 to-orange-500 rounded-full text-[10px] font-bold text-black flex items-center justify-center"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full text-[10px] font-bold text-black flex items-center justify-center"
                 >
                   {count}
                 </motion.span>
@@ -392,7 +392,7 @@ export default function DailyQuestsPanel() {
               {activeTab === tab && (
                 <motion.div
                   layoutId="questTabIndicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-amber-400 to-orange-500"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-orange-500"
                 />
               )}
             </motion.button>
@@ -508,7 +508,7 @@ function QuestCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 bg-linear-to-br ${getTypeColor(quest.type)} rounded-lg flex items-center justify-center text-2xl`}>
+          <div className={`w-12 h-12 bg-gradient-to-br ${getTypeColor(quest.type)} rounded-lg flex items-center justify-center text-2xl`}>
             {quest.icon}
           </div>
           <div>
@@ -527,7 +527,7 @@ function QuestCard({
         </div>
         <div className="w-full bg-zinc-800 rounded-full h-2">
           <div 
-            className={`bg-linear-to-r ${quest.completed ? 'from-emerald-500 to-emerald-500' : 'from-blue-500 to-purple-600'} h-2 rounded-full transition-all`}
+            className={`bg-gradient-to-r ${quest.completed ? 'from-emerald-500 to-emerald-500' : 'from-blue-500 to-purple-600'} h-2 rounded-full transition-all`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -570,7 +570,7 @@ function QuestCard({
         {quest.completed && !quest.claimed ? (
           <button 
             onClick={() => onClaim(quest)}
-            className="px-4 py-2 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
           >
             <Gift className="w-4 h-4" />
             Claim
@@ -627,7 +627,7 @@ function ClaimRewardModal({ reward, onClose }: { reward: Quest; onClose: () => v
 
         <button 
           onClick={onClose}
-          className="w-full px-6 py-3 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold hover:opacity-90 transition-opacity"
+          className="w-full px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold hover:opacity-90 transition-opacity"
         >
           Awesome!
         </button>

@@ -33,6 +33,8 @@ const navIcons: Record<string, React.ComponentType<{ className?: string; size?: 
   Messages: MetalSocialIcon,
   Merchant: MetalMerchantIcon,
   Governance: MetalGovernanceIcon,
+  "DAO Hub": MetalGovernanceIcon,
+  Flashlight: MetalTokenIcon,
   Headhunter: MetalHeadhunterIcon,
   Endorsements: MetalShieldIcon,
   Rewards: MetalRewardsIcon,
@@ -48,7 +50,9 @@ const navLinks: Array<{ href: string; label: string; highlight?: boolean; accent
   { href: "/stories", label: "Stories", highlight: true },
   { href: "/social-messaging", label: "Messages", highlight: true },
   { href: "/merchant", label: "Merchant" },
+  { href: "/flashlight", label: "Flashlight", highlight: true },
   { href: "/governance", label: "Governance" },
+  { href: "/dao-hub", label: "DAO Hub", highlight: true, accent: true },
 ];
 
 // Secondary navigation - organized by category
@@ -57,6 +61,8 @@ const moreLinks = [
     category: "Social",
     items: [
       { href: "/social", label: "Analytics", accent: true },
+      { href: "/social-hub", label: "Social Hub", accent: true },
+      { href: "/social-payments", label: "Social Payments", accent: true },
       { href: "/docs", label: "Docs" },
     ]
   },
@@ -77,17 +83,24 @@ const moreLinks = [
       { href: "/endorsements", label: "Endorsements" },
       { href: "/appeals", label: "Appeals" },
       { href: "/council", label: "Council" },
+      { href: "/dao-hub", label: "DAO Hub", accent: true },
     ]
   },
   {
     category: "Finance",
     items: [
+      { href: "/pay", label: "Pay", accent: true },
+      { href: "/pos", label: "POS", accent: true },
+      { href: "/flashlight", label: "Flashlight", accent: true },
       { href: "/payroll", label: "Payroll" },
       { href: "/escrow", label: "Escrow" },
       { href: "/treasury", label: "Treasury" },
+      { href: "/reporting", label: "Reporting" },
       { href: "/token-launch", label: "Token Launch", accent: true },
       { href: "/streaming", label: "Streaming", accent: true },
       { href: "/cross-chain", label: "Cross-Chain", accent: true },
+      { href: "/subscriptions", label: "Subscriptions", accent: true },
+      { href: "/buy", label: "Buy Tokens", accent: true },
     ]
   },
   {
@@ -95,6 +108,8 @@ const moreLinks = [
     items: [
       { href: "/stealth", label: "Private Pay", accent: true },
       { href: "/guardians", label: "Guardians" },
+      { href: "/vault/settings", label: "Vault Settings" },
+      { href: "/vault/recover", label: "Vault Recovery" },
       { href: "/multisig", label: "Multi-Sig" },
       { href: "/time-locks", label: "Time Locks" },
     ]
@@ -105,15 +120,38 @@ const moreLinks = [
       { href: "/insights", label: "Insights", accent: true },
       { href: "/taxes", label: "Tax Report" },
       { href: "/budgets", label: "Budgets" },
+      { href: "/price-alerts", label: "Price Alerts" },
     ]
   },
   {
     category: "System",
     items: [
+      { href: "/enterprise", label: "Enterprise", accent: true },
+      { href: "/performance", label: "Performance", accent: true },
       { href: "/sanctum", label: "Sanctum" },
       { href: "/security-center", label: "Security" },
       { href: "/admin", label: "Admin" },
       { href: "/developer", label: "Developer", accent: true },
+      { href: "/control-panel", label: "Control Panel", accent: true },
+      { href: "/setup", label: "Setup" },
+      { href: "/testnet", label: "Testnet" },
+      { href: "/support", label: "Support" },
+      { href: "/notifications", label: "Notifications" },
+      { href: "/live-demo", label: "Live Demo" },
+      { href: "/demo/crypto-social", label: "Crypto Social Demo", accent: true },
+      { href: "/explorer", label: "Explorer", accent: true },
+      { href: "/explorer/[id]", label: "Explorer Detail" },
+      { href: "/theme", label: "Theme" },
+      { href: "/theme-manager", label: "Theme Manager" },
+      { href: "/theme-showcase", label: "Theme Showcase" },
+      { href: "/about", label: "About" },
+      { href: "/benefits", label: "Benefits" },
+      { href: "/vesting", label: "Vesting" },
+      { href: "/paper-wallet", label: "Paper Wallet" },
+      { href: "/hardware-wallet", label: "Hardware Wallet" },
+      { href: "/invite", label: "Invite", accent: true },
+      { href: "/invite/[code]", label: "Invite Code" },
+      { href: "/legal", label: "Legal" },
     ]
   }
 ];

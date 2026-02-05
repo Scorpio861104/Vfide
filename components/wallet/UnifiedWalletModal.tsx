@@ -189,7 +189,7 @@ export function UnifiedWalletModal({
               <>
                 {/* Connected Header */}
                 <div className="text-center mb-6">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
                     <Wallet className="w-8 h-8 text-white" />
                   </div>
                   <h2 className="text-xl font-bold">Connected</h2>

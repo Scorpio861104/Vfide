@@ -337,7 +337,7 @@ export function UnifiedActivityFeed({
         >
           <div className="flex gap-3">
             {/* Icon */}
-            <div className={`w-10 h-10 rounded-full bg-linear-to-br ${getActivityColor(activity.type)} flex items-center justify-center text-white shrink-0`}>
+            <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getActivityColor(activity.type)} flex items-center justify-center text-white shrink-0`}>
               {getActivityIcon(activity.type)}
             </div>
 
@@ -360,7 +360,7 @@ export function UnifiedActivityFeed({
 
               {/* Amount Badge */}
               {activity.amount && (
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-linear-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full">
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full">
                   <DollarSign className="w-3 h-3 text-purple-400" />
                   <span className="text-xs font-bold text-purple-400">
                     {activity.amount} {activity.currency}

@@ -208,7 +208,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Hidden Canvas for Certificate Generation */}
       <canvas ref={canvasRef} width={1200} height={800} style={{ display: 'none' }} />
 
@@ -263,7 +263,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className={`bg-linear-to-br rounded-lg p-6 border-2 transition-all group cursor-pointer ${
+                    className={`bg-gradient-to-br rounded-lg p-6 border-2 transition-all group cursor-pointer ${
                       selectedAchievement?.id === achievement.id
                         ? 'border-cyan-400 from-cyan-400/20 to-transparent'
                         : `border-${
@@ -394,7 +394,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className={`bg-linear-to-r ${tierColors[referral.tier]} border-2 rounded-lg p-8 text-white`}
+                    className={`bg-gradient-to-r ${tierColors[referral.tier]} border-2 rounded-lg p-8 text-white`}
                   >
                     <div className="grid md:grid-cols-2 gap-8">
                       {/* Left: Referral Info */}
@@ -510,7 +510,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-linear-to-r from-amber-400/10 via-[#1A1A2E] to-zinc-950 border-2 border-amber-400/30 rounded-lg overflow-hidden"
+                  className="bg-gradient-to-r from-amber-400/10 via-[#1A1A2E] to-zinc-950 border-2 border-amber-400/30 rounded-lg overflow-hidden"
                 >
                   {/* Certificate Preview */}
                   <div className="bg-zinc-900 p-8 border-b border-amber-400/20">
@@ -624,7 +624,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className={`bg-linear-to-r ${platformColors[metric.platform]} border rounded-lg p-6`}
+                      className={`bg-gradient-to-r ${platformColors[metric.platform]} border rounded-lg p-6`}
                     >
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-zinc-100 capitalize">{metric.platform}</h3>
@@ -639,7 +639,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min((metric.clicks / 1000) * 100, 100)}%` }}
                               transition={{ duration: 1, delay: idx * 0.1 + 0.3 }}
-                              className="bg-linear-to-r from-violet-400 to-cyan-400 rounded h-full"
+                              className="bg-gradient-to-r from-violet-400 to-cyan-400 rounded h-full"
                             />
                           </div>
                           <div className="text-sm font-semibold text-zinc-100 mt-1">{metric.clicks}</div>
@@ -652,7 +652,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min((metric.conversions / 50) * 100, 100)}%` }}
                               transition={{ duration: 1, delay: idx * 0.1 + 0.4 }}
-                              className="bg-linear-to-r from-emerald-500 to-cyan-400 rounded h-full"
+                              className="bg-gradient-to-r from-emerald-500 to-cyan-400 rounded h-full"
                             />
                           </div>
                           <div className="text-sm font-semibold text-zinc-100 mt-1">{metric.conversions}</div>

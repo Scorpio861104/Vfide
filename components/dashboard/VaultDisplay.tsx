@@ -23,7 +23,7 @@ export default function VaultDisplay({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-6 bg-linear-to-br from-zinc-900 to-zinc-900 rounded-xl border border-zinc-700 ${className}`}
+      className={`p-6 bg-gradient-to-br from-zinc-900 to-zinc-900 rounded-xl border border-zinc-700 ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">

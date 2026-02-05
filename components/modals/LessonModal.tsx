@@ -80,7 +80,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
           ))}
 
           {/* Key Takeaways */}
-          <div className="bg-linear-to-br from-cyan-400/10 to-emerald-400/10 rounded-xl p-6 border border-cyan-400/30">
+          <div className="bg-gradient-to-br from-cyan-400/10 to-emerald-400/10 rounded-xl p-6 border border-cyan-400/30">
             <h3 className="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
               Key Takeaways
@@ -99,7 +99,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
           <div className="flex justify-center pt-4">
             <button
               onClick={onClose}
-              className="px-8 py-3 bg-linear-to-r from-cyan-400 to-emerald-400 text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity"
+              className="px-8 py-3 bg-gradient-to-r from-cyan-400 to-emerald-400 text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity"
             >
               Complete Lesson
             </button>

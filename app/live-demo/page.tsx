@@ -39,7 +39,7 @@ export default function LiveDemoPage() {
   
   return (
     <>
-      <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-zinc-900 py-16 sm:py-20 px-3 sm:px-4 pt-20 sm:pt-24 overflow-x-hidden">
+      <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] to-zinc-900 py-16 sm:py-20 px-3 sm:px-4 pt-20 sm:pt-24 overflow-x-hidden">
       <TransactionNotification 
         notification={notification}
         onClose={closeNotification}
@@ -54,7 +54,7 @@ export default function LiveDemoPage() {
         >
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-zinc-100">
             Experience{' '}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
               VFIDE Live
             </span>
           </h1>
@@ -106,13 +106,13 @@ export default function LiveDemoPage() {
                 >
                   <button
                     onClick={() => handleDemoTransaction('endorse')}
-                    className="w-full bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base"
+                    className="w-full bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base"
                   >
                     Endorse Another User
                   </button>
                   <button
                     onClick={() => handleDemoTransaction('vote')}
-                    className="w-full bg-linear-to-r from-violet-400 to-violet-600 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base"
+                    className="w-full bg-gradient-to-r from-violet-400 to-violet-600 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base"
                   >
                     Vote on DAO Proposal
                   </button>
@@ -150,12 +150,12 @@ export default function LiveDemoPage() {
               >
                 <button
                   onClick={() => handleDemoTransaction('transfer')}
-                  className="bg-linear-to-r from-cyan-400 to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
+                  className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
                 >
                   Send VFIDE
                 </button>
                 <button
-                  className="bg-linear-to-r from-emerald-400 to-[#00CC6A] text-zinc-950 font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
+                  className="bg-gradient-to-r from-emerald-400 to-[#00CC6A] text-zinc-950 font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
                 >
                   Pay Merchant
                 </button>
@@ -171,7 +171,7 @@ export default function LiveDemoPage() {
           transition={{ delay: 0.8 }}
           className="relative"
         >
-          <div className="absolute inset-0 bg-linear-to-r from-cyan-400 via-[#00FF88] to-amber-400 rounded-2xl blur-2xl opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-[#00FF88] to-amber-400 rounded-2xl blur-2xl opacity-20" />
           <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-cyan-400/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-zinc-100">
               Ready for No Processor Fees?
@@ -180,7 +180,7 @@ export default function LiveDemoPage() {
               Join thousands building trust-based commerce with non-custodial vaults and DAO governance.
             </p>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center">
-              <button className="w-full sm:w-auto bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
+              <button className="w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
                 Create Your Vault
               </button>
               <button className="w-full sm:w-auto bg-zinc-950 border-2 border-cyan-400 text-cyan-400 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">

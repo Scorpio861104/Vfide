@@ -11,7 +11,7 @@ export function ConnectWalletPrompt() {
         <p className="text-slate-400 mb-8 max-w-md">
           You need to connect your wallet to access the Owner Control Panel.
           <br />
-          Make sure you're using the owner address.
+          Make sure you&apos;re using the owner address.
         </p>
         <ConnectButton />
       </div>

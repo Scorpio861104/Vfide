@@ -50,7 +50,7 @@ export function OverviewTab({
               </div>
               {address ? (
                 <>
-                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-400 to-blue-400">{votingPower}</div>
+                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">{votingPower}</div>
                   <div className="text-gray-500 text-sm mt-1">Based on ProofScore</div>
                   <div className="mt-3 text-xs text-emerald-400 flex items-center gap-1">
                     {isEligibleBool ? (
@@ -166,7 +166,7 @@ function DeadlineCard({ id, title, hoursRemaining, voted }: { id: number; title:
   return (
     <motion.div
       whileHover={{ scale: 1.01, x: 4 }}
-      className={`flex items-center justify-between p-4 bg-linear-to-r ${colors.bg} backdrop-blur-sm border ${colors.border} rounded-xl hover:shadow-lg ${colors.glow} transition-all`}
+      className={`flex items-center justify-between p-4 bg-gradient-to-r ${colors.bg} backdrop-blur-sm border ${colors.border} rounded-xl hover:shadow-lg ${colors.glow} transition-all`}
     >
       <div>
         <div className="text-white font-bold">{title}</div>

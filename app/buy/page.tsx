@@ -170,7 +170,7 @@ export default function BuyPage() {
   const comingSoonProviders = FIAT_PROVIDERS.filter(p => p.status === 'coming_soon');
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-zinc-900 to-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-8">
@@ -335,7 +335,7 @@ export default function BuyPage() {
                             
                             <button
                               onClick={() => handleBuy(provider)}
-                              className="w-full py-3 bg-linear-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
+                              className="w-full py-3 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
                             >
                               Buy with {provider.name}
                               <ExternalLink size={16} />

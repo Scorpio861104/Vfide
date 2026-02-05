@@ -169,7 +169,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
           {step < steps.length - 1 ? (
             <button
               onClick={() => setStep(step + 1)}
-              className="px-6 py-2 bg-linear-to-r from-emerald-500 to-green-500 text-white font-bold rounded-lg hover:shadow-lg transition-all"
+              className="px-6 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold rounded-lg hover:shadow-lg transition-all"
             >
               Next →
             </button>
@@ -177,7 +177,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
             <button
               onClick={handleSetupGuardians}
               disabled={actionStatus === 'confirming' || actionStatus === 'signing'}
-              className="px-6 py-2 bg-linear-to-r from-emerald-500 to-green-500 text-white font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {actionStatus === 'confirming' ? 'Setting up...' : 'Setup Guardians'}
             </button>

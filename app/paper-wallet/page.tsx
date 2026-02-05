@@ -385,7 +385,7 @@ export default function PaperWalletPage() {
                 disabled={!allAcknowledged}
                 className={`w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 ${
                   allAcknowledged
-                    ? 'bg-linear-to-r from-jade-500 to-teal-500 text-black'
+                    ? 'bg-gradient-to-r from-jade-500 to-teal-500 text-black'
                     : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                 }`}
               >
@@ -587,7 +587,7 @@ export default function PaperWalletPage() {
                 <div className="flex gap-4">
                   <button
                     onClick={handlePrint}
-                    className="flex-1 py-4 bg-linear-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-xl flex items-center justify-center gap-2"
+                    className="flex-1 py-4 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-xl flex items-center justify-center gap-2"
                   >
                     <Printer size={20} />
                     Print Wallet
@@ -696,7 +696,7 @@ export default function PaperWalletPage() {
               <div className="flex gap-4">
                 <button
                   onClick={handlePrint}
-                  className="flex-1 py-4 bg-linear-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-xl flex items-center justify-center gap-2"
+                  className="flex-1 py-4 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-xl flex items-center justify-center gap-2"
                 >
                   <Printer size={20} />
                   Print Again

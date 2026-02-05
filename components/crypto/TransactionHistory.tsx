@@ -231,8 +231,8 @@ const TransactionCard = React.memo(function TransactionCard({ transaction, userI
           whileHover={{ scale: 1.1, rotate: 5 }}
           className={`relative w-12 h-12 rounded-xl flex items-center justify-center ${
             isSent
-              ? 'bg-linear-to-br from-red-500/20 to-red-600/10 text-red-400'
-              : 'bg-linear-to-br from-green-500/20 to-green-600/10 text-green-400'
+              ? 'bg-gradient-to-br from-red-500/20 to-red-600/10 text-red-400'
+              : 'bg-gradient-to-br from-green-500/20 to-green-600/10 text-green-400'
           }`}
         >
           {renderIconForType(transaction.type, "w-5 h-5")}

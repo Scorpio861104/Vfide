@@ -204,7 +204,7 @@ export default function OnboardingChecklist() {
           setIsMinimized(false);
           playNotification();
         }}
-        className="fixed bottom-24 right-6 z-40 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 px-6 py-3 rounded-full font-bold shadow-lg flex items-center gap-2"
+        className="fixed bottom-24 right-6 z-40 bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 px-6 py-3 rounded-full font-bold shadow-lg flex items-center gap-2"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         whileHover={{ scale: 1.05 }}
@@ -231,7 +231,7 @@ export default function OnboardingChecklist() {
     >
       {showConfetti && <Confetti />}
       {/* Header */}
-      <div className="bg-linear-to-r from-amber-400/20 to-orange-500/20 p-4 border-b border-amber-400/30">
+      <div className="bg-gradient-to-r from-amber-400/20 to-orange-500/20 p-4 border-b border-amber-400/30">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
             <Trophy className="w-6 h-6 text-amber-400" />
@@ -270,13 +270,13 @@ export default function OnboardingChecklist() {
           </div>
           <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
             <motion.div 
-              className="bg-linear-to-r from-amber-400 to-orange-500 h-3 rounded-full relative"
+              className="bg-gradient-to-r from-amber-400 to-orange-500 h-3 rounded-full relative"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ type: 'spring', stiffness: 100, damping: 15 }}
             >
               <motion.div
-                className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                 animate={{ x: ['-100%', '100%'] }}
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
               />
@@ -327,7 +327,7 @@ export default function OnboardingChecklist() {
             <div className="text-lg font-bold text-white mb-1">All Done!</div>
             <div className="text-sm text-zinc-400 mb-3">You&apos;ve completed the onboarding checklist</div>
             <motion.button 
-              className="w-full px-4 py-2 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold"
+              className="w-full px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               animate={{ boxShadow: ['0 0 0px #FFD700', '0 0 20px #FFD700', '0 0 0px #FFD700'] }}

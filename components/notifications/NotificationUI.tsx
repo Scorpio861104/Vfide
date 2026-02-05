@@ -199,7 +199,7 @@ export function NotificationToast({
       </div>
 
       {/* Swipe hint */}
-      <div className="absolute inset-y-0 right-0 w-1 bg-linear-to-l from-white/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
     </motion.div>
   );
 }
@@ -543,7 +543,7 @@ export function NotificationBadge({
         <>
           <span className={`
             absolute ${badgeSizeClasses[size]} rounded-full 
-            bg-linear-to-r from-cyan-500 to-blue-500 
+            bg-gradient-to-r from-cyan-500 to-blue-500 
             flex items-center justify-center font-bold text-white
           `}>
             {count > 99 ? '99+' : count}

@@ -158,7 +158,7 @@ export function SponsorMenteeModal({ isOpen, onClose }: SponsorMenteeModalProps)
                   whileTap={canSponsor ? { scale: 0.98 } : {}}
                   className={`flex-1 py-3 rounded-lg font-bold transition-all ${
                     canSponsor
-                      ? 'bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 hover:shadow-lg hover:shadow-emerald-400/50'
+                      ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 hover:shadow-lg hover:shadow-emerald-400/50'
                       : 'bg-zinc-100/10 text-zinc-100/30 cursor-not-allowed'
                   }`}
                 >

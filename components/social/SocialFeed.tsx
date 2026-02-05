@@ -346,7 +346,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Sticky Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -429,7 +429,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-linear-to-r from-zinc-900 to-zinc-800 border border-zinc-700 rounded-xl p-6 mb-8 sticky top-20 z-20"
+          className="bg-gradient-to-r from-zinc-900 to-zinc-800 border border-zinc-700 rounded-xl p-6 mb-8 sticky top-20 z-20"
         >
           <div className="flex gap-4 mb-4">
             <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-lg shrink-0">👤</div>
@@ -485,7 +485,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ delay: idx * 0.05 }}
-                  className={`bg-linear-to-br ${getPostColor(post.type)} border rounded-xl p-6 hover:border-cyan-400/50 transition-all group`}
+                  className={`bg-gradient-to-br ${getPostColor(post.type)} border rounded-xl p-6 hover:border-cyan-400/50 transition-all group`}
                 >
                   {/* Post Header */}
                   <div className="flex items-start justify-between mb-4">

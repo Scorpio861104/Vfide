@@ -233,7 +233,7 @@ export function Avatar({
       <div className={`
         relative rounded-full overflow-hidden
         ${sizes[size].container}
-        ${(!src || hasError) ? `bg-linear-to-br ${getGradient()}` : 'bg-gray-800'}
+        ${(!src || hasError) ? `bg-gradient-to-br ${getGradient()}` : 'bg-gray-800'}
       `}>
         {src && !hasError ? (
           <>
@@ -317,7 +317,7 @@ export function TokenIcon({
     return (
       <div className={`
         ${sizes[size]} rounded-full
-        bg-linear-to-br from-gray-600 to-gray-700
+        bg-gradient-to-br from-gray-600 to-gray-700
         flex items-center justify-center
         text-white font-bold text-xs
         ${className}
@@ -456,7 +456,7 @@ export function VideoPlayer({
             exit={{ opacity: 0 }}
             className="
               absolute bottom-0 left-0 right-0 p-4
-              bg-linear-to-t from-black/80 to-transparent
+              bg-gradient-to-t from-black/80 to-transparent
               opacity-0 group-hover:opacity-100 transition-opacity
             "
           >

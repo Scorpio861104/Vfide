@@ -104,7 +104,7 @@ export default function AppealsPage() {
                 disabled={!canSubmit}
                 className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
                   canSubmit
-                    ? 'bg-linear-to-r from-emerald-500 to-cyan-500 text-black hover:shadow-lg hover:shadow-emerald-500/30'
+                    ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-black hover:shadow-lg hover:shadow-emerald-500/30'
                     : 'bg-white/5 text-gray-500 cursor-not-allowed'
                 }`}
               >

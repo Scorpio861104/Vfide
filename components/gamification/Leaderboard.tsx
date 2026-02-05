@@ -121,7 +121,7 @@ export function Leaderboard() {
       {/* Header */}
       <div className="p-6 border-b border-zinc-800">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-linear-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
             <Trophy className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -264,8 +264,8 @@ export function Leaderboard() {
                   {/* Avatar */}
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
                     entry.rank <= 3
-                      ? 'bg-linear-to-br from-yellow-400 to-orange-500'
-                      : 'bg-linear-to-br from-cyan-400 to-violet-400'
+                      ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
+                      : 'bg-gradient-to-br from-cyan-400 to-violet-400'
                   }`}>
                     {(entry.alias || entry.address).charAt(0).toUpperCase()}
                   </div>

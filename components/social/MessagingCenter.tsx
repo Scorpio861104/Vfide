@@ -316,7 +316,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           <div className="flex items-center gap-3">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm">
                 {friend.alias ? friend.alias?.[0]?.toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
               </div>
             </div>
@@ -400,7 +400,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         ) : (
           <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center shrink-0">
                 <Lock className="w-5 h-5 text-zinc-950" />
               </div>
               <div className="flex-1">

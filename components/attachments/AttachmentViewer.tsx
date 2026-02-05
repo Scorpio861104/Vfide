@@ -135,7 +135,7 @@ function ImageAttachment({ attachment, compact, onClick }: ImageAttachmentProps)
       </div>
 
       {/* File info */}
-      <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 to-transparent p-2">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
         <div className="text-white text-xs truncate">{attachment.name}</div>
         <div className="text-gray-300 text-xs">{formatFileSize(attachment.size)}</div>
       </div>
@@ -196,7 +196,7 @@ interface FileAttachmentProps {
 function FileAttachment({ attachment, compact: _compact }: FileAttachmentProps) {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center gap-3 hover:border-zinc-700 transition-colors">
-      <div className="w-10 h-10 bg-linear-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
+      <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
         {renderIconComponent(attachment.type, "w-5 h-5 text-blue-400")}
       </div>
 

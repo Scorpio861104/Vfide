@@ -76,7 +76,7 @@ export default function HeadhunterPage() {
           <Trophy className="w-24 h-24 text-amber-400 mx-auto mb-6" />
           <h1 className="text-3xl font-bold text-white mb-4">Headhunter Competition</h1>
           <p className="text-zinc-400 mb-6">Connect your wallet to participate</p>
-          <button className="px-8 py-3 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+          <button className="px-8 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-semibold hover:opacity-90 transition-opacity">
             Connect Wallet
           </button>
         </div>
@@ -87,13 +87,13 @@ export default function HeadhunterPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       {/* Header */}
-      <div className="bg-linear-to-r from-amber-400/10 to-orange-500/10 border-b border-amber-400/20">
+      <div className="bg-gradient-to-r from-amber-400/10 to-orange-500/10 border-b border-amber-400/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <Trophy className="w-10 h-10 text-amber-400" />
-                <h1 className="text-4xl font-bold bg-linear-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
                   Headhunter Competition
                 </h1>
               </div>
@@ -274,7 +274,7 @@ export default function HeadhunterPage() {
                 <button 
                   onClick={handleClaimReward}
                   disabled={isClaimPending}
-                  className="w-full px-6 py-4 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Gift className="w-6 h-6" />
                   {isClaimPending ? 'Claiming...' : `Claim ${formatEther(reward.estimatedReward)} VFIDE`}

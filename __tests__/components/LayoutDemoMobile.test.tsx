@@ -126,6 +126,7 @@ describe('MobileBottomNav', () => {
     const moreButton = screen.getByRole('button', { name: /more options/i })
     fireEvent.click(moreButton)
     expect(screen.getByText('Token Launch')).toBeInTheDocument()
+    expect(screen.getByText('Flashlight')).toBeInTheDocument()
     expect(screen.getByText('Leaderboard')).toBeInTheDocument()
     expect(screen.getByText('Rewards')).toBeInTheDocument()
   })

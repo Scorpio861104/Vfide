@@ -18,7 +18,7 @@ export function SurfaceCard({
   const base = {
     default: "bg-zinc-900/90 border border-zinc-800",
     muted: "bg-zinc-950 border border-zinc-900",
-    glow: "bg-linear-to-br from-[#0F1624] via-[#0B111C] to-zinc-900 border border-zinc-800 shadow-[0_20px_60px_-24px_rgba(0,240,255,0.35)]",
+    glow: "bg-gradient-to-br from-[#0F1624] via-[#0B111C] to-zinc-900 border border-zinc-800 shadow-[0_20px_60px_-24px_rgba(0,240,255,0.35)]",
   }[variant];
 
   const Comp = interactive ? motion.div : "div";

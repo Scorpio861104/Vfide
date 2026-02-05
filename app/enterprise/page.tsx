@@ -2,6 +2,7 @@
 
 import { Footer } from "@/components/layout/Footer";
 import { useVfidePrice } from "@/hooks/usePriceHooks";
+import { PageWrapper, PageHeader } from "@/components/ui/PageLayout";
 import {
     ArrowUpDown,
     Building2,
@@ -30,17 +31,26 @@ export default function EnterprisePage() {
 
   return (
     <>
-      <main className="min-h-screen bg-zinc-950 pt-24 pb-16">
-        <div className="container mx-auto px-3 sm:px-4">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-zinc-100 mb-4">
-              Enterprise Solutions
-            </h1>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Enterprise-grade payment processing, fiat integration, and treasury management
-            </p>
+      <PageWrapper variant="cosmic">
+        <PageHeader
+          icon={<Building2 className="w-10 h-10 text-white" />}
+          title="Enterprise Command"
+          subtitle="Enterprise-grade payment processing, fiat integration, and treasury management."
+          badge="Institutional Suite"
+          badgeColor="bg-cyan-400/15 text-cyan-200"
+        >
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-zinc-300">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2">
+              <Shield className="h-4 w-4 text-emerald-300" />
+              Compliance-ready infrastructure
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2">
+              <Zap className="h-4 w-4 text-amber-300" />
+              Sub-second settlement rails
+            </span>
           </div>
+        </PageHeader>
+        <main className="container mx-auto px-3 sm:px-4 pb-24 md:pb-16">
 
           {/* Tab Navigation */}
           <div className="flex flex-wrap justify-center gap-2 mb-8">
@@ -65,8 +75,8 @@ export default function EnterprisePage() {
           {activeTab === 'gateway' && <GatewayTab isConnected={isConnected} />}
           {activeTab === 'fiat' && <FiatTab isConnected={isConnected} />}
           {activeTab === 'finance' && <FinanceTab />}
-        </div>
-      </main>
+        </main>
+      </PageWrapper>
       <Footer />
     </>
   );

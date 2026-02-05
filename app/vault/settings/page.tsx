@@ -20,7 +20,7 @@ export default function VaultSettingsPage() {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mb-4">
               <Vault className="w-10 h-10" />
             </div>
-            <h1 className="text-5xl font-black mb-4 bg-clip-text text-transparent bg-linear-to-r from-purple-400 via-blue-400 to-pink-400">
+            <h1 className="text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400">
               Vault Settings
             </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">

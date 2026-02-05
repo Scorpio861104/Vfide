@@ -23,9 +23,7 @@ import { ZustandHydration } from "@/components/core/ZustandHydration";
 import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
 import { MockServiceWorker } from "@/components/dev/MockServiceWorker";
 
-// Use CSS variables for fonts - will load from Google Fonts via CSS
-// This avoids build-time network requests while still using Google Fonts in production
-const _fontVariables = "--font-body --font-display";
+// Fonts are self-hosted via @fontsource in globals.css
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://vfide.io"),
@@ -83,17 +81,11 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-sans antialiased bg-zinc-900" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <body className="font-sans antialiased bg-zinc-900">
         {isE2E ? (
-          children
+          <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
+            {children}
+          </main>
         ) : (
           <ErrorBoundary>
             <AccessibilityProvider>
@@ -110,17 +102,19 @@ export default function RootLayout({
                   <ZustandHydration />
                   <WebVitalsTracker />
                   <EnhancedNetworkBanner />
-                <NetworkSwitchOverlay />
-                <TestnetNotification />
-                {/* Network detection handled by wallet connection */}
-                <AchievementToastContainer />
-                {children}
-                <PieMenu />
-                <OnboardingManager />
-                <HelpCenter />
-              </ToastProvider>
-            </Web3Provider>
-          </AccessibilityProvider>
+                  <NetworkSwitchOverlay />
+                  <TestnetNotification />
+                  {/* Network detection handled by wallet connection */}
+                  <AchievementToastContainer />
+                  <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
+                    {children}
+                  </main>
+                  <PieMenu />
+                  <OnboardingManager />
+                  <HelpCenter />
+                </ToastProvider>
+              </Web3Provider>
+            </AccessibilityProvider>
           </ErrorBoundary>
         )}
       </body>

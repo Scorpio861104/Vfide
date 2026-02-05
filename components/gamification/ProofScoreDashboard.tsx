@@ -328,7 +328,7 @@ interface StatBoxProps {
 function StatBox({ label, value, icon, color }: StatBoxProps) {
   return (
     <div
-      className={`rounded-lg p-4 md:p-6 bg-linear-to-br ${color} text-white shadow-lg`}
+      className={`rounded-lg p-4 md:p-6 bg-gradient-to-br ${color} text-white shadow-lg`}
     >
       <div className="flex items-start justify-between">
         <div>
@@ -379,7 +379,7 @@ function TierProgress({ tier, currentScore }: TierProgressProps) {
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
           <div
-            className={`bg-linear-to-r ${tier.color} h-3 rounded-full transition-all`}
+            className={`bg-gradient-to-r ${tier.color} h-3 rounded-full transition-all`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -688,7 +688,7 @@ export default function ProofScoreDashboard() {
         </div>
 
         {/* Main Score Display */}
-        <div className="bg-linear-to-br from-blue-500 to-blue-700 rounded-lg p-6 md:p-8 text-white shadow-lg mb-8">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg p-6 md:p-8 text-white shadow-lg mb-8">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm md:text-base font-semibold opacity-90 mb-2">

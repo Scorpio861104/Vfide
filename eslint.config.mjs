@@ -31,6 +31,7 @@ const eslintConfig = defineConfig([
     "**/*.stories.mdx",
     "e2e/**",
     "playwright/**",
+    "public/mockServiceWorker.js",
     
     // Temporarily exclude extremely large files that cause ESLint to hang
     // TODO: Refactor these files into smaller components
@@ -48,6 +49,7 @@ const eslintConfig = defineConfig([
         "caughtErrorsIgnorePattern": "^_",
         "ignoreRestSiblings": true,
       }],
+      "@next/next/no-page-custom-font": "off",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/purity": "off",
       "react-hooks/immutability": "off",

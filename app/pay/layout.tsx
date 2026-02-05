@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Checkout - VFIDE Pay",
-  description: "Secure crypto payment checkout. Pay with VFIDE, USDC, or USDT with escrow protection.",
+  description: "Secure crypto payment checkout. QR scans default to instant settlement; escrow protection available for checkout.",
 };
 
 export default function PayLayout({

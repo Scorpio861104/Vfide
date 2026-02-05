@@ -18,6 +18,7 @@ import {
   Search,
   Filter,
 } from 'lucide-react';
+import { PageWrapper, PageHeader } from '@/components/ui/PageLayout';
 
 export default function NotificationHubPage() {
   const {
@@ -92,44 +93,35 @@ export default function NotificationHubPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <div className="border-b border-slate-800">
-        <div className="container mx-auto px-3 sm:px-4 py-8">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between"
+    <PageWrapper variant="gradient">
+      <PageHeader
+        icon={<Bell className="w-10 h-10 text-white" />}
+        title="Notification Command"
+        subtitle="Direct signal, filter noise, and export every critical alert."
+        badge="Signal Intelligence"
+        badgeColor="bg-violet-400/20 text-violet-200"
+      >
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={() => handleExport('json')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
           >
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-                <Bell className="w-10 h-10 text-blue-400" />
-                Notification Hub
-              </h1>
-              <p className="text-slate-400">
-                Manage all your notifications and preferences in one place
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleExport('json')}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                JSON
-              </button>
-              <button
-                onClick={() => handleExport('csv')}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                CSV
-              </button>
-            </div>
-          </motion.div>
+            <Download className="w-4 h-4" />
+            JSON
+          </button>
+          <button
+            onClick={() => handleExport('csv')}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 hover:bg-slate-700 rounded-lg border border-slate-600/60 text-white transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            CSV
+          </button>
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs text-slate-300">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            {stats.unread} unread signals
+          </span>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Tab Navigation */}
       <div className="sticky top-20 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
@@ -260,6 +252,6 @@ export default function NotificationHubPage() {
           </motion.div>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   Home,
   LayoutDashboard,
+  Cpu,
   Shield,
   Wallet,
   MessageCircle,
@@ -50,11 +51,27 @@ import {
   BarChart3,
   ClipboardList,
   TestTube,
+  FlaskConical,
   Compass,
   Scale,
   Rocket,
   Star,
   UserPlus,
+  Sparkles,
+  Palette,
+  Globe,
+  Layers,
+  Sliders,
+  Info,
+  Video,
+  LifeBuoy,
+  Link2,
+  FileSearch,
+  Monitor,
+  ShieldAlert,
+  HardDrive,
+  Tag,
+  Flashlight,
 } from 'lucide-react';
 
 // ============================================================================
@@ -74,6 +91,14 @@ interface NavItem {
 // ============================================================================
 // NAVIGATION STRUCTURE
 // ============================================================================
+
+const AUDIO_ENVELOPE = {
+  initialGain: 0.0001,
+  peakGain: 0.04,
+  attackTime: 0.02,
+  releaseTime: 0.18,
+  finalRampTime: 0.01,
+};
 
 const navigationItems: NavItem[] = [
   {
@@ -100,6 +125,7 @@ const navigationItems: NavItem[] = [
       { id: 'wallet', label: 'Wallet', href: '/crypto', icon: Wallet, color: '#8B5CF6' },
       { id: 'guardians', label: 'Guardians', href: '/guardians', icon: ShieldCheck, color: '#8B5CF6' },
       { id: 'vault-recover', label: 'Recovery', href: '/vault/recover', icon: KeyRound, color: '#8B5CF6' },
+      { id: 'vault-settings', label: 'Settings', href: '/vault/settings', icon: Settings, color: '#8B5CF6' },
       { id: 'multisig', label: 'Multi-Sig', href: '/multisig', icon: Users, color: '#8B5CF6' },
       { id: 'time-locks', label: 'Time Locks', href: '/time-locks', icon: Clock, color: '#8B5CF6' },
       { id: 'vesting', label: 'Vesting', href: '/vesting', icon: Gift, color: '#8B5CF6' },
@@ -113,6 +139,8 @@ const navigationItems: NavItem[] = [
     children: [
       { id: 'merchant-main', label: 'Merchant Hub', href: '/merchant', icon: Store, color: '#10B981' },
       { id: 'pos', label: 'POS Terminal', href: '/pos', icon: CreditCard, color: '#10B981' },
+      { id: 'buy', label: 'Buy Tokens', href: '/buy', icon: Globe, color: '#10B981' },
+      { id: 'flashlight', label: 'Flashlight', href: '/flashlight', icon: Flashlight, color: '#10B981', badge: 'P2P' },
       { id: 'escrow', label: 'Escrow', href: '/escrow', icon: Lock, color: '#10B981' },
       { id: 'payroll', label: 'Payroll', href: '/payroll', icon: Banknote, color: '#10B981' },
       { id: 'streaming', label: 'Streaming', href: '/streaming', icon: Zap, color: '#10B981', badge: 'NEW' },
@@ -133,6 +161,7 @@ const navigationItems: NavItem[] = [
       { id: 'stories', label: 'Stories', href: '/stories', icon: Camera, color: '#F59E0B' },
       { id: 'messages', label: 'Messages', href: '/social-messaging', icon: Mail, color: '#F59E0B' },
       { id: 'social-pay', label: 'Social Pay', href: '/social-payments', icon: Banknote, color: '#F59E0B' },
+      { id: 'social-analytics', label: 'Analytics', href: '/social', icon: TrendingUp, color: '#F59E0B' },
     ],
   },
   {
@@ -141,6 +170,7 @@ const navigationItems: NavItem[] = [
     icon: Vote,
     color: '#6366F1',
     children: [
+      { id: 'dao-hub', label: 'DAO Hub', href: '/dao-hub', icon: Crown, color: '#6366F1', badge: 'DAO' },
       { id: 'governance-main', label: 'Proposals', href: '/governance', icon: Scroll, color: '#6366F1' },
       { id: 'council', label: 'Council', href: '/council', icon: Gavel, color: '#6366F1' },
       { id: 'appeals', label: 'Appeals', href: '/appeals', icon: AlertTriangle, color: '#6366F1' },
@@ -159,7 +189,10 @@ const navigationItems: NavItem[] = [
       { id: 'headhunter', label: 'Referrals', href: '/headhunter', icon: Search, color: '#EC4899' },
       { id: 'endorsements', label: 'Endorsements', href: '/endorsements', icon: Medal, color: '#EC4899' },
       { id: 'badges', label: 'Badges', href: '/badges', icon: Star, color: '#EC4899' },
+      { id: 'benefits', label: 'Benefits', href: '/benefits', icon: Tag, color: '#EC4899' },
+      { id: 'rewards', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
       { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },
+      { id: 'invite-code', label: 'Invite Code', href: '/invite/[code]', icon: Link2, color: '#EC4899', badge: 'LINK' },
     ],
   },
   {
@@ -173,6 +206,7 @@ const navigationItems: NavItem[] = [
       { id: 'budgets', label: 'Budgets', href: '/budgets', icon: PiggyBank, color: '#14B8A6' },
       { id: 'performance', label: 'Performance', href: '/performance', icon: BarChart3, color: '#14B8A6' },
       { id: 'reporting', label: 'Reports', href: '/reporting', icon: ClipboardList, color: '#14B8A6' },
+      { id: 'price-alerts', label: 'Price Alerts', href: '/price-alerts', icon: Bell, color: '#14B8A6' },
     ],
   },
   {
@@ -184,7 +218,13 @@ const navigationItems: NavItem[] = [
       { id: 'developer-main', label: 'Dev Hub', href: '/developer', icon: Code, color: '#64748B' },
       { id: 'testnet', label: 'Testnet', href: '/testnet', icon: TestTube, color: '#64748B' },
       { id: 'explorer', label: 'Explorer', href: '/explorer', icon: Compass, color: '#64748B' },
+      { id: 'explorer-detail', label: 'Transaction Details', href: '/explorer/[id]', icon: FileSearch, color: '#64748B' },
+      { id: 'paper-wallet', label: 'Paper Wallet', href: '/paper-wallet', icon: FileText, color: '#64748B' },
+      { id: 'hardware-wallet', label: 'Hardware Wallet', href: '/hardware-wallet', icon: HardDrive, color: '#64748B' },
+      { id: 'enterprise', label: 'Enterprise', href: '/enterprise', icon: Landmark, color: '#64748B' },
       { id: 'token-launch', label: 'Token Launch', href: '/token-launch', icon: Rocket, color: '#64748B' },
+      { id: 'live-demo', label: 'Live Demo', href: '/live-demo', icon: Video, color: '#64748B' },
+      { id: 'crypto-social-demo', label: 'Social Demo', href: '/demo/crypto-social', icon: FlaskConical, color: '#64748B' },
     ],
   },
   {
@@ -199,6 +239,14 @@ const navigationItems: NavItem[] = [
       { id: 'settings', label: 'Settings', href: '/setup', icon: Settings, color: '#94A3B8' },
       { id: 'help', label: 'Help & Docs', href: '/docs', icon: HelpCircle, color: '#94A3B8' },
       { id: 'legal', label: 'Legal', href: '/legal', icon: Scale, color: '#94A3B8' },
+      { id: 'about', label: 'About', href: '/about', icon: Info, color: '#94A3B8' },
+      { id: 'support', label: 'Support', href: '/support', icon: LifeBuoy, color: '#94A3B8' },
+      { id: 'theme', label: 'Theme', href: '/theme', icon: Palette, color: '#94A3B8' },
+      { id: 'theme-manager', label: 'Theme Manager', href: '/theme-manager', icon: Sliders, color: '#94A3B8' },
+      { id: 'theme-showcase', label: 'Theme Showcase', href: '/theme-showcase', icon: Layers, color: '#94A3B8' },
+      { id: 'admin', label: 'Admin', href: '/admin', icon: ShieldAlert, color: '#94A3B8' },
+      { id: 'control-panel', label: 'Control Panel', href: '/control-panel', icon: Monitor, color: '#94A3B8' },
+      { id: 'sanctum', label: 'Sanctum', href: '/sanctum', icon: Cpu, color: '#94A3B8' },
     ],
   },
 ];
@@ -291,15 +339,51 @@ function CompactTile({
         }}
       />
       
+      {/* Pulse glow for active items */}
+      {(isActive || isHovered) && (
+        <motion.div
+          className="absolute inset-0 rounded-xl pointer-events-none"
+          animate={{ opacity: [0.1, 0.35, 0.1], scale: [1, 1.01, 1] }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            background: `radial-gradient(circle at 30% 30%, ${item.color}25 0%, transparent 70%)`,
+          }}
+        />
+      )}
+
       {/* Scan line effect on hover */}
       {isHovered && (
         <motion.div
           initial={{ x: '-100%' }}
           animate={{ x: '200%' }}
           transition={{ duration: 0.6, ease: 'easeInOut' }}
-          className="absolute inset-0 w-1/3 bg-linear-to-r from-transparent via-white/10 to-transparent"
+          className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent"
           style={{ pointerEvents: 'none' }}
         />
+      )}
+
+      {/* Particle trails */}
+      {isHovered && (
+        <div className="absolute inset-0 pointer-events-none">
+          {Array.from({ length: PARTICLE_TRAIL.count }).map((_, trail) => (
+            <motion.span
+              key={`trail-${item.id}-${trail}`}
+              className="absolute top-1/2 w-1 h-1 rounded-full"
+              style={{ background: item.color, boxShadow: `0 0 8px ${item.color}` }}
+              initial={{
+                opacity: 0,
+                x: '-10%',
+                y: `${-PARTICLE_TRAIL.spacing + trail * PARTICLE_TRAIL.spacing}px`,
+              }}
+              animate={{ opacity: [0, 0.9, 0], x: ['-10%', '120%'] }}
+              transition={{
+                duration: PARTICLE_TRAIL.duration,
+                repeat: Infinity,
+                delay: trail * PARTICLE_TRAIL.delayStep,
+              }}
+            />
+          ))}
+        </div>
       )}
       
       {/* Icon Container */}
@@ -439,13 +523,13 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
       />
       
       {/* Corner bevels - top highlight */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-b from-white/12 to-transparent rounded-t-2xl" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-b from-white/12 to-transparent rounded-t-2xl" />
       
       {/* Corner bevels - bottom shadow */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-t from-black/30 to-transparent rounded-b-2xl" />
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-t from-black/30 to-transparent rounded-b-2xl" />
       
       {/* Left edge highlight */}
-      <div className="absolute top-2 bottom-2 left-0 w-px bg-linear-to-b from-transparent via-white/10 to-transparent" />
+      <div className="absolute top-2 bottom-2 left-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
       
       {/* Rotating border effect when open */}
       {isOpen && (
@@ -458,6 +542,76 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
             borderRadius: '1rem',
           }}
         />
+      )}
+
+      {/* Pulse glow */}
+      {isOpen && (
+        <motion.div
+          className="absolute inset-0 rounded-2xl"
+          animate={{ opacity: [0.25, 0.6, 0.25], scale: [1, 1.08, 1] }}
+          transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            background: `radial-gradient(circle at center, ${activeCategory?.color || '#6366f1'}40 0%, transparent 70%)`,
+          }}
+        />
+      )}
+
+      {/* Orbiting accent dots */}
+      {isOpen && (
+        <>
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+          >
+            <span
+              className="absolute -top-2 left-1/2 h-2 w-2 rounded-full"
+              style={{
+                background: activeCategory?.color || '#6366f1',
+                boxShadow: `0 0 10px ${activeCategory?.color || '#6366f1'}`,
+                transform: 'translateX(-50%)',
+              }}
+            />
+          </motion.div>
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            animate={{ rotate: -360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+          >
+            <span
+              className="absolute -bottom-2 left-1/2 h-1.5 w-1.5 rounded-full"
+              style={{
+                background: activeCategory?.color || '#6366f1',
+                boxShadow: `0 0 8px ${activeCategory?.color || '#6366f1'}`,
+                transform: 'translateX(-50%)',
+              }}
+            />
+          </motion.div>
+        </>
+      )}
+
+      {/* Orbiting active icon */}
+      {isOpen && activeCategory?.icon && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1, rotate: 360 }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+        >
+          <div
+            className="absolute -right-3 top-1/2 h-5 w-5 rounded-full flex items-center justify-center"
+            style={{
+              background: `${activeCategory?.color || '#6366f1'}30`,
+              boxShadow: `0 0 12px ${activeCategory?.color || '#6366f1'}60`,
+              transform: 'translateY(-50%)',
+            }}
+          >
+            {React.createElement(activeCategory.icon, {
+              size: 12,
+              style: { color: activeCategory?.color || '#6366f1' },
+            })}
+          </div>
+        </motion.div>
       )}
       
       {/* Inner content */}
@@ -508,6 +662,7 @@ export function PieMenu() {
   const [activeCategory, setActiveCategory] = useState<NavItem | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<AudioContext | null>(null);
   
   // Close menu on outside click
   useEffect(() => {
@@ -524,6 +679,15 @@ export function PieMenu() {
     
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.close();
+        audioRef.current = null;
+      }
+    };
+  }, []);
   
   // Close on route change
   useEffect(() => {
@@ -550,26 +714,65 @@ export function PieMenu() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, activeCategory]);
 
+  const playClickTone = useCallback((frequency = AUDIO_FREQUENCIES.default) => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new AudioContext();
+      }
+      const context = audioRef.current;
+      if (context.state === 'suspended') {
+        context.resume();
+      }
+      const { initialGain, peakGain, attackTime, releaseTime, finalRampTime } = AUDIO_ENVELOPE;
+
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+      gain.gain.setValueAtTime(initialGain, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(peakGain, context.currentTime + attackTime);
+      const releaseStartTime = context.currentTime + attackTime;
+      const releaseEndTime = releaseStartTime + releaseTime;
+      const finalRampEndTime = releaseEndTime + finalRampTime;
+      gain.gain.exponentialRampToValueAtTime(initialGain, releaseEndTime);
+      gain.gain.linearRampToValueAtTime(0, finalRampEndTime);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(finalRampEndTime);
+    } catch (error) {
+      // Ignore audio errors for unsupported contexts
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Pie menu audio cue failed', error);
+      }
+    }
+  }, []);
+
   const handleItemClick = useCallback((item: NavItem) => {
     if (item.children && item.children.length > 0) {
       setActiveCategory(item);
+      playClickTone(AUDIO_FREQUENCIES.categoryOpen);
     } else if (item.href) {
+      playClickTone(AUDIO_FREQUENCIES.navigation);
       router.push(item.href);
       setIsOpen(false);
       setActiveCategory(null);
     }
-  }, [router]);
+  }, [router, playClickTone]);
 
   const handleBack = useCallback(() => {
+    playClickTone(AUDIO_FREQUENCIES.back);
     setActiveCategory(null);
-  }, []);
+  }, [playClickTone]);
 
   const toggleMenu = useCallback(() => {
+    playClickTone(isOpen ? AUDIO_FREQUENCIES.toggleClose : AUDIO_FREQUENCIES.toggleOpen);
     setIsOpen(prev => !prev);
     if (isOpen) {
       setActiveCategory(null);
     }
-  }, [isOpen]);
+  }, [isOpen, playClickTone]);
 
   const itemsToShow = activeCategory?.children || navigationItems;
 
@@ -581,7 +784,7 @@ export function PieMenu() {
   return (
     <nav 
       ref={menuRef}
-      className="fixed bottom-4 right-4 z-100 sm:bottom-6 sm:right-6"
+      className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-24 z-100 sm:bottom-6 sm:right-24"
       aria-label="Main navigation"
     >
       {/* Backdrop */}
@@ -798,3 +1001,18 @@ export function PieMenu() {
 }
 
 export default PieMenu;
+const AUDIO_FREQUENCIES = {
+  default: 520,
+  categoryOpen: 480,
+  navigation: 560,
+  back: 420,
+  toggleOpen: 520,
+  toggleClose: 360,
+};
+
+const PARTICLE_TRAIL = {
+  count: 3,
+  spacing: 6,
+  duration: 0.9,
+  delayStep: 0.2,
+};

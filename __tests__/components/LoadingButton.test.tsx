@@ -75,7 +75,7 @@ describe('LoadingButton', () => {
   it('applies primary variant by default', () => {
     render(<LoadingButton>Submit</LoadingButton>)
     const button = screen.getByRole('button')
-    expect(button.className).toContain('bg-linear-to-r')
+    expect(button.className).toContain('bg-gradient-to-r')
   })
 
   it('applies secondary variant', () => {

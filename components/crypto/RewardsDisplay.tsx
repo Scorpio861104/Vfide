@@ -56,7 +56,7 @@ export function RewardsDisplay({ userId }: RewardsDisplayProps) {
   return (
     <div className="space-y-4">
       {/* Header with Total */}
-      <div className="bg-linear-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-gray-400 text-sm mb-1">Total Unclaimed Rewards</div>
@@ -65,7 +65,7 @@ export function RewardsDisplay({ userId }: RewardsDisplayProps) {
               <span className="text-2xl text-purple-400">VFIDE</span>
             </div>
           </div>
-          <div className="w-16 h-16 bg-linear-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
             <Award className="w-8 h-8 text-white" />
           </div>
         </div>
@@ -74,7 +74,7 @@ export function RewardsDisplay({ userId }: RewardsDisplayProps) {
           <button
             onClick={handleClaim}
             disabled={claiming}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {claiming ? (
               <>
@@ -161,7 +161,7 @@ const RewardCard = React.memo(function RewardCard({ reward }: { reward: TokenRew
       exit={{ opacity: 0, x: 20 }}
       className="bg-zinc-900 border border-purple-500/20 rounded-lg p-3 flex items-center gap-3 hover:border-purple-500/40 transition-colors"
     >
-      <div className="w-10 h-10 bg-linear-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center shrink-0">
+      <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center shrink-0">
         {renderIconForAction(reward.action, "w-5 h-5 text-purple-400")}
       </div>
 

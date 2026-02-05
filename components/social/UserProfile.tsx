@@ -259,17 +259,17 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Cover Image */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative h-48 md:h-64 bg-linear-to-r from-cyan-400/20 via-violet-400/20 to-rose-500/20"
+        className="relative h-48 md:h-64 bg-gradient-to-r from-cyan-400/20 via-violet-400/20 to-rose-500/20"
       >
         {user.coverImage && (
           <img src={user.coverImage} alt="cover" className="w-full h-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-linear-to-t from-zinc-950 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent" />
       </motion.div>
 
       {/* Profile Header */}
@@ -282,7 +282,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
           className="flex flex-col md:flex-row md:items-end gap-4 -mt-20 mb-6"
         >
           <div className="shrink-0">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-linear-to-br from-cyan-400 to-violet-400 p-1 shadow-2xl">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-400 p-1 shadow-2xl">
               <div className="w-full h-full rounded-xl bg-zinc-900 flex items-center justify-center text-6xl md:text-8xl">
                 {user.avatar}
               </div>
@@ -600,7 +600,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
                           initial={{ width: 0 }}
                           animate={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
                           transition={{ duration: 1, delay: 0.2 }}
-                          className={`h-full ${achievement.isUnlocked ? 'bg-linear-to-r from-cyan-400 to-violet-400' : 'bg-zinc-700'}`}
+                          className={`h-full ${achievement.isUnlocked ? 'bg-gradient-to-r from-cyan-400 to-violet-400' : 'bg-zinc-700'}`}
                         />
                       </div>
                       <div className="flex justify-between items-center mt-2">

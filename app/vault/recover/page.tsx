@@ -204,7 +204,7 @@ function VaultKeyVisualization({ isSearching }: { isSearching: boolean }) {
             <motion.div
               animate={{ y: [-40, 40] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-x-4 h-0.5 bg-linear-to-r from-transparent via-cyan-400 to-transparent"
+              className="absolute inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
             />
           )}
         </motion.div>
@@ -347,13 +347,13 @@ function SearchMethodButton({
       {active && (
         <motion.div
           layoutId="searchMethodActive"
-          className={`absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-transparent ${color.glow} to-transparent`}
+          className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent ${color.glow} to-transparent`}
         />
       )}
       
       {/* Hover shine */}
       <motion.div
-        className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
       />
     </motion.button>
   );
@@ -423,12 +423,12 @@ function SearchResultCard({
               onClick={onClaimClick}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-linear-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
+              className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
             >
               <Key className="h-5 w-5" />
               <span>Claim Vault</span>
               <motion.div
-                className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
               />
             </motion.button>
           ) : (
@@ -598,7 +598,7 @@ function ClaimFlowModal({
                   initial={{ width: 0 }}
                   animate={{ width: s <= step ? '100%' : '0%' }}
                   transition={{ duration: 0.5, delay: s * 0.1 }}
-                  className="h-full bg-linear-to-r from-cyan-500 to-blue-500"
+                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
                 />
               </div>
             ))}
@@ -786,14 +786,14 @@ function ClaimFlowModal({
               whileTap={{ scale: 0.98 }}
               onClick={() => setStep(step + 1)}
               disabled={step === 2 && !recoveryId}
-              className="px-8 py-3 bg-linear-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
+              className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
             >
               <span className="relative z-10 flex items-center gap-2">
                 Continue
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </span>
               <motion.div
-                className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
               />
             </motion.button>
           ) : (
@@ -801,7 +801,7 @@ function ClaimFlowModal({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onClose}
-              className="px-8 py-3 bg-linear-to-r from-emerald-500 to-teal-500 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg shadow-emerald-500/30"
+              className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg shadow-emerald-500/30"
             >
               <CheckCircle2 className="h-4 w-4" />
               Done
@@ -943,12 +943,12 @@ export default function VaultRecoveryPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-linear-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 mb-8"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 mb-8"
             >
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }}>
                 <Sparkles className="h-4 w-4 text-cyan-400" />
               </motion.div>
-              <span className="text-sm font-semibold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-purple-400">
+              <span className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
                 Industry First: Wallet Recovery Without Seed Phrases
               </span>
             </motion.div>
@@ -962,7 +962,7 @@ export default function VaultRecoveryPage() {
             >
               <span className="text-white">Find & Recover</span>
               <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-blue-400 to-purple-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400">
                 Your Vault
               </span>
             </motion.h1>
@@ -1074,7 +1074,7 @@ export default function VaultRecoveryPage() {
                     disabled={isSearching}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-linear-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 sm:min-w-50 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
+                    className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 sm:min-w-50 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
                   >
                     {isSearching ? (
                       <>
@@ -1093,7 +1093,7 @@ export default function VaultRecoveryPage() {
                       </>
                     )}
                     <motion.div
-                      className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
                     />
                   </motion.button>
                 </div>
@@ -1243,14 +1243,14 @@ export default function VaultRecoveryPage() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-10 py-4 bg-linear-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white inline-flex items-center gap-3 shadow-lg shadow-amber-500/30 relative overflow-hidden group"
+                    className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white inline-flex items-center gap-3 shadow-lg shadow-amber-500/30 relative overflow-hidden group"
                   >
                     <span className="relative z-10 flex items-center gap-2">
                       Configure Recovery
                       <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </span>
                     <motion.div
-                      className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
                     />
                   </motion.button>
                 </Link>

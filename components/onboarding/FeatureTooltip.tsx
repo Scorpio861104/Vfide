@@ -82,7 +82,7 @@ export function FeatureTooltip({
           transition={{ duration: 0.2 }}
           className={`absolute ${positionClasses[position]} z-50 w-64`}
         >
-          <div className="relative bg-linear-to-br from-zinc-800 to-zinc-900 border-2 border-cyan-400 rounded-lg shadow-2xl p-4">
+          <div className="relative bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-cyan-400 rounded-lg shadow-2xl p-4">
             {arrow && <div className={arrowClasses[position]} />}
             
             <div className="flex items-start gap-3">

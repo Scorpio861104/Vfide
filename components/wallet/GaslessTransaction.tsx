@@ -99,7 +99,7 @@ export function GaslessBanner({
         animate={{ opacity: 1, y: 0 }}
         className={`
           flex items-center gap-3 px-4 py-3 
-          bg-linear-to-r from-green-50 to-emerald-50 
+          bg-gradient-to-r from-green-50 to-emerald-50 
           dark:from-green-900/20 dark:to-emerald-900/20
           border border-green-200 dark:border-green-800
           rounded-xl ${className}

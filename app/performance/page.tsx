@@ -15,6 +15,7 @@ import {
   TimeRange,
 } from '@/config/performance-dashboard';
 import { RefreshCw, BarChart3, AlertCircle, Users, Zap } from 'lucide-react';
+import { PageWrapper, PageHeader } from '@/components/ui/PageLayout';
 
 export default function PerformanceDashboardPage() {
   const [activeTab, setActiveTab] = useState<
@@ -92,23 +93,39 @@ export default function PerformanceDashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <div className="border-b border-slate-800">
-        <div className="container mx-auto px-4 py-8">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-8"
-          >
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">
-                Performance Dashboard
-              </h1>
-              <p className="text-slate-400">
-                Real-time system metrics, errors, and user analytics
-              </p>
-            </div>
+    <PageWrapper variant="aurora">
+      <PageHeader
+        icon={<Zap className="w-10 h-10 text-white" />}
+        title="Performance Command"
+        subtitle="Real-time metrics, error insights, and live user intelligence."
+        badge="System Health"
+        badgeColor="bg-emerald-400/20 text-emerald-200"
+      >
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-6 text-sm text-zinc-400">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            Live telemetry enabled
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2">
+            <BarChart3 className="h-4 w-4 text-cyan-300" />
+            Multi-surface performance tracking
+          </span>
+        </div>
+      </PageHeader>
+      <div className="container mx-auto px-4 pb-24 md:pb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8"
+        >
+          <div className="text-zinc-400">
+            <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/80 mb-2">
+              Ops overview
+            </p>
+            <p className="text-lg text-white font-semibold">
+              Performance Dashboard
+            </p>
+          </div>
 
             <div className="flex items-center gap-4">
               <select
@@ -151,8 +168,8 @@ export default function PerformanceDashboardPage() {
                 />
                 Auto Refresh
               </label>
-            </div>
-          </motion.div>
+          </div>
+        </motion.div>
 
           {/* Health Score */}
           <motion.div
@@ -199,7 +216,6 @@ export default function PerformanceDashboardPage() {
                   : 'Critical'}
             </p>
           </motion.div>
-        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -341,6 +357,6 @@ export default function PerformanceDashboardPage() {
           </motion.div>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

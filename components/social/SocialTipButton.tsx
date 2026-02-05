@@ -80,7 +80,7 @@ export function SocialTipButton({
         className={`flex items-center gap-2 transition-all group ${
           compact
             ? 'p-2 hover:bg-zinc-800 rounded-lg'
-            : 'px-4 py-2 bg-linear-to-r from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20 border border-purple-500/20 rounded-lg'
+            : 'px-4 py-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20 border border-purple-500/20 rounded-lg'
         } ${className}`}
       >
         <DollarSign className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
@@ -119,7 +119,7 @@ export function SocialTipButton({
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div>
@@ -230,7 +230,7 @@ export function SocialTipButton({
                 <button
                   onClick={handleTip}
                   disabled={!amount || isLoading || !isConnected}
-                  className="w-full py-3 bg-linear-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all transform active:scale-95"
+                  className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all transform active:scale-95"
                 >
                   {isLoading ? (
                     <>

@@ -36,7 +36,7 @@ export function EndorsementCard({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-linear-to-br from-amber-900/20 to-orange-900/20 border border-amber-500/30 rounded-xl p-4"
+      className="bg-gradient-to-br from-amber-900/20 to-orange-900/20 border border-amber-500/30 rounded-xl p-4"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">

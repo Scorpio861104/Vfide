@@ -122,7 +122,7 @@ export function QuickAction({ icon, label, href, color, isPrimary = false }: Qui
           relative p-5 rounded-2xl font-semibold flex flex-col items-center gap-3 text-center
           overflow-hidden transition-all duration-300
           ${isPrimary 
-            ? 'bg-linear-to-br text-zinc-950 shadow-lg'
+            ? 'bg-gradient-to-br text-zinc-950 shadow-lg'
             : 'glass-card hover:border-opacity-100'
           }
         `}
@@ -134,7 +134,7 @@ export function QuickAction({ icon, label, href, color, isPrimary = false }: Qui
         }}
       >
         {/* Shimmer effect on hover */}
-        <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-500 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full" />
+        <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full" />
         
         <div 
           className={`relative z-10 ${isPrimary ? '' : ''}`}

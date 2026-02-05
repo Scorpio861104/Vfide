@@ -468,7 +468,7 @@ function SuggestionCard({ suggestion, onFollow, onDismiss }: SuggestionCardProps
             <h3 className="font-semibold">{suggestion.user.displayName}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">@{suggestion.user.username}</p>
           </div>
-          <div className="text-right text-xs font-semibold bg-linear-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded">
+          <div className="text-right text-xs font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded">
             {suggestion.score}%
           </div>
         </div>

@@ -63,7 +63,7 @@ export function TokenBalance({
         </div>
       )}
       {showToken && TOKEN_ADDRESS && TOKEN_ADDRESS !== '0x' && (
-        <div className="flex items-center gap-1 px-2 py-1 bg-linear-to-r from-cyan-400/10 to-blue-500/10 border border-cyan-400/30 rounded-full">
+        <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 border border-cyan-400/30 rounded-full">
           <span className="text-cyan-400">V</span>
           <span className="text-zinc-100 font-medium">{formattedToken}</span>
         </div>
