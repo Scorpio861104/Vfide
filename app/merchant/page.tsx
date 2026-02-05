@@ -48,6 +48,39 @@ const scaleVariants = {
   }
 };
 
+const merchantExcellence = [
+  {
+    icon: Shield,
+    title: 'Escrow-first protection',
+    description: 'Auto-select escrow for new buyers, high-value carts, or high-risk scores. Instant settlement unlocks after trust thresholds.',
+  },
+  {
+    icon: Zap,
+    title: 'Smart settlement routing',
+    description: 'Route funds instantly for trusted QR flows or hold in escrow for delivery-proof scenarios—always visible to both parties.',
+  },
+  {
+    icon: CreditCard,
+    title: 'ProofScore guardrails',
+    description: 'Dynamic risk scoring, device reputation, and buyer history give merchants a clearer safety signal than chargebacks.',
+  },
+  {
+    icon: RefreshCw,
+    title: 'Stable settlement paths',
+    description: 'STABLE-PAY auto-converts with slippage caps, keeping margins stable without manual FX or payout delays.',
+  },
+  {
+    icon: QrCode,
+    title: 'Instant QR checkout',
+    description: 'Sub-5 second QR settlement for in-person commerce with tamper-proof receipts and offline fallbacks.',
+  },
+  {
+    icon: Store,
+    title: 'Merchant ops console',
+    description: 'Unified view of disputes, payouts, inventory tie-ins, and loyalty rewards in one workflow.',
+  },
+];
+
 // Feature card component
 function FeatureCard({ 
   icon: Icon, 
@@ -292,6 +325,40 @@ export default function MerchantPage() {
                 description="Real-time customer risk assessment. Know who you're dealing with before payment."
                 color="orange"
               />
+            </div>
+          </motion.section>
+
+          <motion.section variants={containerVariants} className="mb-16">
+            <motion.div variants={itemVariants} className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400">
+                  Merchant Excellence Stack
+                </span>
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Built to be the safest and fastest way to accept crypto without sacrificing trust, liquidity, or customer experience.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {merchantExcellence.map((item) => (
+                <motion.div
+                  key={item.title}
+                  variants={scaleVariants}
+                  whileHover={{ y: -4 }}
+                  className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="rounded-2xl bg-white/10 p-3 text-cyan-200">
+                      <item.icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold mb-1">{item.title}</h3>
+                      <p className="text-sm text-gray-400">{item.description}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.section>
 
