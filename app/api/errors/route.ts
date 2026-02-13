@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
 
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
+
+  // Require admin authentication
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -45,13 +50,24 @@ export async function POST(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
+  // Require authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
-    const { severity, message, stack, metadata, userId } = body;
+    const { severity, message, stack, metadata } = body;
 
     if (!message) {
       return NextResponse.json({ error: 'message required' }, { status: 400 });
     }
+
+    const userResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authResult.user.address.toLowerCase()]
+    );
+
+    const userId = userResult.rows[0]?.id || null;
 
     const result = await query(
       `INSERT INTO error_logs (user_id, severity, message, stack, metadata, timestamp)
