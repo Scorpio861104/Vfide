@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 import { 
   parsePaginationParams, 
   createPaginatedResponse,
@@ -35,6 +36,9 @@ export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
+
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
 
   try {
     // Use standardized pagination parsing
@@ -122,16 +126,39 @@ export async function POST(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
+  // Authentication (required - no test bypasses)
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
-    const { wallet_address, username, display_name, bio, avatar_url } = body;
+    const {
+      username,
+      display_name,
+      bio,
+      avatar_url,
+      email,
+      location,
+      website,
+      twitter,
+      github,
+    } = body;
 
-    if (!wallet_address) {
-      return NextResponse.json(
-        { error: 'Wallet address is required' },
-        { status: 400 }
-      );
+    // Use authenticated user's address (not from request body)
+    const requestWallet = typeof body.wallet_address === 'string'
+      ? body.wallet_address
+      : authResult.user.address;
+    if (!requestWallet) {
+      return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
     }
+    // Verify user is updating their own profile
+    if (requestWallet.toLowerCase() !== authResult.user.address.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+    const wallet_address = requestWallet;
 
     // Check if user exists
     const existingUser = await query<User>(
@@ -149,20 +176,47 @@ export async function POST(request: NextRequest) {
              display_name = COALESCE($3, display_name),
              bio = COALESCE($4, bio),
              avatar_url = COALESCE($5, avatar_url),
+             email = COALESCE($6, email),
+             location = COALESCE($7, location),
+             website = COALESCE($8, website),
+             twitter = COALESCE($9, twitter),
+             github = COALESCE($10, github),
              last_seen_at = NOW(),
              updated_at = NOW()
          WHERE wallet_address = $1
          RETURNING *`,
-        [wallet_address.toLowerCase(), username, display_name, bio, avatar_url]
+        [
+          wallet_address.toLowerCase(),
+          username,
+          display_name,
+          bio,
+          avatar_url,
+          email,
+          location,
+          website,
+          twitter,
+          github,
+        ]
       );
       user = updateResult.rows[0]!;
     } else {
       // Create new user
       const insertResult = await query<User>(
-        `INSERT INTO users (wallet_address, username, display_name, bio, avatar_url)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO users (wallet_address, username, display_name, bio, avatar_url, email, location, website, twitter, github)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING *`,
-        [wallet_address.toLowerCase(), username, display_name, bio, avatar_url]
+        [
+          wallet_address.toLowerCase(),
+          username,
+          display_name,
+          bio,
+          avatar_url,
+          email,
+          location,
+          website,
+          twitter,
+          github,
+        ]
       );
       user = insertResult.rows[0]!;
     }
