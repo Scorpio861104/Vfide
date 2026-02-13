@@ -2,6 +2,7 @@ import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ address: string }> }) {
   // Rate limiting: 100 requests per minute for balance lookups
@@ -25,6 +26,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         { error: 'Invalid Ethereum address format' },
         { status: 400 }
       );
+    }
+
+    // Require authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+
+    // Verify user is requesting their own balance
+    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const result = await query(
