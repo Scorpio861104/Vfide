@@ -1,5 +1,7 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { Contract } from "ethers";
+
+const ethers = (hre as any).ethers;
 
 /**
  * Deployment script for Phases 3-6 smart contracts
@@ -42,8 +44,12 @@ interface DeployedContracts {
 
 async function main() {
   const [deployer] = await ethers.getSigners();
+  if (!deployer) {
+    throw new Error('No deployer signer available');
+  }
   console.log("Deploying contracts with account:", deployer.address);
-  console.log("Account balance:", (await deployer.getBalance()).toString());
+  const balance = await ethers.provider.getBalance(deployer.address);
+  console.log("Account balance:", balance.toString());
 
   // Get network configuration
   const config = getNetworkConfig();
@@ -60,11 +66,13 @@ async function main() {
 
   // Deploy Phase 5: Liquidity Mining
   console.log("\n📦 Phase 5: Liquidity Mining");
-  const phase5 = await deployPhase5(config, phase3.priceOracle.address);
+  const priceOracleAddress = await phase3.priceOracle.getAddress();
+  const phase5 = await deployPhase5(config, priceOracleAddress);
 
   // Deploy Phase 6: Advanced DeFi
   console.log("\n📦 Phase 6: Advanced DeFi Features");
-  const phase6 = await deployPhase6(config, phase3.priceOracle.address, phase4.vfideStaking.address);
+  const stakingAddress = await phase4.vfideStaking.getAddress();
+  const phase6 = await deployPhase6(config, priceOracleAddress, stakingAddress);
 
   // Configure contract integrations
   console.log("\n⚙️  Configuring Contract Integrations");
@@ -73,23 +81,23 @@ async function main() {
   // Save deployment addresses
   const addresses = {
     // Phase 3
-    vfideBridge: phase3.vfideBridge.address,
-    bridgeSecurityModule: phase3.bridgeSecurityModule.address,
-    priceOracle: phase3.priceOracle.address,
+    vfideBridge: await phase3.vfideBridge.getAddress(),
+    bridgeSecurityModule: await phase3.bridgeSecurityModule.getAddress(),
+    priceOracle: priceOracleAddress,
     
     // Phase 4
-    vfideStaking: phase4.vfideStaking.address,
-    stakingRewards: phase4.stakingRewards.address,
-    governancePower: phase4.governancePower.address,
+    vfideStaking: stakingAddress,
+    stakingRewards: await phase4.stakingRewards.getAddress(),
+    governancePower: await phase4.governancePower.getAddress(),
     
     // Phase 5
-    liquidityIncentivesV2: phase5.liquidityIncentivesV2.address,
-    lpTokenTracker: phase5.lpTokenTracker.address,
+    liquidityIncentivesV2: await phase5.liquidityIncentivesV2.getAddress(),
+    lpTokenTracker: await phase5.lpTokenTracker.getAddress(),
     
     // Phase 6
-    vfideFlashLoan: phase6.vfideFlashLoan.address,
-    vfideLending: phase6.vfideLending.address,
-    collateralManager: phase6.collateralManager.address,
+    vfideFlashLoan: await phase6.vfideFlashLoan.getAddress(),
+    vfideLending: await phase6.vfideLending.getAddress(),
+    collateralManager: await phase6.collateralManager.getAddress(),
   };
 
   console.log("\n✅ Deployment Complete!");
@@ -108,12 +116,26 @@ async function main() {
   console.log("\n💾 Addresses saved to deployments file");
 }
 
+const waitForDeployment = async (contract: Contract) => {
+  const contractWithWait = contract as Contract & { waitForDeployment?: () => Promise<void>; deployed?: () => Promise<void> };
+  if (contractWithWait.waitForDeployment) {
+    await contractWithWait.waitForDeployment();
+    return;
+  }
+  if (contractWithWait.deployed) {
+    await contractWithWait.deployed();
+  }
+};
+
 async function deployPhase3(config: DeploymentConfig) {
   // Deploy Bridge Security Module
   const BridgeSecurityModule = await ethers.getContractFactory("BridgeSecurityModule");
-  const bridgeSecurityModule = await BridgeSecurityModule.deploy(config.owner, ethers.constants.AddressZero);
-  await bridgeSecurityModule.deployed();
-  console.log("  ✓ BridgeSecurityModule:", bridgeSecurityModule.address);
+  const bridgeSecurityModule = await BridgeSecurityModule.deploy(
+    config.owner,
+    ethers.ZeroAddress
+  ) as Contract & { setBridge: (address: string) => Promise<void> };
+  await waitForDeployment(bridgeSecurityModule);
+  console.log("  ✓ BridgeSecurityModule:", await bridgeSecurityModule.getAddress());
 
   // Deploy VFIDE Bridge
   const VFIDEBridge = await ethers.getContractFactory("VFIDEBridge");
@@ -122,23 +144,23 @@ async function deployPhase3(config: DeploymentConfig) {
     config.layerZeroEndpoint,
     config.owner
   );
-  await vfideBridge.deployed();
-  console.log("  ✓ VFIDEBridge:", vfideBridge.address);
+  await waitForDeployment(vfideBridge);
+  console.log("  ✓ VFIDEBridge:", await vfideBridge.getAddress());
 
   // Update bridge address in security module
-  await bridgeSecurityModule.setBridge(vfideBridge.address);
+  await bridgeSecurityModule.setBridge(await vfideBridge.getAddress());
 
   // Deploy Price Oracle
   const VFIDEPriceOracle = await ethers.getContractFactory("VFIDEPriceOracle");
   const priceOracle = await VFIDEPriceOracle.deploy(
     config.vfideToken,
     config.quoteToken,
-    config.chainlinkFeed || ethers.constants.AddressZero,
-    config.uniswapPool || ethers.constants.AddressZero,
+    config.chainlinkFeed || ethers.ZeroAddress,
+    config.uniswapPool || ethers.ZeroAddress,
     config.owner
   );
-  await priceOracle.deployed();
-  console.log("  ✓ VFIDEPriceOracle:", priceOracle.address);
+  await waitForDeployment(priceOracle);
+  console.log("  ✓ VFIDEPriceOracle:", await priceOracle.getAddress());
 
   return { vfideBridge, bridgeSecurityModule, priceOracle };
 }
@@ -151,14 +173,14 @@ async function deployPhase4(config: DeploymentConfig) {
     config.treasury,
     config.owner
   );
-  await stakingRewards.deployed();
-  console.log("  ✓ StakingRewards:", stakingRewards.address);
+  await waitForDeployment(stakingRewards);
+  console.log("  ✓ StakingRewards:", await stakingRewards.getAddress());
 
   // Deploy Governance Power
   const GovernancePower = await ethers.getContractFactory("GovernancePower");
   const governancePower = await GovernancePower.deploy(config.owner);
-  await governancePower.deployed();
-  console.log("  ✓ GovernancePower:", governancePower.address);
+  await waitForDeployment(governancePower);
+  console.log("  ✓ GovernancePower:", await governancePower.getAddress());
 
   // Deploy VFIDE Staking
   const VFIDEStaking = await ethers.getContractFactory("VFIDEStaking");
@@ -167,8 +189,8 @@ async function deployPhase4(config: DeploymentConfig) {
     config.treasury,
     config.owner
   );
-  await vfideStaking.deployed();
-  console.log("  ✓ VFIDEStaking:", vfideStaking.address);
+  await waitForDeployment(vfideStaking);
+  console.log("  ✓ VFIDEStaking:", await vfideStaking.getAddress());
 
   return { vfideStaking, stakingRewards, governancePower };
 }
@@ -181,8 +203,8 @@ async function deployPhase5(config: DeploymentConfig, priceOracle: string) {
     config.uniswapPositionManager,
     config.owner
   );
-  await liquidityIncentivesV2.deployed();
-  console.log("  ✓ LiquidityIncentivesV2:", liquidityIncentivesV2.address);
+  await waitForDeployment(liquidityIncentivesV2);
+  console.log("  ✓ LiquidityIncentivesV2:", await liquidityIncentivesV2.getAddress());
 
   // Deploy LP Token Tracker
   const LPTokenTracker = await ethers.getContractFactory("LPTokenTracker");
@@ -191,8 +213,8 @@ async function deployPhase5(config: DeploymentConfig, priceOracle: string) {
     priceOracle,
     config.owner
   );
-  await lpTokenTracker.deployed();
-  console.log("  ✓ LPTokenTracker:", lpTokenTracker.address);
+  await waitForDeployment(lpTokenTracker);
+  console.log("  ✓ LPTokenTracker:", await lpTokenTracker.getAddress());
 
   return { liquidityIncentivesV2, lpTokenTracker };
 }
@@ -201,19 +223,19 @@ async function deployPhase6(config: DeploymentConfig, priceOracle: string, staki
   // Deploy Collateral Manager
   const CollateralManager = await ethers.getContractFactory("CollateralManager");
   const collateralManager = await CollateralManager.deploy(priceOracle, config.owner);
-  await collateralManager.deployed();
-  console.log("  ✓ CollateralManager:", collateralManager.address);
+  await waitForDeployment(collateralManager);
+  console.log("  ✓ CollateralManager:", await collateralManager.getAddress());
 
   // Deploy VFIDE Lending
   const VFIDELending = await ethers.getContractFactory("VFIDELending");
   const vfideLending = await VFIDELending.deploy(
     config.vfideToken,
-    collateralManager.address,
+    await collateralManager.getAddress(),
     priceOracle,
     config.owner
   );
-  await vfideLending.deployed();
-  console.log("  ✓ VFIDELending:", vfideLending.address);
+  await waitForDeployment(vfideLending);
+  console.log("  ✓ VFIDELending:", await vfideLending.getAddress());
 
   // Deploy Flash Loan
   const VFIDEFlashLoan = await ethers.getContractFactory("VFIDEFlashLoan");
@@ -222,32 +244,40 @@ async function deployPhase6(config: DeploymentConfig, priceOracle: string, staki
     stakingAddress, // Fees go to stakers
     config.owner
   );
-  await vfideFlashLoan.deployed();
-  console.log("  ✓ VFIDEFlashLoan:", vfideFlashLoan.address);
+  await waitForDeployment(vfideFlashLoan);
+  console.log("  ✓ VFIDEFlashLoan:", await vfideFlashLoan.getAddress());
 
   return { vfideFlashLoan, vfideLending, collateralManager };
 }
 
 async function configureContracts(contracts: DeployedContracts) {
+  const vfideBridge = contracts.vfideBridge as Contract & { setSecurityModule: (address: string) => Promise<void> };
+  const vfideStaking = contracts.vfideStaking as Contract & {
+    setRewardsContract: (address: string) => Promise<void>;
+    setGovernancePower: (address: string) => Promise<void>;
+  };
+  const stakingRewards = contracts.stakingRewards as Contract & { setStakingContract: (address: string) => Promise<void> };
+  const governancePower = contracts.governancePower as Contract & { setStakingContract: (address: string) => Promise<void> };
+  const collateralManager = contracts.collateralManager as Contract & { setLendingContract: (address: string) => Promise<void> };
   // Configure Bridge
-  await contracts.vfideBridge.setSecurityModule(contracts.bridgeSecurityModule.address);
+  await vfideBridge.setSecurityModule(await contracts.bridgeSecurityModule.getAddress());
   console.log("  ✓ Bridge configured with security module");
 
   // Configure Staking
-  await contracts.vfideStaking.setRewardsContract(contracts.stakingRewards.address);
-  await contracts.vfideStaking.setGovernancePower(contracts.governancePower.address);
+  await vfideStaking.setRewardsContract(await contracts.stakingRewards.getAddress());
+  await vfideStaking.setGovernancePower(await contracts.governancePower.getAddress());
   console.log("  ✓ Staking configured");
 
   // Configure Staking Rewards
-  await contracts.stakingRewards.setStakingContract(contracts.vfideStaking.address);
+  await stakingRewards.setStakingContract(await contracts.vfideStaking.getAddress());
   console.log("  ✓ Staking Rewards configured");
 
   // Configure Governance Power
-  await contracts.governancePower.setStakingContract(contracts.vfideStaking.address);
+  await governancePower.setStakingContract(await contracts.vfideStaking.getAddress());
   console.log("  ✓ Governance Power configured");
 
   // Configure Collateral Manager
-  await contracts.collateralManager.setLendingContract(contracts.vfideLending.address);
+  await collateralManager.setLendingContract(await contracts.vfideLending.getAddress());
   console.log("  ✓ Collateral Manager configured");
 }
 
