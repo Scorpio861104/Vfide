@@ -3,17 +3,22 @@
  * @description Deploy and configure all Phase 1 security contracts
  */
 
-import { ethers } from 'hardhat';
+import hre from 'hardhat';
 import { Contract } from 'ethers';
+
+const ethers = (hre as any).ethers;
 
 interface DeploymentConfig {
   network: string;
   admin: string;
   council: [string, string, string, string, string];
   priceOracle: string;
-  tokenName: string;
-  tokenSymbol: string;
-  initialSupply: string;
+  devReserveVestingVault: string;
+  presaleContract: string;
+  treasury: string;
+  vaultHub: string;
+  ledger: string;
+  treasurySink: string;
   pausers: string[];
   blacklistManagers: string[];
   configManagers: string[];
@@ -25,8 +30,17 @@ interface DeployedContracts {
   emergencyControl: Contract;
   circuitBreaker: Contract;
   withdrawalQueue: Contract;
-  tokenV2: Contract;
+  token: Contract;
 }
+
+type RoleGrantingContract = Contract & {
+  grantRoleWithReason: (role: string, account: string, reason: string) => Promise<{ wait: () => Promise<void> }>;
+  EMERGENCY_PAUSER_ROLE: () => Promise<string>;
+  BLACKLIST_MANAGER_ROLE: () => Promise<string>;
+  CONFIG_MANAGER_ROLE: () => Promise<string>;
+};
+
+const asRoleGrantingContract = (contract: Contract) => contract as RoleGrantingContract;
 
 /**
  * Main deployment function
@@ -41,8 +55,9 @@ async function main() {
   console.log(`   Network: ${config.network}`);
   console.log(`   Admin: ${config.admin}`);
   console.log(`   Council Size: ${config.council.length}`);
-  console.log(`   Token: ${config.tokenName} (${config.tokenSymbol})`);
-  console.log(`   Initial Supply: ${config.initialSupply}\n`);
+  console.log(`   Dev Reserve Vault: ${config.devReserveVestingVault}`);
+  console.log(`   Presale Contract: ${config.presaleContract}`);
+  console.log(`   Treasury: ${config.treasury}\n`);
 
   // Deploy contracts
   const contracts = await deployContracts(config);
@@ -85,9 +100,12 @@ function getDeploymentConfig(): DeploymentConfig {
       process.env.COUNCIL_MEMBER_5 || '',
     ],
     priceOracle: process.env.PRICE_ORACLE_ADDRESS || '',
-    tokenName: 'VFIDE Token V2',
-    tokenSymbol: 'VFIDE',
-    initialSupply: ethers.parseEther('1000000000').toString(), // 1 billion tokens
+    devReserveVestingVault: process.env.DEV_RESERVE_VESTING_VAULT || '',
+    presaleContract: process.env.PRESALE_CONTRACT || '',
+    treasury: process.env.TREASURY_ADDRESS || '',
+    vaultHub: process.env.VAULT_HUB_ADDRESS || '',
+    ledger: process.env.PROOF_LEDGER_ADDRESS || '',
+    treasurySink: process.env.TREASURY_SINK_ADDRESS || '',
     pausers: (process.env.PAUSERS || '').split(',').filter(Boolean),
     blacklistManagers: (process.env.BLACKLIST_MANAGERS || '').split(',').filter(Boolean),
     configManagers: (process.env.CONFIG_MANAGERS || '').split(',').filter(Boolean),
@@ -97,6 +115,9 @@ function getDeploymentConfig(): DeploymentConfig {
   if (!config.admin) throw new Error('Admin address not configured');
   if (config.council.some(addr => !addr)) throw new Error('All council members must be configured');
   if (!config.priceOracle) throw new Error('Price oracle address not configured');
+  if (!config.devReserveVestingVault) throw new Error('DevReserveVestingVault address not configured');
+  if (!config.presaleContract) throw new Error('Presale contract address not configured');
+  if (!config.treasury) throw new Error('Treasury address not configured');
 
   return config;
 }
@@ -106,6 +127,9 @@ function getDeploymentConfig(): DeploymentConfig {
  */
 async function deployContracts(config: DeploymentConfig): Promise<DeployedContracts> {
   const [deployer] = await ethers.getSigners();
+  if (!deployer) {
+    throw new Error('No deployer signer available');
+  }
   console.log(`📝 Deploying from: ${deployer.address}\n`);
 
   // 1. Deploy VFIDEAccessControl
@@ -148,18 +172,19 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
   await withdrawalQueue.waitForDeployment();
   console.log(`   ✓ Deployed at: ${await withdrawalQueue.getAddress()}`);
 
-  // 6. Deploy VFIDETokenV2
-  console.log('6️⃣  Deploying VFIDETokenV2...');
-  const Token = await ethers.getContractFactory('VFIDETokenV2');
-  const tokenV2 = await Token.deploy(
-    config.tokenName,
-    config.tokenSymbol,
-    config.initialSupply,
-    config.admin,
-    await multiSig.getAddress()
+  // 6. Deploy VFIDEToken (unified)
+  console.log('6️⃣  Deploying VFIDEToken...');
+  const Token = await ethers.getContractFactory('VFIDEToken');
+  const token = await Token.deploy(
+    config.devReserveVestingVault,
+    config.presaleContract,
+    config.treasury,
+    config.vaultHub,
+    config.ledger,
+    config.treasurySink
   );
-  await tokenV2.waitForDeployment();
-  console.log(`   ✓ Deployed at: ${await tokenV2.getAddress()}`);
+  await token.waitForDeployment();
+  console.log(`   ✓ Deployed at: ${await token.getAddress()}`);
 
   return {
     accessControl,
@@ -167,7 +192,7 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
     emergencyControl,
     circuitBreaker,
     withdrawalQueue,
-    tokenV2,
+    token,
   };
 }
 
@@ -180,19 +205,23 @@ async function configureContracts(
 ): Promise<void> {
   console.log('⚙️  Configuring contracts...\n');
 
+  const emergencyControl = asRoleGrantingContract(contracts.emergencyControl);
+  const circuitBreaker = asRoleGrantingContract(contracts.circuitBreaker);
+  const withdrawalQueue = asRoleGrantingContract(contracts.withdrawalQueue);
+
   // Grant emergency pauser roles
   if (config.pausers.length > 0) {
     console.log('   Granting EMERGENCY_PAUSER_ROLE...');
     for (const pauser of config.pausers) {
-      const tx1 = await contracts.emergencyControl.grantRoleWithReason(
-        await contracts.emergencyControl.EMERGENCY_PAUSER_ROLE(),
+      const tx1 = await emergencyControl.grantRoleWithReason(
+        await emergencyControl.EMERGENCY_PAUSER_ROLE(),
         pauser,
         'Phase 1 deployment'
       );
       await tx1.wait();
       
-      const tx2 = await contracts.circuitBreaker.grantRoleWithReason(
-        await contracts.circuitBreaker.EMERGENCY_PAUSER_ROLE(),
+      const tx2 = await circuitBreaker.grantRoleWithReason(
+        await circuitBreaker.EMERGENCY_PAUSER_ROLE(),
         pauser,
         'Phase 1 deployment'
       );
@@ -206,15 +235,15 @@ async function configureContracts(
   if (config.blacklistManagers.length > 0) {
     console.log('\n   Granting BLACKLIST_MANAGER_ROLE...');
     for (const manager of config.blacklistManagers) {
-      const tx1 = await contracts.emergencyControl.grantRoleWithReason(
-        await contracts.emergencyControl.BLACKLIST_MANAGER_ROLE(),
+      const tx1 = await emergencyControl.grantRoleWithReason(
+        await emergencyControl.BLACKLIST_MANAGER_ROLE(),
         manager,
         'Phase 1 deployment'
       );
       await tx1.wait();
       
-      const tx2 = await contracts.circuitBreaker.grantRoleWithReason(
-        await contracts.circuitBreaker.BLACKLIST_MANAGER_ROLE(),
+      const tx2 = await circuitBreaker.grantRoleWithReason(
+        await circuitBreaker.BLACKLIST_MANAGER_ROLE(),
         manager,
         'Phase 1 deployment'
       );
@@ -228,22 +257,22 @@ async function configureContracts(
   if (config.configManagers.length > 0) {
     console.log('\n   Granting CONFIG_MANAGER_ROLE...');
     for (const manager of config.configManagers) {
-      const tx1 = await contracts.emergencyControl.grantRoleWithReason(
-        await contracts.emergencyControl.CONFIG_MANAGER_ROLE(),
+      const tx1 = await emergencyControl.grantRoleWithReason(
+        await emergencyControl.CONFIG_MANAGER_ROLE(),
         manager,
         'Phase 1 deployment'
       );
       await tx1.wait();
       
-      const tx2 = await contracts.circuitBreaker.grantRoleWithReason(
-        await contracts.circuitBreaker.CONFIG_MANAGER_ROLE(),
+      const tx2 = await circuitBreaker.grantRoleWithReason(
+        await circuitBreaker.CONFIG_MANAGER_ROLE(),
         manager,
         'Phase 1 deployment'
       );
       await tx2.wait();
       
-      const tx3 = await contracts.withdrawalQueue.grantRoleWithReason(
-        await contracts.withdrawalQueue.CONFIG_MANAGER_ROLE(),
+      const tx3 = await withdrawalQueue.grantRoleWithReason(
+        await withdrawalQueue.CONFIG_MANAGER_ROLE(),
         manager,
         'Phase 1 deployment'
       );
@@ -265,7 +294,7 @@ async function printDeploymentSummary(contracts: DeployedContracts): Promise<voi
   console.log(`   EmergencyControlV2:   ${await contracts.emergencyControl.getAddress()}`);
   console.log(`   CircuitBreaker:       ${await contracts.circuitBreaker.getAddress()}`);
   console.log(`   WithdrawalQueue:      ${await contracts.withdrawalQueue.getAddress()}`);
-  console.log(`   VFIDETokenV2:         ${await contracts.tokenV2.getAddress()}`);
+  console.log(`   VFIDEToken:           ${await contracts.token.getAddress()}`);
   console.log('   ─────────────────────────────────────────────────────');
   
   console.log('\n📝 Next Steps:');
@@ -285,7 +314,7 @@ async function verifyContracts(contracts: DeployedContracts, config: DeploymentC
 
   const verifyContract = async (address: string, constructorArguments: any[]) => {
     try {
-      await ethers.run('verify:verify', {
+      await (hre as any).run('verify:verify', {
         address,
         constructorArguments,
       });
@@ -311,12 +340,13 @@ async function verifyContracts(contracts: DeployedContracts, config: DeploymentC
     config.admin,
     ethers.parseEther('1000000'),
   ]);
-  await verifyContract(await contracts.tokenV2.getAddress(), [
-    config.tokenName,
-    config.tokenSymbol,
-    config.initialSupply,
-    config.admin,
-    await contracts.multiSig.getAddress(),
+  await verifyContract(await contracts.token.getAddress(), [
+    config.devReserveVestingVault,
+    config.presaleContract,
+    config.treasury,
+    config.vaultHub,
+    config.ledger,
+    config.treasurySink,
   ]);
 }
 

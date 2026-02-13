@@ -54,6 +54,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
+      type: "edr-simulated" as const,
       chainId: 31337,
       forking: process.env.FORK_MAINNET === "true"
         ? {
@@ -62,26 +63,31 @@ const config: HardhatUserConfig = {
         : undefined,
     },
     sepolia: {
+      type: "http" as const,
       url: process.env.SEPOLIA_RPC_URL || "",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 11155111,
     },
     mainnet: {
+      type: "http" as const,
       url: process.env.MAINNET_RPC_URL || "",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 1,
     },
     polygon: {
+      type: "http" as const,
       url: process.env.POLYGON_RPC_URL || "",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 137,
     },
     base: {
+      type: "http" as const,
       url: process.env.BASE_RPC_URL || "",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 8453,
     },
     zkSync: {
+      type: "http" as const,
       url: process.env.ZKSYNC_RPC_URL || "",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 324,
@@ -108,6 +114,6 @@ const config: HardhatUserConfig = {
     cache: "./cache",
     artifacts: "./artifacts",
   },
-};
+} as HardhatUserConfig & { etherscan: any };
 
 export default config;
