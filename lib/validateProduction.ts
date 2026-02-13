@@ -68,9 +68,17 @@ export function validateProductionEnvironment(): ValidationResult {
   const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET !== 'false';
 
   // Check each required environment variable
+  const legacyExplorer = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL;
+
   for (const config of REQUIRED_ENV_VARS) {
     const value = process.env[config.name];
     const isEmpty = !value || value.trim() === '';
+
+    if (config.name === 'NEXT_PUBLIC_EXPLORER_URL' && isEmpty && legacyExplorer) {
+      result.warnings.push('⚠️  NEXT_PUBLIC_BLOCK_EXPLORER_URL is set; migrate to NEXT_PUBLIC_EXPLORER_URL');
+      result.info.push('✅ NEXT_PUBLIC_EXPLORER_URL satisfied by legacy NEXT_PUBLIC_BLOCK_EXPLORER_URL');
+      continue;
+    }
 
     // Check if required
     if (config.required && isEmpty) {
@@ -153,19 +161,21 @@ export function printValidationResults(result: ValidationResult): void {
 }
 
 // Run validation if executed directly
-if (require.main === module) {
+// ESM equivalent of: if (require.main === module)
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+
+if (isMainModule) {
   const result = validateProductionEnvironment();
   printValidationResults(result);
-  
-  // In CI/Vercel environments, only exit with error if there are critical failures
-  // Allow warnings and optional variables to pass
+
+  // In CI/Vercel environments, still fail if validation fails
   const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
-  
+
   if (isCI && !result.valid) {
-    console.log('⚠️  Running in CI/Deployment environment - treating validation errors as warnings');
-    console.log('⚠️  Ensure all required environment variables are configured in your deployment platform');
-    process.exit(0); // Don't fail the build
+    console.log('❌ Running in CI/Deployment environment - validation errors must be fixed');
+    console.log('❌ Configure all required environment variables in your deployment platform');
+    process.exit(1); // Fail the build to prevent deployment with missing config
   }
-  
+
   process.exit(result.valid ? 0 : 1);
 }
