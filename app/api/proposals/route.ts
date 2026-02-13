@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     // Get proposer ID
     const proposerResult = await query(
-      'SELECT id, is_council_member FROM users WHERE wallet_address = $1',
+      'SELECT id, is_council_member, proof_score FROM users WHERE wallet_address = $1',
       [proposerAddress.toLowerCase()]
     );
 
@@ -182,9 +182,23 @@ export async function POST(request: NextRequest) {
     }
 
     const proposer = proposerResult.rows[0];
+    if (!proposer) {
+      return NextResponse.json(
+        { error: 'Proposer not found' },
+        { status: 404 }
+      );
+    }
 
-    // In production, verify proposer has sufficient tokens or is council member
-    // For now, allow all proposals
+    // Check eligibility: must be council member or have sufficient proof score
+    const proofScore = Number(proposer.proof_score ?? 0);
+    const canPropose = proposer.is_council_member || proofScore >= 50;
+
+    if (!canPropose) {
+      return NextResponse.json(
+        { error: 'Insufficient governance eligibility to propose' },
+        { status: 403 }
+      );
+    }
 
     // Insert proposal
     const result = await query<Proposal>(
