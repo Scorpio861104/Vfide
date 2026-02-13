@@ -1,0 +1,13 @@
+-- Migration: User privacy settings
+-- Created: 2026-01-29T12:10:00.000Z
+
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS user_privacy_settings (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  settings JSONB NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMIT;

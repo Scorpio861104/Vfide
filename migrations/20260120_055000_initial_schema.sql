@@ -18,21 +18,24 @@ CREATE TABLE IF NOT EXISTS users (
 -- Messages table
 CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
-  sender_address VARCHAR(42) NOT NULL,
-  recipient_address VARCHAR(42) NOT NULL,
+  sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  recipient_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
+  is_encrypted BOOLEAN DEFAULT FALSE,
   is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Friends table
-CREATE TABLE IF NOT EXISTS friends (
+-- Friendships table (used by API)
+CREATE TABLE IF NOT EXISTS friendships (
   id SERIAL PRIMARY KEY,
-  user1_address VARCHAR(42) NOT NULL,
-  user2_address VARCHAR(42) NOT NULL,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  friend_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   status VARCHAR(20) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user1_address, user2_address)
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, friend_id)
 );
 
 -- Groups table
@@ -121,6 +124,9 @@ CREATE TABLE IF NOT EXISTS user_rewards (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   amount DECIMAL(18, 6) NOT NULL,
+  reward_type VARCHAR(50),
+  source_contract VARCHAR(42),
+  onchain_reward_id BIGINT,
   reason VARCHAR(100),
   status VARCHAR(20) DEFAULT 'pending',
   earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -181,12 +187,25 @@ CREATE TABLE IF NOT EXISTS endorsements (
   UNIQUE(from_user_id, to_user_id, skill)
 );
 
+-- Monthly Leaderboard table
+CREATE TABLE IF NOT EXISTS monthly_leaderboard (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  month_year VARCHAR(7) NOT NULL,
+  activity_score INTEGER DEFAULT 0,
+  prize_amount DECIMAL(36, 18) DEFAULT 0,
+  prize_claimed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, month_year)
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_wallet ON users(wallet_address);
-CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_address);
-CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_address);
-CREATE INDEX IF NOT EXISTS idx_friends_user1 ON friends(user1_address);
-CREATE INDEX IF NOT EXISTS idx_friends_user2 ON friends(user2_address);
+CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_user ON friendships(user_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_group ON group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
