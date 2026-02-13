@@ -48,7 +48,9 @@ const sendEmailCode = async (destination: string, code: string) => {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`SendGrid error: ${response.status} ${body}`);
+    // Log the full error for debugging but don't expose to client
+    console.error('[SendGrid] Error response:', response.status, body);
+    throw new Error('Email delivery service unavailable');
   }
 };
 
@@ -78,7 +80,9 @@ const sendSmsCode = async (destination: string, code: string) => {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Twilio error: ${response.status} ${body}`);
+    // Log the full error for debugging but don't expose to client
+    console.error('[Twilio] Error response:', response.status, body);
+    throw new Error('SMS delivery service unavailable');
   }
 };
 
