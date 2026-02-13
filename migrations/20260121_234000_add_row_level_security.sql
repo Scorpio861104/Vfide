@@ -41,14 +41,14 @@ CREATE POLICY messages_read_own ON messages
   FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = messages.from_user_id 
+      SELECT 1 FROM users
+      WHERE users.id = messages.sender_id
         AND users.wallet_address = current_setting('app.current_user_address', true)::text
     )
     OR
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = messages.to_user_id 
+      SELECT 1 FROM users
+      WHERE users.id = messages.recipient_id
         AND users.wallet_address = current_setting('app.current_user_address', true)::text
     )
   );
@@ -58,8 +58,8 @@ CREATE POLICY messages_insert_own ON messages
   FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = messages.from_user_id 
+      SELECT 1 FROM users
+      WHERE users.id = messages.sender_id
         AND users.wallet_address = current_setting('app.current_user_address', true)::text
     )
   );
@@ -69,43 +69,8 @@ CREATE POLICY messages_delete_own ON messages
   FOR DELETE
   USING (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = messages.from_user_id 
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-  );
-
--- ============================================================
--- PAYMENT_REQUESTS TABLE
--- ============================================================
--- Users can only see payment requests they created or received
-
-ALTER TABLE payment_requests ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can read their own payment requests
-CREATE POLICY payment_requests_read_own ON payment_requests
-  FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = payment_requests.from_user_id 
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-    OR
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = payment_requests.to_user_id 
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-  );
-
--- Policy: Users can create payment requests as themselves
-CREATE POLICY payment_requests_insert_own ON payment_requests
-  FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = payment_requests.from_user_id 
+      SELECT 1 FROM users
+      WHERE users.id = messages.sender_id
         AND users.wallet_address = current_setting('app.current_user_address', true)::text
     )
   );
@@ -140,29 +105,6 @@ CREATE POLICY user_rewards_update_own ON user_rewards
   );
 
 -- ============================================================
--- MONTHLY_LEADERBOARD TABLE
--- ============================================================
--- All users can read leaderboard, but only update their own entry
-
-ALTER TABLE monthly_leaderboard ENABLE ROW LEVEL SECURITY;
-
--- Policy: All users can read leaderboard
-CREATE POLICY monthly_leaderboard_read_all ON monthly_leaderboard
-  FOR SELECT
-  USING (true);
-
--- Policy: Users can update only their own leaderboard entry
-CREATE POLICY monthly_leaderboard_update_own ON monthly_leaderboard
-  FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = monthly_leaderboard.user_id 
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-  );
-
--- ============================================================
 -- PROPOSALS TABLE
 -- ============================================================
 -- All users can read proposals, proposers can update their own
@@ -174,27 +116,7 @@ CREATE POLICY proposals_read_all ON proposals
   FOR SELECT
   USING (true);
 
--- Policy: Users can insert proposals as themselves
-CREATE POLICY proposals_insert_own ON proposals
-  FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = proposals.proposer_id 
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-  );
-
--- Policy: Users can update only their own proposals
-CREATE POLICY proposals_update_own ON proposals
-  FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = proposals.proposer_id 
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-  );
+-- Note: proposer_id-based policies are added after the column is created in a later migration
 
 -- ============================================================
 -- ENDORSEMENTS TABLE
@@ -213,8 +135,8 @@ CREATE POLICY endorsements_insert_own ON endorsements
   FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = endorsements.endorser_id 
+      SELECT 1 FROM users
+      WHERE users.id = endorsements.from_user_id
         AND users.wallet_address = current_setting('app.current_user_address', true)::text
     )
   );
@@ -224,8 +146,8 @@ CREATE POLICY endorsements_delete_own ON endorsements
   FOR DELETE
   USING (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE users.id = endorsements.endorser_id 
+      SELECT 1 FROM users
+      WHERE users.id = endorsements.from_user_id
         AND users.wallet_address = current_setting('app.current_user_address', true)::text
     )
   );
