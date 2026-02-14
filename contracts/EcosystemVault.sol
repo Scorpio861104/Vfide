@@ -312,8 +312,14 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             uint256 toCouncil = (unallocated * councilBps) / MAX_BPS;
             uint256 toMerchant = (unallocated * merchantBps) / MAX_BPS;
             uint256 toHeadhunter = (unallocated * headhunterBps) / MAX_BPS;
-            uint256 toOperations = unallocated - toCouncil - toMerchant - toHeadhunter;
-            
+            uint256 toOperations = (unallocated * operationsBps) / MAX_BPS;
+
+            // Handle rounding dust (typically 0-3 wei max)
+            uint256 allocated = toCouncil + toMerchant + toHeadhunter + toOperations;
+            if (allocated < unallocated) {
+                toOperations += unallocated - allocated;
+            }
+
             councilPool += toCouncil;
             merchantPool += toMerchant;
             headhunterPool += toHeadhunter;
