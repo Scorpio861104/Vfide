@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
+import QRCode from 'qrcode';
+import { bytesToHex } from 'viem';
+import { generateMnemonic, mnemonicToAccount, english } from 'viem/accounts';
 import { 
   FileText,
   AlertTriangle,
@@ -22,52 +25,6 @@ import {
   Flame
 } from 'lucide-react';
 
-// Simple crypto for demo - in production, use proper cryptographic libraries
-const generateRandomBytes = (length: number): Uint8Array => {
-  const bytes = new Uint8Array(length);
-  if (typeof window !== 'undefined' && window.crypto) {
-    window.crypto.getRandomValues(bytes);
-  }
-  return bytes;
-};
-
-const bytesToHex = (bytes: Uint8Array): string => {
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-};
-
-// Generate a mock private key (32 bytes = 64 hex chars)
-const generatePrivateKey = (): string => {
-  const bytes = generateRandomBytes(32);
-  return bytesToHex(bytes);
-};
-
-// Simple checksum for address - mock implementation
-const generateAddress = (_privateKey: string): string => {
-  // In reality, this would derive from the private key using elliptic curve cryptography
-  const bytes = generateRandomBytes(20);
-  return '0x' + bytesToHex(bytes);
-};
-
-// Generate mnemonic words - simplified mock
-const WORDLIST = [
-  'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse',
-  'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act',
-  'action', 'actor', 'actress', 'actual', 'adapt', 'add', 'addict', 'address', 'adjust', 'admit',
-  'adult', 'advance', 'advice', 'aerobic', 'affair', 'afford', 'afraid', 'again', 'age', 'agent',
-  'agree', 'ahead', 'aim', 'air', 'airport', 'aisle', 'alarm', 'album', 'alcohol', 'alert',
-  'alien', 'all', 'alley', 'allow', 'almost', 'alone', 'alpha', 'already', 'also', 'alter',
-  'always', 'amateur', 'amazing', 'among', 'amount', 'amused', 'analyst', 'anchor', 'ancient', 'anger',
-  'angle', 'angry', 'animal', 'ankle', 'announce', 'annual', 'another', 'answer', 'antenna', 'antique'
-];
-
-const generateMnemonic = (): string => {
-  const words: string[] = [];
-  for (let i = 0; i < 24; i++) {
-    const randomIndex = Math.floor(Math.random() * WORDLIST.length);
-    words.push(WORDLIST[randomIndex] || '');
-  }
-  return words.join(' ');
-};
 
 // Types
 type WalletType = 'ethereum' | 'bitcoin' | 'multi';
@@ -80,56 +37,39 @@ interface GeneratedWallet {
   createdAt: Date;
 }
 
-// QR Code Component (simple SVG-based)
 const QRCodeDisplay = ({ data, size = 200, label }: { data: string; size?: number; label?: string }) => {
-  // Simple placeholder QR - in production use a proper QR library
-  const gridSize = 25;
-  const cellSize = size / gridSize;
-  
-  // Generate deterministic pattern from data
-  const pattern: boolean[] = [];
-  for (let i = 0; i < gridSize * gridSize; i++) {
-    const charCode = data.charCodeAt(i % data.length);
-    pattern.push((charCode + i) % 3 === 0);
-  }
-  
-  // Add positioning squares
-  const isPositionSquare = (x: number, y: number) => {
-    return (
-      (x < 7 && y < 7) || // Top-left
-      (x >= gridSize - 7 && y < 7) || // Top-right
-      (x < 7 && y >= gridSize - 7) // Bottom-left
-    );
-  };
-  
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    setHasError(false);
+    setDataUrl(null);
+
+    QRCode.toDataURL(data, { width: size, margin: 1 })
+      .then((url) => {
+        if (mounted) setDataUrl(url);
+      })
+      .catch(() => {
+        if (mounted) setHasError(true);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [data, size]);
+
   return (
     <div className="flex flex-col items-center">
-      <svg 
-        width={size} 
-        height={size} 
-        className="bg-white rounded-lg p-2"
-        style={{ imageRendering: 'pixelated' }}
-      >
-        {Array.from({ length: gridSize }, (_, y) =>
-          Array.from({ length: gridSize }, (_, x) => {
-            const isBlack = isPositionSquare(x, y) 
-              ? (x === 0 || x === 6 || y === 0 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4) ||
-                 x === gridSize - 7 || x === gridSize - 1 || (x >= gridSize - 5 && x <= gridSize - 3 && y >= 2 && y <= 4) ||
-                 y === gridSize - 7 || y === gridSize - 1 || (x >= 2 && x <= 4 && y >= gridSize - 5 && y <= gridSize - 3))
-              : pattern[y * gridSize + x];
-            return (
-              <rect
-                key={`${x}-${y}`}
-                x={x * cellSize}
-                y={y * cellSize}
-                width={cellSize}
-                height={cellSize}
-                fill={isBlack ? '#000' : '#fff'}
-              />
-            );
-          })
+      <div className="bg-white rounded-lg p-2" style={{ width: size, height: size }}>
+        {dataUrl ? (
+          <img src={dataUrl} alt="QR code" width={size} height={size} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-xs text-zinc-500">
+            {hasError ? 'QR unavailable' : 'Generating QR...'}
+          </div>
         )}
-      </svg>
+      </div>
       {label && <p className="text-xs text-zinc-500 mt-2">{label}</p>}
     </div>
   );
@@ -148,6 +88,7 @@ export default function PaperWalletPage() {
   const [userVerification, setUserVerification] = useState<string[]>(['', '', '']);
   const [verificationError, setVerificationError] = useState(false);
   const [_isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Security acknowledgments
@@ -162,29 +103,46 @@ export default function PaperWalletPage() {
   // Generate wallet
   const handleGenerate = useCallback(() => {
     setIsGenerating(true);
+    setGenerationError(null);
+    setStep('generate');
+
+    if (walletType === 'bitcoin') {
+      setIsGenerating(false);
+      setStep('intro');
+      setGenerationError('Bitcoin address derivation is not available in this build.');
+      return;
+    }
     
-    // Simulate generation delay for security theater
     setTimeout(() => {
-      const privateKey = generatePrivateKey();
-      const address = generateAddress(privateKey);
-      const mnemonic = generateMnemonic();
-      
+      const mnemonic = generateMnemonic(english);
+      const account = mnemonicToAccount(mnemonic);
+      const hdKey = account.getHdKey();
+      const privateKeyBytes = hdKey.privateKey;
+
+      if (!privateKeyBytes) {
+        setIsGenerating(false);
+        setStep('intro');
+        setGenerationError('Failed to derive private key. Please try again.');
+        return;
+      }
+
+      const privateKey = bytesToHex(privateKeyBytes);
+
       setWallet({
         type: walletType,
-        address,
+        address: account.address,
         privateKey,
         mnemonic,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
-      
-      // Pick 3 random words for verification
+
       const words = mnemonic.split(' ');
-      const indices = [4, 12, 20]; // Word positions to verify
-      setVerificationWords(indices.map(i => words[i] || ''));
-      
+      const indices = [4, 12, 20];
+      setVerificationWords(indices.map((i) => words[i] || ''));
+
       setIsGenerating(false);
       setStep('display');
-    }, 2000);
+    }, 500);
   }, [walletType]);
 
   // Copy to clipboard
@@ -298,10 +256,15 @@ export default function PaperWalletPage() {
               {/* Wallet Type Selection */}
               <div className="p-6 bg-zinc-900/50 border border-zinc-700 rounded-xl">
                 <h3 className="text-lg font-semibold text-white mb-4">Select Wallet Type</h3>
+                {generationError && (
+                  <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+                    {generationError}
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
                     { type: 'ethereum' as const, name: 'Ethereum', icon: '⟠', desc: 'ETH & ERC-20 tokens' },
-                    { type: 'bitcoin' as const, name: 'Bitcoin', icon: '₿', desc: 'BTC only' },
+                    { type: 'bitcoin' as const, name: 'Bitcoin', icon: '₿', desc: 'BTC' },
                     { type: 'multi' as const, name: 'Multi-Chain', icon: '🔗', desc: 'Universal seed phrase' }
                   ].map(({ type, name, icon, desc }) => (
                     <button
@@ -309,7 +272,7 @@ export default function PaperWalletPage() {
                       onClick={() => setWalletType(type)}
                       className={`p-4 rounded-xl border text-left transition-all ${
                         walletType === type
-                          ? 'border-jade-400 bg-jade-500/10'
+                          ? 'border-emerald-400 bg-emerald-500/10'
                           : 'border-zinc-700 bg-zinc-800/50 hover:border-zinc-600'
                       }`}
                     >
@@ -324,7 +287,7 @@ export default function PaperWalletPage() {
               {/* Security Acknowledgments */}
               <div className="p-6 bg-zinc-900/50 border border-zinc-700 rounded-xl">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Shield className="text-jade-400" size={20} />
+                  <Shield className="text-emerald-400" size={20} />
                   Security Checklist
                 </h3>
                 <p className="text-zinc-400 text-sm mb-4">
@@ -337,7 +300,7 @@ export default function PaperWalletPage() {
                       type="checkbox"
                       checked={acknowledged.offline}
                       onChange={(e) => setAcknowledged(prev => ({ ...prev, offline: e.target.checked }))}
-                      className="mt-1 w-5 h-5 rounded border-zinc-600 text-jade-500 focus:ring-jade-500"
+                      className="mt-1 w-5 h-5 rounded border-zinc-600 text-emerald-500 focus:ring-emerald-500"
                     />
                     <div>
                       <p className="font-medium text-white">Generate Offline (Recommended)</p>
@@ -352,7 +315,7 @@ export default function PaperWalletPage() {
                       type="checkbox"
                       checked={acknowledged.secure}
                       onChange={(e) => setAcknowledged(prev => ({ ...prev, secure: e.target.checked }))}
-                      className="mt-1 w-5 h-5 rounded border-zinc-600 text-jade-500 focus:ring-jade-500"
+                      className="mt-1 w-5 h-5 rounded border-zinc-600 text-emerald-500 focus:ring-emerald-500"
                     />
                     <div>
                       <p className="font-medium text-white">I understand private key security</p>
@@ -367,7 +330,7 @@ export default function PaperWalletPage() {
                       type="checkbox"
                       checked={acknowledged.backup}
                       onChange={(e) => setAcknowledged(prev => ({ ...prev, backup: e.target.checked }))}
-                      className="mt-1 w-5 h-5 rounded border-zinc-600 text-jade-500 focus:ring-jade-500"
+                      className="mt-1 w-5 h-5 rounded border-zinc-600 text-emerald-500 focus:ring-emerald-500"
                     />
                     <div>
                       <p className="font-medium text-white">I will store this securely</p>
@@ -385,7 +348,7 @@ export default function PaperWalletPage() {
                 disabled={!allAcknowledged}
                 className={`w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 ${
                   allAcknowledged
-                    ? 'bg-gradient-to-r from-jade-500 to-teal-500 text-black'
+                    ? 'bg-linear-to-r from-emerald-500 to-teal-500 text-black'
                     : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                 }`}
               >
@@ -398,8 +361,8 @@ export default function PaperWalletPage() {
                 <h3 className="text-lg font-semibold text-white mb-4">Best Practices</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-jade-500/10 rounded-lg">
-                      <Flame className="text-jade-400" size={18} />
+                    <div className="p-2 bg-emerald-500/10 rounded-lg">
+                      <Flame className="text-emerald-400" size={18} />
                     </div>
                     <div>
                       <p className="font-medium text-white text-sm">Fireproof Storage</p>
@@ -407,8 +370,8 @@ export default function PaperWalletPage() {
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-jade-500/10 rounded-lg">
-                      <Copy className="text-jade-400" size={18} />
+                    <div className="p-2 bg-emerald-500/10 rounded-lg">
+                      <Copy className="text-emerald-400" size={18} />
                     </div>
                     <div>
                       <p className="font-medium text-white text-sm">Multiple Copies</p>
@@ -416,8 +379,8 @@ export default function PaperWalletPage() {
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-jade-500/10 rounded-lg">
-                      <Lock className="text-jade-400" size={18} />
+                    <div className="p-2 bg-emerald-500/10 rounded-lg">
+                      <Lock className="text-emerald-400" size={18} />
                     </div>
                     <div>
                       <p className="font-medium text-white text-sm">Laminate</p>
@@ -425,8 +388,8 @@ export default function PaperWalletPage() {
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-jade-500/10 rounded-lg">
-                      <EyeOff className="text-jade-400" size={18} />
+                    <div className="p-2 bg-emerald-500/10 rounded-lg">
+                      <EyeOff className="text-emerald-400" size={18} />
                     </div>
                     <div>
                       <p className="font-medium text-white text-sm">Private Printing</p>
@@ -452,7 +415,7 @@ export default function PaperWalletPage() {
                 transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                 className="inline-block mb-6"
               >
-                <RefreshCw className="text-jade-400" size={48} />
+                <RefreshCw className="text-emerald-400" size={48} />
               </motion.div>
               <h3 className="text-xl font-semibold text-white mb-2">Generating Secure Keys...</h3>
               <p className="text-zinc-400">Using cryptographically secure random number generation</p>
@@ -469,11 +432,11 @@ export default function PaperWalletPage() {
               className="space-y-6"
             >
               {/* Success Banner */}
-              <div className="p-4 bg-jade-500/10 border border-jade-500/30 rounded-xl flex items-center gap-3">
-                <CheckCircle className="text-jade-400" size={24} />
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-3">
+                <CheckCircle className="text-emerald-400" size={24} />
                 <div>
-                  <p className="font-semibold text-jade-300">Wallet Generated Successfully</p>
-                  <p className="text-jade-200/80 text-sm">
+                  <p className="font-semibold text-emerald-300">Wallet Generated Successfully</p>
+                  <p className="text-emerald-200/80 text-sm">
                     Created at {wallet.createdAt.toLocaleString()}
                   </p>
                 </div>
@@ -519,11 +482,18 @@ export default function PaperWalletPage() {
                         </h3>
                         <p className="text-xs text-red-600">NEVER SHARE - Full control of funds</p>
                       </div>
-                      <QRCodeDisplay data={wallet.privateKey} size={120} />
+                      <div className={showPrivateKey ? '' : 'no-print blur-lg'}>
+                        <QRCodeDisplay data={wallet.privateKey} size={120} />
+                      </div>
                     </div>
-                    <div className="p-3 bg-white rounded font-mono text-sm break-all border border-red-300">
+                    <div className={`p-3 bg-white rounded font-mono text-sm break-all border border-red-300 ${showPrivateKey ? '' : 'no-print blur-lg select-none'}`}>
                       {wallet.privateKey}
                     </div>
+                    {!showPrivateKey && (
+                      <div className="no-print mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
+                        🔒 Private key hidden for security. Click "Show Private Key" below to reveal.
+                      </div>
+                    )}
                   </div>
 
                   {/* Seed Phrase */}
@@ -535,7 +505,7 @@ export default function PaperWalletPage() {
                     <p className="text-xs text-amber-600 mb-4">
                       Write these words in order. This recovers your wallet.
                     </p>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className={`grid grid-cols-4 gap-2 ${showMnemonic ? '' : 'no-print blur-lg select-none'}`}>
                       {wallet.mnemonic.split(' ').map((word, idx) => (
                         <div key={idx} className="p-2 bg-white rounded border border-amber-300 text-center">
                           <span className="text-xs text-amber-600">{idx + 1}.</span>{' '}
@@ -543,6 +513,11 @@ export default function PaperWalletPage() {
                         </div>
                       ))}
                     </div>
+                    {!showMnemonic && (
+                      <div className="no-print mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
+                        🔒 Recovery phrase hidden for security. Click "Show Seed Phrase" below to reveal.
+                      </div>
+                    )}
                   </div>
 
                   {/* Security Notice */}
@@ -562,7 +537,7 @@ export default function PaperWalletPage() {
                     onClick={() => handleCopy(wallet.address, 'address')}
                     className="p-4 bg-zinc-800 rounded-xl flex items-center justify-center gap-2 hover:bg-zinc-700"
                   >
-                    {copiedAddress ? <Check className="text-jade-400" size={18} /> : <Copy size={18} className="text-zinc-400" />}
+                    {copiedAddress ? <Check className="text-emerald-400" size={18} /> : <Copy size={18} className="text-zinc-400" />}
                     <span className="text-white">Copy Address</span>
                   </button>
                   
@@ -587,7 +562,7 @@ export default function PaperWalletPage() {
                 <div className="flex gap-4">
                   <button
                     onClick={handlePrint}
-                    className="flex-1 py-4 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-xl flex items-center justify-center gap-2"
+                    className="flex-1 py-4 bg-linear-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-xl flex items-center justify-center gap-2"
                   >
                     <Printer size={20} />
                     Print Wallet
@@ -604,7 +579,7 @@ export default function PaperWalletPage() {
                 {/* Verification Prompt */}
                 <div className="p-6 bg-zinc-900/50 border border-zinc-700 rounded-xl">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <CheckCircle className="text-jade-400" size={20} />
+                    <CheckCircle className="text-emerald-400" size={20} />
                     Verify Your Backup
                   </h3>
                   <p className="text-zinc-400 text-sm mb-4">
@@ -626,7 +601,7 @@ export default function PaperWalletPage() {
                           }}
                           placeholder="Enter word"
                           className={`w-full px-4 py-2 bg-zinc-800 border rounded-lg text-white placeholder-zinc-500 focus:outline-none ${
-                            verificationError ? 'border-red-500' : 'border-zinc-700 focus:border-jade-500'
+                            verificationError ? 'border-red-500' : 'border-zinc-700 focus:border-emerald-500'
                           }`}
                         />
                       </div>
@@ -642,7 +617,7 @@ export default function PaperWalletPage() {
                   
                   <button
                     onClick={handleVerify}
-                    className="px-6 py-2 bg-jade-500/20 text-jade-400 rounded-lg hover:bg-jade-500/30"
+                    className="px-6 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30"
                   >
                     Verify Backup
                   </button>
@@ -659,16 +634,16 @@ export default function PaperWalletPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="space-y-6"
             >
-              <div className="p-8 bg-jade-500/10 border border-jade-500/30 rounded-xl text-center">
+              <div className="p-8 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', delay: 0.2 }}
                 >
-                  <CheckCircle className="text-jade-400 mx-auto mb-4" size={64} />
+                  <CheckCircle className="text-emerald-400 mx-auto mb-4" size={64} />
                 </motion.div>
                 <h2 className="text-2xl font-bold text-white mb-2">Backup Verified!</h2>
-                <p className="text-jade-200">
+                <p className="text-emerald-200">
                   Your paper wallet is ready for secure storage
                 </p>
               </div>
@@ -696,7 +671,7 @@ export default function PaperWalletPage() {
               <div className="flex gap-4">
                 <button
                   onClick={handlePrint}
-                  className="flex-1 py-4 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-xl flex items-center justify-center gap-2"
+                  className="flex-1 py-4 bg-linear-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-xl flex items-center justify-center gap-2"
                 >
                   <Printer size={20} />
                   Print Again
@@ -722,8 +697,8 @@ export default function PaperWalletPage() {
                     'I understand not to store this digitally'
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-center gap-3 p-2">
-                      <div className="w-5 h-5 rounded border border-jade-400 flex items-center justify-center">
-                        <Check className="text-jade-400" size={14} />
+                      <div className="w-5 h-5 rounded border border-emerald-400 flex items-center justify-center">
+                        <Check className="text-emerald-400" size={14} />
                       </div>
                       <span className="text-zinc-300 text-sm">{item}</span>
                     </div>
