@@ -18,29 +18,45 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_RPC_URL', required: true, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_EXPLORER_URL', required: true, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_IS_TESTNET', required: true, category: 'blockchain' },
-  
+
   // WalletConnect (optional but recommended)
   { name: 'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_WAGMI_PROJECT_ID', required: false, category: 'blockchain' },
-  
+
   // Application URLs
   { name: 'NEXT_PUBLIC_APP_URL', required: true, category: 'api', production: true },
   { name: 'NEXT_PUBLIC_API_URL', required: false, category: 'api' },
   { name: 'NEXT_PUBLIC_WEBSOCKET_URL', required: false, category: 'api' },
-  
+
   // Database (Server-side)
   { name: 'DATABASE_URL', required: true, category: 'api', production: true },
-  
+
   // Security & Rate Limiting
   { name: 'UPSTASH_REDIS_REST_URL', required: false, category: 'security' },
   { name: 'UPSTASH_REDIS_REST_TOKEN', required: false, category: 'security' },
   { name: 'JWT_SECRET', required: true, category: 'security', production: true },
-  
+
   // Monitoring & Error Tracking
   { name: 'NEXT_PUBLIC_SENTRY_DSN', required: false, category: 'monitoring' },
   { name: 'SENTRY_AUTH_TOKEN', required: false, category: 'monitoring', production: true },
   { name: 'NEXT_PUBLIC_GA_MEASUREMENT_ID', required: false, category: 'monitoring' },
-  
+
+  // Avatar Storage (S3-Compatible) - Optional but disables avatar uploads if missing
+  { name: 'S3_BUCKET', required: false, category: 'feature' },
+  { name: 'S3_ACCESS_KEY_ID', required: false, category: 'feature' },
+  { name: 'S3_SECRET_ACCESS_KEY', required: false, category: 'feature' },
+  { name: 'S3_REGION', required: false, category: 'feature' },
+  { name: 'S3_PUBLIC_BASE_URL', required: false, category: 'feature' },
+
+  // Email Service (SendGrid) - Optional but disables email 2FA if missing
+  { name: 'SENDGRID_API_KEY', required: false, category: 'feature' },
+  { name: 'SENDGRID_FROM_EMAIL', required: false, category: 'feature' },
+
+  // SMS Service (Twilio) - Optional but disables SMS 2FA if missing
+  { name: 'TWILIO_ACCOUNT_SID', required: false, category: 'feature' },
+  { name: 'TWILIO_AUTH_TOKEN', required: false, category: 'feature' },
+  { name: 'TWILIO_FROM_NUMBER', required: false, category: 'feature' },
+
   // Feature Flags
   { name: 'NEXT_PUBLIC_ENABLE_ANALYTICS', required: false, category: 'feature' },
   { name: 'NEXT_PUBLIC_ENABLE_CHAT', required: false, category: 'feature' },
@@ -125,6 +141,45 @@ export function validateProductionEnvironment(): ValidationResult {
     if (!process.env.UPSTASH_REDIS_REST_URL) {
       result.warnings.push('⚠️  Redis/Upstash is not configured - rate limiting may not work properly');
     }
+  }
+
+  // Check for partial service configurations (misconfiguration detection)
+  const s3Vars = ['S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_REGION'];
+  const s3Configured = s3Vars.filter(v => process.env[v]);
+  if (s3Configured.length > 0 && s3Configured.length < s3Vars.length) {
+    result.errors.push(`❌ Partial S3 configuration detected. Required: ${s3Vars.join(', ')}`);
+    result.errors.push(`   Missing: ${s3Vars.filter(v => !process.env[v]).join(', ')}`);
+    result.valid = false;
+  } else if (s3Configured.length === 0) {
+    result.warnings.push('⚠️  S3 storage not configured - avatar uploads will be disabled');
+  }
+
+  const sendgridVars = ['SENDGRID_API_KEY', 'SENDGRID_FROM_EMAIL'];
+  const sendgridConfigured = sendgridVars.filter(v => process.env[v]);
+  if (sendgridConfigured.length > 0 && sendgridConfigured.length < sendgridVars.length) {
+    result.errors.push(`❌ Partial SendGrid configuration. Required: ${sendgridVars.join(', ')}`);
+    result.errors.push(`   Missing: ${sendgridVars.filter(v => !process.env[v]).join(', ')}`);
+    result.valid = false;
+  } else if (sendgridConfigured.length === 0) {
+    result.warnings.push('⚠️  SendGrid not configured - email 2FA will be disabled');
+  }
+
+  const twilioVars = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM_NUMBER'];
+  const twilioConfigured = twilioVars.filter(v => process.env[v]);
+  if (twilioConfigured.length > 0 && twilioConfigured.length < twilioVars.length) {
+    result.errors.push(`❌ Partial Twilio configuration. Required: ${twilioVars.join(', ')}`);
+    result.errors.push(`   Missing: ${twilioVars.filter(v => !process.env[v]).join(', ')}`);
+    result.valid = false;
+  } else if (twilioConfigured.length === 0) {
+    result.warnings.push('⚠️  Twilio not configured - SMS 2FA will be disabled');
+  }
+
+  const redisVars = ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'];
+  const redisConfigured = redisVars.filter(v => process.env[v]);
+  if (redisConfigured.length > 0 && redisConfigured.length < redisVars.length) {
+    result.errors.push(`❌ Partial Redis configuration. Required: ${redisVars.join(', ')}`);
+    result.errors.push(`   Missing: ${redisVars.filter(v => !process.env[v]).join(', ')}`);
+    result.valid = false;
   }
 
   return result;
