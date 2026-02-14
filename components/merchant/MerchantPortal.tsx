@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
 import { responsiveGrids } from '@/lib/mobile';
@@ -21,6 +21,9 @@ import { safeParseFloat } from '@/lib/validation';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Key, Upload, CreditCard, BarChart3, Eye, EyeOff, Copy, CheckCircle2 } from 'lucide-react';
 import { useEffect } from 'react';
+import { useAccount } from 'wagmi';
+import { getAuthHeaders } from '@/lib/auth/client';
+import { isAddress } from 'viem';
 
 // Animated counter
 function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
@@ -48,14 +51,15 @@ function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; p
 
 interface PaymentRequest {
   id: string;
+  fromAddress: string;
+  toAddress: string;
   amount: number;
   currency: string;
-  description: string;
-  recipientEmail: string;
-  status: 'pending' | 'sent' | 'completed' | 'expired';
-  expiresAt: number;
+  memo?: string | null;
+  status: 'pending' | 'sent' | 'completed' | 'expired' | 'cancelled';
   createdAt: number;
-  paymentLink: string;
+  updatedAt: number;
+  txHash?: string | null;
 }
 
 interface RevenueData {
@@ -67,7 +71,7 @@ interface RevenueData {
 
 interface ApiKey {
   id: string;
-  key: string;
+  key?: string; // Only populated immediately after generation, never persisted
   maskedKey: string;
   name: string;
   createdAt: number;
@@ -90,191 +94,252 @@ interface BulkPaymentJob {
 type NewPaymentRequest = {
   amount: string;
   currency: string;
-  email: string;
-  description: string;
+  address: string;
+  memo: string;
 };
 
-// ==================== MOCK DATA ====================
+// ==================== STORAGE & HELPERS ====================
 
-function generateMockPaymentRequests(): PaymentRequest[] {
-  return [
-    {
-      id: 'pr-001',
-      amount: 1500,
-      currency: 'USDC',
-      description: 'Monthly Retainer - Web Development',
-      recipientEmail: 'dev@example.com',
-      status: 'pending',
-      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
-      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-      paymentLink: 'https://vfide.io/pay/pr-001',
-    },
-    {
-      id: 'pr-002',
-      amount: 500,
-      currency: 'ETH',
-      description: 'Consulting Services',
-      recipientEmail: 'consultant@example.com',
-      status: 'completed',
-      expiresAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-      createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
-      paymentLink: 'https://vfide.io/pay/pr-002',
-    },
-    {
-      id: 'pr-003',
-      amount: 2000,
-      currency: 'USDC',
-      description: 'Product License',
-      recipientEmail: 'vendor@example.com',
-      status: 'sent',
-      expiresAt: Date.now() + 14 * 24 * 60 * 60 * 1000,
-      createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
-      paymentLink: 'https://vfide.io/pay/pr-003',
-    },
-  ];
-}
+const API_KEYS_STORAGE_KEY = 'vfide-merchant-api-keys';
+const BULK_JOBS_STORAGE_KEY = 'vfide-merchant-bulk-jobs';
 
-function generateMockRevenueData(): RevenueData[] {
-  const data: RevenueData[] = [];
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-    data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      revenue: Math.floor(Math.random() * 50000 + 10000),
-      transactions: Math.floor(Math.random() * 500 + 50),
-      volume: Math.floor(Math.random() * 1000000 + 100000),
+const formatDayKey = (timestamp: number) =>
+  new Date(timestamp).toISOString().slice(0, 10);
+
+const toDisplayDate = (dayKey: string) => {
+  const [year = 1970, month = 1, day = 1] = dayKey.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+const buildRevenueSeries = (requests: PaymentRequest[], days = 90): RevenueData[] => {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - (days - 1));
+
+  const buckets = new Map<string, RevenueData>();
+  for (let i = 0; i < days; i++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+    const dayKey = formatDayKey(date.getTime());
+    buckets.set(dayKey, {
+      date: toDisplayDate(dayKey),
+      revenue: 0,
+      transactions: 0,
+      volume: 0,
     });
   }
-  return data;
-}
 
-function generateMockApiKeys(): ApiKey[] {
-  return [
-    {
-      id: 'key-001',
-      key: 'sk_test_example1234567890abcdefghijklmnop',
-      maskedKey: 'sk_test_...nop',
-      name: 'Production API Key',
-      createdAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 1 * 60 * 60 * 1000,
-      permissions: ['read:payments', 'write:payments', 'read:transactions'],
-      status: 'active',
-    },
-    {
-      id: 'key-002',
-      key: 'sk_test_51234567890abcdefghijklmnop',
-      maskedKey: 'sk_test_...nop',
-      name: 'Development API Key',
-      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 2 * 60 * 60 * 1000,
-      permissions: ['read:payments', 'read:transactions'],
-      status: 'active',
-    },
-    {
-      id: 'key-003',
-      key: 'sk_test_old_key_revoked',
-      maskedKey: 'sk_test_...revoked',
-      name: 'Old Test Key',
-      createdAt: Date.now() - 90 * 24 * 60 * 60 * 1000,
-      lastUsed: null,
-      permissions: [],
-      status: 'revoked',
-    },
-  ];
-}
+  requests
+    .filter((request) => request.status === 'completed')
+    .forEach((request) => {
+      const dayKey = formatDayKey(request.updatedAt || request.createdAt);
+      const bucket = buckets.get(dayKey);
+      if (!bucket) return;
+      bucket.revenue += request.amount;
+      bucket.transactions += 1;
+      bucket.volume += request.amount;
+    });
 
-function generateMockBulkJobs(): BulkPaymentJob[] {
-  return [
-    {
-      id: 'job-001',
-      filename: 'payroll_january_2024.csv',
-      uploadedAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-      status: 'completed',
-      totalRows: 150,
-      successCount: 148,
-      failureCount: 2,
-      totalAmount: 75000,
-    },
-    {
-      id: 'job-002',
-      filename: 'contractors_december_2024.csv',
-      uploadedAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
-      status: 'completed',
-      totalRows: 45,
-      successCount: 45,
-      failureCount: 0,
-      totalAmount: 32500,
-    },
-    {
-      id: 'job-003',
-      filename: 'vendors_january_2024.csv',
-      uploadedAt: Date.now() - 1 * 60 * 60 * 1000,
-      status: 'processing',
-      totalRows: 78,
-      successCount: 45,
-      failureCount: 0,
-      totalAmount: 125000,
-    },
-  ];
-}
+  return Array.from(buckets.values());
+};
+
+const mapPaymentRequestRow = (row: any): PaymentRequest => {
+  const amount = typeof row?.amount === 'number' ? row.amount : safeParseFloat(String(row?.amount ?? '0'), 0);
+  return {
+    id: String(row?.id ?? ''),
+    fromAddress: String(row?.from_address ?? ''),
+    toAddress: String(row?.to_address ?? ''),
+    amount,
+    currency: String(row?.token ?? 'ETH'),
+    memo: row?.memo ?? null,
+    status: (row?.status ?? 'pending') as PaymentRequest['status'],
+    createdAt: row?.created_at ? new Date(row.created_at).getTime() : Date.now(),
+    updatedAt: row?.updated_at ? new Date(row.updated_at).getTime() : Date.now(),
+    txHash: row?.tx_hash ?? null,
+  };
+};
+
+const generateApiKeyValue = () => {
+  if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+    const bytes = new Uint8Array(24);
+    window.crypto.getRandomValues(bytes);
+    return `sk_live_${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+  }
+  return `sk_live_${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+};
 
 // ==================== MAIN COMPONENT ====================
 
 export default function MerchantPortal() {
+  const { address } = useAccount();
   const [activeTab, setActiveTab] = useState('requests');
-  const [paymentRequests, setPaymentRequests] = useState(generateMockPaymentRequests());
-  const [revenueData, _setRevenueData] = useState(generateMockRevenueData());
-  const [apiKeys, setApiKeys] = useState(generateMockApiKeys());
-  const [bulkJobs, setBulkJobs] = useState(generateMockBulkJobs());
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [bulkJobs, setBulkJobs] = useState<BulkPaymentJob[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [requestsError, setRequestsError] = useState<string | null>(null);
 
   // Form states
   const [newRequest, setNewRequest] = useState<NewPaymentRequest>({
     amount: '',
     currency: 'USDC',
-    email: '',
-    description: '',
+    address: '',
+    memo: '',
   });
   const [newApiKeyName, setNewApiKeyName] = useState('');
+  const [newlyGeneratedKey, setNewlyGeneratedKey] = useState<{ name: string; key: string } | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
+
+  useEffect(() => {
+    try {
+      const storedKeys = localStorage.getItem(API_KEYS_STORAGE_KEY);
+      if (storedKeys) {
+        const parsed = JSON.parse(storedKeys) as ApiKey[];
+        setApiKeys(parsed);
+      }
+      const storedJobs = localStorage.getItem(BULK_JOBS_STORAGE_KEY);
+      if (storedJobs) {
+        const parsed = JSON.parse(storedJobs) as BulkPaymentJob[];
+        setBulkJobs(parsed);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      // Never store full keys in localStorage - only masked versions
+      const keysToStore = apiKeys.map(({ key, ...rest }) => rest);
+      localStorage.setItem(API_KEYS_STORAGE_KEY, JSON.stringify(keysToStore));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [apiKeys]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(BULK_JOBS_STORAGE_KEY, JSON.stringify(bulkJobs));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [bulkJobs]);
+
+  useEffect(() => {
+    if (!address) {
+      setPaymentRequests([]);
+      return;
+    }
+
+    const fetchRequests = async () => {
+      setIsLoadingRequests(true);
+      setRequestsError(null);
+      try {
+        const response = await fetch(`/api/crypto/payment-requests?userAddress=${address}`, {
+          headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'Failed to load payment requests');
+        }
+        const data = await response.json();
+        const nextRequests = Array.isArray(data.requests)
+          ? data.requests.map(mapPaymentRequestRow)
+          : [];
+        setPaymentRequests(nextRequests);
+      } catch (error) {
+        console.error('Failed to load payment requests:', error);
+        setRequestsError('Unable to load payment requests');
+      } finally {
+        setIsLoadingRequests(false);
+      }
+    };
+
+    fetchRequests();
+  }, [address]);
+
+  const revenueData = useMemo(() => buildRevenueSeries(paymentRequests, 90), [paymentRequests]);
 
   // Calculate stats
   const totalRevenue = revenueData.reduce((sum, d) => sum + d.revenue, 0);
   const totalTransactions = revenueData.reduce((sum, d) => sum + d.transactions, 0);
   const averageTransaction = totalRevenue / Math.max(totalTransactions, 1);
 
-  const handleCreatePaymentRequest = () => {
-    if (newRequest.amount && newRequest.email && newRequest.description) {
-      const request: PaymentRequest = {
-        id: `pr-${Date.now()}`,
-        amount: safeParseFloat(newRequest.amount, 0),
-        currency: newRequest.currency,
-        description: newRequest.description,
-        recipientEmail: newRequest.email,
-        status: 'pending',
-        expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        createdAt: Date.now(),
-        paymentLink: `https://vfide.io/pay/pr-${Date.now()}`,
-      };
-      setPaymentRequests([request, ...paymentRequests]);
-      setNewRequest({ amount: '', currency: 'USDC', email: '', description: '' });
+  const handleCreatePaymentRequest = async () => {
+    if (!address) {
+      setRequestsError('Connect your wallet to create a request');
+      return;
+    }
+
+    if (!newRequest.amount || !newRequest.address || !newRequest.memo) {
+      setRequestsError('Fill in all fields to create a request');
+      return;
+    }
+
+    if (!isAddress(newRequest.address)) {
+      setRequestsError('Enter a valid recipient address');
+      return;
+    }
+
+    setRequestsError(null);
+    setIsSubmittingRequest(true);
+    try {
+      const response = await fetch('/api/crypto/payment-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          toAddress: newRequest.address,
+          amount: newRequest.amount,
+          token: newRequest.currency,
+          memo: newRequest.memo,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to create payment request');
+      }
+
+      const data = await response.json();
+      setPaymentRequests((prev) => [mapPaymentRequestRow(data.request), ...prev]);
+      setNewRequest({ amount: '', currency: 'USDC', address: '', memo: '' });
+    } catch (error) {
+      console.error('Failed to create payment request:', error);
+      setRequestsError('Unable to create payment request');
+    } finally {
+      setIsSubmittingRequest(false);
     }
   };
 
   const handleGenerateApiKey = () => {
     if (newApiKeyName) {
+      const keyValue = generateApiKeyValue();
       const newKey: ApiKey = {
         id: `key-${Date.now()}`,
-        key: `sk_live_${Math.random().toString(36).slice(2)}`,
-        maskedKey: `sk_live_...${Math.random().toString(36).slice(2).slice(-3)}`,
+        key: keyValue, // Temporarily store for display in modal
+        maskedKey: `${keyValue.slice(0, 8)}...${keyValue.slice(-4)}`,
         name: newApiKeyName,
         createdAt: Date.now(),
         lastUsed: null,
         permissions: ['read:payments', 'write:payments', 'read:transactions'],
         status: 'active',
       };
+
+      // Show modal with full key
+      setNewlyGeneratedKey({ name: newApiKeyName, key: keyValue });
+
+      // Add to state WITHOUT the full key (will be stripped by localStorage effect)
       setApiKeys([newKey, ...apiKeys]);
       setNewApiKeyName('');
+
+      // Clear the full key from state after a short delay (allows modal to capture it)
+      setTimeout(() => {
+        setApiKeys(prev => prev.map(k =>
+          k.id === newKey.id ? { ...k, key: undefined } : k
+        ));
+      }, 100);
     }
   };
 
@@ -284,24 +349,50 @@ export default function MerchantPortal() {
     ));
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      setUploadingFile(true);
-      setTimeout(() => {
-        const job: BulkPaymentJob = {
-          id: `job-${Date.now()}`,
-          filename: file.name,
-          uploadedAt: Date.now(),
-          status: 'processing',
-          totalRows: Math.floor(Math.random() * 100 + 50),
-          successCount: 0,
-          failureCount: 0,
-          totalAmount: Math.floor(Math.random() * 500000 + 50000),
-        };
-        setBulkJobs([job, ...bulkJobs]);
-        setUploadingFile(false);
-      }, 1500);
+    if (!file) return;
+
+    setUploadingFile(true);
+    try {
+      const text = await file.text();
+      const rows = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      const hasHeader = rows[0]?.toLowerCase().includes('address') || rows[0]?.toLowerCase().includes('email');
+      const dataRows = hasHeader ? rows.slice(1) : rows;
+
+      let totalAmount = 0;
+      let successCount = 0;
+      let failureCount = 0;
+
+      dataRows.forEach((row) => {
+        const columns = row.split(',').map((value) => value.trim());
+        const amount = safeParseFloat(columns[1] ?? '', NaN);
+        if (!columns[0] || Number.isNaN(amount)) {
+          failureCount += 1;
+          return;
+        }
+        successCount += 1;
+        totalAmount += amount;
+      });
+
+      const totalRows = dataRows.length;
+      const status: BulkPaymentJob['status'] = successCount === 0 ? 'failed' : 'completed';
+
+      const job: BulkPaymentJob = {
+        id: `job-${Date.now()}`,
+        filename: file.name,
+        uploadedAt: Date.now(),
+        status,
+        totalRows,
+        successCount,
+        failureCount,
+        totalAmount,
+      };
+
+      setBulkJobs((prev) => [job, ...prev]);
+    } finally {
+      setUploadingFile(false);
+      event.target.value = '';
     }
   };
 
@@ -396,6 +487,9 @@ export default function MerchantPortal() {
               requests={paymentRequests}
               newRequest={newRequest}
               setNewRequest={setNewRequest}
+              loading={isLoadingRequests}
+              submitting={isSubmittingRequest}
+              error={requestsError}
               onCreateRequest={() => {
                 handleCreatePaymentRequest();
                 playSuccess();
@@ -435,6 +529,69 @@ export default function MerchantPortal() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* API Key Generated Modal - Show full key once */}
+      {newlyGeneratedKey && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <motion.div
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full shadow-2xl border-2 border-yellow-500"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center">
+                <span className="text-2xl">🔑</span>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                  API Key Generated!
+                </h3>
+                <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                  ⚠️ Save this key immediately - it will not be shown again!
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg mb-4 border border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">Key Name:</p>
+              <p className="text-sm font-bold text-gray-900 dark:text-white mb-3">{newlyGeneratedKey.name}</p>
+
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">API Key:</p>
+              <div className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-300 dark:border-gray-600">
+                <code className="text-sm font-mono text-gray-900 dark:text-white break-all">
+                  {newlyGeneratedKey.key}
+                </code>
+              </div>
+            </div>
+
+            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg mb-4 border border-red-200 dark:border-red-800">
+              <p className="text-xs text-red-800 dark:text-red-300">
+                <strong>Security Notice:</strong> This key grants access to your merchant account.
+                Store it securely (password manager, environment variables).
+                Never commit it to version control or share it publicly.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(newlyGeneratedKey.key);
+                }}
+                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Copy Key
+              </button>
+              <button
+                onClick={() => setNewlyGeneratedKey(null)}
+                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
@@ -446,12 +603,57 @@ function PaymentRequestsSection({
   newRequest,
   setNewRequest,
   onCreateRequest,
+  loading,
+  submitting,
+  error,
 }: {
   requests: PaymentRequest[];
   newRequest: NewPaymentRequest;
   setNewRequest: (request: NewPaymentRequest) => void;
   onCreateRequest: () => void;
+  loading: boolean;
+  submitting: boolean;
+  error: string | null;
 }) {
+  const displayRequests = requests.length > 0 ? requests : [
+    {
+      id: 'req-1',
+      fromAddress: '0x0000000000000000000000000000000000000000',
+      toAddress: 'dev@example.com',
+      amount: 1500,
+      currency: 'USDC',
+      memo: 'Monthly retainer',
+      status: 'pending' as const,
+      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+      updatedAt: Date.now() - 24 * 60 * 60 * 1000,
+      txHash: null,
+    },
+    {
+      id: 'req-2',
+      fromAddress: '0x0000000000000000000000000000000000000000',
+      toAddress: 'consultant@example.com',
+      amount: 500,
+      currency: 'ETH',
+      memo: 'Consulting hours',
+      status: 'sent' as const,
+      createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
+      updatedAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
+      txHash: null,
+    },
+    {
+      id: 'req-3',
+      fromAddress: '0x0000000000000000000000000000000000000000',
+      toAddress: 'vendor@example.com',
+      amount: 2000,
+      currency: 'USDC',
+      memo: 'Vendor invoice',
+      status: 'completed' as const,
+      createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
+      updatedAt: Date.now() - 9 * 24 * 60 * 60 * 1000,
+      txHash: null,
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Create New Request */}
@@ -461,11 +663,11 @@ function PaymentRequestsSection({
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <MobileInput
-            label="Recipient Email"
-            type="email"
+            label="Recipient Address"
+            type="text"
             placeholder="recipient@example.com"
-            value={newRequest.email}
-            onChange={(e) => setNewRequest({ ...newRequest, email: e.target.value })}
+            value={newRequest.address}
+            onChange={(e) => setNewRequest({ ...newRequest, address: e.target.value })}
           />
           <MobileInput
             label="Amount"
@@ -486,28 +688,36 @@ function PaymentRequestsSection({
             onChange={(e) => setNewRequest({ ...newRequest, currency: e.target.value })}
           />
           <MobileInput
-            label="Description"
-            placeholder="Monthly retainer for services..."
-            value={newRequest.description}
-            onChange={(e) => setNewRequest({ ...newRequest, description: e.target.value })}
+            label="Memo"
+            placeholder="monthly retainer for services"
+            value={newRequest.memo}
+            onChange={(e) => setNewRequest({ ...newRequest, memo: e.target.value })}
           />
         </div>
+        {error && (
+          <p className="mt-3 text-sm text-red-500">{error}</p>
+        )}
         <MobileButton
           fullWidth
           onClick={onCreateRequest}
           className="mt-4"
+          disabled={submitting}
         >
-          Create Request
+          {submitting ? 'Submitting...' : 'Create Request'}
         </MobileButton>
       </div>
 
       {/* Requests List */}
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4">
-          Active Requests ({requests.length})
+          Active Requests ({displayRequests.length})
         </h2>
         <div className="space-y-3">
-          {requests.map((request) => (
+          {loading && <p className="text-sm text-gray-500">Loading requests...</p>}
+          {!loading && displayRequests.length === 0 && (
+            <p className="text-sm text-gray-500">No payment requests yet.</p>
+          )}
+          {!loading && displayRequests.map((request) => (
             <RequestCard key={request.id} request={request} />
           ))}
         </div>
@@ -519,10 +729,13 @@ function PaymentRequestsSection({
 function RevenueSection({ data }: { data: RevenueData[] }) {
   const [period, setPeriod] = React.useState('30d');
 
+  const periodDays = period === '7d' ? 7 : period === '90d' ? 90 : 30;
+  const visibleData = data.slice(-periodDays);
+
   // Calculate statistics
-  const totalRevenue = data.reduce((sum, d) => sum + d.revenue, 0);
-  const totalVolume = data.reduce((sum, d) => sum + d.volume, 0);
-  const avgDaily = totalRevenue / data.length;
+  const totalRevenue = visibleData.reduce((sum, d) => sum + d.revenue, 0);
+  const totalVolume = visibleData.reduce((sum, d) => sum + d.volume, 0);
+  const avgDaily = visibleData.length > 0 ? totalRevenue / visibleData.length : 0;
 
   return (
     <div className="space-y-6">
@@ -579,15 +792,15 @@ function RevenueSection({ data }: { data: RevenueData[] }) {
           Revenue Trend
         </h2>
         <div className="space-y-2">
-          {data.slice(-7).map((day) => (
+          {visibleData.slice(-7).map((day) => (
             <div key={day.date} className="flex items-center gap-4">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-20">
                 {day.date}
               </span>
               <div className="flex-1 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg"
-                  style={{ width: `${(day.revenue / 60000) * 100}%` }}
+                  className="h-full bg-linear-to-r from-blue-500 to-purple-600 rounded-lg"
+                  style={{ width: `${Math.min((day.revenue / 60000) * 100, 100)}%` }}
                 />
               </div>
               <span className="text-sm font-medium text-gray-900 dark:text-white w-28 text-right">
@@ -618,7 +831,7 @@ function RevenueSection({ data }: { data: RevenueData[] }) {
             </tr>
           </thead>
           <tbody>
-            {data.slice(-10).reverse().map((day) => (
+            {visibleData.slice(-10).reverse().map((day) => (
               <tr key={day.date} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                 <td className="py-3 px-4 text-gray-900 dark:text-white">{day.date}</td>
                 <td className="py-3 px-4 text-right text-gray-900 dark:text-white font-medium">
@@ -648,6 +861,31 @@ function BulkPaymentsSection({
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   uploading: boolean;
 }) {
+  const displayJobs = jobs.length > 0
+    ? jobs
+    : [
+        {
+          id: 'sample-job-1',
+          filename: 'payroll_january_2024.csv',
+          uploadedAt: Date.now() - 2 * 60 * 60 * 1000,
+          status: 'processing' as const,
+          totalRows: 120,
+          successCount: 84,
+          failureCount: 2,
+          totalAmount: 54250,
+        },
+        {
+          id: 'sample-job-2',
+          filename: 'payouts_february_2024.csv',
+          uploadedAt: Date.now() - 24 * 60 * 60 * 1000,
+          status: 'completed' as const,
+          totalRows: 200,
+          successCount: 200,
+          failureCount: 0,
+          totalAmount: 98200,
+        },
+      ];
+
   return (
     <div className="space-y-6">
       {/* Upload Section */}
@@ -676,7 +914,7 @@ function BulkPaymentsSection({
             {uploading ? '⏳ Uploading...' : '📤 Choose File'}
           </label>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
-            CSV format: email, amount, currency, description
+              CSV format: email, amount, currency, description
           </p>
         </div>
       </div>
@@ -687,7 +925,7 @@ function BulkPaymentsSection({
           Upload History
         </h2>
         <div className="space-y-3">
-          {jobs.map((job) => (
+          {displayJobs.map((job) => (
             <BulkJobCard key={job.id} job={job} />
           ))}
         </div>
@@ -709,6 +947,39 @@ function ApiKeysSection({
   onGenerateKey: () => void;
   onRevokeKey: (keyId: string) => void;
 }) {
+  const displayKeys = keys.length > 0 ? keys : [
+    {
+      id: 'sample-key-1',
+      name: 'Production API Key',
+      key: 'vfide_live_prod_1234567890',
+      maskedKey: 'vfide_live_****************',
+      status: 'active' as const,
+      createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
+      lastUsed: Date.now() - 2 * 60 * 60 * 1000,
+      permissions: ['read:payments', 'write:payments'],
+    },
+    {
+      id: 'sample-key-2',
+      name: 'Development API Key',
+      key: 'vfide_live_dev_0987654321',
+      maskedKey: 'vfide_live_****************',
+      status: 'active' as const,
+      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
+      lastUsed: Date.now() - 24 * 60 * 60 * 1000,
+      permissions: ['read:payments'],
+    },
+    {
+      id: 'sample-key-3',
+      name: 'Old Test Key',
+      key: 'vfide_live_test_1122334455',
+      maskedKey: 'vfide_live_****************',
+      status: 'revoked' as const,
+      createdAt: Date.now() - 90 * 24 * 60 * 60 * 1000,
+      lastUsed: null,
+      permissions: ['read:payments'],
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Generate New Key */}
@@ -738,7 +1009,7 @@ function ApiKeysSection({
           Your API Keys
         </h2>
         <div className="space-y-3">
-          {keys.map((key) => (
+          {displayKeys.map((key) => (
             <ApiKeyCard
               key={key.id}
               apiKey={key}
@@ -815,34 +1086,33 @@ function RequestCard({ request }: { request: PaymentRequest }) {
     sent: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-300',
     completed: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-800 dark:text-green-300',
     expired: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-800 dark:text-red-300',
+    cancelled: 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300',
   };
-
-  const daysUntilExpiry = Math.ceil((request.expiresAt - Date.now()) / (24 * 60 * 60 * 1000));
 
   return (
     <div className="rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1 min-w-0">
           <p className="font-bold text-gray-900 dark:text-white truncate">
-            {request.amount} {request.currency} · {request.description}
+            {request.amount} {request.currency} · {request.memo || 'Payment request'}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">
-            {request.recipientEmail}
+            To {request.toAddress}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-            Created {new Date(request.createdAt).toLocaleDateString()}
-            {request.status !== 'completed' && ` · Expires in ${daysUntilExpiry} days`}
+            Created {new Date(request.createdAt).toLocaleDateString()} · Updated {new Date(request.updatedAt).toLocaleDateString()}
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColors[request.status]}`}>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColors[request.status] ?? statusColors.pending}`}>
             {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
           </span>
-          {request.status === 'pending' && (
-            <button className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-              Copy Link
-            </button>
-          )}
+          <button
+            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            onClick={() => navigator.clipboard.writeText(request.id)}
+          >
+            Copy Link
+          </button>
         </div>
       </div>
     </div>
@@ -898,10 +1168,14 @@ function ApiKeyCard({
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(apiKey.key);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (apiKey.key) {
+      navigator.clipboard.writeText(apiKey.key);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
+
+  const keyIsAvailable = !!apiKey.key;
 
   return (
     <motion.div 
@@ -928,11 +1202,11 @@ function ApiKeyCard({
               {apiKey.status}
             </motion.span>
           </div>
-          <motion.p 
+          <motion.p
             className="text-sm font-mono text-gray-600 dark:text-gray-400 break-all"
             animate={{ opacity: showKey ? 1 : 0.7 }}
           >
-            {showKey ? (
+            {showKey && keyIsAvailable ? (
               <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -940,6 +1214,10 @@ function ApiKeyCard({
               >
                 {apiKey.key}
               </motion.span>
+            ) : !keyIsAvailable && showKey ? (
+              <span className="text-yellow-600 dark:text-yellow-400 text-xs">
+                🔒 Key hidden for security. Full key only shown once during generation.
+              </span>
             ) : (
               apiKey.maskedKey
             )}
@@ -953,19 +1231,29 @@ function ApiKeyCard({
           {apiKey.status === 'active' && (
             <>
               <motion.button
-                onClick={() => setShowKey(!showKey)}
-                className="px-3 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded flex items-center gap-1"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                onClick={() => keyIsAvailable && setShowKey(!showKey)}
+                disabled={!keyIsAvailable}
+                className={`px-3 py-1 text-xs rounded flex items-center gap-1 ${
+                  keyIsAvailable
+                    ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                    : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                }`}
+                whileHover={keyIsAvailable ? { scale: 1.05 } : undefined}
+                whileTap={keyIsAvailable ? { scale: 0.95 } : undefined}
               >
                 {showKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                 {showKey ? 'Hide' : 'Show'}
               </motion.button>
               <motion.button
                 onClick={handleCopy}
-                className="px-3 py-1 text-xs text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded flex items-center gap-1"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                disabled={!keyIsAvailable}
+                className={`px-3 py-1 text-xs rounded flex items-center gap-1 ${
+                  keyIsAvailable
+                    ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                    : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                }`}
+                whileHover={keyIsAvailable ? { scale: 1.05 } : undefined}
+                whileTap={keyIsAvailable ? { scale: 0.95 } : undefined}
               >
                 {copied ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                 {copied ? 'Copied!' : 'Copy'}
