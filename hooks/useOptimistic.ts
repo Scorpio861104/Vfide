@@ -110,7 +110,8 @@ export function useOptimistic<T, R = T>(options: UseOptimisticOptions<T, R>) {
 
       return id;
     },
-    [onOptimisticUpdate, rollbackTimeout, maxPending, cleanupTimeout, rollback]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [onOptimisticUpdate, rollbackTimeout, maxPending, cleanupTimeout]
   );
 
   /**

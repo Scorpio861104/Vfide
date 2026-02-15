@@ -490,18 +490,18 @@ export default function NotificationCenter() {
 
     return {
       id: String(row.id),
-      title: row.title ?? 'Notification',
-      message: row.message ?? '',
+      title: typeof row.title === 'string' ? row.title : 'Notification',
+      message: typeof row.message === 'string' ? row.message : '',
       type,
-      icon: data.icon ?? iconByType[type] ?? '🔔',
+      icon: typeof data.icon === 'string' ? data.icon : iconByType[type] ?? '🔔',
       timestamp: row.created_at ? new Date(row.created_at as string | number | Date).getTime() : Date.now(),
       read: Boolean(row.is_read),
       archived: Boolean(row.archived),
-      actionUrl: data.actionUrl,
-      actionLabel: data.actionLabel,
+      actionUrl: typeof data.actionUrl === 'string' ? data.actionUrl : undefined,
+      actionLabel: typeof data.actionLabel === 'string' ? data.actionLabel : undefined,
       priority: (data.priority as Notification['priority']) ?? 'medium',
       category: (data.category as Notification['category']) ?? 'system',
-      source: data.source ?? 'System',
+      source: typeof data.source === 'string' ? data.source : 'System',
     };
   }, []);
 

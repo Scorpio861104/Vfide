@@ -219,8 +219,8 @@ export default function DailyQuestsPanel() {
             return {
               id: String(row.id),
               type: activeTab,
-              title: row.title ?? 'Quest',
-              description: row.description ?? '',
+              title: typeof row.title === 'string' ? row.title : 'Quest',
+              description: typeof row.description === 'string' ? row.description : '',
               progress: Number(row.progress ?? 0),
               target: Number(row.target ?? 0),
               reward: {
@@ -231,7 +231,7 @@ export default function DailyQuestsPanel() {
               claimed: Boolean(row.claimed),
               expiresAt,
               difficulty: (row.difficulty ?? 'easy') as Quest['difficulty'],
-              icon: row.icon ?? '🎯',
+              icon: typeof row.icon === 'string' ? row.icon : '🎯',
             };
           })
         : [];

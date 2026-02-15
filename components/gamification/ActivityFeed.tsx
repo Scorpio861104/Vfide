@@ -41,7 +41,7 @@ export function ActivityFeed({ limit = 10 }: { limit?: number }) {
         const data = await response.json()
         const items = Array.isArray(data.activities) ? data.activities : []
         const mapped = items.map((activity: Record<string, unknown>): ActivityItem => {
-          const type = normalizeType(activity.activity_type ?? activity.type)
+          const type = normalizeType(activity.activity_type ?? activity.type) as ActivityItem['type'];
           const iconMap: Record<ActivityItem['type'], React.ReactNode> = {
             badge_earned: <Award className="w-4 h-4" />,
             level_up: <TrendingUp className="w-4 h-4" />,
@@ -58,8 +58,10 @@ export function ActivityFeed({ limit = 10 }: { limit?: number }) {
           return {
             id: String(activity.id ?? `${activity.activity_type}-${activity.created_at}`),
             type,
-            user: activity.user_address ?? activity.user_username ?? '0x0',
-            details: activity.description ?? activity.title ?? 'Activity update',
+            user: typeof activity.user_address === 'string' ? activity.user_address : 
+                  typeof activity.user_username === 'string' ? activity.user_username : '0x0',
+            details: typeof activity.description === 'string' ? activity.description :
+                    typeof activity.title === 'string' ? activity.title : 'Activity update',
             timestamp: activity.created_at ? new Date(activity.created_at as string | number | Date).getTime() : Date.now(),
             icon: iconMap[type],
             color: colorMap[type],
