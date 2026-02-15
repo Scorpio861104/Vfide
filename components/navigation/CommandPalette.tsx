@@ -207,6 +207,7 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
       });
       return () => window.cancelAnimationFrame(frame);
     }
+    return undefined;
   }, [isOpen]);
 
   const handleQueryChange = useCallback((value: string) => {

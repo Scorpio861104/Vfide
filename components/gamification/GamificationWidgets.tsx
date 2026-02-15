@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Zap, Award } from 'lucide-react';
 import { useGamification, ACHIEVEMENTS, type AchievementId } from '@/lib/gamification';

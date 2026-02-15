@@ -50,15 +50,15 @@ export async function GET(request: NextRequest) {
       const expiresAt = data.expiresAt ? Number(data.expiresAt) : createdAt + 24 * 60 * 60 * 1000;
 
       const story: StoryItem = {
-        id: data.id ?? `story-${row.id}`,
+        id: typeof data.id === 'string' ? data.id : `story-${row.id}`,
         userId: row.wallet_address,
         userName: row.username ?? row.wallet_address,
         userAvatar: row.avatar_url ?? undefined,
         type: data.type === 'image' || data.type === 'video' ? data.type : 'text',
-        content: data.content ?? '',
-        backgroundColor: data.backgroundColor,
-        textColor: data.textColor,
-        caption: data.caption,
+        content: typeof data.content === 'string' ? data.content : '',
+        backgroundColor: typeof data.backgroundColor === 'string' ? data.backgroundColor : undefined,
+        textColor: typeof data.textColor === 'string' ? data.textColor : undefined,
+        caption: typeof data.caption === 'string' ? data.caption : undefined,
         createdAt,
         expiresAt,
         viewedBy: Array.isArray(data.viewedBy) ? data.viewedBy : [],

@@ -199,6 +199,7 @@ export function OnboardingProvider({ children, customSteps }: OnboardingProvider
       }, 0);
       return () => window.clearTimeout(timeout);
     }
+    return undefined;
   }, [isConnected, completedSteps, markComplete]);
 
   const skipOnboarding = useCallback(() => {

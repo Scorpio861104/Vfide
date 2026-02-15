@@ -180,6 +180,7 @@ export function useOfflineSupport() {
       }, 0);
       return () => window.clearTimeout(timeout);
     }
+    return undefined;
   }, [isOnline, queuedActions, processQueue]);
 
   return {
@@ -255,6 +256,7 @@ export function OfflineBanner({ isOnline, isReconnecting, queuedCount, onRetryAl
       const frame = window.requestAnimationFrame(() => setDismissed(false));
       return () => window.cancelAnimationFrame(frame);
     }
+    return undefined;
   }, [isOnline]);
 
   if (dismissed || (isOnline && !isReconnecting && queuedCount === 0)) {
