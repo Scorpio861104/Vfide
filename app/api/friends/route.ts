@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { from, to } = validation.data;
+    const { from, to } = validation.data as z.infer<typeof friendRequestSchema>;
 
     // Verify the request is from the authenticated user
     if (authResult.user.address.toLowerCase() !== from.toLowerCase()) {

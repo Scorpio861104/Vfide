@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { proposerAddress, title, description, endsAt } = validation.data;
+    const { proposerAddress, title, description, endsAt } = validation.data as z.infer<typeof createProposalSchema>;
 
     // Verify user is creating proposal for themselves
     if (!checkOwnership(authResult.user, proposerAddress)) {

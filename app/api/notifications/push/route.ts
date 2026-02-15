@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/db';
 import { validateBody, pushSubscriptionSchema, pushUnsubscribeSchema } from '@/lib/auth/validation';
 import { requireAuth } from '@/lib/auth/middleware';

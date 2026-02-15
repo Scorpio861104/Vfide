@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getClient } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { questId, userAddress } = validation.data;
+    const { questId, userAddress } = validation.data as z.infer<typeof claimQuestSchema>;
 
     // Verify user is claiming their own rewards
     if (!checkOwnership(authResult.user, userAddress)) {

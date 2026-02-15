@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { from, to, content, encryptedContent } = validation.data;
+    const { from, to, content, encryptedContent } = validation.data as z.infer<typeof sendMessageSchema>;
     const messageContent = encryptedContent ?? content ?? '';
     const isEncrypted = Boolean(encryptedContent);
     

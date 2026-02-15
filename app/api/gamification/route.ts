@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/db';
 import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userAddress, xpAmount, reason } = validation.data;
+    const { userAddress, xpAmount, reason } = validation.data as z.infer<typeof awardXpSchema>;
 
     if (!userAddress || !xpAmount) {
       return NextResponse.json(

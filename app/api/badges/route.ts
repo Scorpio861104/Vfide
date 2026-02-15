@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userAddress, badgeType: badgeId } = validation.data;
+    const { userAddress, badgeType: badgeId } = validation.data as z.infer<typeof awardBadgeSchema>;
 
     // Get user ID
     const userResult = await query(
