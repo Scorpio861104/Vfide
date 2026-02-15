@@ -155,8 +155,8 @@ const getStatusBadgeColor = (status: SearchStatus): string => {
 const SUPPORTED_SEARCH_TYPES: ContentType[] = ['proposal', 'user', 'transaction', 'activity'];
 
 const mapApiResult = (result: Record<string, unknown>, index: number): SearchResult => {
-  const author = result?.author ?? {};
-  const createdAt = result?.createdAt ? new Date(result.createdAt) : new Date();
+  const author = (result?.author ?? {}) as Record<string, unknown>;
+  const createdAt = result?.createdAt ? new Date(result.createdAt as string | number | Date) : new Date();
 
   return {
     id: typeof result?.id === 'string' ? result.id : `result-${index}`,

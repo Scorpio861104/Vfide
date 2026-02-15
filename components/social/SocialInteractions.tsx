@@ -81,8 +81,8 @@ const buildLeaderboardEntries = (rows: Record<string, unknown>[]): LeaderboardEn
     },
     score: Number(row?.activityScore ?? 0),
     change: 0,
-    badges: Number(row?.stats?.questsCompleted ?? 0),
-    streak: Number(row?.stats?.currentStreak ?? 0),
+    badges: Number((row?.stats as Record<string, unknown>)?.questsCompleted ?? 0),
+    streak: Number((row?.stats as Record<string, unknown>)?.currentStreak ?? 0),
     icon: index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`,
   }));
 

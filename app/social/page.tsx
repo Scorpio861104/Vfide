@@ -169,7 +169,8 @@ export default function SocialAnalyticsPage() {
     };
 
     const normalizedEvents = events.map((event) => {
-      const data = event?.event_data ?? event?.eventData ?? {};
+      const eventData = (event as any)?.event_data ?? (event as any)?.eventData ?? {};
+      const data = eventData;
       const parsed = typeof data === 'string' ? (() => {
         try {
           return JSON.parse(data);
@@ -180,7 +181,7 @@ export default function SocialAnalyticsPage() {
 
       const actionRaw = parsed?.action ?? parsed?.type ?? parsed?.event ?? '';
       const action = typeof actionRaw === 'string' ? actionRaw.toLowerCase() : '';
-      const timestamp = event?.timestamp ? new Date(event.timestamp) : new Date();
+      const timestamp = (event as any)?.timestamp ? new Date((event as any).timestamp) : new Date();
 
       return { action, timestamp };
     });

@@ -86,8 +86,9 @@ const mapCommunityPost = (post: Record<string, unknown>): FeedPost => {
   const shares = Number(post?.shares ?? 0);
   const views = Number(post?.views ?? 0);
   const tags = Array.isArray(post?.tags) ? post.tags : undefined;
-  const address = typeof post?.author?.address === 'string' ? post.author.address : '';
-  const name = String(post?.author?.name ?? address ?? 'Member');
+  const author = (post?.author ?? {}) as Record<string, unknown>;
+  const address = typeof author?.address === 'string' ? author.address : '';
+  const name = String(author?.name ?? address ?? 'Member');
   const username = name
     .toLowerCase()
     .replace(/[^a-z0-9_]+/g, '_')
@@ -97,13 +98,13 @@ const mapCommunityPost = (post: Record<string, unknown>): FeedPost => {
   return {
     id: String(post?.id ?? ''),
     author: {
-      id: address || String(post?.author?.name ?? 'user'),
+      id: address || String(author?.name ?? 'user'),
       address,
-      avatar: String(post?.author?.avatar ?? '👤'),
+      avatar: String(author?.avatar ?? '👤'),
       name,
       username,
-      isVerified: Boolean(post?.author?.verified ?? false),
-      proofScore: Number(post?.author?.proofScore ?? 0),
+      isVerified: Boolean(author?.verified ?? false),
+      proofScore: Number(author?.proofScore ?? 0),
     },
     content: String(post?.content ?? ''),
     type: inferPostType(tags),

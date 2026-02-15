@@ -43,13 +43,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     );
 
     const votes = result.rows.map((row) => {
-      const data = row.data && typeof row.data === 'object' ? row.data : {};
+      const data: Record<string, unknown> = row.data && typeof row.data === 'object' && !Array.isArray(row.data) 
+        ? (row.data as Record<string, unknown>) 
+        : {};
       return {
         id: row.id,
-        proposal: data.proposal ?? row.title ?? row.description ?? 'Governance vote',
+        proposal: typeof data.proposal === 'string' ? data.proposal : (row.title ?? row.description ?? 'Governance vote'),
         date: row.created_at,
-        points: Number(data.points ?? 5),
-        claimed: Boolean(data.claimed ?? false),
+        points: typeof data.points === 'number' ? data.points : 5,
+        claimed: typeof data.claimed === 'boolean' ? data.claimed : false,
       };
     });
 
