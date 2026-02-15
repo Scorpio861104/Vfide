@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
+import { z } from 'zod';
 import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, authSchema } from '@/lib/auth/validation';
@@ -29,7 +30,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { address, message, signature } = validation.data;
+    // TypeScript narrowing: validation.success is true, data is properly typed
+    const { address, message, signature } = validation.data as z.infer<typeof authSchema>;
 
     // Verify the message contains expected content (prevent replay attacks)
     const expectedPrefix = 'Sign this message to authenticate with VFIDE';
