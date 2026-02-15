@@ -348,7 +348,7 @@ export function useReferralActivity() {
               type: typeRaw.includes('merchant') ? 'merchant' : 'user',
               address: (meta.referrer ?? meta.address ?? item.user_address ?? '0x0000000000000000000000000000000000000000') as `0x${string}`,
               status: (meta.status === 'credited' ? 'credited' : 'pending') as ReferralActivity['status'],
-              timestamp: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
+              timestamp: item.created_at ? new Date(item.created_at as string | number | Date).getTime() : Date.now(),
               points: Number(meta.points ?? 0),
               txHash: (meta.txHash ?? meta.transactionHash ?? '0x0000000000000000000000000000000000000000000000000000000000000000') as `0x${string}`,
             };

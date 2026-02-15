@@ -675,7 +675,7 @@ export default function UserProfile() {
               name: badge.badge_name ?? badge.name ?? 'Badge',
               description: badge.badge_description ?? badge.description ?? '',
               icon: badge.badge_icon ?? badge.icon ?? '🏅',
-              earnedDate: badge.earned_at ? new Date(badge.earned_at) : new Date(),
+              earnedDate: badge.earned_at ? new Date(badge.earned_at as string | number | Date) : new Date(),
               rarity: badge.badge_rarity ?? badge.rarity ?? 'common',
             }))
           : [];
@@ -697,7 +697,7 @@ export default function UserProfile() {
               id: String(activity.id),
               type: activity.activity_type ?? activity.type ?? 'activity',
               title: activity.title ?? activity.description ?? 'Activity',
-              timestamp: activity.created_at ? new Date(activity.created_at) : new Date(),
+              timestamp: activity.created_at ? new Date(activity.created_at as string | number | Date) : new Date(),
             }))
           : [];
 

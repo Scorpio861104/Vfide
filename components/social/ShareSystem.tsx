@@ -90,7 +90,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
           description: String(row?.badge_description ?? row?.description ?? ''),
           icon: String(row?.badge_icon ?? '🏅'),
           rarity: (row?.badge_rarity ?? 'common') as ShareableAchievement['rarity'],
-          unlockedDate: new Date(row?.earned_at ?? row?.created_at ?? Date.now()),
+          unlockedDate: new Date((row?.earned_at ?? row?.created_at ?? Date.now()) as string | number | Date),
           shareUrl: '/badges',
         })) as ShareableAchievement[];
 

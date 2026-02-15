@@ -41,9 +41,9 @@ export default function TimeLocksPage() {
         const data = await response.json();
         const locks = Array.isArray(data.timeLocks || data.locks) ? (data.timeLocks || data.locks) : [];
         const mapped = locks.map((lock: Record<string, unknown>) => {
-          const createdAt = lock.createdAt ? new Date(lock.createdAt).getTime() : Date.now();
-          const unlockAt = lock.unlockAt ? new Date(lock.unlockAt).getTime() : Date.now();
-          const status: TimeLock['status'] = lock.status || (unlockAt <= Date.now() ? 'ready' : 'pending');
+          const createdAt = lock.createdAt ? new Date(lock.createdAt as string | number | Date).getTime() : Date.now();
+          const unlockAt = lock.unlockAt ? new Date(lock.unlockAt as string | number | Date).getTime() : Date.now();
+          const status: TimeLock['status'] = (lock.status as TimeLock['status']) || (unlockAt <= Date.now() ? 'ready' : 'pending');
 
           return {
             id: String(lock.id ?? `${lock.token ?? 'token'}-${createdAt}`),

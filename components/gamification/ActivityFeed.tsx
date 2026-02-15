@@ -60,7 +60,7 @@ export function ActivityFeed({ limit = 10 }: { limit?: number }) {
             type,
             user: activity.user_address ?? activity.user_username ?? '0x0',
             details: activity.description ?? activity.title ?? 'Activity update',
-            timestamp: activity.created_at ? new Date(activity.created_at).getTime() : Date.now(),
+            timestamp: activity.created_at ? new Date(activity.created_at as string | number | Date).getTime() : Date.now(),
             icon: iconMap[type],
             color: colorMap[type],
           }

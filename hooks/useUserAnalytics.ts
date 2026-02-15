@@ -67,7 +67,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
       category: data.category ?? 'general',
       userId: data.userId ?? event.user_id ?? '',
       sessionId: data.sessionId ?? sessionId,
-      timestamp: event.timestamp ? new Date(event.timestamp).getTime() : Date.now(),
+      timestamp: event.timestamp ? new Date(event.timestamp as string | number | Date).getTime() : Date.now(),
       duration: data.duration,
       metadata: data.metadata ?? {},
       page: data.page ?? 'unknown',
@@ -304,7 +304,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
           event.page,
           event.sessionId,
           event.userId,
-          new Date(event.timestamp).toISOString(),
+          new Date(event.timestamp as string | number | Date).toISOString(),
           event.duration?.toString() || '',
         ]);
 

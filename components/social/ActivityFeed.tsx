@@ -68,7 +68,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
           type: normalizeType(activity.activity_type ?? activity.type),
           user: activity.user_address ?? activity.user_username ?? 'Unknown',
           content: activity.description ?? activity.title ?? 'Activity',
-          timestamp: activity.created_at ? new Date(activity.created_at).getTime() : Date.now(),
+          timestamp: activity.created_at ? new Date(activity.created_at as string | number | Date).getTime() : Date.now(),
           metadata: activity.data ?? activity.metadata ?? undefined,
         })) as ActivityItem[];
 

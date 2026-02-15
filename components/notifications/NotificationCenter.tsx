@@ -494,7 +494,7 @@ export default function NotificationCenter() {
       message: row.message ?? '',
       type,
       icon: data.icon ?? iconByType[type] ?? '🔔',
-      timestamp: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+      timestamp: row.created_at ? new Date(row.created_at as string | number | Date).getTime() : Date.now(),
       read: Boolean(row.is_read),
       archived: Boolean(row.archived),
       actionUrl: data.actionUrl,

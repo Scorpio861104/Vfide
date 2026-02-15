@@ -178,7 +178,7 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
               },
               mutualFriends: 0,
               mutualInterests: [],
-              timestamp: new Date(row?.created_at ?? Date.now()),
+              timestamp: new Date((row?.created_at ?? Date.now()) as string | number | Date),
             } as FriendRequest;
           });
           setFriendRequests(mapped);
@@ -196,7 +196,7 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
               username: row?.sender_username ?? row?.sender_address ?? 'member',
             },
             content: String(row?.content ?? ''),
-            timestamp: new Date(row?.created_at ?? Date.now()),
+            timestamp: new Date((row?.created_at ?? Date.now()) as string | number | Date),
             read: Boolean(row?.is_read ?? false),
           })) as Message[];
           setMessages(mapped);

@@ -213,7 +213,7 @@ export default function DailyQuestsPanel() {
             const rewardVfide = row.rewardVfide ?? row.reward_vfide;
             const rewardXp = row.rewardXp ?? row.reward_xp;
             const expiresAt = activeTab === 'weekly'
-              ? new Date(row.weekEnd ?? row.week_end ?? Date.now()).getTime()
+              ? new Date((row.weekEnd ?? row.week_end ?? Date.now()) as string | number | Date).getTime()
               : new Date().setHours(23, 59, 59, 999);
 
             return {

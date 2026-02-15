@@ -88,7 +88,7 @@ export function CreatorDashboard() {
             recentTransactions: Array.isArray(data.recentTransactions)
               ? data.recentTransactions.map((tx: Record<string, unknown>) => ({
                   ...tx,
-                  timestamp: tx.timestamp ? new Date(tx.timestamp) : new Date(),
+                  timestamp: tx.timestamp ? new Date(tx.timestamp as string | number | Date) : new Date(),
                 }))
               : [],
           });
@@ -323,7 +323,7 @@ export function CreatorDashboard() {
                   <div>
                     <div className="font-medium capitalize">{tx.type}</div>
                     <div className="text-sm text-gray-500">
-                      {new Date(tx.timestamp).toLocaleDateString()}
+                      {new Date(tx.timestamp as string | number | Date).toLocaleDateString()}
                     </div>
                   </div>
                 </div>

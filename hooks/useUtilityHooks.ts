@@ -218,7 +218,7 @@ export function useActivityFeed() {
             from: (meta.from as string | undefined) ?? activity.user_address,
             to: (meta.to as string | undefined) ?? (meta.recipient as string | undefined),
             amount: (meta.amount as string | undefined) ?? (meta.value as string | undefined),
-            timestamp: activity.created_at ? new Date(activity.created_at).getTime() : Date.now(),
+            timestamp: activity.created_at ? new Date(activity.created_at as string | number | Date).getTime() : Date.now(),
             txHash: meta.txHash as string | undefined,
           } as ActivityItem
         })

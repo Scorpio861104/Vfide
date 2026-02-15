@@ -379,7 +379,7 @@ export default function ProofScoreDashboard() {
                 name: badge?.badge_name ?? badge?.name ?? 'Badge',
                 description: badge?.badge_description ?? badge?.description ?? '',
                 icon: badge?.badge_icon ?? '🏅',
-                earnedAt: badge?.earned_at ? new Date(badge.earned_at).getTime() : Date.now(),
+                earnedAt: badge?.earned_at ? new Date(badge.earned_at as string | number | Date).getTime() : Date.now(),
                 rarity: (badge?.badge_rarity ?? badge?.rarity ?? 'common') as Badge['rarity'],
                 requirements: badge?.requirements ?? 'Earned through participation',
               }))

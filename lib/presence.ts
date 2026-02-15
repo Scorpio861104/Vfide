@@ -387,8 +387,8 @@ export function useBulkPresence(addresses: string[]) {
           rows.forEach((row: Record<string, unknown>) => {
             updatePresence(row.wallet_address, {
               status: row.status,
-              lastSeen: new Date(row.last_seen_at).getTime(),
-              lastActivity: new Date(row.last_activity_at).getTime(),
+              lastSeen: new Date(row.last_seen_at as string | number | Date).getTime(),
+              lastActivity: new Date(row.last_activity_at as string | number | Date).getTime(),
             });
           });
           if (active) {
